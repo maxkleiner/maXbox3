@@ -1,0 +1,478 @@
+{***************************************************************
+ * App  : Function Tester Functionizer
+ * Unit Name: 147_function_mapping.txt
+ * Purpose  : Test a lot of indy functions to enhance it
+ * Date  : 21/08/2010  -  14:38:56
+ * History  : integrate mX3 Octobre 2010, locs=455
+ *
+ ****************************************************************}
+Program Function_Mapper_Max;
+
+{ $Project$
+  $Workfile$
+  $Revision$
+  $DateUTC$
+  $Id$
+
+  This file is part of the Indy (Internet Direct) project, and is offered
+  under the dual-licensing agreement described on the Indy website.
+  (http://www.indyproject.org/)
+{  $Log$   }
+
+
+Type
+  Twdays = array[1..7] of string;
+  TMonthnames2 = array[1..12] of string;
+  
+  TIdDateTimeBase = TDateTime;
+  
+var  wdays:  TWdays;
+     monthnames: TMonthnames;
+
+Procedure InitIndyConsts;
+{Do not Localize}
+begin 
+  wdays[1]:= 'Sun'; wdays[2]:='Mon'; wdays[3]:= 'Tue'; wdays[4]:= 'Wed';
+  wdays[5]:= 'Thu'; wdays[6]:='Fri'; wdays[7]:= 'Sat';  
+  monthnames[1]:= 'Jan'; monthnames[2]:= 'Feb'; monthnames[2]:= 'Mar';
+  monthnames[4]:= 'Apr'; monthnames[5]:= 'May'; monthnames[6]:= 'Jun';
+  monthnames[7]:= 'Jul'; monthnames[8]:= 'Aug'; monthnames[9]:= 'Sep';
+  monthnames[10]:= 'Oct'; monthnames[11]:= 'Nov'; monthnames[12]:= 'Dez';
+end;  
+  
+  //TAnsiCharSet = set of WideChar;
+    {class function StrToInt64(const S: string): Int64; overload;
+    class function StrToInt64(const S: string; const Default : Int64): Int64;
+    class function TwoDigitYearCenturyWindow : Word; 
+    class function DayOfWeek(const ADateTime: TDateTime): Word;
+    class function DateTimeToStr(const ADateTime: TDateTime): string;  
+    class function StrToDateTime(const S: String): TDateTime;
+    class function Now : TDateTime;  
+    function FormatDateTime(const Format: string; ADateTime: TDateTime): string; 
+    function Format(const Format: string; const Args: array of const): string;
+    class function FileDateToDateTime(FileDate: Integer): TDateTime;
+    class function CompareStr(const S1, S2: string): Integer;
+    class function AddMSecToTime(const ADateTime : TDateTime; const AMSec:
+                                                   Integer):TDateTime;
+    class function CompareDate(const D1, D2 : TDateTime) : Integer; 
+    class function SameTet(const S1, S2 : String) : Boolean;
+    class procedure FreeAndNil(var Obj);  
+    class function LeadBytes: TAnsiCharSet; 
+    class function IntToHex(Value: Integer; Digits: Integer): string; overload;
+    class function IntToHex(Value: Int64; Digits: Integer): string; overload;
+    class function IntToStr(Value: Integer): string; overload; 
+    class function IntToStr(Value: Int64): string; overload;
+    class function IncludeTrailingPathDelimiter(const S: string): string;
+    class function ExcludeTrailingPathDelimiter(const S: string): string;
+    class function StrToInt(const S: string; Default: Integer): Integer;
+    // overload;
+    class unction StrToInt(const S: string): Integer; overload;
+    class function LowerCase(const S: string): string;
+    class function UpperCase(const S: string): string; overload;
+    class procedure RaiseLastOSError;
+    class function Trim(const S: string): string;
+    class function TrimLeft(const S: string): string;
+    class function TrimRight(const S: string): string;
+    class procedure Abort;
+    class function FileExists(const FileName: string): Boolean;
+    class function LastDelimiter(const Delimiters, S: string): Integer;
+    function StringReplace(const S, OldPattern, NewPattern: string): string;
+    function StringReplace(const S : String; const OldPattern, NewPattern:
+     array of string): string; overload;
+    function ReplaceOnlyFirst(const S, OldPattern, NewPattern: string): string;
+    procedure DecodeTime(const ADateTime:TDateTime; var Hour,Min,Sec,MSec: Word);
+    procedure DecodeDate(const ADateTime: TDateTime; var Year,Month,Day: Word);
+    class function EncodeTime(Hour, Min, Sec, MSec: Word): TDateTime;
+    class function EncodeDate(Year, Month, Day: Word): TDateTime;
+    class function FileAge(const FileName: string): TDateTime;
+    class function DirectoryExists(const Directory: string): Boolean;
+    class function DeleteFile(const FileName: string): Boolean;
+    class function ExtractFilePath(const FileName: string): string;
+    class function ExtractFileName(const FileName: string): string;
+    classxfunction ExtractFileExt(const FileName: string): string;
+    class function ChangeFileExt(const FileName, Extension: string): string;
+    class function IsLeapYear(Year: Word): Boolean;
+    class function FloatToIntStr(const AFloat: Extended): String;
+    class function DateTimeGMTToHttpStr(const GMTValue:TIdDateTimeBase): String;
+    class function DateTimeToInternetStr(const Value: TIdDateTimeBase; const
+                                          AIsGMT : Boolean = False) : String;
+    class function DateTimeToGmtOffSetStr(ADateTime: TIdDateTimeBase; SubGMT:
+                                                      Boolean): string;
+    class function OffsetFromUTC: TIdDateTimeBase;
+  end;}
+
+
+
+procedure mAbort;
+begin
+  Abort;
+end;
+
+
+function mFileExists(const FileName: string): Boolean;
+begin
+  Result:= FileExists(FileName);
+end;
+
+{function mFormat(const Format: string; const Args: array of const): string;
+begin
+  Result := Format(Format,Args);
+end;}
+
+
+function mIncludeTrailingPathDelimiter(const S: string): string;
+begin
+  {$IFDEF DELPHI5}
+  Result := IncludeTrailingBackslash(S);
+  {$ELSE}
+  Result := IncludeTrailingPathDelimiter(S);
+  {$ENDIF}
+end;
+
+function mExcludeTrailingPathDelimiter(const S: string): string;
+begin
+  {$IFDEF DELPHI5}
+  Result := ExcludeTrailingBackslash(S);
+  {$ELSE}
+  Result := ExcludeTrailingPathDelimiter(S);
+  {$ENDIF}
+end;
+
+function mIntToHex(Value: Int64; Digits: Integer): string;
+begin
+  Result := IntToHex(Value,Digits);
+end;
+
+function cIntToHex(Value, Digits: Integer): string;
+begin
+  Result := IntToHex(Value,Digits);
+end;
+
+function mLastDelimiter(const Delimiters, S: string): Integer;
+begin
+  Result := LastDelimiter(Delimiters, S);
+end;
+
+{function mLeadBytes: TAnsiCharSet;
+begin
+  Result := SysUtils.LeadBytes;
+end;}
+
+procedure mRaiseLastOSError;
+begin
+  {$IFDEF DELPHI5}
+    RaiseLastWin32Error;
+  {$ELSE}
+    RaiseLastOSError;
+  {$ENDIF}
+end;
+
+function mStringReplace(const S: String; const OldPattern,
+  NewPattern: array of string): string;
+var
+  i : Integer;
+begin
+  Result:=s;
+  for i := Low(OldPattern) to High(OldPattern) do
+  begin
+    Result := StringReplace(Result,OldPattern[i],NewPattern[i],[rfReplaceAll]);
+  end;
+end;
+
+function cStringReplace(const S, OldPattern,
+  NewPattern: string): string;
+begin
+   Result := StringReplace(s,OldPattern,NewPattern,[rfReplaceAll]);
+end;
+
+function mReplaceOnlyFirst(const S, OldPattern,
+  NewPattern: string): string;
+begin
+   Result := StringReplace(s,OldPattern,NewPattern,[]);
+end;
+
+function mStrToInt(const S: string): Integer;
+begin
+  Result := StrToInt(Trim(S));
+end;
+
+function cStrToInt(const S: string;
+  Default: Integer): Integer;
+begin
+  Result := StrToIntDef(Trim(S),Default);
+end;
+
+function mTrim(const S: string): string;
+begin
+  Result := Trim(s);
+end;
+
+
+function mUpperCase(const S: string): string;
+begin
+  Result:= UpperCase(S);
+end;
+
+function mDateTimeToStr(const ADateTime: TDateTime): string;
+begin
+  Result:= DateTimeToStr(ADateTime);
+end;
+
+function mStrToDateTime(const S: String): TDateTime;
+begin
+  Result:= StrToDateTime(S);
+end;
+
+function mNow: TDateTime;
+begin
+  Result:= Now;
+end;
+
+function mCompareDate(const D1, D2: TDateTime): Integer;
+var LTM1, LTM2 : TTimeStamp;
+begin
+  LTM1:= DateTimeToTimeStamp(D1);
+  LTM2:= DateTimeToTimeStamp(D2);
+  if (LTM1.Date = LTM2.Date) then begin
+    if (LTM1.Time < LTM2.Time) then begin
+       Result:= -1;
+    end 
+    else begin
+      if (LTM1.Time > LTM2.Time) then begin
+        Result := 1;
+      end
+      else begin
+        Result := 0;
+      end;
+    end;
+  end
+  else begin
+    if LTM1.Date > LTM2.Date then begin
+      Result := 1;
+    end
+    else begin
+      Result := -1;
+    end;
+  end;
+end;
+
+function mFormatDateTime(const Format: string;
+  ADateTime: TDateTime): string;
+begin
+   Result:= mFormatDateTime(Format,ADateTime);
+end;
+
+function mDayOfWeek(const ADateTime: TDateTime): Word;
+begin
+  Result:= DayOfWeek(ADateTime);
+end;
+
+ procedure mDecodeDate(const ADateTime: TDateTime;
+  var Year, Month, Day: Word);
+begin
+  DecodeDate(ADateTime,Year,Month,Day);
+end;
+
+ function mEncodeTime(Hour, Min, Sec,
+  MSec: Word): TDateTime;
+begin
+  Result := EncodeTime(Hour,Min,Sec,MSec);
+end;
+
+ procedure mDecodeTime(const ADateTime: TDateTime;
+  var Hour, Min, Sec, MSec: Word);
+begin
+  DecodeTime(ADateTime,Hour,Min,Sec,MSec);
+end;
+
+ function mEncodeDate(Year, Month, Day: Word): TDateTime;
+begin
+  Result := EncodeDate(Year,Month,Day);
+end;
+
+ function mTrimLeft(const S: string): string;
+begin
+  Result := TrimLeft(S);
+end;
+
+ function mTrimRight(const S: string): string;
+begin
+  Result := TrimRight(S);
+end;
+
+ function mExtractFileName(const FileName: string): string;
+begin
+   Result := ExtractFileName(FileName);
+end;
+
+ function mFileAge(const FileName: string): TDateTime;
+begin
+  Result := FileDateToDateTime( FileAge(FileName));
+end;
+
+ function mDirectoryExists(const Directory: string): Boolean;
+begin
+  {$IFDEF DELPHI5}
+  Result := FileCtrl.DirectoryExists(Directory);
+  {$ELSE}
+  Result := DirectoryExists(Directory);
+  {$ENDIF}
+end;
+
+ function mDeleteFile(const FileName: string): Boolean;
+begin
+  Result := DeleteFile(FileName);
+end;
+
+ function mExtractFileExt(const FileName: string): string;
+begin
+  Result := ExtractFileExt(FileName);
+end;
+
+ function mLowerCase(const S: string): string;
+begin
+  Result := LowerCase(S);
+end;
+
+ function mFloatToIntStr(const AFloat: Extended): String;
+begin
+  Result := FloatToStr(AFloat);
+end;
+
+ function mTwoDigitYearCenturyWindow: Word;
+begin
+  Result := 50; //TwoDigitYearCenturyWindow;
+end;
+
+ function mCompareStr(const S1, S2: string): Integer;
+begin
+  Result := CompareStr(S1,S2);
+end;
+
+ function mStrToInt64(const S: string; const Default: Int64): Int64;
+begin
+  Result := StrToInt64Def(Trim(S),Default);
+end;
+
+ function cStrToInt64(const S: string): Int64;
+begin
+  Result := StrToInt64(Trim(S));
+end;
+
+ function mSameText(const S1, S2: String): Boolean;
+begin
+  Result := SameText(S1,S2);
+end;
+
+function mExtractFilePath(const FileName: string): string;
+begin
+  Result := ExtractFilePath(FileName);
+end;
+
+
+ function mChangeFileExt(const FileName, Extension: string): string;
+begin
+  Result := ChangeFileExt(FileName,Extension);
+end;
+
+ function mIsLeapYear(Year: Word): Boolean;
+begin
+  Result := IsLeapYear(Year);
+end;
+
+
+function mAddMSecToTime(const ADateTime: TDateTime; 
+                                const AMSec: Integer): TDateTime;
+var
+  LTM : TTimeStamp;
+begin
+  LTM:= DateTimeToTimeStamp(ADateTime);
+  LTM.Time:= LTM.Time + AMSec;
+  Result:=  TimeStampToDateTime(LTM);
+end;
+
+function mFileDateToDateTime(FileDate: Integer): TDateTime;
+begin
+  Result := FileDateToDateTime(FileDate);
+end;
+
+
+ function mDateTimeGMTToHttpStr(const GMTValue: TIdDateTimeBase) : String;
+// should adhere to RFC 2616
+var
+  wDay,
+  wMonth,
+  wYear: Word;
+begin
+  DecodeDate(GMTValue, wYear, wMonth, wDay);
+  Result := Format('%s, %.2d %s %.4d %s %s',    {do not localize}
+                   [wdays[DayOfWeek(GMTValue)], wDay, monthnames[wMonth],
+                    wYear, FormatDateTime('HH":"mm":"ss',GMTValue),'GMT']);
+                      {do not localize}
+end;
+
+
+{This should never be localized}
+ function mDateTimeToInternetStr(const Value: TIdDateTimeBase; const AIsGMT : Boolean) : String;
+var
+  wDay,
+  wMonth,
+  wYear: Word;
+begin
+  DecodeDate(Value, wYear, wMonth, wDay);
+  Result := Format('%s, %d %s %d %s %s',    {do not localize}
+                   [wdays[DayOfWeek(Value)], wDay, monthnames[wMonth],
+                    wYear, FormatDateTime( 'HH":"mm":"ss', Value),
+                     {do not localize}
+                    DateTimeToGmtOffSetStr(OffsetFromUTC, AIsGMT)]);
+end;
+
+function mDateTimeToGmtOffSetStr(ADateTime: TIdDateTimeBase; SubGMT: Boolean): string;
+var
+  AHour, AMin, ASec, AMSec: Word;
+begin
+  if (ADateTime = 0.0) and SubGMT then begin
+    Result := 'GMT'; {do not localize}
+    Exit;
+  end;
+  DecodeTime(ADateTime, AHour, AMin, ASec, AMSec);
+  Result := Format(' %0.2d%0.2d', [AHour, AMin]); 
+  if ADateTime < 0.0 then begin
+    Result[1] := '-'; {do not localize}
+  end
+  else begin
+    Result[1] := '+';  {do not localize}
+  end;
+end;
+
+procedure bitmaxmap;
+var
+  Bitmap: TBitmap;
+  form1: TForm;
+begin
+  Bitmap := TBitmap.Create;
+  try
+    Bitmap.LoadFromFile('MyBitmap.bmp');
+    //Form1.Canvas.Brush.bitmap:= Bitmap;
+    Form1.Canvas.FillRect(Rect(0,0,100,100));
+  finally
+    //Form1.Canvas.Brush.Bitmap := nil;
+    Bitmap.Free;
+  end;
+end; 
+
+
+begin
+  InitIndyConsts;
+  writeln('Function Mapper ************************************')
+  if mIsLeapYear(2012) then
+  writeln('2012 is Leap Year: ');
+  writeln('internal script function: '+mDateTimeToInternetStr(now, true))
+  writeln('external code function: '+DateTimeToInternetStr(now, true))
+  writeln('some time added: !'+DateTimeToStr(mAddMSecToTime(now, 2000)))
+  //vararraycreate
+end.
+
+
+
+----code_cleared_checked----

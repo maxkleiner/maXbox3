@@ -1,0 +1,126 @@
+//shows structure of procedure types, max@kleiner.com ex. _299
+//compilerswitch $N+ turns the coprocessor on, {$mode objfpc}{$H+} loc's =1
+//example from Lazarus 1.0 - motiongraphics ,add graphic by mX
+
+PROGRAM FormPrototype;
+
+
+var 
+  aFrm: TForm;
+  mT: TTimer;
+  tB: TTrackBar;
+  statBar1: TStatusBar;
+
+//**************************Event Handlers*******************************
+procedure TFrm1_trackSpeedChange(Sender: TObject);
+begin
+  //mt.Interval:= 1000 div tB.Position;
+  writeln(intToStr(1000 div tB.Position));
+end;
+
+procedure TFrm1_closeForm(Sender: TObject; var Action: TCloseAction);
+begin
+  {if mt <> NIL then begin
+    mT.enabled:= false;
+    mT.Free;
+    mT:= NIL;
+  end;}
+  ///afrm.Free;  
+  action:= caFree;
+  afrm:= NIL;
+end;
+
+procedure TFrm1_CloseClick(Sender: TObject);
+begin
+  afrm.Close;
+end;
+
+procedure TFrm1_PauseClick(Sender: TObject);
+begin
+  {if mT <> NIL then
+    mt.enabled:= not mt.enabled; }
+end;
+
+//**************************Form Builder*******************************
+procedure loadForm;
+begin
+  aFrm:= TForm.Create(self);
+  //mT:= TTimer.Create(self);
+  //mt.onTimer:= @TFrm1_timerRedrawTimer;
+  //mt.interval:= MILLISECONDS;
+  //mt.free;  in on close            
+  with aFrm do begin
+    Caption:= '********** Form Template ***********';  
+    height:= 510;
+    width:= 700;
+    Position:= poScreenCenter;
+    //Color:= clBlack;
+    onClose:= @TFrm1_closeForm;
+    //onPaint:= @TFrm1_FormPaint;
+    Canvas.Pen.color:= clBlue;
+    Canvas.Pen.Width:= 15;
+    Show;
+    canvas.brush.bitmap:= getBitmapObject(Exepath+'examples\images\bmp47.bmp');
+    Canvas.FillRect(Rect(600,300,100,100));
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(310,390,150,55);
+    caption:= 'Pause';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPAUSE'); 
+    mXButton(05,05,width, height,12,12,handle);
+    //event handler
+    onClick:= @TFrm1_PauseClick;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(480, 390,150, 55);
+    caption:= 'Close';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP'); 
+    mXButton(05,05,width, height,12,12,handle);
+    onClick:= @TFrm1_CloseClick;
+  end;
+  tB:= TTrackBar.create(aFrm);
+  with tB do begin
+    parent:= aFrm;
+    setBounds(40,402,230,40);
+    Min:= 10; Max:= 100
+    Frequency:= 10
+    Position:= 1000 div 50;
+    linesize:= 4;
+    ThumbLength:= 30;
+    SetFocus;
+    OnChange:= @TFrm1_trackSpeedChange;
+  end;
+  statbar1:= TStatusBar.Create(aFrm);
+  with statbar1 do begin
+    parent:= aFrm;
+    showhint:= true;
+    hint:= 'this is a LED BoX';
+    Panels.add;
+      panels.items[0].width:= 200;
+      panels.items[0].text:= '200';
+    Panels.add;
+      panels.items[1].width:= 150;
+      panels.items[1].text:= '150';
+  end;
+end;  
+
+
+
+begin
+ //--------------------------Main Topic--------------------------
+    loadForm;
+     //for i:= 1 to 500 do
+     //   TForm1_timerRedrawTimer(self);
+End.
+  
+
+ //ShellExecute in W64
+    //ExecuteCommand('cmd','/k FC /L /N C:\maxbook\maxbox3\maxbox391.exe C:\maxbook\maxbox3\maxbox3.exe')
+ //  ExecuteCommand('cmd','/k FC /L /N C:\maxbook\maxbox3\maxboxdef1.ini C:\maxbook\maxbox3\maxboxdef2.ini')
+   
+
+getRulesbyContract  

@@ -1,0 +1,106 @@
+program listbox;
+
+//just to show a calculation in a form, loc's=103 _63
+
+var  inFrm: TForm;
+     mylistbox: TListbox;
+     myedit: TEdit;
+     mybutton, mybutton2: TButton;
+
+
+procedure erdezeichnen(vFrm: TForm);
+var w,x,y,xa,ya: double;
+   begin
+      w:=0; x:=1; y:=0;
+      vFrm.canvas.pen.color:= clpurple;
+      vFrm.canvas.pen.width:= 3;
+      repeat
+         xa:= x; ya:= y;
+         w:= w+0.2;
+         x:= cos(w)*150;
+         y:= sin(w)*150;
+         vFrm.canvas.moveto(round(xa),round(ya))
+         vFrm.canvas.lineto(round(x),round(y))
+        //linie(xa,ya,x,y,10,12);
+      until w > 2 * pi;
+   end;
+
+
+procedure Btn1Click(Sender: TObject);
+var idx: integer;
+begin
+  idx:= mylistbox.itemIndex
+  if idx <> -1 then begin
+    myedit.text:= Format('%d*%d = %s',[idx+1,idx+1, mylistbox.items[idx]]);
+    writeln(Format('%d*%d = %s',[idx+1,idx+1, mylistbox.items[idx]]));
+  end;
+end;
+
+procedure Btn2Close(Sender: TObject);
+begin
+  inFrm.close;
+end;
+
+procedure LoadForm;
+var i: integer; 
+begin
+  inFrm:= TForm.create(self);
+  myListbox:= TListbox.create(inFrm);
+  myEdit:= TEdit.create(inFrm);
+  myButton:= TButton.create(inFrm);
+  myButton2:= TButton.create(inFrm);
+  try
+    with inFrm do begin
+      caption:= '*****ListboX************';  
+      height:= 410;
+      width:= 480;
+      color:= clred;
+      Position:= poScreenCenter;
+      show;
+    end;
+    with myListbox do begin
+      parent:= inFrm;
+      top:= 20;
+      left:= 150;
+      height:= 180;
+      font.size:= 18;
+      font.Style:= [fsbold]; //uncomment for debug
+      for i:= 1 to 10 do
+        items.add(intToStr(i*i));
+      show
+    end;  
+    with myEdit do begin
+      parent:= inFrm;
+      text:= 'set listbox';
+      setbounds(290,163,150,40);
+      font.size:= 18;
+      show
+    end;  
+    with myButton do begin
+      parent:= inFrm;
+      caption:= 'Calc ListboX';
+      setbounds(150,300,145,40);
+      font.size:= 18;
+      onclick:= @btn1Click;
+      show
+    end; 
+    with myButton2 do begin
+      parent:= inFrm;
+      caption:= 'CloseX';
+      setbounds(310,300,145,40);
+      font.size:= 18;
+      onclick:= @btn2Close;
+      show
+    end;   
+  except
+    exit
+  end  
+end;
+
+begin
+  loadForm;
+  erdezeichnen(inFrm)
+end.
+
+//Before you write this off as the writings of a paranoid person, consider this:
+//a listbox in maxbox works with autoboxing ;)

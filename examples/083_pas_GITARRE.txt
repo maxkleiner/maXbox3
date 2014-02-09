@@ -1,0 +1,122 @@
+PROGRAM Gitarre_stimmen;
+//guitar tuning, _83 loc's = 
+//USES Crt;  locs=122
+
+CONST c    =  1;
+      cis  =  2;
+      d    =  3;
+      dis  =  4;
+      e    =  5;
+      f    =  6;
+      fis  =  7;
+      g    =  8;
+      gis  =  9;
+      a    = 10;
+      ais  = 11;
+      b    = 11;
+      h    = 12;
+
+VAR
+  Antwort, Taste: char;
+
+//event handler for memo2 (console)  
+procedure FormKeyPress(Sender: TObject; var Key: Char);
+begin
+ Taste:= Key;
+end; 
+
+PROCEDURE Ton(Octave,Note, vDelay: integer);
+{ Play Note in Octave
+  Frequency computed by first computing C in
+  Octave then increasing frequency by Note-1
+  times the twelfth root of 2. (1.059463994)  }
+var
+  Frequency : double;
+  I         : integer;
+  begin
+    Frequency:= 32.625;
+    for I:= 1 to Octave do           { Compute C in Octave             }
+      Frequency:= Frequency * 2;
+    for I:= 1 to Note - 1 do         { Increase frequency Note-1 times }
+      Frequency:= Frequency * 1.059463094;
+    Beep2(Round(Frequency),vDelay);
+    antwort:= taste;
+  end; (* PROCEDURE Ton *)
+
+
+Procedure BigTune(voc: byte);
+begin 
+  Ton(voc, c, 300); 
+  Ton(voc, cis, 300); 
+  Ton(voc, d, 300);
+  Ton(voc, dis, 300); 
+  Ton(voc, e, 300); 
+  Ton(voc, f, 300); 
+  Ton(voc, fis, 300); 
+  Ton(voc, g, 300); 
+  Ton(voc, gis, 300);
+  Ton(voc, a, 300); 
+  Ton(voc, ais, 300); 
+  //Ton(voc, b, 300); 
+  Ton(voc, h, 300); 
+end;
+
+Procedure IntroTune;
+begin
+  Ton(2, e, 300); 
+  Ton(2, a, 300); 
+  Ton(3, d, 300);
+  Ton(3, g, 300); 
+  Ton(3, h, 300); 
+  Ton(4, e, 300); 
+  //DELAY(500); NOSOUND;
+  writeln ('Machen Sie folgende Eingabe: '); 
+  writeln ('e  :  tiefes E');
+  writeln ('a  :  tiefes A');
+  writeln ('d  :  D' );
+  writeln ('g  :  G');
+  writeln ('h  :  H');
+  writeln ('r  :  hohes E');
+  writeln('');
+  writeln ('q  :  Programm verlassen');
+  writeln('');
+  writeln('Welchen Ton stimmst du? mit c wechseln')
+end;
+
+BEGIN  (* Main *);
+  writeln ('Gitarrenstimmprogramm');
+  memo2.onKeyPress:= @FormKeyPress
+  memo2.setfocus;
+  IntroTune;
+  BigTune(random((5)+1));
+  REPEAT
+    application.processMessages;
+    antwort:= taste;
+    Writeln('')
+    CASE Antwort OF
+      'q' : begin end;
+      'e' : begin REPEAT Ton(2,e,100); application.processMessages;
+            antwort:= taste;    
+            UNTIL taste = 'c'; end;
+      'a' : begin REPEAT Ton(2,a,100); application.processMessages;
+            antwort:= taste;
+            UNTIL Taste = 'c'; end;
+      'd' : begin REPEAT Ton(3,d,100); application.processMessages;
+            antwort:= taste; 
+            UNTIL Taste = 'c'; end;
+      'g' : begin REPEAT Ton(3,g,100); application.processMessages;
+            antwort:= taste;
+            UNTIL Taste = 'c'; end;
+      'h' : begin REPEAT Ton(3,h,100); application.processMessages;
+            antwort:= taste;
+            UNTIL Taste = 'c'; end;
+      'r' : begin REPEAT Ton(4,e,100); application.processMessages;
+            antwort:= taste; 
+            UNTIL Taste = 'c'; end;
+      ELSE BEGIN             
+        write('Neue Ton Eingabe: '); 
+        antwort:= taste;
+      END;                   
+    END; //case
+  UNTIL taste = ('q');
+END.

@@ -1,0 +1,203 @@
+program CompressServices2;
+
+//Purpose: stores a zip file header with a memory stream, locs= 84
+//preparation of compress/decompress folders and entropy theory 
+
+
+Const
+  AZIPFILE = 'maxzip2memory.zip';
+  APDFFILE = 'maxpdfmemory.pdf';
+   
+
+procedure CreateEmptyZipFile;
+var i: integer;
+  zipfile: wideString;
+  //ezip: TByteArray; =(80,75,5,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+  ezip: TByteDynArray;
+  ms: TMemoryStream;
+begin
+  SetLength(ezip, 25);   //for ZIP Header
+    ezip[0]:=80; ezip[1]:=75; ezip[2]:=5; ezip[3]:=6; 
+    for i:= 4 to 23 do ezip[i]:= 0; 
+
+  zipfile:= exepath+'examples\'+AZIPFILE;
+  // create a new empty ZIP file
+  ms:= TMemoryStream.Create;
+  writeln(ObjectToStr(ms));  //debug pointer
+  try
+    //ms.WriteBuffer array of byte of dynamic size;
+    ms.WriteBufferABD(ezip, length(ezip));
+    ms.SaveToFile(Zipfile);
+  finally
+    ms.Free;
+  end;
+end;
+
+procedure CreateEmptyPDFFile;
+var i: integer;
+  zipfile: wideString;
+  //ezip: TByteArray; =(80,75,5,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+  ezip: TByteDynArray;
+  ms: TMemoryStream;
+begin
+  SetLength(ezip, 17);   //for ZIP Header
+    ezip[0]:=37; ezip[1]:=80; ezip[2]:=68; ezip[3]:=70;
+    ezip[4]:=45; ezip[5]:=49; ezip[6]:=46; ezip[7]:=51;
+    ezip[8]:=13; ezip[9]:=37; 
+    {ezip[10]:=13;
+    ezip[11]:=37; ezip[12]:=37; ezip[13]:=69; ezip[14]:=79;
+    ezip[15]:=70; ezip[16]:=13; //ezip[18]:=69; ezip[19]:=79;}
+    for i:= 10 to 14 do ezip[i]:= 0; 
+    //trailer
+    ezip[16]:=13;
+    ezip[16]:=37; ezip[17]:=37; ezip[18]:=69; ezip[19]:=79;
+    ezip[20]:=70; ezip[21]:=13; //ezip[18]:=69; ezip[19]:=79;}
+    
+    
+  zipfile:= exepath+'examples\'+APDFFILE;
+  // create a new empty ZIP file
+  ms:= TMemoryStream.Create;
+  writeln(ObjectToStr(ms));  //debug pointer
+  try
+    //ms.WriteBuffer array of byte of dynamic size;
+    ms.WriteBufferABD(ezip, length(ezip));
+    ms.SaveToFile(Zipfile);
+  finally
+    ms.Free;
+  end;
+  SearchAndOpenDoc(zipfile);
+end;
+
+
+
+//***************************Services Provider**********************************
+procedure XCompress(azipfolder, azipfile: string);
+begin
+  with TShellZip.Create do begin
+    zipfile:= azipfile;
+    ZipFolder(azipfolder);
+    Free;
+  end;  
+ //compress
+end;
+
+procedure XDeCompress(azipfolder, azipfile: string);
+begin
+  with TShellZip.Create do begin
+    zipfile:= azipfile;
+    if DirectoryExists(azipfolder)= false then
+         CreateDir(azipfolder);
+    UnZip(azipfolder);
+    Free;
+  end;  
+ //decompress
+end;
+
+var
+  inlist: TStringlist;
+  i: integer;
+begin
+
+   CreateEmptyZipFile;
+   //CreateEmptyPDFFile;
+   
+   //Compress(exepath+'examples\earthplay2', exepath+'examples\maxboxziptest2.zip');
+   Writeln('Threads count: '+inttoStr(NumProcessThreads));
+   //DeCompress(exepath+'examples\Decompress2', exepath+'examples\maxboxziptest2.zip');
+   
+   writeln(inttoStr64(minint64));
+   writeln(inttoStr64(maxint64));
+   writeln(inttoStr64(mincardinal));
+   writeln(inttoStr64(maxcardinal));
+   writeln(inttoStr(minnativeint));
+   writeln(inttoStr(maxnativeint));
+   
+   {inlist:= TStringlist.create;
+   JCLLocalesInfoList(inlist, 2);
+   for i:= 1 to inlist.count-1 do 
+     writeln(inlist[i]);
+   inlist.Free;}  
+   
+End.
+
+-------------------------------------------------
+
+
+
+   {if QueryInterface(IIncomeInt, incomeIntRef) = S_OK
+      then begin //_addRef; test
+        SetRate(strToInt(edtZins.text),
+                       strToInt(edtJahre.text));
+        cIncome:=strTofloat(edtBetrag.text);
+        cIncome:= GetIncome(cIncome);
+      end;}
+
+   IInterface  = interface
+     ['{00000000-0000-0000-C000-000000000046}']
+     function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
+     function _AddRef: Integer; stdcall;
+     function _Release: Integer; stdcall;
+   end;
+ 
+    IIncomeInt  = interface (IUnknown)
+      ['{DBB42A04-E60F-41EC-870A-314D68B6913C}']
+      function GetIncome(const aNetto: Extended): Extended; stdcall;
+      function GetIncome2(const aNetto: Currency): Currency; stdcall;
+      function GetRate: Extended;
+      function queryDLLInterface(var queryList: TStringList): TStringList;
+              stdcall;
+      function queryDLLInterfaceTwo(var queryList: TStringList): TStringList;
+              stdcall;
+      procedure SetRate(const aPercent, aYear: integer); stdcall;
+      //property Rate: Double read GetRate;
+    end; 
+    
+    
+  
+
+Internet of Things
+Für das Internet der Dinge entwickeln
+
+Viele sehen im Internet of Things vor allem eines: ein gigantisches Potenzial für neue Geschäftsmodelle. Bald wird die ganze Welt programmierbar sein. Jedes EBike, jede Waschmaschine, Kaffeemaschine, jeder Blutdruckmesser oder jede Armbanduhr wird irgendwie vernetzt sein. Geräte werden untereinander als Physical Computing kommunizieren, sich aufeinander abstimmen. Man geht also nicht mehr ins Internet, sondern das Internet ist Teil von uns, Sensoren messen meinen Blutzucker und berechnen so die nächste Krankenkassenprämie. Es kann auch sein, dass intelligente Gebäude so störanfällig werden, dass der Fahrstuhl des Grauens Wirklichkeit wird. Nette Spielereien oder der Anfang einer neuen solargetriebenen Manufakturindustrie inklusive 3D-Drucker und Roboter in der Altersbetreuung
+
+Max Kleiner bespricht, wie mit Android ein Arduino Board gesteuert wird:
+
+    REST als Command Protocol
+    Web to Serial Applications
+    Microcontrollers
+    Aktoren und Sensoren
+    RFIDs sind überall
+    
+
+Extern: Settings-User
+Extern: Konfiguration-Admin
+Intern: Literals-Developer
+
+Identifizierung
+• Konfigurationselemente wie Pfad oder Default-Werte
+• Doppelte Elemente (String oder numerische Literals)
+• Beziehungen der Konfigurationselemente
+• Software Version innerhalb der Config Einstellung
+• Baseline und zentrale Elemente
+• Aufnahme von Konfigurationselementen
+• Bibliotheken / Komponenten / Frameworks etc.    
+
+For example, for ZIP files, you could examine the first four bytes and see if they match the local header signature, i.e. in hex
+
+    50 4b 03 04
+
+    if (buffer[0] == 0x50 && buffer[1] == 0x4b && buffer[2] == 0x03 && buffer[3] == 0x04)
+    
+PDF files start with "%PDF" (hex 25 50 44 46).
+
+http://en.wikipedia.org/wiki/Magic_number_%28programming%29
+
+25 50 44 46 	  	%PDF
+PDF, FDF 	  	Adobe Portable Document Format and Forms Document file
+Trailers:
+0A 25 25 45 4F 46 (.%%EOF)
+0A 25 25 45 4F 46 0A (.%%EOF.)
+0D 0A 25 25 45 4F 46 0D 0A (..%%EOF..)
+0D 25 25 45 4F 46 0D (.%%EOF.)
+NOTE: There may be multiple end-of-file marks within the
+file. When carving, be sure to get the last one.

@@ -1,0 +1,662 @@
+///* LED Matrix             */
+///* ==========             */
+///* Case Study             */
+///* Datum: 11.12.2011      */
+///* Autor: Philippe Schär  */
+///* Release: 1.3.6         */
+///  R 1.3.7. testmode  M   */
+///**************************/
+
+
+
+PROGRAM LEDMatrix;
+
+//{$Testmode}
+{$Define TESTMODE}
+
+    
+VAR 
+    bar : array [0..2040] of byte;    // array für Buchstaben hinterlegung
+    picarr: array [0..7] of byte;
+    laeng,r,rep,b,size,p,co1,co2,colo1,colo2: integer;       // diverse Variablen
+    mode: byte;
+    ppForm: TForm;
+    labelList: TStringList;
+    mylabel: TLabel;
+    text,te: string;
+    
+    
+procedure initialisieren;             // Es werden alle Zeichen im Array bar hinterlegt
+begin
+ bar[32]:= 0; bar[287]:= 0; bar[542]:= 0; bar[797]:=0;   //Leertaste
+ bar[1052]:= 0; bar[1307]:= 0; bar[1562]:= 0; bar[1817]:=0;
+ bar[65]:= 24; bar[320]:= 36; bar[575]:= 36; bar[830]:=60;   //A
+ bar[1085]:= 36; bar[1340]:= 36; bar[1595]:= 36; bar[1850]:=0;     
+ bar[66]:= 56; bar[321]:= 36; bar[576]:= 36; bar[831]:=56;   //B
+ bar[1086]:= 36; bar[1341]:= 36; bar[1596]:= 56; bar[1851]:=0;  
+ bar[67]:= 24; bar[322]:= 36; bar[577]:= 32; bar[832]:=32;   //C
+ bar[1087]:= 32; bar[1342]:= 36; bar[1597]:= 24; bar[1852]:=0;  
+ bar[68]:= 56; bar[323]:= 36; bar[578]:= 36; bar[833]:=36;   //D
+ bar[1088]:= 36; bar[1343]:= 36; bar[1598]:= 56; bar[1853]:=0;  
+ bar[69]:= 60; bar[324]:= 32; bar[579]:= 32; bar[834]:=56;   //E
+ bar[1089]:= 32; bar[1344]:= 32; bar[1599]:= 60; bar[1854]:=0;  
+ bar[70]:= 60; bar[325]:= 32; bar[580]:= 32; bar[835]:=56;   //F
+ bar[1090]:= 32; bar[1345]:= 32; bar[1600]:= 32; bar[1855]:=0;  
+ bar[71]:= 24; bar[326]:= 36; bar[581]:= 32; bar[836]:=44;   //G
+ bar[1091]:= 36; bar[1346]:= 36; bar[1601]:= 24; bar[1856]:=0;  
+ bar[72]:= 36; bar[327]:= 36; bar[582]:= 36; bar[837]:=60;   //H
+ bar[1092]:= 36; bar[1347]:= 36; bar[1602]:= 36; bar[1857]:=0;  
+ bar[73]:= 16; bar[328]:= 16; bar[583]:= 16; bar[838]:=16;   //I
+ bar[1093]:= 16; bar[1348]:= 16; bar[1603]:= 16; bar[1858]:=0;  
+ bar[74]:= 4; bar[329]:= 4; bar[584]:= 4; bar[839]:=4;   //J
+ bar[1094]:= 4; bar[1349]:= 36; bar[1604]:= 24; bar[1859]:=0;  
+ bar[75]:= 68; bar[330]:= 72; bar[585]:= 80; bar[840]:=96;   //K
+ bar[1095]:= 80; bar[1350]:= 72; bar[1605]:= 68; bar[1860]:=0;  
+ bar[76]:= 32; bar[331]:= 32; bar[586]:= 32; bar[841]:=32;   //L
+ bar[1096]:= 32; bar[1351]:= 32; bar[1606]:= 60; bar[1861]:=0;  
+ bar[77]:= 68; bar[332]:= 108; bar[587]:= 84; bar[842]:= 84;   //M
+ bar[1097]:= 68; bar[1352]:= 68; bar[1607]:= 68; bar[1862]:=0; 
+ bar[78]:= 68; bar[333]:= 100; bar[588]:= 116; bar[843]:= 84;   //N
+ bar[1098]:= 92; bar[1353]:= 76; bar[1608]:= 68; bar[1863]:=0; 
+ bar[79]:= 24; bar[334]:= 36; bar[589]:= 36; bar[844]:= 36;   //O
+ bar[1099]:= 36; bar[1354]:= 36; bar[1609]:= 24; bar[1864]:=0; 
+ bar[80]:= 56; bar[335]:= 36; bar[590]:= 36; bar[845]:= 56;   //P
+ bar[1100]:= 32; bar[1355]:= 32; bar[1610]:= 32; bar[1865]:=0; 
+ bar[81]:= 56; bar[336]:= 68; bar[591]:= 68; bar[846]:= 68;   //Q
+ bar[1101]:= 84; bar[1356]:= 76; bar[1611]:= 56; bar[1866]:=6; 
+ bar[82]:= 56; bar[337]:= 36; bar[592]:= 36; bar[847]:= 56;   //R
+ bar[1102]:= 36; bar[1357]:= 36; bar[1612]:= 36; bar[1867]:=0; 
+ bar[83]:= 24; bar[338]:= 36; bar[593]:= 32; bar[848]:= 24;   //S
+ bar[1103]:= 4; bar[1358]:= 36; bar[1613]:= 24; bar[1868]:=0; 
+ bar[84]:= 124; bar[339]:= 16; bar[594]:= 16; bar[849]:= 16;   //T
+ bar[1104]:= 16; bar[1359]:= 16; bar[1614]:= 16; bar[1869]:=0; 
+ bar[85]:= 36; bar[340]:= 36; bar[595]:= 36; bar[850]:= 36;   //U
+ bar[1105]:= 36; bar[1360]:= 36; bar[1615]:= 24; bar[1870]:=0; 
+ bar[86]:= 68; bar[341]:= 68; bar[596]:= 68; bar[851]:= 40;   //V
+ bar[1106]:= 40; bar[1361]:= 16; bar[1616]:= 16; bar[1871]:=0; 
+ bar[87]:= 68; bar[342]:= 68; bar[597]:= 68; bar[852]:= 84;   //W
+ bar[1107]:= 84; bar[1362]:= 84; bar[1617]:= 40; bar[1872]:=0; 
+ bar[88]:= 68; bar[343]:= 68; bar[598]:= 40; bar[853]:= 16;   //X
+ bar[1108]:= 40; bar[1363]:= 68; bar[1618]:= 68; bar[1873]:=0; 
+ bar[89]:= 68; bar[344]:= 68; bar[599]:= 40; bar[854]:= 16;   //Y
+ bar[1109]:= 16; bar[1364]:= 16; bar[1619]:= 16; bar[1874]:=0; 
+ bar[90]:= 124; bar[345]:= 4; bar[600]:= 8; bar[855]:= 16;   //Z
+ bar[1110]:= 32; bar[1365]:= 64; bar[1620]:= 124; bar[1875]:=0;    
+ bar[97]:= 0; bar[352]:= 24; bar[607]:= 4; bar[862]:= 28;   //a
+ bar[1117]:= 36; bar[1372]:= 36; bar[1627]:= 28; bar[1882]:=0;
+ bar[98]:= 32; bar[353]:= 32; bar[608]:= 32; bar[863]:= 56;   //b
+ bar[1118]:= 36; bar[1373]:= 36; bar[1628]:= 56; bar[1883]:=0;
+ bar[99]:= 0; bar[354]:= 0; bar[609]:= 24; bar[864]:= 36;   //c
+ bar[1119]:= 32; bar[1374]:= 36; bar[1629]:= 24; bar[1884]:=0;
+ bar[100]:= 4; bar[355]:= 4; bar[610]:= 4; bar[865]:= 28;   //d
+ bar[1120]:= 36; bar[1375]:= 36; bar[1630]:= 28; bar[1885]:=0;
+ bar[101]:= 0; bar[356]:= 0; bar[611]:= 24; bar[866]:= 36;   //e
+ bar[1121]:= 60; bar[1376]:= 32; bar[1631]:= 28; bar[1886]:=0;
+ bar[102]:= 8; bar[357]:= 20; bar[612]:= 16; bar[867]:= 56;   //f
+ bar[1122]:= 16; bar[1377]:= 16; bar[1632]:= 16; bar[1887]:=0;
+ bar[103]:= 0; bar[358]:= 0; bar[613]:= 24; bar[868]:= 36;   //g
+ bar[1123]:= 36; bar[1378]:= 28; bar[1633]:= 4; bar[1888]:=56;
+ bar[104]:= 32; bar[359]:= 32; bar[614]:= 32; bar[869]:= 56;   //h
+ bar[1124]:= 36; bar[1379]:= 36; bar[1634]:= 36; bar[1889]:=0;
+ bar[105]:= 0; bar[360]:= 16; bar[615]:= 0; bar[870]:= 16;   //i
+ bar[1125]:= 16; bar[1380]:= 16; bar[1635]:= 16; bar[1890]:=0;
+ bar[106]:= 0; bar[361]:= 4; bar[616]:= 0; bar[871]:= 4;   //j
+ bar[1126]:= 4; bar[1381]:= 4; bar[1636]:= 36; bar[1891]:=24;
+ bar[107]:= 32; bar[362]:= 32; bar[617]:= 36; bar[872]:= 40;   //k
+ bar[1127]:= 48; bar[1382]:= 40; bar[1637]:= 36; bar[1892]:=0;
+ bar[108]:= 32; bar[363]:= 32; bar[618]:= 32; bar[873]:= 32;   //l
+ bar[1128]:= 32; bar[1383]:= 40; bar[1638]:= 48; bar[1893]:=0;
+ bar[109]:= 0; bar[364]:= 0; bar[619]:= 0; bar[874]:= 104;   //m
+ bar[1129]:= 84; bar[1384]:= 84; bar[1639]:= 84; bar[1894]:=0;
+ bar[110]:= 0; bar[365]:= 0; bar[620]:= 0; bar[875]:= 56;   //n
+ bar[1130]:= 36; bar[1385]:= 36; bar[1640]:= 36; bar[1895]:=0;
+ bar[111]:= 0; bar[366]:= 0; bar[621]:= 0; bar[876]:= 24;   //o
+ bar[1131]:= 36; bar[1386]:= 36; bar[1641]:= 24; bar[1896]:=0;
+ bar[112]:= 0; bar[367]:= 0; bar[622]:= 56; bar[877]:= 36;   //p
+ bar[1132]:= 36; bar[1387]:= 56; bar[1642]:= 32; bar[1897]:=32;
+ bar[113]:= 0; bar[368]:= 0; bar[623]:= 28; bar[878]:= 36;   //q
+ bar[1133]:= 36; bar[1388]:= 28; bar[1643]:= 4; bar[1898]:=4;
+ bar[114]:= 0; bar[369]:= 0; bar[624]:= 0; bar[879]:= 56;   //r
+ bar[1134]:= 36; bar[1389]:= 32; bar[1644]:= 32; bar[1899]:=0;
+ bar[115]:= 0; bar[370]:= 0; bar[625]:= 28; bar[880]:= 32;   //s
+ bar[1135]:= 24; bar[1390]:= 4; bar[1645]:= 56; bar[1900]:=0;
+ bar[116]:= 0; bar[371]:= 16; bar[626]:= 56; bar[881]:= 16;   //t
+ bar[1136]:= 16; bar[1391]:= 16; bar[1646]:= 8; bar[1901]:=0;
+ bar[117]:= 0; bar[372]:= 0; bar[627]:= 0; bar[882]:= 36;   //u
+ bar[1137]:= 36; bar[1392]:= 36; bar[1647]:= 28; bar[1902]:=0;
+ bar[118]:= 0; bar[373]:= 0; bar[628]:= 68; bar[883]:= 68;   //v
+ bar[1138]:= 40; bar[1393]:= 40; bar[1648]:= 16; bar[1903]:=0;
+ bar[119]:= 0; bar[374]:= 0; bar[629]:= 68; bar[884]:= 68;   //w
+ bar[1139]:= 84; bar[1394]:= 84; bar[1649]:= 40; bar[1904]:=0;
+ bar[120]:= 0; bar[375]:= 0; bar[630]:= 68; bar[885]:= 40;   //x
+ bar[1140]:= 16; bar[1395]:= 40; bar[1650]:= 68; bar[1905]:=0;
+ bar[121]:= 0; bar[376]:= 0; bar[631]:= 68; bar[886]:= 68;   //y
+ bar[1141]:= 40; bar[1396]:= 16; bar[1651]:= 32; bar[1906]:=64;
+ bar[122]:= 0; bar[377]:= 0; bar[632]:= 60; bar[887]:= 4;   //z
+ bar[1142]:= 8; bar[1397]:= 16; bar[1652]:= 60; bar[1907]:=0;     
+ 
+end;
+
+procedure ColorSelect(h: integer; s: integer);   //Pozedur Farbwahl
+
+begin                                            //definition der Hintergrund Farbe
+  if h < 2 then begin                            //falls Farbe 1 oder 0 gewählt,  
+   colo1:= 0;                                    //so wird der Farbcode für Schwarz geladen
+  end;
+   if h =2 then begin                            //falls Farbe 2 gewählt,
+    colo1:= 8388608;                             //so wird der Farbcode für Navy geladen
+   end;
+    if h =3 then begin                           //falls Farbe 3 gewählt,
+     colo1:= 32768;                              //so wird der Farbcode für Grün geladen
+    end;
+     if h =4 then begin                          //falls Farbe 4 gewählt,
+      colo1:= 8421376;                           //so wird der Farbcode für Türkis geladen
+     end;
+      if h =5 then begin                         //falls Farbe 5 gewählt,
+      colo1:= 128;                               //so wird der Farbcode für Weinrot geladen
+      end;
+       if h =6 then begin                        //falls Farbe 6 gewählt,
+        colo1:= 8388736;                         //so wird der Farbcode für Violet geladen
+       end;
+        if h =7 then begin                       //falls Farbe 7 gewählt,
+         colo1:= 32896;                          //so wird der Farbcode für Olive geladen
+        end;
+         if h =8 then begin                      //falls Farbe 8 gewählt,
+          colo1:= 8421504;                       //so wird der Farbcode für Grau geladen
+         end;
+          if h =9 then begin                    //falls Farbe 9 gewählt,
+           colo1:= 12632256;                    //so wird der Farbcode für Silber geladen
+          end;
+           if h =10 then begin                  //falls Farbe 10 gewählt,
+            colo1:= 16711680;                   //so wird der Farbcode für Blau geladen
+           end;
+            if h =11 then begin                 //falls Farbe 11 gewählt,
+             colo1:= 65280;                     //so wird der Farbcode für Hellgrün geladen
+            end;
+             if h =12 then begin                //falls Farbe 12 gewählt,
+              colo1:= 16776960;                 //so wird der Farbcode für Hellblau geladen
+             end;
+              if h =13 then begin               //falls Farbe 13 gewählt,
+               colo1:= 255;                     //so wird der Farbcode für Rot geladen
+              end;
+               if h =14 then begin              //falls Farbe 14 gewählt,
+                colo1:= 16711935;               //so wird der Farbcode für Rosarot geladen
+               end;
+                if h =15 then begin             //falls Farbe 15 gewählt,
+                 colo1:= 65535;                 //so wird der Farbcode für Gelb geladen
+                end;
+                 if h >15 then begin            //falls Farbe grösser als 15 gewählt,
+                  colo1:= 16777215;             //so wird der Farbcode für Weiss geladen
+                 end;
+ if s < 2 then begin                            //Definiton der Schrift Farbe
+   colo2:= 0;                                   //falls Farbe 1 oder 0 gewählt,
+  end;                                           //so wird der Farbcode für Schwarz geladen
+   if s =2 then begin                           //falls Farbe 2 gewählt,
+    colo2:= 8388608;                            //so wird der Farbcode für Navy geladen
+   end;
+    if s =3 then begin                          //falls Farbe 3 gewählt,
+     colo2:= 32768;                             //so wird der Farbcode für Grün geladen
+    end;
+     if s =4 then begin                         //falls Farbe 4 gewählt,
+      colo2:= 8421376;                          //so wird der Farbcode für Türkis geladen
+     end;
+      if s =5 then begin                        //falls Farbe 5 gewählt,
+       colo2:= 128;                             //so wird der Farbcode für Weinrot geladen
+      end;
+       if s =6 then begin                       //falls Farbe 6 gewählt,
+        colo2:= 8388736;                        //so wird der Farbcode für Violet geladen
+       end;
+        if s =7 then begin                      //falls Farbe 7 gewählt,
+         colo2:= 32896;                         //so wird der Farbcode für Olive geladen
+        end;
+         if s =8 then begin                     //falls Farbe 8 gewählt,
+          colo2:= 8421504;                      //so wird der Farbcode für Grau geladen
+         end;
+          if s =9 then begin                    //falls Farbe 9 gewählt,
+           colo2:= 12632256;                    //so wird der Farbcode für Silber geladen
+          end;
+           if s =10 then begin                  //falls Farbe 10 gewählt,
+            colo2:= 16711680;                   //so wird der Farbcode für Blau geladen
+           end;
+            if s =11 then begin                 //falls Farbe 11 gewählt,
+             colo2:= 65280;                     //so wird der Farbcode für Hellgrün geladen
+            end;
+             if s =12 then begin                //falls Farbe 12 gewählt,
+              colo2:= 16776960;                 //so wird der Farbcode für Hellblau geladen
+             end;
+              if s =13 then begin               //falls Farbe 13 gewählt,
+               colo2:= 255;                     //so wird der Farbcode für Rot geladen
+              end;
+               if s =14 then begin              //falls Farbe 14 gewählt,
+                colo2:= 16711935;               //so wird der Farbcode für Rosarot geladen
+               end;
+                if s =15 then begin             //falls Farbe 15 gewählt,
+                 colo2:= 65535;                 //so wird der Farbcode für Gelb geladen
+                end;
+                 if s >15 then begin            //falls Farbe grösser als 15 gewählt,
+                  colo2:= 16777215;             //so wird der Farbcode für Weiss geladen
+                 end;                  
+end;     
+     
+procedure Output;             // Ausgabe Prozedur
+var                            
+  i,tmp,c,cz: integer;                    //lockale Variablen
+  o: TLabel;
+begin
+  cz:=0;
+  c:=0;                                //Varible c (Counter) wir auf = gesetzt
+  tmp:= picarr[cz];
+  for i:= 1 to size   do begin         //wird vom ersten bis zum letzten Pixel durchgeführt (size= anzahl Pixel)
+  o:= TLabel(labelList.objects[i-1]);  //Bestimmung des Pixel
+  if c > 7 then begin                  //C zählt Pixel pro Zeile, wenn c>7 letztes Pixel der Zeile
+    c:= 1;                             //C wird wieder zurück auf 1 gesetz (erstes Pixel der neuen Zeile)
+    cz:= cz + 1;
+    tmp:= picarr[cz];                      //tmp wird mit der nächsten Zeile geladen
+    end
+    else begin                         //Falls C<7 wir c mit 1 ergänzt(nächstes Pixel der Zeile)
+    c:= c + 1;
+    end;
+      if tmp > 127 then begin          //Falls tmp>127(1111111bin), dann begine
+        o.color:= colo2;               //Pixel o (Pixelnummer) wird auf Schrift Farbe gesetzt
+        tmp:= (tmp - 128)*2;           //Variable tmp wird um 128 (10000000bin) verkleiner und ein shift left durchgeführt
+       end  
+        else  begin                    //falls tmp<= 127 ist,dann begine
+           o.color:= colo1 ;           //Pixel o wird auf Hintergrund Farbe gesetzt
+           tmp:= tmp *2;               //schift left von variable tmp
+        end;
+  end;
+end;
+
+
+
+procedure PicGen1();               //Prozedur Bild Generator für Modus 1
+var
+z: integer;                        //Definition der Variablen
+
+begin
+   for z:=0 to 7 do begin          //Das PicArray wird mit dem Buchstaben geladen
+    picarr[z]:= bar[b];            //Dies geschieht Zeile für Zeile
+    b:= b +255;                    //Es wird auf die Nächste Zeile verwiesen 
+   end;        
+   Output();                       //Prozedur Output wird gestartet     
+   sleep(1500);                    //warte ca. 1.5 sekunden  
+end;   
+
+procedure PicGen2();              //Prozedur Bild Generator für Modus 2
+var
+sc,ac: integer;                   //Definition der Variablen
+z,zc: byte;
+tarr:array [0..7] of byte;        //Definition des temporären Array
+
+begin   
+  for z:= 0 to 7 do begin         //Das Temporäre Array wird mit dem Buchstaben geladen
+   tarr[z]:= bar[b];              //Dies geschieht Zeile für Zeile
+   b:= b+ 255;                    //Es wird auf die Nächste Zeile verwiesen
+  end;
+   for sc:= 0 to 7 do begin       //sc (Schritt Counter) es werden 7 Schritte benötigt
+    for zc:=0 to 7 do begin       //zc (Zeilen Counter) dies wird für jede Zeile duchlaufen
+     if tarr[zc] > 127 then begin  //Falls Zahl im Array grösser als 127 dann beginne
+      picarr[zc]:= (picarr[zc]+1);  //Die Zahl im Picarray wird +1 gerrechnet
+      tarr[zc]:= (tarr[zc] - 128)*2; //Shift Left der Zahl im TempArray
+     end
+     else begin
+      tarr[zc]:= tarr[zc]*2;       //Shift Left der Zahl im TempArray
+     end ;
+        
+    end;
+    output();                      //start Output Routine
+    sleep(100);                    //warte ca. 200ms
+    for ac:= 0 to 7 do begin       //dies wird fürs ganze picArray durchlaufen
+      picarr[ac]:= picarr[ac]*2;   //shift left PicArray
+    end;
+  end;
+end;
+
+procedure PicGen3();              //Prozedur Bild Generator für Modus 3
+var
+z,tc,zc,t,ps,ac,sc: integer;      //Definition der Variablen
+tarr: array [0..7] of byte;
+
+begin         
+  for z:= 0 to 7 do begin         //Das Temporäre Array wird mit dem Buchstaben geladen
+   tarr[z]:= bar[b];              //Dies geschieht Zeile für Zeile
+   b:= b+ 255;                    // Es wird auf die Nächste Zeile gezeigt
+  end;
+  for sc:= 0 to 7 do begin        //sc (Schritt Counter) es werden 7 Schritte benötigt
+  for zc:=0 to 7 do begin         //zc (Zeilen Counter) dies wird für jede Zeile duchlaufen
+   t:= tarr[zc];                  //Die Variable t wird mit dem Wert des TempArray definiert
+   ps:= t;                        //Die Variable ps ist gleich wie die Variable t
+   for tc:= 0 to 7 do begin       //Es wird 7 mal ein shift Left durchgeführt
+    if t > 255 then begin         //ist t grösser als 255 dann begine
+     t:= t - 256;                 //von t wird 256 abgezogen
+    end; 
+    t:= t *2;                     //shift Left der Variable t
+   end;
+   if t > 127 then begin          //Falls t grösser als 127 ist begine
+    picarr[zc]:= (picarr[zc]+128);//das PicArray wird mit 128 ergänzt
+    ps:= (ps - 1) div 2;              //die Varible ps wird um eins verkleinert und durch 2 geteilt
+   end
+   else begin                     //falls t kleiner als 127 ist
+    ps:= ps div 2;                    // wird ps nur durch 2 geteilt (shift right)
+   end;
+    tarr[zc]:= ps;                //das TempArray wird mit ps beschrieben
+  end;  
+  output();                       //start Output Routine
+  sleep(200);                     //Warte 200ms
+  for ac:= 0 to 7 do begin        //Es wird für jede Zeile des PicArray
+   picarr[ac]:= picarr[ac] div 2;     //ein Shift right durchgeführt
+  end;    
+ end;
+end;
+
+procedure PicGen4();              //Prozedur Bild Generator für Modus 4
+var                               //Definition der Variablen
+z,sc,ps,zc,tc,t: integer;
+tarr: array [0..7] of byte;
+
+begin
+  for z:= 0 to 7 do begin         //Das Temporäre Array wird mit dem Buchstaben geladen
+   tarr[z]:= bar[b];              //Dies geschieht Zeile für Zeile
+   b:= b+ 255;                    // Es wird auf die Nächste Zeile gezeigt
+  end;
+  for sc:= 0 to 7 do begin        //sc (Schritt Counter) es werden 7 Schritte benötigt
+   ps:= 7                         //variable ps wird mit 7 geladen
+   for zc:= 0 to 7 do begin       //zc (Zeilen Counter) dies wird für jede Zeile duchlaufen
+    if ps < 7 then begin          //Falls ps kleiner ist als 7 beginne
+     picarr[ps+1]:= picarr[ps];   //PacArry wird mit der oberen Zeile geladen
+    end;
+    ps:= ps-1;                    //Variable ps wird um 1 verkleinert
+   end;                           //die erste Zeile des PicArray wird mit der untersten
+   picarr[0]:=tarr[7];            //Zeile des TempArray geladen            
+   t:= 7;                         //Variable t wird mit 7 geladen
+   for tc:= 0 to 7 do begin       //dies wird für jede Zeile des TempArray durchlaufen
+    if t < 7 then begin           //Falls t kleiner ist als 7 begine
+     tarr[t+1]:= tarr[t];         //TempArray wird mit der oberen Zeile geladen
+    end;  
+    tarr[t]:= 0;                  //die obere Zeile des TempArray wird gelöscht(=0)
+    t:= t -1;                     //Es wird auf die nächste Zeile verwiesen
+   end;
+   output();                      //start Output Routine
+   sleep(200);                    //warte ca. 200ms
+  end;
+end;
+
+procedure PicGen5();              //Prozedur Bild Generator für Modus 5
+var
+z,sc,ps,zc,t,tc: integer;         //Definition der Variablen
+tarr: array [0..7] of byte;
+
+begin
+ for z:= 0 to 7 do begin          //Das Temporäre Array wird mit dem Buchstaben geladen
+  tarr[z]:= bar[b];               //Dies geschieht Zeile für Zeile
+  b:= b+ 255;                     // Es wird auf die Nächste Zeile gezeigt
+ end;
+ for sc:= 0 to 7 do begin         //sc (Schritt Counter) es werden 7 Schritte benötigt
+  ps:= 0                          //variable ps wird mit 0 geladen
+  for zc:= 0 to 7 do begin        //zc (Zeilen Counter) dies wird für jede Zeile duchlaufen
+   if ps > 0 then begin           //Falls ps grösser ist als 0 beginne
+    picarr[ps-1]:= picarr[ps];    //PicArray wird mit der unteren Zeile geladen
+   end;
+   ps:= ps+1;                     //Die Variable ps wird mit 1 geladen
+  end;                            //Die unterste Zeile des PicArray wird mit
+  picarr[7]:=tarr[0];             //der obersten Zeile des TempArra geladen             
+  t:= 0;
+  for tc:= 0 to 7 do begin        //Das TempArray wir alles um eine Zeile nach oben verschoben
+   if t > 0 then begin            //Dies geschieht Zeile für Zeile
+    tarr[t-1]:= tarr[t];          //das TempArray wird mit der untern Zeile geladen
+   end;  
+   tarr[t]:= 0;                   //die aktuelle Zeile wird gelöscht (=0)
+   t:= t + 1;                     //es wird auf die nächste Zeile gezeigt
+  end;
+  output();                       //start Output Routine
+  sleep(200);                     //warte ca. 200ms
+ end;
+end;
+
+procedure PicGen6();             //Prozedur Bild Generator für Modus 5
+var
+z,sc,psa,tc,t: integer;          //Definition der Variablen
+tarr: array [0..7] of byte;
+
+begin
+ for z:= 0 to 7 do begin         //Das Temporäre Array wird mit dem Buchstaben geladen
+  tarr[z]:= bar[b];              //Dies geschieht Zeile für Zeile
+  b:= b+ 255;                    // Es wird auf die Nächste Zeile gezeigt
+ end;
+ for sc:= 0 to 7 do begin        //sc (Schritt Counter) es werden 7 Schritte benötigt
+  picarr[0]:=tarr[7];            //Die 1. Zeile des PicArray = 7. Zeile TempArray
+  for psa:= 0 to 7-sc do begin   //Dies wird solange durchlaufen bis das Bild aufgebaut ist
+   output();                     //start Output Routine
+   sleep(150);                   //warte ca. 150ms
+   t:= 7 -sc;                    //variable t = 7 - Anzahl durchgeführter Schritte
+   if psa < t  then begin        //Fals psa kleiner ist als t beginne
+    picarr[psa+1]:= picarr[psa]; //PicArray wird mit der oberen Zeile geladen
+   end;
+   if psa < t  then begin        //Fals psa kleiner ist als t beginne
+    picarr[psa]:=0;              //Zeile im PicArray wird gelöscht (=0)
+   end;
+  end;
+  t:= 7;                         //Variable t wird mit 7 geladen
+  for tc:= 0 to 7 do begin       //Es wird im TempArray jede zeile um eine nach 
+   if t < 7 then begin           //verschoben. Dies geschieht Zeile
+    tarr[t+1]:= tarr[t];         //für Zeile
+   end;  
+   tarr[t]:= 0;                  //die aktuelle Zeile wird gelöscht(=0)
+   t:= t -1;                     //t wird um 1 verkleinert
+  end;  
+ end;
+end;  
+  
+  
+procedure Modeselect(m: integer);    //Prozedur Mode Select
+var
+e: byte;
+
+begin
+  if m = 1 then begin                 //falls m = 1 dann beginne (Modus 1)
+   playMP3(ExePath+'sound\01.mp3');  //MP3 im unter Ordner sound mit dem Namen 01 wird abgespielt
+   sleep(2000);                         //Warte ca. 2 sekunden
+   for p:= 1 to laeng do begin         //Wird für jedes Zeich durchlaufen (p= Position im Text)
+    b:= Ord(text[p]);                 //b (Buchstabe) wird mit dem ASCII Coe des Zeichen gesetzt
+    PicGen1();                        //Starte Prozedur PicGen1
+   end;
+   text:= ' ';                        //Es wird ein Leerzeichen dargestellt
+   laeng:= Length(text);              //Textlänge wird definiert
+   for p:= 1 to laeng do begin         //Wird für jedes Zeich durchlaufen (p= Position im Text)
+    b:= Ord(text[p]);                 //b (Buchstabe) wird mit dem ASCII Coe des Zeichen gesetzt
+    PicGen1();                        //starte PicGen1
+    sleep(20);                        //warte ca. 0.02 sekunden
+   end;
+  end;
+   if m = 2 then begin                 //falls m = 2 dann beginne (Modus 2)
+    playMP3(ExePath+'sound\02.mp3');  //MP3 im unter Ordner sound mit dem Namen 02 wird abgespielt
+    sleep(2000);                         //Warte ca. 2 sekunden
+    for p:= 1 to laeng do begin         //Wird für jedes Zeich durchlaufen (p= Position im Text)
+     b:= Ord(text[p]);                  //b (Buchstabe) wird mit dem ASCII Coe des Zeichen gesetzt
+     PicGen2();                         //starte PicGen2
+    end;
+    text:= ' ';                         //Es wird ein Leerzeichen dargestellt
+    laeng:= Length(text);               //Textlänge wird definiert
+    for p:= 1 to laeng do begin         //Wird für jedes Zeich durchlaufen (p= Position im Text)
+     b:= Ord(text[p]);                  //b (Buchstabe) wird mit dem ASCII Coe des Zeichen gesetzt
+     PicGen2();                         //starte PicGen2
+    end;
+   end;
+    if m = 3 then begin                 //falls m = 3 dann beginne (Modus 3)
+     playMP3(ExePath+'sound\03.mp3');  //MP3 im unter Ordner sound mit dem Namen 03 wird abgespielt
+     sleep(2000);                         //Warte ca. 2 sekunden
+     for p:= 1 to laeng do begin         //Wird für jedes Zeich durchlaufen (p= Position im Text)
+      b:= Ord(text[p]);                  //b (Buchstabe) wird mit dem ASCII Coe des Zeichen gesetzt
+      PicGen3();                         //starte PicGen3
+     end;
+     text:= ' ';                         //Es wird ein Leerzeichen dargestellt
+     laeng:= Length(text);                //Textlänge wird definiert
+     for p:= 1 to laeng do begin         //Wird für jedes Zeich durchlaufen (p= Position im Text)
+      b:= Ord(text[p]);                  //b (Buchstabe) wird mit dem ASCII Coe des Zeichen gesetzt
+      PicGen3();                         //starte PicGen3
+     end;
+    end;
+     if m = 4 then begin                 //falls m = 4 dann beginne (Modus 4)
+      playMP3(ExePath+'sound\04.mp3');  //MP3 im unter Ordner sound mit dem Namen 04 wird abgespielt
+      sleep(2000);                         //Warte ca. 2 sekunden
+      for p:= 1 to laeng do begin         //Wird für jedes Zeich durchlaufen (p= Position im Text)
+       b:= Ord(text[p]);                  //b (Buchstabe) wird mit dem ASCII Coe des Zeichen gesetzt
+       PicGen4();                         //starte PicGen4
+      end;
+      text:= ' ';                         //Es wird ein Leerzeichen dargestellt
+      laeng:= Length(text);               //Textlänge wird definiert
+      for p:= 1 to laeng do begin         //Wird für jedes Zeich durchlaufen (p= Position im Text)
+       b:= Ord(text[p]);                  //b (Buchstabe) wird mit dem ASCII Coe des Zeichen gesetzt
+       PicGen4();                         //starte PicGen4
+      end;
+     end;
+      if m = 5 then begin                 //falls m = 5 dann beginne (Modus 5)
+       playMP3(ExePath+'sound\05.mp3');  //MP3 im unter Ordner sound mit dem Namen 05 wird abgespielt
+       sleep(2000);                         //Warte ca. 2 sekunden
+       for p:= 1 to laeng do begin         //Wird für jedes Zeich durchlaufen (p= Position im Text)
+        b:= Ord(text[p]);                  //b (Buchstabe) wird mit dem ASCII Coe des Zeichen gesetzt
+        PicGen5();                         //starte PicGen5
+       end;
+       text:= ' ';                         //Es wird ein Leerzeichen dargestellt
+       laeng:= Length(text);               //Textlänge wird definiert
+       for p:= 1 to laeng do begin         //Wird für jedes Zeich durchlaufen (p= Position im Text)
+        b:= Ord(text[p]);                  //b (Buchstabe) wird mit dem ASCII Coe des Zeichen gesetzt
+        PicGen5();                         //starte PicGen5
+       end;
+      end;
+       if m = 6 then begin                  //falls m = 6 dann beginne (Modus 6)
+        playMP3(ExePath+'sound\06.mp3');   //MP3 im unter Ordner sound mit dem Namen 06 wird abgespielt
+        sleep(1000);                         //Warte ca. 2 sekunden
+        for p:= 1 to laeng do begin         //Wird für jedes Zeich durchlaufen (p= Position im Text)
+         b:= Ord(text[p]);                  //b (Buchstabe) wird mit dem ASCII Coe des Zeichen gesetzt
+         PicGen6();                         //starte PicGen6
+         sleep(1000);                       //warte ca. 1 Sekunde
+        end;
+        text:= ' ';                         //Es wird ein Leerzeichen dargestellt
+        laeng:= Length(text);               //Textlänge wird definiert
+        for p:= 1 to laeng do begin         //Wird für jedes Zeich durchlaufen (p= Position im Text)
+         b:= Ord(text[p]);                  //b (Buchstabe) wird mit dem ASCII Coe des Zeichen gesetzt
+         PicGen6();                         //starte PicGen6
+         sleep(2000);                       //warte ca. 2 Sekunde
+        end
+       end;
+       if m = 0 then begin                  //falls m = 0 dann beginne (Modus Error)
+        for e:= 0 to 1 do begin
+          playMP3(ExePath+'sound\09.mp3');  //MP3 im unter Ordner sound mit dem Namen 06 wird abgespielt
+          sleep(2000);                       //warte ca. 2 Sekunde
+          for p:= 1 to laeng do begin         //Wird für jedes Zeich durchlaufen (p= Position im Text) 
+           text:= ' Mode Error ';             //der Ausgabe Text ist = Mode Error
+           laeng:= Length(text);             //Textlänge wird definiert
+           b:= Ord(text[p]);                 //b (Buchstabe) wird mit dem ASCII Coe des Zeichen gesetzt
+           PicGen2();                        //starte PicGen2
+          end;
+        end;
+       end;
+        if m > 6 then begin                  //falls m > 6 dann beginne (Modus Error)
+         for e:= 0 to 1 do begin
+           playMP3(ExePath+'sound\09.mp3');  //MP3 im unter Ordner sound mit dem Namen 06 wird abgespielt
+           sleep(2000);                      //warte ca. 2 Sekunde
+           for p:= 1 to laeng do begin         //Wird für jedes Zeich durchlaufen (p= Position im Text)
+            text:= ' Mode Error ';             //der Ausgabe Text ist = Mode Error
+            laeng:= Length(text);              //Textlänge wird definiert
+            b:= Ord(text[p]);                  //b (Buchstabe) wird mit dem ASCII Coe des Zeichen gesetzt
+            PicGen2();                         //starte PicGen2
+           end;
+         end;
+        end;
+end;
+
+       
+procedure Label1Click(Sender: TObject);    //Prozedur Label1Click
+
+begin
+   //initMP3
+   closeMP3;                               //MP3 wird geschlossen
+   {$IfDef TESTMODE}
+     co1:= 1; //eingabe der Hintergrundfarbe
+     co2:= 15;
+     ColorSelect(co1,co2);
+     text:= 'This is maXland and his Band on the Sand ';
+     te:= text;
+     mode:= 2;
+     r:= 1;
+   {$Else}
+   co1:= StrToint(readln('Hintergrund Farbe (1-16)')); //eingabe der Hintergrundfarbe
+   co2:= StrToint(readln('Schrift Farbe (1-16)')); //eingabe der Schrift farbe
+   ColorSelect(co1,co2);                    //start ColorSelect
+   text:= readln('Anzeige Text');          //Einlesen des Ausgabe Text
+   te:= text;                            //variable te = den Eingabe Text
+   laeng:= Length(text);                //Anzahl Buchstabe des Text werden gezählt
+   mode:= StrToint(readln('Mode (1-6)'));//Modus wahl für Text Ausgabe
+   r:= StrToint(readln('Anzahl Wiedergaben')); //einlessen der Anzahl Wiedergaben
+  {$EndIf}
+   if r < 1 then begin                   //Falls r < 1 dann beginne
+    r:= 1;
+   end;
+   for rep:= 1 to r do begin
+     text:= te;
+     laeng:= Length(text);                //Anzahl Buchstabe des Text werden gezählt
+     ModeSelect(mode);
+   end;
+   sleep(2000);                        //warte ca. 2 sekunden
+   closeMP3;                           //schliesse MP3
+end;
+
+
+procedure loadPForm(vx, vy: smallint);     //Prozedur Panel 
+begin
+  size:= vx*vy                         //Panel grösse wird definiert
+  ppform:= Tform.create(self);         //erstelle Panel
+  with ppform do begin
+    caption:= 'to start LED Matrix, please click'; //text im Kopf des Panel 
+    width:= (vx*size)+ 15;            //Breite des Panel definieren
+    height:= (vy*size)+ 37;           //Höhe des Panel definieren
+    BorderStyle:= bsDialog;
+    Position:= poScreenCenter;
+    show;                            //Panel darstellen
+  end  
+end;
+
+
+procedure InitPuzzle(vx: byte);      //Prozedur Puzzle
+var
+  i,x,y: integer;                    //lokale Variablen
+begin
+  labelList:= TStringList.Create;
+  x:= 1;                             //setzt Variable x
+  y:= 1;                             //setzt Variable y
+  for i:= 1 to size do begin         //wird vom ersten bis zum letzten Pixel durchgeführt (size= anzahl Pixel)
+    mylabel:= TLabel.Create(ppform);
+    with mylabel do begin
+      Parent:= ppForm;
+      transparent:= false;
+      color:= clblack;                //definiert die Grund Farbe
+      AutoSize:= false;
+      layout:= tlcenter;
+      alignment:= tacenter;
+      font.Size:= (size div vx) + 12;
+      width:= size
+      height:= size
+      Left:= (x-1)*(size + 1);
+      Top:= (y-1)*(size + 1);
+      OnClick:= @Label1Click;        //startet Prozedur OnLabel1Click
+    end;
+    //set next line of stones
+    if (i mod vx = 0) then begin
+      x:= 1; 
+      inc(y);
+    end else
+      inc(x);
+    //add stones to the list
+    labelList.addObject(inttostr(i), mylabel);
+  end;
+end;
+  
+BEGIN 
+
+   initialisieren;                  //starte Prozedur Initialisieren
+   loadPForm(8,8);                  //starte Prozedur Panel
+   initPuzzle(8);                   //starte Prozedur Puzzle
+   
+END. 
+ 

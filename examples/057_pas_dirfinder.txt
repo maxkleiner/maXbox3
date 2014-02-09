@@ -1,0 +1,57 @@
+program ZukoDirSearch;
+
+// simple filefunctions in directories
+// has findfirst with a TSearchRec structure , loc's 57, _57
+
+{Start NotePad and load a file (the system "knows" the location of NotePad.exe, therefore we don't have to specify the full path):
+ShellExecute(Handle, 'open', PChar('notepad'), PChar('c:\test\readme.txt'), nil, SW_SHOW);}
+{# Run a DOS command and return immediately:
+ShellExecute(Handle, 'open', PChar('command.com'), PChar('/c copy file1.txt file2.txt'), nil, SW_SHOW);
+# Run a DOS command and keep the DOS-window open ("stay in DOS"):
+ShellExecute(Handle, 'open', PChar('command.com'), PChar('/k dir'), nil, SW_SHOW);}
+
+const
+ ext = 'txt';
+ sw = 'SW_SHOW';
+ //faDirectory = $00000010;
+ //faAnyFile   = $0000003F;
+  
+procedure findDirectories(dirlist: TStringlist; Path: string);
+//Find all directories above and including the current one
+begin
+  // Try to find directories above the current directory
+  //SetCurrentDir('..');
+  if FindFirst(path+'*', faDirectory) = 0 then begin
+    repeat
+      // Only show directories
+      if (searchrecattr and faDirectory) = faDirectory  then
+      //then ShowMessage(searchrecName);
+      dirlist.add(searchRecName);     
+    until FindNext <> 0;
+    // Must free up resources used by these successful finds
+    FindClose;
+  end;
+end;
+
+
+procedure StartFileFinder;
+var
+  dirList: TStringList;
+begin
+  dirList:= TStringList.Create;
+  try
+    FindDirectories(dirList, ExePath);
+    dirList.saveToFile(ExePath+'examples\dir_files.txt');
+  finally 
+    dirList.Free;
+  end;
+end;
+
+//main script
+begin
+  beep;
+    StartFileFinder;
+    SearchAndOpenFile(ExePath+ 'examples\dir_files.txt')
+    //shellExecute(0, 'open', 'notepad', 'dir_files.txt', '', 2)
+  //orthogonal and idempotent
+end.

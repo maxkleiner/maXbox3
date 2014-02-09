@@ -1,0 +1,245 @@
+//demo for media player component V2 scalable
+//loads a file, bitmap , mp3, video and so on
+//{$R+}{$D-,L-,O+,Q-,R-,Y-,S-} loc's=144, App_188
+
+program VideoPlayer3;
+
+var 
+  //ms: TStringGrid;
+  //mg: TDrawGrid;
+  selectedFile: string;
+  //mm: TMenu;
+  inFrm: TForm;
+  bmp: TBitmap;
+  mpanel: TPanel;
+  mPlayer: TMediaPlayer;
+  
+
+function LoadBitMap: TBitmap;
+begin
+  Bmp:= TBitmap.Create;
+  try
+    Bmp.LoadFromFile(ExePath+'examples\citymax.bmp');
+  finally
+    result:= bmp;
+  end;
+  //Bmp.Free;
+end; 
+
+procedure CloseClick(Sender: TObject; var action: TCloseAction);
+begin
+  //Form1.Close;  free 308 kByte
+  if MessageDlg('Wanna Leave?',mtConfirmation,[mbYes, mbNo],0) = mrYes then begin
+     //form1.Free;
+    MPlayer.Close;
+    MPlayer.Free;
+    if Assigned(bmp) then
+      bmp.Free;
+    action:= caFree;
+    //ShowMessage('Now you see the hits of mX3');
+    //ExecuteCommand('http://www.softwareschule.ch/maxboxshow.htm','')
+ end else
+    Action:= caNone;
+end;
+
+procedure ResizeEvent(Sender: TObject);
+begin
+  //Form1.Close;  free 308 kByte
+  
+   with mPanel do begin
+     caption:= '********maXboxTV Resized********';  
+     parent:= inFrm;
+     //align:= infrm;  
+     SetBounds(80,80,infrm.width-140,infrm.height-140)
+     color:= clred;
+     //show;
+   end;  
+end;
+
+
+procedure GetMediaData(self: TObject);
+begin
+  if PromptForFileName(selectedFile,
+                      'Video files (*.mpg)|*.mpg|*.avi)|*.avi', //and others
+                      '', 'Select your video media file',
+                      'D:\kleiner2005\download', False) //false: not Save dialog!
+  then begin
+    //Display this full file/path value
+    writeln(ExtractFileExt(selectedFile))
+    if ExtractFileExt(selectedFile) = '.bmp' then begin
+     inFrm.Canvas.Brush.Bitmap:= LoadBitMap 
+     mPanel.parent:= NIL;
+     inFrm.Canvas.FillRect(Rect(80,80,410,410));
+    end else begin
+      mPanel.parent:= inFrm;
+      mPanel.caption:= 'Selected file: '+ExtractFileName(selectedFile);     
+      MPlayer.AutoEnable:= false;
+      //MPlayer.EnabledButtons := [];
+      MPlayer.EnabledButtons:= [btPause, btStop, btPlay];
+      //MPlayer.Refresh;
+      MPlayer.filename:= selectedFile;
+      //VIDEO... MPlayer.filename:= ExePath+'examples\*.mpeg';
+      MPlayer.Close;
+      MPlayer.Wait:= true;
+      MPlayer.Open;
+      MPlayer.TimeFormat := tfMilliseconds;
+      Writeln('Video Size: '+IntToStr(MPlayer.Length));
+      MPlayer.DisplayRect:= Rect(1,1,0,0); {"0,0" force resolution autodetect}
+      //mPanel.Width:= MPlayer.DisplayRect.right;
+      MPlayer.Play;
+    end;
+  end; //File Name
+end;
+
+procedure SetForm;
+var
+   mbutton: TBitBtn;
+begin
+   inFrm:= TForm.Create(self);
+   with inFrm do begin
+      caption:= '********MediaMax3************';  
+      height:= 610;
+      width:= 610;
+      color:= clblack;
+      Position:= poScreenCenter;
+      onClose:= @CloseClick;
+      show;
+   end;
+   mPanel:= TPanel.Create(inFrm);
+   with mPanel do begin
+     caption:= '********maXboxTV********';  
+     parent:= inFrm;
+     //align:= infrm;  
+     SetBounds(80,80,infrm.width-140,infrm.height-140)
+     color:= clred;
+     show;
+   end; 
+  mButton:= TBitBtn.Create(inFrm)
+  with mButton do begin
+    Parent:= inFrm;
+    setbounds(420,20,150, 40);
+    caption:= 'Open Video';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'OPENFOLDER'); 
+    //event handler
+    onclick:= @GetMediaData;
+  end;
+  MPlayer:= TMediaPlayer.create(self);
+  MPlayer.parent:= inFrm;
+  MPlayer.top:= 20;
+  MPlayer.left:= 10;
+  Mplayer.Display:= mPanel;   //for video
+  //LoadBitMap;
+ inFrm.onReSize:= @ResizeEvent;
+ 
+end;
+
+begin
+  //loadbitmap;
+  SetForm;
+  //writeln(gethostbyname('www.kleiner.ch'))
+   writeln('Instance: '+intToStr(getHinstance))
+   writeln('Procid: '+intToStr(getProcessid))
+   writeln('Processors: '+inttostr(GetNumberOfProcessors)) 
+End.
+
+//---------------------------------------------------------
+
+procedure THiddenForm.GetProperties(FileName: string;
+  var MediaFrames, MediaLength, MediaWidth, MediaHeight: Integer);
+begin
+  MediaPlayer.FileName := FileName;
+  MediaPlayer.Wait     := False;
+  MediaPlayer.Open;
+  MediaPlayer.TimeFormat := tfFrames;
+  MediaFrames := MediaPlayer.Length;
+  MediaPlayer.TimeFormat := tfMilliseconds;
+  MediaLength := MediaPlayer.Length;
+  MediaPlayer.DisplayRect:= Rect(1,1,0,0); {"0, 0" forces resolution autodetect}
+  MediaWidth  := MediaPlayer.DisplayRect.Right;
+  MediaHeight := MediaPlayer.DisplayRect.Bottom;
+  if (MediaWidth <= 0) or (MediaHeight <= 0) then begin {invalid values mean not video}
+    MediaWidth  := 0;
+    MediaHeight := 0;
+  end;
+  MediaPlayer.Close;
+end;
+
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  MediaPlayer1.Close;
+  MediaPlayer1.FileName := 'c:\music\test.mp3';
+  MediaPlayer1.Open;
+end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  MediaPlayer1.Close;
+  MediaPlayer1.FileName := 'c:\music\test.mp3';
+  MediaPlayer1.Open; 
+  MediaPlayer1.Play;
+end;
+
+procedure TForm2.btOpenClick(Sender: TObject);
+var
+  OpenMediaDialog : TOpenDialog;
+begin
+  OpenMediaDialog := TOpenDialog.Create(Self);
+  OpenMediaDialog.Filter := 'All Video Files (*.avi)|*.avi';
+  // There are avi files in
+  // C:\Documents and Settings\All Users\Documents\RAD Studio\6.0\Demos\DelphiWin32\VCLWin32\CoolStuff.
+  if OpenMediaDialog.Execute() then begin
+    { Assign a file to the media player. }
+    MediaPlayer1.FileName := OpenMediaDialog.FileName;
+ 
+    { Check if the file exists and is not a directory. }
+    if (FileExists(OpenMediaDialog.FileName)) and
+       (not DirectoryExists(OpenMediaDialog.FileName)) then begin
+      { Open the files. }
+      MediaPlayer1.Wait := true;
+      MediaPlayer1.Open;
+      MediaPlayer1.Play;
+ 
+      { Override automatic button controlling. }
+      MediaPlayer1.EnabledButtons :=
+        [TMPBtnType.btPause, TMPBtnType.btStop, TMPBtnType.btPlay];
+ 
+      { Enable the Stop button. }
+      btStop.Enabled := true;
+      btOpen.Enabled := false;
+    end;
+  end;
+ 
+  OpenMediaDialog.Free;
+end;
+ 
+procedure TForm2.btStopClick(Sender: TObject);
+begin
+  { Stop and close the media. }
+  MediaPlayer1.Stop;
+  MediaPlayer1.Close;
+ 
+  MediaPlayer1.EnabledButtons := [];
+ 
+  { Enable Open button again. }
+  btOpen.Enabled := true;
+end;
+ 
+procedure TForm2.FormCreate(Sender: TObject);
+begin
+  { Disable all buttons. }
+  MediaPlayer1.AutoEnable := false;
+  MediaPlayer1.EnabledButtons := [];
+end;
+ 
+procedure TForm2.MediaPlayer1PostClick(Sender: TObject;
+  Button: TMPBtnType);
+begin
+  if Button = TMPBtnType.btStop then
+     btStop.Click;
+end;
+
+
+------------------------------------------------------
+Programmers never die, they just GOSUB without RETURN 

@@ -1,0 +1,193 @@
+//*************************************************************************
+PROGRAM Tower_of_Hanoi_Steps_SolutionSequence;
+{**************************************************************************
+ solution of the tower of hanoi with a codelist, double recursion!,
+ codelist with 12 patterns of 4 steps, codesequence in 24 solution steps!
+  loc's= 110, ex. _80ff
+ try to program it with a canvas object to visualize
+ ************************************************************************** }
+
+Const SOLUTIONFILE = 'hanoilist.txt';
+
+Type 
+    TPatterns=  array[1..12] of shortstring;
+
+var answer: string;
+    steps, step4, i: integer;
+    patt: shortstring;
+    varray: TPatterns;
+    pattlst, seqlist: TStringlist;
+    
+    
+procedure initPatternArray;    //codelist
+begin
+  varray[1]:=   'a to b a to c b to c a to b ';
+  varray[2]:=   'a to b a to c b to c b to a ';
+  varray[3]:=   'a to c a to b c to b a to c ';
+  varray[4]:=   'a to c a to b c to b c to a ';
+  varray[5]:=   'b to a b to c a to c b to a ';
+  varray[6]:=   'b to a b to c a to c a to b ';
+  varray[7]:=   'b to c b to a c to a b to c ';
+  varray[8]:=   'b to c b to a c to a c to b ';
+  varray[9]:=   'c to a c to b a to b c to a ';
+  varray[10]:=  'c to a c to b a to b a to c ';
+  varray[11]:=  'c to b c to a b to a c to b ';
+  varray[12]:=  'c to b c to a b to a b to c ';
+end;  
+
+procedure Search_Write_Codes;
+var vs, tmp: shortstring;
+   i,k, found: integer;
+begin
+  found:= 0;
+  writeln('pattern codes ---------- for solution: '+answer);
+  for i:= 0 to pattlst.count - 1 do begin
+    vs:= pattlst.strings[i]
+    for k:= 1 to high(varray) do
+      if vs = varray[k] then begin
+        inc(found)
+        tmp:= tmp +(inttostr(k)+'-')
+        //write(inttostr(k)+'-');               //-fast
+        //if found mod 32 = 0 then writeln(''); //-fast
+      if found mod 24 = 0 then begin 
+        seqlist.add(tmp);
+        tmp:= '';
+      end; 
+    end;    
+  end;
+  seqlist.add(tmp) //last/first segment
+  writeln('Nr of codes: ' +inttostr(found))
+end; 
+
+procedure move(high: integer; a,c,b: char);
+begin
+  if high > 1 then begin
+    move(high-1,a,b,c);
+    //writeln(a+' to '+c);   //-fast
+    inc(step4)
+    patt:= patt+a+' to '+c+' ';
+    if step4 mod 4 = 0 then begin
+      pattlst.add(patt)
+      patt:= '';
+    end;   
+    move(high-1,b,c,a);
+    inc(steps)
+  end else begin
+    //writeln(a+' to '+c)   //-fast
+    inc(step4)
+    patt:= patt+a +' to '+c+' ';
+    if step4 mod 4 = 0 then begin
+      pattlst.add(patt)
+      patt:= '';
+    end;   
+    inc(steps)
+  end; 
+end;
+
+
+begin     //main
+  steps:= 0;
+  step4:= 0;
+  initPatternArray;
+  pattlst:= TStringlist.create;
+  seqlist:= TStringlist.create;
+  answer:= readln('How much on a pile ?');
+  Writeln('Pile solution of: '+(answer))
+  move(strtoInt(answer),'a','b','c');
+  Writeln('had total '+inttoStr(steps)+ ' steps');
+  for i:= 0 to pattlst.count - 1 do      //-fast
+    writeln(pattlst.strings[i]);
+  Search_Write_Codes; 
+  writeln('Nr of codelines: '+inttostr(seqlist.count)+ ' in file '+SOLUTIONFILE)
+  seqlist.savetoFile(exepath+'examples\'+SOLUTIONFILE)
+  seqlist.Free; 
+  pattlst.Free;
+  
+  {Writeln('or '+chr(bintoint(inttobin(ord('A') OR ord('B')))))
+  Writeln('xor '+chr(ord('A') XOR ord('B')))
+  Writeln('and '+chr(ord('A') AND ord('B')))
+  Writeln('not and'+chr((NOT ord('A') AND ord('B'))))}
+End.
+
+The 12 Main Step Patterns!
+
+--1-------2-------3-------4-------  A 1,2,3,4
+a to b  a to b   a to c  a to c   
+a to c  a to c   a to b  a to b
+b to c  b to c   c to b  c to b
+a to b  b to a   a to c  c to a
+--5-------6--------7-------8------  B 5,6,7,8
+b to a  b to a   b to c  b to c    
+b to c  b to c   b to a  b to a
+a to c  a to c   c to a  c to a
+b to a  a to b   b to c  c to b
+--9-------10-------11------12-----  C 9,10,11,12
+c to a  c to a   c to b  c to b   
+c to b  c to b   c to a  c to a
+a to b  a to b   b to a  b to a
+c to a  a to c   c to b  b to c
+----------------------------------
+
+
+//***********************************************************************
+This is the solution code sequence for all even piles! repeat n/24:
+
+3-6-11-3-5-12-3-(5/6)-11-4-5-11-3-6-11-(3/4)-5-12-3-5-11-4-5-(11/12)
+
+This is the solution code sequence for all odd piles!:
+
+1-10-7-1-9-8-1-(9/10)-7-2-9-7-1-10-7-(1/2)-9-8-1-9-7-2-9-(7/8)
+//***********************************************************************
+---------------------------------------------------------------------------
+
+
+Example for 12 piles(n) 2^12-1 Tester repeat n/24 lines   
+
+                     X                  X                 X
+  12 3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11- 
+     
+ for 10 is ((15*17=255*4=1020+3=2^10-1))   
+
+     

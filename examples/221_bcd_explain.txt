@@ -1,0 +1,185 @@
+{****************************************************************
+ *
+ * Project  : BCD_Explain maXbase System Information Series
+ * App Name : 221_bcd_explain, loc's = 144
+ * Purpose  : BCD is very common in electronic systems where a numeric value 
+              is to be displayed or scanned
+ * History  : system for mX3.6 of Unit FMTBcd.pas
+            : BCDVal Function
+ ****************************************************************}
+
+program BCD_Explain;
+
+function MyGetTickCount: Longint;
+  external 'GetTickCount@kernel32.dll stdcall';
+  
+const KEYPATH = 'crypt\';  
+  
+var
+  ws: TWideStrings;
+  i: integer;
+  //ole: variant;
+  mybcd: TBCD;
+  ab: Byte;
+  
+
+procedure CreateDBGridForm(dblist: TStringList);
+var 
+   dbform: TForm;
+begin
+   dbform:= CreateMessageDialog('My Fast Form BCD Converter - FFB',mtwarning,
+                                        [mball, mbyes, mbhelp, mbok]);
+   dbform.caption:= 'BCD Demo';
+   dbform.setBounds(50,50,800,600)
+   dbform.Formstyle:= fsStayontop;
+   dbform.Color:= 123;
+   with TLabel.Create(self) do begin
+     parent:= dbform;
+     SetBounds(50,150,500,600)
+     font.size:= 19;
+     font.color:= clyellow;
+     dblist.Add('Converted to.....BCD')
+     caption:= dblist.text;
+   end;  
+   dbform.Show; 
+end;   
+   
+
+procedure BCD_Test;
+//{$APPTYPE CONSOLE}
+//uses SysUtils, FMTBcd;
+var
+  am, sub, tmp:  TBcd;
+  i: Integer;
+begin
+  am:= StrToBcd('1.2345');
+  sub:= StrToBcd('0.12345');
+  for i:= 0 to 9 do begin
+    BcdSubtract(am, sub, tmp);
+    am:= tmp;
+  end;
+  if BcdCompare(am, StrToBcd('0.0')) = 0 then
+    Writeln('Zero: ' + BcdToStr(am))
+  else
+    Writeln('Non-zero: ' + BcdToStr(am));
+end; 
+
+function BCDVal(BCD: Byte): Byte;
+begin
+  result:= ((BCD AND $F0) * 10) div 16 + (BCD AND $0F);
+end;  
+
+
+procedure BCD_Explain; //Example with 2687
+var dblist: TStringList;
+    ab, bc: string;
+begin
+  mybcd.precision:= 8;
+  mybcd.SignSpecialPlaces:= 0;
+  mybcd.fraction[0]:= 38;
+  mybcd.fraction[1]:= 135;
+  dblist:= TStringList.create;
+  Writeln('BCDtoStr with 38+135 :' +BcdToStr(mybcd));
+  ab:= '26';
+  bc:= '87';
+  dblist.add('We convert '+ ab+bc+' to a BCD Format for each number a half Byte') 	
+  dblist.add(' ');
+  dblist.add('2687 is 2=0010, 6=0110, 8=1000, 7=0111 coded') 	
+  mybcd:= StrToBcd(ab+bc);  //'2687')
+  dblist.add('function StrToBcd('''+ab+bc+''') is '+format('%d and %d',
+                              [mybcd.fraction[0],mybcd.fraction[1]])) 
+  writeln('strtobcd '+inttostr(mybcd.fraction[0]));
+  writeln('strtobcd '+inttostr(mybcd.fraction[1]));
+  dblist.add(' ');
+  dblist.add(Format('%s is binary %d of %s',[ab, mybcd.fraction[0],
+                               RightStr(IntToBin(mybcd.fraction[0]),4)]));
+  dblist.add(Format('%s is binary %d of %s',[bc, mybcd.fraction[1],
+                               RightStr(IntToBin(mybcd.fraction[1]),4)]));
+  dblist.add(' ');
+  CreateDBGridForm(dblist);
+  dblist.Free; 
+  //the Number 2687 has the 0010 0110 1000 0111 Representation.    
+  writeln(inttobin(mybcd.fraction[0]));
+  writeln(inttobin(mybcd.fraction[1]));
+  writeln('test back '+inttoStr(bintoint(inttobin(mybcd.fraction[0]))));
+  writeln('test back '+inttoStr(bintoint(inttobin(mybcd.fraction[1]))));
+     //bytetobin is missing
+  for i:= 0 to 255 do
+   writeln(inttostr(i)+ 'is: '+inttostr(BCDVal(i)))   
+end;   
+
+
+begin
+  //SetAdoQuery;
+  //SetAdoSet;
+  BCD_Test;
+  BCD_Explain;
+  ab:= 1335;
+  write(intToStr(BCDVal(13))+intToStr(BCDVal(35)));
+  writeln('simple tester to hex');
+  ab:= 2687;
+  write(intToStr(BCDVal(38))+intToStr(BCDVal(135))+intToStr(BCDVal(0))+intToStr(BCDVal(0)));
+  //mybcd.precision:= 8;
+  //mybcd.SignSpecialPlaces:= 0;
+  //mybcd.fraction[0]:= 38;
+  //mybcd.fraction[1]:= 135;
+  //1410: Function IntegerToBcd( const AValue : Integer) : TBcd
+  mybcd:= IntegerToBCD(2687)
+  writeln('inttobcd '+inttostr(mybcd.fraction[0])+inttostr(mybcd.fraction[1]));
+  PrintF('IntoBCD: %d+%d ',[mybcd.fraction[0],mybcd.fraction[1]]);
+
+  //SetADO_SETAccess2;
+  Writeln('Data Link Dir is: '+ DataLinkDir);
+  writeln('machine name is: '+getHostName)
+  writeln('user name is: '+getUserName)
+  writeln('tick count from func ' +IntToStr(GetTickCount));
+  //Writeln('Host is: '+getHostbyName('www.softwareschule.ch'))
+  //CreateFileFromString(ExePath+'mycopy.txt',memo2.text);
+  //WriteLog(ExePath+'mylog.txt',memo2.text)
+  {ws:= TWideStringList.create;
+  getProviderNames(ws)
+  for i:= 1 to ws.count -1 do 
+    writeln(inttostr(i) +' '+ws.strings[i])
+  ws.free; } 
+End.   
+
+
+As most computers store data in 8-bit bytes, it is possible to use one of the following methods to encode a BCD number:
+
+    Uncompressed: each numeral is encoded into one byte, with four bits representing the numeral and the remaining bits having no significance.
+    Packed: two numerals are encoded into a single byte, with one numeral in the least significant nibble (bits 0-3) and the other numeral in the most significant nibble (bits 4-7).
+BCD is very common in electronic systems where a numeric value is to be displayed, especially in systems consisting solely of digital logic, and not containing a microprocessor. By utilizing BCD, the manipulation of numerical data for display can be greatly simplified by treating each digit as a separate single sub-circuit. This matches much more closely the physical reality of display hardware
+
+
+
+
+*******************************************************
+There is no place like 127.0.0.1 
+
+Exception: Access violation at address 4DE2F83C in module 'msado15.dll'. Read of address 78742E67 at 0.1057
+
+
+[Microsoft][ODBC Driver Manager] Data source name not found and no default driver specified at 35.440
+
+[Microsoft][ODBC Microsoft Access Driver] Query is too complex at 35.607
+
+
+[Microsoft][ODBC Microsoft Access Driver] The Microsoft Jet database engine cannot find the input table or query 'Table1d'.  Make sure it exists and that its name is spelled correctly at 35.556
+
+[Microsoft][ODBC Microsoft Access Driver] Syntax error (missing operator) in query expression '031-333 77 88' at 41.356
+
+[Microsoft][ODBC Microsoft Access Driver] Too few parameters. Expected 2 at 41.354
+
+
+The syntax for the INSERT statement is:
+
+    INSERT INTO table
+    (column-1, column-2, ... column-n)
+    VALUES
+    (value-1, value-2, ... value-n);
+    
+dbs.Execute " INSERT INTO Employees " _
+        & "(FirstName,LastName, Title) VALUES " _
+        & "('Harry', 'Washington', 'Trainee');"
+        
+        

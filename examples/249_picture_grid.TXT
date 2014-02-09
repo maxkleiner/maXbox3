@@ -1,0 +1,406 @@
+PROGRAM ASCII_GridForm_Solution;
+//shows ASCII&Pascal Triangle Variation (odd&even) of the binominal coefficients  
+//shows the work of a StringList with a StringGrid to sort the ASCII Table!
+//Task 226, locs=222
+
+Const
+   CROW = 18;
+   CCOL = 25;
+   CTRI = (CCOL +1) DIV 2;    //NCR-1                       
+   //CCOL = 2 * CTRI-1;
+   LotNR = 300;
+   LotRANGE = 45;
+   TheSeparator = '@';
+   RESPATH ='examples\images\';         //path to memory --> examples
+   DECK = 'deck2.bmp';
+
+
+Var 
+//<Variable declarations>
+    quadrat,square: extended;
+    j,i: integer;
+    larr: array[0..lotNR] of integer; 
+    bigstring: string;
+    sGrid1: TStringGrid;  
+    mForm: Tform;
+    Bmp: TBitmap;
+
+
+procedure FormKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = #27 then mForm.close;
+end;
+
+procedure CreateDrawForm;
+begin
+  mForm:= TForm.create(self);
+  with mForm do begin
+    FormStyle:= fsStayOnTop;
+    Position:= poScreenCenter;
+    color:= clred;
+    Caption:= 'ASCII Pascal BITMAP GRID Tester';
+    Width:= 1000;
+    Height:= 645;
+    BorderStyle:= bsDialog;
+    //onClose:= @FormClose;
+    onKeyPress:= @FormKeyPress
+    Show
+  end;
+  sGrid1:= TStringGrid.Create(self);
+  with sGrid1 do begin
+    parent:= mForm;
+    top:= 20;
+    defaultColwidth:= 34;
+    defaultRowheight:= 28;
+    GridLineWidth:= 5;
+    colcount:= CCOL;  
+    rowcount:= CROW;
+    height:= CROW *(defaultRowHeight+GridLineWidth);
+    width:= CCOL * (defaultColWidth+GridLineWidth);
+    borderStyle:= bsNone;
+    scrollbars:= false;
+  end;
+end;
+
+//http://www.delphitricks.com/source-code/components/sort_a_stringgrid.html
+procedure SortStringGrid(var GenStrGrid: TStringGrid; ThatCol: Integer);
+var
+  CountItem, I, J, K, ThePosition: integer;
+  MyList: TStringList;
+  MyString, TempString: string;
+begin
+  CountItem := GenStrGrid.RowCount;
+  MyList        := TStringList.Create;
+  MyList.Sorted := False;
+  try
+    begin
+      for I := 1 to (CountItem - 1) do
+        MyList.Add(GenStrGrid.Rows[I].Strings[ThatCol] + TheSeparator +
+          GenStrGrid.Rows[I].Text);
+      Mylist.Sort;
+      for K := 1 to Mylist.Count do
+      begin
+        MyString := MyList.Strings[(K - 1)];
+        ThePosition := Pos(TheSeparator, MyString);
+        TempString  := '';
+        {Eliminate the Text of the column on which we have sorted the StringGrid}
+        TempString := Copy(MyString, (ThePosition + 1), Length(MyString));
+        MyList.Strings[(K - 1)] := '';
+        MyList.Strings[(K - 1)] := TempString;
+      end;
+      for J := 1 to (CountItem - 1) do
+        GenStrGrid.Rows[J].Text := MyList.Strings[(J - 1)];
+    end;
+  finally
+    MyList.Free;
+  end;
+end;
+
+
+procedure NumberGrid;
+begin
+  for I:= 1 to (CROW * CCOL)-1 do begin
+     sGrid1.Cells[I ,0]:= inttoStr(I);
+     sGrid1.Cells[0,(I div CCOL)+1]:= inttoStr(I+1);//-47);   
+   end; 
+end;     
+
+
+Procedure FillBitmapGrid;
+var i: integer;
+    img: TImage;
+    imagefile: string;
+begin
+   //Titellines
+   Bmp:= TBitmap.Create;
+   for I:= 1 to 255 do begin
+     sGrid1.Cells[I ,0]:= inttoStr(I-1);
+     sGrid1.Cells[0,(I div 16)+2]:= inttoStr(I+1);//-47);   
+   end;   
+   //for I:= 0 to 15 do 
+     //sGrid1.Cells[I+1,0]:= inttoStr(I); 
+  for I:= 1 to 48 do begin
+     Imagefile:= ('bmp' + IntToStr(I)+'.bmp');
+     Bmp.loadfromFile(ExePath+RESPATH+Imagefile)   
+   //for I:= 2 to 55 do 
+     //sGrid1.Cells [I mod 16+1, I div 16+1]:= IntToStr(Random(I));   //char(i)
+     //sGrid1.Objects[4,4]:= bmp;
+     SGrid1.Canvas.Draw(((I mod 10)*110), ((I div 10) *110)+25, bmp);
+   //sGrid1.Font.Size:= 14;
+     //bmp.Free;
+   end;
+   bmp.Free;
+end;
+
+
+Procedure FillASCIIGrid;
+var i: integer;
+begin
+   //Titellines
+   for I:= 1 to 255 do begin
+     sGrid1.Cells[I ,0]:= inttoStr(I-1);
+     sGrid1.Cells[0,(I div 16)+2]:= inttoStr(I+1);//-47);   
+   end;   
+   //for I:= 0 to 15 do 
+     //sGrid1.Cells[I+1,0]:= inttoStr(I);   
+   for I:= 32 to 255 do 
+     sGrid1.Cells [I mod 16+1, I div 16+1]:= Chr(I);   //char(i)
+   sGrid1.Font.Size:= 14;
+end;
+
+procedure FillPascalGrid;
+var i, c, ct: integer;
+begin
+  j:= 1; c:= 1;
+  ct:= CTRI;
+  with sGrid1 do begin
+    for i:= 0 to lotNr do begin
+      if larr[i] = 1 then begin 
+         dec(ct)
+         c:= 0;
+         repeat 
+           if larr[i] <> 0 then  //zero filter
+             Cells[ct+c, j]:= intToStr(larr[i]);
+           //writeln(inttostr(j)+ ' '+intToStr(larr[i]) +' '+inttostr(i)) debug
+           inc(c) //column
+           inc(i)
+         until c = (2*j-1);
+       inc(j)  //row jump
+      end
+    end;
+   Font.Size:= 15;
+  end;  
+end;
+
+
+procedure FillPascalTriangle;
+var
+  num,i,j,k, spacei: integer;
+  difffact,diff,n,r,comb,nfact,rfact, ar: integer;
+begin
+  //maxForm1.Console1Click(self);
+  difffact:= 1;
+  comb:= 0;
+  nfact:= 1;
+  rfact:= 1;
+  num:= CTRI;
+  //ar:= (CTRI -1)/2;
+  ar:= 2;
+  k:= num-1;
+  spacei:= num-1;
+  //for(i=0;i<num;i++)
+  for i:= 0 to num -1 do begin
+    dec(spacei)
+    k:= spacei;
+   //for(;k>0;k--)
+    for k:= k downto 0 do begin
+      write('    ')
+      larr[ar]:= 0;
+      //dec(ar)
+      end;
+    //for(j=0;j<=i;j++)
+    for j:= 0 to i do begin
+      comb:= 0;
+      nfact:= 1;
+      rfact:= 1;
+      difffact:= 1;
+      //for(n=i;n>=1;n--)
+      for n:= i downto 1 do
+        nfact:= nfact*n;
+      //for(r=j;r>=1;r--)
+      for r:= j downto 1 do
+        rfact:= rfact*r;
+      diff:= i-j;
+      //for(;diff>=1;diff--)
+      for diff:= diff downto 1 do
+        difffact:= difffact*diff;
+      comb:= (nfact div (rfact*difffact));      
+      if comb > 100 then
+      write(format('%.1d    ',[comb])) else
+      write(format('%.1d      ',[comb]));
+      //if not odd(i) then 
+        larr[ar]:= comb //else 
+        //larr[ar]:= comb
+         ar:= ar + 2
+    end;
+    writeln('')
+  end
+end;
+
+function GetBigIntFact(aval: byte): string;
+  //unit mybigint
+var mbResult: TMyBigInt;
+    i: integer;
+begin
+  mbResult:= TMyBigInt.Create(1);
+  try
+    for i:= 1  to aval do 
+      //mbResult.Multiply(mbresult, mbresult);
+      mbResult.Multiply1(mbresult, i);
+    Result:= mbResult.ToString;
+  finally 
+    mbResult.Free;
+  end;
+end;
+
+function getPermutation(npr, k: integer): extended; 
+//2. Permutation(Variation without repeating) = nPr = n!/(n-k)!
+begin
+  result:= (Fact(npr)/Fact(npr-k));
+  //test 4 of 10 = 5040 = NPR(10,4)
+end;
+
+function getCombination(npr, k: integer): extended; 
+//3. Combination (binominal coefficient)= nCr = nPr / k!
+begin
+  result:= (Fact(npr)/Fact(npr-k)/Fact(k));
+  //ncr:= npr/round(fact(ncr))
+  //test 4 of 20 = 4845 = NCR(20,4)
+end;
+
+
+BEGIN  //Main
+  {x:= 100; quadrat:= power(x,2); 
+  writeln(format('%f', [quadrat]))
+  square:= sqrt(quadrat)
+  writeln(format('%f', [square]))}
+
+  CreateDrawForm;
+  //FillASCIIGrid;
+  FillBitmapGrid;
+  //SortStringGrid(SGrid1, 1);     //!! just to show a logix with ASCII
+  //FillASCIIGrid;
+  
+  //FillPascalTriangle;
+  //FillPascalGrid;
+  //NumberGrid;
+    
+  writeln(floattoStr(getPermutation(45,6)))
+  writeln(floattoStr(getCombination(45,6)))
+  writeln(floattoStr(getCombination(12,6)))
+  writeln('Swap File Size: '+inttoStr(getSwapFileSize))
+
+  (*comblist:= TStringlist.create;
+  for i:= 1 to 12 {LotRANGE} do
+    comblist.add(Format('case: %d is %f',[i, getCombination(12,i)]))
+  for i:= 1 to 12 {LotRANGE} do
+    Writeln(comblist[i-1]) 
+  comblist.Free;*)
+
+  //for i:= 1 to lotnr do 
+    //Write(inttostr(larr[i])+ ' ');  //debug
+  //Writeln(GetASCII)  
+End. 
+
+----------------------------------------------
+//teststring     SNCF 15018 TEE Iris la dette du diable
+1   12    66    220  495  792  924  792  495  220  66    12    1   
+
+procedure TForm30.btnAscii8Click(Sender: TObject);
+var
+I: Integer;
+begin
+ClearGrid;
+for I:= 32 to 255 do begin
+  StringGrid1.Cells [I mod 16 + 1,
+I div 16 + 1 := AnsiChar (I);
+end;
+end;
+In previous versions of Delphi you could obtain the same output by writing
+the following simpler version (that uses Char rather than AnsiChar for the
+conversion):
+for I := 32 to 255 do begin
+  StringGrid1.Cells [I mod 16 + 1,
+I div 16 + 1] := Char (I);
+end;
+I don't think I really need to tell you how messy the situation is with the
+various ISO 8859 encodings (there are 16 of them, still unable to cover the
+more complex alphabets), Windows page codes, multi byte representations
+to cover Chinese and other languages. With Unicode, this is all behind us,
+even though the new standard has its own complexity and potential problems.
+
+-----------------------------------------------------
+
+  Dealing with Big Numbers (Integers)
+  -----------------------------------
+  
+  As you may know there's no simple solution to print or store big numbers, for example you want to compute fact(70), your calculator shows:
+  fact(70) = 1.1978571669969891796072783721689e+100
+  
+  but the maximum range on Delphi depends on your operating system types, means nowadays an int64 range is the big int.
+  Now that the "signed" Words are finally up-to-par with the unsigned integer types, Delphi 4 introduces a new 64-bits integer type, called Int64, with a whopping range of -2^63..2^63 - 1  
+
+ Another way is to use the type extended, but the limitation is precision like
+   
+    Writeln(FloatToStr(Fact(70)))
+ 
+    it only shows 
+    1.2E+0100
+
+With a BigInt Library (bigintlib) you'll see the full range of Fact(70):
+
+11978571669969891796072783721689098736458938142546425857555362864628009582789845319680000000000000000
+    
+The call respectively the calculation goes like this:
+
+function GetBigIntFact(aval: byte): string;
+//call of unit mybigint
+var mbRes: TMyBigInt;
+    i: integer;
+begin
+  mbRes:= TMyBigInt.Create(1);
+  try
+    //multiplication of factor
+    for i:= 1  to aval do 
+      mbRes.Multiply1(mbresult, i);
+    Result:= mbRes.ToString;
+  finally 
+    //FreeAndNil(mbResult);
+    mbRes.Free;
+  end;
+end;
+    
+Or you want the power of 100        
+2^100=
+1267650600228229401496703205376
+  
+The definition of the function could be the following:
+
+function GetBigIntPower(aval: integer): string;
+var mbResult: TMyBigInt;
+     i: integer;
+begin
+  mbResult:= TMyBigInt.Create(1);
+  try
+    for i:= 1 to aval do 
+      mbResult.Multiply1(mbresult, 2);
+    Result:= mbResult.ToString;
+  finally 
+    mbResult.Free;
+  end;
+end;
+  
+  
+At least one really big, it's 2^1000
+
+10715086071862673209484250490600018105614048117055336074437503883703510511249361224931983788156958581275946729175531468251871452856923140435984577574698574803934567774824230985421074605062371141877954182153046474983581941267398767559165543946077062914571196477686542167660429831652624386837205668069376
+
+
+the class of the unit from swiss delphi:
+
+  TMyBigInt = class
+  private
+    Len: Integer;
+    Value: AnsiString;
+    procedure Trim;
+    procedure Shift(k: Integer);
+    procedure MultiplyAtom(Multiplier1: TMyBigInt; Multiplier2: Integer);
+  public
+    constructor Create(iValue: Integer = 0);
+    procedure Add(Addend1, Addend2: TMyBigInt);
+    procedure Multiply(Multiplier1, Multiplier2: TMyBigInt); overload;
+    procedure Multiply(Multiplier1: TMyBigInt; Multiplier2: Integer); overload;
+    function ToString: string;
+    procedure CopyFrom(mbCopy: TMyBigInt);
+  end;
+    

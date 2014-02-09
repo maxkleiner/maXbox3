@@ -1,0 +1,591 @@
+//****************TimeTester**************************
+program BigDecimal_SysTools;
+
+// this is in conjunction with example _28_pas_dataset.txt locs=160
+// in V3.2 you find DBX, SQLExpress for Interbase, Firebird, Oracle 
+
+//GetShortPathName(PChar(LongName), ShortName, Max_Path);
+  
+
+function GetShortPathName(lname, sname: pchar; mpath: longint): bool;
+  external 'GetShortPathNameW@kernel32.dll stdcall';
+
+function MessageBoxTimeOut(hWnd: HWND; lpText: PChar; lpCaption: PChar; uType: UINT;
+ wLanguageId: WORD; dwMilliseconds:DWORD):Integer; external 'MessageBoxTimeoutA@user32.dll stdcall';
+
+
+Const SQLQuery = 'Select PersonalNr, KommDatum from ZeitA where PersonalNr = 1'; 
+                    
+var
+   dbMain: TDatabase;   //@global
+   mstd: TStDecimal;
+
+function TFormMain_GetTime:TDateTime;
+begin
+  result:= StrToTime(FormatDateTime('h:n',time)); // Sekunden abschneiden
+end;
+
+function CurrToStr2(const Value: Currency): string;
+var
+  IntVal: currency;//Int64; //absolute Value;
+begin
+  IntVal:= value;
+  if Abs(IntVal) >= 10000 then begin
+    Result:= CurrToStr(IntVal);  //inttoStr
+    Insert(DecimalSeparator, Result, Length(Result) - 3);
+  end
+  else begin
+    Result:= Format('0%s%.4d', [DecimalSeparator, Abs(IntVal)]);
+    if IntVal < 0 then
+      Result:= '-' + Result;
+  end;
+end;
+
+
+function TestCurSum(): string;
+var
+  value1, value2, delta: Currency;
+begin
+  value1 := 3602879701896.97;
+  value2 := 3602879701896.98;
+  delta  := 0.01;
+  value1 := value1 + delta;
+  value2 := value2 + delta;
+  Result := CurrToStr2(value1) + ' / ' + CurrToStr2(value2);
+end;
+
+
+var 
+   mylst: TStringlist;
+   hs: string;
+   i: integer;
+   textout: boolean;
+   myregxs: RegExprString;
+   iResult, iFlags: Integer;  
+   S: Single;
+   E: Extended; 
+       
+begin
+
+ // maxform1.ShellStyle1click(self)
+    maxform1.Console1Click(self)
+    //maxform1.Decompile1Click(self)
+    textout:= false;
+  //MakeDataBase;
+  //Define_Let_OpenDB;
+  //queryperformancefrequency
+  //Function GetAliasPath( const AliasName : string) : string');
+  //addstandardalias
+  mylst:= TStringlist.create;
+  with TSession.Create(NIL) do try
+      SessionName:= 'Mars3'
+      getAliasNames(mylst);
+      Writeln('BDE / DB Alias List:  ******************************');
+      for i:= 1 to mylst.count-1 do
+        write(mylst[i]+' ');
+    finally
+      Free;
+      mylst.Free; 
+    end;      
+ 
+  Writeln('BDE/DB Parameters: ******************************');
+  Writeln('BDE Directory '+GetBdeDirectory);
+  writeln('Temp File Path'+getTempDir)
+  Writeln('*************************************************');
+
+  //GetAliasDriverName('SAS')
+  writeln(timetoStr(TFormMain_GetTime))
+  writeln(timeToStr(time))
+  gettickcount
+  //queryperformancecounter
+  writeln(inttoStr(max_path))
+  //saveln
+  writeln('thiis is newline'+CR+LF+'a second line');
+  //gettemppath
+  //CollectionsEqual
+  
+  with TThread.Create(true) do begin
+      //afterconstruction
+         resume;
+         //synchronize(
+         writeln('thread id '+inttoStr(threadid))
+         writeln('thread handle '+inttoStr(handle))
+      free;
+  end;
+  
+//  function ExecRegExpr (const ARegExpr, AInputStr : RegExprString) : boolean;
+// true if string AInputString match regular expression ARegExpr
+// ! will raise exeption if syntax errors in ARegExpr
+   Writeln(ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+                          'BLOCK( test1)', 'def "$1" value "$2"', True))
+//  will return:  def 'BLOCK' value 'test1'
+//  ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+//   'BLOCK( test1)', 'def "$1" value "$2"')
+//   will return:  def "$1" value "$2"
+   myregxs:= ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+                  'BLOCK( test1)', 'def "$1" value "$2"', false);
+     Writeln(myregxs)             
+//   will return:  def "$1" value "$2"
+   //or $00001000
+  iFlags:= $0 or $00010000 or $00000040;
+     iResult:= MessageBoxTimeout(Application.Handle,
+         'Test a timeout of 2 seconds.','MessageBoxTimeout Test',iFlags,0,2000);
+         
+      Writeln(TestCurSum);
+
+    //3602879701896.98 / 3602879701896.9904
+  
+      mstd:= TStDecimal.Create;
+      mstd.addOne;
+      writeln('big decimal '+mstd.asString);
+      mstd.addOne;
+      mstd.RaiseToPower(73)
+      writeln('big decimal2 '+mstd.asString);
+      mstd.Free;
+      
+       E := 0.1;
+       {if E = 0.1 then
+         ShowMessage('equal')
+       else
+         ShowMessage('not equal');}
+       Writeln(floattoStr(E));
+       S:= E;
+       E:= S;
+       Writeln(BoolToStrJ(SameValue(E,S,0)));  
+    
+       Writeln(floatToStr(E));
+       PrintF('more float prec %.18f',[E])
+       //0.100000000000000000
+       //0.100000001490116120
+  //SynRegExpr
+      with TStString.Create do begin
+        AppendString(memo2.text)
+        Writeln('this word count of StString '+IntToStr(WordCount));
+        Writeln('ASCII count '+inttoStr(ASCIICount));
+        //atIndex
+        Free;
+      end;
+      
+  //Function AnsiHashText( const S : string; Size : Integer) : Integer');
+       ///writeln(inttoStr(AnsiHashText(memo2.text, 128)));
+       hs:= 'to hash the trash';
+       //writeln(inttoStr(AnsiHashText(hs, 128)));
+
+  //Function AnsiHashStr( const S : string; Size : Integer) : Integer');
+  //Function AnsiELFHashText( const S : string; Size : Integer) : Integer');
+  //Function AnsiELFHashStr( const S : string; Size : Integer) : Integer');}
+       Writeln('do have the lambda expression');
+       Println('do have the %s'+hs);
+       Saveln('memo2extract.txt',hs)
+       Sayln(hs);
+       
+       
+  
+  
+End.
+
+http://rvelthuis.de/articles/articles-floats.html
+
+(* === compile-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TStDecimal(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TOBJECT', 'TStDecimal') do
+  with CL.AddClassN(CL.FindClass('TOBJECT'),'TStDecimal') do
+  begin
+    RegisterMethod('Constructor Create');
+    RegisterMethod('Function Compare( X : TStDecimal) : integer');
+    RegisterMethod('Function IsNegative : boolean');
+    RegisterMethod('Function IsOne : boolean');
+    RegisterMethod('Function IsPositive : boolean');
+    RegisterMethod('Function IsZero : boolean');
+    RegisterMethod('Procedure SetToOne');
+    RegisterMethod('Procedure SetToZero');
+    RegisterMethod('Procedure Assign( X : TStDecimal)');
+    RegisterMethod('Procedure AssignFromFloat( aValue : double)');
+    RegisterMethod('Procedure AssignFromInt( aValue : integer)');
+    RegisterMethod('Function AsFloat : double');
+    RegisterMethod('Function AsInt( aRound : TStRoundMethod) : integer');
+    RegisterMethod('Procedure Abs');
+    RegisterMethod('Procedure Add( X : TStDecimal)');
+    RegisterMethod('Procedure AddOne');
+    RegisterMethod('Procedure ChangeSign');
+    RegisterMethod('Procedure Divide( X : TStDecimal)');
+    RegisterMethod('Procedure Multiply( X : TStDecimal)');
+    RegisterMethod('Procedure RaiseToPower( N : integer)');
+    RegisterMethod('Procedure Round( aRound : TStRoundMethod; aDecPl : integer)');
+    RegisterMethod('Procedure Subtract( X : TStDecimal)');
+    RegisterMethod('Procedure SubtractOne');
+    RegisterProperty('AsString', 'AnsiString', iptrw);
+  end;
+end;
+
+
+
+function ReplaceRegExpr (const ARegExpr, AInputStr, AReplaceStr : RegExprString;
+      AUseSubstitution : boolean{$IFDEF D4_}= False{$ENDIF}) : RegExprString; //###0.947
+// Returns AInputStr with r.e. occurencies replaced by AReplaceStr
+// If AUseSubstitution is true, then AReplaceStr will be used
+// as template for Substitution methods.
+// For example:
+//  ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+//   'BLOCK( test1)', 'def "$1" value "$2"', True)
+//  will return:  def 'BLOCK' value 'test1'
+//  ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+//   'BLOCK( test1)', 'def "$1" value "$2"')
+//   will return:  def "$1" value "$2"
+
+
+Exception: An error occurred while attempting to initialize the Borland Database Engine (error $2A04) at 0.569
+
+$2A04 (10756) = Operation not applicable.
+DBIO will not start: BDE Error $2A04
+
+
+Full error:
+  CRITICAL (Work) An error occurred while attempting 
+  to initialize the Borland Database Engine (error $2A04)
+
+Issue:
+This error indicates a core problem with BDE configuration.
+
+
+Resolution:
+
+1) Close ALL application software, stop all OmniRush modules including
+   Launcher
+
+2) Open the BDE Administrator
+
+3) Go to the Configuration | System | INIT area
+
+4) Check the Default Driver setting. The recommended setting
+   (for ALL systems) is DBASE
+
+5) Go to the Configuration | Drivers | Native | Paradox area
+
+6) Check the NET DIR setting. This should be set to a LOCAL
+   drive and a simple directory that exists. For example, check
+   if you have a C:\TEMP\ directory. If not, create one and grant
+   all users full access to it.
+   Then set NET DIR to c:\temp\
+
+7) We advise that the PC now be rebooted.
+
+8) Check for proper operation.
+
+
+
+Re:Getting ERROR: "to initialize the Borland Database Engine (error $210D)"
+The errors are "shared memory conflict" and "insufficient memory to
+complete this operation" respectively.
+I assume that "several Delphi 7's running" means several programs
+created with Delphi7 not several instances of the Delphi 7 IDE. You
+need to change the SharedMemLocation and SharedMemSize in the BDE
+Administrator. Try 0x5BDE and 4096. If that does not work try some of
+the other locations suggested in the on-line help.
+--
+
+  
+  
+TABLE 16.1. PRIMARY TDataSet PROPERTIES.
+
+Property 	Description
+Active 	Opens the dataset when set to True and closes it when set to False.
+AutoCalcFields 	Determines when calculated fields are calculated.
+Bof 	Returns True if the cursor is on the first record in the dataset and False if it isn't.
+CachedUpdates 	When True, updates are held in a cache on the client machine until an entire transaction is complete. When False, all changes to the database are made on a record-by-record basis.
+CanModify 	Determines whether the user can edit the data in the dataset.
+DataSource 	The DataSource component associated with this dataset.
+DatabaseName 	The name of the database that is currently being used.
+Eof Returns True if the cursor is at the end of the file and False if it isn't.
+FieldCount 	The number of fields in the dataset. Because a dataset might be dynamic (the results of a query, for example), the number of fields can vary from one dataset request to the next.
+Fields 	An array of TFields objects that contains information about the fields in the dataset.
+FieldValues 	Returns the value of the specified field for the current record. The value is represented as a Variant.
+Filter 	An expression that determines which records a dataset contains.
+Filtered When True, the dataset is filtered based on either the Filter property or the OnFilterRecord event. When False, the entire dataset is returned.
+FilterOptions 	Determines how filters are applied.
+Found 	Indicates whether a find operation is successful.
+Handle 	A BDE cursor handle to the dataset. This is used only when making direct calls to the BDE.
+Modified Indicates whether the current record has been modified.
+RecNo 	The current record number in the dataset.
+RecordCount 	Returns the number of records in the dataset.
+State 	Returns the current state of the dataset (dsEdit, dsBrowse, dsInsert, and so on).
+UpdateObject 	Specifies the TUpdateObject component to use for cached updates.
+UpdatesPending 	When True, the cached update buffer contains edits not yet applied to the dataset.
+
+
+TABLE 16.2. PRIMARY TDataSet METHODS.
+
+Method 	Description
+Append 	Creates an empty record and adds it to the end of the dataset.
+AppendRecord 	Appends a record to the end of the dataset with the given field data and posts the edit.
+ApplyUpdates 	Instructs the database to apply any pending cached updates. Updates are not actually written until the CommitUpdates method is called.
+Cancel 	Cancels any edits to the current record if the edits have not yet been posted.
+CancelUpdates 	Cancels any pending cached updates.
+ClearFields 	Clears the contents of all fields in the current record.
+CommitUpdates 	Instructs the database to apply updates and clear the cached updates buffer.
+Close 	Closes the dataset.
+Delete 	Deletes the current record.
+DisableControls 	Disables input for all data controls associated with the dataset.
+Edit 	Enables editing of the current record.
+EnableControls 	Enables input for all data controls associated with the dataset.
+FetchAll 	Gets all records from the cursor to the end of the dataset and stores them locally.
+FieldByName 	Returns the TField pointer for a field name.
+
+FindFirst
+
+check:
+procedure SIRegisterTDATASET(CL: TPSPascalCompiler);
+procedure TDATASETFIELDS_R(Self: TDATASET; var T: TFIELDS);
+begin T := Self.FIELDS; end;
+
+//{$IFNDEF FPC}
+
+procedure TDATASETFIELDLIST_R(Self: TDATASET; var T: TFIELDLIST);
+begin T := Self.FIELDLIST; end;
+
+_QSQ14.DB  ??
+
+
+http://mailer.newsabo.net/link.php?M=4355886&N=30&L=5&F=H
+
+Kritische Java-Lücke wird im großen Stil ausgenutzt Update
+
+Kriminelle nutzen derzeit zunehmend eine kritische Lücke in der Java-Laufzeitumgebung aus, um Rechner beim Besuch speziell präparierter Webseiten mit Schadcode zu infizieren. Laut dem renommierten Security-Blogger Brian Krebs ist das darauf zurückzuführen, dass das Arsenal des weit verbreiteten Exploit-Kits BlackHole um einen passenden Exploit ausgebaut wurde.
+
+Durch die Lücke, die Oracle Mitte Februar gepatcht hat, kann Schadcode aus der Java-Sandbox ausbrechen und sich dauerhaft auf dem System verankern. Welche Art von Schadcode dabei injiziert wird, ist variabel. Unter anderem soll die Lücke zur Verbreitung des ZeuS-Trojaners genutzt werden.
+
+Laut einer Analyse von Microsoft ist der Dropper in zwei Java-Klassen aufgeteilt. Die erste Klasse nutzt die Schwachstelle bei der Verarbeitung von Arrays aus, um an höhere Rechte zu gelangen und führt anschließend die Loader-Klasse aus, sich um das Herunterladen und das Installieren der Payload kümmert.
+
+
+Mit der aktuellen Java-Version ist man vor dem Exploit geschützt. Vergrößern Schützen kann man sich, indem man eine der derzeit aktuellen Java-Versionen 6 Update 31 oder 7 Update 3 installiert. Ob und welche Version des Browser-Plugins installiert ist, erfährt man auf dieser Testseite.
+
+Allzu sicher sollte man sich jedoch selbst mit der aktuellsten Java-Version nicht fühlen: Brian Krebs berichtet von Gerüchten in Untergrundforen über einen neuen Exploit, der eine ungepatchte kritische Java-Lücke ausnutzt.
+
+Wer auf Nummer sicher gehen will, kann Java auch komplett deinstallieren oder zumindest das Browser-Plugin deaktivieren. Letzteres dürfte sich aufgrund der stetig abnehmenden Verbreitung von Java auf die meisten Webseiten nicht auswirken. 
+
+// Beim Kopieren immer AsVariant benutzen!!!
+// Leere, nicht initialisierte Integer-, Float- und DateTime-Felder liefern mit AsInteger oder value
+// den Wert 0 und nicht NULL.
+// Wenn das Feld eine Nachschlagetabelle benutzt, und das Nachschlagefeld mit Min/Max begrenzt ist,
+// gibt es bei Locate und Lookup eine Exception!!!
+var a:array[0..60] of Variant;
+
+
+
+// Funktion: HexDump
+// Gibt 1. Parameter als HexDump aus.
+// Als 2. Parameter muß die Größe angegeben werden.
+function HexDump(const y; size: Integer): string;
+type
+  TBytes = array[0..MaxInt - 1] of Byte;
+var
+  i, j: Integer;
+  s: string;
+begin
+// // Das würde reichen. Der Rest ist nur Optik ;-)
+// for i := 0 to size - 1 do
+// begin
+// j := TBytes(y)[i];
+// Result := Result + IntToHex(j, 2) + ' ';
+// end;
+
+  Result := 'Größe: ' + IntToStr(size) + ' Bytes' + sLineBreak;
+  for i := 0 to size - 1 do
+  begin
+    if (i mod 16) = 0 then Result := Result + IntToHex(i, 4) + ' : ';
+    // Das i. Byte von y ermitteln
+    j := TBytes(y)[i];
+    // Hex Zahl ausgeben
+    Result := Result + IntToHex(j, 2) + ' ';
+    // lesbaren Bereich rechts ausgeben
+    if j > 31 then s := s + Chr(j)
+              else s := s + '.';
+    // nach 8 Bytes Leerzeichen und
+    // nach 16 Byte lesbaren Text sowie Zeilenumbruch ausgeben
+    if (i mod 16) = 15 then
+    begin
+      Result := Result + ': ' + s + sLineBreak;
+      s := '';
+    end
+    else if (i mod 8) = 7 then
+    begin
+      Result := Result + ' ';
+      s := s + ' ';
+    end;
+  end;
+  // Letzte Zeile kann weniger als 16 Byte haben -> mit Leerzeichen auffüllen
+  if ((size-1) mod 16) < 15 then
+  begin
+    for i := ((size-1) mod 16) to 14 do Result := Result + ' ';
+    if ((size-1) mod 16) < 7 then Result := Result + ' ';
+    Result := Result + ': ' + s + sLineBreak;
+  end;
+end;
+
+procedure TForm1.Button2Click(Sender: TObject);
+var
+  s1: string;
+  s2: shortstring;
+  a: array[0..2] of record x,y: Integer end;
+begin
+  // Test von HexDump
+  s1 := 'Hallo, das ist ein Test.';
+  s2 := 'Hallo, das ist ein Test.';
+  a[0].x := 0;
+  a[0].y := 1;
+  a[1].x := 2;
+  a[1].y := 3;
+  a[2].x := 4;
+  a[2].y := 5;
+  // Courier sieht beim Dump schöner aus ;-)
+  Memo1.Font.Name := 'Courier New';
+  // Huch, es werden nur 4 Byte ausgegeben -> Ein String ist also ein Pointer
+  Memo1.Lines.add(HexDump(s1, SizeOf(s1)));
+  // Hier ist der Text ;-)
+  // (Length + 1 ist immer 0, da es intern ein nullterminierter String ist.)
+  Memo1.Lines.add(HexDump(Pointer(s1)^, Length(s1)+1));
+  // Aha, wie früher in Turbo Pascal -> String ist 256 Byte groß und
+  // 1. Byte beinhaltet die Größe (Länge) des Strings
+  Memo1.Lines.add(HexDump(s2, SizeOf(s2)));
+  // Das Array ist 25 Byte größ 3 x 2 Integer á 4 Byte
+  Memo1.Lines.add(HexDump(a, SizeOf(a)));
+
+  // Ausgabe letzter HexDump(a):
+  // Größe: 24 Bytes
+  // 0000 : 00 00 00 00 01 00 00 00 02 00 00 00 03 00 00 00 : ........ ........
+  // 0010 : 04 00 00 00 05 00 00 00 : ........
+end; 
+
+
+  
+  5.6.2012 11.30-14.00 , Falcone Konferenzsaal, Birmensdorferstrasse 150, Zürich
+
+Closures und funktionale Sprachen
+Max Kleiner, Kleiner Kommunikation
+
+Ein Closure ist ein funktionales Objekt, das sich Werte unabhängig seines Geltungsbereichs (Scope) merkt und zurückgibt. Andere meinen auch, es sei schlicht ein anonymer Code Block mit Widerverwendung. Wenn Sie jemals eine Funktion gebaut haben, die eine andere Funktionzurückgibt, haben Sie bereits mit der Closure oder Delegate Idee Kontakt geschlossen. Diese Session soll mit kleinen konkreten Beispiiel Licht in die Welt der Closures bringen und so ganz nebenbeieinige Tatsachen zur funktionalen Programmierung liefern (Back to the Function).
+Der Benefit von Closures sind granulare Wiederverwendbarkeit (Reuse), ausführbare Methoden sowie Vermeiden von Redundanz und Wiederholung. Max bespricht:
+ 
+
+    Ein Closure als Code Block
+    Long History - Smalltalk with Blocks, von Lisp bis Ruby
+    Functional Programming - eine Renaissance
+    Dynamic Languages - Fluch oder Segen?
+    Objektorientiert versus Blockorientiert
+    Case Study- Design eines digitalen Lügendetektors mit Closures!
+
+
+
+    There are lots of neat little things that are in many of the DLLs that Microsoft has installed in Windows. Most of them are documented in the Win32 API. However, there are a lot of them that are undocumented. This article shows how to use one of the undocumented functions available in user32.dll, MessageBoxTimeOut.
+
+This type of functionality for a MessageBox has been requested on the Delphi newsgroups many times and there have been several solutions written. After being introduced in XP, this functionality is now available to developers using this undocumented API.
+
+Since this function is not documented, it is not found in Windows.pas, so it has to be defined. It is identical to the MessageBox API definition except it has two more parameters, wLanguageID and dmMilliseconds.
+
+function MessageBoxTimeOut(
+hWnd: HWND; lpText: PChar; lpCaption: PChar;
+uType: UINT; wLanguageId: WORD; dwMilliseconds: DWORD): Integer; stdcall;
+
+function MessageBoxTimeOutA(
+hWnd: HWND; lpText: PChar; lpCaption: PChar;
+uType: UINT; wLanguageId: WORD; dwMilliseconds: DWORD): Integer; stdcall;
+
+function MessageBoxTimeOutW(
+hWnd: HWND; lpText: PWideChar; lpCaption: PWideChar;
+uType: UINT; wLanguageId: WORD; dwMilliseconds: DWORD): Integer; stdcall;
+
+
+implementation
+
+// this const is not defined in Windows.pas
+const
+MB_TIMEDOUT = 32000;
+
+function MessageBoxTimeOut; externaluser32 name 'MessageBoxTimeoutA';
+function MessageBoxTimeOutA; external user32 name 'MessageBoxTimeoutA';
+function MessageBoxTimeOutW; external user32 name 'MessageBoxTimeoutW';
+
+
+Now, to call the function, it is as easy as setting the flags and making the call. There may be other results returned that I am not aware of besides the standard IDxxx return values and the MB_TIMEDOUT result defined above.
+
+var
+iResult: Integer;
+iFlags: Integer;
+
+begin
+// Define a MessagBox with an OK button and a timeout of 2 seconds
+iFlags := MB_OK or MB_SETFOREGROUND or MB_SYSTEMMODAL or MB_ICONINFORMATION;
+iResult := MessageBoxTimeout(
+Application.Handle,
+'Test a timeout of 2 seconds.',
+'MessageBoxTimeout Test', iFlags, 0, 2000);
+
+// iResult will = 1 (IDOK)
+
+ShowMessage(IntToStr(iRet));
+
+// Define a MessageBox with a Yes and No button and a timeout of 5 seconds
+
+iFlags := MB_YESNO or MB_SETFOREGROUND or MB_SYSTEMMODAL or MB_ICONINFORMATION;
+
+iResult := MessageBoxTimeout(
+Application.Handle,
+'Test a timeout of 5 seconds.',
+'MessageBoxTimeout Test', iFlags, 0, 5000);
+
+// iResult = MB_TIMEDOUT if no buttons clicked, otherwise
+// iResult will return the value of the button clicked
+
+case iResult of
+IDYES: // Pressed Yes button
+ShowMessage('Yes');
+IDNO: // Pressed the No button
+ShowMessage('No');
+MB_TIMEDOUT: // MessageBox timed out
+ShowMessage('TimedOut');
+end;
+end;
+
+I presume Borland will not put this into Windows.pas until Microsoft documents it but developers can get a head start on them by using the code above. It is unlikely that Microsoft will depricate this function for quite some time because all of the standard MessageBox API calls actually call MessageBoxTimeOutA or MessageBoxTimeoutW and pass $FFFFFFFF as the timeout period meaning the dialog will wait a very long time, approx 49 days!
+Posted by BladeMaster at 11:46 AM
+Labels: message box, timeout, undocumented api 
+
+
+procedure TForm1.Button1Click(Sender: TObject) ;
+var
+  iRet: Integer;
+  iFlags: Integer;
+begin
+   iFlags := MB_OK or MB_SETFOREGROUND or MB_SYSTEMMODAL or MB_ICONINFORMATION;
+   MessageBoxTimeout(Application.Handle, 'Test a timeout of 2 seconds.', 'MessageBoxTimeout Test', iFlags, 0, 2000) ;
+   iFlags := MB_YESNO or MB_SETFOREGROUND or MB_SYSTEMMODAL or MB_ICONINFORMATION;
+   iRet := MessageBoxTimeout(Application.Handle, 'Test a timeout of 5 seconds.', 'MessageBoxTimeout Test', iFlags, 0, 5000) ;
+   case iRet of
+     IDYES:
+       ShowMessage('Yes') ;
+     IDNO:
+       ShowMessage('No') ;
+     MB_TIMEDOUT:
+       ShowMessage('TimedOut') ;
+   end;
+end;
+
+
+ Sommer, Sonne, Ökostrom
+Meldung vorlesen und MP3-Download
+
+Nach einer Meldung des in Münster ansässigen Internationalen Wirtschaftsforums Regenerative Energie haben die in Deutschland installierten Photovoltaikanlagen am vorgestrigen Freitag Mittag einen Weltrekord bei der Gewinnung von Solarenergie aufgestellt. Im Vergleich zum Vorjahreswert stellen die erzeugten 22 Gigawatt eine Steigerung um mehr als die Hälfte dar und ersetzten zumindest vorübergehend die Energieausbeute von 15 bis 20 Kernkraftwerken.
+
+Trotz der Tatsache, dass Deutschland geografisch gesehen gar nicht die optimal für Gewinnung von Solarenergie liegt, konnte Forumsdirektor Norbert Allnoch verkünden: "Es gibt derzeit kein anderes Land auf der Erde, in dem Solaranlagen mit einer Leistung von über 20 000 MW Strom produzieren können." Wie Allnoch gegenüber Reuters erklärte, deckt diese Leistung rund ein Drittel des landesweiten Energiebedarfs an einem Werktag, am Wochenende, wenn Industrieanlagen und Büros ruhen, sogar beinahe die Hälfte.
+
+
+Hausneubau voller Solarmodule Vergrößern
+Bild: thetimchanell, cc-by-2.0 Ergänzend erklärt das IWR, der Strom aus Photovoltaik-Anlagen werde nicht nur überwiegend dezentral und sehr nahe am Ort der Verbraucher erzeugt und entlaste damit die Stromnetze, sondern da er vorwiegend zur Mittagszeit anfalle, eigne er sich besonders gut zur Abdeckung der ebenfalls mittäglichen Spitzenlasten. Deshalb kämen teuer produzierende Spitzenlastkraftwerke immer seltener oder gar nicht mehr zum Einsatz.
+
+Fest codiert in der Erden
+Steht die App, aus Bits gebrannt.
+Heute muß die Software werden,
+Frisch, Entwickler! seid zur Hand.
+maXbox

@@ -1,0 +1,82 @@
+//calculates a cipher suite from string
+//key substitution during encryption, loc's =77
+// solution of refactor and decomposition
+
+program simple_Cipher_Refactor;
+
+const
+  //to enlarge the entropy like s-box
+  C1 = 52845;
+  C2 = 22719;
+  FNAME = 'readmefirst_maxbox.txt';
+  CIPHERNAME = 'crypto_readmefirst.txt';
+  MYKEY = 16549813;
+
+var mycipher, cipherback: string;
+    
+//-------------------cryptor service---------------------//
+
+function EncryptDecrypt(const S: string; Key: word; mode: char): string;
+var
+  i, myint: word;
+begin
+  SetLength(Result, length(s));
+  //cipher in order of ord ;)
+  for i:= 1 to Length(S) do begin
+    myint:= ord(S[i]) xor (Key shr 8)
+    Result[i]:= chr(myint);
+    if mode = 'E' then
+      Key:= (ord(Result[i]) + Key) * C1 + C2;
+    if mode = 'D' then 
+      Key:= (ord(S[i]) + Key) * C1 + C2;
+  end;
+end;
+
+procedure StringToFile(acontent, afilename:string);
+begin
+ with TFileStream.Create(afilename, fmOpenWrite or fmCreate) do begin
+   try
+     Write(acontent, length(acontent));
+   finally
+     Free;
+   end
+ end  
+end;
+
+function FileToString(afilename: string):string;
+begin
+ with TFileStream.Create(afilename, fmOpenRead or fmShareCompat) do begin
+   try 
+     SetLength(result, Size);
+     Read(result, Size);
+   finally 
+     Free;
+   end  
+ end
+end;
+
+function StartLoadService: TStringList;
+begin
+  if fileExists(ExePath+'examples/'+FNAME) then begin
+    result:= TStringList.create;
+    result.loadfromfile(ExePath+'examples/'+FNAME);
+  end
+end;    
+
+begin //main
+  //first encrypt loaded file and store it
+  try 
+    mycipher:= encryptDecrypt(StartLoadService.text, MYKEY, 'E')
+    StringToFile(mycipher, CIPHERNAME)
+    //second decrypt file and store it back
+    cipherback:= FileToString(CIPHERNAME);
+    if length(mycipher) = length(cipherback) then begin
+      writeln(encryptDecrypt(cipherback, MYKEY, 'D'))
+      StringToFile(encryptDecrypt(cipherback, MYKEY, 'D'), FNAME)
+    end;  
+  finally 
+    //fileList.free; is just missing!!
+    //startLoadService.free;
+    beep2(444, 400)
+  end
+end.

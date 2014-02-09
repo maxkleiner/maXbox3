@@ -1,0 +1,356 @@
+{****************************************************************
+ *
+ * Project  : CipherBox Crypto Series
+ * App Name : 219_CipherBox.txt, loc's = 350
+ * Purpose  : crypt & decrypt a file with symmetric keys
+ * History  : system for mX3.2, internal random generator, maxmade
+ * ToDo: check if key is loaded!, one time pad key list  
+ ****************************************************************}
+
+program CipherBox3_FORM_Lab;
+
+const LEFTBASE = 20;
+      TOPBASE = 25; 
+      MEDIAPATH =  'Users\armasuisse\Downloads';
+      KEYPATH = '\crypt\';
+      CIPHERLOG = 'cipherbox_log3.txt';
+                                                                                      
+var 
+  selectedFile: string;
+  mpanel: TPanel;
+  mPlayer: TMediaPlayer;
+  inFrm: TForm;  
+  mbtn3: TBitBtn;
+  Lstbox: TListbox;
+  stat: TStatusbar;
+  STATchoice: boolean;
+  myTimeStamp, DateTime1, DateTime2: TDateTime;
+  StartKey, MultKey, AddKey: integer;
+  //fileToCrypt, cryptFile, decryptFile: string;
+  cfile, cryptin, clearout, cryptlog: string;
+  
+function MSecToTime(mSec: Int64): string;
+var dt: TDateTime;
+begin
+  dt:= (mSec/1000/86400);  //SecsPerDay;
+  Result:= FormatDateTime('" song length is:" nn:ss:zzz',dt);
+end; 
+  
+  
+procedure FindAllFiles(FilesList: TStringList; StartDir, FileMask: string);
+var //SR: TSearchRec;
+  DirList: TStringList;
+  IsFound: Boolean;
+  i: integer;
+begin
+  if StartDir[length(StartDir)] <> '\' then
+                       StartDir:= StartDir + '\';
+  {Build a list of the files in dir StartDir (not the directories!)}
+  IsFound:= FindFirst(StartDir+FileMask, faAnyFile-faDirectory) = 0;
+  while IsFound do begin
+    //only file name less StartDir
+    FilesList.Add(StartDir + searchrecName);
+    IsFound:= FindNext = 0;
+  end;
+  FindClose;
+  //Build a list of subdirectories
+  DirList:= TStringList.Create;
+    IsFound:= FindFirst(StartDir+'*.*', faAnyFile) = 0;
+    while IsFound do begin
+      if ((searchrecAttr and faDirectory) <> 0) and
+         (searchrecName[1] <> '.') then
+           DirList.Add(StartDir + searchrecName);
+      IsFound:= FindNext = 0;
+    end;
+    FindClose;
+  //Scan the list of subdirectories recursive!
+  for i:= 0 to DirList.Count - 1 do
+    FindAllFiles(FilesList, DirList[i], FileMask);
+  DirList.Free;
+end;  
+
+procedure StartFileFinder(vlist: TStringList);
+begin
+  FindAllFiles(vlist, MEDIAPATH, '*.*');
+  //vlist.saveToFile('maXbox_mp3files.txt');
+end;
+
+
+procedure ChangeSong(self: TObject);
+begin
+  MPlayer.filename:= lstbox.items[lstbox.itemIndex];
+  StatChoice:= true;
+  mBtn3.Caption:= 'One Time Pad!';
+end; 
+
+procedure CloseClick(Sender: TObject; var action: TCloseAction);
+begin
+  //Form1.Close;  free 308 kByte
+  if MessageDlg('Wanna Leave?',mtConfirmation,[mbYes, mbNo],0) = mrYes then begin
+     //form1.Free;
+    MPlayer.Close;
+    MPlayer.Free;
+    //bmp.Free;
+    action:= caFree;
+ end else
+    Action:= caNone;
+end;
+
+
+Procedure InitRandomKeys;
+begin
+  DateTime1:= Now;
+  DateTime2:= Now; 
+  S_GetEncryptionKeys(DateTime1, DateTime2, StartKey, MultKey, AddKey);
+  Write('S_key: '+inttoStr(StartKey)+ ' ');
+  Write('M_key: '+inttoStr(MultKey)+ ' ');
+  Write('A_key: '+inttoStr(AddKey)+ ' ');
+  Writeln(' ');
+end;
+
+procedure BtnloadKey(Sender: TObject);
+var keysave: string;
+begin
+  InitRandomKeys;
+  Lstbox.Items.Add('S_key: '+inttoStr(StartKey)+
+        ' M_key: '+inttoStr(MultKey) + ' A_key: '+inttoStr(AddKey));
+  {keysave:= ('S_key: '+inttoStr(StartKey)+#13#10+'M_key: '+inttoStr(MultKey)
+             +#13#10+'A_key: '+inttoStr(AddKey))}       
+  keysave:= ('S_key: '+inttoStr(StartKey)+' M_key: '+inttoStr(MultKey)
+                            +' A_key: '+inttoStr(AddKey))       
+  CreateFileFromString(ExePath+KEYPATH+'keyfile.cryptfile.txt', keysave);       
+end;
+
+procedure OpenCD(self: TObject);
+begin
+  OpenCDDrive;
+end; 
+
+procedure GetMediaData(self: TObject);
+begin
+   //cryptFile:= 'C:\SecureCenter\Dec 15 2010mx3\maxboxerrorlog2.txt';
+   //decryptFile:= 'C:\SecureCenter\Dec 15 2010mx3\maxboxerrorlogback.txt'; 
+
+ if PromptForFileName(selectedFile,'files(*.*)|*.*',//others
+                      '', 'Select your file to crypt', MEDIAPATH, False)
+  then begin
+     // Display this full file/path value
+    mPanel.caption:= 'Selected file: '+ExtractFileName(selectedFile);     
+    stat.SimpleText:= 'Selected file: '+ExtractFileName(selectedFile);
+    cfile:= LoadFileAsString(selectedFile);
+    Lstbox.Items.Add('File to Crypt: '+ExtractFileName(selectedFile));
+    cryptin:= S_StrEncrypt96(cfile, StartKey, MultKey, AddKey);
+    CreateFileFromString(selectedFile+'_crypt', cryptin);
+    Lstbox.Items.Add('Crypted file: '+ExtractFileName(selectedFile)+'_crypt');
+    WriteLog(cryptLog, lstbox.items.text)
+   {clearout:= S_StrDEcrypt96(cryptin, StartKey, MultKey, AddKey);
+    CreateFileFromString(selectedFile+'_decrypt', clearout);}
+  end;
+end;
+
+procedure GetMediaData2(self: TObject);
+begin
+ if PromptForFileName(selectedFile,'files(*_crypt)|*_crypt',//others
+                      '', 'Select your file to decrypt', MEDIAPATH, False)
+   then begin
+     // Display this full file/path value
+     stat.SimpleText:= 'Selected file: '+ExtractFileName(selectedFile);
+     Lstbox.Items.Add('File to Decrypt: '+ExtractFileName(selectedFile));
+     cryptin:= LoadFileAsString(selectedFile);
+     clearout:= S_StrDEcrypt96(cryptin, StartKey, MultKey, AddKey);
+     CreateFileFromString(selectedFile+'_decrypt', clearout);
+     Lstbox.Items.Add('File Decrypted as: '+ExtractFileName(selectedFile)+'_decrypt');
+     WriteLog(cryptLog, lstbox.items.text)
+   end;
+end;
+
+procedure getKeyData(self: TObject);
+var kfile: string;
+    TT1, TT2, TT3: integer;
+begin
+  if PromptForFileName(selectedFile, 'Key files (*.cryptfile.txt)|*.cryptfile.txt',
+            '', 'Select your key file', ExePath, False) //false: not Save dialog!
+  then begin
+    //Display this full file/path value
+    kfile:= LoadFileAsString((selectedFile));
+    if ExtractFileExt(selectedFile) = '.txt' then begin
+      TT1:= pos('S_key: ', kfile);
+      TT2:= pos('M_key: ', kfile);
+      TT3:= pos('A_key: ', kfile);
+      if TT1 > 0 then begin
+        StartKey:= StrToInt(trim(copy(kfile,7,TT2-7)));
+        writeln('debug found s_key '+InttoStr(StartKey))
+      end;
+      if TT2 > 0 then begin
+        MultKey:= StrToInt(trim(copy(kfile,TT2+7,TT3-(TT2+7))));
+        writeln('debug found m_key '+ inttostr(multkey))
+      end;
+      if TT3 > 0 then begin
+        AddKey:= StrToInt(trim(copy(kfile,TT3+7,10)));
+        writeln('debug found a_key '+inttostr(addkey))
+        Lstbox.Items.Add('Key file loaded: '+ExtractFileName(selectedFile))
+      end;
+    end else
+      mPanel.caption:= 'No file: '+ExtractFileName(selectedFile);     
+  end; //File Name
+end;
+
+procedure SetForm;
+var
+  mbtn, mbtn2, mbtn4: TBitBtn;
+  mi, mi1, mi2: TMenuItem;
+  mt: TMainMenu;
+  mlbl, mlbl1: TLabel; 
+  mp3list: TStringList;
+  i: integer;
+begin
+  STATChoice:= false;
+  inFrm:= TForm.Create(self);
+  mLbl:= TLabel.create(inFrm);
+  mLbl1:= TLabel.create(inFrm);
+  mPanel:= TPanel.Create(inFrm);
+  stat:= TStatusbar.Create(inFrm);
+  Lstbox:= TListbox.create(inFrm);
+  
+  with inFrm do begin
+     caption:= '********CipherBox3 Crypto Lab************';  
+     height:= 610;
+     width:= 980;
+     //color:= clred;
+     Position:= poScreenCenter;
+     onClose:= @CloseClick;
+     Show;
+   end;
+   with mPanel do begin
+     caption:= '*****CipherBox*****';  
+     parent:= inFrm;  
+     SetBounds(LEFTBASE+10,TOPBASE+40,460,400)
+     color:= clsilver;
+     font.color:= clyellow;
+     font.size:= 20;
+     Show;
+   end; 
+  mp3list:= TStringList.Create;
+  StartFileFinder(mp3list);
+  with Lstbox do begin
+    parent:= inFrm;
+    SetBounds(LEFTBASE+490, TOPBASE+40, 420, 400)
+    font.size:= 10;
+    color:= clYellow;
+    for i:= 0 to mp3list.count - 1 do 
+      items.add(mp3List[i]);
+    onClick:= @ChangeSong;  
+  end;
+  mp3List.Free;  
+  mBtn:= TBitBtn.Create(inFrm)
+  with mBtn do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 420, TOPBASE+ 460,150, 40);
+    caption:= 'File to Cipher';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'UNKNOWNFILE'); 
+    onclick:= @GetMediaData;
+  end;
+  
+  mBtn4:= TBitBtn.Create(inFrm)
+  with mBtn4 do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 570, TOPBASE+460,150, 40);
+    caption:= 'File to Decipher';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'OPENFOLDER'); 
+    onclick:= @GetMediaData2;
+  end;
+  mBtn2:= TBitBtn.Create(inFrm)
+  with mBtn2 do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 270, TOPBASE+460,150, 40);
+    caption:= 'Load Key';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'FLOPPY'); 
+    //event handler
+    onclick:= @getKeyData;
+  end;
+  mBtn3:= TBitBtn.Create(inFrm)
+  with mBtn3 do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 750, TOPBASE+460,150, 40);
+    caption:= 'Generate Key!';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'EXECUTABLE'); 
+    //event handler
+    onclick:= @BtnloadKey;
+  end;
+  with mlbl do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+15,TOPBASE-15,180,20);
+    font.size:= 32;
+    font.color:= clred;
+    font.style:= [fsunderline]
+    caption:= 'CipherBox';
+  end;  
+  with mlbl1 do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+495,TOPBASE-1,180,20);
+    font.size:= 20;
+    font.color:= clred;
+    caption:= 'Log List:';
+  end;  
+  mt:= TMainMenu.Create(infrm)
+  with mt do begin
+   //parent:= frmMon;
+  end;  
+  mi:= TMenuItem.Create(mt)
+  mi1:= TMenuItem.Create(mt)
+  mi2:= TMenuItem.Create(mt)
+  with mi do begin
+    //parent:= frmMon;
+    Caption:='Cipher File';
+    Name:='ITEM';
+    mt.Items.Add(mi);   
+    OnClick:= @GetMediaData;
+  end;
+  with mi1 do begin
+    //parent:= frmMon;
+    Caption:='Decipher File';
+    Name:='ITEM2';
+    mt.Items.Add(mi1) ;
+    OnClick:= @GetMediaData2;
+  end;
+  with mi2 do begin
+    //parent:= frmMon;
+    Caption:='Open CD Player';
+    Name:='ITEM3';
+    mt.Items.Add(mi2);
+    OnClick:= @OPenCD;
+  end;
+  with Stat do begin
+    parent:= inFrm;
+    stat.SimplePanel:= true;
+  end;
+  MPlayer:= TMediaPlayer.create(self);
+  with MPlayer do begin
+    parent:= inFrm; 
+    height:= 38;
+    top:= TOPBASE + 460;
+    left:= LEFTBASE+ 10;
+    Display:= mPanel;   //for video show
+  end;  
+end;
+
+//main app
+begin
+  SetForm;
+  cryptLog:= ExePath+CIPHERLOG;
+  Lstbox.Items.Add('CipherBox ready, Generate/Load a Key first');
+   //writeln(gethostbyname('www.kleiner.ch'))
+   writeln('Instance: '+intToStr(getHinstance))
+   writeln('Procid: '+intToStr(getProcessid))
+   writeln('Processors: '+inttostr(GetNumberOfProcessors)) 
+End.
+
+//---------------------------------------------------------
+
+
+------------------------------------------------------
+Programmers never die, they just GOSUB without RETURN 

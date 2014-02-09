@@ -1,0 +1,387 @@
+Program API_ZEOS_TestDemo; //in progress
+
+//////////////////////////////////////////////////////////////////////
+//  Get several functions of ZEOS utilities to test                 //
+//  #sign:Administrator: PC08: 08/02/2014 01:24:30 PM 
+//  Purpose: checks convert and SQL  controls                       //
+//  #path>\    E:\maxbox3\mXGit39988\maxbox3\examples\              //
+//  2 func, 0 proc: Lines of Code #locs:384
+//////////////////////////////////////////////////////////////////////
+
+{unit uPSI_ZSysUtils; }
+
+//uPSI_uLkJSON.pas, uPSI_HotLog; IndyPac3}
+//TODO: find an example for all functions
+//TODO: Save image to webserver_file, turn procedure [DownloadJPEGTo..] to function
+
+Const
+   UrlGoogleQrCode= 'http://chart.apis.google.com/chart?chs=%dx%d&cht=qr&chld=%s&chl=%s';
+   AFILENAME= 'mX3QRCode3.png';
+   QDATA= 'this is maXland on a maXbox stream dream firebox';
+  
+type
+  TQrImage_ErrCorrLevel=(L,M,Q,H);
+
+var
+  js:TlkJSONobject;
+  xs:TlkJSONbase;
+  
+// i improve test for version 0.94 - add random part to names of fields;
+// it smaller decrease speed of generation, but much better for testing
+// Leon, 27/03/2007
+{.$define usefastmm}
+
+
+function PathEllipsis2(const S : string; MaxWidth : Integer) : string;
+  { PathEllipsis function. Trims a path down to the      }
+  { specified number of pixels. For example,             }
+  { 'd:\program files\my stuff\some long document.txt'   }
+  { becomes 'd:\...\some long...' or a variation thereof }
+  { depending on the value of MaxWidth.                  }
+var
+  R       : TRect;
+  BM      : TBitmap;
+  NCM     : TNonClientMetrics;
+begin
+  if MaxWidth = 0 then begin
+    Result := S;
+    Exit;
+  end;
+  NCM.cbSize := SizeOf(NCM);
+  SystemParametersInfoNCM(
+    SPI_GETNONCLIENTMETRICS, NCM.cbSize, NCM, 0);
+  BM := TBitmap.Create;
+  try
+    BM.Canvas.Font.Handle := CreateFontIndirect(NCM.lfMenuFont);
+    if BM.Canvas.TextWidth(S) < MaxWidth then begin
+      Result := S;
+      Exit;
+    end;
+    Result := ExtractFilePath(S);
+    Delete(Result, Length(Result), 1);
+    while BM.Canvas.TextWidth(Result + '\...\' + ExtractFileName(S)) > MaxWidth do begin
+      { Start trimming the path, working backwards }
+      Result := ExtractFilePath(Result);
+      Delete(Result, Length(Result), 1);
+      { Only drive letter left so break out of loop. }
+      if Length(Result) = 2 then
+        Break;
+    end;
+    { Add the filename back onto the modified path. }
+    Result := Result + '\...\' + ExtractFileName(S);
+    { Still too long? }
+    if BM.Canvas.TextWidth(Result) > MaxWidth then begin
+      R := Rect(0, 0, MaxWidth, 0);
+      DrawText(BM.Canvas.Handle, PChar(Result), -1,
+        R, DT_SINGLELINE or DT_END_ELLIPSIS or DT_MODIFYSTRING or DT_CALCRECT);
+    end;
+  finally
+    BM.Free;
+  end;
+end;
+
+
+const
+  ROP_DSPDxax = $00E20746;
+
+function CreateDisabledBitmap2(FOriginal : TBitmap; OutlineColor : TColor) : TBitmap;
+  {-create TBitmap object with disabled glyph}
+var
+  MonoBmp : TBitmap;
+  IRect   : TRect;
+begin
+  IRect := Rect(0, 0, FOriginal.Width, FOriginal.Height);
+  Result := TBitmap.Create;
+  try
+    Result.Width := FOriginal.Width;
+    Result.Height := FOriginal.Height;
+    MonoBmp := TBitmap.Create;
+    try
+      with MonoBmp do begin
+        Assign(FOriginal);
+        HandleType := bmDDB;
+        Canvas.Brush.Color := OutlineColor;
+        if Monochrome then begin
+          Canvas.Font.Color := clWhite;
+          Monochrome := False;
+          Canvas.Brush.Color := clWhite;
+        end;
+        Monochrome := True;
+      end;
+      with Result.Canvas do begin
+        Brush.Color := clBtnFace;
+        FillRect(IRect);
+        Brush.Color := clBtnHighlight;
+        SetTextColor(Handle, clBlack);
+        SetBkColor(Handle, clWhite);
+        BitBlt(Handle, 1, 1, WidthOf(IRect), HeightOf(IRect),
+          MonoBmp.Canvas.Handle, 0, 0, ROP_DSPDxax);
+        Brush.Color := clBtnShadow;
+        SetTextColor(Handle, clBlack);
+        SetBkColor(Handle, clWhite);
+        BitBlt(Handle, 0, 0, WidthOf(IRect), HeightOf(IRect),
+          MonoBmp.Canvas.Handle, 0, 0, ROP_DSPDxax);
+      end;
+    finally
+      MonoBmp.Free;
+    end;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+type
+  TParentControl = TWinControl;
+
+
+procedure CopyParentImage2(Control : TControl; Dest : TCanvas);
+var
+  I     : Integer;
+  Count : Integer;
+  X, Y  : Integer;
+  OldDC : Integer;
+  DC    : hDC;
+  R     : TRect;
+  SelfR : TRect;
+  CtlR  : TRect;
+begin
+  if Control.Parent = nil then
+    Exit;
+   Count := Control.Parent.ControlCount;
+  DC := Dest.Handle;
+  SelfR := Bounds(Control.Left, Control.Top, Control.Width, Control.Height);
+  X := -Control.Left; Y := -Control.Top;
+   {copy parent control image}
+  OldDC := SaveDC(DC);
+  SetViewportOrgEx(DC, X, Y, '');
+  IntersectClipRect(DC, 0, 0, Control.Parent.ClientWidth, Control.Parent.ClientHeight);
+  //TParentControl(Control.Parent).PaintWindow(DC);
+  RestoreDC(DC, OldDC);
+
+  {copy images of graphic controls}
+  for I := 0 to Count - 1 do begin
+    if (Control.Parent.Controls[I] <> nil) and
+      not (Control.Parent.Controls[I] is TWinControl) then begin
+      if Control.Parent.Controls[I] = Control then
+        Break;
+      with Control.Parent.Controls[I] do begin
+        CtlR := Bounds(Left, Top, Width, Height);
+        if {bool}IntersectRect(R, SelfR, CtlR) and Visible then begin
+          OldDC := SaveDC(DC);
+          SetViewportOrgEx(DC, Left + X, Top + Y, '');
+          IntersectClipRect(DC, 0, 0, Width, Height);
+          Perform(WM_PAINT, DC, 0);
+          RestoreDC(DC, OldDC);
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure DrawTransparentBitmap2(Dest : TCanvas; X, Y, W, H : Integer;
+  Rect : TRect; Bitmap : TBitmap; TransparentColor : TColor);
+var
+  MemImage : TBitmap;
+  R        : TRect;
+begin
+  MemImage := TBitmap.Create;
+  try
+    R := Bounds(0, 0, Bitmap.Width, Bitmap.Height);
+    if TransparentColor = clNone then begin
+      if (WidthOf(Rect) <> 0) and (HeightOf(Rect) <> 0) then
+        R := Rect;
+      MemImage.Width := WidthOf(R);
+      MemImage.Height := HeightOf(R);
+      MemImage.Canvas.CopyRect(Bounds(0, 0, MemImage.Width, MemImage.Height),
+        Bitmap.Canvas, R);
+
+      if (W = 0) or (H = 0) then
+        Dest.Draw(X, Y, MemImage)
+      else
+        Dest.StretchDraw(Bounds(X, Y, W, H), MemImage);
+     end else  begin
+      MemImage.Width := WidthOf(R);
+      MemImage.Height := HeightOf(R);
+      MemImage.Canvas.CopyRect(R, Bitmap.Canvas, R);
+      if TransparentColor = clDefault then
+        TransparentColor := MemImage.Canvas.Pixels[0, MemImage.Height - 1];
+      DrawTransparentBitmapPrim(Dest.Handle, MemImage.Handle, X, Y, W, H,
+        Rect, ColorToRGB(TransparentColor and not $02000000));
+    end;
+  finally
+    MemImage.Free;
+  end;
+end;
+
+  
+function DownloadJPGToBitmap(const URL : string; ABitmap: TBitmap): Boolean;
+var
+  idHttp: TIdHTTP;
+  ImgStream: TMemoryStream;
+  JpgImage: TJPEGImage;
+begin
+  Result:= False;
+  ImgStream:= TMemoryStream.Create;
+  try
+    idHttp:= TIdHTTP.Create(nil);
+    try
+      idHttp.Get1(URL, ImgStream);
+    finally
+      idHttp.Free;
+    end;
+    ImgStream.Position:= 0;
+    JpgImage:= TJPEGImage.Create;
+    try
+      JpgImage.LoadFromStream(ImgStream);
+      ABitmap.Assign(JpgImage);
+    finally
+      Result:= True;
+      JpgImage.Free;
+    end;
+  finally
+    ImgStream.Free;
+  end;
+end;
+
+
+//TODO:#1 Returns the QR Code direct of the last modification of the given File
+
+ var image2: TImage;
+    asiz: dword;
+    myal: TAlSelectSQLClause;
+    
+    //tx: TALFBXLibrary;
+
+begin
+  Writeln(datetimetostr(FileTimeGMT(exepath+'maxbox3.exe')));
+  //call of the script
+  //GetQrCodeIndy(150,150,'Q',ExePath+AFILENAME, QData);
+  //call of the Lib
+  //GetQrCode2(150,150,'Q',QDATA, ExePath+AFILENAME);
+  //http://entwickler-konferenz.de/
+  //http://www.softwareschule.ch/images/Ekon17_2013.jpg
+  
+  image2:= TImage.create(self); 
+  if isInternet then
+    DownloadJPGToBitmap('http://www.softwareschule.ch/images/Ekon17_2013.jpg',
+                              Image2.Picture.Bitmap);
+    
+    with TCustomDrawForm.create(self) do begin
+       width:=820;
+       height:=820;
+       image1.height:= 600; //add properties
+       image1.picture.bitmap:= image2.picture.bitmap;
+       //SelectionBackground1Click(self)
+       //CustomDraw1Click(self);  
+       //Selection1Click(self);
+       Background1.click;
+       bitmap1.click;
+       Tile1.click;
+       Showmodal;           //add methods
+       Free;                
+     end;
+  
+   //if IsTCPPortOpen(80,'192.168.1.53') then
+      if IsTCPPortOpen(80,getIP(getHostName)) then
+       writeln('Port 80 Open Started') else 
+       writeln('Port not open');
+   maxCalcF('SQRT(PI)');
+   maxCalcF('1/2*(SQRT(5)+1)');
+  
+   PrintF('gcd %d * lcm %d = %d ',[gcd(4,6), lcm(4,6), 4*6]);
+     //SetAlias(Alias, aAliasDir);
+     //SetBde('\DRIVERS\PARADOX\INIT','NET DIR',aNetDir);
+     //SetBde('\SYSTEM\INIT','LOCAL SHARE','TRUE');
+    //JSONTest; 
+     writeln(ovformatsettings.timeseparator);
+     writeln(ovformatsettings.dateseparator);
+     //writeln(getformatsettings.dateseparator);
+     writeln(PathEllipsis(exepath+'firstdemo.txt',90));
+     writeln(PathEllipsis2(exepath+'firstdemo.txt',90));
+    //  CL.AddDelphiFunction('Function wGetComputerName( lpBuffer : PKOLChar; var nSize : DWORD) : BOOL');
+
+    writeln(booleantoString(wGetComputerName('Came',asiz)));
+     //wgetfileversioninfo
+     
+  {   Function TALFBXClientCreate_P(Self: TClass; CreateNewInstance: Boolean;  ApiVer : TALFBXVersion_API; const lib : AnsiString):TObject;
+Begin Result := TALFBXClient.Create(ApiVer, lib); END;
+   }
+  
+     with TALFBXClient.create(fb20,'C:\maXbox\mX39982\maxbox3\GDS32.DLL') do begin
+//        RegisterMethod('Procedure Connect( DataBaseName, Login, Password, CharSet : AnsiString; const ExtraParams : AnsiString);');
+     Connect('C:\Program Files (x86)\AVERP\AVERP_DEMO.FDB','SYSDBA',
+                    'masterkey','','');
+        //raiselastException;            
+
+       //writeln(GetDataBaseInfoString(1))
+       //free;
+     end;
+     
+     with TIdFTP.Create(self) do begin
+       try
+       abort;
+       //free;
+       except
+       end;
+       //writeln('ftp free');
+      end; 
+    
+     // with TALXMLNode.Create do begin
+        //free;
+       // end;
+    
+      with TAlNNTPClient.Create do begin
+        free;
+        end;
+     
+      with TALBaseAVLList.Create do begin
+        free;
+        end;
+    
+       {with TalMySqlConnectionPoolClient.Create(self,self) do begin
+        //execute('');
+        //ReleaseAllConnections;
+        //free;
+        end; }
+  
+        with TALHTTPClient.Create do begin
+        //execute('');
+        free;
+        end;
+    
+      with TALHTTPClient.Create do begin
+        //execute('');
+        free;
+        end;
+  
+      {with TALXMLNode.Create(TALXMLDocument.Create) do begin
+        //execute('');
+        free;
+        end;  }
+        
+      with TAlGSMComm.Create do begin
+        //execute('');
+        free;
+        end;
+      
+    
+      
+     {with TALXMLDocument.Create do begin
+        //free;
+        end;  }
+     
+     //, 'Create');
+     //myal:= TAlSelectSQLClause.create;
+     
+     with TAlSelectSQLClause.create do begin
+       sqltext;
+       servertype:= alFirebird;
+     end; 
+     
+     
+    
+End.  
+
+
+----app_template_loaded_code----

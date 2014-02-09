@@ -1,0 +1,171 @@
+program TimerEvent_Object_RaceCondition;
+// tutorial on http://www.softwareschule.ch/download/maxbox_starterpdf _59_
+// timerevent with time dialog synchronisation /event triggering, loc's=
+// when messagebox is to early (line 15) the break condition never arrives 
+//Task: if glob_cnt is an odd counter then timer2 is fault, why?
+// how many times obj1 and obj2 appears ?
+//Task: set the 2 interval const on the same time with an odd counter, then ?
+
+const MSECONDS1 = 1000; //
+      MSECONDS2 = 2000; //
+ 
+var myTimer, mytimer2: TTimer; //is an object of class TTimer! 
+    Glob_cnt, i: byte;   
+
+procedure timer1Event(Sender: TObject);  //event handler
+begin
+  incb(Glob_cnt)
+  if Glob_cnt >= 12 then begin 
+    myTimer.enabled:= false;
+    myTimer.Free;
+    myTimer2.enabled:= false;
+    myTimer2.Free;
+  end;
+  if Sender = mytimer then 
+    Writeln(Format('this is timer1 %d of: %s',[Glob_cnt,timeToStr(Time)]))
+  else
+    Writeln(Format('this is timer2 %d of: %s',[Glob_cnt,timeToStr(Time)]))
+end;  
+
+//main program
+begin
+  Glob_cnt:= 0;
+  ShowMessage('Press OK to start with timer at: '
+                 +dateToStr(date)+': '+timeToStr(Time))
+  myTimer:= TTimer.Create(self);
+  myTimer2:= TTimer.Create(self);
+  myTimer.onTimer:= @timer1Event;
+  myTimer2.onTimer:= @timer1Event;
+  myTimer.interval:=  MSECONDS1  //MILLISECONDS;
+  myTimer2.interval:= MSECONDS2;
+  {for i:= 1 to 100 do begin
+    writeln('this is loop: '+inttostr(i))
+    sleep(20)
+  end;}
+  Writeln('Watt '+floatToStr(70*9.81*20 / 30)) 
+  Writeln('Watt '+floatToStr(49*9.81*2 / 10))  
+end.
+
+-----------------------------------------------
+possible output
+this is timer1 1 of: 13:37:44
+this is timer2 2 of: 13:37:45
+this is timer1 3 of: 13:37:45
+this is timer1 4 of: 13:37:46
+this is timer2 5 of: 13:37:47
+this is timer1 6 of: 13:37:47
+this is timer1 7 of: 13:37:48
+this is timer2 8 of: 13:37:49
+this is timer1 9 of: 13:37:49
+this is timer1 10 of: 13:37:50
+this is timer2 11 of: 13:37:51
+this is timer1 12 of: 13:37:51
+
+Or another async:
+
+this is timer1 1 of: 09:57:44
+this is timer1 2 of: 09:57:45
+this is timer2 3 of: 09:57:45
+this is timer1 4 of: 09:57:46
+this is timer1 5 of: 09:57:47
+this is timer2 6 of: 09:57:47
+this is timer1 7 of: 09:57:48
+this is timer1 8 of: 09:57:49
+this is timer2 9 of: 09:57:49
+this is timer1 10 of: 09:57:50
+this is timer1 11 of: 09:57:51
+this is timer2 12 of: 09:57:51
+
+
+{//Purpose
+Use the Timer component to trigger an event, either one time or repeatedly, after a measured interval. Write the code that you want to occur at the specified time inside the timer component's OnTimer event. 
+//Tasks
+To specify the amount of elapsed time before the timer event is triggered, use the Interval property. 
+To discontinue a timed event, set the timer component's Enabled property to False. TTimer encapsulates the Windows API timer functions.
+
+Unit
+ExtCtrls
+
+//Description
+TTimer is used to simplify calling the Windows API timer functions SetTimer and KillTimer, and to simplify processing the WM_TIMER messages. Use one timer component for each timer in the application.
+The execution of the timer occurs through its OnTimer event. TTimer has an Interval property that determines how often the timer’s OnTimer event occurs. Interval corresponds to the parameter for the Windows API SetTimer function.
+Caution: Limitations on the total number of timers system-wide are system dependent.
+//Sender of a button click:
+The parameter "Sender" references the control that was used to call the method. If you click on the Button1 control, causing the Button1Click method to be called, a reference or pointer to the Button1 object is passed to Button1Click in the parameter called Sender.}
+
+Einstieg OOP
+
+An object consists of methods, properties and in many cases events.
+
+Ein Objekt ist eine Instanz von einer Klasse:
+
+
+Was ist eine Klasse?
+
+TTimer = class(TComponent)
+private
+  FInterval: Cardinal;
+  FWindowHandle: HWND;
+  FOnTimer: TNotifyEvent;
+  FEnabled: Boolean;
+  procedure UpdateTimer;
+  procedure SetEnabled(Value: Boolean);
+  procedure SetInterval(Value: Cardinal);
+  procedure SetOnTimer(Value: TNotifyEvent);
+  procedure WndProc(var Msg: TMessage);
+protected
+  procedure Timer; dynamic;
+public
+  constructor Create(AOwner: TComponent); override;
+  destructor Destroy; override;
+published
+  property Enabled: Boolean read FEnabled write SetEnabled default True;
+  property Interval: Cardinal read FInterval write SetInterval default 1000;
+  property OnTimer: TNotifyEvent read FOnTimer write SetOnTimer;
+end;
+
+
+Eine Klasse erzeugt N-Objekte!
+
+Welcher Typ hat ein Objekt?   --> myTimer: TTimer; //mytimer= object
+Die Klasse definiert den Typ. --> mytimer als Typ TTimer
+Welcher Typ hat die Klasse?   --> die Klasse erbt den Typ der Oberklasse (TTimer = class(TComponent))
+
+
+myTimer.onTimer:= @timer1Event;
+
+Wo ist das Signal (Event)?  -->onTimer
+wo ist der EventHandler ? --> timer1Event
+Wir übergeben dem Event / Signal des Objekts die Adresse des EventHandler(unsere definierte Procedur) als Adressoperator @, ist Technik einer CallBack Operation.
+
+Aufgabe1
+
+Wieviel Watt verbraucht man wenn man
+ 10 sec. lang 10 mal auf ein Podest von 0.2 m springt?
+ Die Masse ist 49 kg mal 9.81 = 480 Newton Gewicht
+ Gewicht = 49 * 9.81
+ Masse   = 49
+ Arbeit = 480 * 2 = 960 Joule = Nm  [2 = 0.2 * 10 = 2 meter Weg] (Kraft * Weg)
+ Leistung = Arbeit / Zeit = 960 / 10 = 96 Watt
+ 
+Wieviel Watt verbraucht man wenn man
+ 30 sec. lang 20 mal auf ein Podest von 1 m springt?
+ Die Masse ist 70 kg mal 9.81
+ Gewicht = 70 * 9.81
+ Masse   = 70 
+ 
+ Nm / t = 70*9.81*20 / 30 = Watt
+ 
+     Aufgabe2: Ein Rechner braucht im Schnitt 5 Takte für ein Befehl abzuarbeiten:
+     Geg.: 4 Giga Takt, 20 msec Zeitscheibe 
+     Ges.: wieviel Befehle pro Zeitscheibe ?
+     Man rechne 4 * 10^9 / 5 * 50   (50 weil 1000/20)
+     
+     
+
+
+
+
+
+
+

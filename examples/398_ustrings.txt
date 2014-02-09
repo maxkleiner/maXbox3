@@ -1,0 +1,429 @@
+Program UStrings;
+
+//#sign max: APSN21: 07.10.2013 19:51:17 
+//#path:E:\maxbox\maxbox3\examples\
+//TODO: Save the QRCode to webserver_file, #locs:207
+//http://theroadtodelphi.wordpress.com/2010/12/06/generating-qr-codes-with-delphi/
+
+//check the helpfile \docs\THotlog.chm
+
+{unit uPSI_HotLog;}
+
+                               
+Const
+   
+   UrlGoogleQrCode='http://chart.apis.google.com/chart?chs=%dx%d&cht=qr&chld=%s&chl=%s';
+   AFILENAME= 'mX3QRCode3.png';
+   QDATA= 'this is maXland on a maXbox stream dream firebox';
+  
+ var hlog1: THotlog;
+
+{The API requires 3 simple fields be posted to it:
+cht=qr this tells Google to create a QR code;
+chld=M the error correction level of the QR code (see here for more info);
+chs=wxh the width and height of the image to return (eg chs=250x250);
+chl=text the URL encoded text to be inserted into the barcode.}
+
+const 
+  ArraySize = 9;
+type  
+  TMyArray = array[1..ArraySize] of integer;
+var   
+  MyArray : TMyArray;
+  i 	: integer;
+
+type
+  TQrImage_ErrCorrLevel=(L,M,Q,H);
+
+
+Procedure SwapSortEm;
+var 
+  temp, i, j : integer;
+Begin
+   { Compare every element in the array ... }
+   for i := 1 to ArraySize do begin
+      { ... to every other element in the array ... }
+      for j := i+1 to ArraySize do begin
+         if MyArray[i] > MyArray[j] then begin
+            { ... and swap them if they're out of order. }
+            temp := MyArray[i];
+            MyArray[i] := MyArray[j];
+            MyArray[j] := temp;
+         end; { if }
+      end; { j }
+   end; { i }
+End;  { Procedure SwapSortEm }
+
+
+Procedure QuickSort(lowerPos, upperPos: integer);
+   var temp, i, middlePos, pivotValue : integer;
+Begin
+   { check that the lower position is less than the upper position }
+   if lowerPos < upperPos then begin
+      { Select a pivot value }
+      pivotValue := MyArray[lowerPos];
+      { default to the middle position to the lower position }
+      middlePos := lowerPos;
+      { partition the array about the pivot value }
+      for i := lowerPos+1 to upperPos do begin
+         if MyArray[i] < pivotValue then begin
+            { bump up the middle position }
+            inc(middlePos);
+            { swap this element to the "lower" part of the array }
+            temp := MyArray[middlePos];
+            MyArray[middlePos] := MyArray[i];
+            MyArray[i] := temp;
+         end; { if }
+      end; { for }
+      { place the pivot value in the middle to finish the partitioning }
+      temp := MyArray[lowerPos];
+      MyArray[lowerPos] := MyArray[middlePos];
+      MyArray[middlePos] := temp;
+      { Finally, recursively call QuickSort on the two parititioned halves.}
+      QuickSort(lowerPos, middlePos-1);
+      QuickSort(middlePos+1, upperPos);
+    { else
+      the lower position has reached or exceeded the upper position,
+      so we're done.  This case terminates the tail-end recursion. }
+    end;  { if }
+End;  { Procedure QuickSort }
+
+
+procedure FmxUtilsTest;
+begin
+ // CL.AddClassN(CL.FindClass('TOBJECT'),'EInvalidDest');
+ // CL.AddClassN(CL.FindClass('TOBJECT'),'EFCantMove');
+ //Procedure fmxCopyFile( const FileName, DestName : string)');
+ //Procedure fmxMoveFile( const FileName, DestName : string)');
+ //Function fmxGetFileSize( const FileName : string) : LongInt');
+ //Function fmxFileDateTime( const FileName : string) : TDateTime');
+ //Function fmxHasAttr( const FileName : string; Attr : Word) : Boolean');
+ //Function fmxExecuteFile( const FileName, Params, DefaultDir : string; ShowCmd : Integer) : THandle');
+end;
+
+
+
+procedure uStringtest;
+begin
+  writeln(LTrim('this is maXbox fox'));
+  //RTrim( S : String) : String');
+  //uTrim( S : String) : String');
+  writeln(StrChar(30, '*'));
+  //RFill( S : String; L : Byte) : String');
+  //LFill( S : String; L : Byte) : String');
+  writeln(CFill('mX4',50));
+  writeln(StrChar(30, '*'));
+  //Replace( S : String; C1, C2 : Char) : String');
+  //Extract( S : String; var Index : Byte; Delim : Char) : String');
+ //Parse( S : String; Delim : Char; Field : TStrVector; var N : Byte)');
+  //SetFormat( NumLength, MaxDec : Integer; FloatPoint, NSZero : Boolean)');
+  //FloatStr( X : Float) : String');
+  //IntStr( N : LongInt) : String');
+  //CompStr( Z : Complex) : String');
+end;
+
+
+procedure SetHotLogHeader;
+var mself: TStringlist;
+begin
+  hlog1.header:= TstringList.Create;
+    With hlog1.Header Do  Begin
+        Add('{crlf}{LNumOff}{*80*}');
+        Add('>>>> Start {App_name}  v {App_ver}{80@}{now}');
+        Add('{@12}From : {App_path}');
+        Add('{@12}Prms : {App_prm-}{crlf}');
+    End;  
+    hlog1.footer := TStringList.Create;
+    With hlog1.Footer Do  Begin
+        Add('{LNumOff}');
+        Add('<<<< Stop  {App_name}{80@}{now}');
+        Add('{*80*}{crlf}');
+    End;
+    hlog1.Add(hlog1.header.text);
+    hlog1.Add(hlog1.footer.text);
+    writeln('footer count '+inttostr(hlog1.footer.count))
+    //normdist
+end;      
+
+
+ // var hlog1: THotlog;
+//TODO:#1 Returns the QR Code direct of the last modification of the given File
+
+begin
+  Writeln(datetimetostr(FileTimeGMT(exepath+'maxbox3.exe')));
+   
+  //GetQrCodeTest(150,150,'Q', 'this is maXland on the maXbox');
+  //call of the script
+  //GetQrCodeInet(150,150,'Q',ExePath+'mX3QRCode2.png','this is maXland on maXbox');
+  //GetQrCodeIndy(150,150,'Q',ExePath+AFILENAME, QData);
+ 
+  //call of the Lib
+  //GetQrCode2(150,150,'Q',QDATA, ExePath+AFILENAME);
+
+  { Program SwapSortCrt }
+   Randomize;   { Initialize the random number function. }
+   writeln('Before . . .');
+   for i := 1 to ArraySize do begin
+      MyArray[i] := trunc(random(1000))+1;
+      writeln(itoa(i)+': '+ itoa(MyArray[i]));
+   end; { for }
+   SwapSortEm;
+   writeln('After . . .');
+   for i := 1 to ArraySize do begin
+      writeln(itoa(i)+': '+ itoa(MyArray[i]));
+      //writeln(i, ': ', MyArray[i]);
+   end; { for }
+   //End  { Program SwapSortCrt }
+   writeln('QuickSortCrt');
+   
+   {QuickSortCrt }
+   Randomize;   { Initialize the random number function. }
+   writeln('Before . . .');
+   for i := 1 to ArraySize do begin
+      MyArray[i] := trunc(random(1000))+1;
+      writeln(itoa(i)+': '+ itoa(MyArray[i]));
+      //writeln(i, ': ', MyArray[i]);
+   end; { for }
+   QuickSort(1, ArraySize);
+   writeln('After . . .');
+   for i := 1 to ArraySize do begin
+      writeln(itoa(i)+': '+ itoa(MyArray[i]));
+      //writeln(i, ': ', MyArray[i]);
+   end; { for }
+   //End  { Program SwapSortCrt }
+   writeln('QuickSort End');
+  
+   //OpenDoc(exePath+'docs\THotlog.chm');
+   //{$Stringtest}
+   
+   uStringtest;
+
+  
+   maxCalcF('SQRT(PI)');
+   PrintF('gcd %d * lcm %d = %d ',[gcd(4,6), lcm(4,6), 4*6]);
+ 
+ 
+ 
+End.  
+
+   myformtemplate
+     with TCustomDrawForm.create(self) do begin
+       image1.height:= 600; //add properties
+       showmodal;           //add methods
+       free;                //free it
+     end;
+   
+
+In order to make your life easier, the unit HotLog.pas declares an instance of THotLog, and calls its constructor automatically, as soon as your programm is loaded (in fact, as soon as the HotLog unit's part of your programm is loaded).
+
+This instance is called "hLog". It is the object instance you'll use to access HotLog.pas/ThotLog properties and routines.
+
+All the following examples will allways use it. However, and as stated before, THotLog being an object, you can declare as many instances of it as you want.
+
+// and the written result will be :
+
+********************************************************************************
+>>>> Start HotLogTest.exe  v 1.0.0.4                         2004-03-09 23:38:54
+           From : C:\Program Files\Borland\Delphi9\Projects\HotLog\
+           Prms : (No params)
+
+(....)
+
+<<<< Stop  HotLogTest.exe                                    2004-03-09 23:38:55
+********************************************************************************
+
+
+
+
+
+
+http://theroadtodelphi.wordpress.com/2010/12/06/generating-qr-codes-with-delphi/
+
+Using the Google Chart Tools / Image Charts (aka Chart API) you can easily generate QR codes, this kind of images are a special type of two-dimensional barcodes. They are also known as hardlinks or physical world hyperlinks.
+
+The QR Codes store up to 4,296 alphanumeric characters of arbitrary text. QR codes can be read by an optical device with the appropriate software. Such devices range from dedicated QR code readers to mobile phones.
+
+
+Using Delphi there are several ways you can generate QR codes - to encode any text (URL, phone number, simple message). QR Codes store up to 4,296 alphanumeric characters of arbitrary text.
+
+The 2D Barcode VCL components is a set of components designed for generating and printing barcode symbols in your Delphi or C++ Builder applications. Use the components set like any other VCL components.
+
+J4L Components includes the QR-code implementation featuring: auto, byte, alpha, numeric and kanji encoding.
+
+The Google Chart Tools (Chart API) also let you generate QR-code images using an HTTP POST or 
+
+All do you need to generate a QrCode is make a get request to this URI
+
+http://chart.apis.google.com/chart?chs=200x200&cht=qr&chld=M&chl=Go+Delphi+Go
+
+uses
+ PngImage,
+ HTTPApp,
+ WinInet;
+ 
+type
+TQrImage_ErrCorrLevel=(L,M,Q,H);
+ 
+const
+UrlGoogleQrCode='http://chart.apis.google.com/chart?chs=%dx%d&cht=qr&chld=%s&chl=%s';
+QrImgCorrStr   : array [TQrImage_ErrCorrLevel] of string=('L','M','Q','H');
+ 
+procedure WinInet_HttpGet(const Url: string;Stream:TStream);
+const
+BuffSize = 1024*1024;
+var
+  hInter   : HINTERNET;
+  UrlHandle: HINTERNET;
+  BytesRead: DWORD;
+  Buffer   : Pointer;
+begin
+  hInter := InternetOpen('', INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
+  if Assigned(hInter) then
+  begin
+    Stream.Seek(0,0);
+    GetMem(Buffer,BuffSize);
+    try
+        UrlHandle := InternetOpenUrl(hInter, PChar(Url), nil, 0, INTERNET_FLAG_RELOAD, 0);
+        if Assigned(UrlHandle) then
+        begin
+          repeat
+            InternetReadFile(UrlHandle, Buffer, BuffSize, BytesRead);
+            if BytesRead>0 then
+             Stream.WriteBuffer(Buffer^,BytesRead);
+          until BytesRead = 0;
+          InternetCloseHandle(UrlHandle);
+        end;
+    finally
+      FreeMem(Buffer);
+    end;
+    InternetCloseHandle(hInter);
+  end
+end;
+ 
+//this function return a Stream (PngImage inside) with a Qr code.
+procedure GetQrCode(Width,Height:Word;Correction_Level:TQrImage_ErrCorrLevel;const Data:string;StreamImage : TMemoryStream);
+Var
+ EncodedURL  : string;
+begin
+  EncodedURL:=Format(UrlGoogleQrCode,[Width,Height,QrImgCorrStr[Correction_Level],HTTPEncode(Data)]);
+  WinInet_HttpGet(EncodedURL,StreamImage);
+end;
+
+
+http://www.delphi-central.com/callback.aspx
+
+ public
+    { Public-Deklarationen }
+    constructor Create(Owner:TComponent); override;
+    destructor Destroy; override;
+    procedure Assign(Source: TPersistent);override;
+
+    procedure DrawBarcode(Canvas:TCanvas);
+    procedure DrawText(Canvas:TCanvas);
+    property CanvasHeight :Integer read GetCanvasHeight;
+    property CanvasWidth :Integer read GetCanvasWidth;
+  published
+    { Published-Deklarationen }
+   { Height of Barcode (Pixel)}
+    property Height : integer read FHeight write SetHeight;
+    property Text   : string read FText write SetText;
+    property Top    : Integer read FTop write SetTop;
+    property Left   : Integer read FLeft write SetLeft;
+   { Width of the smallest line in a Barcode }
+    property Modul  : integer read FModul  write SetModul;
+    property Ratio  : Double read FRatio write SetRatio;
+    property Typ    : TBarcodeType read FTyp write SetTyp default bcCode_2_5_interleaved;
+   { build CheckSum ? }
+    property Checksum:boolean read FCheckSum write SetCheckSum default FALSE;
+    property CheckSumMethod:TCheckSumMethod read FCheckSumMethod write FCheckSumMethod default csmModulo10;
+
+   { 0 - 360 degree }
+    property Angle  :double read FAngle write SetAngle;
+
+    property ShowText:TBarcodeOption read FShowText write SetShowText default bcoNone;
+    property ShowTextFont: TFont read FShowTextFont write SetShowTextFont;
+    property ShowTextPosition: TShowTextPosition read FShowTextPosition write SetShowTextPosition default stpTopLeft;
+    property Width : integer read GetWidth write SetWidth stored False;
+    property Color:TColor read FColor write FColor default clWhite;
+    property ColorBar:TColor read FColorBar write FColorBar default clBlack;
+      property OnChange:TNotifyEvent read FOnChange write FOnChange;
+  end;
+
+function CheckSumModulo10(const data:string):string;
+
+function ConvertMmToPixelsX(const Value:Double):Integer;
+function ConvertMmToPixelsY(const Value:Double):Integer;
+function ConvertInchToPixelsX(const Value:Double):Integer;
+function ConvertInchToPixelsY(const Value:Double):Integer;
+
+How about something like this:
+
+$url =~ m|([^/]+)/?$|;
+my $end_of_url = $1;
+
+The $ on the end anchors the regular expression to the end of the string. The [^/] means anything that's not a slash and the + after means I want one or more things that are not slashes. Notice that this is in a capture group which are marked with parentheses.
+
+I end the regular expression with /? which means that there may or may not be a slash on the very end of the string. I've put my regular expression between m| and |, so I can use forward slashes without having to constantly escape them.
+
+The last part of the URL is now in $1 and I can set my own scalar variable to save this Result.
+share|improve this answer
+
+  
+procedure GetQrCodeImage(Width,Height: Word; Correct_Level: string;
+           const Data:string; aimage: TImage; apath: string);
+var
+  encodedURL: string;
+  idhttp: TIdHttp;// THTTPSend;
+  pngStream: TMemoryStream;
+begin
+  encodedURL:= Format(UrlGoogleQrCode,[Width,Height, Correct_Level, HTTPEncode(Data)]);
+  //WinInet_HttpGet(EncodedURL,StreamImage);
+  idHTTP:= TIdHTTP.Create(NIL)
+  pngStream:= TMemoryStream.create;
+  with TLinearBitmap.Create do try
+    idHTTP.Get1(EncodedURL, pngStream)
+    pngStream.Position:= 0;
+    LoadFromStream2(pngStream,'PNG');
+    aImage.Picture:= NIL;
+    AssignTo(aimage.picture.bitmap);
+    SaveToFile(apath);
+    //OpenDoc(apath);
+  finally
+    Dispose;
+    Free;
+    idHTTP.Free
+    pngStream.Free;
+  end;
+end;
+
+procedure GetQrCode3(Width,Height: Word; Correct_Level: string;
+           const Data:string; apath: string);
+var
+  encodedURL: string;
+  idhttp: TIdHttp;// THTTPSend;
+  png: TLinearBitmap;//TPNGObject;
+  pngStream: TMemoryStream;
+begin
+  encodedURL:= Format(UrlGoogleQrCode,[Width,Height, Correct_Level, HTTPEncode(Data)]);
+  //WinInet_HttpGet(EncodedURL,StreamImage);
+  idHTTP:= TIdHTTP.Create(NIL)
+  pngStream:= TMemoryStream.create;
+  with TLinearBitmap.Create do try
+    idHTTP.Get1(EncodedURL, pngStream)
+    pngStream.Position:= 0;
+    LoadFromStream2(pngStream,'PNG');
+    //aImage.Picture:= NIL;
+    //AssignTo(aimage.picture.bitmap);
+    SaveToFile(apath);
+    OpenDoc(apath);
+  finally
+    Dispose;
+    Free;
+    idHTTP.Free
+    pngStream.Free;
+  end;
+end;
+
+
+  
+----app_template_loaded_code----

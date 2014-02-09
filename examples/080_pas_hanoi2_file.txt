@@ -1,0 +1,438 @@
+PROGRAM Tower_of_Hanoi_Steps_SolutionSequence;
+//Uses Crt;
+{
+ **************************************************************************
+ solution of the tower of hanoi with a codelist, double recursion!,
+ codelist with 12 patterns of 4 steps, codesequence in 24 solution steps!
+  loc's= 134, ex. _80ff
+ try to program it with a canvas object to visualize
+ ************************************************************************** }
+//uses crt;
+
+Const SOLUTIONFILE = 'hanoilist.txt';
+
+Type 
+    TPatterns=  array[1..12] of shortstring;
+
+var answer: string;
+    steps, step4, i: integer;
+    patt: shortstring;
+    varray: TPatterns;
+    pattlst, seqlist: TStringlist;
+    
+    
+procedure initPatternArray;    //codelist
+begin
+  varray[1]:=   'a to b a to c b to c a to b ';
+  varray[2]:=   'a to b a to c b to c b to a ';
+  varray[3]:=   'a to c a to b c to b a to c ';
+  varray[4]:=   'a to c a to b c to b c to a ';
+  varray[5]:=   'b to a b to c a to c b to a ';
+  varray[6]:=   'b to a b to c a to c a to b ';
+  varray[7]:=   'b to c b to a c to a b to c ';
+  varray[8]:=   'b to c b to a c to a c to b ';
+  varray[9]:=   'c to a c to b a to b c to a ';
+  varray[10]:=  'c to a c to b a to b a to c ';
+  varray[11]:=  'c to b c to a b to a c to b ';
+  varray[12]:=  'c to b c to a b to a b to c ';
+end;  
+
+procedure initPatternArray2; //just a test draft
+begin
+  varray[1]:=   'a to b a to c b to c '; 
+  varray[2]:=   'a to b a to c c to b ';
+  varray[3]:=   'a to b c to a c to b ';
+  varray[4]:=   'a to c b to a b to c ';
+  varray[5]:=   'a to c b to a c to b ';
+  varray[6]:=   'a to c a to b c to b ';
+ // varray[5]:=   'b to a b to c a to c ';
+ // varray[6]:=   'b to a b to c a to c ';
+ // varray[7]:=   'b to c b to a c to a ';
+ // varray[8]:=   'b to c b to a c to a ';
+  varray[7]:=   'c to a b to a c to b ';
+  varray[8]:=   'c to a b to a b to c ';  //2ba
+  varray[9]:=   'c to a c to b a to b ';
+  varray[10]:=  'c to b c to a b to a ';
+  varray[11]:=  'c to b c to a a to b ';
+  varray[12]:=  'c to b a to b b to a ';
+end;  
+
+procedure Search_Write_Codes;
+var vs, tmp: shortstring;
+   i,k, found: integer;
+begin
+  found:= 0;
+  writeln('pattern codes ---------- for solution: '+answer);
+  for i:= 0 to pattlst.count - 1 do begin
+    vs:= pattlst.strings[i]
+    for k:= 1 to high(varray) do
+      if vs = varray[k] then begin
+        //writeln('patt code: '+inttostr(k));
+        inc(found)
+        tmp:= tmp +(inttostr(k)+'-')
+        //write(inttostr(k)+'-');               //-fast
+        //if found mod 32 = 0 then writeln(''); //-fast
+      if found mod 24 = 0 then begin 
+        seqlist.add(tmp);
+        tmp:= '';
+      end; 
+    end;    
+  end;
+  seqlist.add(tmp) //last/first segment
+  writeln('Nr of codes: ' +inttostr(found))
+end; 
+
+ 
+procedure move(high: integer; a,c,b: char);
+begin
+  if high > 1 then begin
+    move(high-1,a,b,c);
+    //writeln(a+' to '+c);   //-fast
+    inc(step4)
+    patt:= patt+a+' to '+c+' ';
+    if step4 mod 4 = 0 then begin
+      pattlst.add(patt)
+      patt:= '';
+    end;   
+    move(high-1,b,c,a);
+    inc(steps)
+  end else begin
+    //writeln(a+' to '+c)   //-fast
+    inc(step4)
+    patt:= patt+a +' to '+c+' ';
+    if step4 mod 4 = 0 then begin
+      pattlst.add(patt)
+      patt:= '';
+    end;   
+    inc(steps)
+  end; 
+  //writeln(' very last test') 
+end;
+
+begin     //main
+  steps:= 0;
+  step4:= 0;
+  initPatternArray;
+  pattlst:= TStringlist.create;
+  seqlist:= TStringlist.create;
+  answer:= readln('How much on a pile ?');
+  Writeln('Pile solution of: '+(answer))
+  move(strtoInt(answer),'a','b','c');
+  Writeln('had total '+inttoStr(steps)+ ' steps');
+  for i:= 0 to pattlst.count - 1 do      //-fast
+    writeln(pattlst.strings[i]);
+  Search_Write_Codes; 
+  writeln('Nr of codelines: '+inttostr(seqlist.count)+ ' in file '+SOLUTIONFILE)
+  seqlist.savetoFile(exepath+'examples\'+SOLUTIONFILE)
+  seqlist.Free; 
+  pattlst.Free;
+  
+  {Writeln('or '+chr(bintoint(inttobin(ord('A') OR ord('B')))))
+  Writeln('xor '+chr(ord('A') XOR ord('B')))
+  Writeln('and '+chr(ord('A') AND ord('B')))
+  Writeln('not and'+chr((NOT ord('A') AND ord('B'))))}
+End.
+
+The 12 Main Step Patterns!
+
+--1-------2-------3-------4-------  A 1,2,3,4
+a to b  a to b   a to c  a to c   
+a to c  a to c   a to b  a to b
+b to c  b to c   c to b  c to b
+a to b  b to a   a to c  c to a
+--5-------6--------7-------8------  B 5,6,7,8
+b to a  b to a   b to c  b to c    
+b to c  b to c   b to a  b to a
+a to c  a to c   c to a  c to a
+b to a  a to b   b to c  c to b
+--9-------10-------11------12-----  C 9,10,11,12
+c to a  c to a   c to b  c to b   
+c to b  c to b   c to a  c to a
+a to b  a to b   b to a  b to a
+c to a  a to c   c to b  b to c
+----------------------------------
+//***********************************************************************
+This is the solution code sequence for all even piles! repeat n/24:
+
+3-6-11-3-5-12-3-(5/6)-11-4-5-11-3-6-11-(3/4)-5-12-3-5-11-4-5-(11/12)
+
+This is the solution code sequence for all odd piles!:
+
+1-10-7-1-9-8-1-(9/10)-7-2-9-7-1-10-7-(1/2)-9-8-1-9-7-2-9-(7/8)
+//***********************************************************************
+---------------------------------------------------------------------------
+
+Example for 10 piles(n) 2^10-1 Tester repeat n/24 lines
+                     X                  X                 X
+  12 3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-    
+
+Those are the 5 work Patterns:
+
+move from    1   a to   c     2   a to   c     3  a to   c     a to c
+move from        a to   b         b to   a        b to   a     b to c
+move from        c to   b         b to   c        c to   b     b to a
+
+move from    4   c to   a     5   c to   a   (Inv 1) c to a   c to a 
+move from        b to   a         b to   a           b to c   c to b
+move from        c to   b         b to   c           a to b   a to b
+
+NEW Sequence of Step  / Patterns
+  2  3               
+  3  1-9
+  4  3-6-11-3
+  5  1-10-7-1-9-8-1-10
+  6  3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-3
+  7  1-10-5-1-9-6-1-10-5-2-9-5-1-10-5-
+     1-9-6-1-9-5-2-9-6-1-10-5-1-9-6-1-9
+  
+  8  3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-
+     3-5-12-3-5-11-4-5-12-3-6-11-3-5-12-
+     3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-
+     4-5-11-3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-
+  
+  9  1-10-7-1-09-8-1-10-7-2-09-7-1-10-7-
+     1-09-8-1-09-7-2-09-8-1-10-7-1-09-8-
+     1-10-7-2-09-7-1-10-7-2-09-8-1-09-7-
+     2-09-7-1-10-7-1-09-8-1-10-7-2-09-7-
+     1-10-7-1-09-8-1-09-7-2-09-8-1-10-7-
+     1-09-8-1-09-7-2-09-7-1-10-7-2-09-8-
+     1-09-7-2-09-8-1-10-7-1-09-8-1-10-7-
+     2-09-7-1-10-7-1-09-8-1-09-7-2-09-8-
+     1-10-7-1-09-8-1-   
+     
+ 10  3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-    (15*17=255*4=1020+3=2^10-1)
+     3-5-12-3-5-11-4-5-12-3-6-11-3-5-12-
+     3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-
+     4-5-11-3-6-11-3-5-12-3-6-11-4-5-11-
+     3-6-11-3-5-12-3-5-11-4-5-12-3-6-11-
+     3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-
+     3-5-11-4-5-12-3-6-11-3-5-12-3-6-11-
+     4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-
+     4-5-12-3-5-11-4-5-11-3-6-11-3-5-12-
+     3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-
+     4-5-12-3-6-11-3-5-12-3-5-11-4-5-11-
+     3-6-11-4-5-12-3-5-11-4-5-11-3-6-11-
+     3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-
+     3-5-11-4-5-12-3-6-11-3-5-12-3-6-11-
+     4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-  
+     
+ 12  3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-      Diagonal Pattern 4-6-12!
+     3-5-12-3-5-11-4-5-12-3-6-11-3-5-12-                       3-5-11
+     3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-
+     4-5-11-3-6-11-3-5-12-3-6-11-4-5-11-
+     3-6-11-3-5-12-3-5-11-4-5-12-3-6-11-
+     3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-
+     3-5-11-4-5-12-3-6-11-3-5-12-3-6-11-
+     4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-
+     4-5-12-3-5-11-4-5-11-3-6-11-3-5-12-
+     3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-
+     4-5-12-3-6-11-3-5-12-3-5-11-4-5-11-
+     3-6-11-4-5-12-3-5-11-4-5-11-3-6-11-
+     3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-
+     3-5-11-4-5-12-3-6-11-3-5-12-3-6-11-
+     4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-
+     3-5-12-3-5-11-4-5-12-3-6-11-3-5-12-
+     3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-
+     4-5-12-3-6-11-3-5-12-3-6-11-4-5-11-
+     3-6-11-3-5-12-3-5-11-4-5-12-3-6-11-
+     3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-
+     3-5-11-4-5-11-3-6-11-3-5-12-3-6-11-
+     4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-
+     4-5-12-3-5-11-4-5-12-3-6-11-3-5-12-
+     3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-
+     4-5-12-3-6-11-3-5-12-3-6-11-4-5-11-
+     3-6-11-4-5-12-3-5-11-4-5-11-3-6-11-
+     3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-
+     3-5-11-4-5-12-3-6-11-3-5-12-3-5-11-
+     4-5-11-3-6-11-4-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-
+     3-5-12-3-5-11-4-5-12-3-6-11-3-5-12-
+     3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-
+     4-5-11-3-6-11-3-5-12-3-6-11-4-5-11-
+     3-6-11-4-5-12-3-5-11-4-5-12-3-6-11-
+     3-5-12-3-5-11-4-5-11-3-6-11-4-5-12-
+     3-5-11-4-5-11-3-6-11-3-5-12-3-6-11-
+     4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-
+     4-5-12-3-5-11-4-5-11-3-6-11-3-5-12-
+     3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-
+     4-5-12-3-6-11-3-5-12-3-5-11-4-5-11-
+     3-6-11-4-5-12-3-5-11-4-5-12-3-6-11-
+     3-5-12-3-6-11-4-5-11-3-6-11-3-5-12-
+     3-5-11-4-5-12-3-6-11-3-5-12-3-5-11-
+     4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-
+     4-5-12-3-5-11-4-5-12-3-6-11-3-5-12-
+     3-5-11-4-5-11-3-6-11-4-5-12-3-5-11-
+     4-5-11-3-6-11-3-5-12-3-6-11-4-5-11-
+     3-6-11-3-5-12-3-5-11-4-5-12-3-6-11-
+     3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-
+     3-5-11-4-5-11-3-6-11-3-5-12-3-6-11-
+     4-5-11-3-6-11-3-5-12-3-5-11-4-5-12-
+     3-6-11-3-5-12-3-5-11-4-5-11-3-6-11-
+     4-5-12-3-5-11-4-5-12-3-6-11-3-5-12-
+     3-6-11-4-5-11-3-6-11-3-5-12-3-5-11-
+     4-5-12-3-6-11-3-5-12-3-6-11-4-5-11-
+     3-6-11-4-5-12-3-5-11-4-5-11-3-6-11-
+     3-5-12-3-6-11-4-5-11-3-6-11-4-5-12-
+     3-5-11-4-5-12-3-6-11-3-5-12-3-5-11-
+     4-5-11-3-6-11-4-5-12-3-5-11-4-5-11-
+     3-6-11-3-5-12-3-6-11-4-5-11-3-6-11-
+     3-5-12-3-5-11-4-5-12-3-6-11-3-5-12-
+     3-6-11-4-5-11-3-6-11-4-5-12-3-5-11-
+     4-5-11-3-6-11-3-5-12-3-6-11-4-5-11-
+     3-6-11-    
+
+
+
+just inside maxbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+                                     
+
+Ref. Pile solution of: 20
+had total 1048575 steps
+pattern codes ---------- for solution: 20
+Nr of codes: 262143
+Nr of codelines: 10923 in file hanoilist.txt
+ mX3 executed: 10.02.2012 19:36:21  Runtime: 0:1:0.312
+ 
+with writeline: 
+Nr of codes: 262143
+Nr of codelines: 10923 in file hanoilist.txt
+ mX3 executed: 10.02.2012 19:44:46  Runtime: 0:5:52.313
+
+Old
+--5-------6--------7-------8------ 5-->7, 6-->8
+b to c  b to c   b to a  b to a   5 6 7 8  a,b,c 
+b to a  b to a   b to c  b to c
+c to a  c to a   a to c  a to c
+b to c  c to b   b to a  a to b
+
+
+The tower of Hanoi (commonly also known as the "towers of Hanoi"), is a puzzle invented by E. Lucas in 1883. It is also known as the Tower of Brahma puzzle and appeared as an intelligence test for apes in the film Rise of the Planet of the Apes (2011) under the name "Lucas Tower."
+
+Given a stack of n disks arranged from largest on the bottom to smallest on top placed on a rod, together with two empty rods, the towers of Hanoi puzzle asks for the minimum number of moves required to move the stack from one rod to another, where moves are allowed only if they place smaller disks on top of larger disks. The puzzle with n=4 pegs and n disks is sometimes known as Reve's puzzle.
+
+The problem is isomorphic to finding a Hamiltonian path on an n-hypercube (Gardner 1957, 1959).
+TowersofHanoiSolution
+
+Given three rods and n disks, the sequence S_1={a_k} giving the number of the disk (i=1 to n) to be moved at the kth step is given by the remarkably simple recursive procedure of starting with the list S_1={1} for a single disk, and recursively computing
+S_n={S_(n-1),n,S_(n-1)}. 	
+(1)
+
+For the first few values of n, this gives the sequences shown in the following table. A solution of the three-rod four-disk problem is illustrated above.
+n	S_n
+1	1
+2	1, 2, 1
+3	1, 2, 1, 3, 1, 2, 1
+4	1, 2, 1, 3, 1, 2, 1, 4, 1, 2, 1, 3, 1, 2, 1
+
+As the number of disks is increases (again for three rods), an infinite sequence is obtained, the first few terms of which are illustrated in the table above (Sloane's A001511). Amazingly, this is exactly the binary carry sequence plus one. Even more amazingly, the number of disks moved after the kth step is the same as the element which needs to be added or deleted in the kth addend of the Ryser formula (Gardner 1988, Vardi 1991). A simple method for hand-solving uses disks painted with alternating colors. No two disks of the same color are ever placed atop each other, and no disk is moved twice in a row (P. Tokarczuk, pers. comm. Jun. 23, 2004).
+
+As a result of the above procedure, the number of moves h_n required to solve the puzzle of n disks on three rods is given by the recurrence relation
+h_n=2h_(n-1)+1 	
+(2)
+
+with h_1=1. Solving gives
+h_n=2^n-1, 	
+(3)
+
+i.e., the Mersenne numbers.
+
+For three rods, the proof that the above solution is minimal can be achieved using the Lucas correspondence which relates Pascal's triangle to the Hanoi graph. While algorithms are known for transferring disks on four rods, none has been proved minimal.
+
+A Hanoi graph can be constructed whose graph vertices correspond to legal configurations of n towers of Hanoi, where the graph vertices are adjacent if the corresponding configurations can be obtained by a legal move. The puzzle itself can be solved using a binary Gray code.
+
+Poole (1994) and Rangel-Mondragón give Mathematica routines for solving the Hanoi towers problem. Poole's algorithm works for an arbitrary disk configuration, and provides the solution in the fewest possible moves.
+
+The minimal numbers of moves required to order n=1, 2, ... disk on four rods are given by 1, 3, 5, 9, 13, 17, 25, 33, ... (Sloane's A007664). It is conjectured that this sequence is given by the recurrence
+s_n=s_(n-1)+2^x, 	
+(4)
+
+with s_1=1 and x the positive floor integer solution to
+n-1=1/2x(x+1), 	
+(5)
+
+i.e.,
+x=|_(sqrt(8n-7)-1)/2_|. 	
+(6)
+
+This would then given the explicit formula
+s_n=1+[n-1/2x(x-1)-1]2^x. 	
+(7)
+
+SEE ALSO: Binary Carry Sequence, Gray Code, Pancake Sorting, Puz-Graph, Ryser Formula
+
+REFERENCES:
+
+Allouche, J.-P. and Shallit, J. "The Ring of k-Regular Sequences." Theoret. Comput. Sci. 98, 163-197, 1992.
+
+Allouche, J.-P. "Note on the Cyclic Towers of Hanoi." Theor. Comput. Sci. 123, 3-7, 1994.
+
+Bogomolny,A. "Towers of Hanoi." http://www.cut-the-knot.org/recurrence/hanoi.shtml.
+
+Brousseau, A. "Tower of Hanoi with More Pegs." J. Recr. Math. 8, 169-176, 1972.
+
+Chartrand, G. "The Tower of Hanoi Puzzle." §6.3 in Introductory Graph Theory. New York: Dover, pp. 135-139, 1985.
+
+Daiev, V. "Problem 636: Greatest Divisors of Even Integers." Math. Mag. 40, 164-165, 1967.
+
+Dubrovsky, V. "Nesting Puzzles, Part I: Moving Oriental Towers." Quantum 6, 53-57 (Jan.) and 49-51 (Feb.), 1996.
+
+Flajolet, P.; Raoult, J.-C.; and Vuillemin, J. "The Number of Registers Required for Evaluating Arithmetic Expressions." Theoret. Comput. Sci. 9, 99-125, 1979.
+
+Frame, J. S. "Solution to Problem 3918." Amer. Math. Monthly 41, 216-217, 1941.
+
+Gardner, M. "Mathematical Games: About the Remarkable Similarity between the Icosian Game and the Towers of Hanoi." Sci. Amer. 196, 150-156, May 1957. 

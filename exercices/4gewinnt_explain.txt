@@ -1,0 +1,166 @@
+Readmefirst 4Gewinnt.exe
+********************************************
+
+die EXE besteht aus
+
+- 4gewinnt.pas
+- rechner.inc
+
+
+mit dem Script 170_ nun endlich auch in maXbox realisiert!  1995-2012
+----------------------------------------------------------------------------------------------------
+
+
+Ja die Implementierung ist rund 10 Jahre her, noch präziser nämlich genau 10 Jahre, die Datei 4gewinnt.pas hat den timestamp 8.3.1995!
+
+Nun jede position an der ein stein landen kann, wird mit einem wert aus einer matrix versehen:
+ 
+      { Wert für Position eines Steins }
+      PosWert : SpielMatrix = (( 3, 4, 5, 7, 5, 4, 3),
+                               ( 4, 6, 8,10, 8, 6, 4),
+                               ( 5, 8,11,13,11, 8, 5),
+                               ( 5, 8,11,13,11, 8, 5),
+                               ( 4, 6, 8,10, 8, 6, 4),
+                               ( 3, 4, 5, 7, 5, 4, 3));
+
+da die möglichen viererreihen in der mitte grösser als am rand sind, ergibt sich eine nach aussen abnehmende verteilung.
+Dies allein reicht noch nicht, da für jede mögliche viererreihe nachgesehen wird, ob n blaue oder n rote enthalten sind, es dürfen auch steine fehlen. 
+Der funktionswert von minmax gibt jeweils den wert der betrachteten spielstellung an; die nummer des besten zuges ist nach der rekursion in der varibablen enthalten. 
+Bei 7 möglichen positionen und 9 zügen im voraus ergibt sich schon ein baum von 7 hoch 9 berechnungen, sofern man mit dem alpha-beta schnitt nicht abkürzt.
+ 
+ 
+{ Wert einer Reihe in der schon drei Steine }
+      { derselben Farbe enthalten sind            }
+      Wert3 = 28;
+ 
+      { Wert einer Reihe in der schon zwei Steine }
+      { derselben Farbe enthalten sind            }
+      Wert2 = 7;
+ 
+ 
+Dann werden die dreierreihen unterschiedlich bewertet, da die position des noch fehlenden steins herangezogen wird; das ist abhängig ob der noch fehlende stein an einer geraden oder ungeraden y-position ist. Denn wenn blau beginnt muss wenn noch eine spalte zur verfügung steht auch blau an einer ungeraden position enden, gewinnen.
+Waagrechte 3-reihen werden besser bewertet als diagonale und die sind wiederum besser als senkrechte reihen:
+ 
+ 
+ 
+  Procedure Auswertung;
+ 
+  Begin
+    Dreier_Rot:=S=30;
+    Dreier_Blau:=S=3;
+    If S>1 Then
+      If S=40 Then Begin
+        Bewertung:=-20000-Stufe;
+        If Stufe=100 Then
+          Bewertung:=-Unendlich;
+        Ende:=True;
+      End
+      Else
+        If S=4 Then Begin
+          Bewertung:=30000+Stufe;
+          If Stufe=100 Then
+            Bewertung:=Unendlich;
+          Ende:=True;
+        End
+        Else
+          Inc(BW,RWert[S]);
+  End;
+  {-------------------------------------------------}
+ 
+Begin
+  BW:=0;
+ 
+  {-------------------------------------------------}
+  { Bewertungskriterium 1:                          }
+  {   Werte der einzelnen positionen      }
+  {-------------------------------------------------}
+  For j:=1 To M Do
+    For i:=1 To Count[j] Do Begin
+      If SM[i,j]=1 Then
+        BW:=BW+PosWert[i,j];
+      If SM[i,j]=10 Then
+        BW:=BW-PosWert[i,j];
+    End;
+ 
+  {-------------------------------------------------}
+  { Bewertungskriterium 2:                          }
+  {   Bewertung der jeweiligen 2-, 3- und }
+  {   4 er der Spielstellung                }
+  {-------------------------------------------------}
+ 
+  Ende:=False;
+ 
+  {-------- senkrechte Reihen --------}
+  For j:=1 To M Do Begin
+    Help:=Count[j];
+    If Help>3 Then Help:=3;
+    For i:=1 To Help Do Begin
+      S:=SM[i,j]+SM[i+1,j]+SM[i+2,j]+SM[i+3,j];
+      Auswertung;
+      If Ende Then Exit;
+      If Dreier_Rot Then
+        For k:=0 To 3 Do
+          If SM[i+k,j]=0 Then
+            If i+k And 1=ComputerBegin Then
+              Dec(BW,RWert[3]);
+      If Dreier_Blau Then
+        For k:=0 To 3 Do
+          If SM[i+k,j]=0 Then
+            If i+k And 1=1-ComputerBegin Then
+              Inc(BW,RWert[3]);
+    End;
+  End;
+ 
+  {-------- waagrechte Reihen --------}
+  For j:=1 To M-3 Do
+    For i:=1 To N Do Begin
+      S:=SM[i,j]+SM[i,j+1]+SM[i,j+2]+SM[i,j+3];
+      Auswertung;
+      If Ende Then Exit;
+      If Dreier_Rot And (j>1) Then
+        If j And 1=ComputerBegin Then
+          Dec(BW,3*RWert[3]);
+      If Dreier_Blau And (j>1) Then
+        If j And 1=1-ComputerBegin Then
+          Inc(BW,3*RWert[3]);
+    End;
+ 
+  {-------- diagonale Reihen --------}
+  For i:=1 To N-3 Do
+    For j:=1 To M-3 Do Begin
+      S:=SM[i,j]+SM[i+1,j+1]+SM[i+2,j+2]+SM[i+3,j+3];
+      Auswertung;
+      If Ende Then Exit;
+      If Dreier_Rot Then
+        For k:=0 To 3 Do
+          If SM[i+k,j+k]=0 Then
+            If i+k And 1=ComputerBegin Then
+              Dec(BW,2*RWert[3]);
+      If Dreier_Blau Then
+        For k:=0 To 3 Do
+          If SM[i+k,j+k]=0 Then
+            If i+k And 1=1-ComputerBegin Then
+              Inc(BW,2*RWert[3]);
+      S:=SM[i+3,j]+SM[i+2,j+1]+SM[i+1,j+2]+SM[i,j+3];
+      Auswertung;
+      If Ende Then Exit;
+      If Dreier_Rot Then
+        For k:=0 To 3 Do
+          If SM[i+3-k,j+k]=0 Then
+            If i+3-k And 1=ComputerBegin Then
+              Dec(BW,2*RWert[3]);
+      If Dreier_Blau Then
+        For k:=0 To 3 Do
+          If SM[i+3-k,j+k]=0 Then
+            If i+3-k And 1=1-ComputerBegin Then
+              Inc(BW,2*RWert[3]);
+    End;
+  Bewertung:=BW;
+End;
+ 
+ 
+ 
+Vielleicht lassen sich mit anderen werten bessere ergebnisse erzielen, zumal die die konstanten auch noch einen teil beitragen, hier wäre eine simulation mit einem gen. algo. angebracht, wobei dann der zufall auf der jeweilige stufe noch eingebaut werden müsste, die variabilität der bewertung.
+ 
+ 
+Max Kleiner

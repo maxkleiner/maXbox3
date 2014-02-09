@@ -1,0 +1,78 @@
+program STringList_Plus;
+
+// Ex. 100, locs=25
+//uses pas_math_UNIT_TEST.pas
+
+var
+  locs : TStringList;            // Define our string list variable
+  i    : Integer;
+begin
+  // Define a string list object, and point our variable at it
+  locs:= TStringList.Create;
+  // Now add some locs to our list - using the DelimitedText property
+  // with overriden control variables
+  locs.Duplicates;
+  locs.Delimiter := ' ';        // Each list item will be blank separated
+  locs.QuoteChar := '|';        // And each item will be quoted with |'s
+  locs.DelimitedText := '|TEE Mistral| |BR 103| |Tartaruga "TEE-type"|';
+
+  // Now display these locs
+  for i := 0 to locs.Count-1 do begin
+    ShowMessage(locs[i]);       // locs[i] equates to locs.Strings[i]
+    Writeln(locs[i])
+  end;
+   // Free up the list object
+  locs.Free;
+end.  
+
+ TStringList  = class(TStrings)
+  private
+    FList: PStringItemList;
+    FCount: Integer;
+    FCapacity: Integer;
+    FSorted: Boolean;
+    FDuplicates: TDuplicates;
+    FCaseSensitive: Boolean;
+    FOnChange: TNotifyEvent;
+    FOnChanging: TNotifyEvent;
+    procedure ExchangeItems(Index1, Index2: Integer);
+    procedure Grow;
+    procedure QuickSort(L, R: Integer; SCompare: TStringListSortCompare);
+    procedure SetSorted(Value: Boolean);
+    procedure SetCaseSensitive(const Value: Boolean);
+  protected
+    procedure Changed; virtual;
+    procedure Changing; virtual;
+    function Get(Index: Integer): string; override;
+    function GetCapacity: Integer; override;
+    function GetCount: Integer; override;
+    function GetObject(Index: Integer): TObject; override;
+    procedure Put(Index: Integer; const S: string); override;
+    procedure PutObject(Index: Integer; AObject: TObject); override;
+    procedure SetCapacity(NewCapacity: Integer); override;
+    procedure SetUpdateState(Updating: Boolean); override;
+    function CompareStrings(const S1, S2: string): Integer; override;
+    procedure InsertItem(Index: Integer; const S: string; AObject: TObject); virtual;
+  public
+    destructor Destroy; override;
+    function Add(const S: string): Integer; override;
+    function AddObject(const S: string; AObject: TObject): Integer; override;
+    procedure Clear; override;
+    procedure Delete(Index: Integer); override;
+    procedure Exchange(Index1, Index2: Integer); override;
+    function Find(const S: string; var Index: Integer): Boolean; virtual;
+    function IndexOf(const S: string): Integer; override;
+    procedure Insert(Index: Integer; const S: string); override;
+    procedure InsertObject(Index: Integer; const S: string;
+      AObject: TObject); override;
+    procedure Sort; virtual;
+    procedure CustomSort(Compare: TStringListSortCompare); virtual;
+    property Duplicates: TDuplicates read FDuplicates write FDuplicates;
+    property Sorted: Boolean read FSorted write SetSorted;
+    property CaseSensitive: Boolean read FCaseSensitive write SetCaseSensitive;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    property OnChanging: TNotifyEvent read FOnChanging write FOnChanging;
+  end;
+
+  
+----code_cleared_checked----

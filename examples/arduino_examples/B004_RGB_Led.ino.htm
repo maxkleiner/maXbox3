@@ -1,0 +1,140 @@
+Version:0.9
+StartHTML:0000000105
+EndHTML:0000011038
+StartFragment:0000001053
+EndFragment:0000011022
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>mXScriptasHTML</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="generator" content="SynEdit HTML exporter" />
+<style type="text/css">
+<!--
+body { color: #000000; background-color: #FFFFFF; }
+.pas1-assembler { }
+.pas1-character { color: #000080; text-decoration: underline; }
+.pas1-comment { color: #000080; font-style: italic; }
+.pas1-float { color: #FF6347; }
+.pas1-hexadecimal { color: #FF00FF; }
+.pas1-identifier { }
+.pas1-number { color: #FF0000; }
+.pas1-preprocessor { font-style: italic; }
+.pas1-reservedword { color: #000000; font-weight: bold; }
+.pas1-space { }
+.pas1-string { color: #008080; }
+.pas1-symbol { color: #800080; }
+-->
+</style>
+</head>
+<body>
+<!--StartFragment--><pre><code><span class="pas1-character">#</span><span class="pas1-identifier">include </span><span class="pas1-symbol">&quot;</span><span class="pas1-identifier">variant</span><span class="pas1-symbol">.</span><span class="pas1-identifier">h</span><span class="pas1-symbol">&quot;
+</span><span class="pas1-character">#</span><span class="pas1-identifier">include </span><span class="pas1-symbol">&lt;</span><span class="pas1-identifier">stdio</span><span class="pas1-symbol">.</span><span class="pas1-identifier">h</span><span class="pas1-symbol">&gt;
+</span><span class="pas1-character">#</span><span class="pas1-identifier">include </span><span class="pas1-symbol">&lt;</span><span class="pas1-identifier">adk</span><span class="pas1-symbol">.</span><span class="pas1-identifier">h</span><span class="pas1-symbol">&gt;
+</span><span class="pas1-character">#</span><span class="pas1-identifier">include </span><span class="pas1-symbol">&lt;</span><span class="pas1-identifier">Scheduler</span><span class="pas1-symbol">.</span><span class="pas1-identifier">h</span><span class="pas1-symbol">&gt;
+
+</span><span class="pas1-character">#def</span><span class="pas1-identifier">ine LED </span><span class="pas1-number">13
+</span><span class="pas1-character">#def</span><span class="pas1-identifier">ine RED </span><span class="pas1-number">2
+</span><span class="pas1-character">#def</span><span class="pas1-identifier">ine GREEN </span><span class="pas1-number">3
+</span><span class="pas1-character">#def</span><span class="pas1-identifier">ine BLUE </span><span class="pas1-number">4
+
+</span><span class="pas1-symbol">/*</span><span class="pas1-space">  mX4 Adaption
+Achtung</span><span class="pas1-symbol">:</span><span class="pas1-space"> Serielle Schnittstelle muss unten rechts auf Newline stehen</span><span class="pas1-symbol">!
+*/</span><span class="pas1-space">  
+</span><span class="pas1-comment">// Accessory descriptor. It's how Arduino identifies itself to Android.
+</span><span class="pas1-identifier">char model</span><span class="pas1-symbol">[]</span><span class="pas1-space"> </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-symbol">&quot;</span><span class="pas1-identifier">HelloWorldModel</span><span class="pas1-symbol">&quot;;</span><span class="pas1-space"> </span><span class="pas1-comment">// model in xml
+</span><span class="pas1-identifier">char displayName</span><span class="pas1-symbol">[]</span><span class="pas1-space"> </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-symbol">&quot;</span><span class="pas1-identifier">A Hello World Accessory</span><span class="pas1-symbol">&quot;;</span><span class="pas1-space"> </span><span class="pas1-comment">// your Arduino board
+</span><span class="pas1-identifier">char companyName</span><span class="pas1-symbol">[]</span><span class="pas1-space"> </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-symbol">&quot;</span><span class="pas1-identifier">Hello Inc</span><span class="pas1-symbol">&quot;;
+
+</span><span class="pas1-comment">// Make up anything you want for these
+</span><span class="pas1-identifier">char versionNumber</span><span class="pas1-symbol">[]</span><span class="pas1-space"> </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-symbol">&quot;</span><span class="pas1-float">1.2</span><span class="pas1-symbol">&quot;;
+</span><span class="pas1-identifier">char serialNumber</span><span class="pas1-symbol">[]</span><span class="pas1-space"> </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-symbol">&quot;</span><span class="pas1-number">1</span><span class="pas1-symbol">&quot;;
+</span><span class="pas1-identifier">char url</span><span class="pas1-symbol">[]</span><span class="pas1-space"> </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-symbol">&quot;</span><span class="pas1-identifier">http</span><span class="pas1-symbol">:</span><span class="pas1-comment">//www.osciprime.com/repo/OsciPrimeICS.apk&quot;;
+
+</span><span class="pas1-identifier">volatile uint8_t pause </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">255</span><span class="pas1-symbol">;
+</span><span class="pas1-identifier">USBHost Usb</span><span class="pas1-symbol">;
+</span><span class="pas1-identifier">ADK adk</span><span class="pas1-symbol">(&amp;</span><span class="pas1-identifier">Usb</span><span class="pas1-symbol">,</span><span class="pas1-space"> companyName</span><span class="pas1-symbol">,</span><span class="pas1-space"> model</span><span class="pas1-symbol">,</span><span class="pas1-space"> displayName</span><span class="pas1-symbol">,</span><span class="pas1-identifier">versionNumber</span><span class="pas1-symbol">,</span><span class="pas1-identifier">url</span><span class="pas1-symbol">,</span><span class="pas1-identifier">serialNumber</span><span class="pas1-symbol">);
+
+
+</span><span class="pas1-reservedword">String</span><span class="pas1-space"> received_string </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-symbol">&quot;&quot;;
+</span><span class="pas1-identifier">char received_char</span><span class="pas1-symbol">;
+
+</span><span class="pas1-identifier">void setup</span><span class="pas1-symbol">()
+</span><span class="pas1-comment">{
+  cpu_irq_enable();
+  pinMode(LED, OUTPUT);
+  Serial.begin(9600);
+  Scheduler.startLoop(adkLoop);
+  Scheduler.startLoop(serialLoop);
+  delay(200);
+}
+
+</span><span class="pas1-character">#def</span><span class="pas1-identifier">ine RCVSIZE </span><span class="pas1-number">128
+
+</span><span class="pas1-identifier">void loop</span><span class="pas1-symbol">()</span><span class="pas1-comment">{
+	yield();
+}
+
+</span><span class="pas1-identifier">void serialLoop</span><span class="pas1-symbol">()</span><span class="pas1-comment">{
+  uint8_t cmd;
+  uint8_t val;
+  while(Serial.available()){
+    received_char = Serial.read();
+    if(received_char != '\r' &amp;&amp; received_char != '\n')
+      received_string.concat(received_char);
+  }
+</span><span class="pas1-space">        
+  </span><span class="pas1-reservedword">if</span><span class="pas1-symbol">(</span><span class="pas1-identifier">received_string </span><span class="pas1-symbol">!=</span><span class="pas1-space"> </span><span class="pas1-symbol">&quot;&quot;</span><span class="pas1-space"> </span><span class="pas1-symbol">&amp;&amp;</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">received_char </span><span class="pas1-symbol">==</span><span class="pas1-space"> </span><span class="pas1-string">'\r'</span><span class="pas1-space"> </span><span class="pas1-symbol">||</span><span class="pas1-space"> received_char </span><span class="pas1-symbol">==</span><span class="pas1-space"> </span><span class="pas1-string">'\n'</span><span class="pas1-symbol">))</span><span class="pas1-comment">{
+    cmd = received_string[0];
+    val = atoi(&amp;received_string[1]);
+    if(cmd == 'r')
+      analogWrite(RED, (255-val));
+    if(cmd == 'g')
+      analogWrite(GREEN, (255-val));
+    if(cmd == 'b')
+      analogWrite(BLUE, (255-val));
+    received_string = &quot;&quot;;
+  }
+
+</span><span class="pas1-space">  yield</span><span class="pas1-symbol">();
+}
+
+</span><span class="pas1-identifier">void adkLoop</span><span class="pas1-symbol">()
+</span><span class="pas1-comment">{
+  uint8_t buf[RCVSIZE];
+  uint32_t nbread = 0;
+  uint8_t cmd;
+  uint8_t val;
+
+  Usb.Task();
+
+  if (adk.isReady()){
+    adk.read(&amp;nbread, RCVSIZE, buf);
+    if (nbread &gt; 0){
+      for(int i=0; i&lt;nbread;i++){
+        if(buf[i] == '\n')
+          buf[i] = '\0';
+      }
+</span><span class="pas1-space">        
+      cmd </span><span class="pas1-symbol">=</span><span class="pas1-space"> buf</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">];
+</span><span class="pas1-space">      val </span><span class="pas1-symbol">=</span><span class="pas1-space"> atoi</span><span class="pas1-symbol">((</span><span class="pas1-identifier">char</span><span class="pas1-symbol">*)&amp;</span><span class="pas1-identifier">buf</span><span class="pas1-symbol">[</span><span class="pas1-number">1</span><span class="pas1-symbol">]);
+</span><span class="pas1-space">      
+      </span><span class="pas1-reservedword">if</span><span class="pas1-symbol">(</span><span class="pas1-identifier">cmd </span><span class="pas1-symbol">==</span><span class="pas1-space"> </span><span class="pas1-string">'r'</span><span class="pas1-symbol">)</span><span class="pas1-comment">{
+        analogWrite(RED, (255-val));
+      }
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">if</span><span class="pas1-symbol">(</span><span class="pas1-identifier">cmd </span><span class="pas1-symbol">==</span><span class="pas1-space"> </span><span class="pas1-string">'g'</span><span class="pas1-symbol">)</span><span class="pas1-comment">{
+        analogWrite(GREEN, (255-val));
+      }
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">if</span><span class="pas1-symbol">(</span><span class="pas1-identifier">cmd </span><span class="pas1-symbol">==</span><span class="pas1-space"> </span><span class="pas1-string">'b'</span><span class="pas1-symbol">)</span><span class="pas1-comment">{
+        analogWrite(BLUE, (255-val));
+      }
+</span><span class="pas1-space">    </span><span class="pas1-symbol">}
+</span><span class="pas1-space">  </span><span class="pas1-symbol">}
+</span><span class="pas1-space"> 
+  yield</span><span class="pas1-symbol">();
+}
+
+
+</span></code></pre><!--EndFragment--></body>
+</html>

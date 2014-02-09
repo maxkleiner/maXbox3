@@ -1,0 +1,88 @@
+//calculates a cipher suite from string, max@kleiner.com
+//efficient and straight use of TFileStream _33
+//key substitution during encryption, loc's =88 
+
+program simple_Cipher;
+
+type
+  TKey_256 = array[0..7] of longword; //not in use
+
+const
+  //something to enlarge the entropy like an s-box
+  C1 = 52845;
+  C2 = 22719;
+
+var mytext, mycipher, cipherback: string;
+    MYKEY: word;
+    p,q: integer; 
+
+function Encrypt(const S: String; Key: word): String;
+var
+  i,myint: word;
+begin
+  SetLength(Result,length(s));
+  //cipher in order of ord;)
+  for i:= 1 to Length(S) do begin
+    myint:= ord(S[i]) xor (Key shr 8)
+    Result[i]:= chr(myint);
+    Key:= (ord(Result[i]) + Key) * C1 + C2;
+  end;
+end;
+
+function Decrypt(const S: String; Key: Word): String;
+var
+  i, myint: word;
+begin
+  //Result[0]:= S[0]
+  SetLength(Result,length(s));
+  for i:= 1 to Length(S) do begin
+    myint:= ord(S[i]) xor (Key shr 8)
+    Result[i] := chr(myint);
+    Key:= (ord(S[i]) + Key) * C1 + C2;
+  end;
+end;
+
+procedure StringToFile(acontent, afilename:string);
+var fls: TFileStream;
+begin
+ fls:= TFileStream.Create(afilename, fmOpenWrite or fmCreate);
+ try
+   //no never ever use acontent[1]!! 
+   fls.Write(acontent,length(acontent));
+ finally
+   fls.Free;
+ end  
+end;
+
+function FileToString(afilename: string): string;
+var fls: TFileStream;
+begin
+ fls:= TFileStream.Create(afilename,fmOpenRead or fmShareCompat);
+ try 
+   SetLength(result,fls.Size);
+   fls.Read(result,fls.Size);
+ finally 
+   fls.Free;
+ end
+end;
+
+begin
+  //clrscr;
+   MYKEY:= 12365498
+   try
+     mytext:= fileToString(ExePath+'examples/pascalscript.pdf');
+     mycipher:= encrypt(mytext, mykey)
+     p:= length(mycipher)
+     stringToFile(mycipher,ExePath+'examples/cryptofiles2.txt');
+     cipherback:= fileToString(ExePath+'examples/cryptofiles2.txt');
+     q:= length(cipherback)
+     if (p=q) then
+       mytext:= decrypt(cipherback, mykey);
+     writeln(mytext)
+     stringToFile(mytext,ExePath+'examples/clear_pascalsciptback.pdf');
+     //writeln(decrypt(mycipher, mykey))
+   finally
+     //inStream.free;   
+     //filestr.free;
+   end  
+end.

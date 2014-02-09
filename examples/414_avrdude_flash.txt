@@ -1,0 +1,488 @@
+Program AVRDude_Demo; //in progress
+
+//////////////////////////////////////////////////////////////////////
+//  Get data from flash ROM to test Arduino  [avrdude.exe]          //
+//  #sign:max: APSN21: 21.10.2013 09:06:27 
+//  Purpose: checks memory and state controls                       //
+//  #path>ples\E:\maxbox\maxbox3\examples\                          //
+//  1 func, 3 proc: Lines of Code #locs:133
+//////////////////////////////////////////////////////////////////////
+
+
+{http://sourceforge.net/p/avr-ada/wiki/USB%20Boarduino/
+http://farasbee.com/blog/2012/03/17/introduction-to-avr-microcontrollers/
+avrdude -p 2313 -e -m flash -i main.hex  }
+
+//TODO: Save image to webserver_file, turn procedure [DownloadJPEGTo..] to function
+//Important: you need 3 files: avrdude.exe, avrdude.conf, libusb0.dll -in../crypt
+
+Const
+  AFILENAME= 'mxcc_hex.txt';
+  AVRDUDEC='-F -v -pm328p -cstk500v1 -P\\.\COM4 -b115200 -D -Uflash:r:E:\maxbox\mxcc_hex.txt:i';
+  
+type
+  TQrImage_ErrCorrLevel=(L,M,Q,H);
+
+var
+  js:TlkJSONobject;
+  dbform: TForm;
+
+procedure imageOnclick(sender: TObject);
+begin 
+ showMessageBig('AVRCommandString: '+AVRDUDEC+CRLF+CRLF);
+end;
+  
+procedure CreateDBGridForm(myimg: TImage);
+begin
+   dbform:= CreateMessageDialog('My Fast Form Arduino Converter - FFAC',mtwarning,
+                                        [mbyes, mbhelp, mbok]);
+   dbform.caption:= 'AVRDUDE Demo';
+   dbform.setBounds(50,50,850,600)
+   dbform.Formstyle:= fsStayontop;
+   dbform.Color:= 123;
+   dbform.autoscroll:= true;
+   with TLabel.Create(self) do begin
+     parent:= dbform;
+     SetBounds(300,80,500,600)
+     font.size:= 34;
+     font.color:= clyellow;
+     caption:= 'AVRDUDE cmd'+CRLF+'lists flash of Arduino mem';
+   end;  
+   with TImage.create(self) do begin
+     parent:= dbform;
+     setBounds(300,200,300,300)
+     picture.bitmap:= myimg.picture.bitmap;
+     onClick:= @imageOnclick;  //shows AVRDUDEC;
+   end;    
+   dbform.Show; 
+end;
+
+ 
+function DownloadJPGToBitmap(const URL: string; ABitmap: TBitmap): Boolean;
+var
+  idHttp: TIdHTTP;
+  ImgStream: TMemoryStream;
+  JpgImage: TJPEGImage;
+begin
+  Result:= False;
+  ImgStream:= TMemoryStream.Create;
+  try
+    idHttp:= TIdHTTP.Create(NIL);
+    try
+      idHttp.Get1(URL, ImgStream);
+    finally
+      idHttp.Free;
+    end;
+    ImgStream.Position:= 0;
+    JpgImage:= TJPEGImage.Create;
+    try
+      JpgImage.LoadFromStream(ImgStream);
+      ABitmap.Assign(JpgImage);
+    finally
+      Result:= True;
+      JpgImage.Free;
+    end;
+  finally
+    ImgStream.Free;
+  end;
+end;
+
+procedure ExecuteAVRDude_andOpenFile;
+begin
+  //ExecuteCommand('cmd','/k dir *.*')
+  //avrdude -F -v -pm328p -cstk500v1 -P\\.\COM4 -b115200 -D -Uflash:r:E:\maxbox\mXcc_hex.txt:i
+  ExecuteCommand('E:\maxboxfiles\avrdude','/k '+AVRDUDEC)
+  if fileExists('E:\maxbox\'+AFILENAME) then
+     OpenDoc('E:\maxbox\'+AFILENAME);
+   //ExecuteCommand('cmd','/k dir *.*')  
+   //S_ShellExecute(ExePath+'maxbox3.exe','',seCmdopen)
+   //ShellExecute3('cmd','/k dir *.*',seCMDOpen)  
+end;
+
+//TODO:#1 Returns the image direct of the last modification of the given File
+
+var image2: TImage;
+
+begin
+  Writeln(datetimetostr(FileTimeGMT(exepath+'maxbox3.exe')));
+  //call of the script
+  //GetQrCodeIndy(150,150,'Q',ExePath+AFILENAME, QData);
+  //call of the Lib
+  //GetQrCode2(150,150,'Q',QDATA, ExePath+AFILENAME);
+  //http://www.softwareschule.ch/images/Ekon17_2013.jpg
+  
+  image2:= TImage.create(self); 
+  try
+    if isInternet then
+       DownloadJPGToBitmap('http://www.softwareschule.ch/images/Ekon17_2013.jpg',
+                              Image2.Picture.Bitmap);
+    CreateDBGridForm(image2);
+  finally
+    image2.Free;
+  end;
+     
+  if IsTCPPortOpen(80,'192.168.1.53') then
+       writeln('Port Open Started') else 
+       writeln('Port not open');
+   maxCalcF('SQRT(PI)');
+   PrintF('gcd %d * lcm %d = %d ',[gcd(4,6), lcm(4,6), 4*6]);
+    //JSONTest; 
+   ExecuteAVRDude_andOpenFile; 
+    
+End.  
+
+
+more docs:
+{http://elecrom.wordpress.com/2009/04/15/avrdude-tutorial-burning-hex-files-using-usbasp-and-avrdude/ }
+  //http://entwickler-konferenz.de/
+
+
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TlkJSONobject(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TlkJSONcustomlist', 'TlkJSONobject') do
+  with CL.AddClassN(CL.FindClass('TlkJSONcustomlist'),'TlkJSONobject') do begin
+    RegisterProperty('UseHash', 'Boolean', iptr);
+    RegisterProperty('HashTable', 'TlkHashTable', iptr);
+    RegisterProperty('HashTable', 'TlkBalTree', iptr);
+    RegisterMethod('Function Add6( const aname : WideString; aobj : TlkJSONbase) : Integer;');
+    RegisterMethod('Function OldGetField( nm : WideString) : TlkJSONbase');
+    RegisterMethod('Procedure OldSetField( nm : WideString; const AValue : TlkJSONbase)');
+    RegisterMethod('Function Add7( const aname : WideString; aboolean : Boolean) : Integer;');
+    RegisterMethod('Function Add8( const aname : WideString; nmb : double) : Integer;');
+    RegisterMethod('Function Add9( const aname : WideString; s : string) : Integer;');
+    RegisterMethod('Function Add10(const aname : WideString; const ws:WideString): Integer;');
+    RegisterMethod('Function Add11( const aname : WideString; inmb : Integer) : Integer;');
+    RegisterMethod('Procedure Delete( idx : Integer)');
+    RegisterMethod('Function IndexOfName( const aname : WideString) : Integer');
+    RegisterMethod('Function IndexOfObject( aobj : TlkJSONbase) : Integer');
+    RegisterProperty('Field', 'TlkJSONbase WideString', iptrw);
+    SetDefaultPropery('Field');
+    RegisterMethod('Constructor Create( bUseHash : Boolean)');
+    RegisterMethod('Function Generate( AUseHash : Boolean) : TlkJSONobject');
+    RegisterMethod('Function SelfType : TlkJSONtypes');
+    RegisterMethod('Function SelfTypeName : string');
+    RegisterProperty('FieldByIndex', 'TlkJSONbase Integer', iptrw);
+    RegisterProperty('NameOf', 'WideString Integer', iptr);
+    RegisterMethod('Function getDouble( idx : Integer) : Double;');
+    RegisterMethod('Function getInt( idx : Integer) : Integer;');
+    RegisterMethod('Function getString( idx : Integer) : string;');
+    RegisterMethod('Function getWideString( idx : Integer) : WideString;');
+    RegisterMethod('Function getBoolean( idx : Integer) : Boolean;');
+    RegisterMethod('Function getDouble1( nm : string) : Double;');
+    RegisterMethod('Function getInt1( nm : string) : Integer;');
+    RegisterMethod('Function getString1( nm : string) : string;');
+    RegisterMethod('Function getWideString1( nm : string) : WideString;');
+    RegisterMethod('Function getBoolean1( nm : string) : Boolean;');
+  end;
+end;
+
+  myformtemplate
+     with TCustomDrawForm.create(self) do begin
+       image1.height:= 600; //add properties
+       SelectionBackground1Click(self)
+       Drawing1Click(self)'
+       showmodal;           //add methods
+       free;                //free it
+     end;
+  
+In order to make your life easier, the unit HotLog.pas declares an instance of THotLog, and calls its constructor automatically, as soon as your programm is loaded (in fact, as soon as the HotLog unit's part of your programm is loaded).
+
+This instance is called "hLog". It is the object instance you'll use to access HotLog.pas/ThotLog properties and routines.
+
+All the following examples will allways use it. However, and as stated before, THotLog being an object, you can declare as many instances of it as you want.
+
+// and the written result will be :
+
+********************************************************************************
+>>>> Start HotLogTest.exe  v 1.0.0.4                         2004-03-09 23:38:54
+           From : C:\Program Files\Borland\Delphi9\Projects\HotLog\
+           Prms : (No params)
+(....)
+
+<<<< Stop  HotLogTest.exe                                    2004-03-09 23:38:55
+********************************************************************************
+
+http://theroadtodelphi.wordpress.com/2010/12/06/generating-qr-codes-with-delphi/
+
+Using the Google Chart Tools / Image Charts (aka Chart API) you can easily generate QR codes, this kind of images are a special type of two-dimensional barcodes. They are also known as hardlinks or physical world hyperlinks.
+
+The QR Codes store up to 4,296 alphanumeric characters of arbitrary text. QR codes can be read by an optical device with the appropriate software. Such devices range from dedicated QR code readers to mobile phones.
+Using Delphi there are several ways you can generate QR codes - to encode any text (URL, phone number, simple message). QR Codes store up to 4,296 alphanumeric characters of arbitrary text.
+
+The 2D Barcode VCL components is a set of components designed for generating and printing barcode symbols in your Delphi or C++ Builder applications. Use the components set like any other VCL components.
+
+J4L Components includes the QR-code implementation featuring: auto, byte, alpha, numeric and kanji encoding.
+The Google Chart Tools (Chart API) also let you generate QR-code images using an HTTP POST or 
+All do you need to generate a QrCode is make a get request to this URI
+
+http://chart.apis.google.com/chart?chs=200x200&cht=qr&chld=M&chl=Go+Delphi+Go
+
+uses
+ PngImage,
+ HTTPApp,
+ WinInet;
+ 
+type
+TQrImage_ErrCorrLevel=(L,M,Q,H);
+ 
+const
+UrlGoogleQrCode='http://chart.apis.google.com/chart?chs=%dx%d&cht=qr&chld=%s&chl=%s';
+QrImgCorrStr   : array [TQrImage_ErrCorrLevel] of string=('L','M','Q','H');
+ 
+procedure WinInet_HttpGet(const Url: string;Stream:TStream);
+const
+BuffSize = 1024*1024;
+var
+  hInter   : HINTERNET;
+  UrlHandle: HINTERNET;
+  BytesRead: DWORD;
+  Buffer   : Pointer;
+begin
+  hInter := InternetOpen('', INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
+  if Assigned(hInter) then
+  begin
+    Stream.Seek(0,0);
+    GetMem(Buffer,BuffSize);
+    try
+        UrlHandle := InternetOpenUrl(hInter, PChar(Url), nil, 0, INTERNET_FLAG_RELOAD, 0);
+        if Assigned(UrlHandle) then
+        begin
+          repeat
+            InternetReadFile(UrlHandle, Buffer, BuffSize, BytesRead);
+            if BytesRead>0 then
+             Stream.WriteBuffer(Buffer^,BytesRead);
+          until BytesRead = 0;
+          InternetCloseHandle(UrlHandle);
+        end;
+    finally
+      FreeMem(Buffer);
+    end;
+    InternetCloseHandle(hInter);
+  end
+end;
+ 
+//this function return a Stream (PngImage inside) with a Qr code.
+procedure GetQrCode(Width,Height:Word;Correction_Level:TQrImage_ErrCorrLevel;const Data:string;StreamImage : TMemoryStream);
+Var
+ EncodedURL  : string;
+begin
+  EncodedURL:=Format(UrlGoogleQrCode,[Width,Height,QrImgCorrStr[Correction_Level],HTTPEncode(Data)]);
+  WinInet_HttpGet(EncodedURL,StreamImage);
+end;
+
+
+http://www.delphi-central.com/callback.aspx
+
+
+function CheckSumModulo10(const data:string):string;
+
+function ConvertMmToPixelsX(const Value:Double):Integer;
+function ConvertMmToPixelsY(const Value:Double):Integer;
+function ConvertInchToPixelsX(const Value:Double):Integer;
+function ConvertInchToPixelsY(const Value:Double):Integer;
+
+  
+procedure GetQrCodeImage(Width,Height: Word; Correct_Level: string;
+           const Data:string; aimage: TImage; apath: string);
+var
+  encodedURL: string;
+  idhttp: TIdHttp;// THTTPSend;
+  pngStream: TMemoryStream;
+begin
+  encodedURL:= Format(UrlGoogleQrCode,[Width,Height, Correct_Level, HTTPEncode(Data)]);
+  //WinInet_HttpGet(EncodedURL,StreamImage);
+  idHTTP:= TIdHTTP.Create(NIL)
+  pngStream:= TMemoryStream.create;
+  with TLinearBitmap.Create do try
+    idHTTP.Get1(EncodedURL, pngStream)
+    pngStream.Position:= 0;
+    LoadFromStream2(pngStream,'PNG');
+    aImage.Picture:= NIL;
+    AssignTo(aimage.picture.bitmap);
+    SaveToFile(apath);
+    //OpenDoc(apath);
+  finally
+    Dispose;
+    Free;
+    idHTTP.Free
+    pngStream.Free;
+  end;
+end;
+
+procedure GetQrCode3(Width,Height: Word; Correct_Level: string;
+           const Data:string; apath: string);
+var
+  encodedURL: string;
+  idhttp: TIdHttp;// THTTPSend;
+  png: TLinearBitmap;//TPNGObject;
+  pngStream: TMemoryStream;
+begin
+  encodedURL:= Format(UrlGoogleQrCode,[Width,Height, Correct_Level, HTTPEncode(Data)]);
+  //WinInet_HttpGet(EncodedURL,StreamImage);
+  idHTTP:= TIdHTTP.Create(NIL)
+  pngStream:= TMemoryStream.create;
+  with TLinearBitmap.Create do try
+    idHTTP.Get1(EncodedURL, pngStream)
+    pngStream.Position:= 0;
+    LoadFromStream2(pngStream,'PNG');
+    //aImage.Picture:= NIL;
+    //AssignTo(aimage.picture.bitmap);
+    SaveToFile(apath);
+    OpenDoc(apath);
+  finally
+    Dispose;
+    Free;
+    idHTTP.Free
+    pngStream.Free;
+  end;
+end;
+
+//BDE Install Test
+
+procedure TForm1.BtnSetupClick(Sender: TObject);
+var aAliasDir, aNetDir:String;
+begin
+  Application.ProcessMessages;
+  aAliasDir:=EditDataDir.Text;
+  aNetDir:=EditNetDir.Text;
+
+//  aAliasDir:='E:\SAS\Daten';
+//  aNetFileDir:='E:\';
+//  ShowMessage(ExpandUNCFileName(aAliasDir));
+
+  if trim(aAliasDir)='' then raise Exception.Create('Geben Sie bitte das Datenverzeichnis an.');
+  if trim(aNetDir)='' then raise Exception.Create('Geben Sie bitte das Netzverzeichnis an.');
+  if not DirectoryExists(aAliasDir) then raise Exception.Create('Das Datenverzeichnis konnnte nicht gefunden werden.');
+  if not DirectoryExists(aNetDir) then raise Exception.Create('Das Netzverzeichnis konnnte nicht gefunden werden.');
+
+  try
+     Screen.Cursor:=crHourGlass;
+     SetAlias(Alias, aAliasDir);
+     SetBde('\DRIVERS\PARADOX\INIT','NET DIR',aNetDir);
+     SetBde('\SYSTEM\INIT','LOCAL SHARE','TRUE');
+//     SetBde('\DRIVERS\PARADOX\TABLE CREATE','BLOCK SIZE','4096'); // Standard 2048 KB
+//     SetBde('\DRIVERS\PARADOX\TABLE CREATE','LEVEL','7');
+     SetBde('\DRIVERS\PARADOX\INIT','LANGDRIVER','ANSIINTL'); // ANSIINTL ist der Kurzname für Pdox ANSI Intl
+     SetBde('\SYSTEM\INIT','LANGDRIVER','ANSIINTL');
+
+     // soll angeblich die Performance verbessern
+     SetBde('\System\Init','MAXFILEHANDLES','100'); // (Standard: 48)
+     SetBde('\System\Init','MAXBUFSIZE','2048'); // Cachepuffer in KB (Standard: 2048 KB)
+     SetBde('\System\Init','MINBUFSIZE','128');
+
+     //SetBde('\System\Init','MEMSIZE','64'); // max. BDE-Speicher (Standard: 16 MB)
+     //SetBde('\System\Init','SHAREDMEMSIZE','8192'); // Speicher (Standard: 2048 KB)
+  finally
+     Screen.Cursor:=crDefault;
+  end;
+  Close;
+
+(*
+  // Versionen der redirector-files testen (nur Win 95)
+  if Win32Platform = VER_PLATFORM_WIN32_WINDOWS then CheckRedirector;
+  // Registry checken
+  case Win32Platform of
+    VER_PLATFORM_WIN32_WINDOWS: CheckWin95Registry;
+    VER_PLATFORM_WIN32_NT:      CheckWinNTRegistry;
+  end;
+  // Neustart
+  if RebootRequired then RestartDialog(0, nil, ew_RestartWindows);
+*)
+end;
+
+    six spaces!
+    Findtext:= lv.Items.item[lv.ItemIndex].SubItems[1]; //'End.';
+
+
+{.$define usefastmm}
+
+program test;
+
+//{$APPTYPE CONSOLE}
+
+uses
+{$ifdef usefastmm}
+  fastmm4,
+{$endif}
+  windows,
+  SysUtils,
+  uLkJSON in 'uLkJSON.pas';
+
+var
+  js:TlkJSONobject;
+  xs:TlkJSONbase;
+  i,j,k,l: Integer;
+  ws: String;
+begin
+{$ifdef USE_D2009}
+  ReportMemoryLeaksOnShutdown := True;
+{$endif}
+  Randomize;
+  js := TlkJSONobject.Create(true);
+//  js.HashTable.HashOf := js.HashTable.SimpleHashOf;
+  k := GetTickCount;
+// syntax of adding changed to version 0.95+
+  for i := 0 to 50000 do
+    begin
+      l := random(9999999);
+      ws := 'param'+inttostr(l);
+      js.add(ws,ws);
+      ws := 'int'+inttostr(l);
+      js.add(ws,i);
+    end;
+  k := GetTickCount-k;
+  writeln('records inserted:',js.count);
+  writeln('time for insert:',k);
+  writeln('hash table counters:');
+  writeln(js.hashtable.counters);
+
+  k := GetTickCount;
+  ws := TlkJSON.GenerateText(js);
+  writeln('text length:',length(ws));
+  k := GetTickCount-k;
+// free the object
+  writeln('release memory...');
+  js.Free;
+//  js.Free;
+
+  writeln('time for gentext:',k);
+
+  k := GetTickCount;
+  xs := TlkJSON.ParseText(ws);
+
+  k := GetTickCount-k;
+  writeln('time for parse:',k);
+  writeln('approx speed of parse (th.bytes/sec):',length(ws) div k);
+  writeln('press enter...');
+  readln;
+  writeln(ws);
+  writeln('press enter...');
+  readln;
+// works in 0.94+ only!
+  js := TlkJSONobject(xs);
+  for i := 1 to 10 do
+    begin
+      writeln('field ',i,' is ',js.NameOf[i]);
+      writeln('type of field ',i,' is ',js.FieldByIndex[i].SelfTypeName);
+      writeln('value of field ',i,' is ',js.FieldByIndex[i].Value);
+      writeln;
+    end;
+  writeln('release memory...');
+  if assigned(xs) then FreeAndNil(xs);
+//  js.Free;
+//}
+  writeln('press enter...');
+  ws := '';
+  readln;
+end.
+
+
+http://elecrom.wordpress.com/2009/04/15/avrdude-tutorial-burning-hex-files-using-usbasp-and-avrdude/
+http://sourceforge.net/p/avr-ada/wiki/USB%20Boarduino/
+http://farasbee.com/blog/2012/03/17/introduction-to-avr-microcontrollers/
+
+avrdude -p 2313 -e -m flash -i main.hex
+
+
+----app_template_loaded_code----

@@ -1,0 +1,128 @@
+program listboxMerge;
+
+//just to show a merger in a ListBox, loc's=116, _63
+
+var  inFrm: TForm;
+     listbox1, listbox2: TListbox;
+     mybutton, mybutton2: TButton;
+
+procedure erdezeichnen(vFrm: TForm);
+var w,x,y,xa,ya: double;
+   begin
+      w:=0; x:=1; y:=0;
+      vFrm.canvas.pen.color:= clpurple;
+      vFrm.canvas.pen.width:= 3;
+      repeat
+         xa:= x; ya:= y;
+         w:= w+0.2;
+         x:= cos(w)*150;
+         y:= sin(w)*150;
+         vFrm.canvas.moveto(round(xa),round(ya))
+         vFrm.canvas.lineto(round(x),round(y))
+        //linie(xa,ya,x,y,10,12);
+      until w > 2 * pi;
+   end;
+
+
+procedure Btn2Close(Sender: TObject);
+begin
+  inFrm.close;
+end;
+
+procedure MergeStrings(Dest, Source: TStrings);
+var
+  I, DI: Integer;
+  begin
+  for I:= 0 to Source.Count - 1 do begin
+    if Pos ('=', Source[I]) > 1 then begin
+      DI:= Dest.IndexOfName(Source.Names[I]);
+      if DI > -1 then Dest[DI] := Source[I];
+    end;
+  end;
+end;
+
+procedure Btn1Click(Sender: TObject);
+//var idx: integer;
+begin
+  MergeStrings(ListBox1.Items, ListBox2.Items);
+  //myedit.text:= Format('%d*%d = %s',[idx+1,idx+1, mylistbox.items[idx]]);
+  //writeln(Format('%d*%d = %s',[idx+1,idx+1, mylistbox.items[idx]]));
+end;
+
+procedure ListboxFill;
+begin
+  ListBox1.Items.Add('Plants = 10');
+  ListBox1.Items.Add('Animals = 20');
+  ListBox1.Items.Add('Minerals = 15');
+  ListBox2.Items.Add('Animals = 4');
+  ListBox2.Items.Add('Plants = 9');
+  ListBox2.Items.Add('Minerals = 78');
+end;
+
+procedure LoadForm;
+var i: integer; 
+begin
+  inFrm:= TForm.create(self);
+  Listbox1:= TListbox.create(inFrm);
+  listbox2:= TListbox.create(inFrm);
+  myButton:= TButton.create(inFrm);
+  myButton2:= TButton.create(inFrm);
+  try
+    with inFrm do begin
+      caption:= '*****ListboX************';  
+      height:= 410;
+      width:= 480;
+      color:= clred;
+      Position:= poScreenCenter;
+      show;
+    end;
+    with Listbox1 do begin
+      parent:= inFrm;
+      setBounds(20,90,200,150)
+      font.size:= 18;
+      show
+    end;  
+     with Listbox2 do begin
+      parent:= inFrm;
+      setBounds(250,90,200,150)
+      font.size:= 18;
+      show
+    end;  
+    with myButton do begin
+      parent:= inFrm;
+      caption:= 'Merge boX';
+      setbounds(140,300,145,40);
+      font.size:= 18;
+      onclick:= @btn1Click;
+      show
+    end; 
+    with myButton2 do begin
+      parent:= inFrm;
+      caption:= 'CloseX';
+      setbounds(305,300,145,40);
+      font.size:= 18;
+      onclick:= @btn2Close;
+      show
+    end;   
+  except
+    exit
+  end  
+end;
+
+begin
+  loadForm;
+  ListBoxFill;
+  erdezeichnen(inFrm)
+end.
+
+//Before you write this off as the writings of a paranoid person, consider this:
+//a listbox in maxbox works with autoboxing ;)
+List boxes (TListBox) and check-list boxes display lists from which users can select one or more choices from a list of possible options. The choices are represented using text, graphics, or both.
+
+Items uses a TStrings object to fill the control with values. 
+ItemIndex indicates which item in the list is selected. 
+MultiSelect specifies whether a user can select more than one item at a time. 
+Sorted determines whether the list is arranged alphabetically. 
+Columns specifies the number of columns in the list control. 
+IntegralHeight specifies whether the list box shows only entries that fit completely in the vertical space (VCL only). 
+ItemHeight specifies the height of each item in pixels. The Style property can cause ItemHeight to be ignored. 

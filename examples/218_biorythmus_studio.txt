@@ -1,0 +1,218 @@
+program Biorhythmus_Studio;
+
+// ...plot a the bio of 3 periods 23,28,33   loc's= 176    ex.:_82
+//to teach the sinus function with wave theory! LCM(23,28,33)=21252 is zero test
+// task: sign the days on the x-axis
+
+const 
+  XNAME = 'Max Kleiner';
+  XYEAR = 1959;
+  XMONTH = 06;
+  XDAY = 20;
+  XFILEDIR = 'examples/';
+
+
+  DIM = 660;
+  PI2 = 6.28318530717958647692528676655901;
+  E = 2.718281828459;
+  BODY = 23;
+  EMOTION = 28;
+  SPIRIT = 33;
+ 
+type TBIOVector = array[0..DIM] of TPoint; 
+
+var
+  cFrm: TForm;
+  bodyPts, emoPts, spiritPts: TBIOVector;
+  mybirthDay, date2: TDateTime;
+
+procedure CalculateGraph(var bPts, ePts, sPts: TBIOVector);
+var
+  dayinterval, radian: Double;
+  periodrange, ageindays: integer;
+  xRgePixs, yRgePixs, origx, origy, i: Integer;
+begin
+  {calculate the biosinus curve in the interval -2Pi..+2Pi}
+  xRgePixs:= (cFrm.Width - 2); { pixels in Pi }
+  yRgePixs:= (cFrm.Height - 2) div 6; { pixels amplitude}
+  origx:= cFrm.Width div 2 ;
+  origy:= cFrm.Height div 2;
+  periodrange:= 33;
+  date2:= date;
+  //intervaltest  := 33.0 / (pi2 * 338);
+  //radian are number of days since birth
+  //xPoints[i].Y:= Round(sin(PI2 * (radian mod 23/5)/23)* yRangePixs);
+  ageInDays:= trunc(date2) - trunc(mybirthDay);
+  dayInterval:= 0.1;
+  radian:= ageInDays - periodRange;
+  for i:= 0 to DIM do begin
+    bPts[i].Y:= origy - Round(sin(PI2*(round(radian)
+                                           mod BODY)/BODY)* yRgePixs);
+    radian:= radian + dayinterval;
+  end;
+  radian:= ageInDays - periodRange;
+  for i:= 0 to DIM do begin
+    ePts[i].Y:= origy - Round(sin(PI2*(round(radian)
+                                           mod EMOTION)/EMOTION)* yRgePixs);
+    radian:= radian + dayinterval;
+  end;
+  radian:= ageInDays - periodRange;
+  for i:= 0 to DIM do begin
+    sPts[i].Y:= origy - Round(sin(PI2*(round(radian) 
+                                           mod SPIRIT)/SPIRIT)* yRgePixs);
+    radian:= radian + dayinterval;
+  end;
+end;
+
+procedure DrawChart(bPts, ePts, sPts: TBIOVector);
+var
+  i: integer;
+begin
+  with cFrm.canvas do begin
+    Pen.Color:= clBlue;
+       moveto(1, (bPts[0].y));
+    for i:= 1 to DIM do
+      LineTo(i , bPts[i].Y);  
+    Pen.Color:= clred;
+    moveto(1, (ePts[0].y));
+    for i:= 1 to DIM do
+      LineTo(i , ePts[i].Y);  
+    Pen.Color:= cllime;
+    moveto(1, (sPts[0].y));
+    for i:= 1 to DIM do
+      LineTo(i , sPts[i].Y);  
+  end;
+end;
+
+procedure PaintBox1Paint(Sender: TObject);
+var
+  origx, origy, xRngPixs, yRngPixs: Integer;
+begin
+  with cFrm.Canvas do begin
+    { Fill background in white }
+    Brush.Color:= clBtnFace;
+    Brush.Style:= bsSolid;
+ 
+    { Paint a coordinate cross }
+    origx:= (cfrm.Width div 2);
+    origy:= (cfrm.Height div 2);
+    Pen.Color:= clBlack;
+    Pen.Style:= psSolid;
+    Pen.Width:= 1;
+    MoveTo(1, origy);
+    LineTo(cfrm.Width - 1, origy);
+    MoveTo(origx, 1);
+    LineTo(origx, cFrm.Height - 1);
+
+    { Paint some tickmarks and label the axis }
+    Font.Name:= 'Georgia';
+    Font.Size:= 18;
+    Font.Color:= clblue;
+    xRngPixs:= (cFrm.Width - 20) div 4; { pixels in Pi }
+    yRngPixs:= (cFrm.Height - 20) div 2; { pixels in 1 }
+    TextOut(origx -2 * xRngPixs +2, origy -210,'Biorhythmus for ');
+    TextOut(origx -2 * xRngPixs +2, origy -178,XNAME);
+                            
+    font.Size:= 12;
+    { X axis }
+    MoveTo(origx -2 * xRngPixs, origy -4);
+    LineTo(origx -2 * xRngPixs, origy +4);
+    TextOut(origx -2 * xRngPixs +2, origy +6, '-2p');
+    MoveTo(origx -xRngPixs, origy -0);
+    LineTo(origx -xRngPixs, origy +170);
+    TextOut(origx -xRngPixs +2 -TextWidth('pppp'),
+                                  origy +170, datetoStr(date-16));
+    MoveTo(origx +xRngPixs, origy -0);
+    LineTo(origx +xRngPixs, origy +170);
+    TextOut(origx +xRngPixs -2 -TextWidth('ppp'),
+                                  origy +170, datetoStr(date+16));
+    //TextOut(origx +xRngPixs -10 -TextWidth('datep'), origy +40, now);
+    
+    MoveTo(origx +2 * xRngPixs, origy -4);
+    LineTo(origx +2 * xRngPixs, origy +4);
+    TextOut(origx +2 * xRngPixs -2 -TextWidth('2p'), origy +6, '2p');
+
+    { Y axis }
+    MoveTo(origx -4, origy - yRngPixs);
+    LineTo(origx +4, origy - yRngPixs);
+    TextOut(origx +4, origy - yRngPixs, '1.0');
+    MoveTo(origx -4, origy - yRngPixs div 2);
+    LineTo(origx +4, origy - yRngPixs div 2);
+    TextOut(origx +6, origy - (yRngPixs + TextHeight('1')) div 2, '0.5');
+    MoveTo(origx -4, origy + yRngPixs div 2);
+    LineTo(origx +4, origy + yRngPixs div 2);
+    TextOut(origx +4, origy + (yRngPixs - TextHeight('1')) div 2, '-0.5');
+    MoveTo(origx -4, origy + yRngPixs);
+    LineTo(origx +4, origy + yRngPixs);
+    TextOut(origx +3, origy + yRngPixs - TextHeight('1'), '-1.0');
+    TextOut(origx +3, origy + (yRngPixs) -40, dateToStr(date));
+
+    Font.Name:= 'Arial';
+    Font.Color:= clBlue;
+        TextOut(origx -2 * xRngPixs +2, origy +110, 'body');
+    Font.Color:= clred;
+        TextOut(origx -2 * xRngPixs +2, origy +130, 'emotion');
+    Font.Color:= clLime;
+        TextOut(origx -2 * xRngPixs +2, origy +150, 'spirit');
+    {rePaint the graph }
+    Pen.Color:= clBlue;
+    DrawChart(bodyPts, emoPts, spiritPts);
+  end;
+end;
+
+{$IFNDEF LINUX}
+procedure SaveCanvasInFile(vCanvas: TCanvas; FileName: string);
+var
+  Bmp: TBitmap;
+  bmp1: TLinearBitmap;
+  MyRect: TRect;
+begin
+  Bmp:= TBitmap.Create;
+  bmp1:= TLinearBitmap.create;
+  try
+    MyRect := vCanvas.ClipRect;
+    Bmp.Width := MyRect.Right - MyRect.Left;
+    Bmp.Height := MyRect.Bottom - MyRect.Top;
+    Bmp.Canvas.CopyRect(MyRect, vCanvas, MyRect);
+    bmp1.Assign(Bmp)
+    Bmp1.SaveToFile(FileName);
+  finally
+    Bmp.Free;
+    bmp1.Free;
+  end;
+end; 
+{$ENDIF}
+
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  with cFrm do begin
+    caption:= 'BIORHYTHMUS of birthday: ' + datetoStr(mybirthDay);
+    BorderStyle:= bsDialog;
+    height:= 440;
+    width:= 660;
+    onPaint:= @PaintBox1Paint;
+    show;
+  end  
+end;
+
+//main BIO date plot
+begin
+  //ageinDays:= strtoint(readln('how old are you in days ?'));
+  mybirthDay:= encodeDate(XYEAR, XMONTH, XDAY);
+  LoadForm;
+  CalculateGraph(bodyPts, emoPts, spiritPts);
+  DrawChart(bodyPts, emoPts, spiritPts);
+  saveCanvasInFile(cfrm.canvas, ExePath+XFILEDIR+'Biofor'+XNAME+'.png')
+end.
+
+just maXbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+                                     
+

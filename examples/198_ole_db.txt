@@ -1,0 +1,212 @@
+{****************************************************************
+ *
+ * Project  : OLE DB maXbase SeriesSystem Information Series
+ * App Name : 198_ole_db.txt, loc's = 140
+ * Purpose  : DB Access via OLE DB
+ * History  : system demo for mX3.2
+ ****************************************************************}
+program SysDLL;
+
+function  MyMessageBeep(para: integer): byte;
+     external 'MessageBeep@user32.dll stdcall';  
+
+function MyGetTickCount: Longint;
+  external 'GetTickCount@kernel32.dll stdcall';
+ 
+procedure MySleep(Milliseconds: Cardinal);
+  external 'Sleep@kernel32.dll stdcall';
+ 
+ 
+var
+  myTimeStamp: TDateTime;
+  ws: TWideStrings;
+  dCom: TADOCommand;
+  i: integer;
+
+  
+procedure DBShow(Sender: TObject);
+var ADODataSet1: TADODataSet;
+var
+  i:integer;
+begin
+  i:= 1;
+  adoDataSet1.connectionString
+  while i <= ADODataSet1.RecordCount do begin
+    Writeln(ADODataSet1.Fieldbyname('name').AsString);
+    ADODataSet1.Next;
+    i:= i+1;
+  end;
+end; 
+
+
+Procedure SetADOQuery;
+var i: integer;
+  adoquery: TAdoQuery;
+begin  
+  adoquery:= TAdoQuery.create(self);
+  with adoquery do begin
+    cachesize:= 500;
+ //ConnectionString:= 'Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\SecureCenter\Dec 15 2010mx3\images.MDB;Persist Security Info=False';
+  //adoquery.ParamCheck := True;
+    SQL.Add('Select * from patient');
+    //SQL.Add('Select * from patient where id = :id ');
+    with Parameters.Parambyname('id') do begin
+      DataType:= ftInteger;
+      Value:= '123';
+    end; 
+    Open;
+    while i <= RecordCount do  begin
+      Writeln(Fieldbyname('name').AsString);
+      Next;
+      i:= i+1;
+    end;
+    Close;
+    Free; 
+  end;
+end;
+
+Procedure SetADOSET;
+var 
+  adoquery: TAdoDataSet;
+  adocon: TADOConnection;
+  xlsfile: string;
+begin  
+  adoquery:= TAdoDataSet.Create(self);
+  adocon:= TADOConnection.Create(self);
+  with adoquery do begin
+    cachesize:= 500;
+{ ConnectionString:= 'Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\SecureCenter\Dec 15 2010mx3\images.MDB;Persist Security Info=False';
+  adoquery.ParamCheck := True;}
+   xlsfile:= ExePath+'examples/mysheet.xls'; 
+   ConnectionString:= 'Provider=Microsoft.Jet.OLEDB.4.0;' +
+           'Data Source=' + xlsFile + ';' +
+           'Extended Properties=Excel 8.0;';
+
+   adocon.ConnectionString:= 'Provider=Microsoft.Jet.OLEDB.4.0;' +
+           'Data Source=' + xlsFile + ';' +
+           'Extended Properties=Excel 8.0;';
+   //LoginPrompt:= false;
+  commandtext:= 'select count(*)'
+  adocon.LoginPrompt:= false;
+  adocon.Connected:= true;
+  Open;          
+   //Close;
+   //Free;        
+  end;
+end;
+
+Procedure ConnectTest;
+var
+  dconnect: TADOConnection;
+begin
+  dconnect:= TADOConnection.Create(self);
+  try
+    dconnect.Provider:= 'Microsoft.Jet.OLEDB.4.0'
+    dconnect.ConnectionString:= 'Provider=SQLOLEDB;DataSource=MyServer;Integrated Security//=SSPI;Initial Catalog=pubs;';
+  //or for MS Jet (MS Access):
+    dconnect.ConnectionString:= 'Provider=Microsoft.Jet.OLEDB.4.0;'+
+                                  'DataSource=c:\db.mdb;';
+    dconnect.Connected:= true;
+    dconnect.LoginPrompt := False
+    dconnect.open('Admin','');
+    //dconnect.Active:= true;
+  finally
+    dconnect.Free;
+  end;
+end;     
+
+
+begin
+  //SetAdoQuery;
+  //SetAdoSet;
+  Writeln('Data Link Dir is: '+ DataLinkDir);
+  writeln('machine name is: '+getHostName)
+  writeln('user name is: '+getUserName)
+  mytimestamp:= GetFileCreationTime(exepath+'maxbox3.exe')
+  writeln(datetimetoStr(mytimestamp)+' Creation Date of maXbox3')
+  writeln('tick count from func ' +IntToStr(GetTickCount));
+  writeln('tick count from api  ' +IntToStr(MyGetTickCount));
+  //DLL Test
+  MyMessageBeep(60);
+  MySleep(10);
+  Writeln('Host is: '+getHostbyName('www.softwareschule.ch'))
+  CreateFileFromString(ExePath+'mycopy.txt',memo2.text);
+  WriteLog(ExePath+'mylog.txt',memo2.text)
+  ws:= TWideStringList.create;
+  getProviderNames(ws)
+  for i:= 1 to ws.count -1 do 
+    writeln(inttostr(i) +' '+ws.strings[i]);
+  ws.free;  
+end.   
+
+
+*******************************************************
+There is no place like 127.0.0.1 
+
+Exception: Access violation at address 4DE2F83C in module 'msado15.dll'. Read of address 78742E67 at 0.1057
+
+
+function OctToDec(OctStr: string): string;
+var
+  DecNum: single;
+  i: byte;
+  Error: Boolean;
+  charset: set of char;
+begin
+  DecNum:=0;
+  Error:=False;
+  charset:= ['1','2','3','4','5','6','7']
+  for i:=Length(OctStr) downto 1 do begin
+    if OctStr[i] in charset then begin
+      Error:= True;
+      ShowMessage('This is not octal number');
+      Break;
+    end;
+    DecNum:= DecNum+StrToInt(OctStr[i])*Power(8, Length(OctStr)-i);
+  end;
+  if not Error then
+    Result:= FloatToStr(DecNum)
+  else Result:='';
+end;
+
+
+function BinToOct(BinStr: string): string;
+var
+  i: Integer;
+  OctPart: single;
+  LastPart, OctStr: string;
+  Error: Boolean;
+begin
+  Error:=False;
+  OctStr:='';
+  case Length(BinStr) mod 3 of
+    1: BinStr:='00'+BinStr;
+    2: BinStr:='0'+BinStr;
+  end;
+
+  while Length(BinStr)>0 do
+  begin
+    LastPart:=Copy(BinStr, Length(BinStr)-2, 3);
+    Delete(BinStr, Length(BinStr)-2, 3);
+    OctPart:=0;
+    for i:=1 to 3 do
+      if not ((LastPart[i] ='1') or (LastPart[i] ='0')) then begin
+        ShowMessage('This is not binary number');
+        Error:=True;
+        Break;
+      end
+      else
+        OctPart:=OctPart+StrToInt(LastPart[i])*Power(2, 3-i);
+    OctStr:=OctStr+FloatToStr(OctPart);
+  end;
+  Result:='';
+  if Error<>True then begin
+    for i:=1 to Length(OctStr) do
+      Result:=Result+OctStr[Length(OctStr)-i+1];
+    while (Result[1]='0') and (Length(Result)>1) do
+      Delete(Result, 1, 1);
+  end;
+end;
+
+
+

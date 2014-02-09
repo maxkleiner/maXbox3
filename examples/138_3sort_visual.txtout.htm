@@ -1,0 +1,537 @@
+Version:0.9
+StartHTML:0000000105
+EndHTML:0000044493
+StartFragment:0000001037
+EndFragment:0000044477
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>mXScriptasHTML</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="generator" content="SynEdit HTML exporter" />
+<style type="text/css">
+<!--
+body { color: #000000; background-color: #FFFFFF; }
+.pas1-assembler { }
+.pas1-character { text-decoration: underline; }
+.pas1-comment { color: #000080; font-style: italic; }
+.pas1-float { color: #800080; }
+.pas1-hexadecimal { color: #FF00FF; }
+.pas1-identifier { }
+.pas1-number { color: #FF0000; }
+.pas1-preprocessor { font-style: italic; }
+.pas1-reservedword { color: #000000; font-weight: bold; }
+.pas1-space { }
+.pas1-string { color: #008080; }
+.pas1-symbol { color: #000000; }
+-->
+</style>
+</head>
+<body>
+<!--StartFragment--><pre><code><span class="pas1-comment">//Example of the memo load and save capabilities of the VCL
+//Task: Make the 3rd algo too!
+//Get the text and write your memo memories, locs=218 
+
+</span><span class="pas1-reservedword">program</span><span class="pas1-space"> Sorting_Form_Demo;
+
+</span><span class="pas1-reservedword">const</span><span class="pas1-space"> LEFTBASE = </span><span class="pas1-number">20</span><span class="pas1-symbol">;
+      TOPBASE = </span><span class="pas1-number">25</span><span class="pas1-symbol">; 
+      vARRSIZE = </span><span class="pas1-number">200</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">type
+</span><span class="pas1-space">  </span><span class="pas1-comment">//TThreadSortArray = array[0..MaxInt div SizeOf(Integer) - 1] of Integer;
+</span><span class="pas1-space">  TmSortArray =  </span><span class="pas1-reservedword">array</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">..ARRSIZE] </span><span class="pas1-reservedword">of</span><span class="pas1-space"> Integer;
+
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> 
+  mymemo: TMemo;
+  mpaint, mpaint2: TPaintBox;
+  inFrm: TForm;  
+  mbtn3: TBitBtn;
+  Lstbox: TListbox;
+  stat: TStatusbar;
+  selectedFile: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+  BubbleSortArray: TSortArray;
+  SelectionSortArray: TSortArray;
+  QuickSortArray: TSortArray;
+  ArraysRandom: Boolean;
+  FA, FB, FI, FJ: Integer;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> PaintLine(Canvas: TCanvas; I, Len: Integer); </span><span class="pas1-reservedword">forward</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> RandomizeArrays;
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  I: Integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   </span><span class="pas1-comment">//I:= 0;
+</span><span class="pas1-space">   </span><span class="pas1-comment">//if b then dialogs.showmessage('this is')
+</span><span class="pas1-space">   assert(high(BubbleSortArray) &lt;= </span><span class="pas1-number">200</span><span class="pas1-symbol">, </span><span class="pas1-string">'array to big'</span><span class="pas1-symbol">);
+  </span><span class="pas1-comment">//Check(high(BubbleSortArray) &lt;= 170, 'array to big');
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> ArraysRandom </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Randomize;
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> I:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> ARRSIZE - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">      </span><span class="pas1-comment">//SelectionSortarray[i]:= random(165);
+</span><span class="pas1-space">    BubbleSortArray[I]:= Random(</span><span class="pas1-number">170</span><span class="pas1-symbol">);
+    SelectionSortArray:= BubbleSortArray;
+    QuickSortArray:= BubbleSortArray;
+    writeln(</span><span class="pas1-string">'just random done'</span><span class="pas1-symbol">)
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> PaintRandomArray;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> I: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  mPaint.Canvas.Pen.Color:= clblue;
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> I:= Low(SelectionSortArray) </span><span class="pas1-reservedword">to</span><span class="pas1-space"> High(SelectionSortArray) </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">    PaintLine(mpaint.Canvas, I, SelectionSortArray[I]);
+  mPaint2.Canvas.Pen.Color:= clgreen;
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> I:= Low(BubbleSortArray) </span><span class="pas1-reservedword">to</span><span class="pas1-space"> High(BubbleSortArray) </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">    PaintLine(mpaint2.Canvas, I, BubbleSortArray[I])
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> PaintLine(Canvas: TCanvas; I, Len: Integer);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  canvas.moveTo(</span><span class="pas1-number">0</span><span class="pas1-symbol">, I * </span><span class="pas1-number">2</span><span class="pas1-space"> + </span><span class="pas1-number">1</span><span class="pas1-symbol">)
+  canvas.LineTo(Len, I * </span><span class="pas1-number">2</span><span class="pas1-space"> + </span><span class="pas1-number">1</span><span class="pas1-symbol">)
+  </span><span class="pas1-comment">//Canvas.PolyLine([Point(0, I * 2 + 1), Point(Len, I * 2 + 1)]);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> DoVisualSwap2;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mpaint2 </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-comment">//invalidate;
+</span><span class="pas1-space">    Canvas.Pen.Color:= clBtnFace;
+    </span><span class="pas1-comment">//Canvas.Pen.Color:= clBlue;
+</span><span class="pas1-space">    PaintLine(Canvas, FI, FA);
+    PaintLine(Canvas, FJ, FB);
+    Canvas.Pen.Color:= clRed;
+    PaintLine(Canvas, FI, FB);
+    PaintLine(Canvas, FJ, FA);
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> DoVisualSwap;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mpaint </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-comment">//invalidate;
+</span><span class="pas1-space">    Canvas.Pen.Color:= clBtnFace;
+    </span><span class="pas1-comment">//Canvas.Pen.Color:= clBlue;
+</span><span class="pas1-space">    PaintLine(Canvas, FI, FA);
+    PaintLine(Canvas, FJ, FB);
+    Canvas.Pen.Color:= clRed;
+    PaintLine(Canvas, FI, FB);
+    PaintLine(Canvas, FJ, FA);
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> VisualSwap2(A, B, I, J: Integer);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//symbol rename
+</span><span class="pas1-space">  FA:= A;
+  FB:= B;
+  FI:= I;
+  FJ:= J;
+  </span><span class="pas1-comment">//if bolTHslowmotion then
+</span><span class="pas1-space">    </span><span class="pas1-comment">//        sysutils.sleep(5);
+</span><span class="pas1-space">  </span><span class="pas1-comment">//DoVisualSwap;
+</span><span class="pas1-space">  DoVisualSwap2;
+  
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> VisualSwap(A, B, I, J: Integer);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//symbol rename
+</span><span class="pas1-space">  FA:= A;
+  FB:= B;
+  FI:= I;
+  FJ:= J;
+  </span><span class="pas1-comment">//if bolTHslowmotion then
+</span><span class="pas1-space">    </span><span class="pas1-comment">//        sysutils.sleep(5);
+</span><span class="pas1-space">  DoVisualSwap;
+  </span><span class="pas1-comment">//DoVisualSwap2;
+</span><span class="pas1-space">  
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TvSelectionSort(</span><span class="pas1-reservedword">var</span><span class="pas1-space"> A: TSortArray);
+</span><span class="pas1-comment">// syncedit
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space"> indx, J, T: Integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> indx := Low(A) </span><span class="pas1-reservedword">to</span><span class="pas1-space"> High(A) - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> J := High(A) </span><span class="pas1-reservedword">downto</span><span class="pas1-space"> indx + </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> A[indx] &gt; A[J] </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        VisualSwap(A[indx], A[J], indx, J);
+        </span><span class="pas1-comment">//write('debug')
+</span><span class="pas1-space">        T:= A[indx];
+        A[indx] := A[J];
+        A[J] := T;
+        </span><span class="pas1-comment">//if Terminated then Exit;
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+
+</span><span class="pas1-comment">{ TBubbleSort }
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TvBubbleSort(</span><span class="pas1-reservedword">var</span><span class="pas1-space"> A: TSortArray);
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  I, J, T: Integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> I := High(A) </span><span class="pas1-reservedword">downto</span><span class="pas1-space"> Low(A) </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> J := Low(A) </span><span class="pas1-reservedword">to</span><span class="pas1-space"> High(A) - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> A[J] &gt; A[J + </span><span class="pas1-number">1</span><span class="pas1-symbol">] </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        VisualSwap2(A[J], A[J + </span><span class="pas1-number">1</span><span class="pas1-symbol">], J, J + </span><span class="pas1-number">1</span><span class="pas1-symbol">);
+        T := A[J];
+        A[J] := A[J + </span><span class="pas1-number">1</span><span class="pas1-symbol">];
+        A[J + </span><span class="pas1-number">1</span><span class="pas1-symbol">] := T;
+     </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> QuickSort(</span><span class="pas1-reservedword">var</span><span class="pas1-space"> A: TSortArray; iLo, iHi: Integer);
+  </span><span class="pas1-reservedword">var
+</span><span class="pas1-space">    Lo, Hi, Mid, T: Integer;
+  </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Lo := iLo;
+    Hi := iHi;
+    </span><span class="pas1-comment">// inline variable
+</span><span class="pas1-space">    Mid := A[(Lo + Hi) </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">];
+    </span><span class="pas1-reservedword">repeat
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">while</span><span class="pas1-space"> A[Lo] &lt; Mid
+                    </span><span class="pas1-reservedword">do</span><span class="pas1-space"> Inc(Lo);
+      </span><span class="pas1-reservedword">while</span><span class="pas1-space"> A[Hi] &gt; Mid
+                    </span><span class="pas1-reservedword">do</span><span class="pas1-space"> Dec(Hi);
+      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Lo &lt;= Hi </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        VisualSwap(A[Lo], A[Hi], Lo, Hi);
+        T := A[Lo];
+        A[Lo] := A[Hi];
+        A[Hi] := T;
+        Inc(Lo);
+        Dec(Hi);
+      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">until</span><span class="pas1-space"> Lo &gt; Hi;
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Hi &gt; iLo </span><span class="pas1-reservedword">then</span><span class="pas1-space"> QuickSort(A, iLo, Hi);
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Lo &lt; iHi </span><span class="pas1-reservedword">then</span><span class="pas1-space"> QuickSort(A, Lo, iHi);
+    </span><span class="pas1-comment">//if Terminated then Exit;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TvQuickSort(</span><span class="pas1-reservedword">var</span><span class="pas1-space"> A: TSortArray);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  QuickSort(A, Low(A), High(A));
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+  
+</span><span class="pas1-reservedword">Function</span><span class="pas1-space"> getRandomText: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i, getback: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">1400</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    getback:=  random(</span><span class="pas1-number">58</span><span class="pas1-symbol">)+</span><span class="pas1-number">65
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (getback &lt; </span><span class="pas1-number">91</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">OR</span><span class="pas1-space"> (getback &gt; </span><span class="pas1-number">96</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">      result:= result + Chr(getback) +Chr(</span><span class="pas1-number">32</span><span class="pas1-symbol">)
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+  
+</span><span class="pas1-comment">//Event Handler - Closure  
+</span><span class="pas1-reservedword">Procedure</span><span class="pas1-space"> GetMediaData(self: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> PromptForFileName(selectedFile,
+                       </span><span class="pas1-string">'Text files (*.txt)|*.txt'</span><span class="pas1-symbol">,
+                       </span><span class="pas1-string">''</span><span class="pas1-symbol">,
+                       </span><span class="pas1-string">'Select your mX3 test file'</span><span class="pas1-symbol">,
+                       ExePath+</span><span class="pas1-string">'examples\'</span><span class="pas1-symbol">, False)  </span><span class="pas1-comment">// Means not a Save dialog !
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     </span><span class="pas1-comment">// Display this full file/path value
+</span><span class="pas1-space">     ShowMessage(</span><span class="pas1-string">'Selected file = '</span><span class="pas1-symbol">+selectedFile);
+     Stat.simpletext:= selectedFile;
+     mymemo.lines.LoadFromFile(selectedFile);
+     </span><span class="pas1-comment">// Split this full file/path value into its constituent parts
+</span><span class="pas1-space">     </span><span class="pas1-comment">//writeln('PromptForFileName_28: Res of processpath '+tmp)
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+  
+</span><span class="pas1-comment">//Event Handler - Closure
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> BtnStartClick(self: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//mymemo.lines.savetofile(ExePath+'\examples\mymemomemoire.txt');
+</span><span class="pas1-space">  mymemo.lines.text:= getRandomText;
+  mPaint.invalidate;
+  RandomizeArrays;
+  PaintRandomArray;
+  TvSelectionSort(selectionSortArray)
+  TvBubbleSort(bubbleSortArray)
+
+  </span><span class="pas1-comment">//mymemo.lines.SaveToFile(selectedFile);
+</span><span class="pas1-space">  Stat.simpletext:= </span><span class="pas1-string">' start has been sorted'</span><span class="pas1-space"> ;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> GetRandom(self: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//mymemo.lines.savetofile(ExePath+'\examples\mymemomemoire.txt');
+</span><span class="pas1-space">  mymemo.lines.text:= getRandomText;
+  mPaint.invalidate;
+  mPaint2.invalidate;
+  RandomizeArrays;
+  PaintRandomArray;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> BtnSortClick(self: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//mymemo.lines.savetofile(ExePath+'\examples\mymemomemoire.txt');
+</span><span class="pas1-space">  </span><span class="pas1-comment">//RandomizeArrays(inFrm);
+</span><span class="pas1-space">  </span><span class="pas1-comment">//PaintRandomArray;
+</span><span class="pas1-space">  mPaint.invalidate;
+  mPaint2.invalidate;
+
+  TvSelectionSort(selectionSortArray)
+  TvBubbleSort(bubbleSortArray)
+
+  </span><span class="pas1-comment">//mymemo.lines.SaveToFile(selectedFile);
+</span><span class="pas1-space">  </span><span class="pas1-comment">//Stat.simpletext:= selectedFile+ ' has been saved' ;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> SetForm;
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  mbtn, mbtn2: TBitBtn;
+  mi, mi1, mi2, mi3: TMenuItem;
+  mt: TMainMenu;
+  mlbl, mlbl1: TLabel; 
+
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  inFrm:= TForm.Create(self);
+  mLbl:= TLabel.create(inFrm);
+  mLbl1:= TLabel.create(inFrm);
+  mPaint:= TPaintBox.Create(inFrm);
+  mPaint2:= TPaintBox.Create(inFrm);
+  stat:= TStatusbar.Create(inFrm);
+  Lstbox:= TListbox.create(inFrm);
+  mymemo:= TMemo.create(inFrm);
+
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> inFrm </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    caption:= </span><span class="pas1-string">'********SortMonster3************'</span><span class="pas1-symbol">;  
+    height:= </span><span class="pas1-number">610</span><span class="pas1-symbol">;
+    width:= </span><span class="pas1-number">980</span><span class="pas1-symbol">;
+    </span><span class="pas1-comment">//color:= clred;
+</span><span class="pas1-space">    Position:= poScreenCenter;
+    </span><span class="pas1-comment">//onClose:= @CloseClick;
+</span><span class="pas1-space">    Show;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mPaint </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     Parent:= inFrm;  
+     SetBounds(LEFTBASE+</span><span class="pas1-number">10</span><span class="pas1-symbol">,TOPBASE+</span><span class="pas1-number">40</span><span class="pas1-symbol">,</span><span class="pas1-number">200</span><span class="pas1-symbol">,</span><span class="pas1-number">400</span><span class="pas1-symbol">)
+     color:= clsilver;
+     Show;
+     </span><span class="pas1-comment">//onpaint:= @closeclick;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mPaint2 </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     Parent:= inFrm;  
+     SetBounds(LEFTBASE+</span><span class="pas1-number">210</span><span class="pas1-symbol">,TOPBASE+</span><span class="pas1-number">40</span><span class="pas1-symbol">,</span><span class="pas1-number">200</span><span class="pas1-symbol">,</span><span class="pas1-number">400</span><span class="pas1-symbol">)
+     color:= clsilver;
+     Show;
+     </span><span class="pas1-comment">//onpaint:= @closeclick;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+  
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mymemo </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Parent:= inFrm;
+    SetBounds(LEFTBASE+</span><span class="pas1-number">520</span><span class="pas1-symbol">, TOPBASE+</span><span class="pas1-number">40</span><span class="pas1-symbol">, </span><span class="pas1-number">400</span><span class="pas1-symbol">, </span><span class="pas1-number">400</span><span class="pas1-symbol">)
+    font.size:= </span><span class="pas1-number">14</span><span class="pas1-symbol">;
+    color:= clYellow;
+    wordwrap:= true;
+    scrollbars:= ssvertical;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  
+  mBtn:= TBitBtn.Create(inFrm)
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mBtn </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Parent:= inFrm;
+    setbounds(LEFTBASE+ </span><span class="pas1-number">590</span><span class="pas1-symbol">, TOPBASE+ </span><span class="pas1-number">460</span><span class="pas1-symbol">,</span><span class="pas1-number">150</span><span class="pas1-symbol">, </span><span class="pas1-number">40</span><span class="pas1-symbol">);
+    caption:= </span><span class="pas1-string">'Random'</span><span class="pas1-symbol">;
+    font.size:= </span><span class="pas1-number">12</span><span class="pas1-symbol">;
+    glyph.LoadFromResourceName(getHINSTANCE,</span><span class="pas1-string">'CL_MPPAUSE'</span><span class="pas1-symbol">); 
+    </span><span class="pas1-comment">//event handler
+</span><span class="pas1-space">    onclick:= @GetRandom;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  mBtn2:= TBitBtn.Create(inFrm)
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mBtn2 </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Parent:= inFrm;
+    setbounds(LEFTBASE+ </span><span class="pas1-number">430</span><span class="pas1-symbol">, TOPBASE+</span><span class="pas1-number">460</span><span class="pas1-symbol">,</span><span class="pas1-number">150</span><span class="pas1-symbol">, </span><span class="pas1-number">40</span><span class="pas1-symbol">);
+    caption:= </span><span class="pas1-string">'Sort'</span><span class="pas1-symbol">;
+    font.size:= </span><span class="pas1-number">12</span><span class="pas1-symbol">;
+    glyph.LoadFromResourceName(getHINSTANCE,</span><span class="pas1-string">'CL_MPEJECT'</span><span class="pas1-symbol">); 
+    </span><span class="pas1-comment">//event handler
+</span><span class="pas1-space">    onclick:= @BtnSortClick;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  mBtn3:= TBitBtn.Create(inFrm)
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mBtn3 </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Parent:= inFrm;
+    setbounds(LEFTBASE+ </span><span class="pas1-number">750</span><span class="pas1-symbol">, TOPBASE+</span><span class="pas1-number">460</span><span class="pas1-symbol">,</span><span class="pas1-number">150</span><span class="pas1-symbol">, </span><span class="pas1-number">40</span><span class="pas1-symbol">);
+    caption:= </span><span class="pas1-string">'Start Sort'</span><span class="pas1-symbol">;
+    font.size:= </span><span class="pas1-number">12</span><span class="pas1-symbol">;
+    </span><span class="pas1-comment">//glyph.LoadFromResourceName(getHINSTANCE,'PREVIEWGLYPH'); 
+</span><span class="pas1-space">    glyph.LoadFromResourceName(getHINSTANCE,</span><span class="pas1-string">'CL_MPSTEP'</span><span class="pas1-symbol">); 
+     </span><span class="pas1-comment">//event handler
+</span><span class="pas1-space">    onclick:= @BtnStartClick;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mlbl </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent:= inFrm;
+    setbounds(LEFTBASE+</span><span class="pas1-number">15</span><span class="pas1-symbol">,TOPBASE-</span><span class="pas1-number">15</span><span class="pas1-symbol">,</span><span class="pas1-number">180</span><span class="pas1-symbol">,</span><span class="pas1-number">20</span><span class="pas1-symbol">);
+    font.size:= </span><span class="pas1-number">28</span><span class="pas1-symbol">;
+    font.color:= clred;
+    </span><span class="pas1-comment">//font.style:= [fsunderline]
+</span><span class="pas1-space">    caption:= </span><span class="pas1-string">'SortMemoApp Draft'</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mlbl1 </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent:= inFrm;
+    setbounds(LEFTBASE+</span><span class="pas1-number">495</span><span class="pas1-symbol">,TOPBASE-</span><span class="pas1-number">1</span><span class="pas1-symbol">,</span><span class="pas1-number">180</span><span class="pas1-symbol">,</span><span class="pas1-number">20</span><span class="pas1-symbol">);
+    font.size:= </span><span class="pas1-number">20</span><span class="pas1-symbol">;
+    font.color:= clred;
+    caption:= </span><span class="pas1-string">'Text File:'</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+  mt:= TMainMenu.Create(infrm)
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mt </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   </span><span class="pas1-comment">//parent:= frmMon;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+  mi:= TMenuItem.Create(mt)
+  mi1:= TMenuItem.Create(mt)
+  mi2:= TMenuItem.Create(mt)
+  mi3:= TMenuItem.Create(mi)
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mi </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-comment">//parent:= frmMon;
+</span><span class="pas1-space">    Caption:=</span><span class="pas1-string">'Play Media'</span><span class="pas1-symbol">;
+    Name:=</span><span class="pas1-string">'ITEM'</span><span class="pas1-symbol">;
+    mt.Items.Add(mi);   
+    </span><span class="pas1-comment">//OnClick:= @GetMediaData;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mi1 </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-comment">//parent:= frmMon;
+</span><span class="pas1-space">    Caption:=</span><span class="pas1-string">'Show Video'</span><span class="pas1-symbol">;
+    Name:=</span><span class="pas1-string">'ITEM2'</span><span class="pas1-symbol">;
+    mt.Items.Add(mi1) ;
+    </span><span class="pas1-comment">//OnClick:= @GetVideoData
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mi2 </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-comment">//parent:= frmMon;
+</span><span class="pas1-space">    Caption:=</span><span class="pas1-string">'Open CD Player'</span><span class="pas1-symbol">;
+    Name:=</span><span class="pas1-string">'ITEM3'</span><span class="pas1-symbol">;
+    mt.Items.Add(mi2);
+    </span><span class="pas1-comment">//OnClick:= @OPenCD;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mi3 </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Caption:=</span><span class="pas1-string">'Open maXbook'</span><span class="pas1-symbol">;
+    Name:=</span><span class="pas1-string">'ITEM4'</span><span class="pas1-symbol">;
+    </span><span class="pas1-comment">//mi.Items[0].add(mi3);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> Stat </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent:= inFrm;
+    stat.SimplePanel:= true;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+  
+ 
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  memo2.font.size:= </span><span class="pas1-number">14</span><span class="pas1-symbol">;
+  SetForm;
+  mymemo.lines.text:= getRandomText;
+  </span><span class="pas1-comment">//SearchAndOpenDoc(ExePath+MEDIAPATH)
+</span><span class="pas1-space">  </span><span class="pas1-comment">//mylistview:= TFormListView.Create(self);
+</span><span class="pas1-space">  </span><span class="pas1-comment">//exit;
+</span><span class="pas1-space">  maxform1.color:= clsilver;
+  writeln(floattostr(maXcalc(</span><span class="pas1-string">'3273+1731+276'</span><span class="pas1-symbol">)))
+</span><span class="pas1-reservedword">End</span><span class="pas1-symbol">.
+
+</span><span class="pas1-comment">//-------------------------------------------------
+
+</span><span class="pas1-identifier">source </span><span class="pas1-reservedword">is</span><span class="pas1-space"> tlistview
+target </span><span class="pas1-reservedword">is</span><span class="pas1-space"> tform
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TfMerit.SourceLVStartDrag(Sender: TObject;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> DragObject: TDragObject);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> TargetLV:TListView;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-comment">// TargetLV:=nejak urcit dle potreby
+</span><span class="pas1-space">  TargetLV.BeginDrag(True)
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TfMerit.SourceLVMouseDown(Sender: TObject;
+Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-identifier">MouseIsDown:=True;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TfMerit.SourceLVMouseUp(Sender: TObject; Button: TMouseButton;
+Shift: TShiftState; X, Y: Integer);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-identifier">MouseIsDown:=False;
+</span><span class="pas1-reservedword">if</span><span class="pas1-space"> (Sender </span><span class="pas1-reservedword">as</span><span class="pas1-space"> TListView).Dragging </span><span class="pas1-reservedword">then
+</span><span class="pas1-symbol">(Sender </span><span class="pas1-reservedword">as</span><span class="pas1-space"> TListView).EndDrag(False);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TfMerit.SourceLVMouseMove(Sender: TObject; Shift: TShiftState;
+X, Y: Integer);
+</span><span class="pas1-reservedword">begin
+if</span><span class="pas1-space"> (Sender.ClassNameIs(</span><span class="pas1-string">'TListView'</span><span class="pas1-symbol">)) </span><span class="pas1-reservedword">then
+begin
+if</span><span class="pas1-space"> MouseIsDown </span><span class="pas1-reservedword">and</span><span class="pas1-space"> ((Sender </span><span class="pas1-reservedword">as</span><span class="pas1-space"> TListView).SelCount&gt;</span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then
+</span><span class="pas1-symbol">(Sender </span><span class="pas1-reservedword">as</span><span class="pas1-space"> TListView).BeginDrag(True);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TfMerit.TargetLVDragOver(Sender, Source: TObject; X,
+Y: Integer; State: TDragState; </span><span class="pas1-reservedword">var</span><span class="pas1-space"> Accept: Boolean);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> T:TListView;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-identifier">T:=Sender </span><span class="pas1-reservedword">as</span><span class="pas1-space"> TListView;
+Accept:=Assigned(T.GetItemAt(X,Y));
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TfMerit.TargetLVDragDrop(Sender, Source: TObject; X,
+Y: Integer);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> It:TListItem;
+LV1,LV2:TListView;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-identifier">LV1:=Source </span><span class="pas1-reservedword">as</span><span class="pas1-space"> TListView;
+LV2:=Sender </span><span class="pas1-reservedword">as</span><span class="pas1-space"> TListview;
+
+It:=LV2.GetItemAt(X,Y);
+</span><span class="pas1-reservedword">if</span><span class="pas1-space"> Assigned(It) </span><span class="pas1-reservedword">then
+begin
+</span><span class="pas1-comment">// zpracuj polozku ze zdrojoveho listview
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TControlParentR(Self: TControl; </span><span class="pas1-reservedword">var</span><span class="pas1-space"> T:TWinControl); </span><span class="pas1-reservedword">begin</span><span class="pas1-space"> T:= Self.Parent; </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TControlParentW(Self: TControl; T: TWinControl); </span><span class="pas1-reservedword">begin</span><span class="pas1-space"> Self.Parent:= T; </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    RegisterPropertyHelper(@TControlParentR, @TControlParentW, </span><span class="pas1-string">'PARENT'</span><span class="pas1-symbol">);
+    RegisterProperty(</span><span class="pas1-string">'Parent'</span><span class="pas1-symbol">, </span><span class="pas1-string">'TWinControl'</span><span class="pas1-symbol">, iptRW);
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TTXPTool.LVPFFDblClick(Sender: TObject);
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-identifier">tmpList : TListItem;
+fn ; </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+ft : integer;
+fs : integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-identifier">tmpList := LVPFF.Selected;
+</span><span class="pas1-reservedword">if</span><span class="pas1-space"> tmplist&lt;&gt;</span><span class="pas1-reservedword">nil</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+begin
+</span><span class="pas1-space">  fn := tmpList.Caption
+  ft := tmpList.SubItems.Strings[</span><span class="pas1-number">1</span><span class="pas1-symbol">];
+  fs := tmpList.SubItems.Strings[</span><span class="pas1-number">3</span><span class="pas1-symbol">];
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> pos(</span><span class="pas1-string">'Wave'</span><span class="pas1-symbol">, ft)&gt;</span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    PlayThisOne1Click(</span><span class="pas1-reservedword">nil</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> pos(</span><span class="pas1-string">'Jpg'</span><span class="pas1-symbol">, ft)&gt;</span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    ShowJpg1Click(</span><span class="pas1-reservedword">nil</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> pos(</span><span class="pas1-string">'Targa'</span><span class="pas1-symbol">, ft)&gt;</span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    ShowTga1Click(</span><span class="pas1-reservedword">nil</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> pos(</span><span class="pas1-string">'Pcx'</span><span class="pas1-symbol">, ft)&gt;</span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    ShowPcx1Click(</span><span class="pas1-reservedword">nil</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> pos(</span><span class="pas1-string">'Mission Sound Collection'</span><span class="pas1-symbol">, ft)&gt;</span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    ShowPwf1Click(</span><span class="pas1-reservedword">nil</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span></code></pre><!--EndFragment--></body>
+</html>

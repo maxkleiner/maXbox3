@@ -1,0 +1,107 @@
+//***************************************
+program Crypto_Hash_Code;
+
+//calculates hash store from MD5 and SHA1
+//functions are just to illustrate, the call of md5 and sha1 is secure internal!
+//http://en.wikipedia.org/wiki/Hash_function
+
+//type
+  //T4x4LongWordRecord = array [0..3] of LongWord;
+  //T5x4LongWordRecord = array [0..4] of LongWord;
+
+const
+   AFILE = 'maxbox3.exe';
+
+var   
+   hexd: THexarray;
+   mylog: TIdlogfile;
+   i: integer;
+   tempstr: string;
+   //TIdHashCRC32
+  
+  procedure GetHexArray(var ahexdig: THexArray);
+  var i: byte;
+  begin
+   for i:= 0 to 9 do
+     ahexdig[i]:= chr(i+48);  //of 48
+   for i:= 10 to 15 do
+     ahexdig[i]:= chr(i+55);  //of 65
+   //= '0123456789ABCDEF';  
+  end;
+
+function MD5A(const fileName: string): string;
+ var
+   idmd5: TIdHashMessageDigest5;
+   fs: TFileStream;
+   //hash : T4x4LongWordRecord;
+ begin
+   idmd5:= TIdHashMessageDigest5.Create;
+   fs:= TFileStream.Create(fileName, fmOpenRead OR fmShareDenyWrite) ;
+   try
+     result:= idmd5.AsHex(idmd5.HashValue1(fs)) ;
+   finally
+     fs.Free;
+     idmd5.Free;
+   end;
+ end;
+ 
+function SHA1A(const fileName: string): string;
+var
+  idsha: TIdHashSHA1;
+  fs: TFileStream;
+  hash: T5x4LongWordRecord;
+ begin
+   idsha:= TIdHashSHA1.Create;
+   fs:= TFileStream.Create(fileName, fmOpenRead OR fmShareDenyWrite) ;
+   try
+     //result:= idmd5.AsHex(hash) ;
+     result:= idsha.AsHex(idsha.HashValue(fs)) ;
+   finally
+     fs.Free;
+     idsha.Free;
+   end;
+ end;
+
+begin
+  getHexArray(hexd);
+  for i:= 0 to 15 do
+    Write(hexd[i]);
+  writeln(' ');  
+  //hashvalue first
+  PrintF('From CRC32 of file %s is %d',[AFILE, ComputeFileCRC32(ExePath+AFILE)]);
+  //old C3B9FBA6EFE24D7347C718F054FE48D6
+  //3293C39CB75928D991C0DC89C4C7BDC8
+  Writeln('From MD5:  '+MD5(ExePath+AFILE))
+  //old 65B83A31774A8F6D3A1606ED8E466903185D2E90
+  //DADE3222556AEC69BCD9F9AB6F1FC21FB6722A56
+  //ÚÞ2"Ujìi¼Ùù«oÂ¶r*V
+  Writeln('From SHA1:  '+SHA1(ExePath+AFILE))
+  writeln(' ');  
+  mylog:= Tidlogfile.create(self);
+  mylog.Filename:= 'indylogtest.txt';
+  mylog.Free;
+  //test routine from ASCII to HEX!
+  tempstr:= 'ÚÞ2"Ujìi¼Ùù«oÂ¶r*V'
+  for i:= 1 to 20 do
+    Write(charToHexStr(tempstr[i]))
+end.
+
+----------------------------------------------------
+-1753041190
+-346756791
+md5 of mx3
+9E DB 74 AA 37 CF 42 7B CB C1 C5 C2 F9 5B F3 75 
+
+from idpop3
+
+if Length(S) > 0 then begin
+          with TIdHashMessageDigest5.Create do
+          try
+            S:=LowerCase(TIdHash128.AsHex(HashValue(S+Password)));
+          finally
+            Free;
+          end;//try
+          
+Some cryptographic hash functions, such as SHA-1, have even stronger uniformity guarantees than checksums or fingerprints, and thus can provide very good general-purpose hashing functions.
+
+In ordinary applications, this advantage may be too small to offset their much higher cost.[5] However, this method can provide uniformly distributed hashes even when the keys are chosen by a malicious agent. This feature may help protect services against denial of service attacks.          

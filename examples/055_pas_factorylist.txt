@@ -1,0 +1,108 @@
+//shows the use of a simple factory method to generate various reports or forms
+//small output of two naked forms, loc's =106, _55
+
+PROGRAM ObjectHandling_corrupt;
+
+var 
+  objlist, factoryList: TStringList;
+  //TFormClass = class of TForm;
+
+function TObjectFactory_Create: TStringList;
+begin
+  result:= TStringList.Create;
+end;
+
+procedure RegisterObject(const AName: string; const AReportClass: TForm);
+var
+  i: integer;
+  //lMapping: TReportMapping;
+begin
+  i:= factoryList.IndexOf(UpperCase(AName));
+  if i <> -1 then
+    showMessage('Registering a duplicate report' + ' name <' + AName + '>')
+  else begin
+    // classReference not implemented
+    //lMapping:= TReportMapping.CreateEx(AName, AReportClass);
+    areportClass:= TWinFormP.create(self)
+    areportClass.caption:= AName
+    factoryList.AddObject(UpperCase(AName), areportClass);
+  end;
+end;
+
+function GenerateObject(const AName: string): TForm;
+var
+  idx: integer;
+begin
+  idx:= factoryList.IndexOf(UpperCase(AName));
+  if idx = -1 then
+    showmessage('No report was registered by' + ' the name <' + AName + '>')
+  else begin
+    result:= TForm(factoryList.Objects[idx]);
+    result.show
+  end  
+end;
+
+procedure GetRegisteredObjects(var AList: TStringList);
+var
+  i: integer;
+begin
+  AList.Clear;
+  for i:= 0 to factoryList.Count - 1 do
+    AList.Add(TForm(factoryList.Objects[i]).Name);
+end;
+
+procedure TObjectFactory_Destroy;
+var
+  i: integer;
+begin
+  if Assigned(factoryList) then begin
+    for i:= 0 to factoryList.Count - 1 do
+      TForm(factoryList.Objects[i]).Free;
+    factoryList.Free;
+  end;
+end;
+  
+procedure StartFactory;
+var
+  puzzform: TWinformP;
+  myform: TForm;
+begin
+  //fill the list with objects (reports,forms...)
+  try
+    factoryList:= TObjectFactory_Create;
+    registerObject('simpleform', myform)
+    registerObject('puzzleform', puzzform)
+    generateObject('simpleform');
+    generateObject('puzzleform');
+  finally  
+    //TObjectFactory_Destroy;
+  end   
+end;
+
+procedure ObjectsOut;
+var loop: byte;
+begin
+  getRegisteredObjects(objList)
+  objList.sort;
+  for loop:= 0 to objlist.count - 1 do
+    writeln('objects registered: '+ objlist.strings[loop]);
+  objList.free;
+end;
+      
+procedure InitObjlist;
+begin
+  //resets random gen
+  objList:= TStringlist.create;
+  objList.clear;
+end; 
+ 
+begin
+  //init, register & generate objects
+    InitObjlist
+    StartFactory
+    ObjectsOut
+    //TObjectFactory_Destroy;
+  //task: proof that each object has its own name     
+end.
+      
+      

@@ -1,0 +1,150 @@
+program All_LottoCombinations_bit_Power;
+//****************************************************************************
+// To provide a fast algo with large numbers (45bit ore more) can turn into a
+// complicated debate. Here's a solution for compiler or interpreter.
+// ZWEIHOCHFUENFUNDVIERZIG = 35184372088832; by Max & Beat Straehl
+// time consuming is about 45 sec.(minutes maXbox) without optimisation days!!
+// number of lotto spheres are 45 with 6 crosses on it(change), _97
+
+const NUMBER_OF_SPHERES = 45;
+      NUMBER_OF_BITS_ARRAY_UPPER_END = 255;
+
+var  counter, counterCopy, counterOffset, range: int64;
+     bitCounter, bitCount, bitPosition, combCounter: integer;
+     byteFragmentIndexOfCounter: integer;
+     positionOfLowestBitOutOfSix: integer;
+     numberOfBits: array[0..NUMBER_OF_BITS_ARRAY_UPPER_END] of byte;
+     before, after: TDateTime;        
+     combstr: string;
+     lottoList: TStringList;
+
+function powerOf2(exponent: integer): int64;
+var shifter: int64;
+    counter: integer;
+begin
+  shifter:= 1;
+  for counter:= 1 to exponent do
+    shifter:= shifter + shifter;
+  result:= shifter;
+end;
+
+procedure presetBitCountLookupTable(highestIndex: integer);
+var arrayIndex: integer;
+    numberOfBitsSet: integer;
+    byteValue: integer;
+begin
+  //preset bit count lookup table
+  for arrayIndex:= 0 to highestIndex do begin 
+     byteValue:= arrayIndex;
+     numberOfBitsSet:= 0;
+     for bitCounter:= 1 to 8 do begin
+        if ((byteValue and 1) = 1) then
+          inc(numberOfBitsSet);
+        byteValue:= byteValue shr 1;
+     end;
+    numberOfBits[arrayIndex]:= numberOfBitsSet;
+  end;
+end;
+
+begin  //main
+  presetBitCountLookupTable(NUMBER_OF_BITS_ARRAY_UPPER_END);
+  range:= powerOf2(NUMBER_OF_SPHERES); 
+  lottoList:= TStringlist.create;
+  before:= Time;
+  combCounter:= 0;  
+  counter:= 0;
+  lottoList.add('All lotto combinations 6 from ' +IntToStr(NUMBER_OF_SPHERES));
+  lottoList.add('**********************************************************');
+  while counter < range do begin  //check cases
+      bitCount:= 0;
+      counterCopy:= counter;
+      for byteFragmentIndexOfCounter:= 0 to 5 do begin
+         bitCount:= bitCount+numberOfBits[counterCopy mod 256];
+         counterCopy:= counterCopy shr 8;
+      end;
+      if (bitCount=6) then begin  
+        counterCopy:= counter;
+        positionOfLowestBitOutOfSix:= -1;
+        inc(combCounter);
+        //write('combination #' + inttostr(combinationCounter) +': ');
+        for bitCounter:=1 to NUMBER_OF_SPHERES do begin
+            if ((counterCopy and 1) = 1) then begin
+               //write(inttoStr(bitCounter) +' ');
+               combstr:=  combstr+ ' '+IntToStr(bitCounter);
+               if (positionOfLowestBitOutOfSix= -1) then
+                 positionOfLowestBitOutOfSix:= bitCounter;
+            end;
+          counterCopy:= counterCopy shr 1;
+        end;
+        //writeln(' ');
+        lottoList.add('# '+IntToStr(combCounter)+': '+ combstr)
+        combstr:= '';  
+        counterOffset:= 1;
+        bitPosition:= 1;
+        while (bitPosition<positionOfLowestBitOutOfSix) do begin
+          counterOffset:= counterOffset + counterOffset;
+          inc(bitPosition);
+        end;
+        counter:= counter + counterOffset;
+      end else
+        counter:= counter + 1;
+  end; //while
+  after:= Time;
+  Writeln('Save lotto file at: ' +TimeToStr(after) + ' '+DateToStr(date));
+  lottoList.SaveToFile('All_lotto_combinations2.txt');
+  lottoList.Free;
+  Writeln('Lotto report started at: '+ FormatDateTime('hh:nn:ss.zzz',before));
+  Writeln('Lotto report ended at: '+ FormatDateTime('hh:nn:ss.zzz',after));
+  Writeln('Lotto report lasted: '+FormatDateTime('hh:nn:ss.zzz',after-before));
+  Writeln('6 of ' +IntToStr(NUMBER_OF_SPHERES)+' are: ' +IntToStr(combCounter));
+end. 
+
+
+//files at:
+www.softwareschule.ch/download/97_pas_lottocombinations_beat_plus.pdf
+for compiler file at:
+www.softwareschule.ch/download/maxbox97_lottoproject_allcombinations_dpr.txt
+
+{
+maXbox 97_pas_lottocombinations_beat_plus Compiled done: 28.04.2010 14:41:56
+--------------------------------------------------------
+Save lotto file at: 15:27:42 28.04.2010
+Lotto report started at: 14:41:56.970
+Lotto report ended at: 15:27:42.867
+Lotto report lasted: 00:45:45.897
+6 of 45 are: 8145060
+ruNMax executed on: 28.04.2010 15:27:55 }
+
+
+You may know this:
+Lotto combination 1-2-3-4-5-6 has the same chance of being drawn as any other
+lottery combination. But the combination 1,2,3,4,5,6 should not be played. It
+represents a weird arrangement of lottery numbers. Why?
+If one hits the jackpot, you should be advised to never play the statistically
+dreadful 1,2,3,4,5,6!
+
+1. If the lotto 6/45 has a total of 8,145,060 comb., and only one is drawn as 
+the winner, the probability is undeniably 1 / 8,145,060.
+
+All shapes have, however, the same probability of appearance. Reality only has
+a different idea! There been thousands of lotto drawings conducted worldwide.
+We should have seen by now a lottery combination of the type 1,2,3,4,5,6. There
+has been none so far or you know anyone?.
+
+2. Furthermore, you can use the code to generate all lotto combinations in
+lexicographic order for any experiment or game. Beware! The output files can be
+extremely large, for 6/45 is about 240 MB!
+
+One interesting point at all is the binominal coefficient. It means that you get
+the same amount of combinations with 6 or 39 tips (crosses) of 45!
+
+Cause the mathematics shows
+3. Combination (binominal coefficient)= nCr = n!/(k! * (n-k)!)
+                                             45! /6! * 39!
+so you can see 6 or 39 are interchangeable...
+
+The probabilities are equal, but the combinations are not equal.
+--------------------------------------------------------------------------- 
+
+
+

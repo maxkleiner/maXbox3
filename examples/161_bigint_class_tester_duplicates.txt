@@ -1,0 +1,569 @@
+PROGRAM Bigint_Class_Tester;
+
+//(Fast) binominal coefficient computing of the class TMyBigInt with format
+// ------------------------------------------------
+
+//uses Sysutils, MyBigInt; loc's=165
+
+CONST
+  SeparationChar = '.';
+  
+type
+  Zahl = shortstring; //[0..9];
+  TMyDatentyp = array of byte;
+
+//...
+var
+  Zahl1, Zahl2, Ergebnis: TMyDatentyp;
+  i: integer;
+  
+function Addition(aZahl1, aZahl2: TMyDatentyp): TMyDatentyp;
+var
+   i: Integer;
+   tp: Tmydatentyp;
+begin
+  setlength(result, 1000);
+  writeln(inttostr(high(azahl1)));
+  writeln(inttostr(getarraylength(azahl1)));
+  for i:= 0 to high(aZahl1) do
+    result[i]:= aZahl1[i] + aZahl2[i];
+end;
+
+
+
+FUNCTION FormatInt64(i: int64): STRING;
+VAR
+  j : INTEGER;
+BEGIN
+  Result := IntToStr64(i);
+  j := 3;
+  WHILE Length(Result) > j DO BEGIN
+    Insert(SeparationChar,
+           Result,
+           Length(Result) - j + 1);
+    //Inc(j,4);
+    j:= j+4;
+  END;
+END; 
+
+
+function GetBigIntDirect: string;
+  //unit mybigint
+var mbResult: TMyBigInt;
+     i: integer;
+begin
+  mbResult:= TMyBigInt.Create(333);
+  try
+    // Faktoren im Zaehler aufmultiplizieren
+    for i:= 1  to 12 do 
+      mbResult.Multiply(mbresult, mbresult);
+    Result:= mbResult.ToString;
+  finally 
+    //FreeAndNil(mbResult);
+    mbResult.Free;
+  end;
+end;
+
+
+function GetBigInt: string;
+  //unit mybigint
+var mbResult: TMyBigInt;
+     i: integer;
+begin
+  mbResult:= TMyBigInt.Create(1000);
+  try
+    // Faktoren im Zaehler aufmultiplizieren
+    for i:= 1  to 55 do 
+      mbResult.Multiply1(mbResult, 200001);
+    Result:= mbResult.ToString;
+  finally 
+    //FreeAndNil(mbResult);
+    mbResult.Free;
+  end;
+end;
+
+//ultimate search space
+/////////////////Full Text Finder
+
+var cntr: integer;
+    searchtopic: string;
+    recursiv: boolean;
+    
+   
+
+function SearchSubString(aStrList: TStringlist): string;
+//function SearchSubString(afilepath: string): string;
+var i, TT1: integer;
+    s1: string;
+    //AStrList: TStringlist;
+begin
+  result:= '';
+  s1:= '';
+  //aStrList:= TStringList.Create;
+  //aStrList.Clear;
+  //aStrlist.loadFromFile(afilepath);
+  for i:= 0 to aStrList.Count -1 do begin
+    s1:= aStrList[i];
+    //repeat
+    TT1:= pos(Uppercase(searchtopic), Uppercase(s1));
+    if TT1 > 0 then begin
+     if i= 0 then begin
+        result:= result+intToStr(i)+': '+s1+#13#10;
+        result:= result+ aStrList[i+1]+#13#10;  //line after
+      end else begin
+        result:= result+ aStrList[i-1]+#13#10;  //line before
+        result:= result+intToStr(i)+': '+s1+#13#10;
+        result:= result+ aStrList[i+1]+#13#10;  //line after
+      end;
+      if i= astrlist.count-1 then
+        result:= result+intToStr(i)+': '+s1+#13#10;
+    end;
+    //until TT1 = 0;
+  end;  //for
+  //aStrList.Free;
+end;
+
+
+//no changes in delphi necessary
+procedure FindAllFiles2(fList, sublist: TStringList; StartDir,FileMask: string);
+//procedure FindAllFiles(fList: TStringList; StartDir,FileMask: string);
+var
+  //SR: TSearchRec;   d
+  DirList: TStringList;
+  IsFound: Boolean;
+  //searchstr: string[255];  d
+  searchstr: shortstring;
+
+  resStr: string;
+  i: integer;
+  myDosdate: TDateTime;
+begin
+  if StartDir[length(StartDir)] <> '\' then
+                       StartDir:= StartDir + '\';
+  { Build a list of the files in directory StartDir!}
+  //IsFound:= FindFirst(StartDir+FileMask, faAnyFile-faDirectory, SR) = 0; d
+  IsFound:= FindFirst(StartDir+FileMask, faAnyFile-faDirectory) = 0;
+  
+  while IsFound do begin
+  resStr:= '';
+    //myDosdate:= fileDatetoDateTime(searchrectime)
+    //decodeDate(mydosdate, year, month, day)
+    //if (day = day1) and (month = month1) and (year = year1) then
+     sublist.Clear;
+     try
+     sublist.loadFromFile(StartDir + searchrecname);
+     except
+       maxform1.memo2.lines.add('EFileNotLoad Exception:'+StartDir+':'+searchrecname);
+     end;
+     //fList.Add(StartDir + searchrecName);//+ DateTimetoStr(mydosdate));
+     //SearchName !!
+    //if winformp.chkbxfinder.Checked then
+         maxform1.memo2.lines.add('filefinder out test: '+StartDir + searchrecname);
+    try
+      resstr:= SearchSubstring(sublist);
+      //resstr:= SearchSubstring(StartDir + searchrecname);
+    except
+      maxform1.memo2.lines.add('ENot finished Exception:'+StartDir+':'+searchrecname);
+     end;
+      if resStr <> '' then begin
+        cntr:= cntr+1;
+        fList.Add(#13#10+'***** File '+intToStr(cntr)+': '+StartDir+ searchrecname+#13#10+resStr);
+     end;
+    //IsFound:= FindNext(SR) = 0; D
+     IsFound:= FindNext = 0;
+  
+  end;
+  //FindClose(SR)2; d
+  FindClose;
+
+  //Build a list of subdirectories
+  if recursiv then begin
+    DirList:= TStringList.Create;
+    //IsFound:= FindFirst(StartDir+'*.*', faAnyFile, SR) = 0;
+    //IsFound:= FindFirst(StartDir+'*.*', faAnyFile, SR) = 0;
+    
+    while IsFound do begin
+      if ((SearchrecAttr and faDirectory) <> 0) and
+         (searchrecname[1] <> '.') then
+           DirList.Add(StartDir + searchrecname);
+      IsFound:= FindNext = 0;  //d
+    end;
+    FindClose; //d
+  //Scan the list of subdirectories recursive!
+    for i:= 0 to DirList.Count- 1 do
+      FindAllFiles2(fList, sublist, DirList[i], FileMask);
+      //FindAllFiles(fList, DirList[i], FileMask);
+    DirList.Free;
+  end;
+end;
+    
+
+
+procedure StartFileFinder2(spath, ext, searchstr: string; recursiv: boolean; 
+                             reslist: TStringlist);
+var
+  fList, sublist: TStringList;
+  //spath: string;
+  time1, diff: TDateTime;
+begin
+  //winformp.finderactive:= true;
+  fList:= TStringList.Create;
+  sublist:= TStringList.Create;
+  cntr:= 0;
+  //winformp.searchtopic:='';
+  //winformp.StatusBar1.Font.Size:= 9;
+  //screen.Cursor:= crHourGlass;
+  time1:= time;
+  try
+    //FindAllFiles(fList, 'C:\', '*.*'); pattern
+    //spath:= winformp.DirectoryListBox1.Directory;
+    //if winformp.edtmask.text='' then winformp.edtmask.Text:= '*.txt';
+       if ext='' then ext:= '*.txt';
+       if searchstr <>'' then begin
+    //if winformp.edtsearch.text <>'' then begin
+    //if DirectoryExists(ExePath+'Examples') = false then
+      //CreateDir(ExePath + 'Examples');
+    maxform1.memo2.lines.add('FullTextSearch started at: '+timetostr(time)+' '+SPATH);
+    searchtopic:= searchstr;
+    FindAllFiles2(fList, sublist, SPATH, ext);
+    //FindAllFiles(fList, SPATH, winformp.edtmask.text);
+    fList.add(formatdatetime('"Found '+inttoStr(cntr)+' Finder of:" dd:mm:yyyy',date));
+    fList.add('"Search and Found for '+searchstr);
+    Diff:= time - time1;
+    fList.add(IntToStr(Trunc(Diff * 24)) +
+                   FormatDateTime('" h run time is:" nn:ss:zzz',Diff));
+    fList.saveToFile(ExePath+'Examples\searchresulttest.txt'); //debug
+    SearchAndOpenDoc(ExePath+'Examples\searchresulttest.txt');
+    reslist:= fList;
+    end else Showmessage('You must enter a search topic');
+  finally
+    fList.Free;
+    sublist.Free;
+    screen.Cursor:= crDefault;
+    //winformp.finderactive:= false;
+  end;
+end;
+
+
+//<PROCEDURE> 
+var mtest: HRESULT;
+    a: hwnd;
+    aa: hdc;
+    b: hglobal;
+    //bb: hlocal;
+    s, ssub: shortstring;
+    sa: ansistring;
+    sw: widestring;
+    wc: widechar;
+    cinf: TCominfo;
+    k,t: integer;
+    seclist: TStringlist;
+    adat: TDataModule;
+
+BEGIN  //Main
+//<Executable statements>
+   //formatint(100000)
+  {Writeln('Test very very large number 1: ')
+  Writeln(GetBigIntDirect);
+  Writeln('Test very large number: ')
+  Writeln(GetBigInt);
+  Writeln('');}
+  Writeln('Big Lotto Combination 1600 of 5000!')
+  Writeln('')
+  Writeln(BinominalCoefficient(5000, 1600));    
+  Writeln('')
+  Writeln('Lotto Combination 6 of 45!')
+  Writeln(BinominalCoefficient(45, 6));    
+  Writeln('Lotto Combination 6 of 49!')
+  Writeln(BinominalCoefficient(49, 6));  
+  Writeln('');  
+
+  Writeln(FormatBigInt(BinominalCoefficient(60, 10)));  
+  Writeln('');  
+  
+  Writeln(FormatBigInt((BinominalCoefficient(5000, 1600))))
+  Writeln(''); 
+  Writeln(FormatInt(4100000))
+  writeln(FloatToStr((Power(2,64))))
+  writeln(((powerBig(10,308)))) //1.8 *10^308
+  writeln(((powerBig(2,1024))))
+  writeln('')
+  writeln(((powerBig(10,38))))  //3.4 *10^38
+  writeln(((powerBig(2,128))))
+  writeln(((powerBig(2,128))))
+  writeln(((powerBig(10,24))))
+  
+  setlength(Zahl1, 1000);
+  setlength(Zahl2, 1000);
+  //zahl1:= 952 zahl2:= 943
+  zahl1[0]:=9;
+  zahl1[1]:=5;
+  zahl1[2]:=2;
+
+  zahl2[0]:=9;
+  zahl2[1]:=4;
+  zahl2[2]:=3;
+
+  //without carry bit
+  Ergebnis:= Addition(Zahl1, Zahl2);
+  for i:= 0 to 50 do
+     write(inttoStr(Ergebnis[i]));
+    
+    {writeln(StringOfChar('A', 5)); 
+    s:= 'max';
+    writeln(s)
+    writeln(inttostr(sizeof(s)))
+    sa:= 'max';
+    writeln(sa)
+    writeln(inttostr(sizeof(sa)))
+     sw:= 'max';
+    writeln(sw)
+    writeln(inttostr(sizeof(sw)))
+    wc:= 'x';
+    writeln(wc)
+    writeln(inttostr(sizeof(wc)))}
+   
+    //posx
+    //ansiindexstr
+    //ansipos
+     //ansidelete
+  //speak(floattostr(power(2,64)))
+  //Writeln(LoadFileAsString(ExePath+WIPEDIR+'newfile4.txt'));}
+  
+   with TStDictionary.create(200) do begin
+     //delete('name1',nil)
+     free;
+   end;  
+   
+   seclist:= TStringlist.create;
+    seclist.loadfromfile(exepath+'\examples\TypeRecordslistRegdoubleFilename_savereport.txt');
+   
+   for i:= 10 to 30 do
+   writeln(Substr(seclist.strings[i],1,'AddTypeS'));
+   seclist.free;
+   
+   
+   selftestcRandom;
+ 
+   seclist:= TStringlist.create;
+   
+   StartFileFinder2(exepath+'\exercices','*.txt','fractal',false,seclist);
+   seclist.free;
+ 
+   (*seclist:= TStringlist.create;
+   seclist.sort;
+   with TStringlist.create do begin
+    // loadfromfile(exepath+'\examples\ClasslistRegdoubleFilename_savereport.txt')
+    loadfromfile(exepath+'\examples\TypeRecordslistRegdoubleFilename_savereport.txt')
+   // loadfromfile(exepath+'\examples\ConstsFilename_savereport.txt')
+    
+     k:= 0;
+     for i:= 1 to count-1 do begin
+     if pos('********** File',strings[i]) > 0 then
+       seclist.add(inttostr(k)+ ' '+strings[i]);
+       //showmessage('this is');
+     
+     if i mod 3 = 0 then begin
+       if strings[i]='' then continue;
+        if pos('//',strings[i]) > 0 then continue;
+       inc(k)
+       //ssub:= substr(strings[i],1,'FindClass')
+       //ssub:= substr((strings[i]),1,('CL.AddConstantN('''))
+        ssub:= substr((strings[i]),1,(' CL.AddTypeS('''))           
+      // seclist.add(inttostr(k)+ ' '+ssub);
+       
+       //seclist.add(ssub +' '+inttostr(k));
+       seclist.add(ssub);
+      
+       //seclist.sort;
+       //writeln(inttostr(k) +' '+strings[i]);
+       //writeln(inttostr(k) +' '+ssub);
+      
+      end; 
+      end;
+      //savetofile(exepath+'\examples\ClasslistmX4Report.txt');
+       //memo2.lines.savetofile(exepath+'\examples\ClasslistmX4Report.txt');
+     free;
+     seclist.sort;
+     t:= 0;
+     for i:= 1 to seclist.count-1 do begin
+        if seclist[i] = seclist[i-1] then begin
+        inc(t)
+         writeln(inttostr(t)+' '+seclist[i]);
+       end;  
+      end; 
+     seclist.savetofile(exepath+'\examples\TypeedListSortmX4Duplicatres2.txt');
+     seclist.Free;
+   end;    *)
+   writeln(mbversion)
+  
+END. 
+
+//-----------------------------app_template_loaded--------------------
+
+
+ShortString For example, it is the structure in memory can be expressed as:
+
+strShort = record
+wLength: WORD;
+szBuf: array of Char;
+end;
+
+In other words, each ShortString operation, do not need to traverse the string will be able to get the size of the string. In addition, the last of the string array is not a # 0 character as at the end. ShortString and therefore an array of C++ language string is not compatible.
+
+
+AnsiString for example, under "Delphi6 Developer's Guide," a description of its structure can be expressed as follows:
+
+strAnsi = record
+nSize: Integer;
+nRef: Integer;
+nLength: Integer;
+szBuf: array of Char;
+end; 
+
+   TMyBigInt = class
+   private
+     Len: Integer;
+     Value: AnsiString;
+     procedure Trim;
+     procedure Shift(k: Integer);
+     procedure MultiplyAtom(Multiplier1: TMyBigInt; Multiplier2: Integer);
+   public
+     constructor Create(iValue: Integer = 0);
+     procedure Add(Addend1, Addend2: TMyBigInt);
+     procedure Multiply(Multiplier1, Multiplier2: TMyBigInt); overload;
+     procedure Multiply(Multiplier1: TMyBigInt; Multiplier2: Integer); overload;
+     function ToString: string;
+     procedure CopyFrom(mbCopy: TMyBigInt);
+   end;
+ 
+
+
+
+---------------------------------------------------
+C Data Type | Object Pascal |  Description
+
+-------------------------------------------------------------------------------------
+
+LPSTR       PAnsiChar;  String >pointer
+LPCSTR      PAnsiChar;  String >pointer
+DWORD       Integer;    Whole numbers
+BOOL        LongBool;   Boolean values
+PBOOL       ^BOOL;      Pointer to a Boolean value
+Pbyte       ^Byte;      Pointer to a byte value
+PINT        ^Integer;   Pointer to an integer value
+Psingle     ^Single;    Pointer to a single (floating point) value
+PWORD       ^Word;      Pointer to a 16-bit value
+PDWORD      ^DWORD;     Pointer to a 32-bit value
+LPDWORD     PDWORD;     Pointer to a 32-bit value
+UCHAR       Byte;       8-bit values (can represent characters)
+PUCHAR      ^Byte;      Pointer to 8-bit values
+SHORT       Smallint;   16-bit whole numbers
+UINT        Integer;    32-bit whole numbers. Traditionally,
+                        this was used to represent unsigned integers, but Object 
+                        Pascal does not have a true unsigned integer data type.
+PUINT       ^UINT;      Pointer to 32-bit whole numbers
+ULONG       Longint;    32-bit whole numbers. Traditionally,
+                        this was used to represent unsigned integers,
+                        but Object Pascal does not have a true
+                        unsigned integer data type.
+PULONG      ^ULONG;     Pointer to 32-bit whole numbers
+PLongint    ^Longint;   Pointer to 32-bit values
+PInteger    ^Integer;   Pointer to 32-bit values
+PSmallInt   ^Smallint;  Pointer to 16-bit values
+PDouble     ^Double;    Pointer to double (floating point) values
+LCID        DWORD;      A local identifier
+LANGID      Word;       A language identifier
+THandle     Integer;    An object handle. Many Windows API functions return a value
+                        of type THandle, which identobject ifies that object within
+                        Windows’internal object tracking tables.
+PHandle     ^THandle;   A pointer to a handle
+WPARAM      Longint;    A 32-bit message parameter. Under earlier versions of Windows,
+                        this was a 16-bit data type.
+LPARAM      Longint;    A 32-bit message parameter
+LRESULT     Longint;    A 32-bit function return value
+HWND        Integer;    A handle to a window. All windowed controls, child windows,
+                        main windows, etc., have a corresponding window handle that
+                        identifies them within Windows’internal tracking tables.
+HHOOK       Integer;    A handle to an installed Windows system hook
+ATOM        Word;       An index into the local or global atom table for a string
+HGLOBAL     THandle;    A handle identifying a glob. allocated dynamic memory object.
+                        Under 32-bit Windows, there is no distinction between globally
+                        and locally allocated memory.
+HLOCAL      THandle;    A handle identifying a locally allocated dynamic memory object.
+                        Under 32-bit Windows, there is no distinction between globally
+                        and locally allocated memory.
+FARPROC     Pointer;    A pointer to a procedure, usually used as a parameter type in
+                        functions that require a callback function
+HGDIOBJ     Integer;    A handle to a GDI object. Pens, device contexts, brushes, etc.,
+                        all have a handle of this type that identifies them within
+                        Windows’internal tracking tables.
+HBITMAP     Integer;    A handle to a Windows bitmap object
+HBRUSH      Integer;    A handle to a Windows brush object
+HDC         Integer;    A handle to a device context
+HENHMETAFILE  Integer;  A handle to a Windows enhanced metafile object
+HFONT       Integer;    A handle to a Windows logical font object
+HICON       Integer;    A handle to a Windows icon object
+HMENU       Integer;    A handle to a Windows menu object
+HMETAFILE   Integer;    A handle to a Windows metafile object
+HINST       Integer;    A handle to an instance object
+HMODULE     HINST;      A handle to a module
+HPALETTE    Integer;    A handle to a Windows color palette
+HPEN        Integer;    A handle to a Windows pen object
+HRGN        Integer;    A handle to a Windows region object
+HRSRC       Integer;    A handle to a Windows resource object
+HKL         Integer;    A handle to a keyboard layout
+HFILE       Integer;    A handle to an open file
+HCURSOR     HICON;      A handle to a Windows mouse cursor object
+COLORREF    DWORD;      A Windows color reference value, containing values
+                        for the red, green, and of ;bsp;blue components of a color
+                        
+
+procedure FindAllFilesSimple(fList: TStringList; StartDir, FileMask: string);
+var //SR: TSearchRec;
+  DirList: TStringList;
+  IsFound: Boolean;
+  i: integer;
+begin
+  if StartDir[length(StartDir)] <> '\' then
+                       StartDir:= StartDir + '\';
+  {Build a list of the files in dir StartDir (not the directories!)}
+  //IsFound:= FindFirst(StartDir+FileMask, faAnyFile-faDirectory, search) = 0;
+  IsFound:= FindFirst(StartDir+FileMask, faAnyFile-faDirectory) = 0;
+   while IsFound do begin
+    //only file name less StartDir
+    fList.Add(StartDir + searchrecName);
+    //IsFound:= FindNext(search) = 0;
+    IsFound:= FindNext = 0;
+  end;
+  //FindClose(search);
+  FindClose;
+ 
+  //Build a list of subdirectories
+  DirList:= TStringList.Create;
+    //IsFound:= FindFirst(StartDir+'*.*', faAnyFile, search) = 0;
+    IsFound:= FindFirst(StartDir+'*.*', faAnyFile) = 0;
+     while IsFound do begin
+      //if ((search.Attr and faDirectory) <> 0) and
+      if ((searchrecAttr and faDirectory) <> 0) and
+             //(search.Name[1] <> '.') then
+         (searchrecName[1] <> '.') then
+             //DirList.Add(StartDir + search.Name);
+           DirList.Add(StartDir + searchrecName);
+          //IsFound:= FindNext(search) = 0;
+      IsFound:= FindNext = 0;
+    end;
+    //FindClose(search);
+    FindClose;
+  //Scan the list of subdirectories recursive!
+  for i:= 0 to DirList.Count - 1 do
+    FindAllFilesSimple(fList, DirList[i], FileMask);
+  DirList.Free;
+end;
+
+
+
+                        
+Das Buch oder eher der Bildband besticht durch wirklich exotisches Bildmaterial, in dem Sinne, dass die Aufnahmen selten und von besonderem Wert sind.
+Es zeigt schon in den ersten Seiten ein Pasifal-Plakat, das in seiner dynamischen Kunst-Art einmalig ist. Der Autor verarbeitet ausschliesslich eigenes Bildmaterial mit optimaler Optik. Zu erwähnen sind die stimmungsvollen Fernaufnahmen auf S.16 Gotthard oder S.42 wie auch die seltenen Farbaufnahmen wie S.24. zeigt.
+Auch die damalige TEEM als übergreifender Güterverkehr kommt zum Zuge und das perspektivische Material wird auch so präzise wie möglich datiert und bezeichnet wie der TEE Capitole du Matin auf S.67. Eine TEE Übersicht auf S.82 runden den Bildband ab, der auch mit interessanten Details überzeugt, z.B. S.97. Hier sieht man ein imposantes Beispiel von Industriedesign der EuroFima, die einiges an TEE Material lieferte.

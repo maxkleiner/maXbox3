@@ -1,0 +1,364 @@
+program DateFind_MX;
+
+//tests all the snippets of mX3922/delphi_mxtester.html
+// complex filefunction which shows all files of the day time stamp
+// has findfirst with a TSearchRec structure, loc's = 69, _60
+
+const ext = 'txt';   
+      sw = 'SW_SHOW';
+     
+var
+  year, year1, month, month1, day, day1: word;   
+   
+procedure FindAllFiles(FilesList: TStringList; StartDir, FileMask: string);
+var
+  //SR: TSearchRec;
+  DirList: TStringList;
+  IsFound: Boolean;
+  i: integer;
+  myDosdate: TDateTime;
+begin
+  if StartDir[length(StartDir)] <> '\' then
+                       StartDir:= StartDir + '\';
+  { Build a list of the files in directory StartDir (not the directories!)}
+  IsFound:= FindFirst(StartDir+FileMask, faAnyFile-faDirectory) = 0;
+  while IsFound do begin
+    myDosdate:= fileDatetoDateTime(searchrectime)
+    decodedate(mydosdate, year, month, day)
+    if (day = day1) and (month = month1) and (year = year1) then 
+       FilesList.Add(StartDir + searchrecName);// + DateTimetoStr(mydosdate));
+    IsFound:= FindNext = 0;
+  end;
+  FindClose;
+  //Build a list of subdirectories
+  DirList:= TStringList.Create;
+    IsFound:= FindFirst(StartDir+'*.*', faAnyFile) = 0;
+    while IsFound do begin
+      if ((searchrecAttr and faDirectory) <> 0) and
+         (searchrecName[1] <> '.') then
+           DirList.Add(StartDir + searchrecName);
+      IsFound:= FindNext = 0;
+    end;
+    FindClose;
+  //Scan the list of subdirectories recursive!
+  for i:= 0 to DirList.Count - 1 do
+    FindAllFiles(FilesList, DirList[i], FileMask);
+  DirList.Free;
+end;
+
+procedure StartFileFinder;
+var
+  FilesList: TStringList;
+begin
+  FilesList:= TStringList.Create;
+  try
+    FindAllFiles(FilesList, ExePath, '*.txt');
+    fileslist.saveToFile(ExePath+ 'examples\pas_files.txt');
+  finally 
+    FilesList.Free;
+  end;
+end;
+
+function coddingint(k: integer): string;
+var s: string;
+    z: integer;
+begin
+  s:= '';
+  while k>255 do begin
+    z:= k div 256; 
+    if z>255 then z:= 255;
+    s:= chr(z)+s;
+    k:=k-z*256;
+  end;
+  s:= chr(k)+s;
+  result:= s;
+end;
+  
+function uncoddingint(s: string): integer;
+var //s: string;
+    i,k,z: integer;
+begin
+  //s:= '';
+  result:= -1; if (s='') then exit;
+  k:= 0;
+  k:= ord(s[1]);
+  delete(s,1,1);
+  for i:= 1 to length(s) do begin
+    if (ord(s[i])=0) and (i>1) then z:= 256 else z:= ord(s[i]);
+    k:=k+z*256;
+  end;
+  result:= k;
+end;
+
+  //var nullstr: string;
+  
+  function LoadFile(const FileName: TFileName): string; 
+  var anullstr: string;
+ 
+    begin 
+      with TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite) do begin 
+        try 
+          SetLength(Result, Size); 
+          Read(result, Size); 
+          anullstr:= '0^';
+          //getmem(pchar(anullstr),34);
+          //getmemosize(pchar(anullstr));
+         //Write(Pointer(content)^, Length(content));    //test write
+        except 
+          Result := '';  // Deallocates memory 
+          Free; 
+          //raise; 
+          raiselastwin32error;
+        end; 
+        Free; 
+      end; 
+    end; 
+    
+    
+    procedure SaveFile(const FileName: TFileName; const acontent: string); 
+    begin 
+      with TFileStream.Create(FileName, fmCreate) do 
+        try 
+          Write(acontent, Length(acontent));
+          Seek(0, soFromBeginning);  
+        finally 
+          Free; 
+        end; 
+    end; 
+    
+    
+    procedure stringHashTest;
+    var 
+        idxclassific: TStringList; 
+        i : Integer; 
+    begin 
+        idxclassific:= TStringList.Create; 
+        idxclassific.Add('unix=good'); 
+        //idxclassific[0]:= 'windows=bad'; 
+        idxclassific.add('windows=bad'); 
+       for i := 0 to idxclassific.Count-1 do begin 
+            ShowMessage(idxclassific[i]); 
+            ShowMessage(idxclassific.Names[i]); 
+            ShowMessage(idxclassific.ValueFromIndex[i]); 
+            ShowMessage(idxclassific.Values[idxclassific.Names[i]]); 
+        end; 
+       idxclassific.Free; 
+     end;
+     
+  
+    function CleanInput(input: String) : String; 
+    var 
+      output : string; 
+      index : Integer; 
+    begin 
+      output:= StringReplace(input, #9, '',[rfReplaceAll, rfIgnoreCase]); 
+      output:= StringReplace(output, #10, '',[rfReplaceAll, rfIgnoreCase]); 
+      output:= StringReplace(output, #13, '',[rfReplaceAll, rfIgnoreCase]); 
+      output:= StringReplace(output, '  ', '',[rfReplaceAll, rfIgnoreCase]); 
+      output:= StringReplace(output, '&nbsp;', '',[rfReplaceAll, rfIgnoreCase]); 
+      output:= StringReplace(output, '&nbsp', '',[rfReplaceAll, rfIgnoreCase]); 
+      output:= StringReplace(output, '<br>', '',[rfReplaceAll, rfIgnoreCase]); 
+      Result:= output; 
+    end;
+    
+ 
+  procedure stopwatchtester;
+    var 
+      StartTime,StopTime : TDateTime; 
+    begin 
+      StartTime:= Now; 
+      writeln(TimeToStr(StartTime)); 
+       //[...]
+      sleep(500); 
+      
+      StopTime:= Now; 
+   //ListBox1.Items.Add('After doing stuff '+ FormatDateTime('hh:nn:ss',StopTime - StartTime)); 
+    writeln('After doing '+ FormatDateTime('hh:nn:ss:zzzz', StopTime - StartTime));    
+   end;     
+   
+   
+  type 
+    TDigits = array of array of Integer; 
+ 
+   procedure arraytester;
+   //var myarray : array of string;
+    var   myarray: TDigits;
+          i: byte;
+   begin
+   
+       // SetLength(MyArray,5,10); //5 rows, 10 columns each 
+        //SetLength(MyArray[2],7); //We can use a different dimension for one cell 
+   
+    SetArrayLength(MyArray,5); //Array[3] points to a fifteen-column array 
+    for i:= 0 to 4 do
+    SetArrayLength(MyArray[i],10);
+   
+    SetLength(MyArray[2],7);
+   
+    //SetLength(MyArray[2],5); //Array[2] points to a five-column array 
+        //4 
+        writeln(IntToStr(High(myarray))); 
+        //9 
+        writeln(IntToStr(High(myarray[0]))); 
+        //6 
+        writeln(IntToStr(High(myarray[2]))); 
+        assert2(High(myarray[2])=6,'must be 6'); 
+   end;
+   
+ 
+ procedure arrayHash;
+    var 
+      myhash : TStringList; 
+      //mst: TStringHash;
+      Index : Integer; 
+     begin 
+      myhash := TStringList.Create; 
+      myhash.Add('mykey=myvalue'); 
+      myhash.Add('mykey2=myvalue2'); 
+      ShowMessage(myhash.Values['mykey']); 
+       for Index := 0 to myhash.Count-1 do begin 
+        writeln(myhash.Names[Index] + '=' + myhash.ValueFromIndex[Index]); 
+      end;
+      myhash.Free;
+    end;
+    
+    
+  procedure StringHash;
+    var 
+      hsh: TStringHash; 
+    begin 
+      hsh:= TStringHash.Create(20); 
+        with hsh do begin
+      
+      try 
+          add('viens',1234); 
+          add('divi',2344556); 
+        ShowMessage(inttostr(valueof('viens'))); 
+        ShowMessage(inttostr(valueof('divi')));
+         
+      finally 
+        Free;
+        end; 
+      end;    
+   end;
+   
+    procedure allocRes;
+    var E: Exception;
+    begin
+    //AllocateSomeResources; 
+    try
+        try 
+            //stuff that could trigger an exception 
+        finally 
+            //perform general actions, such as FreeAndNIL() 
+        end; 
+    except 
+        //handle exception 
+        //on E: Exception do begin 
+            MessageDlg(E.Message, mtWarning, [mbOK], 0); 
+        end; 
+    end;  
+   
+  
+ var mystring: string;
+//main script
+begin
+  //the the date from now to compare with file date
+  decodeDate(date, year1, month1, day1) 
+  //StartFileFinder;
+  writeln(coddingint(200000));
+  writeln(inttostr(uncoddingint('@ÿÿÿ')));
+  writeln(inttostr(uncoddingint(coddingint(200000))));
+
+  beep;
+  writeln(LoadFile(exepath+'firstdemo.txt'));
+  mystring:= LoadFile(exepath+'firstdemo.txt');
+  //SaveFile('firstdemosave.txt', memo2.text); 
+  //Searchandopendoc('firstdemosave.txt');
+  //shellexecute(1, 'open', 'notepad', 'rec_files.txt', '', 2)
+  //orthogonal and idempotent
+  //stringHashTest;
+  //writeln(CleanInput(mystring));
+  stopwatchtester;
+  arraytester;
+  arrayhash;
+  StringHash;
+  //reset
+  
+End.
+
+
+// code snippets
+
+
+    With ASQLite3DB1 do begin 
+        DefaultDir := ExtractFileDir(Application.ExeName); 
+        Database := 'test.sqlite'; 
+        CharacterEncoding := 'STANDARD'; 
+        Open; 
+        SQLite3_ExecSQL('CREATE TABLE IF NOT EXISTS mytable (id INTEGER PRIMARY KEY, label VARCHAR)'); 
+    end; 
+      
+    AssignFile(SomeTxtFile, FILE2PARSE) ; 
+    Reset(SomeTxtFile) ; 
+    ASQLite3DB1.SQLite3_ExecSQL('BEGIN;'); 
+      
+    while not EOF(SomeTxtFile) do begin 
+        ReadLn(SomeTxtFile, buffer) ; 
+      
+        PerlRegEx1.RegEx := '^([^d].+)\s(\d+)$'; 
+        PerlRegEx1.Options := [preCaseLess]; 
+        PerlRegEx1.Subject := buffer; 
+        If PerlRegEx1.Match then begin 
+            row := Format('INSERT INTO mytable (id,label) VALUES (%s,"%s");',[PerlRegEx1.SubExpressions[2],PerlRegEx1.SubExpressions[1]]); 
+            ASQLite3DB1.SQLite3_ExecSQL(row); 
+        end; 
+    end;
+    
+    
+    big check report on all examples
+    
+        - tfilestream, check free   OK
+029_pas_assignfile.txt(16:46): Type mismatch     OK
+copy FNAME = 'readmefirst_maxbox.txt'; a newer one
+038_pas_box_demonstrator.txt  uncomment //{$I pas_includebox.inc}
+//cause of begin end makes no main control in main               OK
+045_pas_listhandling.txt , set another const name for maxnum   OK
+055_pas_factorylist.txt is buggy
+065 bitcounter as performance test
+067_pas_morse.txt is still missing
+069_pas_ledmatrix.txt set with mylabel do begin
+      transparent:= false;                              OK
+      
+075_pas_bitmap_Artwork.txt intelligence test
+
+fix 109_pas_mp3_download.txt
+25 zipStream:= TFileStream.create(mxpath+mp3song, fmCreate)
+fix   path to pdf allfunctionslist
+maXbox3 130_sysinformation.txt      --->maxbox_functions_all.pdf
+145_netwok_info.txt 
+135 maskoperation dont work on 64bit check on 32
+    check 163_interfaces.txt
+fix
+164_code_reviews2.txt       , name is case sensitiv!
+   if IsFormOpen('MaxForm1') then writeln('TMainForm TMaxForm1 is open');
+   
+   270_Jedi_FunctionPower set GetFileTypeJ(Exepath+'maxbox3.exe');
+ check on xp   
+   264_VCL_utils2.txt  
+  fix 
+   295_easter_calender.txt  
+        
+    
+    examples need internet
+    001_1_pas_functest.txt 
+    101 - 130
+    
+    takes time
+    044_pas_8queens_solutions.txt (2 min.)
+    050_pas_primetest2.txt (1 min)
+    064_pas_timetest.txt(1 min)
+    070_pas_functionplotter4.txt(2 min.)
+    
+    
+    

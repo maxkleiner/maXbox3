@@ -1,0 +1,218 @@
+program puzzleTest_corrupt;
+
+//*********************************************************************
+// logic game example with objects and structure, loc's=218  
+// you have to move the letters in the box to the right word order;)
+// first you define a pattern (word) and remove the word with the 
+// function secret(); second someone else has to solve it with solver()
+//*********************************************************************
+
+// declaration of 3 classes
+
+var
+  pForm: TWinformp;
+  myLabel: TMyLabel;
+  Labellist: TStringList;
+    
+
+procedure Verify;
+var
+  i,nbok: integer;
+  o: TMyLabel;
+begin
+  nbok:= 0;
+  for i:= 1 to pForm.maxtot do begin
+    o:= TMyLabel(labellist.objects[i-1]);
+    if ((o.lblx=o.okx) and (o.lbly=o.oky)) then
+      inc(nbok);
+  end;
+  if (nbok=pForm.maxtot) then
+     writeln('***Congratulations'#13#10'You win with Max Delphi.Win32 !');
+end;
+
+
+procedure moveStone(o: TMyLabel);
+begin
+  if (o.lblx + 1 = pform.freex) and (o.lbly = pform.freey) then begin
+    //right move
+    o.lblx:= o.lblx +1;
+    o.Left:= o.Left + pform.psize +1;
+    o.Top:= o.Top;
+    pform.freex:= pform.freex -1;
+  end else
+  if (o.lblx - 1 = pform.freex) and (o.lbly = pform.freey) then begin
+    //left move
+    o.lblx:= o.lblx -1;
+    o.Left:= o.Left - pform.psize -1;
+    o.Top:= o.Top;
+    pform.freex:= pform.freex +1;
+  end else
+  if (o.lblx = pform.freex) and (o.lbly - 1 = pform.freey) then begin
+    //top move up
+    o.lbly:= o.lbly -1;
+    o.Left:= o.Left;
+    o.Top:= o.Top - pform.psize -1;
+    pform.freey:= pform.freey + 1;
+  end else
+  if (o.lblx = pform.freex) and (o.lbly + 1 = pform.freey) then begin
+    //bottom move down
+      o.lbly:= o.lbly +1;
+      o.Left:= o.Left;
+      o.Top:= o.Top + pform.psize +1;
+      pform.freey := pform.freey - 1;
+   end;
+  //verify if stones are in right order 
+  verify()
+end;
+
+
+
+procedure Meltpuzzle;
+var
+  i,nbplace,y, x: integer;
+begin
+  nbplace:= 0;
+  x:= 1;
+  y:= 1;
+  for i:=0 to pform.maxtot-1 do begin
+    TMyLabel(labellist.objects[i]).place:= false;
+    TMyLabel(labellist.objects[i]).Visible:= false;
+  end;
+  //RANDOMIZE;
+  i:= 0;
+  while (nbplace < pform.maxtot ) do begin
+    //i:= random(maxtot);
+    //i:= i + 1;
+    if not(TMyLabel(labellist.objects[i]).place) then begin
+      nbplace:= nbplace + 1;
+      TMyLabel(labellist.objects[i]).place:= true;
+      TMyLabel(labellist.objects[i]).Visible:= true;
+      TMyLabel(labellist.objects[i]).lblx:= x;
+      TMyLabel(labellist.objects[i]).lbly:= y;
+      TMyLabel(labellist.objects[i]).Left:= (x-1)*(pform.psize + 1);
+      TMyLabel(labellist.objects[i]).Top:= (y-1)*(pform.psize + 1);
+      inc(x);
+      inc(i);
+      if (x mod pform.maxx=1) then begin
+        x:= 1;
+        inc(y);
+      end;
+    end;
+   end;
+    pform.freex:= pform.maxx;
+    pform.freey:= pform.maxy;
+end;
+
+procedure LoadForm;
+begin
+  with pform do begin
+    maxx:= 3
+    maxy:= 3
+    psize:= 64
+    caption:= 'this is maxland II';  
+    //pattern:= explain sideeffect
+    maxtot:= (maxx*maxy)-1;
+    width:= (maxx*psize)+ 10;
+    height:= (maxy*psize)+ 30;
+  end  
+end;
+
+procedure InitPuzzle;
+var
+  i,x,y: integer;
+  pattern: string;
+begin
+  labellist:= TStringList.Create;
+  //puzzle word
+  pattern:= 'MAXLANDS';
+  x:= 1;
+  y:= 1;
+  for i:=1 to pform.maxtot do begin
+    mylabel:= TMyLabel.Create(pform);
+    with mylabel do begin
+      Parent:= pForm;
+      color:= clblue;
+      AutoSize:= false;
+      layout:= tlcenter;
+      alignment:= tacenter;
+      font.Size:= pform.maxx + pform.maxy +12;
+      font.Style:= [fsbold];
+      font.Color:= clyellow;
+      width:= pform.psize;
+      height:= pform.psize;
+      lblx:= x;
+      okx:= x;
+      lbly:= y;
+      oky:= y;
+    end;
+    //set the next line of stones
+    if (i mod pform.maxx=0) then begin
+      x:=1; 
+      inc(y);
+    end else inc(x);
+    if length(pattern) = pform.maxtot then
+      mylabel.caption:= pattern[i] else begin
+        writeln('pattern word must have the size of the puzzle -1: '
+                            + inttoStr(pform.maxtot));
+        exit;
+      end
+    //mylabel.OnClick:= mylabel.Label1Click(pform);
+    //add stones to the list
+    labellist.addObject(inttostr(i), mylabel);
+  end;
+end;
+
+
+procedure secret;
+begin
+//for i:=0 to maxtot-1 do begin
+  moveStone(TMyLabel(labellist.objects[7]));
+  //wait(4000)
+  moveStone(TMyLabel(labellist.objects[4]));
+  //moveStone(TMyLabel(labellist.objects[1]));
+  //end;
+end;
+
+procedure solver;
+begin
+  //moveStone(TMyLabel(labellist.objects[1]));
+  moveStone(TMyLabel(labellist.objects[4]));
+  moveStone(TMyLabel(labellist.objects[7]));
+end;
+
+procedure testVerify;
+begin
+  moveStone(TMyLabel(labellist.objects[7]));
+  moveStone(TMyLabel(labellist.objects[7]));
+end;
+
+//main
+begin
+//OOP in 20 Days *********************************************
+ 
+  pform:= TWinformp.create(self);
+  loadForm();
+  pform.show;
+  initPuzzle();
+  meltPuzzle(); 
+  //sleep(400)
+  secret()  
+  //sleep(400)
+  //solver()
+  //testVerify
+  
+{//to destroy the objects on the list
+  for i:= 0 to 8 -1 do begin
+  //sleep(200)
+    TMylabel(labellist.objects[i]).free
+  end}
+
+end.
+just inside maxbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+                                     

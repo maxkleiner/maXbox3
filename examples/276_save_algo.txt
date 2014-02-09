@@ -1,0 +1,180 @@
+{***************************************************************
+/*
+* System: maXbox :Product: Algorithm
+* File: $RCS:276_save_algo.txt$:locs=150 
+* Purpose: Implements a save function in 3 algos
+*
+* Release 1.0.2
+* ©:public; Company: kleiner kommunikation
+* Author: Max
+* Filepath: $E:\maxbox\maxbox3\examples\276_save_algo.txt$
+*
+* Created: 2012-02-09 by mX4
+* Modified: $Date: 2012-05-14 2:40p $ @: Max
+*/**************************************************************}
+
+
+PROGRAM Save_Algorithm;
+CONST 
+//<Constant declarations> 
+  FILENAME = 'savetestfile4.txt';
+
+{TYPE 
+<Type declarations>} 
+
+Var 
+//<Variable declarations>
+  i: integer;
+  FModif: boolean;
+  msd: TSaveDialog;
+
+//<FUNCTION>
+//<PROCEDURE> 
+
+procedure TEdit_SaveToFile(afilename: string);
+begin
+  maxform1.Memo2.Lines.SaveToFile(aFileName);
+  FModif:= False;
+  msg('writeln to (Save file): '+FILENAME);
+end;
+
+
+function TEditForm_Save(ForceSave, changeName: Boolean): Boolean;   //Original
+var ffilename: string;
+      funnamed: boolean;
+begin
+  //ffilename:= Exepath+'savetestfile.txt';
+  if ffilename = '' then funnamed:= true;
+  Fmodif:= true;
+  Result:= False;
+  if not ForceSave and FModif then
+    case MessageDlg(Format('Save changes to %s?',
+       [ExtractFileName(FFileName)]),mtConfirmation,[mbYes,mbNo,mbCancel],0) of
+      mrYes: ForceSave:= True;
+      mrCancel: Exit;
+    end;
+  if ForceSave then begin
+    if ChangeName or FUnnamed then
+     if not PromptForFileName(FFileName,'Media files(*.TXT)|*.txt',
+                      'txt', 'Save mX3 file', ExePath, true) //false: Open dialog!
+     then Exit; 
+    //SaveToFile;
+    TEdit_SaveToFile(ffilename)
+  end;
+  Result:= True;
+end;
+
+
+function TEditSave1(ForceSave: Boolean): Boolean;
+var ffilename: string;
+    funnamed: boolean;
+begin
+  //ffilename:= Exepath+'savetestfile.txt';
+  if ffilename = '' then funnamed:= true;
+  fmodif:= true;
+  Result:= False;
+  if ForceSave and FModif then
+    case MessageDlg(Format('Save changes to %s?',
+       [ExtractFileName(FFileName)]), mtConfirmation, [mbYes,mbNo,mbCancel], 0)
+    of
+      mrYes: begin
+               ForceSave:= True;
+               fmodif:= false;
+             end;  
+      mrCancel: Exit;
+    end;
+  if not ForceSave and fModif then begin
+    ForceSave:= True;
+    fModif:= false;
+  end;
+  if ForceSave and not fModif then begin
+    if FUnnamed then
+     if not PromptForFileName(FFileName,'Media files(*.TXT)|*.txt',
+                      'txt', 'Save mX3 file', ExePath, true) //false: Open dialog!
+     then Exit; 
+    //SaveToFile;
+    TEdit_SaveToFile(ffilename)
+  end;
+  {if not ForceSave and fModified then begin
+    if FUnnamed then
+     if not PromptForFileName(FFileName,'Media files(*.TXT)|*.txt',
+                      'txt', 'Save mX3 file', ExePath, true) 
+     then Exit; 
+    //SaveToFile;
+    TEditForm_SaveToFile(ffilename)
+  end;}
+  Result:= True;
+end;
+
+
+function TEditSave2(forceSave: Boolean): Boolean;
+var fFilenm: string;
+    funnamed: boolean;
+begin
+  fFilenm:= Exepath+FILENAME;
+  Result:= False;
+  //if ffilenm = '' then funnamed:= true;
+  FModif:= true;
+  if Not forceSave And FModif then begin
+    forceSave:= true;
+    FModif:= false;
+  end;  
+  if forceSave And FModif then
+    Case MessageDlg(Format('Save change to %s?', [ExtractFileName(fFilenm)])
+                      ,mtConfirmation,[mbYes,mbNo,mbCancel],0) Of
+      //mrYes: forceSave:= True;
+      mrNo: forceSave:= False;
+      mrCancel: Exit;
+    end;
+  if forceSave then begin
+    if funnamed then
+      if Not PromptForFileName(fFilenm,'Mfiles(*.TXT)|*.txt',
+                  'txt','Save mX3file', ExePath,true) //false=OpenDialog!
+      then Exit; 
+    TEdit_SaveToFile(fFilenm)
+  end;
+  Result:= True;
+end;
+
+
+BEGIN  //Main
+//<Executable statements>
+//if TEditSave1(false) then Msg('true') else Msg('false');
+  // if TEditSave2(false) then Msg('true') else Msg('false');  //left strain
+  // if TEditSave2(true) then Msg('true') else Msg('false');   //mid strain + unmodified
+     if TEditSave2(true) then Msg('true') else Msg('false');   //right strain + modified
+
+  for i:= 1 to 3 do 
+    Writeln(FILENAME);
+//<Definitions>  
+END. 
+
+----app_template_loaded_code----
+
+//Which strain doesnt work in this alfo:
+function TEditSave3(forceSave: Boolean): Boolean;
+var fFilenm: string;
+    funnamed, saveit: boolean;
+begin
+  fFilenm:= Exepath+FILENAME;
+  Result:= False;
+  //if ffilenm = '' then funnamed:= true;
+  FModif:= false;
+  if Not forceSave And FModif then
+    saveit:= true;
+  if forceSave And FModif then
+    Case MessageDlg(Format('Save changes to %s?',
+        [ExtractFileName(fFilenm)]),mtConfirmation,[mbYes,mbNo,mbCancel],0) Of
+      mrYes: saveit:= True;
+      mrNo: saveit:= False;
+      mrCancel: Exit;
+    end;
+  if saveit then begin
+    if FUnnamed then
+      if Not PromptForFileName(fFilenm,'Mfiles(*.Txt)|*.txt',
+                  'txt', 'Save mX3file', ExePath, true) //false: OpenDialog!
+      then Exit; 
+    TEdit_SaveToFile(fFilenm)
+  end;
+  Result:= True;
+end;

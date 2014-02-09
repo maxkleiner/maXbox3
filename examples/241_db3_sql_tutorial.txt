@@ -1,0 +1,272 @@
+{****************************************************************
+ *
+ * Project  : OLE DB maXbase SeriesSystem Information Series
+ * App Name : 241_db3_SQL_tutorial.txt, loc's = 196  for Tutorial 12
+ * Purpose  : DB Access via OLE DB with Access and SQL
+ * History  : system for mX3, need: Database3.mdb in /Examples and ODBC DNS
+ ****************************************************************}
+Program DB_ACCESS_SQL;
+
+function MyGetTickCount: Longint; external 'GetTickCount@kernel32.dll stdcall';
+procedure CreateDBGridForm(aSet: TAdoQuery); forward;  
+ 
+var
+  dCom: TADOCommand;
+  sl: TStringList;
+
+
+Procedure ConnectTest;
+var cnect: TADOConnection;
+begin
+  cnect:= TADOConnection.Create(self);
+  try
+    cnect.Provider:= 'Microsoft.Jet.OLEDB.4.0'
+    cnect.ConnectionString:= 'Provider=SQLOLEDB;DataSource=MyServer;Integrated Security//=SSPI;Initial Catalog=pubs;'; //or for MS Jet (MS Access):
+    cnect.ConnectionString:= 'Provider=Microsoft.Jet.OLEDB.4.0;'+
+                                  'DataSource=c:\db.mdb;';
+    cnect.Connected:= true;
+    cnect.LoginPrompt:= False;
+    cnect.Open('Admin','');  //cnect.Active:= true;
+  finally
+    cnect.Free;
+  end;
+end;     
+
+Procedure SetADOAccessSQL_Query;
+var //adoquery: TAdoDataSet;
+  adoQry: TAdoQuery;
+  i,z: integer;
+begin  
+  adoQry:= TAdoQuery.Create(self);
+  with adoQry do begin
+    cacheSize:= 500;
+    connectionString:= 'Provider=MSDASQL;DSN=mx3base;Uid=sa;Pwd=admin';
+    {commandText:= 'INSERT INTO Table1 (FirstName, LastName, Phone)'+
+                        'VALUES (''Max99'', ''Box5459'', ''031-333 77 88'')';}
+    commandText:= 'SELECT * FROM Table1';
+    Open;
+    Writeln(intToStr(Recordcount)+' records found: ')
+    for i:= 0 to Recordcount - 1 do begin
+      for z:= 0 to Fieldcount - 1 do 
+        Write((Fields[z].asString)+'  ');
+      Writeln(#13#10)
+      Next;
+    end;
+    CreateDBGridForm(adoQry); 
+    Close;
+    Free;        
+  end;
+end;
+
+//*******************SQL StringList Solution**********************************
+procedure splitAttributes(ast: string; attrs: TStringList);
+var x: integer; 
+   s: string;
+begin
+  if not (Assigned(attrs)) then  
+       attrs:= TStringList.Create;
+  s:= '';
+  x:= 1;
+  while (x <= length(ast)) do begin
+    if ast[x] = ',' then begin
+      attrs.Add(Trim(s));
+      s:='';
+    end else 
+      s:= s + ast[x];
+    inc(x);
+  end;
+  attrs.Add(Trim(s+ast[x-1]));
+end;    
+    
+procedure deleteStr(var auxstr: string; len: byte);
+begin
+  Delete(auxstr, 1, len);
+end;
+
+procedure fillRecords(aDBName, T,A,C, fs: string; sl: TStringlist);
+var attrs: TStringlist;
+    f: shortint;
+    auxstr: shortstring;
+begin
+  attrs:= TStringlist.Create;
+  splitAttributes(A, attrs);
+  with TAdoQuery.Create(self) do begin
+    cachesize:= 500;
+    connectionString:= 'Provider=MSDASQL;DSN='+aDBName+';Uid=sa;Pwd=admin';
+    //commandText:= 'SELECT * FROM Table1';
+    SQL;
+    commandText:= 'SELECT '+A+' FROM '+T;
+    if length(C) > 0 then
+      commandText:= 'SELECT '+A+' FROM '+T+' WHERE '+C;
+    Open;
+    First;
+    try
+      while not(EOF) do begin
+        auxstr:='';
+        for f:= 0 to attrs.count-1 do
+          auxstr:= auxstr + FS + fields[f].AsString;
+        deleteStr(auxstr, length(fs));
+        sl.add(auxstr);
+        Next;
+      end;
+    finally
+      Close;
+      Free;
+    end;      
+  end; //with 
+  attrs.Free;
+end;  
+
+procedure ShowRecords;
+var i: integer;
+begin
+  for i:= 0 to sl.count-1 do 
+    Writeln(sl[i]);
+  Writeln('');
+end;
+
+procedure GetDBProviders;
+var  ws: TWideStrings;
+     i: integer;
+begin
+  ws:= TWideStringList.Create;
+  getProviderNames(ws)
+  for i:= 1 to ws.count -1 do 
+    writeln(intToStr(i) +' '+ws.strings[i]);
+  ws.free;
+end;
+
+procedure CreateDBGridForm(aSet: TADOQuery);
+var tmpDataSource: TDataSource;
+    dbGrid: TDBGrid;
+    dbFrm: TForm;
+begin
+  dbFrm:= CreateMessageDialog('FastForm DB SQL',mtwarning,[mball,mbhelp,mbok]);
+  dbFrm.caption:= 'FFP SQL DBGrid Demo';
+  dbFrm.setBounds(50,50,900,500)
+  dbFrm.formstyle:= fsstayontop;
+  dbFrm.color:= clWebGold;
+  dbFrm.show; 
+  dbgrid:= TDBGrid.Create(self)
+  with dbGrid do begin
+    Parent:= dbFrm;
+    left:= 65; top:= 100;
+    width:= 800; height:= 350;
+    ReadOnly:= True;
+     //Options:=DBGrid.Options + [dgEditing];  
+    tmpDataSource:= TDatasource.Create(Self);
+    with tmpDataSource do begin
+      dataset:= TDataSet(aSet);
+      IsLinkedto(TDataSet(aSet))
+      Enabled;
+    end;
+    //DataSource is linked to a DataSet.
+     dataSource:= tmpDataSource;
+     BeginLayout; //!!
+     writeln('fcount of datasource '+intToStr(fieldcount))
+   end;
+   //tmpDataSource.Free; 
+   //dbGrid.Free;
+   //dbFrm.Free;
+end;
+
+
+Begin //main app
+  //SetAdoQuery;
+  //SetAdoSet;
+  maxform1.ShellStyle1Click(self);
+  ProcessMessagesON;
+  sl:= TStringList.Create;
+  FillRecords('mx3base','table1','firstname','','; ',sl); 
+  FillRecords('mx3base','table1','firstname,lastname,phone','','; ',sl); 
+  //FillRecord('mx3base','table1','firstname,lastname,phone','firstname = ''max''','; ',sl);
+  ShowRecords;
+  sl.Free;
+  
+  //Some Infos & Tests
+  SetADOAccessSQL_Query;
+  GetDBProviders;
+  Writeln('Data Link Dir is: '+ DataLinkDir);
+  Writeln('Machinename is: '+getHostName)
+  Writeln('Username is: '+getUserName)
+  //DLL Test
+  Writeln('tick count from dll func ' +IntToStr(MyGetTickCount));
+  {Writeln((getASCII))  
+  Writeln(S_UTF_8ToString(getASCII))  
+  Writeln(S_StringToUTF_8(getASCII))}  
+End.   
+
+
+// with BDE or ODBC Example
+{ with TQuery.Create(NIL) do begin
+    databasename:= dbname;
+    //filteroptions
+    SQL.Add('SELECT'+A+'FROM'+T);
+    if length(C)>0 then
+      SQL.Add('WHERE'+C);
+    prepare;  
+    while not(prepared) do 
+    open;
+    first;
+    try
+      while not(EOF) do begin
+        auxstr:='';
+        for f:= 0 to attrs.count-1 do
+          auxstr:= auxstr + FS + fields[F].asstring;
+        deleteSTR(auxstr, length(fs));
+        sl.add(auxstr);
+        next;
+      end;
+      close;
+    finally
+      Free;
+    end;      
+ end;}
+ 
+ 
+*******************************************************
+There is no place like 127.0.0.1 
+
+Exception: Access violation at address 4DE2F83C in module 'msado15.dll'. Read of address 78742E67 at 0.1057
+Access violation at address 1B041FC6 in module 'msjet40.dll'. Read of address 0003242E at 37.408
+[Microsoft][ODBC Driver Manager] Data source name not found and no default driver specified at 35.440
+[Microsoft][ODBC Microsoft Access Driver] Query is too complex at 35.607
+[Microsoft][ODBC Microsoft Access Driver] The Microsoft Jet database engine cannot find the input table or query 'Table1d'.  Make sure it exists and that its name is spelled correctly at 35.556
+[Microsoft][ODBC Microsoft Access Driver] Syntax error (missing operator) in query expression '031-333 77 88' at 41.356
+[Microsoft][ODBC Microsoft Access Driver] Too few parameters. Expected 2 at 41.354
+
+
+The syntax for the INSERT statement is:
+
+    INSERT INTO table
+    (column-1, column-2, ... column-n)
+    VALUES
+    (value-1, value-2, ... value-n);
+    
+dbs.Execute " INSERT INTO Employees " _
+        & "(FirstName,LastName, Title) VALUES " _
+        & "('Harry', 'Washington', 'Trainee');"
+        
+        
+ADOConnection1.Open;
+ADOQuery1.Close;
+ADOQuery1.SQL.Text:= 'SELECT * FROM database1 WHERE
+value1=1 AND value2= ' + inttostr(array[3]);
+        
+QuotedStr rather than ''''    
+
+CommandText does not return a result set at 41.360
+CommandText does not return a result set at 38.372
+
+ADOQuery1.SQL.Clear;
+ADOQuery1.SQL.Add('Insert into Score ([Score],[Round],[FighterID],[FightID])
+Values('+quotedstr(cbrf1.text)+','+QuotedStr(inttostr(countround))+', )');
+ADOQuery1.ExecSQL;
+ADOQuery1.SQL.Clear;
+
+tools and configuration:
+mdbviewer for Database3.mdb
+dns-entry in ODBC DataSources: Provider=MSDASQL;DSN=mx3base
+
+
+

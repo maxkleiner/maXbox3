@@ -1,0 +1,190 @@
+program HaeusleBauen_Animation;
+//program DHouse;
+//*********************************************************************
+// example for analyzing and play with 3D aninmation loc's=180, ex. 79  
+// you have to change sleep() for speed adaption
+// experiment with speed() or and refresh/rectangle for effects 
+//*********************************************************************
+
+
+type
+  THaus = array[1..10] of record             { Rohdaten }
+     x,y,z: Integer;
+  end;       
+
+  TFolge = array[1..20] of Byte;             { Punktfolge }
+
+  point = record
+    x,y: integer;
+  end;
+
+var
+  cFrm: TForm;
+  Alpha, Beta, Mx, My: Integer;    { Drehwinkel mit Startwerten }
+  Groesse: single;       { Hausgroesse }
+  Haus: THaus;
+  Folge: TFolge;
+  Taste: char;
+  a: single;
+  Haus3D: array[1..10] of point;
+
+
+procedure cross(x,y : integer;r : word;c : TColor);
+var d,cx,cy : integer;
+begin
+  d:= 3-(r+r);
+  cx:= 0;
+  cy:= r;
+  while cx <= cy do begin
+    with cFrm.Canvas do begin
+      Pixels[x+cx,y+cy]:= c;
+      Pixels[x+cx,y-cy]:= c;
+      Pixels[x-cx,y+cy]:= c;
+      Pixels[x-cx,y-cy]:= c;
+      Pixels[x+cy,y+cx]:= c;
+      Pixels[x+cy,y-cx]:= c;
+      Pixels[x-cy,y+cx]:= c;
+      Pixels[x-cy,y-cx]:= c;
+      if d < 0 then
+        d:= d+cx shl 2+6
+      else begin
+        d:= d+(cx-cy) shl 2+10;
+        dec(cy);
+      end;
+    end; //with
+  end; //while 
+end;
+
+
+procedure loadHouseArray;
+ begin
+ Haus[1].x:= -55;  Haus[1].y:= -120;  Haus[1].z:= -75;
+ Haus[2].x:= -55;  Haus[2].y:= -120;  Haus[2].z:= 0;
+ Haus[3].x:= 0;    Haus[3].y:= -120;  Haus[3].z:= 75;
+ Haus[4].x:= 55;   Haus[4].y:= -120;  Haus[4].z:= 0;
+ Haus[5].x:= 55;   Haus[5].y:= -120;  Haus[5].z:= -75;
+ Haus[6].x:= 55;   Haus[6].y:= 120;   Haus[6].z:= -75;
+ Haus[7].x:= 55;   Haus[7].y:= 120;   Haus[7].z:= 0;
+ Haus[8].x:= 0;    Haus[8].y:= 120;   Haus[8].z:= 75;
+ Haus[9].x:= -55;  Haus[9].y:= 120;   Haus[9].z:= 0;
+ Haus[10].x:= -55; Haus[10].y:= 120;  Haus[10].z:= -75;
+
+ Folge[1]:= 5; Folge[2]:= 1; Folge[3]:= 2; Folge[4]:= 3;  
+ Folge[5]:= 4; Folge[6]:= 5; Folge[7]:= 6; Folge[8]:= 7;  
+ Folge[9]:= 8; Folge[10]:= 9; Folge[11]:= 10; Folge[12]:= 6;  
+ Folge[13]:= 7; Folge[14]:= 4; Folge[15]:= 3; Folge[16]:= 8;  
+ Folge[17]:= 9; Folge[18]:= 2; Folge[19]:= 1; Folge[20]:= 10;  
+end; 
+ 
+
+procedure Projektion(Alpha, Beta,             { Drehwinkel }
+                     Mx, My: Integer;   { Mittelpunkt }
+                     Groesse: single);         { Vergroesserung}
+var  SinA, SinB, CosA, CosB : single;     { Zwischenvariablen }
+     Lauf : Integer;
+
+begin { Projektion }
+  SinA:= Sin(Alpha/180*Pi);          { Bogenmassberechnungen auáerhalb }
+  SinB:= Sin(Beta/180*Pi);                 { der Schleife, um }
+  CosA:= Cos(Alpha/180*Pi);            { Rechenzeit zu sparen }
+  CosB:= Cos(Beta/180*Pi);
+  for Lauf:= 1 to 10 do                        { Umrechnungen }
+    with Haus[Lauf] do begin 
+      Haus3D[Lauf].x:=  Round((CosA * Haus[Lauf].x - Haus[Lauf].y * SinA)
+                              * Groesse) + Mx ;
+      Haus3D[Lauf].y:= Round(((Haus[Lauf].x*SinA + Haus[Lauf].y*CosA)*CosB
+                                + Haus[Lauf].z*SinB)*Groesse) + My;
+    end; { with }
+   cFrm.canvas.MoveTo(Haus3D[Folge[1]].x, Haus3D[Folge[1]].y);
+  //{ Zeichne Hausansicht }
+  for Lauf:= 2 to 20 do                 
+      cFrm.canvas.LineTo(Haus3D[Folge[Lauf]].x,Haus3D[Folge[Lauf]].y);
+  sleep(60)    
+end; { Projektion }
+
+
+procedure FormKeyPress(Sender: TObject; var Key: Char);
+begin
+ Taste:= Key;
+ //cFrm.canvas;
+end;
+
+{PROCEDURE Beschriften ;
+  BEGIN
+    SETTEXTSTYLE (0, 0, 2);
+    OUTTEXTXY (5, 15, '       Space Race with MEGAMAX');
+    settextstyle(0,0,1);
+    SETTEXTSTYLE (0, 0, 1);
+    SETTEXTJUSTIFY (CenterText, BottomText);
+    OUTTEXTXY (GetMaxX DIV 2, GetMaxY-10, 'Virtual R. is an Inanity '#3' max');
+  END;}
+
+procedure LoadForm;
+begin
+  Alpha:= 45;    { Drehwinkel mit Startwerten }
+  Beta:= -105;
+  Groesse:= 1.5;      
+  cFrm:= TForm.create(self);
+  with cFrm do begin
+    caption:= '3D House Animation - press X or Z, end with q';  
+    BorderStyle:= bsDialog;
+    height:= 440;
+    width:= 450;
+    onKeyPress:= @FormKeyPress
+    //color:= clblack;
+    show;
+  end  
+end;
+
+ 
+//main house circle
+begin
+//************* maXbox graphics serie***************************************
+  loadForm;
+  loadHouseArray;
+  Cross(200,200, 240, clBlue)
+  Mx := cFrm.width div 2;                   { Hausmitte berechnen }
+  My := cFrm.height div 2;
+  repeat
+    Projektion(Alpha,Beta,Mx,My,Groesse);      { Haus zeichnen }
+    application.processMessages;
+    a:= 1.05;
+    case Taste of
+     'g': Groesse:= Groesse * 1.05;                 
+     'k': groesse:= groesse / 1.05; 
+     's': begin
+           repeat
+             Groesse:= Groesse / a;
+             Projektion(Alpha,Beta,Mx,My,Groesse); 
+             application.processMessages;    
+             a:= a+0.1;
+           until Taste = 'q';
+             groesse:= 1.5;
+           end; 
+     'l' :  Dec(Mx);                           { nach links }
+     'r' : Inc(Mx);                          { nach rechts }
+     'u' : Inc(My);                           { nach unten }
+     'o' : Dec(My);                            { nach oben}        
+     'x' : Inc(Beta);                       { drehen um x-Achse }
+     'c' : Dec(Beta);                          { back }
+     'z' : Inc(Alpha);                     { drehen um z-Achse }
+     't' : Dec(Alpha);                       { back }     
+     //#0  : case Readkey of #72 #80 #77 #75 
+     end; { case }
+     //comment this out for more animation;
+     cfrm.canvas.Rectangle(0, 0, cfrm.Width, cfrm.Height);
+     //cfrm.canvas.refresh;
+  until Taste = 'q';
+  Projektion(Alpha,Beta,Mx,My,Groesse);      { Haus zeichnen } 
+  Cross(200,200, 240, clBlue)
+end.
+
+just inside maxbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+                                     
+

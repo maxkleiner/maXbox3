@@ -1,0 +1,684 @@
+{****************************************************************
+ * Project  : Statistic Regression Overview
+ * App Name : 289_regression2, loc's = 533 
+ * Purpose  : Demonstrates a linear regression with coefficients
+ * Date     : 07/30/2012  -  17:07
+ * History  : convert to maXbox Nov 2011 with systools4 stat pac
+ *          : internal test function regression
+ *          : skyscraper dataset with full reference of book
+ ****************************************************************}
+Program LinearRegression2;
+
+{BOOL WINAPI MessageBeep(
+  __in  UINT uType );}
+//TThreadFunction = function(P: Pointer): Longint; stdcall;
+//Procedure ExecuteThread(afunc: TThreadFunction; var thrOK: boolean);
+
+function  MessageBeep(para: integer): byte;
+  external 'MessageBeep@user32.dll stdcall'; 
+
+//{$I ..\maxbox3\pas_includebox.inc}
+  
+procedure LinRegressionInBoX(const KnownY: array of Double; const KnownX: array of Double;
+                      NData : Integer; var LF : TStLinEst; ErrorStats : Boolean); forward;
+
+type
+  TByteArr = array of byte;
+  
+  (*TStLinEst = record
+    B0, B1     : Double;   {model coefficients}
+    seB0, seB1 : Double;   {standard error of model coefficients}
+    R2         : Double;   {coefficient of determination}
+    sigma      : Double;   {standard error of regression}
+    SSr, SSe   : Double;   {elements for ANOVA table}
+    F0         : Double;   {F-statistic to test B1=0}
+    df         : Integer;  {denominator degrees of freedom for F-statistic}
+  end;*)
+   
+
+var
+  except_state, execute_state: string;
+  mytimestamp: TDateTime;
+  osType: TIdWin32Type;
+  //diskTotal, amtFree: int64;
+  //ptr: ___Pointer;
+  thresult: boolean;
+  //thfct: TThreadFunction;   //procedure type
+  //mybase: TThread;
+  mybox: TPaintBox;
+  mythreadArray: TSortArray;
+  frmMon: TForm;
+  Image1: TImage;
+
+  
+procedure getMaxBoxIni;
+var
+  Ini: TIniFile;   
+begin
+  Ini:= TIniFile.Create(ExePath+'maxboxdef.ini');
+  try
+    except_state:= Ini.ReadString('Form', 'EXCEPTIONLOG','');
+    execute_state:= Ini.ReadString('Form', 'EXECUTESHELL','');
+  finally
+    writeln('inifile sysdata test: '+(except_state)+ ' '+(execute_state))
+    ini.Free;
+  end;
+end;
+
+procedure getDriveTypesF;
+var
+  Drive: byte;
+  DriveLetter: String;
+begin
+  for Drive:= ord('A') to ord('Z') do begin
+    DriveLetter:= chr(Drive) + ':\';
+    case GetDriveType(PChar(chr(Drive) + ':\')) of
+      0: //DRIVE_UNKNOWN
+      Memo2.Lines.Add(DriveLetter + ' Unknown Drive');
+      {1: //DRIVE_NO_ROOT_DIR
+      Memo2.Lines.Add(DriveLetter + ' No Root Dir or mount Point');}
+      2: //DRIVE_REMOVABLE:
+      Memo2.Lines.Add(DriveLetter + ' Removable or Floppy Drive');
+      3: //DRIVE_FIXED:
+      Memo2.Lines.Add(DriveLetter + ' Fixed Drive');
+      4: //DRIVE_REMOTE:
+      Memo2.Lines.Add(DriveLetter + ' Network Drive');
+      5: //DRIVE_CDROM:
+      Memo2.Lines.Add(DriveLetter + ' CD-ROM Drive');
+      6: //DRIVE_RAMDISK:
+      Memo2.Lines.Add(DriveLetter + ' RAM Disk');
+    end;
+  end;
+end;
+
+procedure ThreadDemoForm;
+begin
+    with TSortThread.Create(mybox, mythreadarray) do begin
+    bolTHslowmotion:= true;
+      slowmotion:= 2;
+    end;  
+    with TQuickSort.Create(mybox, mythreadarray) do begin
+    bolTHslowmotion:= true;
+      slowmotion:= 4;
+    end;  
+    with TThreadSortForm.Create(self) do begin
+      caption:= 'IBZDemo';
+      label1.caption:= 'Bubble Sort down up';
+      //bolTHslowmotion:= true;
+      slowmotionfirst:= 1;   //to begin
+      slowmotion:= 3;        // for each thread
+      show;
+      //StartBtn.caption:= 'go parallel';
+      //StartBtnClick(self);
+     end;  
+end;  
+
+procedure DrawPolyline2(vFrm: TForm; vPoints: array of TPoint);
+var i, hsize: integer;
+begin
+  with vFrm.Canvas do begin
+    hsize:= vFrm.Height - 1 div 2;
+    //moveto(0, hsize -((vPoints[0].y)));
+    vFrm.Canvas.MoveTo(round(vpoints[1].x), round(vpoints[1].y));
+    for i:= 0 to high(vPoints) do
+      //LineTo(vPoints[i].x, vPoints[i].y);
+      LineTo(round(vPoints[i].x), round(vPoints[i].y));
+    //Polybezier  
+  end;
+end;  
+
+procedure DrawPolyPoints2(vFrm: TForm; vPoints: array of TPoint);
+var i, hsize: integer;
+begin
+  with vFrm.Canvas do begin
+    //Brush.Size:= 10;
+    hsize:= vFrm.Height - 1 div 2;
+    //moveto(0, hsize -((vPoints[0].y)));
+    vFrm.Canvas.MoveTo(round(vpoints[1].x), round(vpoints[1].y));
+    for i:= 0 to high(vPoints) do begin
+      //LineTo(vPoints[i].x, vPoints[i].y);
+      Pixels[(round(vPoints[i].x)),{hsize-} (round(vPoints[i].y))]:= clyellow;
+      Pixels[(round(vPoints[i].x+1)),{hsize-} (round(vPoints[i].y+1))]:= clred;
+      //Pixels[(round(vPoints[i].x+2)),{hsize-} (round(vPoints[i].y+2))]:= clwhite;
+     end;
+    //Polybezier  
+  end;
+end;  
+
+procedure InitBitmapForm;
+var
+  origx, origy: integer;
+begin
+ frmMon:= TForm.create(self);
+ with frmMon do begin
+   //FormStyle := fsStayOnTop;
+   Position := poScreenCenter;
+   caption:='Pulsar Regression BitmaX';
+   color:= clblack;
+   width:= 600;
+   height:= 450;
+   Show;
+   //Canvas.pen.Width:= 3; 
+   //Canvas.pen.Color:= clGreen; 
+ end;
+  with frmMon.canvas do begin
+    //hsize:= cFrm.Height -1 div 2;
+   { Paint a coordinate cross }
+    origx:= (frmMon.Width div 2);
+    origy:= (frmMon.Height div 2);
+    Pen.Color:= clgreen;
+    Pen.Style:= psSolid;
+    Pen.Width:= 2;
+    MoveTo(1, origy);
+    LineTo(frmMon.Width - 1, origy);
+    MoveTo(origx, 1);
+    LineTo(origx, FrmMon.Height - 1);
+    { Paint some tickmarks and label the axis }
+    Font.Name:= 'Georgia';
+    Font.Size:= 18;
+    Font.Color:= clblue;
+    TextOut(origx +40, origy -215,'Regression maXplot ');
+  end; 
+end; 
+ 
+procedure TForm1_LoadBitmap(Sender: TObject);
+var
+ mybitmap : TBitmap;
+ MyRect: TRect;
+begin
+  mybitmap:= TBitmap.create;
+  mybitmap.loadfromfile(exepath+'examples\citymax.bmp')
+  //frmmon.width:= mybitmap.width;
+  //frmmon.height:= mybitmap.height;
+  //Image1.Picture.BitMap.PixelFormat:= pf24bit; 
+  myRect:= Rect(5,5, mybitmap.width-15, mybitmap.height-15);
+  frmMon.Canvas.StretchDraw(myRect, mybitmap);
+  //frmmon.canvas.Brush.Bitmap:= mybitmap;
+  //frmMon.Canvas.picture:=Assign(abitmap);
+  mybitmap.Free;
+end;
+
+procedure Delay2StopWatch(msecs: integer);
+ var FirstTickCount: longint;
+begin
+ FirstTickCount:= GetTickCount;
+ repeat
+   Application.ProcessMessages; {allowing access to other controls, widgets, etc.}
+ until ((GetTickCount-FirstTickCount) >= Longint(msecs));
+end;
+//Test it with:
+procedure CallTicker(msecs: integer);
+begin
+ with TStopWatch.create do begin
+   start
+     Delay2StopWatch(msecs)
+   stop
+   writeln('Stop Watch CPU Tester: '+getValueStr)
+ end;    
+end;
+
+function StrToArrOfByte(AStr: String): TByteArr;
+var
+  j: smallint;
+begin
+  SetLength(Result, Length(AStr)) ;
+  for j:= 0 to Length(AStr)-1 do
+     Result[j]:= ord(AStr[j + 1])-48;
+end;
+
+
+procedure LinRegressionInBoX(const KnownY: array of Double; const KnownX: array of Double;
+                      NData : Integer; var LF : TStLinEst; ErrorStats : Boolean);
+var
+  i : Integer;
+  sx, sy, xmean, ymean, sxx, sxy, syy, x, y : Extended;
+begin
+  if (NData <= 2) then
+    writeln('RaiseStatError(stscStatBadCount)');
+  {compute basic sums}
+  sx := 0.0;
+  sy := 0.0;
+  sxx := 0.0;
+  sxy := 0.0;
+  syy := 0.0;
+  for i := 0 to NData-1 do begin
+    //x := TDoubleArray(KnownX)[i];
+    x:= KnownX[i];
+    //y := TDoubleArray(KnownY)[i];
+    y:= KnownY[i];
+    sx := sx+x;
+    sy := sy+y;
+    sxx := sxx+x*x;
+    syy := syy+y*y;
+    sxy := sxy+x*y;
+  end;
+  xmean := sx/NData;
+  ymean := sy/NData;
+  sxx := sxx-NData*xmean*xmean;
+  syy := syy-NData*ymean*ymean;
+  sxy := sxy-NData*xmean*ymean;
+  //writeln(floattostr(sxx)+' '+floattostr(sxy))
+  {check for zero variance}
+  if (sxx <= 0.0) or (syy <= 0.0) then
+    writeln('RaiseStatError(stscStatBadData)');
+  {initialize returned parameters}
+  //fillchar(LF, sizeof(LF), 0);
+  {regression coefficients}
+  LF.B1 := sxy/sxx;
+  LF.B0 := ymean-LF.B1*xmean;
+  {error statistics}
+  if (ErrorStats) then begin
+    LF.ssr := LF.B1*sxy;
+    LF.sse := syy-LF.ssr;
+    LF.R2 := LF.ssr/syy;
+    LF.df := NData-2;
+    LF.sigma := sqrt(LF.sse/LF.df);
+    if LF.sse = 0.0 then
+      {pick an arbitrarily large number for perfect fit}
+      LF.F0 := 1.7e+308
+    else
+      LF.F0 := (LF.ssr*LF.df)/LF.sse;
+    LF.seB1 := LF.sigma/sqrt(sxx);
+    LF.seB0 := LF.sigma*sqrt((1.0/NData)+(xmean*xmean/sxx));
+  end;
+end;
+
+
+{4565: Function AveDev( const Data : array of Double) : Double');
+4566: Function AveDev16( const Data, NData : Integer) : Double');
+4567: Function Confidence( Alpha, StandardDev : Double; Size : LongInt) : Double');
+4568: Function Correlation( const Data1, Data2 : array of Double) : Double');
+4569: Function Correlation16( const Data1, Data2, NData : Integer) : Double');
+4570: Function Covariance( const Data1, Data2 : array of Double) : Double');
+4571: Function Covariance16( const Data1, Data2, NData : Integer) : Double');
+4572: Function DevSq( const Data : array of Double) : Double');
+4573: Function DevSq16( const Data, NData : Integer) : Double');}
+{X Values	Y Values
+60	3.1
+61	3.6
+62	3.8
+63	4
+65	4.1  }
+
+procedure StatisticRegressionPackage;
+var adx, ady, adregx, adregy: array of double;
+    aaSum, aaSumOfSquares: extended;
+    abytearr: TByteArr;
+    i,offsetx, offsety, sty, stx: integer;
+    lregr: TStLinEst;
+    dpnts: array[0..4] of TPoint;
+    fpa: TFloatPointArray;
+    fpa2: array of TPoint;
+    calcstr: string;
+    
+//http://www.koders.com/delphi/fid01C6FC01AA74690692B71DC9F63FEB4B86AE43DB.aspx?s=crc    
+begin
+  SetLength(adx,5)
+  SetLength(ady,5)
+  adx[0]:= 60;
+  adx[1]:= 61;
+  adx[2]:= 62;
+  adx[3]:= 63;
+  adx[4]:= 65;
+  ady[0]:= 3.1;
+  ady[1]:= 3.6;
+  ady[2]:= 3.8;
+  ady[3]:= 4.0;
+  ady[4]:= 4.1;
+  offsetx:= 10;
+  offsety:= 7;
+  sty:= 400;   //startx, starty
+  stx:= -400;
+  dpnts[0].x:= stx+60*offsetx;
+  dpnts[1].x:= stx+61*offsetx;
+  dpnts[2].x:= stx+62*offsetx;
+  dpnts[3].x:= stx+63*offsetx;
+  dpnts[4].x:= stx+65*offsetx;
+  dpnts[0].y:= sty-round(3.1*10)*offsety;
+  dpnts[1].y:= sty-round(3.6*10)*offsety;
+  dpnts[2].y:= sty-round(3.8*10)*offsety;
+  dpnts[3].y:= sty-round(4.0*10)*offsety;
+  dpnts[4].y:= sty-round(4.1*10)*offsety;
+  //writeln(inttostr(dpnts[3].y));
+  //frmMon.Canvas.Polyline(dpnts); 
+  
+  PrintF('Correlation of x and y %.4f',[Correlation(ady,adx)]);
+  PrintF('Covariance of x and y %.4f',[Covariance(ady,adx)]);
+//  4604: Function Forecast(X: Double; const KnownY: array of Double; const KnownX : array of Double) : Double');
+  PrintF('Forecast of x is %.4f',[Forecast(5,ady,adx)]);
+  //4606: Function Intercept( const KnownY : array of Double; const KnownX : array of Double) : Double');
+  PrintF('Intercept of y and x %.4f',[Intercept(ady,adx)]);
+  //5832: Procedure SumsAndSquares( const Data : array of Double; var Sum, SumOfSquares : Extended)
+  SumsAndSquares(adx, aaSum, aaSumOfSquares);
+  PrintF('SumsAndSquares of X: %.2f  %.2f', [aaSum, aaSumOfSquares]);
+  //4574: Procedure Frequency( const Data : array of Double; const Bins : array of Double; var Counts : array of LongInt)');
+  PrintF('Standard Error of y %.4f',[StandardErrorY(ady,adx)]);
+  PrintF('Slope of both %.4f',[Slope(ady,adx)]);
+  PrintF('R Squared of both %.4f',[RSquared(ady,adx)]);
+  PrintF('Normal Mean Math of x %.4f',[Mean(adx)]);
+  PrintF('Geometric Mean of Jedi  of x %.4f',[GeometricMean(adx)]);
+  PrintF('Geometric Mean Systools of x %.4f',[GeometricMeanS(adx)]);
+  PrintF('Harmonic Mean of Jedi  of x %.6f',[HarmonicMean(adx)]);
+  PrintF('Harmonic Mean Systools of x %.6f',[HarmonicMeanS(adx)]);
+  
+  // SetLength(adrand,1000)
+  //for i:= 1 to 1000-1 do adrand[i]:= randomF;
+  //for i:= 1 to 1000-1 do writeln(floattostr(adrand[i]));
+  {abytearr:= StrtoArrofByte(memo2.text)
+  for i:= 0 to length(abytearr)-1 do write((chr(abytearr[i]+48)));
+  writeln('');}
+  
+//Trick 1_6: 1, 2, 4, 5, 7, 8
+  PrintF('Choose a number %f',[maXcalc('7*9*111*1001/7')]);
+  Writeln('*********************************************');
+ {Step1: Choose a number from 1 to 6. Step2: Multiply the number with 9.
+ Step3: Multiply the result with 111. Step4: Multiply the result by 1001.
+ Step5: Divide the answer by 7.
+ Answer: All the above numbers will be present.}
+
+//http://people.sc.fsu.edu/~jburkardt/datasets/regression/regression.html
+  {full statistics for a linear regression}
+  (*TStLinEst = record
+    B0, B1     : Double;   {model coefficients}
+    seB0, seB1 : Double;   {standard error of model coefficients}
+    R2         : Double;   {coefficient of determination}
+    sigma      : Double;   {standard error of regression}
+    SSr, SSe   : Double;   {elements for ANOVA table}
+    F0         : Double;   {F-statistic to test B1=0}
+    df         : Integer;  {denominator degrees of freedom for F-statistic}
+  end;
+{LINEST}
+procedure LinEst(const KnownY : array of Double;
+  const KnownX : array of Double; var LF : TStLinEst; ErrorStats : Boolean);
+  {-Performs linear fit to data and returns coefficients and error statistics.
+      KnownY is the dependent array of known data points.
+      KnownX is the independent array of known data points.
+      NData must be greater than 2.
+    If ErrorStats is FALSE, only B0 and B1 are computed; the other fields
+      of TStLinEst are set to 0.0. See declaration of TStLinEst for returned data. } *)
+
+   SetArrayLength(adregx,5)
+   SetArrayLength(adregy,5)              
+   adregx[0]:= 234;
+   adregx[1]:= 254;
+   adregx[2]:= 262;
+   adregx[3]:= 284;
+   adregx[4]:= 291;
+   adregy[0]:= 150;
+   adregy[1]:= 170;
+   adregy[2]:= 164;
+   adregy[3]:= 167;
+   adregy[4]:= 194;
+   //LinEst(adregx,adregy, linregress, true)
+  LinRegressionInBoX(adregx,adregy, 5, lregr, true); 
+  PrintF('Linear Regression Coefficients: B0: %f, B1 %f, Sigma %.4f',
+               [lregr.B0,lregr.B1, lregr.sigma]); 
+  
+  //-----------------------------------------------------------------
+  //Skyscraper Example of buildings: height (y) and floors (x)
+  //e.g.  Eurotower 148m , 39 floors
+  SetLength(adx,25)
+  SetLength(ady,25)
+
+  adx[0]:= 40;            ady[0]:= 142;    //frankfurter büro center
+  adx[1]:= 39;            ady[1]:= 148;    //eurotower
+  adx[2]:= 38;            ady[2]:= 154;    //skyper
+  adx[3]:= 38;            ady[3]:= 155;    //deutsche bank II
+  adx[4]:= 40;            ady[4]:= 155;    //deutsche bank I
+  adx[5]:= 47;            ady[5]:= 159;    //plaza büro center
+  adx[6]:= 40;            ady[6]:= 160;    //hochhaus güterplatz
+  adx[7]:= 40;            ady[7]:= 160;    //grand hyatt
+  adx[8]:= 42;            ady[8]:= 165;    //hochhaus europagarten
+  adx[9]:= 32;            ady[9]:= 166;    //silver tower
+  adx[10]:= 42;           ady[10]:= 168;   //opern turm
+  adx[11]:= 42; {estim}   ady[11]:= 180;   //neue dz-bank
+  adx[12]:= 43;           ady[12]:= 185;   //neubau europ.zentralbank (skytower)
+  adx[13]:= 46;           ady[13]:= 185;   //turm 185
+  adx[14]:= 45;           ady[14]:= 186;   //trianon
+  adx[15]:= 55;           ady[15]:= 197;   //hochhauskomplex neue mainzer str
+  adx[16]:= 55; {estim}   ady[16]:= 200;   //bahn-tower
+  adx[17]:= 55;           ady[17]:= 200;   //main tower
+  adx[18]:= 53;           ady[18]:= 208;   //dz bank ag
+  adx[19]:= 52; {plan}    ady[19]:= 212;   //urban entertainment
+  adx[20]:= 64; {plan}    ady[20]:= 228;   //MAX
+  adx[21]:= 68; {plan}    ady[21]:= 250;   //marieninsel
+  adx[22]:= 55;           ady[22]:= 257;   //messe turm
+  adx[23]:= 56;           ady[23]:= 259;   //commerzbank tower
+  adx[24]:= 97; {plan}    ady[24]:= 369;   //millenium tower
+  
+  LinRegressionInBoX(ady,adx, 25, lregr,true); 
+  PrintF('Linear Regression Coeff.: B0: %f, B1 %f, sterr:%f, %f, deter:%f, Sigma %.4f',
+             [lregr.B0,lregr.B1, lregr.seB0,lregr.seB1, lregr.R2,lregr.sigma]);
+  PrintF('Sky Regression is: y = %f + %fx',[lregr.B0,lregr.B1]);
+  PrintF('Normal Mean of math x %.4f',[Mean(adx)]);
+  PrintF('Normal Mean of math y %.4f',[Mean(ady)]);
+  PrintF('Correlation of x and y %.4f',[Correlation(ady,adx)]);
+  PrintF('Covariance of x and y %.4f',[Covariance(ady,adx)]);
+  PrintF('Forecast direct of x:= 42 is %.4f',[Forecast(42,ady,adx)]);
+
+  calcstr:= floatToStr(lregr.B0)+'+'+floatToStr(lregr.B1)+'*'+intToStr(42);
+  //writeln(calcstr);
+  PrintF('Forecast with 42 floor is %f heigh',[maXcalc(calcstr)]);
+  PrintF('Forecast with 42 floor is %f heigh',[maXcalc('23.17+3.49*42')]);
+ 
+  SetLength(fpa2,25)
+  //SetLength(ady,25)
+ //copy from array of double to array of TPoint 
+  for i:= 0 to 25-1 do begin    
+    fpa2[i].x:= 10+round(adx[i]*4);
+    fpa2[i].y:= 410-round(ady[i]);
+  end;  
+  // test the graph in some scatter plot
+  DrawPolyline2(frmMon, fpa2);
+  DrawPolyPoints2(frmMon, fpa2)
+  //function of regression line
+  frmmon.canvas.MoveTo(1*4, 410-round(lregr.B0));
+   for i:= 1 to frmMon.width do begin
+      frmmon.canvas.LineTo(i*4, 410-round(lregr.B1*i+lregr.B0));
+   end; 
+ //--------------------------Skyscraper finish---------------------------  
+ //---------------------------------------------------------------------
+  //Voting Example: of 1 party: in % parts x: last year, y: this year
+  
+  SetLength(adx,10)
+  SetLength(ady,10)
+  adx[0]:= 30;     ady[0]:= 35;
+  adx[1]:= 57;     ady[1]:= 52;
+  adx[2]:= 40;     ady[2]:= 38;
+  adx[3]:= 45;     ady[3]:= 47;
+  adx[4]:= 55;     ady[4]:= 61;
+  adx[5]:= 28;     ady[5]:= 35;
+  adx[6]:= 33;     ady[6]:= 37;
+  adx[7]:= 52;     ady[7]:= 50;
+  adx[8]:= 56;     ady[8]:= 60;
+  adx[9]:= 65;     ady[9]:= 61;
+ 
+  LinRegressionInBoX(ady,adx, 10, lregr,true); 
+  PrintF('Lin Regression Coeff.: B0: %f, B1 %f, sterr:%f, %f, deter:%f, Sigma %.4f',
+             [lregr.B0,lregr.B1, lregr.seB0,lregr.seB1, lregr.R2,lregr.sigma]);
+  PrintF('Regression is: y = %f + %.4fx',[lregr.B0,lregr.B1]);
+ //--------------------------Voting finish---------------------------  
+           
+  Writeln(FloattoStr(Factorial(115)))
+  Writeln(FloattoStr(FactorialS(115)))
+  Writeln(FloattoStr(Fact(115)))
+end;
+
+begin
+   //InifileRead;
+   getMaxBoxIni;
+   thresult:= false;
+   //thfct:= @myThread;
+   CurrentThreadID
+   writeln('Thread ID :'+intToStr(CurrentThreadID))
+   CurrentProcessId
+   writeln('Process ID :'+intToStr(CurrentProcessID))
+   //ExecuteThread(thfct, thresult)
+   //if thresult = true then
+   writeln('machine name is: '+getHostName)
+   writeln('user name is: '+getUserName)
+   osType:= Win32Type;
+   writeln('OS Type is: '+intToStr(ord(osType)));
+   mytimestamp:= GetFileCreationTime(exepath+'maxbox3.exe')
+   writeln(DateTimeToStr(mytimestamp)+' for maXbox3 file')
+   //searchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter2.pdf')
+   //ExecuteCommand('cmd','/k dir *.*')
+   getDriveTypesF;
+  //ThreadDemoForm;  
+  InitBitmapForm;
+  TForm1_LoadBitmap(Self);
+  CallTicker(500);
+  
+  StatisticRegressionPackage;  
+End.   
+
+------------------------------------------------
+Windows crashed again. I am the Blue Screen of Death. No one hears your screams.
+Three things are certain: Death, taxes, and lost data. Guess which has occurred.
+There is no place like 127.0.0.1 
+
+
+REGRESSION is a dataset directory which contains test data for linear regression.
+
+The simplest kind of linear regression involves taking a set of data (xi,yi), and trying to determine the "best" linear relationship
+
+
+        y = a * x + b
+      
+Commonly, we look at the vector of errors:
+
+        ei = yi - a * xi - b
+      
+
+and look for values (a,b) that minimize the L1, L2 or L-infinity norm of the errors. For problems involving multivariate sets of data, the number a becomes a matrix, and b a vector, but the idea is similar.
+
+The data files have a simple format:
+
+    initial comment lines, each beginning with a "#".
+    the number of columns of data;
+    the number of rows of data;
+    for each column of data, a line containing a column label; the first column is always "Index" and counts the rows; if there is a column labeled "A0" it usually contains the value 1.0;
+    each row of data, on a separate line, with data separated by spaces.
+
+There are also some extended examples, which involve an M by N linear system, a set of linear constraints to be solved exactly, and a set of linear inequalities. In that case, a master file lists the sizes of the three sets of data, and the name of the first file, which contains the linear system.
+//-------------------------------------------------------------------------
+
+type
+  //PThreadSortArray = ^TThreadSortArray;
+  //TThreadSortArray = array[0..MaxInt div SizeOf(Integer) - 1] of Integer;
+  TSortArray =  array[1..ARRSIZE] of Integer;
+
+
+  TSortThread = class(TThread)
+  strict private
+    FBox: TPaintBox;
+    //FSortArray: PThreadSortArray;
+    FSortArray: TSortArray;
+    FSize: Integer;
+    FA, FB, FI, FJ: Integer;
+    Fbolthslowmotion: boolean;
+    procedure DoVisualSwap;
+    procedure Setbolthslowmotion(const Value: boolean);
+  protected
+    procedure Execute; override;
+    procedure VisualSwap(A, B, I, J: Integer);
+    procedure Sort(var A: array of Integer); virtual; abstract;
+  public
+    constructor Create(Box: TPaintBox; var SortArray: TSortArray);
+    property  bolTHslowmotion: boolean read Fbolthslowmotion write Setbolthslowmotion;
+
+  end;
+
+
+
+***********************************Thread Class *****************************
+  TThread = class
+  private
+{$IFDEF MSWINDOWS}
+    FHandle: THandle;
+    FThreadID: THandle;
+{$ENDIF}
+{$IFDEF LINUX}
+    // ** FThreadID is not THandle in Linux **
+    FThreadID: Cardinal;
+    FCreateSuspendedSem: TSemaphore;
+    FInitialSuspendDone: Boolean;
+{$ENDIF}
+    FCreateSuspended: Boolean;
+    FTerminated: Boolean;
+    FSuspended: Boolean;
+    FFreeOnTerminate: Boolean;
+    FFinished: Boolean;
+    FReturnValue: Integer;
+    FOnTerminate: TNotifyEvent;
+    FSynchronize: TSynchronizeRecord;
+    FFatalException: TObject;
+    procedure CallOnTerminate;
+    class procedure Synchronize(ASyncRec: PSynchronizeRecord; QueueEvent: Boolean = False); overload;
+{$IFDEF MSWINDOWS}
+    function GetPriority: TThreadPriority;
+    procedure SetPriority(Value: TThreadPriority);
+{$ENDIF}
+{$IFDEF LINUX}
+    // ** Priority is an Integer value in Linux
+    function GetPriority: Integer;
+    procedure SetPriority(Value: Integer);
+    function GetPolicy: Integer;
+    procedure SetPolicy(Value: Integer);
+{$ENDIF}
+    procedure SetSuspended(Value: Boolean);
+  protected
+    procedure CheckThreadError(ErrCode: Integer); overload;
+    procedure CheckThreadError(Success: Boolean); overload;
+    procedure DoTerminate; virtual;
+    procedure Execute; virtual; abstract;
+    procedure Queue(AMethod: TThreadMethod); overload;
+    procedure Synchronize(AMethod: TThreadMethod); overload;
+    property ReturnValue: Integer read FReturnValue write FReturnValue;
+    property Terminated: Boolean read FTerminated;
+  public
+    constructor Create(CreateSuspended: Boolean);
+    destructor Destroy; override;
+    procedure AfterConstruction; override;
+    procedure Resume;
+    procedure Suspend;
+    procedure Terminate;
+    function WaitFor: LongWord;
+    class procedure Queue(AThread: TThread; AMethod: TThreadMethod); overload;
+    class procedure RemoveQueuedEvents(AThread: TThread; AMethod: TThreadMethod);
+    class procedure StaticQueue(AThread: TThread; AMethod: TThreadMethod);
+    class procedure Synchronize(AThread: TThread; AMethod: TThreadMethod); overload;
+    class procedure StaticSynchronize(AThread: TThread; AMethod: TThreadMethod);
+    property FatalException: TObject read FFatalException;
+    property FreeOnTerminate: Boolean read FFreeOnTerminate write FFreeOnTerminate;
+{$IFDEF MSWINDOWS}
+    property Handle: THandle read FHandle;
+    property Priority: TThreadPriority read GetPriority write SetPriority;
+{$ENDIF}
+{$IFDEF LINUX}
+    // ** Priority is an Integer **
+    property Priority: Integer read GetPriority write SetPriority;
+    property Policy: Integer read GetPolicy write SetPolicy;
+{$ENDIF}
+    property Suspended: Boolean read FSuspended write SetSuspended;
+{$IFDEF MSWINDOWS}
+    property ThreadID: THandle read FThreadID;
+{$ENDIF}
+{$IFDEF LINUX}
+    // ** ThreadId is Cardinal **
+    property ThreadID: Cardinal read FThreadID;
+{$ENDIF}
+    property OnTerminate: TNotifyEvent read FOnTerminate write FOnTerminate;
+  end;
+  
+  
+  Trick 6: 1, 2, 4, 5, 7, 8
+Step1: Choose a number from 1 to 6.
+Step2: Multiply the number with 9.
+Step3: Multiply the result with 111.
+Step4: Multiply the result by 1001.
+Step5: Divide the answer by 7.
+Answer: All the above numbers will be present.
+
+ 
+

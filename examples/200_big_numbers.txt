@@ -1,0 +1,223 @@
+{***************************************************************
+ * App      : Big Number Functionizer
+ * Unit Name: 200_big_numbers.txt
+ * Purpose  : Test a defines big types
+ * Date     : 18/03/2011 
+ * History  :mX3.2, locs=116
+ * ***************************************************************}
+Program Big_Numbers_Max;
+
+{ $Project$
+  $Workfile$
+  $Revision$
+  $DateUTC$
+  $Log$}
+  {class function StrToInt64(const S: string): Int64; overload;
+   class function StrToInt64(const S: string; const Default : Int64): Int64;
+  end;}
+
+
+CONST
+    cTiny = 1E-15;
+
+
+function mCompareDate(const D1, D2: TDateTime): Integer;
+var LTM1, LTM2: TTimeStamp;
+begin
+  LTM1:= DateTimeToTimeStamp(D1);
+  LTM2:= DateTimeToTimeStamp(D2);
+  if (LTM1.Date = LTM2.Date) then begin
+    if (LTM1.Time < LTM2.Time) then begin
+       Result:= -1;
+    end 
+    else begin
+      if (LTM1.Time > LTM2.Time) then
+        Result:= 1
+      else 
+        Result:= 0;
+    end;
+  end
+  else begin
+    if LTM1.Date > LTM2.Date then
+      Result:= 1
+    else
+      Result:= -1;
+  end;
+end;
+
+
+Function mStrToInt64(const S: string; const Default: Int64): Int64;
+begin
+  Result:= StrToInt64Def(Trim(S),Default);
+end;
+
+Function cStrToInt64(const S: string): Int64;
+begin
+  Result:= StrToInt64(Trim(S));
+end;
+
+procedure BIGMAXSCREEN;
+begin
+  try
+    CaptureScreenPNG(ExePath+'MyScreenBitmap.png');
+  finally
+    SearchandOpenDoc(ExePath+'MyScreenBitmap.png')
+  end;
+end; 
+
+function powerOf2(exponent: Integer): Int64;
+var shifter: int64;
+    counter: integer;
+begin
+  shifter:= 1;
+  for counter:= 1 to exponent do
+    shifter:= shifter + shifter;
+  result:= shifter;
+end;
+
+Function SuperPIN: extended;
+var myPi: extended;
+    k: integer;
+begin
+MyPi:= 0;
+for k:= 0 to 100 do begin
+  MyPi:= MyPi + 1/Power(16,k) * ((0.5*k+1)-(0.25*k + 4)-(0.125*k+5)-(0.125*k+6)) 
+end;
+  result:= myPi;
+end;
+
+
+const
+  aMINInt64 = $8000000000000000;
+  aMAXInt64 = $7FFFFFFFFFFFFFFF;
+
+var 
+  a,b: integer;
+  zb: boolean;
+  bigI: Int64;
+  verybig, e: extended;
+  s: string;
+  
+begin
+  Writeln('Big Numbers Function Tester ******************')
+  bigI:= round(Power(2,31)-1)
+  //sum(234,45)
+  writeln('limit: '+intToStr((bigI)))
+  writeln('64bit: '+floatToStr(Power(2,64)))
+  writeln('Int64 max: '+IntToStr64(MinInt64)+'..'+IntToStr64(MaxInt64))
+  bigI:= powerOf2(62) - powerOf2(62)-1
+  writeln('must -1: '+inttostr64((bigI)))
+
+  writeln('int function: '+inttoStr64(powerOf2(63)-1))         
+  writeln('lib function: '+floattostr(Power(2,63)))         
+  writeln('const direct '+intToStr64(MaxInt64))
+ 
+  bigI:= cStrToInt64(intToStr64(maxint64))
+  writeln('from convert back: '+intToStr64(bigI))
+  bigI:= round(Power(2,32))
+  writeln('too big for round: '+IntToStr64(bigI))
+  writeln('too big: '+IntToStr64(2*(MaxInt64)))
+  verybig:= MaxInt64;
+  writeln('not too big: '+floatToStr(2* verybig))
+  writeln('much more BIG: '+floatToStr(Power(2,100)))
+  writeln('much more BIGINT: '+FloatToStr(IntPower(2,1000)))
+
+  //Convert to 
+  Writeln(floatToStr(Power(2,100)));
+  Writeln(floatToStr(Exp(100*Ln(2))))
+  Writeln(floatToStr(Ln(Exp(1))))
+  //Writeln(floatToStr(SuperPIN))
+
+  //BIGMAXSCREEN
+  //OpenCDDrive
+  //boolean tester - small numbers;)
+  a:= 1;
+  b:= -1;
+  zb:= a=b;
+  if zb then write('true ') else write('false ');
+  zb:= a=-b;
+  if zb then write('true ') else write('false ');
+end.
+
+//examples to test the integrity and correctness in Groovy/Java
+---------------------------------
+
+/* Big Numbers in Groovy */
+
+package ch.ecotronics.maxbox
+
+println LONG.MAX_VALUE
+assert Long.MAX_VALUE == 9223372036854775807
+
+BigInteger big = 2 * Long.MAX_VALUE
+println big
+assert big == -2
+
+BigDecimal bigDec = 2.0 * Long.MAX_VALUE
+println bigDec
+assert bigDec == 18446744073709551614.0
+
+double bigger = Math.pow(2,1000)
+assert bigger == 1.1E+0301
+println bigger
+
+------------------------------------------------------------------------
+
+
+Now that the "signed" Words are finally up-to-par with the unsigned integer types, Delphi 4 immediately introduces a new 64-bits integer type, called Int64, with a whopping range of -2^63..2^63 - 1  
+
+2^100=
+1267650600228229401496703205376
+
+ExecuteShell(ExePath+'maxbox3.exe', '"' + ExePath+'examples\218_biorythmus_studio.txt"');
+
+
+{** A power function from Jack Lyle. Said to be more powerful than the
+    Pow function that comes with Delphi. }
+function Power2(Base, Exponent : Double) : Double;
+{ raises the base to the exponent }
+  CONST
+    cTiny = 1e-15;
+
+  VAR
+    Power : Double; { Value before sign correction }
+
+  BEGIN
+    Power := 0;
+    { Deal with the near zero special cases }
+    IF (Abs(Base) < cTiny) THEN BEGIN
+      Base := 0.0;
+    END; { IF }
+    IF (Abs(Exponent) < cTiny) THEN BEGIN
+      Exponent := 0.0;
+    END; { IF }
+
+    { Deal with the exactly zero cases }
+    IF (Base = 0.0) THEN BEGIN
+      Power := 0.0;
+    END; { IF }
+    IF (Exponent = 0.0) THEN BEGIN
+      Power := 1.0;
+    END; { IF }
+
+    { Cover everything else }
+    IF ((Base < 0) AND (Exponent < 0)) THEN
+        Power := 1/Exp(-Exponent*Ln(-Base))
+    ELSE IF ((Base < 0) AND (Exponent >= 0)) THEN
+        Power := Exp(Exponent*Ln(-Base))
+    ELSE IF ((Base > 0) AND (Exponent < 0)) THEN
+        Power := 1/Exp(-Exponent*Ln(Base))
+    ELSE IF ((Base > 0) AND (Exponent >= 0)) THEN
+        Power := Exp(Exponent*Ln(Base));
+
+    { Correct the sign }
+    IF ((Base < 0) AND (Frac(Exponent/2.0) <> 0.0)) THEN
+      Result := -Power
+    ELSE
+      Result := Power;
+  END; { FUNCTION Pow }
+
+
+
+
+----code_cleared_checked----

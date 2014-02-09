@@ -1,0 +1,425 @@
+PROGRAM TheHexer_Draft_Beta;
+
+//CL.AddTypeS('TSettingChangeEvent','procedure (Sender: TObject; Flag: Integer;
+// const Section: string; var Result: Longint) of object)');
+//  #locs=231
+
+CONST 
+//<Constant declarations> 
+  TEXTOUT = 'hi world of code';
+  LEFTBASE = 20;
+  TOPBASE = 30; 
+  TEXTPATH = 'examples\outline3.txt';
+  //#define WM_SYSCOMMAND                   0x0112
+  WM_SYSCOMMAND =  $0112;
+  //SC_SCREENSAVE =  $F140;
+  FLAG_A = $01;
+  FLAG_B = $02;
+  FLAG_C = $04;
+  
+  
+  sizeBorder = 2;
+  sc_SizeLeft           = $F001;  { these are the variations }
+  sc_SizeRight          = $F002;  { on the SC_SIZE value }
+  sc_SizeTop            = $F003;
+  sc_SizeTopLeft        = $F004;
+  sc_SizeTopRight       = $F005;
+  sc_SizeBottom         = $F006;
+  sc_SizeBottomRight    = $F008;
+  sc_SizeBottomLeft     = $F007;
+  sc_DragMove2           = $F012;
+
+
+{TYPE 
+<Type declarations>} 
+
+VAR 
+//<Variable declarations>
+  i: integer;
+  myhx: THexDump;
+  inFrm: TForm;
+  stat: TStatusbar;
+  myMemo: TMemo;
+
+
+//<FUNCTION>
+//<PROCEDURE> 
+
+//Sender: TObject; Flag: Integer; const Section: string; var Result: Longint
+ procedure someChangeofOS(av: TObject; Flag: integer; const Section: string; var aResult: longint);
+ begin
+   writeln('os change of '+section);
+ end;
+ 
+ procedure FormCloseClick(Sender: TObject; var Action: TCloseAction);
+ begin
+  //myImage.Free;
+   Writeln('Outline Form Closed at: '+ TimeToStr(Time));
+   //inFrm.Free;
+   //myhx.Free;
+   Action:= caFree;
+ end;
+ 
+ function CheckTrunc(abin: string): integer;
+ var i,j,aDec: integer;
+ begin
+ aDec:= 0;
+ for i:= length(abin) downto 1 do begin
+   if abin[i] <> '0' then
+     aDec:= aDec + Trunc(IntPower(2,j));
+   Inc(j);
+   end;
+  result:= aDec;
+ end;     
+  
+ function CheckTrunc2(abin: string): integer;
+ var i,j: integer;
+ begin
+ result:= 0;
+   for i:= length(abin) downto 1 do begin
+     if abin[i] <> '0' then
+       result:= result + Trunc(IntPower(2,j));
+     Inc(j);
+   end;
+ end;    
+
+ Procedure IntegerListCheck;
+ var wr: TWriter;
+ begin
+ with TIntegerList.Create do begin
+     Sort;
+     add(round(power(2,31)-1));
+     add(1234567);
+     add(234567);
+     add(344456);
+     add(3445676);
+     //wr.writeFloat
+     //WriteData(wr)
+     writeln(inttostr(count))
+     for i:= 0 to count-1 do 
+       writeln(inttostr(items[i]));
+     Free;  
+   end;
+ end;   
+
+ 
+ 
+//--------------------------------Form Build---------------------------------//
+//****************************************************************************
+Procedure SetForm;
+var
+  mt: TMainMenu;
+begin
+  inFrm:= TForm.Create(self);
+  myMemo:= TMemo.Create(inFrm);
+  stat:= TStatusbar.Create(inFrm);
+
+  with inFrm do begin
+    caption:='*****OutlineMedia3*****';  
+    height:= 610;
+    width:= 980;
+    Position:= poScreenCenter;
+    onClose:= @FormCloseClick;  
+  Show;
+  end;
+  with TPanel.Create(inFrm) do begin
+    caption:= '***HEXOutline***';  
+    Parent:= inFrm;  
+    SetBounds(LEFTBASE,TOPBASE+40,340,400)
+    color:= clsilver;
+    font.color:= clyellow;
+    font.size:= 30;
+  end; 
+  with myMemo do begin
+    Parent:= inFrm;
+    SetBounds(LEFTBASE+470,TOPBASE+40,440,400)
+    font.size:= 14;
+    color:= clYellow;
+    scrollbars:= ssVertical;
+    lines.LoadFromFile(ExePath+TEXTPATH);
+  end;
+  with stat do begin
+    Parent:= inFrm;
+    SimplePanel:= true;
+    simpletext:= 'memo on hex beta draft';
+  end;
+end;  
+ 
+ 
+procedure SearchAndCopy(aStrList: TStrings; aSearchStr, aNewStr: string; offset: integer);
+var i, t1: integer;
+    s1: string;
+begin
+  // old string can't be part of new string!, eg.: max --> climax
+  if pos(aSearchStr, aNewStr) > 0 then begin
+    write('old string cant be part of new string');
+    exit;
+  end;
+  for i:= 0 to aStrList.Count -1 do begin
+    s1:= aStrList[i];
+      t1:= pos(aSearchStr, s1);
+      if t1 > 0 then begin
+        Delete(s1, t1+offset-length(asearchstr), Length(aNewStr));
+        Insert(aNewStr, s1, t1+offset);
+        aStrList[i]:= s1;
+      end;
+  end; 
+end;
+
+   
+ var
+  myfile: TStringlist;
+   
+BEGIN  //Main
+//<Executable statements>
+  for i:= 1 to 3 do 
+    Writeln(TEXTOUT);
+    Writeln(floatToStr(Cos(0.35)));
+    writeln(floatToStr(Signe(Cos(0.56),Sin(0.34))));
+    //SetForm;
+    
+    //SendMessage(Application.Handle, WM_SYSCOMMAND, SC_SCREENSAVE, 0); 
+    write(inttoStr(FLAG_A OR FLAG_C)+ '  ');
+    write(inttoStr(FLAG_A + FLAG_C));
+    writeln('');
+    write(inttoStr(FLAG_A AND FLAG_C)+'  ');
+    write(inttoStr(FLAG_A * FLAG_C));
+ 
+    writeln(InttoStr(checkTrunc('1110101')))
+    Assert2(117=checkTrunc('1110101'), 'must be 117') 
+    writeln(InttoStr(checkTrunc2('1110101')))
+    Writeln(floattostr(Floor(PI)));
+    //Writeln(floattostr(FloorJ(PI)));
+    Writeln(floattostr(power(2,PI)));
+    Writeln(floattostr(powerJ(2,PI)));
+    Writeln(floattostr(CSC(PI)));
+    Writeln(inttoStr(sign(+0.006)));  
+   Writeln(floattoStr(pythagoras(10.45,10.32)));    //4.66726071656878E-62
+  
+    //IntegerListCheck;
+    //myhx:= CreateHexDump(myMemo);
+    //myhx.Address
+    //myhx.DataSize:= 200;
+    //myhx.DataSize:= length(mymemo.text)
+    //myhx.currentline:= 4;
+    //myhx.currentline:= 5;
+    //myhx.Free;
+    //Application.HookSynchronizeWakeup;
+    //Application.OnHelp:= @someChangeofOS;
+    Application.OnSettingChange:= @someChangeofOS;
+//<Definitions>  
+
+    //S_ShellExecute(exepath+'maxbox3.exe',pchar(ExePath+'firstdemo3.txt'),seCMDOpen);
+      //memo2.text:= myfile.text;
+   myfile:= TStringlist.create;
+   myfile.loadfromfile(ExePath+'firstdemo.txt');
+     SearchAndCopy(myfile, 'date', datetimetoStr(now), 11);
+   SearchAndCopy(myfile, 'name', gethostname, 11);
+   SearchAndCopy(myfile, 'path', extractFilePath(Exepath), 11);
+ 
+ //  SearchAndCopy(myfile, '#date'01:5129.05.2013 23:04:57);
+ //  SearchAndCopy(myfile, '#name'axmaxmaxtname, 11);
+ //  SearchAndCopy(myfile, '#path'ples\E:\maxbox\maxbox3\examples\axbox2\source_2007\maxbox29\mx4\mx4_v38\mx4\
+ 
+   //SearchAndReplace(myfile, '#path'ples\E:\maxbox\maxbox3\examples\axbox2\source_2007\maxbox29\mx4\mx4_v38\mx4\
+ 
+ 
+   myfile.Savetofile(ExePath+'firstdemo.txt');
+
+   SearchandOpenDoc(ExePath+'firstdemo.txt');
+
+END. 
+
+Parameters
+
+wParam
+
+    The type of system command requested. This parameter can be one of the following values.
+    Value	Meaning
+
+    SC_CLOSE
+    0xF060
+
+    	
+
+    Closes the window.
+
+    SC_CONTEXTHELP
+    0xF180
+
+    	
+
+    Changes the cursor to a question mark with a pointer. If the user then clicks a control in the dialog box, the control receives a WM_HELP message.
+
+    SC_DEFAULT
+    0xF160
+
+    	
+
+    Selects the default item; the user double-clicked the window menu.
+
+    SC_HOTKEY
+    0xF150
+
+    	
+
+    Activates the window associated with the application-specified hot key. The lParam parameter identifies the window to activate.
+
+    SC_HSCROLL
+    0xF080
+
+    	
+
+    Scrolls horizontally.
+
+    SCF_ISSECURE
+    0x00000001
+
+    	
+
+    Indicates whether the screen saver is secure.
+
+    SC_KEYMENU
+    0xF100
+
+    	
+
+    Retrieves the window menu as a result of a keystroke. For more information, see the Remarks section.
+
+    SC_MAXIMIZE
+    0xF030
+
+    	
+
+    Maximizes the window.
+
+    SC_MINIMIZE
+    0xF020
+
+    	
+
+    Minimizes the window.
+
+    SC_MONITORPOWER
+    0xF170
+
+    	
+
+    Sets the state of the display. This command supports devices that have power-saving features, such as a battery-powered personal computer.
+
+    The lParam parameter can have the following values:
+
+        -1 (the display is powering on)
+        1 (the display is going to low power)
+        2 (the display is being shut off)
+        
+     SC_MOUSEMENU
+    0xF090
+
+    	
+
+    Retrieves the window menu as a result of a mouse click.
+
+    SC_MOVE
+    0xF010
+
+    	
+
+    Moves the window.
+
+    SC_NEXTWINDOW
+    0xF040
+
+    	
+
+    Moves to the next window.
+
+    SC_PREVWINDOW
+    0xF050
+
+    	
+
+    Moves to the previous window.
+
+    SC_RESTORE
+    0xF120
+
+    	
+
+    Restores the window to its normal position and size.
+
+    SC_SCREENSAVE
+    0xF140
+
+    	
+
+    Executes the screen saver application specified in the [boot] section of the System.ini file.
+
+    SC_SIZE
+    0xF000
+
+    	
+
+    Sizes the window.
+
+    SC_TASKLIST
+    0xF130
+
+    	
+
+    Activates the Start menu.
+
+    SC_VSCROLL
+    0xF070
+
+    	
+
+    Scrolls vertically.
+
+     
+lParam
+
+    The low-order word specifies the horizontal position of the cursor, in screen coordinates, if a window menu command is chosen with the mouse. Otherwise, this parameter is not used.
+
+    The high-order word specifies the vertical position of the cursor, in screen coordinates, if a window menu command is chosen with the mouse. This parameter is –1 if the command is chosen using a system accelerator, or zero if using a mnemonic.
+
+Return value
+
+An application should return zero if it processes this message.
+Remarks
+
+To obtain the position coordinates in screen coordinates, use the following code:
+
+
+xPos = GET_X_LPARAM(lParam);    // horizontal position 
+yPos = GET_Y_LPARAM(lParam);    // vertical position
+
+
+
+ CL.AddConstantN('SC_SIZE','LongInt').SetInt( 61440);
+ CL.AddConstantN('SC_MOVE','LongInt').SetInt( 61456);
+ CL.AddConstantN('SC_MINIMIZE','LongInt').SetInt( 61472);
+ CL.AddConstantN('SC_MAXIMIZE','LongInt').SetInt( 61488);
+ CL.AddConstantN('SC_NEXTWINDOW','LongInt').SetInt( 61504);
+ CL.AddConstantN('SC_PREVWINDOW','LongInt').SetInt( 61520);
+ CL.AddConstantN('SC_CLOSE','LongInt').SetInt( 61536);
+ CL.AddConstantN('SC_VSCROLL','LongInt').SetInt( 61552);
+ CL.AddConstantN('SC_HSCROLL','LongInt').SetInt( 61568);
+ CL.AddConstantN('SC_MOUSEMENU','LongInt').SetInt( 61584);
+ CL.AddConstantN('SC_KEYMENU','LongInt').SetInt( 61696);
+ CL.AddConstantN('SC_ARRANGE','LongInt').SetInt( 61712);
+ CL.AddConstantN('SC_RESTORE','LongInt').SetInt( 61728);
+ CL.AddConstantN('SC_TASKLIST','LongInt').SetInt( 61744);
+ CL.AddConstantN('SC_SCREENSAVE','LongInt').SetInt( 61760);
+ CL.AddConstantN('SC_HOTKEY','LongInt').SetInt( 61776);
+ CL.AddConstantN('SC_DEFAULT','LongInt').SetInt( 61792);
+ CL.AddConstantN('SC_MONITORPOWER','LongInt').SetInt( 61808);
+ CL.AddConstantN('SC_CONTEXTHELP','LongInt').SetInt( 61824);
+ CL.AddConstantN('SC_SEPARATOR','LongInt').SetInt( 61455);
+ CL.AddConstantN('SC_ICON','').SetString( SC_MINIMIZE);
+ CL.AddConstantN('SC_ZOOM','').SetString( SC_MAXIMIZE);
+       
+
+
+
+----app_template_loaded_code----

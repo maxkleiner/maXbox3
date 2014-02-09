@@ -1,0 +1,127 @@
+program Lotto_Simulation;
+
+//uses crt;  THIS PROGRAM IS FOR TESTING UNITS TO PROVE CORRECTNESS
+
+//type TCross = (1,2,3,4,5,6,7,8,9,10);
+const cross = 6;
+      peop = 10;
+      numbers = 45;
+
+type lottozahlen= array[1..cross] of byte;
+//lottozahlen= set of TCross;
+         spieler= record
+                    name: string;
+                     tip: array[1..cross] of byte;
+                  end;
+          gruppe= array[1..peop] of spieler;
+     lottozettel= array[1..peop] of lottozahlen;
+
+var    team: gruppe;
+       tips: lottozettel;
+    gezogen: lottozahlen;
+  x,zaehler: longint;
+          z: integer;
+       ende: boolean;
+     people: byte;
+    antwort: string;
+
+procedure AUSFUELLEN(var team: gruppe; var tips: lottozettel; x: integer);
+var n,i: integer;
+begin
+  //tips[x]:= [ ];
+  for i:= 1 to cross do
+    tips[x][i]:= 0; 
+      team[x].name:= readln('Name please: ');
+      for n:= 1 to cross do begin
+        team[x].tip[n]:= strtoInt(readln('number '+inttostr(n)+' of '+inttostr(cross)+' please: '));
+        write(inttostr(n) +' .zahl: '+inttoStr(team[x].tip[n])+'   ');
+        tips[x][n]:= tips[x][n] + (team[x].tip[n]);
+      end;
+     writeln(''); 
+end;
+
+procedure ZIEHUNG(var gezogen: lottozahlen);
+var zufall, step, i, z: integer;
+    dup: boolean;
+begin
+  //gezogen:= [ ];
+  for i:= 1 to cross do
+     gezogen[i]:= 0; 
+   step:= 1;
+   repeat
+     randomize;
+     zufall:= random(numbers)+1;
+     for z:= 1 to cross do 
+      if (gezogen[z] = zufall) then dup:= true;
+    if (not dup) then begin
+      gezogen[step]:= zufall;
+      inc(step);
+    end;
+     {if not (zufall in gezogen)
+     then begin
+       step:= step+1;
+       gezogen:= gezogen+[zufall];
+     end; }
+   until step= cross+1;
+end;
+
+procedure AUSWERTUNG(gezogen:lottozahlen; tips:lottozettel;
+                        team:gruppe; var fertig: boolean);
+var n,i,z: integer;
+begin
+  n:= 0;
+  z:= 1;
+   repeat
+     n:= n+1;
+     for i:= 1 to cross do
+      if gezogen[i]= tips[n][i] then begin 
+     //{if gezogen=tips[n]
+         writeln('');
+         writeln('      So '+inttostr(z)+' richtige hat '+team[n].name);
+         inc(z)
+         ende:= true
+       end;
+    until n= people;
+end;
+
+procedure MASK;
+begin
+  writeln('');
+  writeln('     MAGIC /// ');
+  writeln('    /// LOGIC products  ');
+  writeln('');
+  writeln('  ***************************************************************');
+  writeln('   Statistical Lotto Simulator for several Persons    ');
+  writeln('  ***************************************************************');
+  writeln('');
+  people:= StrtoInt(readln('how many player: '));
+end;
+
+var i: integer;
+
+Begin      //Main 
+memo2.height:= 500;
+repeat
+  MASK;
+  for x:= 1 to people do begin
+      AUSFUELLEN(team,tips,x);
+    end;
+  zaehler:=0;
+  i:= 0;
+  //repeat
+    ende:= false;
+    zaehler:= zaehler+1;
+    ZIEHUNG(gezogen);
+    AUSWERTUNG(gezogen,tips,team,ende);
+  //writeln(inttoStr(zaehler));
+  //until ende or (zaehler=10)  // or keypressed;
+  if ende
+  then writeln(' bonne chance after '+inttostr(zaehler)+' trials');
+       for i:= 1 to cross do
+       writeln(inttostr(gezogen[i]));
+  //else writeln(zaehler,'-mal versucht and no lucky punch');
+  writeln(' once again ? (j/n)');
+  antwort:= readln('ONCE AGAIN antwort: ');
+ until (antwort='n') or (antwort='N')
+end.
+

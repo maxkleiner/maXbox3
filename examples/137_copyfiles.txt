@@ -1,0 +1,46 @@
+//shows file stream-handling with except and free _137
+//runs under Win and Linux (CLX), locs=43
+//***********************************************************
+//resourcestring a='fform';
+
+program xFileStream;
+
+
+procedure CopyFile_Stream(const sourceName, destName: string);
+var
+  srcStream, destStream: TFileStream;
+  exceptstr: string;
+begin
+  srcStream:= NIL;
+  destStream:= NIL;
+  exceptStr:= 'cannot copy %0:s to %1:s: %2:s';
+  try
+    try
+      srcStream:= TFileStream.create(sourceName, fmOpenRead);
+      destStream:= TFileStream.create(destName, fmCreate);
+      destStream.CopyFrom(srcStream, srcStream.size);
+    finally
+      srcStream.Free;
+      destStream.Free;
+    end;     
+  except
+    //on E: Exception
+    Exception.create(Format(exceptStr,[sourceName,destName,'e.message']));
+    //exit;
+  end;
+end;
+
+var 
+  origfile, copyfile: string;
+//main
+begin
+  origfile:= ExePath+'firstdemo.txt';
+  copyfile:= 'firstdemo_copy.txt'
+  CopyFile_Stream(origFile, copyFile)
+  if fileExists(copyFile) then
+    SearchAndOpenFile(copyfile)
+end.
+
+//memo1 is script editor
+//memo2 is output space
+//max@kleiner.com 

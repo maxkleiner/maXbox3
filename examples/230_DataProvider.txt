@@ -1,0 +1,209 @@
+{****************************************************************
+ *
+ * Project  : ClientDataset maXbase SeriesSystem Information Series
+ * App Name : 230_DataProvider.txt, loc's = 142
+ * Purpose  : DB Access via BDE Alias Access
+ * History  : system for mX3.6 ,need: BDE Alias or Database3.mdb in /examples
+ ****************************************************************}
+program DB_DataProvider;
+
+function MyGetTickCount: Longint;
+  external 'GetTickCount@kernel32.dll stdcall';
+  
+var
+  ws: TWideStrings;
+  i: integer;
+
+procedure CreateDBGridForm(dblist: TStringList);
+ //diaform:= CreateMessageDialog('my fast form perform',mtconfirmation, []);
+var 
+    DlgType1: TMsgDlgType;  
+    dbform: TForm;
+begin
+   dbform:= CreateMessageDialog('My Fast Form XML Converter - FFP',mtwarning,
+                                        [mball, mbyes, mbhelp, mbok]);
+   dbform.caption:= 'FFP XML Demo';
+   dbform.setBounds(50,50,800,600)
+   dbform.Formstyle:= fsStayontop;
+   dbform.Color:= 123;
+   with TLabel.Create(self) do begin
+     parent:= dbform;
+     SetBounds(400,50,500,600)
+     font.size:= 14;
+     dblist.Add('converted to...XML')
+     caption:= dblist.text;
+   end;  
+   dbform.show; 
+end;   
+   
+
+Procedure SetADO_SETAccess2;
+var 
+  adoquery: TAdoDataSet;
+  i, z: integer;
+begin  
+  adoquery:= TAdoDataSet.Create(self);
+  with adoquery do begin
+    cachesize:= 500;
+    //commandtext:= 'select count(*)'
+    //commandtext:= 'INSERT INTO Table1 (FirstName, LastName, Phone)'+
+                        //'VALUES (''Max77'', ''Box545'', ''031-333 77 88'')';
+    commandText:= 'SELECT * FROM Table1';
+    connectionString:= 'Provider=MSDASQL;DSN=mx3base;Uid=sa;Pwd=admin';
+    Open;
+  for i:= 0 to Recordcount - 1 do begin
+    for z:= 0 to Fieldcount - 1 do 
+      Write((Fields[z].asString)+'  ');
+    Writeln(#13#10)
+    Next;
+  end;
+    Close;
+    Free;        
+  end;
+end;
+
+
+procedure DB_XML_AliasConverter;
+//uses
+    //Classes, SysUtils, DB, DBTables, Provider, DBClient;
+var
+   i: Integer;
+   BDEAlias: string;
+   abase, abasepath: string;
+   aParams, TableNames: TStringList;
+   aDataSetProvider: TDataSetProvider;
+   CDataSet: TClientDataSet;
+   Table: TTable;
+begin
+  BDEAlias:= 'DBDEMOS';
+  TableNames:= TStringList.Create;
+  AParams:= TStringList.Create; 
+  with TSession.Create(NIL) do try
+    //AutoSessionName := True;
+    SessionName:= 'MainSession3'; 
+    GetAliasParams(BDEAlias, AParams); 
+    OpenDatabase(BDEAlias); 
+    abasepath:= aParams[0];
+    Delete(abasepath,1,7)
+    GetTableNames(abasepath,'', True, False, TableNames);
+  finally
+    Close;
+    Free;
+  end {TSession};
+  Table:= TTable.Create(NIL);
+  aDataSetProvider:= TDataSetProvider.Create(NIL);
+  CDataSet:= TClientDataSet.Create(NIL);
+  try
+    Table.DatabaseName:=  BDEAlias; //tablenames[2];
+    //Table.Params.Assign(AParams); 
+    Writeln('base name '+Table.DatabaseName);
+    for i:= 0 to Pred(TableNames.Count) do begin
+      Table.TableName:= TableNames[i];
+      writeln('table to XML '+Table.Tablename)
+      Table.Open;
+      aDataSetProvider.DataSet:= Table;
+      CDataSet.SetProvider(TComponent(aDataSetProvider));
+      CDataSet.Open;
+      CDataSet.SaveToFile(ExePath+'crypt\'+
+                           ChangeFileExt(Table.TableName,'.xml'),dfXMLUTF8);
+      CDataSet.Close;
+      Table.Close
+    end;
+    CreateDBGridForm(tableNames);
+  finally
+    Table.Free;
+    CdataSet.Free;
+    aDataSetProvider.Free; 
+    //ASession.Free;  
+    AParams.Free;
+    tableNames.Free;
+  end;
+end;
+
+
+begin
+  //SetAdoQuery;
+  //SetAdoSet;
+  //SetADOSETAccess;
+  DB_XML_AliasConverter;
+  //SetADO_SETAccess2;
+  Writeln('Data Link Dir is: '+ DataLinkDir);
+  writeln('machine name is: '+getHostName)
+  writeln('user name is: '+getUserName)
+  writeln('tick count from func ' +IntToStr(GetTickCount));
+  Writeln('Host is: '+getHostbyName('www.softwareschule.ch'))
+  //CreateFileFromString(ExePath+'mycopy.txt',memo2.text);
+  //WriteLog(ExePath+'mylog.txt',memo2.text)
+  ws:= TWideStringList.create;
+  getProviderNames(ws)
+  for i:= 1 to ws.count -1 do 
+    writeln(inttostr(i) +' '+ws.strings[i]);
+  ws.free;  
+end.   
+
+
+*******************************************************
+There is no place like 127.0.0.1 
+
+Exception: Access violation at address 4DE2F83C in module 'msado15.dll'. Read of address 78742E67 at 0.1057
+
+
+[Microsoft][ODBC Driver Manager] Data source name not found and no default driver specified at 35.440
+
+[Microsoft][ODBC Microsoft Access Driver] Query is too complex at 35.607
+
+
+[Microsoft][ODBC Microsoft Access Driver] The Microsoft Jet database engine cannot find the input table or query 'Table1d'.  Make sure it exists and that its name is spelled correctly at 35.556
+
+[Microsoft][ODBC Microsoft Access Driver] Syntax error (missing operator) in query expression '031-333 77 88' at 41.356
+
+[Microsoft][ODBC Microsoft Access Driver] Too few parameters. Expected 2 at 41.354
+
+
+The syntax for the INSERT statement is:
+
+    INSERT INTO table
+    (column-1, column-2, ... column-n)
+    VALUES
+    (value-1, value-2, ... value-n);
+    
+dbs.Execute " INSERT INTO Employees " _
+        & "(FirstName,LastName, Title) VALUES " _
+        & "('Harry', 'Washington', 'Trainee');"
+        
+        
+ADOConnection1.Open;
+ADOQuery1.Close;
+ADOQuery1.SQL.Text := 'SELECT * FROM database1 WHERE
+value1=1 AND value2= ' + inttostr(array[3]);
+        
+QuotedStr rather than ''''    
+
+CommandText does not return a result set at 41.360
+
+ADOQuery1.SQL.Clear;
+ADOQuery1.SQL.Add('Insert into Score ([Score],[Round],[FighterID],[FightID])
+Values('+quotedstr(cbrf1.text)+','+QuotedStr(inttostr(countround))+', )');
+ADOQuery1. ExecSQL;
+ADOQuery1.SQL.Clear;
+
+
+
+In my program, I instansiate a TDataModule at RunTime and put it in a
+variable named FData.
+I then want to assign one of the TDataSources found in FData to a DBGrid's
+DataSource property. So I do this :
+MyGrid.DataSource := FData.DataSource1;
+Of cource, the DataSource is linked to a DataSet (actualy, a Memory table).
+Each time I call FData.DataSet1.Append() I receive a List out of bound
+(0).
+I traced the program and found out that the error is raised in
+TDataSet.DataEvent(Event: TDataEvent; Info: Longint);
+the code is
+for I := 0 to FDataSources.Count - 1 do
+TDataSource(FDataSources[I]).DataEvent(Event, Info);
+I don't know why it raises this error.
+Anyone have any idea ?
+Thanks in advance.
+
+

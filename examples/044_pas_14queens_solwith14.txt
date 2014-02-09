@@ -1,0 +1,111 @@
+//shows the recursive solution to the 8 queens chess problem, max@kleiner.com
+//small output of solution in text mode or file list!, loc's =111 _44
+//92 board solutions are possible! you can find the solutions in a txt file
+
+program Fourten_EightQueensSolutions;
+
+const NB = 10;
+      N_LEFT = 2 * NB;
+      N_RIGHT_R = NB - 1;
+      N_RIGHT_L = 1 - NB;
+
+type
+  Play = array[1..NB] of boolean;
+  Play2 = array[1..NB] of Play;
+  RowCheck = array[1..NB] of boolean;
+  LeftDiagCheck = array[2..N_LEFT] of boolean;
+  RightDiagCheck = array[N_RIGHT_L..N_RIGHT_R] of boolean;
+  
+var 
+  Board : Play2;
+  safeRow: rowCheck;
+  safeleftDiag: LeftDiagCheck;
+  safeRightDiag: RightDiagCheck;
+  row, column, i, tester: integer;
+  reslist: TStringList;
+  time1, time2, diff: TDateTime;
+ 
+  
+function Safe(row,col: shortint; saferow: rowCheck; safeleftDiag: leftDiagCheck;
+                      saferightDiag: rightDiagCheck): boolean;
+//true if a queen can be safely placed in the current position
+begin
+ result:= safeRow[row] and safeLeftDiag[row+col] and safeRightDiag[row-col]
+end;
+ 
+procedure chessPrint(board: Play2);
+var i,j: integer;
+    tempstr, codestr: string;
+//shows the current board layout
+begin
+  tempstr:= '';
+  codestr:= '';
+  reslist.add(inttostr(tester+1))
+  //i is column , j is row ! 
+  for j:= 1 to NB do begin
+    for i:= 1 to NB do
+      if (board[i][j]) then begin
+        tempstr:= tempstr + 'Q'
+        codestr:= codestr + inttostr(i)
+      end else tempstr:= tempstr + 'X';
+        reslist.add(tempstr)
+        tempstr:= '';
+        //write('Q') else write('*'); 
+        //writeln('');
+  end; //for   
+  reslist.add(codestr); 
+  reslist.add('-----------------');
+  inc(tester)
+  writeln(inttostr(tester) + ': '+codestr);
+end;
+
+procedure TryColumn(column: integer; var board: Play2);
+//recursive procedure for attempting queen placement
+var row: integer;
+begin
+  row:= 1
+  repeat 
+    if safe(row, column, saferow, safeleftdiag, saferightdiag) then begin
+      //set the queen
+      saferow[row]:= false;
+      safeleftdiag[row+column]:= false;
+      saferightdiag[row-column]:= false;
+      board[row][column]:= true;
+      if column < NB then
+        Trycolumn(column + 1, board) else 
+           chessPrint(board);
+      //removes queens
+      safeRow[row]:= true;
+      safeleftDiag[row+column]:= true;
+      saferightDiag[row-column]:= true;
+      board[row][column]:= false;
+    end;
+    //row was safe
+    inc(row);
+  until row > NB
+end;
+
+begin
+  //init board & main
+  tester:= 0;
+  time1:= time;
+  writeln(formatdatetime('"start is:" hh:mm:ss:zzz', time)) 
+  reslist:= TStringlist.create;
+  for row:= 1 to NB do safeRow[row]:= true;    
+  for i:= 2 to N_LEFT do safeleftDiag[i]:= true;
+  for i:= N_RIGHT_L to N_RIGHT_R do saferightDiag[i]:= true;
+  for row:= 1 to NB do 
+    for column:= 1 to NB do
+      board[row][column]:= false;
+      //make the first recursive call
+  tryColumn(1, board);
+  reslist.savetoFile('chesssolution_result.txt')
+  memo2.lines.add('all codestrings of solutions');
+  reslist.free; 
+  time2:= time;
+  writeln(formatdatetime('"stop is:" hh:mm:ss:zzz', time)) 
+  Diff:= time2 - time1; 
+  writeln(IntToStr(Trunc(Diff * 24)) + 
+                      FormatDateTime('" h run time:" nn:ss:zzz',Diff));
+  
+end.                                                                             

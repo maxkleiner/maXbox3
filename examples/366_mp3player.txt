@@ -1,0 +1,278 @@
+PROGRAM Duallist_Viewer;
+CONST 
+//<Constant declarations>   locs=119
+  TEXTOUT = ' hi time traveler ';
+  FILENAME = 'maxbox3.exe';
+
+{TYPE 
+<Type declarations>} 
+
+VAR 
+  i, N, SN: integer;
+  getlist: TStringList;
+
+//procedure StrtoList(s: string; const List: TStrings; const delimiter: char=';');
+procedure StrtoList(s: string; const List: TStrings; const delimiter: char);
+var tmp : string;
+    i   : integer;
+begin
+  List.BeginUpdate;
+  if delimiter = '' then delimiter:= ';';
+  try
+   List.Clear;
+   while pos(delimiter, s) > 0 do begin
+     i := pos(delimiter, s);
+     tmp := Copy(s, 1, i - 1);
+     Delete(s, 1, i);
+     List.Add(tmp);
+   end;
+   if s <> '' then
+     List.Add(s);
+  finally
+   List.EndUpdate;
+  end;
+end;
+
+procedure runDuallistForm;
+//var acap: TCaption;
+var getList: TStringlist;
+    mpFrm: TJvDualListForm;
+    mpFrmdlg: TJvDualListDialog; 
+    mbutton: TBitBtn;
+begin
+  getList:= TStringlist.create;
+   if PeBorFormNames(Exepath+FILENAME, getList) then
+       //for i:= 1 to getList.count-1 do 
+         writeln('forms found');
+    {dlist:= TJvDualListDialog.create(self);
+    TForm(dlist).Setbounds(10,10,400,400);
+    dlist.execute
+    dlist.free;}
+  //with TJvDualListForm.create(self) do begin
+  mpFrmDlg:= TJvDualListDialog.create(self);
+  with mpFrmDlg do begin
+    list1:= getList;
+    width:= 600;
+    height:= 650;
+    //SetBounds(10,10,450,400)
+    resizable:= true;
+    label1caption:= 'Song Selection';
+    label2caption:= 'Song List';
+    //Label1Caption.onclick:= 
+    okbtncaption:= 'Player';
+    //TJvDualListDialog(setbounds
+    title:= 'MP3 Dual Player';
+    HelpBtnCaption:= 'Play';
+    //onclick
+    //okBtn.onclick
+    //HelpBtn.onclick:=
+    //width:= 700;
+    //Showmodal;
+    Execute;
+    
+    //showmodal;
+    Free;
+  end;
+  //mpFrm:= TJvDualListForm.create(self);
+  {with mpFrm do begin
+    //list:= getList;
+    width:= 600;
+    height:= 650;
+    //SetBounds(10,10,450,400)
+    BorderStyle:= bsDialog;
+    //okbtncaption:= 'Player';
+    //TJvDualListDialog(setbounds
+    caption:= 'MP3 Dual Player';
+    //width:= 700;
+    //Execute;
+    //Show;
+    showmodal;
+    Free;
+  end;}
+
+  {mButton:= TBitBtn.Create(mpFrm)
+  with mButton do begin
+    Parent:= TForm(mpFrm);
+    setbounds(420,20,150, 40);
+    caption:= 'Open Video';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'OPENFOLDER'); 
+    //event handler
+    //onclick:= @GetMediaData;
+  end; }
+
+  getlist.Free;  
+end; 
+
+
+procedure runPatchForm;
+//var acap: TCaption;
+begin
+  with TFoPatch.create(self) do begin
+    //list1:= getList;
+    SetBounds(10,10,350,200)
+    //okbtncaption:= 'Dual OK';
+    //TJvDualListDialog(setbounds
+    caption:= 'mX3 Patch Form';
+    Showmodal;
+    //showmodal;
+    Free;
+  end;
+end; 
+
+procedure runSwitchForm;
+var ascut: TShortcut;
+begin
+  with TJvSwitch.create(self) do begin
+    //list1:= getList;
+    SetBounds(10,10,350,200)
+    //okbtncaption:= 'Dual OK';
+    //TJvDualListDialog(setbounds
+    //caption:= 'mX3 Patch Form';
+    //ToggleKey;
+    stateon:= true;
+    ToggleSwitch;
+    ShowFocus:= true;
+    //execute
+    //onclick
+    Show;
+    //showmodal;
+    //Free;
+  end;
+end; 
+
+
+
+BEGIN  //Main
+//<Executable statements>
+ runDuallistForm;
+ //runPatchForm;
+ //runSwitchForm;
+
+ //writeln(floattostr(CPUUsage))
+ with TJvCpuUsage2.create(self) do
+   writeln('cpu '+floattostr(usage));
+ writeln(floattostr(kmtonm(23.3)))
+ writeln(floattostr(AttoPascal(10.3)))
+ writeln(floattostr(metretoFeet(10.0)))
+ writeln('PascalToBar  '+floattoStr(PascalToBar(47.5)));
+ writeln('PascalToAt   '+floattoStr(PascalToAt(47.5)));
+ writeln('PascalToTorr '+floattoStr(PascalToTorr(47.5)));
+ 
+  N:= 2; SN:= 1000;
+  {for i:= 1 to round(power(2,N)) do begin 
+    Writeln(intToStr(i)+TEXTOUT + DateTimeToStr(AddHours(Now,-i)));
+    Delay(SN);   //speed of time machine
+  end;}
+  getList:= TStringlist.create;
+     if IsValidPeFile(Exepath+FILENAME) then writeln ('Valid PE File!');
+     if PeVerifyCheckSum(Exepath+FILENAME) then writeln ('Valid CheckSum File!');
+     
+      getList.Free;
+   Writeln(TEXTOUT + DateTimeToStr(AddHours(Now,-(round(power(2,24))))));
+//<Definitions>  
+END. 
+
+
+
+----app_template_loaded_code----
+
+(* === compile-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJvDualListDialog(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TJvComponent', 'TJvDualListDialog') do
+  with CL.AddClassN(CL.FindClass('TJvComponent'),'TJvDualListDialog') do begin
+    RegisterMethod('Constructor Create( AOwner : TComponent)');
+    RegisterMethod('Function Execute : Boolean');
+    RegisterProperty('Ctl3D', 'Boolean', iptrw);
+    RegisterProperty('Sorted', 'Boolean', iptrw);
+    RegisterProperty('Title', 'string', iptrw);
+    RegisterProperty('Label1Caption', 'TCaption', iptrw);
+    RegisterProperty('Label2Caption', 'TCaption', iptrw);
+    RegisterProperty('OkBtnCaption', 'TCaption', iptrw);
+    RegisterProperty('CancelBtnCaption', 'TCaption', iptrw);
+    RegisterProperty('HelpBtnCaption', 'TCaption', iptrw);
+    RegisterProperty('HelpContext', 'THelpContext', iptrw);
+    RegisterProperty('List1', 'TStrings', iptrw);
+    RegisterProperty('List2', 'TStrings', iptrw);
+    RegisterProperty('ShowHelp', 'Boolean', iptrw);
+  end;
+end;
+
+
+(* === compile-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TImageForm(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TForm', 'TImageForm') do
+  with CL.AddClassN(CL.FindClass('TForm'),'TImageForm') do begin
+    RegisterProperty('DirectoryList', 'TDirectoryListBox', iptrw);
+    RegisterProperty('DriveCombo', 'TDriveComboBox', iptrw);
+    RegisterProperty('PathLabel', 'TLabel', iptrw);
+    RegisterProperty('FileEdit', 'TEdit', iptrw);
+    RegisterProperty('ImagePanel', 'TPanel', iptrw);
+    RegisterProperty('Image', 'TImage', iptrw);
+    RegisterProperty('FileListBox', 'TFileListBox', iptrw);
+    RegisterProperty('ImageName', 'TLabel', iptrw);
+    RegisterProperty('FilterCombo', 'TFilterComboBox', iptrw);
+    RegisterProperty('StretchCheck', 'TCheckBox', iptrw);
+    RegisterProperty('FilePics', 'TJvPicClip', iptrw);
+    RegisterProperty('FormStorage', 'TJvFormStorage', iptrw);
+    RegisterProperty('OkBtn', 'TButton', iptrw);
+    RegisterProperty('CancelBtn', 'TButton', iptrw);
+    RegisterProperty('Label2', 'TLabel', iptrw);
+    RegisterProperty('Label3', 'TLabel', iptrw);
+    RegisterProperty('Label4', 'TLabel', iptrw);
+    RegisterProperty('Label5', 'TLabel', iptrw);
+    RegisterProperty('PreviewBtn', 'TSpeedButton', iptrw);
+    RegisterMethod('Procedure FileListBoxClick( Sender : TObject)');
+    RegisterMethod('Procedure StretchCheckClick( Sender : TObject)');
+    RegisterMethod('Procedure FormCreate( Sender : TObject)');
+    RegisterMethod('Procedure FileListBoxChange( Sender : TObject)');
+    RegisterMethod('Procedure FileListBoxDblClick( Sender : TObject)');
+    RegisterMethod('Procedure FormDestroy( Sender : TObject)');
+    RegisterMethod('Procedure PreviewBtnClick( Sender : TObject)');
+    RegisterMethod('Procedure OkBtnClick( Sender : TObject)');
+    RegisterProperty('FileName', 'string', iptrw);
+  end;
+end;
+
+
+http://www.softwareschule.ch/download/maxbox_blix_the_programmer.pdf
+
+  
+  timec:= round(power(2,30)/24);
+  writeln(inttoStr(timec div 365));
+  writeln(intToStr(Round(Power(2,30)/24/365)));
+  writeln(inttoStr(round(power(2,12)) div 24));
+  maxcalcF('170*24');
+  
+  Energy = MemC * Work
+  W = KEt - KEº
+
+
+http://petshopboxstudio.com/goodies/free-vector-character-the-programmer/
+http://lifehacker.com/5401954/programmer-101-teach-yourself-how-to-code
+
+----code_cleared_checked----
+
+ 
+
+There are a lot of opinions out there, but there's no 88not one “best” language. Here's the thing to
+consider: In the end, language doesn't matter THAT much. Understanding data and control
+structures, algorithms, metrics, modelling and design patterns does matter very much. Every
+language, even a simple scripting language, will have elements that you'll use in other languages
+as well and will help 88your understanding. maXbox is build on Object Pascal and is similar to Java or C++ 88, a
+well known and mighty language.
+Script: Examples/336_digiclock2.txt
+Feedback @
+max@kleiner.com
+Literature:
+Kleiner et al., Patterns konkret, 2003, Software & Support
+Links of maXbox Tutorials:
+http://www.softwareschule.ch/maxbox.htm
+http://sourceforge.net/projects/maxbox
+http://sourceforge.net/apps/mediawiki/maxbox/
+http://en.wikipedia.org/wiki/Time_travel
+

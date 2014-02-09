@@ -1,0 +1,588 @@
+program Turtle_Language_Demo;
+
+//*********************************************************************
+// world of fractals, patterns & topology with Turtle, loc's=277, also ex. 252_/  
+// Basic turtle object used in for ex. game and beginners.
+// you can switch in main between the functions(), Voice is on! 
+//*********************************************************************
+(*RRRR    EEEEEE   AAAA   DDDDD    MM     MM   EEEEEE 
+ RR  RR   EE       AA AA  DD  DD   MMMM MMMM   EE    
+ RRRRR    EEEE    AAAAAA  DD   DD  MM MMM MM   EEEE
+ RR  RR   EE      AA   AA DD   DD  MM  M  MM   EE
+ RR   RR  EEEEEE AA    AA DDDDD    MM  M  MM   EEEEEE *)
+ 
+{This script creates a leaf. It is an example of an "iterated function system".} 
+
+Const
+  DAT = 1200;
+  
+type
+  TMemor= array[1..DAT] of double;
+  
+  //TJvTurtle = class(TComponent);
+var
+  cFrm: TForm;
+  myturtle: TJvTurtle;
+  mp: TPoint;
+  //pbox: TPaintBox;
+  //mpan: TPanel;
+  
+
+procedure Sierpinski(a,b,c: TPoint; Recdeepth: integer; aCanvas: TCanvas);
+{ Sierpinski Dreieck (Rekursiv)
+Algorithmus von Alleinherrscher ([url]www.delphipraxis.net[/url])
+28.10.2009 , MX, small correction by c.y, cause sinus() won't work, just cos }
+var new_a,new_b,new_c: TPoint;
+begin
+  acanvas.Pen.Color:= clred;
+  with acanvas do begin
+    moveto((a.x),(a.y));
+    lineto((b.x),(b.y));
+    lineto((c.x),(c.y));
+    lineto((a.x),(a.y));
+  end;
+  new_c.x:= (a.x+b.x ) div 2;
+  new_c.y:= (a.y+b.y) div 2;
+  new_a.x:= (b.x+c.x ) div 2;
+  new_a.y:= (b.y+c.y) div 2;
+  new_b.x:= (a.x+c.x) div 2;
+  new_b.y:= (a.y+c.y) div 2;             
+  if Recdeepth > 0 then begin
+    Sierpinski(a,new_c,new_b, Recdeepth-1, aCanvas);
+    Sierpinski(new_c,b,new_a, Recdeepth-1, aCanvas);
+    Sierpinski(new_b,new_a,c, Recdeepth-1, aCanvas);
+  end;
+end; 
+
+procedure Sierpinski_Setup(vForm: TForm);
+var a,b,c:TPoint;
+    awidth, atop, aleft, i: integer;
+begin
+  awidth:=650;
+  atop:=680;
+  aleft:=50;
+  //edgepoints of first triangle left, bottom:
+  a.x:= aleft;
+  a.y:= atop;
+  b.X:= awidth+a.x;
+  b.y:= atop;
+  c.X:= awidth div 2+aleft;
+  c.y:= atop - awidth;
+  //c.y:= round(atop-Cos((60/360)*2*Pi)*awidth);
+  vForm.canvas.pen.Width:= 1;
+  for i:= 1 to 6 do begin
+    Sierpinski(a,b,c,i,vForm.canvas);
+    sleep(500)
+  end;  
+end; 
+
+
+procedure Barnsleyfern;
+var p, q, pt, qt: single;
+  p1, p2, p3, x: byte;
+  i: integer;
+begin
+p:=0
+q:=0
+i:=0;
+with myTurtle do begin     //@turtle language
+    //canvas:=  cFrm.canvas;
+    //canvas.assign(cFrm)
+    canvas:= cFrm.canvas;
+    canvas.Pen.Color:= clgreen;
+    penDown:= true;
+    //penup
+    penWidth:= 1;
+//# you can change the number of iterations
+//# also change the maps if you like
+ repeat 
+   inc(i)
+   p1:= random(255);
+   p2:= random(255);
+   p3:= random(30);
+ //pc p1,p2,p3
+ //canvas.Pen.Color:= RGB2TColor(p1,p2,p3);
+   canvas.Pen.Color:= SetRGBValue(p1,p2,p3);
+   x:= random(100)
+   pt:= p
+   qt:= q
+ if x < 86 then begin
+  p:=0.85*pt+0.04*qt
+  q:=-0.04*pt+0.85*qt+1.6
+ end; 
+ if (x >= 86) and (x < 93) then begin
+  p:=-0.15*pt+0.28*qt
+  q:=0.26*pt+0.24*qt+0.44
+ end;
+ if (x >=93) and (x < 99) then begin
+  p:=0.2*pt-0.26*qt
+  q:=0.23*pt+0.22*qt+1.6
+ end;
+ if (x >= 99) then begin
+  p:=0;
+  q:=0.16*qt;
+ end;
+ //go 50*p+200, 50*(500-q)
+  mp.x:= round(50*p+200);
+  mp.y:= round(50*(14-q));
+  position:= mp
+ //writeln(inttoStr(mp.y))
+  pendown:= true;
+  moveforward(1);
+  pendown:= false;
+  movebackward(1);
+ //sleep(0)
+ until i > 60000;
+  mp.x:= 0; mp.y:= 0;
+  position:= mp;
+  //Free;
+ end;
+end;
+
+
+procedure TurtleFractal;
+{#this program draws a bit of the Mandelbrot
+#set. It uses advanced maths. To find out
+#more, go to http://en.wikipedia.org/wiki/Mandelbrot_set}
+var p, xr, c1, c2, xt, yt, m, x,y: single;
+    q,s,kmax,i,j,k: byte;
+begin
+ p:=0
+ q:=0
+ i:=0;
+with myTurtle do begin  ////@turtle language
+    //canvas.assign(cFrm)
+    canvas:= cFrm.canvas;
+    canvas.Pen.Color:= clgreen;
+    penDown:= true;
+    penWidth:= 3;
+//cs 500,500
+//# q sets the resolution. 100 is low res
+//# 200 is higher res, but takes a while
+ q:= 170;
+ s:= 40
+ xr:= 0.02/q
+ kmax:= 70
+ m:= 240/(kmax-s);
+for i:= 10 to q-1 do
+ for j:= 1 to q-1 do begin
+  c1:=-0.12+i*xr
+  c2:=-0.92+j*xr
+  x:=0
+  y:=0
+  k:=0    //comment set to structure test
+  p:=0
+  while p < 1 do begin
+   xt:= x*x-y*y+c1;
+   yt:= 2*x*y+c2
+   x:= xt
+   y:= yt
+   k:= k+1
+   if x*x + y*y > 100 then p:=1;
+   if k > kmax then p:=1;
+  end;
+  if k > s then begin
+   //pcolor default  m*(kmax+1-k), m*(kmax+1-k), m*(k-s) 
+    canvas.Pen.Color:= SetRGBValue(round(m*(kmax+1-k)),
+                   round((kmax+1-k)),round(m*(k-s)));
+    mp.x:= round(500*i/q); 
+    mp.y:= round(530*(1-j/q));
+    position:= mp;
+    //canvas.lineto(mp.x, mp.y)
+    //go 500*i/q, 500*(1 - j/q)
+    moveforward(1)
+  end
+ end;
+end; //with
+end;
+
+procedure turtleFirst(firstpoint: smallint);
+begin
+  with myTurtle do begin
+    //canvas.assign(cFrm)
+    canvas:= cFrm.canvas;
+    canvas.Pen.Color:= clred;
+    penDown:= true;
+    //penup
+    penWidth:= 10;
+    mp.x:= 190; mp.y:= 200;
+    Position:= mp;
+    //pencolor
+   {moveforward(200)
+    //right(90)
+    turn(270)
+    moveforward(50)}
+    //# house body
+    turn(firstpoint)    //180
+    moveforward(100)
+    right(90)
+    moveforward(100)
+    turn(90)
+    moveforward(30)
+    //pendown:= false;
+    right(140)
+    moveforward(105)
+    right(80)
+    moveforward(105)
+    right(140)
+    moveforward(30)
+    turn(90)
+    moveforward(100)
+  end;  
+end; 
+
+procedure TurtleEasy;
+begin
+  with myTurtle do begin
+    //canvas.assign(cFrm)
+    canvas:= cFrm.canvas;
+    canvas.Pen.Color:= clred;
+    penDown:= true;
+    //penup
+    penWidth:= 10;
+    mp.x:= 190; mp.y:= 200;
+    Position:= mp;
+    //right(90)    //180
+    moveforward(100)
+    right(90)    //180
+    moveforward(100)
+    //movebackward(100)
+    left(90)    //180
+    moveforward(100)
+   end;
+end;    
+
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  try
+    with cFrm do begin
+      caption:= 'Sierpinski Turtle by maXbox((((*))))';  
+      height:= 750;
+      width:= 690;
+      color:= clblack; //clwhite
+      Position:= poScreenCenter;
+      show;
+      //canvas.assign(myturtle.canvas)
+    end;
+    Application.processMessages;
+  except
+    Exit;
+  end  
+end;
+
+//main theme
+begin
+//*************maXbox graphics series***********************************
+  //processMessagesOff;  for speed
+  with memo2 do begin
+    height:= 190;
+    color:= clblack;
+    font.size:= 18;
+    font.color:= clred;
+  end;  
+  myturtle:= TJvTurtle.create(self);
+  loadForm();
+  //Sierpinski_Setup(cFrm);
+  //Voice('Chaos done and gone') 
+    //turtleEasy;
+    turtleFirst(90);
+    turtleFractal;
+    //Barnsley's fern an early IFS.
+    turtleFirst(180);
+    Barnsleyfern;
+    turtleFirst(90);
+    turtleFirst(360);
+  myTurtle.Free;
+  
+ 
+End.
+
+
+just inside maxbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+                              
+                              
+                              
+performance start is: 17:25:09:093
+performance stop is: 17:26:06:062
+0 h elapsed run time is: 00:56:969                              
+
+
+Summary
+
+Drawing component that allows the drawing of the path of a turtle.
+
+run\JvTurtle.pas
+
+
+[edit] Pascal
+
+ run\JvTurtle.pas
+
+ TJvTurtle = class(TComponent);
+
+
+[edit] Description
+
+    JVCLInfo
+
+Basic turtle object used in for ex. childgame. Assign a canvas (ex. form.canvas) to the TJvTurtle, and a starting point (position: ex. 100, 100). From this point on you can start by moving your turtle across the screen, while it leaves it's trail (it draws a line). Make sure your pen is down, or it will not draw (PenDown property set to true). Easy made functions like Moveforward, Movebackward, Turn, .... allow you to control the turtles movement.
+
+run\JvTurtle.pas
+
+
+[edit] About
+[edit] Navigation
+[-] TJvTurtle
+ TJvTurtle
+ TJvTurtle.Area
+ TJvTurtle.Canvas
+ TJvTurtle.Create@TComponent
+ TJvTurtle.Destroy
+ TJvTurtle.DoCom
+ TJvTurtle.DoRepaintRequest
+ TJvTurtle.DoRequestBackground
+ TJvTurtle.DoRequestFilter
+ TJvTurtle.DoRequestImageSize
+ TJvTurtle.Heading
+ TJvTurtle.Interpret
+ TJvTurtle.Mark
+ TJvTurtle.MoveBackward
+ TJvTurtle.MoveForward
+ TJvTurtle.OnRepaintRequest
+ TJvTurtle.OnRequestBackground
+ TJvTurtle.OnRequestFilter
+ TJvTurtle.OnRequestImageSize
+ TJvTurtle.PenDown
+ TJvTurtle.PenWidth
+ TJvTurtle.Position
+ TJvTurtle.Right
+ TJvTurtle.Turn
+
+run\JvTurtle.pas 
+
+constructor TCustomCntrl.Create(AOwner:TComponent);
+begin
+  inherited Create(AOwner);
+
+  pBox:=TPaintBox.Create(self);
+  pBox.parent:=self;
+  pBox.SetBounds(0,0,width,height);
+  Canvas.Assign(pBox.canvas);     //<ERROR HERE
+
+end;     
+
+
+reset
+penup
+forward 50
+pendown
+pw 2
+go 200, 200
+
+# house body
+
+turnleft 90
+forward 100
+turnright 90
+forward 100
+turnleft 90
+
+forward 30
+turnright 140
+forward 105
+turnright 80
+forward 105
+turnright 140
+forward 30
+
+
+turnleft 90
+forward 100
+
+# attic window
+
+go 120, 90
+turnleft 90
+forward 60
+turnleft 90
+
+repeat 90 [
+  forward 1.05 
+  turnleft  2
+]
+
+# attic window middle line
+
+go 150, 90
+turnright 180
+forward 30
+
+# attic window diagonal lines
+
+tr 45
+go 135, 77
+forward 10
+go 135, 82
+forward 10
+
+go 160, 79
+forward 10
+go 160, 84
+forward 10
+tl 45
+
+# door
+
+go 120,200
+forward 50
+tr 90
+forward 30
+tr 90
+forward 50
+
+# door knob
+
+go 145, 175
+
+repeat 24 [
+  forward 1
+  tr  15
+]
+
+# window
+
+go 160,140
+tr 180
+forward 25
+tr 90
+forward 25
+tr 90
+forward 25
+tr 90 
+forward 25
+tr 90
+
+# window centre lines
+
+go 172.5,140
+forward 25
+tr 90
+
+go 160,127.5
+forward 25
+
+# window diagonal lines
+#pw 1
+tl 45
+go 164, 134
+forward 5
+go 164, 138
+forward 5
+
+go 177, 121
+forward 5
+go 177, 125
+forward 5
+tr 45
+
+go 230,150
+
+
+
+----------------------------
+reset
+canvassize 500,500
+pencolor 0,255,0
+
+p=0
+q=0
+
+# you can change the number of iterations
+# also change the maps if you like
+repeat 60000 [
+ p1 = random 0,255
+ p2 = random 0,255
+ p3 = random 0,30
+ pc p1,p2,p3
+ x = random 1,100
+ pt = p
+ qt = q
+ if x < 86 [
+  p=0.85*pt+0.04*qt
+  q=-0.04*pt+0.85*qt+1.6
+ ]
+ if (x >= 86) and (x < 93) [
+  p=-0.15*pt+0.28*qt
+  q=0.26*pt+0.24*qt+0.44
+ ]
+ if (x >=93) and (x < 99) [
+  p=0.2*pt-0.26*qt
+  q=0.23*pt+0.22*qt+1.6
+ ]
+ if (x >= 99) [
+  p=0
+  q=0.16*qt
+ ]
+ go 50*p+200, 50*(500-q)
+ pendown
+ forward 1
+ penup
+ backward 1
+]
+
+go 0,0
+
+
+#this program draws a bit of the Mandelbrot
+#set. It uses advanced maths. To find out
+#more, go to http://en.wikipedia.org/wiki/Mandelbrot_set
+
+reset
+cs 500,500
+cc 0,0,0
+# q sets the resolution. 100 is low res
+# 200 is higher res, but takes a while
+q=100
+s=40
+xr=0.02/q
+kmax=70
+m=240/(kmax-s)
+
+for i = 10 to q-1 [
+ for j = 1 to q-1 [
+  c1 = -0.12+i*xr
+  c2 = -0.92+j*xr
+  x=0
+  y=0
+  k=0
+  p=0
+  while p < 1 [
+   xt=x*x-y*y+c1
+   yt=2*x*y+c2
+   x=xt
+   y=yt
+   k=k+1
+   if x*x + y*y > 100 [
+    p=1
+   ]
+   if k > kmax [
+    p=1
+   ]
+  ]
+  if k > s [
+   pc m*(kmax+1-k), m*(kmax+1-k), m*(k-s) 
+   go 500*i/q, 500*(1 - j/q)
+   forward 1
+  ]
+ ]
+]
+
+----code_cleared_checked----

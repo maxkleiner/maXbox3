@@ -1,0 +1,54 @@
+program Graphic_Converter;
+// gets a PNG graphic or another format and converts to JPG or another and save
+// just change the extension in const LINE 6, loc's=51, GIF in mX3.1 
+
+const ORIGPIC= '/examples/maxbox3.png';
+      CONVERTPIC = '/examples/maxbox4.jpg';  //extension!
+
+var 
+  myImage: TImage;
+
+procedure buildImageForm;
+var
+  inFrm: TForm;
+begin
+  inFrm:= TForm.create(self)
+  with inFrm do begin
+    position:= poScreenCenter;
+    FormStyle:= fsStayOnTop;
+    color:= clblue;
+    borderStyle:= bsDialog;
+    caption:= 'mX3 Stream_Dream Converter'
+    width:= 750; height:= 450;
+    Show;
+  end;
+  myImage:= TImage.Create(inFrm);
+  with myImage do begin
+    Parent:= inFrm;
+    SetBounds(10,10, inFrm.width, inFrm.height) 
+  end;
+end;  
+
+procedure convertImage(vimage: TImage); 
+begin
+  with TLinearBitmap.Create do
+  try
+    LoadFromFile(ExePath+ORIGPIC);
+    vimage.Picture:= NIL;
+    AssignTo(vimage.Picture.Bitmap);
+    SaveToFile(ExePath+CONVERTPIC); 
+  finally
+    Dispose;
+    Free;
+  end; 
+end;  
+
+begin
+  buildImageForm;
+  convertImage(myImage);
+  SearchAndOpenFile(ExePath+CONVERTPIC)
+  writeln(intToStr(FileSizebyName(ExePath+CONVERTPIC))+' KB of new File!')
+end.
+
+//**************************************************program Image_Converter
+//**************************************************Stream Dream Convert (SDC)

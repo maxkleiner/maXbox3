@@ -1,0 +1,104 @@
+//MaxBox is a scripter tool with an inbuild delphi engine in one exe!
+//designed for teaching and analyzing methods _35
+//runs under Win and Linux (CLX) to build Delphi in a Box, locs=94
+//*************************************************************************
+
+{function IntToHex(Value: Integer; Digits: Integer): string;
+//  FmtStr(Result, '%.*x', [Digits, Value]);
+asm
+        CMP     EDX, 32        // Digits < buffer length?
+        JBE     @A1
+        XOR     EDX, EDX
+@A1:    PUSH    ESI
+        MOV     ESI, ESP
+        SUB     ESP, 32
+        PUSH    ECX            // result ptr
+        MOV     ECX, 16        // base 16 EDX = Digits = field width
+        CALL    CvtInt
+        MOV     EDX, ESI
+        POP     EAX            // result ptr
+        CALL    System.@LStrFromPCharLen
+        ADD     ESP, 32
+        POP     ESI
+end;}
+
+
+program CRC_16_Checksum;
+
+const hValue = '010310260002'; 
+var myCRC: string;
+
+function HexToInt(HexNum: string): LongInt;
+begin
+  Result:=StrToInt('$' + HexNum);
+end;
+
+function IntToBin(Int: Integer): String;
+var
+  i: integer;
+begin
+  Result:= '';
+  for i:= 7 downto 0 do
+  Result:= Result + IntToStr((Int shr i) and 1);
+end;
+
+function BinToInt(Binary: String): Integer;
+var
+  i: integer;
+begin
+  Result:= 0;
+  for i:= Length(Binary) downto 1 do begin
+    result:= StrToInt(Binary[i]) * 1 shl (Length(Binary) - i)
+    Inc(result);
+  end  
+end;
+
+//checksumme crc16
+function CRC16(statement: string): string;
+var crc: word;
+  n,m,i, manz: integer;
+  buff: array[1..256] of byte;
+begin
+  manz:= round(length(statement) /2);
+  i:= 1
+  m:= 1;
+  //convert string in byte integer values
+   for n:= 1 to manz do begin
+     buff[m]:= hextoint(copy(statement,i,2));
+     m:= m+1
+     i:= i+2;
+   end;
+   // compute CRC16  
+   CRC:= $FFFF;
+   for m:= 1 to manz do begin
+     CRC:= (CRC xor buff[m])
+     for n:= 1 to 8 do begin
+      if ((CRC and $0001) = 1) then
+        CRC:= ((CRC shr 1) xor $A001)
+        else 
+         CRC:= (CRC shr 1)
+      //showmessage('testcase: ' + inttobin(CRC) +' round: '+intToStr(m));
+     end
+   end; 
+   // convert crc to turning string 
+   result:= copy(intToHex(CRC,4),3,2) + copy(intToHex(CRC,4),1,2);
+  end;     
+
+begin
+  //mycrc:= CRC16('E93650074D4FEF0F0733CAF57E62C8E0')
+  myCRC:= CRC16(hValue) //from Schleicher Script Prozesstechnik
+  //myCRC:= CRC16('E93650')
+  writeln('CRC from Modbus Control: '+myCRC)
+  //writeln(inttostr(bintoint('1001')))
+  //... add your code here
+end.
+
+
+just inside maXbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_|                                   
+

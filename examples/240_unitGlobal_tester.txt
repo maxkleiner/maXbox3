@@ -1,0 +1,346 @@
+//unit unitGlobal;
+
+(*****************************************************************
+*                                                                *
+*   In dieser Unit sind diverse Methoden und Attribute, die in   *
+*   einer ganzen Applikation benutzt werden.                     *
+*                                                                *
+*   Projekt  : RTS maXbase SPS +  loc's = 346                               *
+*                                                                *
+******************************************************************)
+
+Program GlobalUnitTester;
+
+//interface
+//uses Inifiles, Windows, Controls, Forms, SysUtils, DB, DBTables,
+  //   Dialogs, StdCtrls, Dat_DatenModul, frmGrafik, Menus;
+
+//type TGlobal = class
+  //public
+    procedure TGlobal_StartInit; forward;
+    procedure TGlobal_SetLanguage(aForm : TForm); forward;
+    function  TGlobal_INIRead(Abschnitt: String; Zeile: String) : String; forward;
+    procedure TGlobal_INIWrite(Abschnitt: String; Zeile: String; Wert: String); forward;
+    procedure TGlobal_SetRealLength(var s : String); forward;
+    function  TGlobal_GetCurDir : String; forward;
+    function  TGlobal_GetWinPath : String; forward;
+    procedure TGlobal_Hinweis(MldgNr : Integer); forward;
+    procedure TGlobal_Warnung(MldgNr : Integer); forward;
+    procedure TGlobal_Fehler(MldgNr : Integer); forward;
+    function  TGlobal_Frage(MldgNr : Integer) : Boolean; forward;
+    function  TGlobal_GetMessage(MeldNr : Integer) : String; forward;
+    function  TGlobal_GetText(TextNr : Integer) : String; forward;
+    procedure TGlobal_QueryExec(aQuery : TQuery; SQLString : String); forward;
+    procedure TGlobal_AddToWhere(Wert:Variant; Feld:String; DType:Integer); forward;
+    procedure TGlobal_FilterInit; forward;
+    procedure TGlobal_ShowGraphic(aForm: TForm; aImage: TImage; PicName : String); forward;
+
+//end;
+
+
+Const RTS_STRING = 1;
+      RTS_NUM = 2;
+      RTS_DATE = 3;
+      RTS_BOOL = 4;
+      INIFile = 'RTS.ini';
+      myTextfile = 'Sprache.txt';
+
+var Sprache    : String;
+    GrafikPfad : String;
+    AnzKrit    : Integer;
+    Kriterium  : String;
+    FilterSQL  : String;
+
+    Anlage     : String;
+    Antrieb    : String;
+    Klemmung   : String;
+    AnzAchse   : String;
+    AnzSpindel : String;
+    
+    mByte      : Byte; 	    //An integer type supporting values 0 to 255
+    mCard      : Cardinal;  //The basic unsigned integer type
+    mInt64     : Int64;     //A 64 bit sized integer - the largest in Delphi
+    mInt       : Integer;   //The basic Integer type
+    lInt       : LongInt;   //An Integer whose size is guaranteed to be 32 bits
+    sInt       : ShortInt;  //An integer type supporting values -128 to 127
+    smInt      : SmallInt;  //An Integer type supporting values from -32768 to 32767
+    mWord      : Word; 	    //An integer type supporting values 0 to 65535
+    dWord      : DWord;      //16 bit 
+    lWord      : LongWord;   //type LongWord = 0..4294967295;
+
+//implementation
+
+// INI-File lesen und Variablen initialisieren
+procedure TGlobal_StartInit;
+begin
+  Sprache:= TGlobal_INIRead('Parameter', 'Sprache');
+  GrafikPfad:= TGlobal_INIRead('Parameter', 'Grafikpfad');
+end;
+
+// Setzt die Sprache für das Formular 'aForm'
+procedure TGlobal_SetLanguage(aForm: TForm);
+var i: Integer;
+begin
+  for i:= 0 to aForm.ComponentCount - 1 do begin
+    // Wenn Objekt ein Label...
+    if aForm.Components[i] is TLabel then begin
+      with aForm.Components[i] {as TLabel} do begin
+        TLabel(aForm.Components[i]).Caption:= TGlobal_GetText(Tag);
+      end;
+    end;
+    // Wenn Objekt ein Button...
+    if aForm.Components[i] is TButton then begin
+      with aForm.Components[i] {as TButton} do begin
+        TButton(aForm.Components[i]).Caption:= TGlobal_GetText(Tag);
+      end;
+    end;
+    // Wenn Objekt ein Menüpunkt...
+    if aForm.Components[i] is TMenuItem then begin
+      with aForm.Components[i] {as TMenuItem} do begin
+        TMenuItem(aForm.Components[i]).Caption:= TGlobal_GetText(Tag);
+      end;
+    end;
+  end;
+end;
+
+// Zeile aus dem INI-File lesen
+function TGlobal_INIRead(Abschnitt: String; Zeile: String): String;
+var RTSIni: TIniFile;
+begin
+  RTSIni:= TIniFile.Create(GetCurrentDir + INIFile);
+  Result:= RTSIni.ReadString(Abschnitt, Zeile, 'ERROR');
+  RTSIni.Free;
+end;
+
+// Zeile in dem INIFile schreiben
+procedure TGlobal_INIWrite(Abschnitt: String; Zeile: String; Wert: String);
+var RTSIni: TIniFile;
+begin
+  RTSIni:= TIniFile.Create(GetCurrentDir + INIFile);
+  RTSIni.WriteString(Abschnitt, Zeile, Wert);
+  RTSIni.Free;
+end;
+
+// Hilfs-Prozedur für API-Aufrufe
+procedure TGlobal_SetRealLength(var s: String);
+begin
+  SetLength(s, StrLen(pChar(s)));
+end;
+
+// Aktuelles Verzeichnis ermitteln
+function TGlobal_GetCurDir: String;
+var CurDir: String;
+begin
+  SetLength(CurDir, MAX_PATH);
+  //GetCurrentDir(MAX_PATH, pChar(CurDir));
+  TGlobal_SetRealLength(CurDir);
+  CurDir:= CurDir + '\';
+  Result:= CurDir;
+end;
+
+// Windows-Pfad ermitteln
+function TGlobal_GetWinPath : String;
+var WinDir: String;
+    Laenge: Integer;
+begin
+  Laenge:= 255;
+  SetLength(WinDir, Laenge);
+  Laenge:= GetWindowsDirectory(PChar(WinDir), Laenge);
+  SetLength(WinDir, Laenge);
+  Result:= WinDir + '\';
+end;
+
+// Zeigt eine Information an
+procedure TGlobal_Hinweis(MldgNr: Integer);
+begin
+  MessageDlg(TGlobal_GetMessage(MldgNr), mtInformation, [mbOK], 0);
+end;
+
+// Zeigt eine Warnung an
+procedure TGlobal_Warnung(MldgNr: Integer);
+begin
+  MessageDlg(TGlobal_GetMessage(MldgNr), mtWarning, [mbOK], 0);
+end;
+
+// Zeigt einen Fehler an
+procedure TGlobal_Fehler(MldgNr: Integer);
+begin
+  MessageDlg(TGlobal_GetMessage(MldgNr), mtError, [mbOK], 0);
+end;
+
+// Gibt eine Frage aus. Bei Klick auf 'Ja' wird True zurückgeliefert
+function TGlobal_Frage(MldgNr: Integer): Boolean;
+begin
+  Result:= False;
+  if MessageDlg(TGlobal_GetMessage(MldgNr),
+                        mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+     Result:= True;
+end;
+
+// Holt eine Meldung aus dem Textfile
+function TGlobal_GetMessage(MeldNr: Integer): String;
+var MeldFile: TIniFile;
+begin
+  MeldFile:= TIniFile.Create(GetCurrentDir + myTextFile);
+  Result:= MeldFile.ReadString('Messages' + Sprache, IntToStr(MeldNr), 'ERROR');
+  MeldFile.Free;
+end;
+
+// Holt einen Text aus dem Textfile
+function TGlobal_GetText(TextNr: Integer): String;
+var SprachFile: TIniFile;
+begin
+  SprachFile:= TIniFile.Create(GetCurrentDir + myTextFile);
+  Result:= SprachFile.ReadString('Texte' + Sprache, IntToStr(TextNr), 'ERROR');
+  SprachFile.Free;
+end;
+
+// Setzt einen SQL auf die Datenbank ab
+procedure TGlobal_QueryExec(aQuery: TQuery; SQLString: String);
+begin
+  with aQuery do begin
+    Close;
+    SQL.Clear;
+    SQL.Add(SQLString);
+    Prepare;
+    Open;
+  end;
+end;
+
+// Fügt eine SQL-WHERE Klausel an das Kriterium an. Der Datentyp wird berücksichtigt
+procedure TGlobal_AddToWhere(Wert: Variant; Feld:String; DType:Integer);
+var MyKlausel : String;
+begin
+  MyKlausel:= '';
+  if Length(Wert) > 0 then begin
+    Case DType of
+      RTS_STRING:         // Wenn Datentyp String...
+      begin
+        MyKlausel:= ' LIKE ' + Chr(39) + Wert + Chr(39);
+      end;
+      RTS_NUM:            // Wenn Datentyp Numerisch...
+      begin
+        MyKlausel:= ' = ' + Wert;
+      end;
+      RTS_BOOL:           // Wenn Datentyp Boolean...
+      begin
+        if Wert = 'TRUE' then
+          MyKlausel:= '= TRUE';
+      end;
+      RTS_DATE:           // Wenn Datentyp Datum...
+      begin
+        MyKlausel:= ' = ' + '#' + Format(Wert, ['mm\/dd\/yyy']) + '#';
+      end;
+    end;
+    if AnzKrit > 0 then Kriterium:= Kriterium + ' AND ';
+    Kriterium:= Kriterium + Feld + MyKlausel;
+    Inc(AnzKrit);
+  end;
+end;
+
+// Setzt den Basis-SQL für den Filter
+procedure TGlobal_FilterInit;
+begin
+  FilterSQL:= 'SELECT Artikel.ArtID, Artikel.ArtNr, Artikel.Abmessung, Artikel.Gewicht, Artikel.Bild, Bez.Bez1, ';
+  FilterSQL:= FilterSQL + 'TechDat.MaxWsD, TechDat.MaxWsGO, TechDat.MaxWsGM, TechDat.mDT, TechDat.mW, TechDat.Mk ';
+  FilterSQL:= FilterSQL + 'TechDat.Mh, TechDat.Mv, TechDat.i, TechDat.n ';
+  FilterSQL:= FilterSQL + 'FROM (Bez RIGHT JOIN Artikel ON Bez.BezID = Artikel.BezID) ';
+  FilterSQL:= FilterSQL + 'LEFT JOIN TechDat ON Artikel.ArtID = TechDat.ArtID';
+  Kriterium:= '';
+  AnzKrit:= 0;
+end;
+
+// Zeigt die Grafik an
+procedure TGlobal_ShowGraphic(aForm: TForm; aImage: TImage; PicName: String);
+//var Meldung : TGlobal;
+begin
+  //Meldung := Nil;
+  if PicName <> '' then begin
+    with aForm do begin
+      aimage.Picture.LoadFromFile(GrafikPfad + PicName);
+      aimage.AutoSize := True;
+      Width:= aImage.Width + 40;
+      Height:= aImage.Height + 60;
+      Top:= (Screen.Height - Height) Div 2;
+      Left:= (Screen.Width - Width) Div 2;
+      Show;
+    end;
+  end
+  else begin
+    TGlobal_Warnung(9);
+  end;
+  //Meldung.Free;
+end;
+
+
+var
+    aResult, aRemainder: word;
+    amantissa: extended;
+    aexponent: integer;
+    myshort: shortint;
+    mysmall: smallint;
+    float1, float2 : single;
+    coef: array[0..3] of double; 
+
+begin //main
+
+  TGlobal_FilterInit
+  Writeln(FilterSQL)
+  
+  Writeln(floatToStr(Abs(-23.4)))
+  Writeln(IntToStr(Ceil(1.2)));
+  //CompareValue
+  //SameValue
+  DivMod(20,6,aresult, aremainder)
+  Writeln(Format('DivMod(20,6, result %d, reminder %d)',[aresult,aremainder]))
+  //EnsureRange
+  Writeln(floatToStr(Exp(1.0)));
+  Writeln(IntToStr(Floor(1.2)));
+  Writeln(FloatToStr(Frac(Exp(1.0))));
+  Frexp(Exp(1.0), aMantissa, aExponent)
+  Writeln(Format('Frexp(Exp(1.0), mantissa %f, aexponent %d)',[amantissa,aexponent]))
+//Function CountGenerations(Ancestor,Descendent: TClass): Integer');
+
+  //CountGenerations(TClass(TControl), TClass(TForm))
+  
+  Writeln(FloatToStr(Infinity))
+    float1:= Infinity;
+    float2:= 23;
+  Writeln('float1 - float2 = '+FloatToStr(float1 - float2));
+  //inrange
+  Writeln(FloatToStr(Int(PI)));
+  //intpower
+  Writeln(FloatToStr(IntPower(2,16)));
+  float1:= 1/00000.1;
+  Writeln(BoolToStr(IsInfinite(float1),true))
+  float1:= NAN;
+
+  //Writeln(BoolToStr(IsNan(float1),true))
+  Writeln(FloatToStr(LogN(10,Power(2,64))));
+  Writeln(FloatToStr(LdExp(4.0,3)));     //Calculates X * (2**P)
+  Writeln(FloatToStr(Ln(Exp(1.0))));     
+  Writeln(FloatToStr(LnXP1(Exp(1.0))));     
+  Writeln(FloatToStr(Log10(PI)));     
+  Writeln(FloatToStr(Log2(PI)));     
+  Writeln(FloatToStr(LogN(2,PI)));     
+  Writeln(FloatToStr(PI));    
+  
+  coef[0]:= 2; coef[1]:= 4;
+  coef[2]:= 6; coef[3]:= 8;
+  Writeln(FloatToStr(Poly(2, coef))); //result = 2^0*2 + 2^1*4 + 2^2*6 + 2^3*8 
+  
+  Writeln(FloatToStr(Sqr(PI)));    
+  Writeln(FloatToStr(Sqrt(PI)));    
+  Writeln(IntToStr(Trunc(PI)));   
+  Writeln('two byte '+IntToStr(TwoByteToWord(255,255)));   
+  //SetThreadName('myownthread')
+  Writeln(ByteToHex(TwoByteToWord(255,255)));   
+  
+    with TColorDialog.Create(self) do begin
+     //title:= 'my big pic bit';
+     if execute then
+       showmessage('hit the bit and have a happy day ;)');
+     Free;
+   end; 
+ 
+end.

@@ -1,0 +1,153 @@
+program HTTP_Script_Loader_Local;
+// this is some welcome kind of a internet script loading
+// loads form and the script in a new box! loc's=150
+// variation with a loop of Ex.: 119;
+
+var 
+  myImage, myImage2, myImage3: TImage;
+  inFrm: TForm;
+  myURL1, myURL2, myURL3: string;
+
+procedure FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  myImage.Free;
+  myImage2.Free;
+  myImage3.Free;
+  inFrm.Free;
+end;
+  
+procedure buildImageForm;
+begin
+  inFrm:= TForm.create(self)
+  with inFrm do begin
+    position:= poScreenCenter;
+    FormStyle:= fsStayOnTop;
+    color:= clblue;
+    borderStyle:= bsDialog;
+    caption:= 'mX3 StreamCoderDream'
+    width:= 800; height:= 600;
+    OnClose:= @FormClose;
+    Show;
+  end;
+  myImage:= TImage.Create(inFrm);
+  with myImage do begin
+    Parent:= inFrm;
+    width:= inFrm.width; 
+    height:= inFrm.height;
+    Left:= 10;
+    Top:= 10;
+  end;
+  myImage2:= TImage.Create(inFrm);
+  with myImage2 do begin
+    Parent:= inFrm;
+    width:= inFrm.width; 
+    height:= inFrm.height;
+    Left:= 220;
+    Top:= 520;
+  end;
+  myImage3:= TImage.Create(inFrm);
+  with myImage3 do begin
+    Parent:= inFrm;
+    width:= inFrm.width; 
+    height:= inFrm.height;
+    Left:= 750;
+    Top:= 210;
+  end;
+end;  
+
+procedure getHTTP_PNG(vimage, vimage2, vimage3: TImage); 
+var
+  idHTTP: TIDHTTP;
+  pngStream, pngStream2, pngStream3: TMemoryStream;
+begin
+  myURL1:= 'http://www.softwareschule.ch/download/uc_cryptosystem.png';
+  myURL2:= 'http://www.softwareschule.ch/download/3dphaseshifter.png';
+  myURL3:= 'http://max.kleiner.com/images/gottardo_stamp_small.jpg';
+  //myURL3:= 'http://www.kleiner.ch/kleiner/images/gottardo_klein.jpg';
+
+  with TLinearBitmap.Create do
+  try
+    idHTTP:= TIdHTTP.Create(NIL)
+    pngStream:= TMemoryStream.create;
+    //OptimizeMem
+    idHTTP.Get1(myURL1, pngStream)
+    //idHTTP.Get1(myURL2, pngStream)
+    pngStream.Position:= 0;
+    LoadFromStream2(pngstream,'PNG');
+    vimage.Picture:= NIL;
+    AssignTo(vimage.Picture.Bitmap);
+ 
+    pngStream2:= TMemoryStream.create;
+    idHTTP.Get1(myURL2, pngStream2)
+      pngStream2.Position:= 0;
+    LoadFromStream2(pngstream2,'PNG');
+    AssignTo(vimage2.Picture.Bitmap);
+
+    pngStream3:= TMemoryStream.create;
+    idHTTP.Get1(myURL3, pngStream3)
+      pngStream3.Position:= 0;
+    LoadFromStream2(pngstream3,'JPG');
+    AssignTo(vimage3.Picture.Bitmap);
+     //SaveToFile(ExePath+'mX3GUI.jpg');
+  finally
+    Dispose;
+    Free;
+    idHTTP.Free
+    pngStream.Free;
+    pngStream2.Free;
+    pngStream3.Free;
+  end; 
+end;  
+
+Procedure GetScriptAndRun;
+var 
+  scriptStream: TFileStream;
+  dirList: TStringList;
+  idHTTP: TIDHTTP;
+  myURL, ascript: string;
+  i: integer;
+begin
+  ascript:= '210_public_private_cryptosystem.txt';
+  myURL:= 'http://www.softwareschule.ch/download/'+ascript;
+  {if not FileExists(ExePath+ascript) then begin
+    scriptStream:= TFileStream.create(ExePath+'examples/'+ascript, fmCreate)
+    idHTTP:= TIdHTTP.create(NIL)
+    try
+      idHTTP.Get1(myURL, scriptStream)
+    finally
+      idHTTP.Free
+      scriptStream.Free;
+      maxform1.color:= clRed;
+    end;
+  end;}
+  dirlist:= TStringList.Create;
+  dirlist.Clear;
+  //DirectoryListBox1.update;
+  GetDirList(ExePath+'examples\22*.txt',dirlist,true)
+  //application.processmessages;
+  for i:= 0 to dirlist.count - 1 do begin
+      //Writeln(ExtractFileName(dirlist[i]));
+    aScript:= ExtractFileName(dirlist[i])
+    Delete(ascript,1,7) //delete the search mask
+    Writeln(ascript+' will be loaded');
+    Showmessage('Script '+ascript+ ' will be loaded and executed in another box!');
+    ExecuteShell(ExePath+'maxbox3.exe','"'+ExePath+'examples\'+ascript+'"');
+    //ExecuteShell(ExePath+'maxbox3.exe','');
+  end;
+  Writeln(intToStr(dirlist.count)+ ' script files found')
+  dirlist.Free;    
+  //Showmessage('Script will be loaded and executed in another box!');
+  //ExecuteShell(ExePath+'maxbox3.exe','"'+ExePath+'examples\'+ascript+'"');
+  //playMP3(ExePath+mp3song);
+end;
+
+begin
+  //buildImageForm;
+  //getHTTP_PNG(myImage, myImage2, myImage3);
+  GetScriptAndRun;
+  //Speak('Welcome to the maxbox Coder!')
+  //searchAndOpenDoc(ExePath+'mX3GUI.jpg')
+end.
+
+//**************************************************program HTTP_Code_Streamer;
+//**************************************************

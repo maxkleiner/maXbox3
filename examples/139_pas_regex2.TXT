@@ -1,0 +1,159 @@
+program RegularExpressionTask_PascalNames;
+
+// first interpreter of regex , loc's = 64
+{The current version of RegEx is 1.2 - I have used the library extensively in
+ my own code (albeit for simple expressions), so it is now ready for others
+  to have a go.}
+// profile based, TASK: replace the regeX to match!
+
+  
+var 
+  myRegEX, oexpression: TniRegularExpression;  
+  flagset: TniRegularExpressionMatchFlags;  
+  //oMatcher: TniRegularExpressionMatcher;          
+  oExpression2: TniExtendedRegularExpression;
+  TniRegularExpressionMatchResult: (mrNone, mrFail, mrMatch, mrInsufficient);
+  //flagset : set of TniRegularExpressionMatchFlag;
+
+function fac(numb: integer): longint;
+begin
+  if numb = 0 then
+    result:= 1 else
+  result:= numb * fac(numb-1)
+end; 
+
+{function TniRegularExpression_Match( const sString: string):
+                                      TniRegularExpressionMatchResult;
+var
+  oMatcher: TniRegularExpressionMatcher;
+begin
+  // Prepare for Matching
+  ClearMatches;
+  oMatcher:= TniRegularExpressionMatcher.Create( self, flagSet);
+  try
+    oMatcher.FindMatches( sString, AddMatch);
+  finally
+    oMatcher.Free;
+  end;
+  if FoMatches.Count>0 then
+    Result:= mrMatch
+  else Result:= mrFail;
+End;}
+
+// main script
+begin
+  //myflag:= [mfStartOnly];
+  flagset:= [mfStartOnly,mfLongMatches];
+  myregEx:= TniRegularExpression.create('\d+(.\d+)?',flagset)
+  flagset:= [mfLongMatches]
+  //RegEx of Pascal Names:
+   //[a-zA-Z_][a-zA-Z0-9_]*
+  
+  oExpression:= TniRegularExpression.Create('PascalNames:[a-zA-Z_][a-zA-Z0-9_]*',[ ]);
+  
+  //TniRegularExpressionMatchResult = (mrNone, mrFail, mrMatch, mrInsufficient);
+   if oExpression.match('PascalNames:Get_function_A999') = mrMatch then
+           writeln('expression matched! '+intToStr(oExpression.MatchCount)) else
+             writeln('no matching');
+
+   //constructor TniRegularExpressionMatcher.Create( oOwner: TniRegularExpression;
+   //          xFlags: TniRegularExpressionMatchFlags);
+   //if VerifyAssigned( oExpression, 'Should have an expression to test');
+  writeln('facultry of 6: '+inttostr(fac(6)))
+end.
+
+RegEx of Pascal Names:
+   [a-zA-Z_][a-zA-Z0-9_]*
+
+
+Regular Expressions
+------------------------------------------------------------
+Regular Expressions are a powerful mechanism for searching and matching within plain text. This object implements Regular expressions with the following syntax:
+
+    * a matches the character a
+    * abc matches characters a, b and c in that order
+    * a|b matches either a or b
+    * a? matches a or no a (optionality)
+    * a* matches any number of a or no a (optional with repetition)
+    * a+ matches one or more a (required with repetition)
+    * . matches any one character (tab, space or visible character)
+    * [abc] matches any one of a, b, c
+    * [a-g] matches any letter from a to g
+    * \d matches any digit [0-9]
+    * \a matches any letter [A-Za-z]
+    * \w matches any letter or digit [0-9A-Za-z]
+    * \t matches a tab (#9)
+    * \n matches a newline (#10 or #13)
+    * \b matches space (#32) or tab (#9)
+    * \+ matches + (escape)
+    * \. matches .
+    * ^ matches start of string
+    * $ matches end of string
+
+
+Description
+These specifiers are used to configure the Matcher for the type of matches desired. Note that lack of a flag implies the reverse state ie a match is case insensitive unless mfCaseSensitive is specified.
+
+Some useful combinations:
+
+    * mfStartOnly + mfLongMatches: Find longest match at the start
+      Useful for parsing
+    * mfMultipleMatches + mfOverlapMatches: Find all matches anywhere
+    * mfStartOnly + mfFinishOnly: Entire line must match, not just a portion
+
+Combining mfAllMatches with mvOverlapMatches may result in a large number of results.
+Combinging mfStartOnly with mfFinishOnly requires that the entire line match the expression.
+
+TniRegularExpression Example
+Sample Expressions
+
+    * Integer: \d+
+      (one or more digits)
+    * Number: \d+(.\d+)?
+      (one or more digits optionally followed by decimal point
+       and one or more digits)
+    * Money: \$\d+(,\d\d\d)*(\.\d\d)
+      (Optional dollar sign, followed by 1 or more digits, followed by comma
+       and three digits multiple times, optionally followed by a decimal point
+        and two digits)
+    * Words: colou?r
+      (Match c, o, l, o, optional u, r - american or english spelling)
+    * Number as word: one|two|three|four|five|six|seven|eight|nine|ten
+      Exactly one of one, two, three, four, five, six, seven, eight, nine, ten
+      
+Operation
+Developed from first principals and NFA/DFA theory, this object works as follows (note that this description uses terminology which should in reality be confined to a Computer Science paper):
+
+   1. Parse Regular Expression into a Non-deterministic Finite State Automata (NFA) with lambda transitions
+   2. Merge identical states
+   3. Eliminate Lambda transitions
+   4. Merge identical states
+      (The Removal of lambda transitions can reveal that two transitions are actually identical when they didn't appear so initially)
+   5. Removal of unreachable states
+   6. Removal of non-determinism
+   7. Use the resultant DFA to match an input stream
+
+   
+//oExpression:= TniRegularExpression.Create('ID:[A-Za-z]+=VALUE:[0-9]+',[ ]);
+   
+procedure TniTestExtendedRegularExpression.RunTest;
+var
+  oEx: TniExtendedRegularExpression;
+begin
+  oEx:= TniExtendedRegularExpression.Create('{ID:[A-Za-z]+}={VALUE:[0-9]+}',
+                                                      [ ]);
+  try
+    VerifyAssigned( oExpression, 'Should have an expression to test');
+
+    TestMatch( oEx, 'X=4', 'X=4',
+                            'X', '4');
+    TestMatch( oEx, 'one two three x=4 five six', 'x=4',
+                            'x', '4');
+    TestMatch( oEx, 'twohundredfiftytwo=252', 'twohundredfiftytwo=252',
+                            'twohundredfiftytwo', '252');
+    TestMatch( oEx, 'one thousand and twohundredfiftytwo=252 does not'
+                +'match', 'twohundredfiftytwo=252', 'twohundredfiftytwo', '252');
+  finally
+    oEx.Free;
+  end;
+end;         

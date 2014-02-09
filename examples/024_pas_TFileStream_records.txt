@@ -1,0 +1,85 @@
+//shows the use of filestream and records _23
+//small output of solution, but won't work cause of writebuffer!!
+//task: find another structure to store and retrieve the records
+
+PROGRAM Work_with_FileStream;
+
+type
+  TPerson = record
+    Name: string;
+    vorname: string;
+  end;
+
+  TComputer = record
+    Name: string;
+    cpu: string;
+  end;
+
+var
+  Person: TPerson;
+  Computer: TComputer;
+  myStream: TFileStream;
+
+//implementation
+
+//Save or create the file
+procedure Create_and_SaveStream;
+begin
+  try
+    myStream := TFileStream.Create('streamtest.dat', fmOpenReadWrite);
+  except
+    myStream := TFileStream.Create('streamtest.dat', fmCreate);
+  end;
+
+  //save 2 records for TPerson and TComputer
+  Person.Name    := 'Grossenbacher';
+  Person.vorname := 'Simon';
+  //myStream.WriteBuffer(Person, SizeOf(TPerson));
+
+  Person.Name    := 'Kleiner';
+  Person.vorname := 'Max';
+  //myStream.WriteBuffer(Person, SizeOf(TPerson));
+
+  Computer.Name := 'Delphi';
+  Computer.cpu  := 'Intel';
+  //myStream.WriteBuffer(Computer, SizeOf(TComputer));
+
+  Computer.Name := 'Win';
+  Computer.cpu  := 'AMD';
+  //myStream.WriteBuffer(Computer, SizeOf(TComputer));
+  myStream.Free;
+end;
+
+
+//load records from TPerson to memo2 and
+//load records from TComputer to memo2
+procedure loadFromStream;
+var
+  i: Integer;
+begin
+  try
+    //open read only
+    myStream:= TFileStream.Create('streamtest.dat', fmOpenRead);
+  except
+    ShowMessage('Datei konnte nicht geladen werden.');
+    Exit;
+  end;
+
+  //set variable i to the record count
+  //Read records TPerson
+  for i := 2 downto 1 do begin
+    //myStream.ReadBuffer(Person, SizeOf(TPerson));
+    memo2.lines.Add(Person.vorname + ' ' + Person.Name);
+  end;
+  //Read Records TComputer
+  for i := 2 downto 1 do begin
+    //myStream.ReadBuffer(Computer, SizeOf(TComputer));
+    memo2.lines.Add(Computer.Name + ' ' + Computer.cpu);
+  end;
+  myStream.Free;
+end;
+
+begin //main
+  Create_and_SaveStream;
+  loadFromStream;
+end.  

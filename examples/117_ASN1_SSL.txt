@@ -1,0 +1,210 @@
+program ASN1;
+
+{What is ASN.1?
+ASN.1 is a language with the sole purpose of defining data formats. It
+is useful when you stream data from one application to another or just
+save data to a file.
+StreamSec ASN.1 is based on the ASN.1 1988 syntax with extensions for
+type identifiers and open type declarations. The language guide is
+distributed with the trial and also available as a separate download. }
+// gets a ping protocol - draft works not!
+// shows new section 101 - 120 http/internet examples, loc's=79 
+
+//uses IdASN1Util,
+
+
+var 
+  Idcmp: TIdIcmpClient;
+  RoundTripTime : Double;
+    Host : string;
+    Port : TIdPort;
+    Enterprise: string;
+    GenTrap: integer;
+    SpecTrap: integer;
+    aVersion : integer;
+    PDUType : integer;
+    TimeTicks : integer;
+    ID : integer;
+    ErrorStatus : integer;
+    ErrorIndex : integer;
+    MIBOID : TStringList;
+    MIBValue : TStringList;
+
+(*----------------------------------------------------------------------------*
+ | procedure TSNMPInfo.DecodeBuf                                              |
+ |                                                                            |
+ | Decode an ASN buffer into version, community, MIB OID/Value pairs, etc.    |
+ |                                                                            |
+ | Parameters:                                                                |
+ |     Buffer:string           The ASN buffer to decode                       |
+ *----------------------------------------------------------------------------*)
+procedure TSNMPInfoDecodeBuf(Buffer: string);
+var
+  Poss: integer;
+  endpos,vt: integer;
+  sm,sv, community: string;
+begin
+  Poss:= 2;
+  Endpos:= ASNDecLen(Poss,buffer);
+  aversion:= StrToInt(ASNItem(Poss,buffer,vt));
+  community:= ASNItem(Poss,buffer,vt);
+  PDUType:= StrToInt(ASNItem(Poss,buffer,vt));
+  ID:= StrToInt(ASNItem(Poss,buffer,vt));
+  //Self.ErrorStatus:=Sys.StrToInt(ASNItem(Pos,buffer,vt),0);
+  //Self.ErrorIndex:=Sys.StrToInt(ASNItem(Pos,buffer,vt),0);
+  ASNItem(Poss,buffer,vt);
+  while Poss < Endpos do begin          // Decode MIB/Value pairs
+      ASNItem(Poss,buffer,vt);
+      Sm:= ASNItem(Poss,buffer,vt);
+      Sv:= ASNItem(Poss,buffer,vt);
+      //MIBadd(sm,sv, vt);
+  end;
+end;
+
+function FileSizeByName2(const AFilename: string): longint;
+begin
+  with TFileStream.Create(AFilename, fmOpenRead or fmShareDenyWrite) do
+  try
+    Result:= Size;
+  finally
+    Free;
+  end;
+end;
+
+function IPToID(Host: string): string;
+var
+  s, t: string;
+  i, x: integer;
+begin
+  Result:= '';    {Do not Localize}
+  for x:= 1 to 3 do begin
+      t:= '';    {Do not Localize}
+      s:= Copy(Host, Pos('.', host),Length(Host));    {Do not Localize}
+      t:= Copy(Host, 1, (Length(Host) - Length(s)));
+      Delete(Host, 1, (Length(Host) - Length(s) + 1));
+      //writeln('n '+t)
+      i:= StrToint(t);
+      Result:= Result + Chr(i);
+    end;
+  i:= StrToint(Host);
+  Result:= Result + Chr(i);
+end;
+
+function IsFormOpen(const FormName: string): Boolean; 
+var 
+  i: Integer; 
+begin 
+  Result:= False; 
+  for i:= Screen.FormCount - 1 DownTo 0 do 
+    if (Screen.Forms[i].Name = FormName) then begin 
+      Result:= True; 
+      Break; 
+    end; 
+end; 
+
+begin
+   //if IsFormOpen('maxform1') then writeln('true')
+   Writeln(IPtoID('192.128.065.056'))
+  //PutPing;
+  {if MPing('www.google.com', 4, RoundTripTime) then
+    MessageDlg(Format('Ping moyen : %s',[FormatFloat('0.00',RoundTripTime)]),
+     mtInformation, [mbOK], 0)
+  else
+    MessageDlg('Erreur. L''hôte est sans doute injoignable.',
+    mtInformation, [mbOK], 0); //Host unreachable}
+end.
+------------------------------------------------
+
+************************************************************************/
+/* INDY EXPORTS - GREGOR IBIC, INTELICOM d.o.o. END                     */
+/************************************************************************/
+
+Add the following content to the end of ssleay.num file in util folder.
+Check if the function numbers are sequential.
+
+SSL_set_app_data_indy                   278    EXIST::FUNCTION:
+SSL_get_app_data_indy                   279    EXIST::FUNCTION:
+SSL_CTX_set_info_callback_indy          280    EXIST::FUNCTION:
+X509_STORE_CTX_get_app_data_indy        281    EXIST::FUNCTION:
+X509_get_notBefore_indy                 282    EXIST::FUNCTION:
+X509_get_notAfter_indy                  283    EXIST::FUNCTION:
+UCTTimeDecode_indy                      284    EXIST::FUNCTION:
+SSL_SESSION_get_id_indy                 285    EXIST::FUNCTION:
+SSL_SESSION_get_id_ctx_indy             286    EXIST::FUNCTION:
+SSL_CTX_get_version_indy                287    EXIST::FUNCTION:
+SSL_CTX_set_options_indy                288    EXIST::FUNCTION:
+
+Finally, start compiling OpenSSL by double clicking the mingw32.bat. After compiling the OpenSSL libraries can be found in the main directory, the other programs are in the newly created subdirectory out.
+
+the OpenSSL library containts two dll: Libeay32.dll and libssl32.dll
+The last, modify Indy Source code when needed. 
+
+---------------------------------------------------------
+
+Delphi import unit per OpenSSL DLL
+How to compute SHA1 digest
+Calcolare il digest SHA1 di una stringa
+
+function SHA1(msg: string): string;
+var
+  mdLength, b64Length: integer;
+  mdValue: array [0..EVP_MAX_MD_SIZE] of byte;
+  mdctx: EVP_MD_CTX;
+  memout, b64: pBIO;
+  inbuf, outbuf: array [0..1023] of char;
+begin
+  StrPCopy(inbuf, msg);
+  EVP_DigestInit(@mdctx, EVP_sha1());
+  EVP_DigestUpdate(@mdctx, @inbuf, StrLen(inbuf));
+  EVP_DigestFinal(@mdctx, @mdValue, mdLength);
+  mdLength := EVP_MD_CTX_size(@mdctx);
+  b64 := BIO_new(BIO_f_base64);
+  memout := BIO_new(BIO_s_mem);
+  b64 := BIO_push(b64, memout);
+  BIO_write(b64, @mdValue, mdLength);
+  BIO_flush(b64);
+  b64Length := BIO_read(memout, @outbuf, 1024);
+  outbuf[b64Length-1] := #0;
+  result := StrPas(@outbuf);
+end;
+
+
+AHost =>server to ping
+ATimes =>number of pings to send
+AvgMS =>average time calculated
+
+      <script src="http://www.gmodules.com/gadgets/ifr?url=http://zytugadgets.googlepages.com/einstein.xml&amp;synd=open&amp;w=320&amp;h=200&amp;title=Albert+Einstein+quotes&amp;border=%23ffffff%7C0px%2C1px+solid+%2382CAFA%7C0px%2C2px+solid+%23BDEDFF%7C0px%2C3px+solid+%23E0FFFF&amp;output=js"></script>
+
+
+
+A nice feature in many software applications is the Help Quote that comes up whenever you start the software.  The number of features or how extensive the documentation is for the application will have a direct effect on how many different help topics are covered.  However, what if that content did not have to remain static?  What if there was a way to have a special kind of server setup to deliver the Quote of the Day?  With Indy, there is.  The TidQOTDServer handles the standard Quote of the Day protocol.  Basically this is just another example of how Indy has implemented pretty much every standard protocol.  
+
+
+//**************************************************program HTTP_PNG_Streamer;
+//**************************************************
+
+Here's the constant that is used to build the HTML…
+  WEB_PAGE = '<html>' + #13#10 +
+            '<head>' + #13#10 +
+            '<title>The Amazing HTTP Server</title>' + #13#10 +
+            '</head>' + #13#10 +
+            '<body>' + #13#10 +
+            '<p align="center"><font face="Arial" size="5"><i><b>' +
+            'The color of your magnificent Indy based HTTP ' +
+            'Server is...</b></i></font></p>' + #13#10 +
+            '<p align="center"><i><b><font face="Arial" ' +
+            'color="%s" size="6">%s</font></b></i></p>' + #13#10 +
+            '<p align="center"><font face="Arial" size="5"><i><b>' +
+            'Please pick a color for the HTTP Server:</b></i>' +
+            '</font></p>' + #13#10 + '<p align="center"><i><b>' +
+            '<a href="http://127.0.0.1/blue.htm"><font ' +
+            'face="Arial" size="5" color="#0000FF">BLUE</font>' +
+            '</a></b></i></p>' + #13#10 + '<p align="center">' +
+            '<i><b><a href="http://127.0.0.1/red.htm">' +
+            '<font face="Arial" size="5" color="#FF0000">RED' +
+            '</font></a></b></i></p>' + #13#10 + '<p align="center">' +
+            '<i><b><a href="http://127.0.0.1/yellow.htm">' +
+            '<font face="Arial" size="5" color="#FFFF00">YELLOW' +
+            '</font></a></b></i></p>' + #13#10 + '</body>' + #13#10 +
+            '</html>' + #13#10;
+

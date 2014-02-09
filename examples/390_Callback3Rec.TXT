@@ -1,0 +1,335 @@
+PROGRAM Callback_Recursion_To_HTML;
+// dont fly, robin, fly 
+//#sign max: APSN21: 13.09.2013 08:37:51 
+//#path:E:\maxbox\maxbox3\examples\
+//try also the class TJvStringListToHtml , #file:390_Callback3Rec.TXT
+
+//uses
+  //TJvStringListToHtml
+
+Const
+//resourcestring
+  RC_Html1 = '<HTML>';
+  RC_Html2 = '<TITLE>TStringList converted in JEDI-VCL maXbox Component</TITLE>';
+  RC_Html3 = '<BODY>';
+  RC_Html4 = '<BR>';
+  RC_Html5 = '</BODY>';
+  RC_Html6 = '</HTML>';
+  
+Type
+  TFileCallbackProc = procedure(filename: string);
+  
+
+Function Endian64(x: Int64): Int64;
+begin
+  Result:= (x And $00000000000000FF) Shl 56;
+  Result:= Result + (x and $000000000000FF00) shl 40;
+  Result:= Result + (x and $0000000000FF0000) shl 24;
+  Result:= Result + (x and $00000000FF000000) shl 8;
+  Result:= Result + (x and $000000FF00000000) shr 8;
+  Result:= Result + (x and $0000FF0000000000) shr 24;
+  Result:= Result + (x and $00FF000000000000) shr 40;
+  Result:= Result + (x and $FF00000000000000) shr 56;
+end;
+
+
+Procedure TrimStrings(const Strings: TStrings);
+var i: Integer;
+begin 
+  for i:= 0 to Strings.Count -1 do
+    Strings[i]:= Trim(Strings[i]);
+end; 
+
+
+function TJVStringListToHtml_Convert(Value: TStringList): TStringList;
+var
+  i: Integer;
+begin
+  Result:= TStringList.Create;
+  Result.Add(RC_Html1);
+  Result.Add(RC_Html2);
+  Result.Add(RC_Html3);
+  for i:= 0 to Value.Count - 1 do
+    Result.Add(RC_Html4 + Value[i]);
+  Result.Add(RC_Html5);
+  Result.Add(RC_Html6);
+end;
+
+
+procedure TJvstringListToHtml_ConvertToHtml(Value: TStringList; Path: string);
+var
+  list: TStringList;
+begin
+  // classic memory leak fixed
+  list:= TJVStringListToHtml_Convert(Value);
+  try
+    list.SaveToFile(Path);
+  finally
+    list.Free;
+  end;
+end;
+
+
+var icnt: integer;
+  year, year1, month, month1, day, day1: word;   
+
+ 
+ 
+procedure FindAllFiles(fileList: TStringList; StartDir, FileMask: string);
+var
+  //SR: TSearchRec;
+  DirList: TStringList;
+  IsFound: Boolean;
+  i: integer;
+  myDosdate: TDateTime;
+begin
+  if StartDir[length(StartDir)] <> '\' then
+                       StartDir:= StartDir + '\';
+  { Build filelist in StartDir (not directories!)}
+  IsFound:= FindFirst(StartDir+FileMask, faAnyFile-faDirectory) = 0;
+  while IsFound do begin
+    {myDosdate:= fileDatetoDateTime(searchrectime)
+    decodedate(mydosdate, year, month, day)
+    if (day = day1) and (month = month1) and (year = year1) then }
+       fileList.Add(StartDir + searchrecName);//+DateTimetoStr(mydosdate));
+    IsFound:= FindNext = 0;
+  end;
+  FindClose;
+  //Build list of subdirectories
+  DirList:= TStringList.Create;
+    IsFound:= FindFirst(StartDir+'*.*', faAnyFile) = 0;
+    while IsFound do begin
+      if ((searchrecAttr and faDirectory) <> 0) and
+         (searchrecName[1] <> '.') then
+           DirList.Add(StartDir + searchrecName);
+      IsFound:= FindNext = 0;
+    end;
+    FindClose;
+  //Scan the list of subdirs recursive!
+  for i:= 0 to DirList.Count - 1 do
+    FindAllFiles(fileList, DirList[i], FileMask);
+   DirList.Free;
+end;
+
+procedure StartFileFinder;
+var
+  fileList: TStringList;
+  i: integer;
+begin
+  fileList:= TStringList.Create;
+  try
+  decodeDate(date, year1, month1, day1)
+    //FindAllFiles(FilesList, 'D:\', '*.*');
+    FindAllFiles(fileList, ExePath, '*.*');
+    writeln('Files Found '+inttostr(filelist.count));
+    TJvstringListToHtml_ConvertToHtml(filelist, Exepath+'stlist2.htm');
+    OpenFile(Exepath+'stlist2.htm');
+   //filelist.add(formatdatetime('"Datfinder all files from:" dd:mm:yyyy',date))
+   //filelist.saveToFile(ExePath+'Examples\datefindlist.txt');
+  finally 
+    fileList.Free;
+  end;
+end;
+
+ 
+Function RecFileLook(Filespec: string; callBack: TFileCallbackProc): boolean;
+ {scan for rec subdirs code}
+var
+  validres: integer; {SearchRec routines return 0 if successful}
+  SearchRec: TSearchRec;
+  DirPath, DirName, Flname: string; {search for subdirs flname will be *.*}
+begin
+    DirPath:= ExtractFilePath(FileSpec);
+    Result:= DirectoryExists(DirPath);
+    If not Result then Exit; {some error checking code}
+    Flname:= ExtractFileName(FileSpec); {save wild cards in the filespec}
+    validres:= FindFirst(FileSpec, FaDirectory);
+    while validres = 0 do begin
+      If (SearchRecAttr And faDirectory > 0) And (SearchRecName[1]<>'.') then begin
+        //{ignore two dotted directories, do AND on attribs to confirm
+        // that the current searchrec is a directory}
+        dirname:= SearchRecName+'('; 
+        {add dirname to current path}
+        //writeln(dirpath+dirname) //debug
+        RecFileLook(Dirpath+ dirname+'\'+ Flname, callBack);
+        //now check for subdirs using recursive callback to function
+      end;
+      validres:= FindNext;  
+      callBack(Dirpath+ dirname+ searchrecname);
+        {if it was not a returned
+          from rec search subdirs keep looking in current path}
+    end;
+end; 
+
+ 
+Procedure RecurseDirectory3(aDir : String; Subs: boolean);
+var
+  //SearchRec :TSearchRec;
+  aResult : LongInt;
+begin
+  aResult:= FindFirst(aDir+'\*.*', faAnyFile-faDirectory);
+  while aResult = 0 do begin
+    { This makes sure its not the . or .. directorys}
+    if NOT (SearchRecname[1]='.') then begin
+      if (SearchRecattr and faDirectory) > 0 then begin
+      //if SearchRecattr = faDirectory then begin
+       { its a dir so do a recursive call
+        if subdirectories wanted }
+        writeln('bool '+booleantostring(subs));
+        if Subs then 
+          RecurseDirectory3(aDir +SearchRecname, Subs);
+      end
+      else begin
+      inc(icnt);
+      maxForm1.memo2.lines.Add(inttostr(icnt)+': '+aDir+SearchRecname);
+      end;
+    end; //if . ..
+    aResult:= FindNext;
+  end;
+  findclose;
+end;
+
+
+Procedure RecurseDir(Dir: String; Subdirs: boolean; callback: TFileCallbackProc);
+var
+  //SearchRec :TSearchRec;
+  aResult: integer;
+begin
+  aResult:= FindFirst(Dir+'\*.*', faAnyFile);
+  while aResult = 0 do begin
+    { This makes sure its not the . or .. directorys}
+    if not(SearchRecname[1]='.') then begin
+      if (SearchRecattr and faDirectory) <> 0 then begin
+      { its a dir so do a recursive call
+        if subdirectories wanted }
+        if Subdirs then
+          RecurseDir(Dir +SearchRecname+'\', Subdirs, callback);
+      end
+      else
+        { Call are callback function}
+        callback(dir+SearchRecname);
+      end; //if . ..
+    aResult:= FindNext;  //(SearchRec);
+  end;
+end;
+
+
+Procedure CB_letdataOut(filenamepath: string);
+ begin
+   inc(iCnt);
+   writeln(inttostr(iCnt)+': '+filenamepath) 
+ end;   
+
+
+var 
+    stlist: TStringlist;
+    i: integer;
+
+begin
+  writeln('TeamViewerID: '+getTeamViewerID);
+  writeln('addressinfo '+addressinfo($71A90000));
+  writeln(datetimetostr(FileTimeGMT(exepath+'maxbox3.exe')));
+ //Procedure RecurseDirectory2(Dir : String; IncludeSubs : boolean);
+   {stlist:= TStringlist.create;
+  //stlist.add(memo2.text);
+  for i:= 1 to memo2.lines.count - 1 do 
+    stlist.add(memo2.lines[i]);
+  TJvstringListToHtml_ConvertToHtml(stlist, Exepath+'stlist.htm')
+  OpenFile(Exepath+'stlist.htm');
+  stlist.Free;}
+ 
+    icnt:= 0;
+  //RecurseDirectory(Exepath,false, @letdataout);
+  //RecurseDirectory(Exepath,false, mybackout);
+  Writeln('');
+  Writeln('**************************** Callback Out *********************')
+  //RecurseDir(Exepath,false, mybackout);
+  //RecurseDir(Exepath,true, @letdataout);
+  //RecurseDir(ExePath{TESTD},true, @letdataout);
+  //RecurseDirectory3(ExePath{TESTD}, true);
+
+  writeln('**************************** second route ********************');
+  
+  icnt:= 0;
+  RecFileLook(ExePath+'*.*', @CB_letdataout);
+  StartFileFinder;
+  //ParamStrUTF8
+  // CreateCaret
+   //findalldirectories
+   //CompareFileExt
+ 
+end. 
+
+
+    if DirPath[length(DirPath)] <> '\' then
+                       DirPath:= DirPath + '\';
+
+
+
+(* === compile-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJvStringListToHtml(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TJvComponent', 'TJvStringListToHtml') do
+  with CL.AddClassN(CL.FindClass('TJvComponent'),'TJvStringListToHtml') do begin
+    RegisterMethod('Constructor Create( AOwner : TComponent)');
+      RegisterMethod('Procedure Free');
+    RegisterMethod('Procedure ConvertToHTML( Source : TStrings; const FileName : string)');
+    RegisterMethod('Procedure ConvertToHTMLStrings( Source, Destination : TStrings)');
+    RegisterProperty('HTML', 'TStrings', iptrw);
+    RegisterProperty('Strings', 'TStrings', iptrw);
+    RegisterProperty('HTMLLineBreak', 'string', iptrw);
+    RegisterProperty('HTMLTitle', 'string', iptrw);
+    RegisterProperty('IncludeHeader', 'Boolean', iptrw);
+  end;
+end;
+ 
+
+
+TTarArchive Usage
+-----------------
+- Choose a constructor
+- Make an instance of TTarArchive                  TA := TTarArchive.Create (Filename);
+- Scan through the archive                         TA.Reset;
+                                                   WHILE TA.FindNext (DirRec) DO BEGIN
+- Evaluate the DirRec for each file                  ListBox.Items.Add (DirRec.Name);
+- Read out the current file                          TA.ReadFile (DestFilename);
+  (You can ommit this if you want to
+  read in the directory only)                        END;
+- You're done                                      TA.Free;
+
+
+TTarWriter Usage
+----------------
+- Choose a constructor
+- Make an instance of TTarWriter                   TW := TTarWriter.Create ('my.tar');
+- Add a file to the tar archive                    TW.AddFile ('foobar.txt');
+- Add a string as a file                           TW.AddString (SL.Text, 'joe.txt', Now);
+- Destroy TarWriter instance                       TW.Free;
+- Now your tar file is ready.
+
+
+
+
+The last slash might be optional. Right?
+
+How about something like this:
+
+$url =~ m|([^/]+)/?$|;
+my $end_of_url = $1;
+
+The $ on the end anchors the regular expression to the end of the string. The [^/] means anything that's not a slash and the + after means I want one or more things that are not slashes. Notice that this is in a capture group which are marked with parentheses.
+
+I end the regular expression with /? which means that there may or may not be a slash on the very end of the string. I've put my regular expression between m| and |, so I can use forward slashes without having to constantly escape them.
+
+The last part of the URL is now in $1 and I can set my own scalar variable to save this result.
+share|improve this answer
+
+
+ Raspberry Pi soll Nashörner schützen
+Meldung vorlesen und MP3-Download
+
+Die Entwicklungsfirma Cambridge Consultants nutzt einen Raspberry Pi zur Steuerung eines robusten Kamerasystems, mit dem Nashörnern in Kenias Tsavo-Nationalpark überwacht werden sollen. Die Kamera, die ihre Daten quasi in Echtzeit über Satellit aus dem Park zum kenianischen Wildlife Service schickt, soll das Überleben der Tiere sichern helfen. 
+ 
+
+----app_template_loaded_code----

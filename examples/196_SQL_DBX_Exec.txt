@@ -1,0 +1,322 @@
+program DataBASE_Executer;
+
+// this is in progress with no simple solution at first sight!
+// _196 of maXbase DBSeries 193 - 199, loc's=73
+
+var 
+  E: Exception;
+
+const E6= 1000000; 
+      SQLQuery = 'SELECT * FROM Parts WHERE Description like "%Gauge%"'''; 
+      DBPATH = 'C:\Program Files\Common Files\Borland Shared\Data\MASTSQL7.GDB';      
+
+
+{What you have to do is declare a TSQLConnection variable, create an instance, then with the DataSet's commandtext property, add SQL definitions. Finally, you'll make a call to ExecSQL, and your Query will be executed at runtime. Here's the example code:
+ }
+
+procedure PostDATA(const vDescript: WideString; vPrice: Double);
+var
+  Connection : TSQLConnection;
+  DataSet    : TSQLDataSet;
+begin
+  Connection:= TSQLConnection.Create(NIL);
+  with Connection do begin
+    ConnectionName:= 'VCLScanner';
+    DriverName:= 'INTERBASE';
+    LibraryName:= 'dbxint30.dll';
+    VendorLib:= 'GDS32.DLL';
+    GetDriverFunc:= 'getSQLDriverINTERBASE';
+    Params.Add('User_Name=SYSDBA');
+    Params.Add('Password=masterkey');
+    //Params.Add('Database=Milo2:D:\frank\webservices\umlbank.gdb');
+    Params.Add('Database='+DBPATH);
+    LoginPrompt:= True;
+    Open;
+  end;
+  DataSet:= TSQLDataSet.Create(NIL);
+  with DataSet do begin
+    SQLConnection:= Connection;
+    CommandText:= 
+          Format('INSERT INTO PARTS VALUES("%d","%d","%s","%d","%d","%f","%f")',
+                            [141,3511, vDescript,13,13,1200.23, vPrice]);
+    try
+      ExecSQL(false);
+      //getlastexception
+      //Commit;
+    except
+      E:= Exception.Create('SQL Key Exception: ');
+      Showmessage(E.message+'DATASET Exception not write')
+    end;
+  end;
+  Connection.Close;
+  DataSet.Free;
+  Connection.Free;
+end;
+
+{begin
+ tempSQL:= tSQLdataset.Create(nil);
+ tempSQL.SQLConnection.Name:= 'SQLConnection1';
+ tempSQL.CommandText:=  'Select CustomerName from CustomerFile where CustomerNo=123';
+ tempSQL.Open;
+ label1.Caption := tempSQL.FieldByName('CustomerName ').value;
+end;}
+//dbExpress Version 2.5 not supported yet at 49.764
+
+begin
+  //Application.minimize;
+  Writeln(dateToStr(Today))
+  //BDEInterBaseConnect;
+  PostDATA('m@x Part Gauge', 2124.34);
+  //CreateATable('DBDEMOS','mxadd5');
+  //CopyTable('DBDEMOS','mxadd', 'mxadd5')
+  Writeln(DataLinkDir);
+end.
+
+
+I noticed whenever I start my laptop (running XP SP3), it automatically connects to the following two IP addresses for a brief seconds.
+
+"netstat -a" results:
+TCP SOCRATEASE:1056 60-241-16-172.static.tpgi.com.au:888 SYN_SENT
+TCP SOCRATEASE:1057 122.14.178.61.dail.lz.gs.dynamic.163data.com.cn:6666 SYN_SENT
+
+sometimes it's:
+TCP SOCRATEASE:1077 60.241.16.172:888 ESTABLISHED
+
+I brought up "msconfig" window, cleaned and double checked the "startup" tab and "servies" tab, turned off all-non essential non-Microsoft services and etc.
+Then I reboot the machine and run the "netstat -a" again, but the two suspicious TCP connection still show up.
+
+I ran the Kaspersky on my computer, it came up with nothing.
+I ran the Ad-Aware, still nothing.
+
+clearly, 60.241.16.172 belongs to "tpgi.com.au", an Australian ISP.
+122.14.178.61 belongs to 163data.com.cn, an Chinese ISP.
+
+so my question is:
+
+what applications/viruses would need to "phone home" the two suspicious IP addresses?
+
+And are there any logginig tools for me to find out what programs in my computer is trying to connect to those IP addresses?
+
+The DOS "netstat" command can only show me the active IP connections, but it doesn't say who's sending them.
+
+procedure TForm1.FormShow(Sender: TObject);
+var
+  i:integer;
+begin
+  i:=1;
+  while i <= ADODataSet1.RecordCount do
+  begin
+     ComboBox1.Items.Add(ADODataSet1.Fieldbyname('name').AsString);
+     ADODataSet1.Next;
+   i:=i+1;
+  end;
+end; 
+
+end. 
+
+//In this example we use dbdemos database with Country table  
+
+begin
+    Tabelle.FieldDefs.Add('Ident',ftInteger,0,True); // ich mach mir immer einen eigenen Ident
+    Tabelle.FieldDefs.Add('Vorname',ftString,50,False); // Tabellenfeld Vorname 50 Zeichen
+    Tabelle.FieldDefs.Add('Name',ftString,50,False); // Tabellenfeld Name 50 Zeichen
+    Tabelle.FieldDefs.Add('Strasse',ftString,30,False); // Tabellenfeld Strasse 30 Zeichen
+    Tabelle.FieldDefs.Add('PLZ',ftString,6,False); // usw
+    Tabelle.FieldDefs.Add('Ort',ftString,30,False);
+    Tabelle.FieldDefs.Add('Telefon',ftString,30,False);
+    Tabelle.FieldDefs.Add('EMail',ftString,30,False);
+    Tabelle.IndexDefs.Add('', 'Ident', [ixPrimary, ixUnique]); // und setzte ihn auch als einziartig
+    Tabelle.CreateTable;
+    end;
+
+object ADODataSet1: TADODataSet
+    ConnectionString =
+      'Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Program Files\Co' +
+      'mmon Files\Borland Shared\Data\dbdemos.mdb;Persist Security Info' +
+      '=False'
+    CommandText = 'select Name  from country'
+  end
+  
+  
+TABLE 16.1. PRIMARY TDataSet PROPERTIES.
+
+Property 	Description
+Active 	Opens the dataset when set to True and closes it when set to False.
+AutoCalcFields 	Determines when calculated fields are calculated.
+Bof 	Returns True if the cursor is on the first record in the dataset and False if it isn't.
+CachedUpdates 	When True, updates are held in a cache on the client machine until an entire transaction is complete. When False, all changes to the database are made on a record-by-record basis.
+CanModify 	Determines whether the user can edit the data in the dataset.
+DataSource 	The DataSource component associated with this dataset.
+DatabaseName 	The name of the database that is currently being used.
+Eof Returns True if the cursor is at the end of the file and False if it isn't.
+FieldCount 	The number of fields in the dataset. Because a dataset might be dynamic (the results of a query, for example), the number of fields can vary from one dataset request to the next.
+Fields 	An array of TFields objects that contains information about the fields in the dataset.
+FieldValues 	Returns the value of the specified field for the current record. The value is represented as a Variant.
+Filter 	An expression that determines which records a dataset contains.
+Filtered When True, the dataset is filtered based on either the Filter property or the OnFilterRecord event. When False, the entire dataset is returned.
+FilterOptions 	Determines how filters are applied.
+Found 	Indicates whether a find operation is successful.
+Handle 	A BDE cursor handle to the dataset. This is used only when making direct calls to the BDE.
+Modified Indicates whether the current record has been modified.
+RecNo 	The current record number in the dataset.
+RecordCount 	Returns the number of records in the dataset.
+State 	Returns the current state of the dataset (dsEdit, dsBrowse, dsInsert, and so on).
+UpdateObject 	Specifies the TUpdateObject component to use for cached updates.
+UpdatesPending 	When True, the cached update buffer contains edits not yet applied to the dataset.
+
+
+TABLE 16.2. PRIMARY TDataSet METHODS.
+
+Method 	Description
+Append 	Creates an empty record and adds it to the end of the dataset.
+AppendRecord 	Appends a record to the end of the dataset with the given field data and posts the edit.
+ApplyUpdates 	Instructs the database to apply any pending cached updates. Updates are not actually written until the CommitUpdates method is called.
+Cancel 	Cancels any edits to the current record if the edits have not yet been posted.
+CancelUpdates 	Cancels any pending cached updates.
+ClearFields 	Clears the contents of all fields in the current record.
+CommitUpdates 	Instructs the database to apply updates and clear the cached updates buffer.
+Close 	Closes the dataset.
+Delete 	Deletes the current record.
+DisableControls 	Disables input for all data controls associated with the dataset.
+Edit 	Enables editing of the current record.
+EnableControls 	Enables input for all data controls associated with the dataset.
+FetchAll 	Gets all records from the cursor to the end of the dataset and stores them locally.
+FieldByName 	Returns the TField pointer for a field name.
+
+FindFirst
+
+Example:
+
+  {set up database component}
+  ABSDatabase1.DatabaseName := 'emp_db';
+  ABSDatabase1.DatabaseFileName := 'c:\data\employee_db.abs';
+
+  {set up query component}
+  ABSQuery1.DatabaseName := 'emp_db';
+  ABSQuery1.SQL.Text := 'select * from employee';
+  ABSQuery1.RequestLive := True;
+   
+  if (not ABSDatabase1.Exists) then
+    raise Exception.Create('Database file does not exist');
+
+  {execute and open query}
+  ABSQuery1.Open;
+
+	
+
+Finds the first record that matches the current filter criteria.
+
+FindNext 	Finds the next record that matches the current filter criteria.
+FindLast 	Finds the last record that matches the current filter criteria.
+FindPrior 	Finds the previous record that matches the current filter criteria.
+First 	Moves the cursor to the first record in the dataset.
+FreeBookmark 	Erases a bookmark set previously with GetBookmark and frees the memory allocated for the bookmark.
+GetBookmark 	Sets a bookmark at the current record.
+GetFieldNames 	Retrieves a list of the field names in the dataset.
+GotoBookmark 	Places the cursor at the record indicated by the specified bookmark.
+Insert 	Inserts a record and puts the dataset in edit mode.
+InsertRecord 	Inserts a record in the dataset with the given field data and posts the edit.
+Last 	Positions the cursor on the last record in the dataset.
+Locate 	Searches the dataset for a particular record.
+Lookup 	Locates a record by the fastest possible means and returns the data contained in the record.
+MoveBy 	Moves the cursor by the specified number of rows.
+Next 	Moves the cursor to the next record.
+Open 	Opens the dataset.
+Post 	Writes the edited record data to the database or to the cached update buffer.
+Prior 	Moves the cursor to the previous record.
+Refresh 	Updates the data in the dataset from the database.
+RevertRecord 	When cached updates are used, this method discards changes previously made to the record but not yet written to the database.
+SetFields 	Sets the values for all fields in a record.
+UpdateStatus Returns the current update status when cached updates are enabled.  
+
+
+procedure SIRegister_TBlobStream(CL: TPSPascalCompiler);
+procedure SIRegister_TUpdateSQL(CL: TPSPascalCompiler);
+procedure SIRegister_TQuery(CL: TPSPascalCompiler);
+procedure SIRegister_TStoredProc(CL: TPSPascalCompiler);
+procedure SIRegister_TBatchMove(CL: TPSPascalCompiler);
+procedure SIRegister_TTable(CL: TPSPascalCompiler);
+procedure SIRegister_TIndexFiles(CL: TPSPascalCompiler);
+procedure SIRegister_TDBDataSet(CL: TPSPascalCompiler);
+procedure SIRegister_TNestedTable(CL: TPSPascalCompiler);
+procedure SIRegister_TBDEDataSet(CL: TPSPascalCompiler);
+procedure SIRegister_TSQLUpdateObject(CL: TPSPascalCompiler);
+procedure SIRegister_TDataSetUpdateObject(CL: TPSPascalCompiler);
+procedure SIRegister_TDatabase(CL: TPSPascalCompiler);
+procedure SIRegister_TParamList(CL: TPSPascalCompiler);
+procedure SIRegister_TSession(CL: TPSPascalCompiler);
+procedure SIRegister_TSessionList(CL: TPSPascalCompiler);
+procedure SIRegister_TBDECallback(CL: TPSPascalCompiler);
+procedure SIRegister_TDBError(CL: TPSPascalCompiler);
+procedure SIRegister_EDBEngineError(CL: TPSPascalCompiler);
+procedure SIRegister_DBTables(CL: TPSPascalCompiler);
+
+
+ich habe Probleme mit TQuery. Die Aufgabenstellung: die Items einer Stringliste sollen darauf geprüft werden, ob sie bereits in einer Tabelle stehen. Wenn ja, werden sie aus der Liste gelöscht. Das ganze funktioniert denkbar einfach:
+Code:
+
+
+   ...
+   for i := MaiList.Count - 1 downto do begin
+       MaiQuery1.close;
+       MaiQuery1.SQL.clear;
+       MaiQuery1.SQL.text := 'Select * from MaiTable.db where (MaiFeld like ''' + MaiList[i] + ')''';
+       MaiQuery1.open;
+       if MaiQuery1.recordcount > 0 then
+          MaiList.delete(i)
+   end:
+   ...
+
+begin
+for i := MaiList.Count - 1 downto 0 do
+begin
+MaiQuery1.close;
+//MaiQuery1.SQL.clear; nicht notwendig
+MaiQuery1.SQL.text := 'Select * from MaiTable.db where MaiFeld like "%' + MaiList[i] + '%"';
+MaiQuery1.open;
+if (i > 1537) and (i < 1541) then
+ShowMessage(MaiQuery1.SQL.text);
+if MaiQuery1.recordcount > 0 then
+MaiList.delete(i)
+end;
+end;
+[/delphi:1:da2a96482f]
+
+
+       check:
+procedure SIRegisterTDATASET(CL: TPSPascalCompiler);
+procedure TDATASETFIELDS_R(Self: TDATASET; var T: TFIELDS);
+begin T := Self.FIELDS; end;
+
+//{$IFNDEF FPC}
+
+procedure TDATASETFIELDLIST_R(Self: TDATASET; var T: TFIELDLIST);
+begin T := Self.FIELDLIST; end;
+
+
+TSQLDataSet is a forward only read only dataset. As you move the cursor
+through the dataset by calling TSQLDataSet.Next it fetches the rows one
+at a time. It does not buffer multiple rows on the client. That is the
+function of TClientDataSet.
+
+Many thanks for that. So I take it that SQLDataset.Open causes the SQL
+
+
+thi is a Sample of insert, in a table with 4 fields, with the SQLQuery.
+
+begin
+
+TableSQL.Active := False;
+TableSQL.SQL.Clear;
+TableSQL.SQL.Add('INSERT INTO EXAMPLE_TABLE(FIELD1, FIELD2, FIELD3,
+FIELD4) VALUES (:PFIELD1, :PFIELD2, :PFIELD3,:PFIELD4);
+TableSQL.ParamByName('PFIELD1').AsString := 'TEST';
+TableSQL.ParamByName('PFIELD2').AsInteger := 10;
+TableSQL.ParamByName('PFIELD3').AsFloat := 10.34;
+TableSQL.ParamByName('PFIELD4').AsDateTime := Now;
+TableSQL.ExecSQL;
+
+end;
+
+In the table, the FIELD1 is a string, the 2 is an integer, the 3 is a
+flating and the last is a timestamp.

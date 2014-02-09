@@ -1,0 +1,251 @@
+program fractals_withperformance_test;
+
+//*********************************************************************
+// the world of fractals, chaos, patterns & topology, loc's=234, ex.72  
+// strange worlds of mandelbrot, lorenz attractors & bifurcations;)
+// you can switch in main between the functions() 
+//*********************************************************************
+(*RRRR    EEEEEE   AAAA   DDDDD    MM     MM   EEEEEE 
+ RR  RR   EE       AA AA  DD  DD   MMMM MMMM   EE    
+ RRRRR    EEEE    AAAAAA  DD   DD  MM MMM MM   EEEE
+ RR  RR   EE      AA   AA DD   DD  MM  M  MM   EE
+ RR   RR  EEEEEE AA    AA DDDDD    MM  M  MM   EEEEEE *)
+ 
+const
+  DAT = 1200;
+  CHDAT = 450;          
+
+type
+  TMemor= array[1..DAT] of double;
+
+var
+  scaleX1, scaleX2, scaleY1, scaleY2: double;
+  cFrm: TForm;
+  chartData: TMemor;
+  time1, time2, diff: TDateTime;
+  
+procedure scaleResults(const X, Y : double; var intX, intY : integer;
+                                        width, height: integer);
+var scaledX, scaledY: double; 
+ begin
+   scaledX:= (X-scaleX1)/(scaleX2-scaleX1);
+   scaledY:= (Y-scaleY2)/(scaleY1-scaleY2);
+   intX:= round(scaledX * width);
+   intY:= round(scaledY * height);
+ end; 
+
+procedure Mandelbrot_process(X, Y, au,bu: double;
+                                     X2, Y2: integer; vForm: TForm);
+var 
+  c1, c2, z1, z2, tmp: single;
+  i, j, count: integer;
+begin
+  c2:= bu;
+for i:= 10 to X2 do begin
+  c1:= au;  
+  for j:= 0 to Y2 do begin
+    z1:= 0;
+    z2:= 0;
+    count:= 0;
+    {count is deep of iteration of the mandelbrot set
+     if |z| >=2 then z is not a member of a mandelset}
+    while (((z1*z1 + z2*z2 <4) AND (count <= 90))) do begin
+      tmp:=z1;
+      z1:= z1*z1 - z2*z2 + c1;
+      z2:= 2*tmp*z2+c2;
+      inc(count);
+    end;    
+    //the color-palette depends on TColor(n*count mod t)
+    //vForm.Canvas.pen.Color:= (16*count mod 155);
+    vForm.Canvas.Pixels[j,i]:= (16*count mod 255);
+    c1:=c1 + X;
+  end;
+  c2:= c2 + Y;
+end;
+end; 
+
+procedure Mandelbrotsetup(vForm: TForm);
+var 
+  X1, X2, Y1, Y2: integer;
+  dX, dY, bo, bu, au, ao: double;
+begin
+  X1:=0; X2:=420;
+  Y1:=0; Y2:=440;
+  ao:=1; au:=-2; bo:=1.5;
+  bu:= -1.5; dX:= (ao-au)/(X2-X1);
+  //direct scaling cause of speed
+  dY:= (bo-bu)/(Y2-Y1); 
+  Mandelbrot_process(dX, dY, au,bu, X2, Y2, vForm);
+end;  
+ 
+
+procedure Lorenz_process(var X, Y, Z: double; vForm: TForm);
+var intX, intY : integer;
+  dX, dY, dZ: double; 
+begin 
+  dY:= X * (28-Z)-Y; 
+  dX:= 10 * (Y-X); 
+  dZ:= X * Y- (8/3) * Z; 
+  scaleResults(X,Y,intX,intY, vForm.ClientWidth, vForm.ClientHeight);
+  {$IFDEF LINUX}
+    vForm.Canvas.DrawPoint(intX,intY);
+  {$ELSE}
+    vForm.Canvas.Pixels[intX, intY]:= clRed; 
+  {$ENDIF}
+  X:= X+ 0.01 * dX;
+  Y:= Y+ 0.01 * dY; 
+  Z:= Z+ 0.01 * Dz;
+end;
+
+procedure ModelLorenzsetup(vForm: TForm);
+var
+  i: integer;
+  x, y, z: double; 
+begin
+  scaleX1:=-20; scaleX2:=20;
+  scaleY1:=-25; scaleY2:=30; 
+  X:= 0.1; Y:= 0.1; Z:= 0.1; 
+  for i:= 1 to 6500 do 
+    Lorenz_process(X,Y,Z, vForm);
+end; 
+
+procedure Bifurcation_process(var X, Y: double; vForm: TForm);
+var 
+  j,k,i: integer;
+  r: double;
+begin 
+  for i:=0 to 630 do begin 
+    //i and r depends on overflow
+    r:=2.95+1.643192e-03*i; 
+    X:=0.02;
+    for j:=1 to 350 do X:=r*X*(1-X);
+    //accuracy filter
+    for k:=1 to 220 do begin
+    {$IFDEF LINUX}
+      vForm.Canvas.DrawPoint(i,round(390*(1.0-X)));
+    {$ELSE}
+      vForm.Canvas.Pixels[i,round(390*(1.0-X))]:= clBlue;
+    {$ENDIF}
+      X:=r*X*(1-X); 
+    end;
+  end;
+end; 
+ 
+procedure Bifurcationsetup(vForm: TForm);
+var X, Y: double;
+begin
+  X:=1; Y:=1; 
+  vForm.Canvas.pen.Color:=clblue;
+  bifurcation_process(X,Y, vForm);
+  //direct mode without scaling
+end;  
+
+
+function ChartGenerator(HBase, count: integer; var vdata: TMemor): boolean;
+var
+  i, y2: Integer;
+  startvalue: Extended;
+begin
+  randomize;
+  y2:= HBase;
+  startvalue:= 0.5;
+  try
+    result:= false;
+    for i:= 1 to count do begin
+      y2:= y2 + (random(15) - random(15));
+      if y2 > 0 then
+      vdata[i]:= abs(round(y2))
+      else vdata[i]:= 1;
+    end;
+   result:= true;
+  finally
+   //randomize;
+  end;
+end;
+
+
+procedure drawChart(vForm: TForm);
+var
+  i, hsize: integer;
+begin
+  with vForm.canvas do begin
+    hsize:= vForm.Height - 1 div 2;
+    Pen.Color:= clblue;
+    moveto(0, hsize -(round(chartData[1])));
+    for i:= 1 to CHDAT do
+      LineTo(i, hsize -(round(chartData[i])));
+  end;
+end;
+
+procedure preInitArray;
+var
+  i: Integer;
+begin
+   for i:= 1 to DAT-1 do chartdata[i]:= 0;
+end;
+
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  try
+    with cFrm do begin
+      caption:= 'choasMAX((((((*)';  
+      height:= 450;
+      width:= 460;
+      color:= clblack;
+      Position := poScreenCenter;
+      show;
+    end;
+    Application.processMessages;
+  except
+    exit
+  end  
+end;
+
+//main chaos
+begin
+//*************maXbox graphics series***********************************
+  processMessagesOff;
+  with memo2 do begin
+    height:= 390;
+    color:= clblack;
+    font.size:= 18;
+    font.color:= clred;
+    //clear;
+  end;  
+  time1:= time;
+  writeln(formatdatetime('"performance start is:" hh:mm:ss:zzz', time)) 
+  loadForm();
+  Mandelbrotsetup(cFrm);
+  ModelLorenzsetup(cFrm);
+  Bifurcationsetup(cFrm);
+  preInitArray;
+    if chartGenerator(cFrm.height div 2, CHDAT, chartData) then
+      drawChart(cFrm);
+    if chartGenerator(cFrm.height div 2, CHDAT, chartData) then
+      drawChart(cFrm);
+  time2:= time;
+  writeln(formatdatetime('"performance stop is:" hh:mm:ss:zzz', time)) 
+  Diff:= time2 - time1; 
+  writeln(IntToStr(Trunc(Diff * 24)) + 
+                   FormatDateTime('" h elapsed run time is:" nn:ss:zzz',Diff));
+  voice('chaos done and gone')                 
+end.
+
+just inside maxbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+                              
+
+performance start is: 23:56:51:093
+performance stop is: 23:57:58:093
+0 h elapsed run time is: 01:07:000
+
+performance start is: 23:59:33:375
+performance stop is: 00:00:39:265
+-23 h elapsed run time is: 58:54:110 !!!

@@ -1,0 +1,103 @@
+program DrawArrow_MX;
+
+// complex drawfunction ..draw an arrow (II)? _86
+
+var
+  BeginPoint: TPoint;
+  Image1: TImage;
+  frmMon: TForm;
+{ .... }
+//uses Math;
+{ .... }
+
+function Point(AX, AY: Integer): TPoint;
+begin
+  Result.X:= AX;
+  Result.Y:= AY;
+end;
+
+procedure Image1MouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  BeginPoint.X:= X;
+  BeginPoint.Y:= Y;
+end;
+
+procedure Image1MouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+var
+  B, deltaX, deltaY: Extended;
+begin
+  Image1.Canvas.Pen.width:= 30;
+  // Beginpoint is the point from where the use drew the line
+  Image1.Canvas.MoveTo(X,Y);
+  Image1.Canvas.LineTo(X,Y);
+  if BeginPoint.X <> X then begin// checks for division by zero
+    if (BeginPoint.X > X) then
+      B:= DegToRad(135) - Tan((BeginPoint.Y - Y) / (BeginPoint.X - X))
+    else
+      B:= DegToRad(45) - Tan((BeginPoint.Y - Y) / (BeginPoint.X - X));
+    // the arrow will have a 45 deg corner
+    deltaX := 45 * Cos(B); // 15 is the length of the arrow
+    deltaY := 45 * Sin(B);
+
+    if (BeginPoint.X > X) then begin
+      //Image1.Canvas.PenPos := Point(X, Y);
+      Image1.Canvas.MoveTo(X,Y);
+      Image1.Canvas.LineTo(X - Trunc(deltaX), Y + Trunc(deltaY));
+      Image1.Canvas.MoveTo(X,Y);
+      Image1.Canvas.LineTo(X + Trunc(deltaY), Y + Trunc(deltaX));
+    end
+    else begin
+      //Image1.Canvas.PenPos := Point(X, Y);
+      Image1.Canvas.MoveTo(X,Y);
+      Image1.Canvas.LineTo(X - Trunc(deltaX), Y + Trunc(deltaY));
+      Image1.Canvas.MoveTo(X,Y);
+      Image1.Canvas.LineTo(X - Trunc(deltaY), Y - Trunc(deltaX));
+    end;
+  end
+  else begin
+    if BeginPoint.Y > Y then begin
+      Image1.Canvas.MoveTo(X,Y);
+      Image1.Canvas.LineTo(X + 10, Y + 10);
+      Image1.Canvas.MoveTo(X,Y);
+      Image1.Canvas.LineTo(X - 10, Y + 10);
+    end else begin
+      //Image1.Canvas.PenPos := Point(X, Y);
+      Image1.Canvas.MoveTo(X,Y);
+      Image1.Canvas.LineTo(X + 10, Y - 10);
+      Image1.Canvas.MoveTo(X,Y);
+      Image1.Canvas.LineTo(X - 10, Y - 10);
+    end;
+  end;
+end;
+
+procedure InitForms;
+begin
+frmMon:= TForm.create(self);
+ with frmMon do begin
+   //FormStyle := fsStayOnTop;
+   Position := poScreenCenter;
+   caption:='click on the form';
+   color:= clred;
+   width:= 450;
+   height:= 400;
+   show
+ end;
+Image1:= TImage.create(frmMon);
+ with Image1 do begin
+   parent:= frmMon;
+   setbounds(10,25, 400,300);
+   show;
+   onMousedown:= @Image1MouseDown;
+   onMouseup:= @Image1MouseUp
+   //text:='maTRIx inside from memo'
+ end;
+end; 
+
+// main graph
+begin
+  InitForms
+end.  
+
+

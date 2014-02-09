@@ -1,0 +1,85 @@
+program Primtester_3;
+
+{ simple primtester between range for perfomance- and filehandling 
+has a function and procedure, consts, globals and locals, locs = 77
+shows sequence, selection and iteration (units are implicit)
+to teach programming for beginners in maXbox!//LIMITS 4294967296 ; 2147483648}
+
+const
+  //FROM_RANGE = 90000000; //start with even numbers
+  //TO_RANGE =  100000000;
+  //FROM_RANGE = 2146483400; //1: 2146483429    
+  //TO_RANGE   = 2147483640; //46610: 2147483629 about 1 h:36:47:210
+  FROM_RANGE = 1000;
+  TO_RANGE = 5000;
+  //FROM_RANGE = 2147483400;     
+  //TO_RANGE = 2147483645;   // = 10 primes as test
+  PRIMEFILE = 'primetest_12_MILL_new.txt';
+
+//globals
+var  
+  mylist: TStringList;   //is an object of class TStringList! 
+  time1, time2, diff: TDateTime;
+
+function checkPrime(acti: integer): boolean;
+var //locals
+  j, mysqr: integer;
+  isprim: boolean;
+begin
+  isprim:= true;
+  mysqr:= round(SQRT(acti));
+  //for j:= 2 to round( SQRT(acti)) do
+  for j:= 2 to mysqr do
+    if ((acti mod j) = 0) then begin
+      isprim:= false
+      break
+    end; 
+  result:= isprim;
+end;
+
+
+procedure TestPrimeNumbers(Vfrom_range, Vto_range: integer; vlist: TStringlist);
+var acti, count: integer;
+begin
+  count:= 0; //init
+  for acti:= Vfrom_range to Vto_range do begin
+    inc(acti)
+    if checkPrime(acti) then begin
+      inc(count)
+      mylist.add(intToStr(count)+': '+intToStr(acti));
+    end //if
+  end //for
+end;
+
+var 
+  myres: int64;
+
+//main program
+begin
+  //time performance
+  time1:= time;
+  writeln(formatdatetime('"performance start is:" hh:mm:ss:zzz', time)) 
+  mylist:= TStringList.create;
+    TestPrimeNumbers(FROM_RANGE, TO_RANGE, mylist);
+  time2:= time; 
+  writeln(formatdatetime('"performance stop is:" hh:mm:ss:zzz', time)) 
+  Diff:= time2 - time1; 
+  writeln(IntToStr(Trunc(Diff * 24)) + 
+                   FormatDateTime('" h run time is:" nn:ss:zzz',Diff));
+  mylist.add(memo2.text)
+  mylist.saveToFile(PRIMEFILE)
+  mylist.Free;
+  //memo2.lines.loadFromFile(PRIMEFILE)
+  //test with myres
+  myres:= trunc(SQRT(922337205807))
+  writeln(inttostr((myres)))
+  //orthogonal and idempotent!
+end.
+
+
+{maXbox D:\firefoxdown\maxbox2_77\maxbox_2_777\maxbox2\examples\50_program_starter_performance_lesssqr.txt Compiled done: 11.01.2010 17:56:14
+performance start is: 17:56:14:973
+performance stop is: 21:44:17:766
+3 h elapsed run time is: 48:02:793
+960383}
+

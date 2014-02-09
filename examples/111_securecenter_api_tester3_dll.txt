@@ -1,0 +1,221 @@
+{****************************************************************
+ *
+ * Project  : SCAPIT - Secure Center API Tester
+ * Unit Name: 1314_sysinformation_shell, loc's = 131
+ * Purpose  : Demonstrates SecureCenter imported functions from Windows API
+ * History  : milo dll, teplas dll, v2.5 
+ ****************************************************************}
+
+program SecureCenterDLL_Tester;
+
+// Example Ressources from SC CD ..\SC_Official_Keylist.zip
+
+
+const REGPATH= '\SYSTEM\CurrentControlSet\services\SCCSService';  
+      REGROOT= HKEY_LOCAL_MACHINE;
+      REGITEM= 'ImagePath';
+
+
+const PASSPHRASE = '99 Luftballone in Holland$';
+      KEYFILE = 'Alchenberger_Lorenz_2007.scsekey';   //9F08D2EC....hash
+      DOCFILE = 'maxbox_starter5.pdf';
+      CIPHERFILE = 'maxbox_starter5.pdf.scse';
+      SUBDIR = 'ciphertest\';
+      
+
+//DLL Test Generic -----------------------------------------------
+function  MessageBeep(para: integer): byte;
+     external 'MessageBeep@user32.dll stdcall';  
+
+function MyGetTickCount: Longint;
+  external 'GetTickCount@kernel32.dll stdcall';
+ 
+procedure MySleep(Milliseconds: Cardinal);
+  external 'Sleep@kernel32.dll stdcall';
+//----------------------------------------------------------------  
+  
+{function CreateKey(mtype: word; username, keyname, password, validfrom, 
+                  validuntil: PChar; var key: pointer; var keylength: word;
+                   var keyhash: Pchar): word;
+  external 'SCCreateNewKey@SecureCiphering.dll stdcall';}  
+
+function SCCipherTheFile2(handle: word; keyname, password: PChar; actionattrib: word;                 workfilename: pChar; var postfilename: string; MB: boolean): word;
+  external 'SCCipherTheFile@SecureCiphering.dll stdcall';  
+  
+procedure SCCipherProgress(var PercentsDone: WORD; cancel: boolean); 
+  external 'SCCipherProgress@SecureCiphering.dll stdcall';  
+    
+    
+function SCLoadAndSetKeyStateWithFileName2(Handle: word; SCKeyName, Password: PChar;
+                        ActId: WORD; KeyHash: pchar): WORD;
+  external 'SCLoadAndSetKeyStateWithFileName@SecureCiphering.dll stdcall';           
+ 
+var
+  mytimestamp: TDateTime;
+  E: Extended;
+  cfile, keyhash: string;
+  errorCode, progress: word;
+  osType: TIdWin32Type;
+
+
+Procedure DateTimeExample;
+Var S, S1 : String;
+begin
+  {Time, Date, and Now are all basically interchangable.}
+  {They all return a DateTime value.}
+  S1:=DateToStr(Now2);
+  Case DayOfWeek(Date) of
+     1: S:='Sunday';
+     2: S:='Monday';
+     3: S:='Tuesday';
+     4: S:='Wednesday';
+     5: S:='Thursday';
+     6: S:='Friday';
+     7: S:='Saturday';
+  Else S:='Noneday';
+  End; {Case}
+  writeln(S+' '+S1+' '+TimeToStr(Time));
+end;
+
+
+procedure SC_Cipher;
+ //example with key and passphrase in parameter, para 1 is cipher
+begin  
+  errorCode:= SCCipherTheFile2(0, ExePath+SUBDIR+KEYFILE, PASSPHRASE,
+              1, ExePath+ SUBDIR+DOCFILE, cfile, false)
+  if errorCode = 0 then
+       SearchAndOpenDoc(ExePath+SUBDIR+CIPHERFILE)
+  Writeln(intToStr(errorCode))   
+end;
+
+
+procedure SC_Decipher;
+  //example with key and passphrase in parameter, para 2 is decipher
+begin
+  errorCode:= SCCipherTheFile2(0, ExePath+SUBDIR+KEYFILE, PASSPHRASE,
+              2, ExePath+ SUBDIR+CIPHERFILE, cfile, false)
+  if errorcode = 0 then
+       SearchAndOpenDoc(ExePath+SUBDIR+DOCFILE)
+  Writeln(intToStr(errorCode))       
+end;
+
+procedure SC_LoadandSetKeyState;
+begin
+  errorCode:= SCLoadAndSetKeyStateWithFileName2(0, ExePath+SUBDIR+KEYFILE, 
+                 PASSPHRASE, 2, keyhash)
+  if errorCode = 0 then
+    Writeln(' this is hash of ' +keyhash)
+    Writeln(inttostr(errorCode))
+end;                  
+
+
+begin
+  writeln(Format('Pi starts off as %.15f', [PI]));
+  dateTimeExample;
+    //ExecuteShell('cmd','/k systeminfo > systeminfo_dell.txt')
+   osType:= Win32Type;
+  writeln(IntToStr(ord(osType))+' is type of Operating System');
+  Writeln('Registry read of SC Image: '+RegistryRead(REGROOT, REGPATH, REGITEM))
+  
+  ExecuteShell('cmd','/c systeminfo > systeminfo_machine.txt')
+  SearchAndOpenFile('systeminfo_machine.txt')
+  writeln('machine name is: '+getHostName)
+  writeln('user name is: '+getUserName)
+  mytimestamp:= GetFileCreationTime(exepath+'maxbox3.exe')
+  writeln(datetimetoStr(mytimestamp)+' Creation Date of maXbox3')
+  writeln('tick count from func ' +IntToStr(GetTickCount));
+  writeln('tick count from api   ' +IntToStr(MyGetTickCount));
+  MySleep(10);
+//maxburaut TEST  ("CE7899D61F05331B20E321814D1CF0726268)  
+
+    errorCode:= 0;
+    cfile:= '';  //just to init the pChar no return available
+    keyhash:= '';
+    progress:= 0;
+    
+    SC_Cipher;
+    //SCCipherProgress(progress, true)
+    
+    SC_Decipher;
+    //SC_LoadAndSetKeyState;
+  
+   {if errorCode = 0 then           
+    writeln('well done cipher: '+inttoStr(errorcode)) else 
+    writeln('error from sc api: '+inttoStr(errorcode))}
+End.   
+
+***************************************************************************
+There is no place like 127.0.0.1 
+
+function SCCipherTheFile(Handle: HWND; SCKeyName: PChar;
+Password: PChar;
+ActionAttrib: WORD;
+WorkFileName: PChar;
+var PostFileName: PChar
+): WORD; export; stdcall;
+
+function SCLoadAndSetKeyStateWithFileName(Handle: HWND; SCKeyName: PChar;
+Password: PChar;
+ActId: WORD;
+var KeyHash: PChar
+): WORD; stdcall;
+
+The structure of a script is as follows (keywords are shown in ALLCAPS bold): 
+
+PROGRAM
+
+CONST 
+
+<Constant declarations> 
+TYPE 
+
+<Type declarations> 
+VAR 
+
+<Variable declarations> 
+BEGIN 
+
+<Executable statements> 
+END. 
+ 
+Note that: 
+
+The main code must be within the begin and end. keywords. 
+All statements in the script use the semicolon ";" as terminator. Only the last statement (END.) uses a dot as terminator. 
+
+function BinToOct(BinStr: string): string;
+var
+  i: Integer;
+  OctPart: single;
+  LastPart, OctStr: string;
+  Error: Boolean;
+begin
+  Error:=False;
+  OctStr:='';
+  case Length(BinStr) mod 3 of
+    1: BinStr:='00'+BinStr;
+    2: BinStr:='0'+BinStr;
+  end;
+
+  while Length(BinStr)>0 do begin
+    LastPart:=Copy(BinStr, Length(BinStr)-2, 3);
+    Delete(BinStr, Length(BinStr)-2, 3);
+    OctPart:=0;
+    for i:=1 to 3 do
+      if not ((LastPart[i] ='1') or (LastPart[i] ='0')) then begin
+        ShowMessage('This is not binary number');
+        Error:=True;
+        Break;
+      end
+      else
+        OctPart:=OctPart+StrToInt(LastPart[i])*Power(2, 3-i);
+    OctStr:=OctStr+FloatToStr(OctPart);
+  end;
+  Result:='';
+  if Error<>True then begin
+    for i:=1 to Length(OctStr) do
+      Result:=Result+OctStr[Length(OctStr)-i+1];
+    while (Result[1]='0') and (Length(Result)>1) do
+      Delete(Result, 1, 1);
+  end;
+end;  

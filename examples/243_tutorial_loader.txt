@@ -1,0 +1,98 @@
+{****************************************************************
+ *
+ * Project  : Information Series for SWS of OpenTools API
+ * Unit Name: 243_mxdocudemo3, loc's = 92
+ * Purpose  : Introduction and Tutorials Demo to the mX3 environment options
+ ****************************************************************}
+
+program maXbox_Options_Demo;
+
+{$DEFINE VOICE}
+
+function  MessageBeep(para: integer): byte;
+     external 'MessageBeep@user32.dll stdcall'; //DLL Functiontype 
+     
+const     
+   REGPATH3= '\Software\Microsoft\Internet Explorer\TypedURLs';  
+   REGROOT3= HKEY_CURRENT_USER;
+     
+var
+  myTimeStamp: TDateTime;
+  
+Procedure PerformanceCounter;
+var time: longint;
+begin
+  time:= GetTickCount;
+  //Put the commands to measure...
+  CaptureScreenPNG(ExePath+'screenshotperftest.png');
+  SearchAndOpenDoc(ExePath+'screenshotperftest.png');
+  Sleep(500)
+  //maxform1.StatusBar1.SimpleText:= ('Time Diff: '+IntToStr(GetTickCount-time));
+  Writeln('Time Performance Diff: '+IntToStr(GetTickCount-time));
+end;
+
+Procedure showCountColors;
+var i: byte;
+begin
+  for i:= 1 to 4 do 
+    with TColorDialog.Create(self) do begin
+      Name:= 'acold'+inttostr(i);
+      Showmessage('Colorobj name is: '+name) 
+      Execute;
+      Free;
+    end;
+end;               
+
+
+Begin
+  Writeln(DateTimeGMTToHttpStr(Now))
+  writeln('machine or host name is: '+getHostName)
+  writeln('user name is: '+getUserName)
+  writeln('domain name is: '+domainname('localhost'));
+  writeln('Check ProcessID : '+intToStr(CurrentProcessID))
+  Writeln('Processor Numbers: '+intToStr(GetNumberOfProcessors))
+  Writeln('Page Size: '+intToStr(GetPageSize))
+  Writeln('Internet Test with IP Address of: '
+                     +GetHostByName('www.softwareschule.ch'));
+  writeln('IP Address of own Host: '+GetHostByName(getHostName));
+  writeln('Services File Path is: '+ServicesFilePath);
+  Writeln('Network Volume Name is: '+NetworkVolume('C')); 
+  mytimestamp:= GetFileCreationTime(exepath+'maxbox3.exe')
+  writeln(DateTimeToStr(myTimeStamp)+' Creation Date of maXbox3')
+  Writeln('SHA1 Hash of maXbox: '+SHA1(exepath+'maxbox3.exe'))
+  writeln('Shell Version is: '+intToStr(GetShellVersion));
+  WriteLog(ExePath+'systemchecklog2.txt',memo2.text)
+  //PerformanceCounter;
+  
+
+  {$IFNDEF VOICE}  
+   Showmessage('for programming you find all functions in the help functionlist: ');
+  {$ENDIF}
+   //Speak('for programming you find all functions in the help functionlist: ');
+   maxform1.AllFunctionsList1Click(self);
+  
+  {$IFNDEF VOICE}  
+    Showmessage('or learn more with the tutorials: ')
+  {$ENDIF}
+  Speak('or learn more with the tutorials: ');
+  maxform1.toolbtnTutorialClick(self);
+  maxform1.tutorial1Click(self); 
+  maxform1.tutorial4Click(self); 
+  maxform1.tutorial5Click(self); 
+  SearchAndOpenFile(exepath+'docs\maxbox_starter12.pdf')
+
+   case CreateMessageDialog('Text the maXbox', mtWarning,[mbYes,mbNo,mbCancel]).ShowModal 
+          of  mrYes: begin
+                       ShowMessage('you said Yes to Colors');
+                       showCountColors;
+                     end;  
+              mrNo: ShowMessage('you said No');
+              mrCancel: ShowMessage('Cancel');
+          end;
+End.   
+
+*******************************************************
+There is no place like 127.0.0.1 
+
+
+

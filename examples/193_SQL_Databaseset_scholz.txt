@@ -1,0 +1,588 @@
+//****************TimeDATATester**************************
+program DataBase_SQLQuery_ScholzSoft;
+
+// this is in conjunction with example _28_pas_dataset.txt
+// in V3.2 you find DBX, SQLExpress for Interbase, Firebird, Oracle 
+ //GetShortPathName(PChar(LongName), ShortName, Max_Path);, loc's=474
+
+  
+
+function GetShortPathName(lname, sname: pchar; mpath: longint): bool;
+  external 'GetShortPathNameW@kernel32.dll stdcall';
+
+
+Const SCHOLZALIAS = 'SAS';
+      TEXTOUTPUT  = true;
+      AFILENAME  = 'scholzdata2.txt';
+      
+
+const SQLQuery = 'Select AuftragsNr, ReNr, Text1, Text2 FROM Auftrag, Aufpos where '+
+                  'Auftrag.AuftragsNr = Aufpos.AuftragsNr AND AuftragsNr > 42543'; 
+  
+//const SQLQuery = 'Select AuftragsNr, ReNr, Text1, Text2 FROM Auftrag, Aufpos where '+
+  //                'Auftrag.AuftragsNr = Aufpos.AuftragsNr AND AuftragsNr > 212000'; 
+      
+//const SQLQuery = 'select * from customer where company like "%SCUBA%"''';    
+//const SQLQuery = 'select * from kasse';    
+//const SQLQuery = 'select suchbegriff from ZeitP';    
+//const SQLQuery = 'select suchbegriff from ZeitP';    
+//const SQLQuery = 'Select Fertig, AuftragsNr, LeistungsNr from ZeitBTmp'; 
+//const SQLQuery = 'Select Fertig, BeginnDatum, AuftragsNr, LeistungsNr from ZeitBtmp where '+
+  //                  ' AuftragsNr > 200000'; 
+//const SQLQuery = 'Select PersonalNr, KommDatum from ZeitA where PersonalNr = 1'; 
+//const SQLQuery = 'Select Listenueberschrift1, Listenueberschrift2 from ID'; 
+
+(*with SqlSearchAB do begin
+       Close;
+       Sql.Clear;
+       Sql.Add('Select AbNr, ATBNr, Produkt, Menge, Einheit, EP, Vk, Rabatt, Rabattbetrag, VkTotal, Termin from AbATB');
+       Sql.Add(format('where AuftragsNr=%d',[aAuftragsNr]));
+       Open;
+  end;*)
+  
+//Join Query      Paradox and the BDE use a subset of ANSI SQL called LocalSQL. However, I should note that after Delphi 3, the BDE is completely ANSI SQL compliant. To do a left outer join on two tables, you'd do something like this:
+
+(*SELECT D.ClientID, D.ClientName , D1.*
+FROM "TABLE1.DB" D LEFT OUTER JOIN "TABLE2.DB" D1 
+WHERE (D1.ClientID = D.ClientID)
+//http://www.thedbcommunity.com/index.php?option=com_content&task=view&id=229&Itemid=46
+That's it! It's more of syntactical thing than anything else.   *)
+
+//const SQLQuery = 'Select Auftrag.AuftragsNr, Auftrag.ReNr, Aufpos.Tex1 FROM Auftrag, Aufpos where '+
+  //                'Auftrag.AuftragsNr = Aufpos.AuftragsNr'; 
+                  //'(Auftrag.AuftragsNr = Aufpos.AuftragsNr) AND AuftragsNr > 212000'; 
+
+//Select AuftragsNr, ReNr, Text1 FROM Auftrag, Aufpos where Auftrag.AuftragsNr = Aufpos.AuftragsNr AND AuftragsNr > 9921001 
+                    
+//const SQLQuery = 'Select AuftragsNr, ReNr, Text1, Text2 FROM Auftrag, Aufpos where '+
+  //                'Auftrag.AuftragsNr = Aufpos.AuftragsNr'; 
+                  //'(Auftrag.AuftragsNr = Aufpos.AuftragsNr) AND AuftragsNr > 212000'; 
+//const SQLQuery = 'select count(*) from ZeitA';                     
+//const SQLQuery = 'Select Fertig, AuftragsNr, LeistungsNr from ZeitB'; 
+//const SQLQuery = 'select count(*) from ZeitB'; 
+//const SQLQuery = 'select count(*) from ZeitB where LeistungsNr > ''150'''; 
+   
+var
+   dbMain: TDatabase;   //@global
+   Ee: exception;
+
+
+function TFormMain_GetTime:TDateTime;
+begin
+  result:= StrToTime(FormatDateTime('h:n',time)); // Sekunden abschneiden
+end;
+
+function RoundSchweiz (value:Extended):Extended;
+  var i:integer;
+      j:double;
+  begin
+  // 0-3 Rappen --> auf 0 abrunden  // 4-5 Rappen --> auf 5 aufrunden
+  // 6-7 Rappen --> auf 5 abrunden  // 8-9 Rappen --> auf 0 aufrunden
+    i:= round(frac(abs(value)*10) * 10);
+    case i of
+      0: j:=0;
+      1: j:=-0.01;
+      2: j:=-0.02;
+      3: j:=-0.03;
+      4: j:= 0.01;
+      5: j:= 0;
+      6: j:=-0.01;
+      7: j:=-0.02;
+      8: j:= 0.02;
+      9: j:= 0.01;
+    end;
+    if j=0
+    then result:=value
+    else if value<0
+         then result:=value-j
+         else result:=value+j;
+  end;
+
+Function TDaten3_BerechneMwStBetrag(aNettobetrag, aMwStSatz:Extended;
+                 aWaehrung:string):Extended;
+BEGIN
+  result:=Round2Dec(aNettobetrag*aMwStSatz/100);
+  if AnsiUpperCase(aWaehrung)='SFR' then result:= RoundSchweiz(result);
+END;
+
+
+function GetQuery(SQLCommand: string; aQuery: TQuery): TFields;
+begin
+  aQuery.SQL.Text:= SQLCommand;
+  aQuery.Open;
+  aQuery.Active:= true;
+  result:= aQuery.Fields;
+end; 
+
+
+procedure DoQuery(aDB: TDataBase; afield: string);
+var i: integer;
+    dQuery: TQuery;
+begin
+   dQuery:= TQuery.create(self); 
+   with dQuery do begin
+   DatabaseName:= aDB.DataBaseName;
+     try
+        //openDataBase; or Close;
+        //GetQuery(SQLQuery, dQuery)
+        SQL.Clear;
+        //SQL.Text:= 'select * from customer';
+        SQL.Text:= SQLQuery;
+        Open;
+        Writeln(inttostr(RecordCount)+' Records found: ')
+        for i:= 0 to RecordCount - 1 do begin
+          Writeln(intToStr(i)+' '+fieldbyname(afield).asString)
+          Next;
+        end;  
+        //ExecSQL;
+       finally
+         Close;
+         Free;
+         CloseDataBase(aDB)
+       end;
+    end   
+end; 
+
+
+procedure DoQuery2(aDB: TDataBase; afilename: shortstring; fileout: boolean);
+var i,z: integer;
+    dQuery: TQuery;
+    reslist: TStringlist;
+    tmps: shortstring;
+begin
+   dQuery:= TQuery.create(self); 
+   reslist:= TStringList.create;
+   tmps:= '';
+   with dQuery do begin
+   DatabaseName:= aDB.DataBaseName;
+     try
+        writeln('');
+        writeln('search for DB starts: ');
+        SQL.Clear;
+        SQL.Text:= SQLQuery;
+        Open;
+        Writeln(inttostr(RecordCount)+' Records found: ')
+        if fileout then
+        for i:= 0 to Recordcount - 1 do begin
+          for z:= 0 to Fieldcount - 1 do  
+            tmps:= tmps + Fields[z].asString+' ';
+          reslist.Add(inttoStr(i)+' '+tmps);
+          tmps:='';
+          Next;
+        end else
+        for i:= 0 to Recordcount - 1 do begin
+          write(inttoStr(i)+' ')
+          for z:= 0 to Fieldcount - 1 do 
+            Write((Fields[z].asString)+' ');
+          writeln('');
+          Next;  
+        end;
+        writeln('');
+        reslist.SaveToFile(afilename);
+       //ExecSQL;
+       finally
+         reslist.Free;
+         Close;
+         Free;
+         //CloseDataBase(aDB)
+       end;
+    end   
+end; 
+
+
+procedure BDEDataBaseConnectQuery(aalias: shortstring;
+                                     afilen: shortstring; atextout: boolean);
+  var aParams, aTblNames: TStringList;
+      aSession: TSession;
+      //dbMain: TDatabase;
+      BDEAlias: string;
+      i: integer;
+      z: shortstring;
+begin 
+  //create alias params list 
+  AParams:= TStringList.Create;  
+  aTblNames:= TStringList.Create; 
+  //BDEAlias:= 'DBDEMOS';
+  BDEAlias:= aalias; //BDEAlias:= 'dBase Files';
+  //create a session to get alias parameters  
+  ASession:= TSession.Create(NIL);  
+  ASession.SessionName:= 'Session6';  
+  //dbMain:= TDatabase.Create(NIL);  
+  try  //except
+  //aSession.AddPassword(z);
+  try  
+    ASession.GetAliasParams(BDEAlias, AParams);
+    Writeln('***********DB Parameters************')
+    for i:= 0 to aparams.count -1 do 
+      writeln(aParams[i]);
+      //connect to database 
+    with dbMain do begin  
+      Params.Assign(AParams);  
+      dbMain:= ASession.OpenDatabase(BDEAlias);
+      Writeln('Database is: '+dbMain.DataBaseName)
+      KeepConnection:= True;
+      GetTableNames(aTblNames, true)
+      {for i:= 0 to atblNames.count -1 do 
+        Writeln(atblnames[i]);}
+      doQuery2(dbMain, afilen, atextout);    //Buchungstext true to fileout
+    end;
+  finally  
+    DBMain.Free;
+    ASession.Free;  
+    AParams.Free;
+    aTblNames.Free;
+  end;
+  except
+    writeln('BDE connect exception');
+    //ee.raise;
+  end;  
+end;
+  
+
+procedure CreateATable(DBName,           //Alias or path
+                       TblName: String); //Table Name to Create     
+var tbl : TTable;
+begin
+  tbl:= TTable.Create(Application);
+  with tbl do begin
+    Active:= False;
+    DatabaseName:= DBName;
+    //TableName := TblName;
+    TableType:= ttParadox;
+    with FieldDefs do begin
+      Clear;
+      Add('LastName', ftString, 30, False);
+      Add('FirstName', ftString, 30, False);
+      Add('Address1', ftString, 40, False);
+      Add('Address2', ftString, 40, False);
+      Add('City', ftString, 30, False);
+      Add('ST', ftString, 2, False);
+      Add('Zip', ftString, 10, False);
+    end;
+    {Add a Primary Key to the table}
+   // with IndexDefs do begin
+     // Clear;
+      //Add('Field1Index', 'LastName;FirstName', [ixPrimary, ixUnique]);
+    //end;
+    CreateTable; {Make the table}
+  end;
+end;
+
+
+procedure TDaten_CopyDS(t:TDataSet);
+// Beim Kopieren immer AsVariant benutzen!!!
+// Leere, nicht initialisierte Integer-, Float- und DateTime-Felder liefern mit AsInteger oder value
+// den Wert 0 und nicht NULL.
+// Wenn das Feld eine Nachschlagetabelle benutzt, und das Nachschlagefeld mit Min/Max begrenzt ist,
+// gibt es bei Locate und Lookup eine Exception!!!
+var a:array[0..60] of Variant;
+    i:integer;
+begin
+  with T do begin
+       //if State in dsEditModes then Post;
+       for i:=0 to FieldCount-1 do a[i]:=Fields[i].AsVariant;
+       Insert;
+       if (Name='Kunde') or (Name='Liefer') or (Name='Personal') or
+          (Name='Angebot') or (Name='Auftrag') or (Name='Kasse') or (Name='Artikel')
+       then for i:=1 to FieldCount-1 do Fields[i].AsVariant:=a[i] // neue Knd-Nr oder Lft-Nr nicht write
+       else for i:=0 to FieldCount-1 do Fields[i].AsVariant:=a[i];
+  end;
+end;
+
+function ShortFilename(LongName:string):string;
+var ShortName : PChar;
+begin
+  ShortName:= StrAlloc(Max_Path);      //Max_Path
+  //function GetShortPathName; external kernel32 name 'GetShortPathNameW';
+  //GetShortPathName(PChar(LongName), ShortName, Max_Path);
+  writeln(booltoStr(GetShortPathName(LongName, Pchar(ShortName), Max_Path),true))
+  //Result:= string(ShortName);
+  Result:= string(ShortName);
+  //StrDispose(ShortName);
+end;
+
+function BinToInt(Value: string): Integer;
+var
+  i, iValueSize: Integer;
+begin
+  Result := 0;
+  iValueSize := Length(Value);
+  for i := iValueSize downto 1 do
+    if Value[i] = '1' then Result := Result + (1 shl (iValueSize - i));
+end; 
+
+procedure getSystemInformation;
+begin
+   Writeln('maXbox Version: '+MBVER);
+   //from unit uPSI_JclSysInfo;
+   Writeln('Function GetCommonFilesFolder :'+GetCommonFilesFolder);
+   Writeln('Function GetCurrentFolder :'+GetCurrentFolder);
+   Writeln('Function GetProgramFilesFolder :'+GetProgramFilesFolder);
+   Writeln('Function GetWindowsFolder :'+GetWindowsFolder);
+   Writeln('Function GetWindowsSystemFolder :'+GetWindowsSystemFolder);
+   Writeln('Function GetWindowsTempFolder :'+GetWindowsTempFolder);
+   Writeln('Function GetDesktopFolder :'+GetDesktopFolder);
+   Writeln('Function GetProgramsFolder :'+GetProgramsFolder);
+   Writeln('Function GetPersonalFolder :'+GetPersonalFolder);
+   Writeln('Function GetFavoritesFolder :'+GetFavoritesFolder);
+   Writeln('Function GetStartupFolder :'+GetStartupFolder);
+   Writeln('Function GetRecentFolder :'+GetRecentFolder);
+   Writeln('Function GetSendToFolder :'+GetSendToFolder);
+   Writeln('Function GetStartmenuFolder :'+GetStartmenuFolder);
+   Writeln('Function GetDesktopDirectoryFolder :'+GetDesktopDirectoryFolder);
+   Writeln('Function GetNethoodFolder :'+GetNethoodFolder);
+   Writeln('Function GetFontsFolder :'+GetFontsFolder);
+   Writeln('Function GetCommonStartmenuFolder :'+GetCommonStartmenuFolder);
+   Writeln('Function GetCommonProgramsFolder :'+GetCommonProgramsFolder);
+   Writeln('Function GetCommonStartupFolder :'+GetCommonStartupFolder);
+   Writeln('Function GetCommonDesktopdirectoryFolder :'+GetCommonDesktopdirectoryFolder);
+   Writeln('Function GetCommonAppdataFolder :'+GetCommonAppdataFolder);
+   Writeln('Function GetAppdataFolder :'+GetAppdataFolder);                                   
+   Writeln('Function GetPrinthoodFolder :'+GetPrinthoodFolder);
+   Writeln('Function GetCommonFavoritesFolder :'+GetCommonFavoritesFolder);
+   Writeln('Function GetTemplatesFolder :'+GetTemplatesFolder);
+   Writeln('Function GetInternetCacheFolder :'+GetInternetCacheFolder);
+   Writeln('Function GetCookiesFolder :'+GetCookiesFolder);
+   Writeln('Function GetHistoryFolder :'+GetHistoryFolder);
+   //Writeln('Function GetAPMLineStatus : TAPMLineStatus;
+   //Function GetAPMBatteryFlag : TAPMBatteryFlag;
+   Writeln('Function GetAPMBatteryLifePercent :'+InttoStr(GetAPMBatteryLifePercent));
+   //Function GetAPMBatteryLifeTime : DWORD;
+   //Function GetAPMBatteryFullLifeTime : DWORD;
+   Writeln('Function GetVolumeName(const Drive : string) : '+GetVolumeName('C'));
+   Writeln('Function GetVolumeSerialNumber :'+GetVolumeSerialNumber('C'));
+   Writeln('Function GetVolumeFileSystem  :'+GetVolumeFileSystem('C'));
+   //Function GetIPAddress( const HostName : string) : string;
+   Writeln('Function GetLocalComputerName :'+GetLocalComputerName);
+   Writeln('Function GetLocalUserName :'+GetLocalUserName);
+   //Function GetUserDomainName( const CurUser : string) : string;
+   Writeln('Function GetDomainName :'+GetDomainName);
+   Writeln('Function GetRegisteredCompany :'+GetRegisteredCompany);
+   Writeln('Function GetRegisteredOwner :'+GetRegisteredOwner);
+   Writeln('Function GetBIOSName :'+GetBIOSName);
+   Writeln('Function GetBIOSCopyright :'+GetBIOSCopyright);
+   Writeln('Function GetBIOSExtendedInfo :'+GetBIOSExtendedInfo);
+   Writeln('Function GetMaxAppAddress :'+IntToStr(GetMaxAppAddress));
+   Writeln('Function GetMinAppAddress :'+IntToStr(GetMinAppAddress));
+   Writeln('Function GetMemoryLoad :'+IntToStr(GetMemoryLoad));
+   Writeln('Function GetSwapFileSize :'+IntToStr(GetSwapFileSize));
+   Writeln('Function GetSwapFileUsage :'+InttoStr(GetSwapFileUsage));
+   Writeln('Function GetTotalPhysicalMemory :'+IntToStr(GetTotalPhysicalMemory));
+   Writeln('Function GetFreePhysicalMemory :'+IntToStr(GetFreePhysicalMemory));
+   Writeln('Function GetTotalPageFileMemory :'+IntToStr(GetTotalPageFileMemory));
+   Writeln('Function GetFreePageFileMemory :'+InttoStr(GetFreePageFileMemory));
+   Writeln('Function GetTotalVirtualMemory :'+InttoStr(GetTotalVirtualMemory));
+   Writeln('Function GetFreeVirtualMemory :'+InttoStr(GetFreeVirtualMemory));
+   Writeln('Function GetShellProcessName :'+GetShellProcessName);
+   //Function GetShellProcessHandle : THandle;
+   //Function GetWindowsVersion : TWindowsVersion;
+   //Function NtProductType : TNtProductType;
+   Writeln('Function GetWindowsVersionString :'+GetWindowsVersionString);
+   Writeln('Function NtProductTypeString :'+NtProductTypeString);
+   Writeln('Function IsAdministrator :'+BoolToStr(IsAdministrator, True));
+end;
+
+
+var 
+     mylst: TStringlist;
+       i: integer;
+       //textout: boolean;
+      myregxs: RegExprString;
+      //iResult, iFlags: Integer; 
+      //a, b, c: single;  
+       
+begin
+ // maxform1.ShellStyle1click(self)
+    maxform1.Console1Click(self)
+    //maxform1.Decompile1Click(self)
+ try
+  dbMain:= TDatabase.Create(self);  
+  BDEDataBaseConnectQuery(SCHOLZALIAS, ExePath+AFILENAME, textoutput); //alias to db, text out
+  //doQuery2(dbMain);    //Buchungstext
+  //DBMain.Free;
+  //CloseDataBase(aDB)
+ except
+   writeln('BDE Error')
+   msg('BDE Error in Query');
+ end;  
+ 
+  dbMain.Close;
+  if TEXTOUTPUT then
+  SearchandOpenFile(ExePath+AFILENAME);
+  //MakeDataBase;
+  //Define_Let_OpenDB;
+  //Function GetAliasPath( const AliasName : string) : string');
+  //addstandardalias
+  mylst:= TStringlist.create;
+  with TSession.Create(NIL) do try
+      SessionName:= 'Mars3'
+      getAliasNames(mylst);
+      Writeln('BDE / DB Alias List:  ******************************');
+      for i:= 1 to mylst.count-1 do
+        write(mylst[i]+' ');
+    finally
+      Free;
+      mylst.Free; 
+    end;      
+ 
+  Writeln('BDE/DB Parameters: ******************************');
+  Writeln('BDE Directory '+GetBdeDirectory);
+  writeln('DB Alias Path '+GetAliasPath(SCHOLZALIAS));
+  writeln('Temp File Path'+getTempDir)
+  Writeln('*************************************************');
+  getSystemInformation;
+  //GetAliasDriverName('SAS')
+  
+  Writeln(floatToStr(TDaten3_BerechneMwStBetrag(260, 19, 'SFR')))
+  writeln(timetoStr(TFormMain_GetTime))
+  writeln(timeToStr(time))
+ //queryperformancecounter
+  //writeln(inttoStr(max_path))
+  //saveln
+  //writeln('thiis is newline'+CR+LF+'a second line');
+  //gettemppath
+  //writeln(ShortFilename('thisisalongilfenema_iiiiiiiiii.txt'));
+  //CollectionsEqual
+   with TThread.Create(true) do begin
+      //afterconstruction
+         resume;
+         //synchronize(
+         writeln('thread id: '+inttoStr(threadid))
+         writeln('own handle: '+inttoStr(handle))
+       free;
+  end;
+  writeln(CreateClassId)
+  
+//  function ExecRegExpr (const ARegExpr, AInputStr : RegExprString) : boolean;
+// true if string AInputString match regular expression ARegExpr
+// ! will raise exeption if syntax errors in ARegExpr
+  
+   Writeln(ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+                          'BLOCK( test1)', 'def "$1" value "$2"', True))
+//  will return:  def 'BLOCK' value 'test1'
+//  ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+//   'BLOCK( test1)', 'def "$1" value "$2"')
+//   will return:  def "$1" value "$2"
+   //myregxs:= ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+                  //'BLOCK( test1)', 'def "$1" value "$2"', false);
+     //Writeln(myregxs)             
+//   will return:  def "$1" value "$2"
+   //or $00001000
+    //executeQuery
+  //SynRegExpr
+  //yesnodialog
+End.
+
+
+function ReplaceRegExpr (const ARegExpr, AInputStr, AReplaceStr : RegExprString;
+      AUseSubstitution : boolean{$IFDEF D4_}= False{$ENDIF}) : RegExprString; //###0.947
+// Returns AInputStr with r.e. occurencies replaced by AReplaceStr
+// If AUseSubstitution is true, then AReplaceStr will be used
+// as template for Substitution methods.
+// For example:
+//  ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+//   'BLOCK( test1)', 'def "$1" value "$2"', True)
+//  will return:  def 'BLOCK' value 'test1'
+//  ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+//   'BLOCK( test1)', 'def "$1" value "$2"')
+//   will return:  def "$1" value "$2"
+
+beleg.rtm ist hauptvorlage
+
+Exception: An error occurred while attempting to initialize the Borland Database Engine (error $2A04) at 0.569
+
+$2A04 (10756) = Operation not applicable.
+DBIO will not start: BDE Error $2A04
+
+
+Full error:
+  CRITICAL (Work) An error occurred while attempting 
+  to initialize the Borland Database Engine (error $2A04)
+
+Issue:
+This error indicates a core problem with BDE configuration.
+
+
+Resolution:
+
+1) Close ALL application software, stop all OmniRush modules including
+   Launcher
+
+2) Open the BDE Administrator
+
+3) Go to the Configuration | System | INIT area
+
+4) Check the Default Driver setting. The recommended setting
+   (for ALL systems) is DBASE
+
+5) Go to the Configuration | Drivers | Native | Paradox area
+
+6) Check the NET DIR setting. This should be set to a LOCAL
+   drive and a simple directory that exists. For example, check
+   if you have a C:\TEMP\ directory. If not, create one and grant
+   all users full access to it.
+   Then set NET DIR to c:\temp\
+
+7) We advise that the PC now be rebooted.
+
+8) Check for proper operation.
+
+
+
+Re:Getting ERROR: "to initialize the Borland Database Engine (error $210D)"
+The errors are "shared memory conflict" and "insufficient memory to
+complete this operation" respectively.
+I assume that "several Delphi 7's running" means several programs
+created with Delphi7 not several instances of the Delphi 7 IDE. You
+need to change the SharedMemLocation and SharedMemSize in the BDE
+Administrator. Try 0x5BDE and 4096. If that does not work try some of
+the other locations suggested in the on-line help.
+--
+
+  
+  
+
+procedure TFormMain.FormKeyPress(Sender: TObject; var Key: Char);
+var i,n:integer;
+begin
+  if key=#13
+  then begin c2:=c1; c1:=''; end // Barcode ist vollständig eingegeben
+  else begin c1:=concat(c1,key); c2:=''; end; // Barcode wird eingelesen
+  key:=#0;
+
+  if c2<>'' then begin
+     LabelInfo.Caption:='';
+
+     // eventuelle vorherige Tatstauranschläge löschen
+     i:=pos('KOMMT',c2); if (i>1) then c2:=copy(c2,i,5);
+     i:=pos('GEHT',c2);  if (i>1) then c2:=copy(c2,i,4);
+     i:=pos('F01',c2);  if (i>1) then c2:=copy(c2,i,3);
+     i:=pos('F12',c2);  if (i>1) then c2:=copy(c2,i,3);
+     i:=pos('PERS',c2);  if (i>1) then c2:=copy(c2,i,12); // Personalkarte hat nur 12 Stellen
+//     if length(c2)>13 then c2:=copy(c2,length(c2)-13+1,13);
+     if length(c2)>14 then c2:=copy(c2,length(c2)-14+1,14);
+
+     n:=length(c2);
+     if      c2='KOMMT' then CodeTyp:=cKommt
+     else if c2='GEHT' then CodeTyp:=cGeht
+     else if c2='F01' then CodeTyp:=cF1
+     else if c2='F12' then CodeTyp:=cF12
+     else if pos('PERS',c2)=1 then CodeTyp:=cPersonalNr
+//     else if pos('  OK',c2)=10 then CodeTyp:=cAtbOk
+     else if pos('  OK',c2)=n-3 then CodeTyp:=cAtbOk
+//     else if length(c2)=13 then CodeTyp:=cAuftrag
+     else if (n=13) or (n=14) then CodeTyp:=cAuftrag
+     else SetError(zErrorReadScan);
+     CheckCode;
+  end;
+end;
+
+F12
+F01
+201206301L999
+201206301L010
+201206301M804
+201206301M801
+201206301M802
+201206301M803
+

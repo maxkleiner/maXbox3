@@ -1,0 +1,76 @@
+
+PROGRAM Modula;
+//_47, locs=74
+
+function modula10(zahl: Int64): Int64;
+{   Nach diesem Verfahren werden z.B. die Prüfziffern
+    von EAN-Codes (immer die ganz rechte Stelle) berechnet.
+    Das System funktioniert wie folgt:
+    Angenommener Code 4205 4504 (Camel Filter)
+    Die letzte Stelle wollen wir berechnen, diese
+    wird also nicht mit einbezogen.
+    Die einzelen Stellen werden abwechselnd mit
+    3 und 1 multipliziert wobei rechts immer mit
+    3 begonnen wird. Die Summe der Produkte wird
+    durch 10 (dem Modul) geteilt, der Rest wird von
+    10 abgezogen. Sollte hierbei 10 übrigbleiben
+    ist die Prüfziffer 0. Hier das Beispiel:
+
+    Stelle      Wert    Wichtung    Produkt
+      1           4   *    3          12
+      2           2   *    1           2
+      3           0   *    3           0
+      4           5   *    1           5
+      5           4   *    3          12
+      6           5   *    1           5
+      7           0   *    3           0
+                                    -------
+    Summe                             36
+
+    Summe / 10(Modul) = 3 Rest 6
+    10(Modul) - 6(Rest) = 4  <- Die Prüfziffer
+    Wenn der Rest 0 ist wäre die Prüfziffer also 10.
+    Da aber nur eine Stelle zur Verfügung steht,
+    wird die Prüfziffer 0.     }
+    
+var 
+  wert: Longint;
+  multi: Word;
+begin
+  //Rechte Stelle wird immer mit 3 multipliziert
+  multi := 3;
+  wert  := 0;
+  repeat
+    //Wert erhöhen um den Wert der letzten Stelle * Multiplikator
+    wert := wert + (zahl - trunc(zahl / 10) * 10) * multi;
+    //Multiplikator ist abwechselnd 3 und 1
+    if multi = 3 then multi := 1 
+    else 
+      multi := 3;
+    //Letzte Stelle der Zahl abschneiden
+    zahl := trunc(zahl / 10);
+  until zahl = 0;
+  //Prüfziffer ermitteln
+  Result := 10 - (wert - trunc(wert / 10) * 10);
+  //Wenn
+  if Result = 10 then Result := 0;
+end;
+
+function ismodula10(zahl: Int64): Boolean;
+  //Prüft mit Hilfe von "modula10", ob die letzte
+  //(rechte) Stelle als Prüfziffer korrekt ist.
+begin
+  //letzte Stelle Abschneiden und Prüfziffer errechnen,
+  //dann mit letzter Stelle der übergebenen Zahl vergleichen
+  if modula10(trunc(zahl / 10)) = zahl - (trunc(zahl / 10) * 10) then
+    Result := True 
+  else 
+    Result := False;
+end;
+
+begin
+  if ismodula10(42054504) then writeln('EAN Mod10 correct') else
+                                 writeln('Mod10 false'); 
+end.
+      
+      

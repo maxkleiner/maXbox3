@@ -1,0 +1,178 @@
+{***************************************************************
+ *
+ * Project  : System Information Series
+ * App Name: 104_drive_type.txt, #locs=144
+ * Purpose  : Demonstrates the functions of drivetype and Internals
+ * Date  : 21/09/2010  -  14:56  - #date:15.06.2013 01:26:50
+ * #path E:\maxbox\maxbox3\examples\
+ * #file:368_configuration_demo.txt
+ * History  : translate and integrate to maXbox June 2010
+ *          : system demo for mX3 beta, enhanced with macros
+ ****************************************************************}
+Program DriveType;
+{BOOL WINAPI MessageBeep(
+  __in  UINT uType
+);}
+
+function  MessageBeep(para: integer): byte;
+  external 'MessageBeep@user32.dll stdcall';  
+
+var
+  except_state, execute_state, boot_state: string;
+  except_conf, execute_conf, boot_conf, macro_state: string;
+  mytimestamp: TDateTime;
+  osType: TIdWin32Type;
+  diskTotal, amtFree: int64;
+  ip_port: integer;
+
+procedure getMaxBoxIniSystem;
+var
+  Ini: TIniFile;
+begin
+  Ini:= TIniFile.Create(ExePath+'maxboxdef.ini');
+  try
+    except_state:= Ini.ReadString('Form', 'EXCEPTIONLOG','');
+    execute_state:= Ini.ReadString('Form', 'EXECUTESHELL','');
+    boot_state:= Ini.ReadString('Form','BOOTSCRIPT','');
+    ip_port:= Ini.ReadInteger('Web','IPPORT',0);
+    macro_state:= Ini.ReadString('Form','MACRO','');
+  finally
+    writeln('inifile sysdata1: '+except_state+ ' '+execute_state);
+    writeln('inifile sysdata2: '+boot_state+ ' '+intToStr(ip_port));
+    writeln('inifile sysdata3: '+macro_state);
+    ini.Free;
+  end;
+end;
+
+procedure getMaxBoxIniShort;
+begin
+  with TIniFile.Create(ExePath+'maxboxdef.ini') do
+  try
+    except_conf:= ReadString('Form','EXCEPTIONLOG','');
+    execute_conf:= ReadString('Form','EXECUTESHELL','');
+    boot_conf:= ReadString('Form','BOOTSCRIPT','');
+    ip_port:= ReadInteger('Web','IPPORT',0);
+  finally
+    writeln('inifile sysdata1: '+except_conf+':'+execute_conf);
+    writeln('inifile sysdata2: '+boot_conf+':'+intToStr(ip_port));
+    Free;
+  end;
+end;
+
+
+procedure signal_Sounds;
+var sound: integer;
+begin
+for sound:= 1 to 100 do
+  if sound mod 10 = 0 then begin
+    MessageBeep(sound)
+    sleep(1500)
+  end  
+end;
+
+procedure getDriveTypesF;
+var
+  Drive: byte;
+  DriveLetter: String;
+begin
+  for Drive:= ord('A') to ord('Z') do begin
+    DriveLetter:= chr(Drive) + ':\';
+    case GetDriveType(PChar(chr(Drive) + ':\')) of
+      0: //DRIVE_UNKNOWN
+      Memo2.Lines.Add(DriveLetter + ' Unknown Drive');
+      {1: //DRIVE_NO_ROOT_DIR
+      Memo2.Lines.Add(DriveLetter + ' No Root Dir or mount Point');}
+      2: //DRIVE_REMOVABLE:
+      Memo2.Lines.Add(DriveLetter + ' Removable or Floppy Drive');
+      3: //DRIVE_FIXED:
+      Memo2.Lines.Add(DriveLetter + ' Fixed Drive');
+      4: //DRIVE_REMOTE:
+      Memo2.Lines.Add(DriveLetter + ' Network Drive');
+      5: //DRIVE_CDROM:
+      Memo2.Lines.Add(DriveLetter + ' CD-ROM Drive');
+      6: //DRIVE_RAMDISK:
+      Memo2.Lines.Add(DriveLetter + ' RAM Disk');
+    end;
+  end;
+end;
+
+  var strc: tscrollStyle;
+      dlllist: TStringlist;
+      i: integer;
+
+begin
+   //InifileRead;
+   getMaxBoxIniSystem;
+   getMaxBoxIniShort;
+   
+   //0 = Current drive
+   writeln('machine name is: '+getHostName)
+   writeln('user name is: '+getUserName)
+   osType:= Win32Type;
+   writeln('OS type: '+intToStr(ord(osType)));
+   mytimestamp:= GetFileCreationTime(exepath+'maxbox3_0.exe')
+   writeln(DateTimeToStr(mytimestamp)+' for maXbox3 file')
+   diskTotal:= DiskSize(0);
+   AmtFree:= DiskFree(0);
+   writeln(IntToStr64(disktotal div 1024))
+   //writeln(IntToStr(AmtFree div diskTotal) +' % on current drive is free: ' + 
+       //IntToStr(AmtFree div 1024) + ' Kbytes free. ');
+   //searchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter2.pdf')
+   //signal_Sounds;
+   //ExecuteCommand('cmd','/k dir *.*')
+    getDriveTypesF;
+    //function DisplayCoord(AColumn, ARow: Integer): TDisplayCoord;
+    //function BufferCoord(AChar, ALine: Integer): TBufferCoord;
+      //DisplayCoord
+      //BufferCoord
+      writeln(chr($BB));
+      writeln(inttoStr(ord(chr($BB))));
+      writeln(chr($B6));
+      writeln(chr($B7));
+    memo1.searchReplace('writeln',Uppercase('writeln'),[ssoWholeWord,ssoEntireScope,ssoReplaceAll]);
+    showmessageBig('writeln are CAPITAL - now we go back!') 
+    writeln('found back: '+intToString(memo1.searchReplace('writeln',lowercase('writeln'),
+                [ssoWholeWord,ssoEntireScope,ssoReplaceAll]))); 
+   
+   
+   dlllist:= TStringList.create;
+     ListDLLExports(Exepath+'dmath.dll', dlllist);
+     for i:= 1 to dlllist.count - 1 do
+       writeln(dlllist[i]);
+   dlllist.Free;
+              
+End.   
+
+There is no place like 127.0.0.1 
+EXPRIMADOR
+
+ #name:max
+ #date:15.06.2013 01:26:50
+ date:30.05.2013 01:26:30
+ 
+//----------------------------------------------
+ DiskSize returns -1 if the drive number is invalid. Drive parameter can be set to: 0 = Current drive, 1 = A, 2 = B, 3 = C and so on. 
+
+
+DRIVE_UNKNOWN
+0 The drive type cannot be determined.
+ 
+DRIVE_NO_ROOT_DIR
+1 The root path is invalid; for example, there is no volume mounted at the specified path.
+ 
+DRIVE_REMOVABLE
+2 The drive has removable media; for example, a floppy drive, thumb drive, or flash card reader.
+ 
+DRIVE_FIXED
+3 The drive has fixed media; for example, a hard drive or flash drive.
+ 
+DRIVE_REMOTE
+4 The drive is a remote (network) drive.
+ 
+DRIVE_CDROM
+5 The drive is a CD-ROM drive.
+ 
+DRIVE_RAMDISK
+6 The drive is a RAM disk.
+ 
+

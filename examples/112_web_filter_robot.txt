@@ -1,0 +1,168 @@
+//************************************************************
+program motion_HTTP_Filter_beta_tester;
+
+// get content in a specific selection in 2 ways!, loc's = 164
+// shows internet subroutines in new section 101 - 120 http/ftp examples
+// design your own content of different sites!
+{type
+  TIdFTPTransferType = (ftASCII, ftBinary);
+const
+  Id_TIdFTP_TransferType = ftBinary; Id_TIdFTP_Passive = False;}
+
+const contentURL1 = 'http://sourceforge.net/projects/maxbox/files/';
+const contentURL2 = 'http://www.swissquote.ch/fcgi-bin/stockfquote?symbols=meyer%20burger&language=d&r=0.6477707200624298';
+const contentURL3 = 'http://www.delphi3000.com/articles/article_4697.asp?SK=';
+const contentURL4 = 'http://news.search.ch/';
+const contentURL5 = 'http://www.delphi3000.com/articles/article_6618.asp?SK=';
+const contentURL6 = 'http://sourceforge.net/apps/mediawiki/maxbox/index.php?title=Main_Page';
+
+var contentLst: TStringList;
+
+procedure filterRange(tmplst: TStringList; vfrom, vto: string; 
+                                            var vstart, vend: Integer);
+var i: integer;
+begin
+  for i:= 1 to tmplst.count do
+    if pos(vfrom, tmplst[i]) <> 0 then begin
+      vstart:= i;
+      break
+    end;
+  for i:= 1 to tmplst.count do
+    if pos(vto, tmplst[i]) <> 0 then begin
+      vend:= i;
+      break
+    end
+end;
+
+function filterSubStr(tmp, von, bis: string; a: Integer): string;
+var
+  SubStr, bck: string;
+  Pos1, Pos2, i: Integer;
+begin
+  i:= 0;
+  while i < a do begin
+    Pos1  := Pos(von, tmp);
+    Pos2  := Pos(bis, tmp);
+    SubStr:= Copy(tmp, Pos1 + Length(von), Pos2 - Pos1 - Length(von));
+    Delete(tmp, Pos1, Pos2 - Pos1 + Length(bis));
+    if SubStr = '' then {nothing} 
+    else if bck = '' then
+      bck:= SubStr
+    else
+      bck:= bck + #13#10 + SubStr;
+    i:= i + 1;
+  end;
+  result:= bck;
+end;
+
+
+procedure ShowContent1(vconLst: TStringList);
+begin
+  showmessage(filterSubStr(vconLst.text,
+  'title="/maxbox2_9.zip:  released on 2010-07-22"',
+  'title="Subscribe to all file releases"',
+  //'title="/release_notes_maxbox2.txt:  released on 2010-06-29"',
+  //'title="/maxbox_starter4.pdf:  released on 2010-06-29"',
+   1))
+end;
+
+procedure ShowContent2(vconLst: TStringList);
+var
+  i, startidx, endidx: integer;
+begin
+  showmessage(filterSubStr(vconLst.text,
+  //'title="/release_notes_maxbox2.txt:  released on 2010-06-29"',
+  //'title="/maxbox_starter4.pdf:  released on 2010-06-29"',
+  '<TD>52 Wochen Hoch</TD>',
+  '<TD>Titelart</TD>', 1))
+  //filterRange with index back;
+  {filterRange(vconLst,': yourApplication.exe','end;', startidx, endidx);
+  for i:= startidx to endidx do 
+       memo2.lines.add(inttostr(i)+' :'+vconLst[i])}
+end;
+
+
+procedure ShowContent3(vconLst: TStringList);
+begin
+  showmessage(filterSubStr(vconLst.text,
+  ': yourApplication.exe',
+  'end;',
+  //'title="/release_notes_maxbox2.txt:  released on 2010-06-29"',
+  //'title="/maxbox_starter4.pdf:  released on 2010-06-29"',
+  1))
+end;
+
+procedure ShowContent4(vconLst: TStringList);
+begin
+  showmessage(filterSubStr(vconLst.text,
+  //'<blockquote class="news_headlines">',
+  '<a href="/inland/" class="news_title">Inland</a>',
+  //'<a href="/kultur/" class="news_title">',
+  '<a href="/sport/" class="news_title">', 1))
+end;
+
+procedure ShowContent5(vconLst: TStringList);
+begin
+  showmessage(filterSubStr(vconLst.text,
+  //'<b>Visits:</b>',
+  'title="This article has been visited',
+  'title="Have a look at the profile of M. Kleiner and his company!"',1))
+end;
+
+procedure ShowContent6(vconLst: TStringList);
+begin
+  showmessage(filterSubStr(vconLst.text,
+  //'<b>Visits:</b>',
+  '/images/poweredby_mediawiki_88x31.png"',
+  'type="text/javascript">if (window.runOnloadHook)',1))
+end;
+
+//unit
+
+procedure LetHTTPConnect(vcontentURL: string);
+var idHTTP: TIdHTTP;
+    E: Exception;
+begin
+  idHTTP:= TIdHTTP.Create(self)
+  try
+    //test bed: memo2.lines.text:= idhttp.get2('http://127.0.0.1')
+    try
+      contentLst.text:= idhttp.get2(vcontentURL);
+    except
+      //silent exception
+      writeln(GetSafeCallExceptionMsg);
+    end    
+  finally
+    idHTTP.Free
+    maxform1.color:= clred; 
+  end;    
+end;
+
+//main killerapp with range & content filter 
+begin
+  //initialization
+  contentLst:= TStringList.create;
+  try
+    LetHTTPConnect(contentURL1);
+    ShowContent1(contentLst);
+    LetHTTPConnect(contentURL2);
+    ShowContent2(contentLst);
+    {LetHTTPConnect(contentURL3);
+    ShowContent3(contentLst);}
+    LetHTTPConnect(contentURL4);
+    ShowContent4(contentLst);
+    LetHTTPConnect(contentURL5);
+    ShowContent5(contentLst);
+    LetHTTPConnect(contentURL6);
+    ShowContent6(contentLst);
+  finally  
+    contentLst.Free;
+    memo2.height:= 230;
+  end;  
+end.
+
+//source:
+//http://www.delphi3000.com/articles/article_4697.asp?SK=
+//http://www.swissdelphicenter.com/en/showarticle.php?id=3
+//http://sourceforge.net/projects/maxbox/files/
+//http://www.swissquote.ch/fcgi-bin/stockfquote?symbols=meyer%20burger&language=d&r=0.6477707200624298

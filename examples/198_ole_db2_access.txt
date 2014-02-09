@@ -1,0 +1,231 @@
+{****************************************************************
+ *
+ * Project  : OLE DB maXbase SeriesSystem Information Series
+ * App Name : 198_ole_db_access.txt, loc's = 177
+ * Purpose  : DB Access via OLE DB with Access
+ * History  : system for mX3.2  , need: Database3.mdb
+ ****************************************************************}
+program DB_ACCESS;
+
+function  MyMessageBeep(para: integer): byte;
+     external 'MessageBeep@user32.dll stdcall';  
+
+function MyGetTickCount: Longint;
+  external 'GetTickCount@kernel32.dll stdcall';
+ 
+var
+  myTimeStamp: TDateTime;
+  ws: TWideStrings;
+  dCom: TADOCommand;
+  i: integer;
+
+  
+procedure DBShow(Sender: TObject);
+var ADODataSet1: TADODataSet;
+var
+  i:integer;
+begin
+  i:= 1;
+  adoDataSet1.connectionString
+  while i <= ADODataSet1.RecordCount do begin
+    Writeln(ADODataSet1.Fieldbyname('name').AsString);
+    ADODataSet1.Next;
+    i:= i+1;
+  end;
+end; 
+
+
+Procedure SetADOQuery;
+var i: integer;
+  adoquery: TAdoQuery;
+begin  
+  adoquery:= TAdoQuery.create(self);
+  with adoquery do begin
+    cachesize:= 500;
+ //ConnectionString:= 'Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\SecureCenter\Dec 15 2010mx3\images.MDB;Persist Security Info=False';
+  //adoquery.ParamCheck := True;
+    //SQL.Add('Select * from patient');
+    commandtext:= 'Select * from patient where id = :id'; 
+    //SQL.Add('Select * from patient where id = :id ');
+    with Parameters.Parambyname('id') do begin
+      DataType:= ftInteger;
+      Value:= '123';
+    end; 
+    Open;
+    while i <= RecordCount do  begin
+      Writeln(Fieldbyname('name').AsString);
+      Next;
+      i:= i+1;
+    end;
+    Close;
+    Free; 
+  end;
+end;
+
+
+Procedure ConnectTest;
+var
+  dconnect: TADOConnection;
+begin
+  dconnect:= TADOConnection.Create(self);
+  try
+    dconnect.Provider:= 'Microsoft.Jet.OLEDB.4.0'
+    dconnect.ConnectionString:= 'Provider=SQLOLEDB;DataSource=MyServer;Integrated Security//=SSPI;Initial Catalog=pubs;';
+  //or for MS Jet (MS Access):
+    dconnect.ConnectionString:= 'Provider=Microsoft.Jet.OLEDB.4.0;'+
+                                  'DataSource=c:\db.mdb;';
+    dconnect.Connected:= true;
+    dconnect.LoginPrompt := False
+    dconnect.open('Admin','');
+    //dconnect.Active:= true;
+  finally
+    dconnect.Free;
+  end;
+end;     
+
+
+Procedure SetADOSETAccess;
+var 
+  adoquery: TAdoDataSet;
+  adocon: TADOConnection;
+  xlsfile: string;
+  i, z: integer;
+begin  
+  adoquery:= TAdoDataSet.Create(self);
+  adocon:= TADOConnection.Create(self);
+  with adoquery do begin
+    cachesize:= 500;
+{ ConnectionString:= 'Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\SecureCenter\Dec 15 2010mx3\images.MDB;Persist Security Info=False';
+  adoquery.ParamCheck := True;}
+   xlsfile:= ExePath+'database3.mdb'; 
+  //ADOCon.ConnectionString := 'Provider=Microsoft.Jet.OLEDB.4.0;DataSource=xlsfile;';   
+  ADOCon.ConnectionString:= 'Provider=MSDASQL;DSN=mx3base;Uid=sa;Pwd=admin';
+  //commandtext:= 'select count(*)'
+  commandtext:= 'select * from Table1'
+  adocon.LoginPrompt:= false;
+  adocon.Connected:= true;
+  //if (adocon.ConnectionState == csStateOpen)
+  //connectionString:= AdoCon.ConnectionString;
+  connectionString:= 'Provider=MSDASQL;DSN=mx3base;Uid=sa;Pwd=admin';
+  Open; 
+  //Writeln(intToStr(Recordcount)+' records found')
+  for i:= 0 to Recordcount - 1 do begin
+    for z:= 0 to Fieldcount - 1 do 
+      Write((Fields[z].asString)+'  ');
+    Writeln(#13#10)
+    Next;
+  end;
+  adocon.close;
+  adocon.free;         
+   Close;
+   Free;        
+  end;
+end;
+
+
+Procedure SetADOSETAccess2;
+var 
+  adoquery: TAdoDataSet;
+  i, z: integer;
+begin  
+  adoquery:= TAdoDataSet.Create(self);
+  with adoquery do begin
+    cachesize:= 500;
+    //commandtext:= 'select count(*)'
+    {commandtext:= 'INSERT INTO Table1 (FirstName, LastName, Phone)'+
+                        'VALUES (''Max'', ''Box545'', ''031-333 77 88'')';}
+    commandText:= 'SELECT * FROM Table1';
+    connectionString:= 'Provider=MSDASQL;DSN=mx3base;Uid=sa;Pwd=admin';
+  //try
+    Open;
+  //except   
+    //Writeln(intToStr(Recordcount)+' records found')
+  //end;
+  for i:= 0 to Recordcount - 1 do begin
+    for z:= 0 to Fieldcount - 1 do 
+      Write((Fields[z].asString)+'  ');
+    Writeln(#13#10)
+    Next;
+  end;
+    Close;
+    Free;        
+  end;
+end;
+
+
+begin
+  //SetAdoQuery;
+  //SetAdoSet;
+  //SetADOSETAccess;
+  SetADOSETAccess2;
+
+  Writeln('Data Link Dir is: '+ DataLinkDir);
+  writeln('machine name is: '+getHostName)
+  writeln('user name is: '+getUserName)
+  mytimestamp:= GetFileCreationTime(exepath+'maxbox3.exe')
+  writeln(datetimetoStr(mytimestamp)+' Creation Date of maXbox3')
+  writeln('tick count from func ' +IntToStr(GetTickCount));
+  //DLL Test
+  MyMessageBeep(60);
+  Writeln('Host is: '+getHostbyName('www.softwareschule.ch'))
+  CreateFileFromString(ExePath+'mycopy.txt',memo2.text);
+  WriteLog(ExePath+'mylog.txt',memo2.text)
+  ws:= TWideStringList.create;
+  getProviderNames(ws)
+  for i:= 1 to ws.count -1 do 
+    writeln(inttostr(i) +' '+ws.strings[i]);
+  ws.free;  
+end.   
+
+
+*******************************************************
+There is no place like 127.0.0.1 
+
+Exception: Access violation at address 4DE2F83C in module 'msado15.dll'. Read of address 78742E67 at 0.1057
+
+
+[Microsoft][ODBC Driver Manager] Data source name not found and no default driver specified at 35.440
+
+[Microsoft][ODBC Microsoft Access Driver] Query is too complex at 35.607
+
+
+[Microsoft][ODBC Microsoft Access Driver] The Microsoft Jet database engine cannot find the input table or query 'Table1d'.  Make sure it exists and that its name is spelled correctly at 35.556
+
+[Microsoft][ODBC Microsoft Access Driver] Syntax error (missing operator) in query expression '031-333 77 88' at 41.356
+
+[Microsoft][ODBC Microsoft Access Driver] Too few parameters. Expected 2 at 41.354
+
+
+The syntax for the INSERT statement is:
+
+    INSERT INTO table
+    (column-1, column-2, ... column-n)
+    VALUES
+    (value-1, value-2, ... value-n);
+    
+dbs.Execute " INSERT INTO Employees " _
+        & "(FirstName,LastName, Title) VALUES " _
+        & "('Harry', 'Washington', 'Trainee');"
+        
+        
+ADOConnection1.Open;
+ADOQuery1.Close;
+ADOQuery1.SQL.Text := 'SELECT * FROM database1 WHERE
+value1=1 AND value2= ' + inttostr(array[3]);
+        
+QuotedStr rather than ''''    
+
+CommandText does not return a result set at 41.360
+
+ADOQuery1.SQL.Clear;
+ADOQuery1.SQL.Add('Insert into Score ([Score],[Round],[FighterID],[FightID])
+Values('+quotedstr(cbrf1.text)+','+QuotedStr(inttostr(countround))+', )');
+ADOQuery1. ExecSQL;
+ADOQuery1.SQL.Clear;
+
+
+mdbviewer
+dns-entry
+
+
+

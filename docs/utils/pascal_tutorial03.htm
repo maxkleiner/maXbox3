@@ -1,0 +1,1744 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+
+<HEAD>
+<SCRIPT LANGUAGE="JavaScript">
+
+<!--
+
+function popUp(pPage) {
+ var fullURL = document.location;
+ var textURL = fullURL.toString();
+ var URLlen = textURL.length;
+ var lenMinusPage = textURL.lastIndexOf("/");
+ lenMinusPage += 1;
+ var fullPath = textURL.substring(0,lenMinusPage);
+ popUpWin = window.open('','popWin','resizable=yes,scrollbars=no,width=525,height=394');
+ figDoc= popUpWin.document;
+ zhtm= '<HTML><HEAD><TITLE>' + pPage + '</TITLE>';
+ zhtm += '<link rel="stylesheet" href="ebooks.css"></head>';
+ zhtm += '<BODY bgcolor="#FFFFFF">';
+ zhtm += '<IMG SRC="' + fullPath + pPage + '">';
+ zhtm += '<P><B>' + pPage + '</B>';
+ zhtm += '</BODY></HTML>';
+ window.popUpWin.document.write(zhtm);
+ window.popUpWin.document.close();
+ // Johnny Jackson 4/28/98
+ }
+
+//-->
+                                                                
+</SCRIPT>
+<link rel="stylesheet" href="ebooks.css">
+
+ <META HTTP-EQUIV="Content-Type" CONTENT="text/html;CHARSET=iso-8859-1">
+ <TITLE>Teach Yourself Borland Delphi 4 in 21 Days -- Ch 3 -- Classes and Object-Oriented Programming</TITLE>
+</HEAD>
+
+<BODY TEXT="#000000" BGCOLOR="#FFFFFF">
+
+<CENTER>
+<H1><IMG SRC="button/sams.gif" WIDTH="171" HEIGHT="66" ALIGN="BOTTOM" BORDER="0"></H1>
+
+<H1><BR>
+Teach Yourself Borland Delphi 4 in 21 Days</H1>
+</CENTER>
+<CENTER>
+<P><A HREF="ch02.htm"><IMG SRC="button/previous.gif" WIDTH="128" HEIGHT="28"
+ALIGN="BOTTOM" ALT="Previous chapter" BORDER="0"></A><A HREF="ch04.htm"><IMG
+SRC="button/next.gif" WIDTH="128" HEIGHT="28" ALIGN="BOTTOM" ALT="Next chapter"
+BORDER="0"></A><A HREF="index.htm"><IMG SRC="button/contents.gif" WIDTH="128"
+HEIGHT="28" ALIGN="BOTTOM" ALT="Contents" BORDER="0"></A> 
+<HR>
+
+</CENTER>
+<CENTER>
+<H1>- 3 -</H1>
+</CENTER>
+<CENTER>
+<H1>Classes and Object-Oriented Programming</H1>
+</CENTER>
+
+<UL>
+ <LI><A HREF="#Heading1">Sets</A>
+ <UL>
+  <LI><A HREF="#Heading2">Styles := Styles - [fsItalic];</A>
+  <LI><A HREF="#Headi
+ng3">Styles := [fsBold, fsItalic];</A>
+	</UL>
+	<LI><A HREF="#Heading4">Casting</A>
+	<LI><A HREF="#Heading5">Pointers</A>
+	<UL>
+		<LI><A HREF="#Heading6">Local Versus Dynamic Memory Usage</A>
+		<LI><A HREF="#Heading7">Dynamic Allocation and Pointers</A>
+		<LI><A HREF="#Heading8">Dereferencing a Pointer</A>
+	</UL>
+	<LI><A HREF="#Heading9">What's a Class?</A>
+	<LI><A HREF="#Heading10">Anatomy of a Class</A>
+	<LI><A HREF="#Heading11">Class Access Levels</A>
+	<UL>
+		<LI><A HREF="#Heading12">Constructors</A>
+		<LI><A HREF="#Heading13">Destructors</A>
+		<LI><A HREF="#Heading14">Data Fields</A>
+		<LI><A HREF="#Heading15">Methods</A>
+		<LI><A HREF="#Heading16">About Self</A>
+		<LI><A HREF="#Heading17">A Class Example</A>
+	</UL>
+	<LI><A HREF="#Heading18">Inheritance</A>
+	<LI><A HREF="#Heading19">Overriding Methods</A>
+	<UL>
+		<LI><A HREF="#Heading20">Class Keywords: is and as</A>
+	</UL>
+	<LI><A HREF="#Heading21">Summary</A>
+	<LI><A HREF="#Heading22">Workshop</A>
+	<UL>
+		<LI><A HREF="#Heading23">Q&amp;A</A>
+		<LI><A HREF="#Heading24">Quiz</A>
+		<LI><A HREF="#Heading25">Exercises</A>
+	</UL>
+</UL>
+
+<P>
+<HR SIZE="4">
+
+<CENTER>
+<H1></H1>
+</CENTER>
+<P>Today you get to the good stuff. In this chapter you will learn about classes.
+Classes are the heart of Object Pascal and a major part of object-oriented programming.
+Classes are also the heart of the Visual Component Library (VCL), which you will
+use when you start writing real Windows applications. (The VCL is discussed in detail
+on Day 5, &quot;The Visual Component Model.&quot;) Today you will find out what a
+class is and how it's expected to be used. Along the way you will learn the meaning
+of Object Pascal buzzwords like <I>inheritance</I>, <I>object</I>, and <I>data</I>
+<I>abstraction</I>. Before you get to that, however, I want to cover a few more aspects
+of Object Pascal that I haven't yet covered.</P>
+<P>
+<H2><A NAME="Heading1"></A>Sets</H2>
+<P>Sets are used frequently throughout Delphi, so you need to know what sets are
+and how they work.</P>
+<P>A <I>set</I> is a collecti
+
+
+on of values of one type.</P>
+<P>That description doesn't say too much, does it? An example that comes to mind
+is the Style property of a VCL font object. This property can include one or more
+of the following values:</P>
+
+<UL>
+	<LI>fsBold
+	<P>
+	<LI>fsItalic
+	<P>
+	<LI>fsUnderline<BR>
+	<BR>
+	
+	<LI>fsStrikeout
+</UL>
+
+<P>A font can have any combination of these styles or none of them at all. A set
+of font styles, then, might have none of these values, it could have all of them,
+or it could have any combination.</P>
+<P>So how do you use a set? Let me use the Style property to illustrate. Typically,
+you turn the individual Style values for the font on or off at design time. Sometimes,
+however, you need to set the font's Style property at runtime. For example, let's
+say that you want to add the bold and italic attributes to the font style. One way
+is to declare a variable of type TFontStyles and then add the fsBold and fsItalic
+styles to the set. Here's how it looks:</P>
+<P>
+<PRE>var
+  Styles : TFontStyles;
+begin
+  Styles := Styles + [fsBold, fsItalic];
+end;
+</PRE>
+<P>This code adds the elements fsBold and fsItalic to the Styles set. The elements
+are enclosed in brackets to indicate that you are adding elements to the set. The
+brackets, when used in this way, are called a <I>set constructor</I>. Notice that
+this code doesn't actually change a font's style; it just creates a set and adds
+two elements to it. To change a font's style, you have to assign this newly created
+set to the Font.Style property of some component:</P>
+<P>
+<PRE>Memo.Font.Style = Styles;
+</PRE>
+<P>Now, let's say that you want the font to be bold but not italic. In that case,
+you have to remove the italic style from the set:</P>
+<P>
+<H3><A NAME="Heading2"></A>Styles := Styles - [fsItalic];</H3>
+<P>The style now contains only the fsBold value because the fsItalic value has been
+removed.</P>
+<P>Often you want to know whether a particular item is in a set. Let's say you want
+to know whether the font is currently set to bold. You can find out whether the
+fsBold
+element is in the set by using the in keyword:</P>
+<P>
+<PRE>if fsBold in Styles then
+  DoSomething;
+</PRE>
+<P>Sometimes you need to make sure you are starting with an empty set. You can clear
+a set of its contents by assigning an empty set to a set variable. This is done with
+an empty set constructor--for example,</P>
+<P>
+<PRE>{ start with an empty set } 
+Styles := [];
+{ now add the bold and italic styles } 
+Styles := Styles + [fsBold, fsItalic];
+</PRE>
+<P>In this example the font style is cleared of all contents, and then the bold and
+italic styles are added. This same thing can be accomplished in a slightly different
+way by just assigning directly to a set:</P>
+<P>
+<H3><A NAME="Heading3"></A>Styles := [fsBold, fsItalic];</H3>
+<P>You don't specifically have to create a TFontStyles variable to change a font's
+style. You can just work with the property directly--for example,</P>
+<P>
+<PRE>Memo.Font.Style := [];
+Memo.Font.Style := Memo.Font.Style + [fsBold, fsItalic];
+</PRE>
+<P>A set is declared using the set keyword. The TFontStyles property is declared
+in the VCL source file GRAPHICS.PAS like this:</P>
+<P>
+<PRE>TFontStyle = (fsBold, fsItalic, fsUnderline, fsStrikeOut);
+</PRE>
+<PRE>TFontStyles = set of TFontStyle;
+</PRE>
+<P>The first line here declares an enumeration type called TFontStyle. (An <I>enumeration</I>
+is a list of possible values.) The second line creates the TFontStyles set as a set
+of TFontStyle values.</P>
+<P>Sets are used often in VCL and in Delphi programming. Many component properties
+are defined as sets. You'll get the hang of sets quickly as you work with Delphi.</P>
+<P>
+<H2><A NAME="Heading4"></A>Casting</H2>
+<PRE><I><strong>New Term:</strong>  Cast</I> means to tell the compiler to treat one data type as if it were a different type. Another term for cast is <I>typecast</I>.
+</PRE>
+<P>Here's an example of a Char data type typecast to an Integer:</P>
+<P>
+<PRE>procedure TForm1.Button1Click(Sender: TObject);
+var
+  AChar : Char;
+  AnInteger : Integer;
+begin
+  AChar := `A';
+  AnInteger := Int
+
+
+eger(AChar);
+  Label1.Caption := IntToStr(AnInteger);
+end;
+</PRE>
+<P>In this example, the cast Integer(AChar) tells the compiler to convert the value
+of AChar to an Integer data type. The cast is necessary because you can't assign
+the value of a Char data type to an Integer type. If you attempt to make the assignment
+without the cast, the compiler will issue an error that reads Incompatible types:
+`Integer' and `Char'.</P>
+<P>By the way, when the preceding code executes, the label will display the text
+65 (65 is the integer value of the character A).</P>
+<P>It is not always possible to cast one data type to another. Take this code, for
+example:</P>
+<P>
+<PRE>procedure TForm1.Button1Click(Sender: TObject);
+var
+  Pi : Double;
+  AnInteger : Integer;
+begin
+  Pi := 3.14;
+  AnInteger := Integer(Pi);
+  Label1.Caption := IntToStr(AnInteger);
+end;
+</PRE>
+<PRE>In this case, I am trying to cast a Double to an Integer. This is not a valid cast, so the compiler will issue an error that reads Invalid typecast. To convert a floating-point value to an integer value, use the Trunc, Floor, or Ceil functions. 
+These functions do just as their names indicate, so I don't need to explain further. See the Delphi help for more information on these functions.
+</PRE>
+<P>Pointers can be cast from one type to another using the as operator. (Pointers
+are discussed in the next section.) I'll discuss the as operator later in the section
+&quot;Class Keywords: is and as.&quot;</P>
+<P>
+<H2><A NAME="Heading5"></A>Pointers</H2>
+<P>Pointers are one of the most confusing aspects of the Object Pascal language.
+So what is a pointer? It's a variable that holds the address of another variable.
+There, that wasn't so bad, was it? I wish it were that simple! Because a pointer
+holds the address of another variable, it is said to &quot;point to&quot; the second
+variable. This is called <I>indirection</I> because the pointer does not have a direct
+association with the actual data, but rather an indirect association.</P>
+<P><strong>New Term:</strong> A <I>pointe
+
+
+r</I> is a variable that holds the address of another
+variable.</P>
+<P>Let's look at an example. Let's say you have a record, and you need to pass the
+address of that record to a procedure requiring a pointer. You take the address of
+a record instance using the @ operator. Here's how it looks:</P>
+<P>
+<PRE>var
+  MLRecord : TMailingListRecord;
+APtr : Pointer;
+begin
+  { Fill MLRecord with data. } 
+  APtr := @MLRecord;
+  SomeFunction(APtr);
+end;
+</PRE>
+<PRE>The APtr variable (which is of type Pointer) is used to hold the memory address of the MLRecord record. This type of pointer is called an <I>untyped pointer</I> because the Pointer data type simply holds a memory address. Another type of pointer 
+is a pointer that is declared as a pointer to a specific type of object. For example, let's say that you create a new type, a pointer to TMailingListRecord record. The declaration would look like this:
+</PRE>
+<PRE>type
+  PMailingListRecord = ^TMailingListRecord;
+  TMailingListRecord = record
+    FirstName : string;
+    LastName : string;
+    Address : string;
+    City : string;
+    State : string;
+    Zip : Integer;
+  end;
+</PRE>
+<P>The type PMailingListRecord is declared as a pointer to a TMailingListRecord.
+You will often see records and their corresponding pointers declared in this way.
+You might be wondering what the point is (no pun intended). Let's go on to the next
+section and I'll show you one way pointers are used.</P>
+
+
+<BLOCKQUOTE>
+	<P>
+<HR>
+<strong>NOTE:</strong> I almost never use long strings in records as I have done here with
+	the TMailingListRecord. I usually use an array of Char rather than a long string.
+	The reason for this is that long strings are dynamically allocated and are not a
+	fixed size. Fixed-size fields are important if you are writing records to disk. I
+	used long strings in the case of TMailingListRecord because I didn't want to muddy
+	the waters with a discussion on fixed-length records at this point in the book. 
+<HR>
+
+
+</BLOCKQUOTE>
+
+<H3><A NAME="Heading6"></A>Local Versus Dynamic Memo
+
+
+ry Usage</H3>
+<P>Yesterday when you read about records, I showed you some examples. All of those
+examples used local allocation of objects. That is, the memory required for the record
+variable was obtained from the program's stack.</P>
+<P><I><strong>New Term:</strong> Local allocation</I> means that the memory required for
+a variable or object is obtained from the program's stack.</P>
+<P><strong>New Term:</strong> The <I>stack</I> is an area of working memory set aside by
+the program when the program starts.</P>
+<P>Any memory the program needs for things such as local variables, function calls,
+and so on is taken from the program's stack. This memory is allocated as needed and
+then freed when it is no longer needed; usually this happens when the program enters
+a function or other local code block. Memory for any local variables the function
+uses is allocated when the function is entered. When the function returns, all the
+memory allocated for the function's use is freed. It all happens for you automatically;
+you don't have to give any thought to how the memory is freed or whether the memory
+is freed at all.</P>
+<P>Local allocation has its good points and its bad points. On the plus side, memory
+can be allocated from the stack very quickly. The negative side is that the stack
+is a fixed size and cannot be changed as the program runs. If your program runs out
+of stack space, weird things start to happen. Your program might crash, it might
+start behaving oddly, or it might seem to perform normally but crash when the program
+terminates. This is less of a problem in the 32-bit world than in 16-bit programming,
+but it's still a consideration.</P>
+<P>For things like variables of the built-in data types and small arrays, there is
+no point in doing anything other than local allocation. But if you are going to be
+using large records, you will probably want to use dynamic allocation from the heap.
+The heap amounts to your computer's free physical RAM plus all your free hard disk
+space. In other words, you can easily have 10
+
+
+0MB of heap memory available on a typical
+Windows system. The good news here is that you have virtually unlimited memory available
+for your programs. The bad news is that memory allocated dynamically requires some
+additional overhead and, as such, is just a smidgen slower than memory allocated
+from the stack. In most programs the extra overhead is not noticed in the least.
+An additional drawback of dynamic allocation is that it requires more from the programmer--not
+a lot more, mind you, but a little.</P>
+<P><I><strong>New Term:</strong> Dynamic allocation</I> means that memory required for an
+object is allocated from the heap.</P>
+<P>
+<PRE><strong>New Term:</strong>  The <I>heap</I> in a Windows program refers to all of your computer's virtual memory.
+</PRE>
+<H3><A NAME="Heading7"></A>Dynamic Allocation and Pointers</H3>
+<P>In an Object Pascal program, memory can be allocated dynamically in several different
+ways. Perhaps the best way is to use the AllocMem function. AllocMem allocates memory
+and fills the allocated memory with zeros. (Other ways to dynamically allocate memory
+include the GetMem procedure and the New function.) All things considered, AllocMem
+probably provides the best way of allocating memory dynamically. Let's go back to
+the TMailingListRecord record. In previous examples, I allocated memory for one of
+these records from the stack like this:</P>
+<P>
+<PRE>var
+  MLRecord : TMailingListRecord;
+begin
+  { Fill MLRecord with data. } 
+  MLRecord.FirstName := `Per';
+  MLRecord.LastName  := `Larsen';
+  { etc. } 
+end;
+</PRE>
+<P>Now I'll create the record dynamically rather than locally:</P>
+<P>
+<PRE>var
+  APtr : PMailingListRecord;
+begin
+  APtr := AllocMem(SizeOf(TMailingListRecord));
+APtr.FirstName := `Per';
+  APtr.LastName  := `Larsen';
+  { Do some other things. } 
+  FreeMem(APtr);
+</PRE>
+<P><B>end;</B></P>
+<P>Notice that this time I declare a PMailingListRecord (a pointer to a TMailingListRecord)
+rather than a TMailingListRecord itself. Also notice that I allocate memory for the
+structure by calling
+the AllocMem function. The parameter passed to AllocMem is the
+amount of memory to allocate. The SizeOf function returns the size of the record,
+so I use that function to determine how much memory to allocate. The call to AllocMem
+allocates memory and initializes the pointer by creating a new instance of a TMailingListRecord
+dynamically. After the memory has been allocated, you can use the pointer variable
+just as you do a regular variable. Finally, notice that after I am done with the
+object, I free the memory associated with the object by using the FreeMem procedure.
+Failure to call FreeMem to free dynamically allocated objects will result in a program
+that leaks memory (uses up memory that it never releases).</P>
+<P>This is the process by which you dynamically create and access records in Object
+Pascal. You probably won't use dynamic allocation very much, but sometimes it's necessary,
+so you should know how it's done.</P>
+
+
+<BLOCKQUOTE>
+	<P>
+<HR>
+<strong>NOTE:</strong> Dynamic allocation of memory for records and arrays is optional.
+	It is mandatory for classes. I'll discuss that in just a bit when I talk about classes.
+	
+<HR>
+</P>
+	<P>
+<HR>
+<strong>NOTE:</strong> The nil keyword is used to specify a pointer that has no value. If
+	you want to clear a pointer of its value, you use the nil keyword like this:</P>
+	<PRE>SomePointer := nil;</PRE>
+
+</BLOCKQUOTE>
+
+<PRE></PRE>
+
+
+<BLOCKQUOTE>
+	<P>You can also use nil to test a pointer to see whether it has been allocated: 
+<HR>
+
+
+</BLOCKQUOTE>
+
+<PRE>if SomePointer = nil then
+ SomePointer := AllocMem(Size);
+</PRE>
+<PRE>This code checks a pointer to see whether it has been assigned a value. If it hasn't been assigned a value, then memory is allocated for the pointer. 
+</PRE>
+<H3><A NAME="Heading8"></A>Dereferencing a Pointer</H3>
+<P>Sometimes you need to dereference a pointer.</P>
+<P><strong>New Term:</strong> <I>Dereferencing</I> a pointer means retrieving the object
+that the pointer points to.</P>
+<P>Let's say that you dynamically created a mailing list record as descr
+
+
+ibed earlier.
+Now you want to assign the contents of that mailing list record to another mailing
+list record variable that was allocated from the stack. Here's what you have so far:</P>
+<P>
+<PRE>var
+  APtr : PMailingListRecord;
+  Rec  : TMailingListRecord;
+begin
+  APtr := AllocMem(SizeOf(TMailingListRecord));
+</PRE>
+<P>Now let's say you want to copy the contents of APtr to the Rec variable. The APtr
+variable is a pointer to a TMailingListRecord and the Rec variable is a TMailingListRecord.
+You might try this:</P>
+<P>
+<PRE>Rec := APtr;
+</PRE>
+<PRE>That won't work, however, because APtr contains a memory address, not a TMailingListRecord. In order to make this assignment, you have to dereference  the pointer by using the pointer operator (^). It looks like this:
+</PRE>
+<PRE>Rec := APtr^;
+</PRE>
+<P>When you dereference a pointer, you are telling the compiler, &quot;Give me the
+object pointed to by the pointer and not the value of the pointer itself.&quot;</P>
+<P>
+<H2><A NAME="Heading9"></A>What's a Class?</H2>
+<P>A <I>class</I> is a collection of fields and methods (functions and procedures)
+that work together to accomplish a specific programming task. In this way a class
+is said to <I>encapsulate</I> the task. Classes have the following features:</P>
+
+<UL>
+	<LI>The capability to control access
+	<P>
+	<LI>Constructors
+	<P>
+	<LI>Destructors
+	<P>
+	<LI>Fields
+	<P>
+	<LI>Methods (procedures and functions)<BR>
+	<BR>
+	
+	<LI>A hidden, special pointer called Self
+</UL>
+
+<PRE>Before diving into an explanation of these features, let me give you a quick example of how a class might be used. Let's use a typical Windows control as an example--a check box, for instance. A class that represents a check box would have fields 
+for the caption of the check box and for the state (checked or unchecked). This class would also have methods that enable you to set and query both the check box caption and the check state. These methods might be named GetCheck, SetCheck, GetCaption, 
+and SetCaption. After the class has been written, you can cr
+
+
+eate an instance of the class to control a check box in Windows. (It's not quite that simple, but this is just an example after all.) If you have three check boxes, you would have three 
+instances of the CheckBox class that could then be used to control each check box individually.
+</PRE>
+<PRE>var
+  Check1 : TMyCheckBox;
+  Check2 : TMyCheckBox;
+  Check3 : TMyCheckBox;
+begin
+  Check1 := TMyCheckBox.Create(ID_CHECK1);
+  Check2 := TMyCheckBox.Create(ID_CHECK2);
+  Check3 := TMyCheckBox.Create(ID_CHECK3);
+  Check1.SetCaption(`Thingamabob Option');
+  Check1.SetCheck(True);
+  Check2.SetCaption(`Doohickey Options');
+  Check2.SetCheck(False);
+  Check3.SetCaption(`Whodyacallum Options');
+  Check3.SetCheck(True);
+  if Check1.GetCheck then DoThingamabobTask;
+  if Check2.GetCheck then DoDoohickeyTask;
+  { etc. } 
+end;
+</PRE>
+<P>In this example, each instance of the class is a separate object. Each instance
+has its own fields, and the objects operate independently of one another. They are
+all objects of the same type but are separate instances in memory. With that brief
+introduction, you can roll up your sleeves once more and go to work on understanding
+classes.</P>
+
+
+<BLOCKQUOTE>
+	<P>
+<HR>
+<strong>NOTE:</strong> The previous example might have been more clear if I had used properties
+	rather than methods called SetCheck, GetCheck, and SetCaption. I didn't because I'm
+	not ready to talk about properties in detail at this time. In fact, most of this
+	chapter will talk about classes without much emphasis on properties. I'll talk about
+	properties more on Day 5. 
+<HR>
+
+
+</BLOCKQUOTE>
+
+<H2><A NAME="Heading10"></A>Anatomy of a Class</H2>
+<P>A class, like a record, has a declaration. The class declaration is always in
+a type section.</P>
+<P>
+<H2><A NAME="Heading11"></A>Class Access Levels</H2>
+<P>Classes can have four levels of access:</P>
+
+<UL>
+	<LI>Private
+	<P>
+	<LI>Public
+	<P>
+	<LI>Protected
+	<P>
+	<LI>Published
+</UL>
+
+<P>Each of these access levels is defined in this section.</P>
+<P>Class access levels control how a class is used
+
+
+. As a single programmer, you might
+be not only the class's creator but also a user of the class. In team programming
+environments, one programmer might be the creator of the class and other programmers
+the users of the class. To understand the role that levels of access play in class
+operation, you first need to understand how classes are used.</P>
+<P>In any class there is the <I>public</I> part of the class, which the outside world
+has access to, and there is the private part of a class. The <I>private</I> part
+of a class is the internal implementation of the class--the inner workings, so to
+speak.</P>
+<P>Part of a well-designed class includes hiding anything from public view that the
+user of the class doesn't need to know.</P>
+<P><strong>New Term:</strong> <I>Data abstraction</I> is the hiding of internal implementations
+within the class from outside views.</P>
+<P>Data abstraction prevents the user from knowing more than he or she needs to know
+about the class and also prevents the user from messing with things that shouldn't
+be messed with. For example, when you get in your car and turn the key to start it,
+do you want to know every detail about how the car operates? Of course not. You only
+want to know as much as you need to know to operate the car safely. In this analogy,
+the steering wheel, pedals, gear shift lever, speedometer, and so on represent the
+public interface between the car and the driver. The driver knows which of those
+components to manipulate to make the car perform the way he or she wants.</P>
+<P>Conversely, the engine, drive train, and electrical system of the car are hidden
+from public view. The engine is tucked neatly away where you never have to look at
+it if you don't want to. It's a detail that you don't need to know about, so it is
+hidden from you--kept private, if you prefer. Imagine how much trouble driving would
+be if you had to know everything the car was doing at all times: Is the carburetor
+getting enough gas? Does the differential have enough grease? Is the alternator producing
+
+
+
+adequate voltage for both the ignition and the radio to operate? Are the intake valves
+opening properly? Who needs it! In the same way, a class keeps its internal implementation
+private so the user of the class doesn't have to worry about what's going on under
+the hood. The internal workings of the class are kept private and the user interface
+is public.</P>
+<P>The <I>protected</I> access level is a little harder to explain. Protected class
+members, like private class members, cannot be accessed by users of the class. They
+can, however, be accessed by classes that are derived from this class. Continuing
+with the car analogy, let's say you want to extend the car (literally) by making
+it a stretch limousine. To do this, you need to know something about the underlying
+structure of the car. You need to know how to modify the drive shaft and frame of
+the car at the very minimum. In this case you would need to get your hands dirty
+and, as a limousine designer, get at the parts of the car that were previously unimportant
+to you (the protected parts).</P>
+<P>The internal workings of the engine are still kept private because you don't need
+to know how the engine works to extend the frame of the car. Similarly, most of the
+public parts of the car remain the same, but you might add some new public elements
+such as the controls for the intercom system. I've strayed a little here and given
+you a peek in to what is called <I>inheritance</I>, but I won't go in to further
+details right now. I will talk more about protected access a little later in the
+section &quot;Methods,&quot; and about inheritance in the section &quot;Inheritance.&quot;
+The point here is that the protected section of a class contains the parts of a class
+that someone extending the class will need to know about.</P>
+<P>The <I>published</I> access level is used when writing components. Any components
+declared in the published section will appear in the Object Inspector at design time.
+I'll talk more about the published section on Day 20, &quot;Creating Compon
+
+
+ents.&quot;</P>
+<P>The Object Pascal language has four keywords that pertain to class access. The
+keywords are (not surprisingly) public, private, protected, and published. You specify
+a class member's access level when you declare the class. A class is declared with
+the class keyword. Here's an example:</P>
+<P>
+<PRE>TVehicle = class
+private
+CurrentGear : Integer;
+  Started : Boolean;
+</PRE>
+<P><B>Speed : Integer;</B></P>
+<P>
+<PRE>  procedure StartElectricalSystem;
+  procedure StartEngine;
+protected
+  procedure StartupProcedure;
+public
+  HaveKey : Boolean;
+  Start : Boolean;
+  procedure SetGear(Gear : Integer);
+  procedure Accelerate(Acceleration : Integer);
+  procedure Brake(Factor : Integer);
+  procedure Turn(Direction : Integer);
+  procedure ShutDown;
+end;
+</PRE>
+<P>Notice how you break the class organization down into the three access levels.
+You might not use all of the access levels in a given class. For example, I am not
+using the published access level in this example. You are not required to use any
+of the access levels if you don't want, but typically you will have a public and
+a private section at the least.</P>
+<P>
+<H3><A NAME="Heading12"></A>Constructors</H3>
+<P>Classes in Object Pascal have a special method called the constructor.</P>
+<P><strong>New Term:</strong> The <I>constructor</I> is a method that is used to create
+an instance of a class.</P>
+<P>The constructor is used to initialize any class member variables, allocate memory
+the class will need, or do any other startup tasks. The TVehicle example you just
+saw does not have a constructor. If you don't provide a constructor, you can use
+the base class's constructor when you create the class. (If not otherwise specified,
+all Object Pascal classes are derived from TObject. The TObject class has a constructor
+called Create, so it is this constructor that will be called if you don't provide
+a constructor. I'll discuss base classes and inheritance later in the section &quot;Inheritance.&quot;)
+Although using the base class's constructor is fine for
+simple classes, you will
+almost always provide a constructor for classes of any significance. The constructor
+can be named anything, but it must be declared using the constructor keyword. This
+is what distinguishes it as a constructor. Given that, let's add a constructor declaration
+to the TVehicle class:</P>
+<P><B>TVehicle = class</B></P>
+<P>
+<PRE>private
+  CurrentGear : Integer;
+  Started : Boolean;
+  Speed : Integer;
+  procedure StartElectricalSystem;
+  procedure StartEngine;
+protected
+  procedure StartupProcedure;
+public
+  HaveKey : Boolean;
+  Start : Boolean;
+  procedure SetGear(Gear : Integer);
+  procedure Accelerate(Acceleration : Integer);
+  procedure Break(Factor : Integer);
+  procedure Turn(Direction : Integer);
+  procedure ShutDown;
+  constructor Create;  { the constructor } 
+end;
+</PRE>
+<P>Notice that the constructor is a special type of method. It does not have a return
+type because a constructor cannot return a value. If you try to add a return type
+to the constructor declaration, you will get a compiler error.</P>
+<P>A class can have more than one constructor. This can be accomplished in two different
+ways. The first way is to simply give the constructor a different name--for example,</P>
+<P>
+<PRE>TVehicle = class
+  { rest of class deleted } 
+  constructor Create; 
+  constructor CreateModel(Model : string); 
+end;
+</PRE>
+<P>This example shows two constructors, one called Create and the other called CreateModel.</P>
+<P>Another way to declare multiple constructors is through method overloading, which
+I discussed yesterday. Here is an example that uses constructors with the same name,
+but with different parameters:</P>
+<P><B>TVehicle = class</B></P>
+<P>
+<PRE>  { rest of class deleted } 
+  constructor Create; overload; 
+  constructor Create(AOwner : TObject);  overload;
+end;
+</PRE>
+<P>Because method overloading is new in Delphi 4, I don't expect to see this way
+of declaring multiple constructors used very much in Delphi programs. The traditional
+method is to declare constructors with different names, an
+
+
+d I suspect that trend
+will continue for quite some time. Still, both methods are legal and either one can
+be used.</P>
+
+
+<BLOCKQUOTE>
+	<P>
+<HR>
+<strong>NOTE:</strong> If you create components for the retail market, you should be sure
+	that your components' constructors have different parameter lists. This will ensure
+	that your components will work with C++Builder as well as with Delphi (C++Builder
+	does not have named constructors, so method overloading is used to differentiate
+	constructors). Even if you don't plan on selling your components to the C++Builder
+	market, you'd be wise to plan ahead for the possibility. 
+<HR>
+
+
+</BLOCKQUOTE>
+
+<P>What's the point of multiple constructors? Multiple constructors provide different
+ways of creating a class. For instance, a class can have a constructor that takes
+no parameters and a constructor that takes one or more parameters to initialize fields
+to certain values. For example, let's say you have a class called TMyRect that encapsulates
+a rectangle (rectangles are frequently used in Windows programming). This class could
+have several constructors. It could have a default constructor that sets all the
+fields to 0, and another constructor that enables you to set the class's fields through
+the constructor. First, let's take a look at how the class declaration might look:</P>
+<P>
+<PRE>TMyRect = class
+private
+  Left : Integer;
+  Top : Integer;
+  Right : Integer;
+  Bottom : Integer;
+public
+  function GetWidth : Integer;
+  function GetHeight : Integer;
+  procedure SetRect(ALeft, ATop, ARight, ABottom : Integer);
+  constructor Create;
+  constructor CreateVal(ALeft, ATop, ARight, ABottom : Integer);
+</PRE>
+<P><B>end;</B></P>
+<P>The definitions for the constructors would look something like this:</P>
+<P>
+<PRE>constructor TMyRect.Create;
+begin
+  inherited Create;
+  Left   := 0;
+  Top    := 0;
+  Right  := 0;
+  Bottom := 0;
+end;
+constructor TMyRect.CreateVal(ALeft, ATop, ARight, ABottom : Integer);
+begin
+  inherited Create;
+  Left   := ALeft;
+  Top    := ATop;
+  Right  := ARight;
+
+
+
+  Bottom := ABottom;
+end;
+</PRE>
+<P>The first constructor simply initializes each field to 0. The second constructor
+takes the parameters passed and assigns them to the corresponding class fields. The
+variable names in the parameter list are local to the constructor, so each of the
+variable names begins with an <I>A</I> to differentiate between the local variables
+and the class fields (the use of the leading <I>A</I> is customary for Delphi programs).
+Notice the use of the inherited keyword in the constructors. I'll talk about the
+inherited keyword later in the section &quot;Inheritance.&quot; I wanted to point
+it out here just so you would know I'm not leaving you in the dark.</P>
+
+
+<BLOCKQUOTE>
+	<P>
+<HR>
+<strong>NOTE:</strong> It's not strictly necessary to initialize the fields to 0 as the
+	Create constructor does here. All fields are automatically initialized to 0 when
+	an object of the class is created. 
+<HR>
+
+
+</BLOCKQUOTE>
+
+<P><strong>New Term:</strong> <I>Instantiation</I> is the creation of an object, called
+an <I>instance</I>, of a class.</P>
+<P>
+<PRE>So how do you use one of these constructors instead of the other? You do that when you instantiate an instance of a class. The following code snippet creates two instances of the TMyRect class. The first uses the Create constructor and the second 
+uses the CreateVal constructor:
+</PRE>
+<PRE>var
+  Rect1 : TMyRect;
+  Rect2 : TMyRect;
+begin
+  Rect1 := TMyRect.Create;
+  Rect2 := TMyRect.CreateVal(0, 0, 100, 100);
+end;
+</PRE>
+<P>You can have as many constructors as you like as long as they all have different
+names or, if overloaded, as long as they follow the rules of method overloading.</P>
+<P>There is one thing that I need to point out about the previous example: Both instances
+of the TMyRect class are allocated dynamically. Earlier I said that you allocate
+memory for an object dynamically by calling the GetMem procedure. Now I seem to be
+contradicting myself, but in truth I am not. The reason is that memory for Object
+Pascal classes is <I>always</I> allocate
+
+
+d dynamically. Although that is not true
+of records, it is true of classes. That also means that the previous code snippet
+leaks memory because I didn't free the memory associated with the two classes. I'll
+talk about that next. Because all Object Pascal classes are created on the heap,
+all class variables are, therefore, pointers. The Rect1 and Rect2 variables in the
+preceding example are both pointers to the TMyRect class.</P>
+<P>
+<H3><A NAME="Heading13"></A>Destructors</H3>
+<P><strong>New Term:</strong> The <I>destructor</I> is a special method that is automatically
+called just before the object is destroyed.</P>
+<P>The destructor can be considered the opposite of the constructor. It is usually
+used to free any memory allocated by the class or do any other cleanup chores. A
+class is not required to have a destructor because the base class's destructor can
+be used instead. Like a constructor, a destructor has no return value.</P>
+<P>Although a class can have multiple destructors, it is not something that is typically
+done. If you have just one destructor, you should name it Destroy. This is more than
+just tradition. When you free an instance of a class (remove it from memory), you
+call the Free method. Free is a method of the TObject class that calls the class's
+Destroy method just before the class is removed from memory. This is the typical
+way to free the memory associated with a class. Here's an example:</P>
+<P>
+<PRE>Rect1 := TMyRect.Create;
+{ Do some things with Rect1. } 
+{ ... } 
+{ Now delete Rect1. } 
+Rect1.Free;
+</PRE>
+<PRE>The example in the &quot;Constructors&quot; section would actually leak memory because the two TMyRect objects were never freed.
+</PRE>
+<P>The following shows the updated code for the TMyRect class, complete with destructor
+(some code removed for brevity):</P>
+<P>
+<PRE>TMyRect = class
+private
+  Left : Integer;
+  Top : Integer;
+  Right : Integer;
+  Bottom : Integer;
+  Text : PChar;     { new field } 
+public
+  function GetWidth : Integer;
+  function GetHeight : Integer;
+  procedure SetR
+
+
+ect(ALeft, ATop, ARight, ABottom : Integer);
+  constructor Create;
+  constructor CreateVal(ALeft, ATop, ARight, ABottom : Integer);
+  destructor Destroy; override;
+end;
+constructor TMyRect.Create;
+begin
+  inherited Create;
+  { Allocate memory for a null-terminated string. } 
+  Text := AllocMem(1024);
+end;
+destructor TMyRect.Destroy;
+begin
+  { Free the allocated memory. } 
+  FreeMem(Text);
+  inherited Destroy;
+end;
+</PRE>
+<P>The modified version of the TMyRect class allocates storage for a null-terminated
+string (a PChar) named Text in its constructor and frees that storage in the destructor.
+(I can't think of a good reason for a class that handles rectangles to have a text
+field, but you never know! It's just an example, after all.)</P>
+<P>Take a closer look at the declaration of the destructor in the TMyRect class declaration.
+It looks like this:</P>
+<P>
+<PRE>destructor Destroy; override;
+</PRE>
+<PRE>Notice the override keyword at the end of the declaration. This keyword tells the compiler that you are overriding a method that is also found in the base class. I'm getting ahead of myself again, so I'll continue this discussion later in the 
+section entitled &quot;Inheritance.&quot; (I keep saying that, so I'll bet you expect that section to be really good!)
+</PRE>
+
+
+<BLOCKQUOTE>
+	<P>
+<HR>
+<strong>NOTE:</strong> Typically, you will call inherited as the first statement in your
+	constructor and the last statement in your destructor. 
+<HR>
+
+
+</BLOCKQUOTE>
+
+<H3><A NAME="Heading14"></A>Data Fields</H3>
+<P><I>Data fields</I> of a class are simply variables that are declared in the class
+declaration; they can be considered as variables that have class scope. Fields in
+classes are essentially the same as fields in records except that their access can
+be controlled by declaring them as private, public, or protected. Regardless of a
+field's access, it is available for use in all methods of the class. Depending on
+the field's access level, it can be visible outside the class as well. Private and
+protected fields, for exampl
+
+
+e, are private to the class and cannot be seen outside
+the class. Public fields, however, can be accessed from outside the class but only
+through an object. Take the TMyRect class declared previously, for example. It has
+no public fields. You could try the following, but you'll get a compiler error:</P>
+<P>
+<PRE>Rect := TMyRect.CreateVal(0, 0, 100, 100);
+Rect.Left := 20; { compiler error! } 
+</PRE>
+<P>The compiler error will say Undeclared identifier: `Left'. The compiler is telling
+you that Left is a private field, and you can't get to it. If Left were in the public
+section of the class declaration, this code would compile.</P>
+
+
+<BLOCKQUOTE>
+	<P>
+<HR>
+<strong>NOTE:</strong> The preceding discussion of private data fields holds true if the
+	TMyRect class were declared in a separate unit, but not true if the TMyRect class
+	is declared in the unit where it is used. Classes contained in the same unit have
+	what are sometimes called <I>friend privileges</I>, which means that the classes
+	can access each other's private data fields. This applies only to classes declared
+	in the same unit. 
+<HR>
+
+
+</BLOCKQUOTE>
+
+<PRE>Object Pascal uses properties to control the access to private fields. A property can be read/write, read-only, or write-only (although write-only properties are rare). A property can have a read method that is called when the property is read, 
+and a write method when a property is written to. Neither is required, however, because a property can have direct access to the private field. These read and write methods are called any time the property is accessed. The write method is particularly 
+important, as it can be used to validate input or to carry out other tasks when the property is assigned a value. In this way the private field is never accessed directly, but always through a property. I'm getting ahead of myself again so I'll leave 
+it at that for now. Properties are discussed in detail on Day 5.
+</PRE>
+
+
+<BLOCKQUOTE>
+	<P>
+<HR>
+<strong>NOTE:</strong> Some OOP extremists say that fields should neve
+
+
+r be public. They
+	would advise you to use properties to access all fields. On the other end of the
+	spectrum is the group that recommends making all your fields public. The truth lies
+	somewhere in between. Some fields are noncritical and can be left public if doing
+	so is more convenient. Other fields are critical to the way the class operates and
+	should not be made public. If you are going to err, it is better to err on the side
+	of making fields private. 
+<HR>
+
+
+</BLOCKQUOTE>
+
+<P>When you create an instance of a class, each class has its own data. You can assign
+a value to the variable Left in one instance of a class and assign a different value
+to the Left variable in a different instance of the class--for example,</P>
+<P>
+<PRE>Rect1 := TMyRect.CreateVal(100, 100, 500, 500);
+Rect2 := TMyRect.CreateVal(0, 0, 100, 100);
+</PRE>
+<P>This code creates two instances of the TMyRect class. Although these two instances
+are identical in terms of their structure, they are completely separate in memory.
+Each instance has its own data. In the first case, the Left field would have a value
+of 100. In the second case it would have a value of 0. It's like new cars on the
+showroom floor: Every model of a particular car comes from the same mold, but they
+are all separate objects. They all vary in their color, upholstery style, features,
+and so on.</P>
+<P>
+<H3><A NAME="Heading15"></A>Methods</H3>
+<P><I>Methods</I> are functions and procedures that belong to your class. They are
+local to the class and don't exist outside the class. Methods can be called only
+from within the class itself or through an instance of the class. They have access
+to all public, protected, and private fields of the class. Methods can be declared
+in the private, protected, or public sections of your class. Good class design requires
+that you think about which of these sections your methods should go into.</P>
+<P>* <I>Public methods</I>, along with properties, represent the user interface to
+the class. It is through the public methods that users of the cl
+
+
+ass access the class
+to gain whatever functionality it provides. For example, let's say you have a class
+that plays and records waveform audio. Public methods might include methods named
+Open, Play, Record, Save, Rewind, and so on.</P>
+
+<UL>
+	<LI><I>Private methods</I> are methods that the class uses internally to &quot;do
+	its thing.&quot; These methods are not intended to be called by users of the class;
+	they are private in order to hide them from the outside world. Frequently a class
+	has startup chores to perform when the class is created (for example, you have already
+	seen that the constructor is called when a class is created). In some classes the
+	startup processing might be significant, requiring many lines of code. To remove
+	clutter from the constructor, a class might have an Init method that is called from
+	the constructor to perform those startup tasks. This method would never be called
+	directly by a user of the class. In fact, more than likely bad things would happen
+	if this method were called by a user at the wrong time, so the method is private
+	in order to protect both the integrity of the class and the user.
+	<P>
+	<LI><I>Protected methods</I> are methods that cannot be accessed by the outside world
+	but can be accessed by classes derived from this class. I haven't talked yet about
+	classes being derived from other classes; I'll save that discussion for a little
+	later when it will make more sense. I discuss deriving classes in the section &quot;Inheritance.&quot;
+</UL>
+
+<P>Methods can be declared as <I>class methods</I>. A class method operates more
+like a regular function or procedure than a method of a class. Specifically, a class
+method cannot access fields or other methods of the class. (In just a bit I'll tell
+you why this restriction exists.) Most of the time, you will not use class methods,
+so I won't go into any detail on them.</P>
+<P>
+<H3><A NAME="Heading16"></A>About Self</H3>
+<P><strong>New Term:</strong> All classes have a hidden field called Self. Self is a pointer
+to the instanc
+
+
+e of the class in memory.</P>
+<P>Obviously, this will require some explanation. First, let's take a look at how
+the TMyRect class would look if Self were not a hidden field:</P>
+<P><B>TMyRect = class</B></P>
+<P>
+<PRE>private
+  Self : TMyRect;
+  Left : Integer;
+  Top : Integer;
+  Right : Integer;
+  Bottom : Integer;
+  Text : PChar;
+public
+  function GetWidth : Integer;
+  function GetHeight : Integer;
+  procedure SetRect(ALeft, ATop, ARight, ABottom : Integer);
+  constructor Create;
+  constructor CreateVal(ALeft, ATop, ARight, ABottom : Integer);
+  destructor Destroy; override;
+end;
+</PRE>
+<P>This is effectively what the TMyRect class looks like to the compiler. When a
+class object is created, the Self pointer is automatically initialized to the address
+of the class in memory:</P>
+<P>
+<PRE>Rect := TMyRect.CreateVal(0, 0, 100, 100);
+{ Now `Rect' and `Rect.Self' have the same value   } 
+{ because both contain the address of the object in memory. } 
+</PRE>
+<P>&quot;But,&quot; you ask, &quot;what does Self mean?&quot; Remember that each
+class instance gets its own copy of the class's fields. But all class instances share
+the same set of methods for the class (there's no point in duplicating that code
+for each instance of the class). How does the compiler figure out which instance
+goes with which method call? All class methods have a hidden Self parameter that
+goes with them. To illustrate, let's say you have a function for the TMyRect class
+called GetWidth. It would look like this:</P>
+<P><B>function TMyRect.GetWidth : Integer;</B></P>
+<P>
+<PRE>begin
+  Result := Right - Left;
+end;
+</PRE>
+<P>That's how the function looks to you and me. To the compiler, though, it looks
+something like this:</P>
+<P>
+<PRE>function TMyRect.GetWidth : Integer;
+begin
+  Result := Self.Right - Self.Left;
+end;
+</PRE>
+<P>That's not exactly accurate from a technical perspective, but it's close enough
+for this discussion. In this code you can see that Self is working behind the scenes
+to keep everything straight for you. You don't have to worry abo
+
+
+ut how that happens,
+but you need to know that it does happen.</P>
+
+
+<BLOCKQUOTE>
+	<P>
+<HR>
+<strong>CAUTION:</strong> Never modify the Self pointer. You can use it to pass a pointer
+	to your class to other methods or as a parameter in constructing other classes, but
+	don't change its value. Learn to treat Self as a read-only variable. 
+<HR>
+
+
+</BLOCKQUOTE>
+
+<PRE>Although Self works behind the scenes, it is still a variable that you can access from within the class. As an illustration, let's take a quick peek into VCL. Most of the time, you will create components in VCL by dropping them on the form at 
+design time. When you do that, Delphi creates a pointer to the component and does all sorts of housekeeping chores on your behalf, saving you from concerning yourself with the technical end of things. Sometimes, however, you will create a component at 
+runtime. VCL insists (as all good frameworks do) on keeping track of which child objects belong to which parent. For example, let's say you want to create a button on a form when another button is clicked. You need to tell VCL what the parent of the 
+new button is. The code would look like this:
+</PRE>
+<PRE>procedure TForm1.Button1Click(Sender: TObject);
+var
+  Button : TButton;
+begin
+  Button := TButton.Create(Self);
+  Button.Parent  := Self;
+  Button.Left    := 20;
+  Button.Top     := 20;
+  Button.Caption := `Click Me';
+end;
+</PRE>
+<P>In this code, you can see that Self is used in the constructor (this sets the
+Owner property of the button, but I'll get into that later when I cover VCL components
+on Day 7, &quot;VCL Components&quot;) and also that it is assigned to the Parent
+property of the newly created button. This is how you will use the Self pointer the
+vast majority of the time in your Delphi applications.</P>
+
+
+<BLOCKQUOTE>
+	<P>
+<HR>
+<strong>NOTE:</strong> Earlier I said that class methods can't access class fields. The
+	reason this is true is because class methods don't have a hidden Self parameter;
+	regular methods do. Without Self, a method cannot access cl
+
+
+ass fields. 
+<HR>
+
+
+</BLOCKQUOTE>
+
+<P>Don't worry too much about Self right now. When you begin to use VCL, it will
+quickly become clear when you are required to use Self in your Delphi applications.</P>
+<P>
+<H3><A NAME="Heading17"></A>A Class Example</H3>
+<PRE>Right now it would be nice if you could see an example of a class. Listing 3.1 shows a unit that contains a class called TAirplane. This class could be used by an aircraft controller program. The class enables you to command an airplane by 
+sending it messages. You can tell the airplane to take off, to land, or to change its course, altitude, or speed. First take a look at the unit and then I'll discuss what is going on within this class.
+</PRE>
+<H4>LISTING 3.1. AIRPLANU.PAS.</H4>
+<PRE>unit AirplanU;
+interface
+uses
+  SysUtils;
+const
+  { Airplane types. } 
+  Airliner     = 0;
+  Commuter     = 1;
+  PrivateCraft = 2;
+  { Status constants. } 
+  TakingOff    = 0;
+  Cruising     = 1;
+  Landing      = 2;
+  OnRamp       = 3;
+  { Message constants. } 
+  MsgChange    = 0;
+  MsgTakeOff   = 1;
+  MsgLand      = 2;
+  MsgReport    = 3;
+type
+  TAirplane = class
+  private
+    Name     : string;
+    Speed    : Integer;
+    Altitude : Integer;
+    Heading  : Integer;
+    Status   : Integer;
+    Kind     : Integer;
+    Ceiling  : Integer;
+  protected
+    procedure TakeOff(Dir : Integer); virtual;
+    procedure Land; virtual;
+  public
+    constructor Create(AName : string; AKind : Integer = Airliner);
+    function SendMessage(Msg : Integer; var Response : string;
+       Spd : Integer; Dir : Integer; Alt : Integer) : Boolean;
+    function GetStatus(var StatusString : string) : Integer; overload; &#194;virtual;
+    function GetStatus : Integer; overload;
+    function GetSpeed : Integer;
+</PRE>
+<P><B>function GetHeading : Integer;</B></P>
+<P>
+<PRE>    function GetAltitude : Integer;
+    function GetName : string;
+  end;
+implementation
+constructor TAirplane.Create(AName : string; AKind : Integer);
+begin
+  inherited Create;
+  Name     := AName;
+  Kind     := AKind;
+  Status   := On
+
+
+Ramp;
+  case Kind of
+    Airliner : Ceiling := 35000;
+    Commuter : Ceiling := 20000;
+    PrivateCraft : Ceiling := 8000;
+  end;
+end;
+procedure TAirplane.TakeOff(Dir : Integer);
+begin
+  Heading := Dir;
+  Status  := TakingOff;
+end;
+procedure TAirplane.Land;
+begin
+  Speed    := 0;
+  Heading  := 0;
+  Altitude := 0;
+  Status   := OnRamp;
+end;
+function TAirplane.SendMessage(Msg : Integer; var Response : string;
+   Spd : Integer; Dir : Integer; Alt : Integer) : Boolean;
+begin
+  Result := True;
+  { Do something based on which command was sent. } 
+  case Msg of
+    MsgTakeOff :
+      { Can't take off if already in the air! } 
+      if status &lt;&gt; OnRamp then begin
+        Response := Name + `: I''m already in the air!';
+        Result := False;
+      end else
+        TakeOff(dir);
+    MsgChange :
+      begin
+        { Check for bad commands and exit if any found. } 
+        if Spd &gt; 500 then
+          Response := `Command Error: Speed cannot be more than 500.';
+        if Dir &gt; 360 then
+          Response := `Command Error: Heading cannot be over 360 &#194;degrees.';
+        if Alt &lt; 100 then
+          Response := Name + `: I''d crash!';
+        if Alt &gt; Ceiling then
+          Response := Name + `: I can''t go that high.';
+        if (Spd = 0) and (Dir = 0) and (Alt = 0) then
+          Response := Name + `: Huh?';
+        if Response &lt;&gt; `' then begin
+          Result := False;
+          Exit;
+        end;
+        { Can't change status if on the ground. } 
+        if status = OnRamp then begin
+          Response := Name + `: I''m on the ground.';
+          Result := False;
+        end else begin
+          Speed := Spd;
+          Heading := Dir;
+          Altitude := Alt;
+          Status := Cruising;
+        end;
+      end;
+    MsgLand :
+      { Can't land if already on the ground. } 
+      if status = OnRamp then begin
+        Response := Name + `: I''m already on the ground.';
+</PRE>
+<P><B>Result := False;</B></P>
+<P>
+<PRE>      end else
+        Land;
+    MsgReport :
+      begin
+        GetStatus(
+
+
+Response);
+        Exit;
+      end;
+  end;
+  { Standard response if all went well. } 
+  if Result then
+    Response := Name + `: Roger.';
+end;
+function TAirplane.GetStatus(var StatusString : string) : Integer;
+begin
+  StatusString := Format(`%s, Altitude: %d, Heading: %d, ` +
+    `Speed: %d', [Name, Altitude, Heading, Speed]);
+  Result := Status;
+end;
+function TAirplane.GetStatus : Integer;
+begin
+  Result := Status;
+end;
+function TAirplane.GetSpeed : Integer;
+begin
+  Result := Speed;
+end;
+function TAirplane.GetHeading : Integer;
+begin
+  Result := Heading;
+end;
+function TAirplane.GetAltitude : Integer;
+begin
+  Result := Altitude;
+end;
+function TAirplane.GetName : string;
+begin
+  Result := Name;
+end;
+end.
+</PRE>
+<P><B>ANALYSIS: </B>Look first at the class declaration in the interface section.
+Notice that the TAirplane class has one overloaded function called GetStatus. When
+called with a string parameter, GetStatus will return a status string as well as
+the status data member (the string parameter is a variable parameter). When called
+without a parameter, it just returns Status. Note that the only way to access the
+private fields is via the public methods. For example, you can change the speed,
+altitude, and heading of an airplane only by sending it a message. To use an analogy,
+consider that an air traffic controller cannot physically change an aircraft's heading.
+The best he can do is send a message to the pilot and tell him to change to a new
+heading.</P>
+
+
+<BLOCKQUOTE>
+	<P>
+<HR>
+<strong>NOTE:</strong> This class would benefit greatly from properties. As I said earlier,
+	I'm not ready to discuss properties in detail at this point in the book, so I'll
+	have to admit that this class could be much better than it is and move on. 
+<HR>
+
+
+</BLOCKQUOTE>
+
+<P>Now turn your attention to the definition of the TAirplane class in the interface
+section. The constructor performs some initialization chores. You have probably noticed
+that the SendMessage function does most of the work. A case statement determines
+which message w
+
+
+as sent and takes the appropriate action. Notice that the TakeOff
+and Land procedures cannot be called directly (they are protected) but rather are
+called through the SendMessage function. Again, as an air traffic controller, you
+can't make an aircraft take off or land, you can only send it a message telling it
+what you want it to do.</P>
+<P>There's something else here that I haven't discussed yet. Note the virtual keyword.
+This specifies that the function is a virtual method.</P>
+<P><strong>New Term:</strong> A <I>virtual method</I> is a method that is automatically
+called if a method of that name exists in the derived class.</P>
+<P>I'll discuss virtual methods in the next section, but I wanted to point them out
+to you now.</P>
+<P>The book's code contains a program called Airport, which enables you to play air
+traffic controller. (You can find the book's code at the Web site http://www.mcp.com/info.
+Type in the book's ISBN: 0-672-31286-7.) The program first sets up an array of TAirplane
+classes and then creates three instances of the TAirplane class. You can send messages
+to any airplane by selecting the airplane, setting up the parameters for the message,
+and then clicking the Execute button. Clicking the button results in a call to the
+selected airplane's SendMessage function. When you send a message, you get a response
+back from the airplane, and that response is displayed in a memo component. Run the
+program and play with it to get a feel for how it works. Figure 3.1 shows the Airport
+program running.</P>
+<P>
+<H2><A NAME="Heading18"></A>Inheritance</H2>
+<P>One of the most powerful features of classes in Object Pascal is that they can
+be extended through inheritance.</P>
+<P><strong>New Term:</strong> <I>Inheritance</I> means taking an existing class and adding
+functionality by deriving a new class from it.</P>
+<P>
+<PRE><strong>New Term:</strong>  The class you start with is called the <I>base class</I> or <I>ancestor class</I>, and the new class you create is called the <I>derived class</I>.
+</PRE>
+<P>To illu
+
+
+strate, let's go back to the TAirplane class. The civilian and military
+worlds are quite different, as you know. To represent a military aircraft, I can
+derive a class from TAirplane and add functionality to it:</P>
+<P>
+<PRE>TMilitaryPlane = class(TAirplane)
+private
+  TheMission : TMission;
+  constructor Create(AName : string; AType : Integer);
+  function GetStatus(var StatusString : string) : Integer; override;
+protected
+  procedure TakeOff(Dir : Integer); override;
+  procedure Land; override;
+  procedure Attack; virtual;
+  procedure SetMission; virtual;
+end;
+</PRE>
+<P>A TMilitaryPlane has everything a TAirplane has, plus a few more goodies. Note
+the first line of the class declaration. The class name in parentheses after the
+class keyword is used to tell the compiler that I am inheriting from another class.
+The class from which I am deriving this class is the base class and, in this case,
+is the TAirplane class.</P>
+
+
+<BLOCKQUOTE>
+	<P>
+<HR>
+<strong>NOTE:</strong> When you derive a class from another class, the new class gets all
+	the functionality of the base class plus whatever new features you add. You can add
+	fields and methods to the new class, but you cannot remove anything from what the
+	base class offers. 
+<HR>
+
+
+</BLOCKQUOTE>
+
+<P>You'll notice that in the private section there is a line that declares a variable
+of the TMission class. The TMission class is not shown here, but it could encapsulate
+everything that deals with the mission of a military aircraft: the target, navigation
+waypoints, ingress and egress altitudes and headings, and so on. This illustrates
+the use of a field that is an instance of another class. In fact, you'll see that
+a lot when programming in Delphi.</P>
+<P>
+<H2><A NAME="Heading19"></A>Overriding Methods</H2>
+<P>I want to take a moment here to discuss virtual methods. Note that the TakeOff
+procedure is a virtual method in the TAirplane class (refer to Listing 3.1). Notice
+that TakeOff is called by SendMessage in response to the MsgTakeOff message. If the
+TMilitaryPlane class did
+
+
+ not provide its own TakeOff method, the base class's TakeOff
+method would be called. Because the TMilitaryPlane class <I>does</I> provide a TakeOff
+method, that method will be called rather than the method in the base class.</P>
+<P><strong>New Term:</strong> Replacing a base class method in a derived class is called
+<I>overriding</I> the method.</P>
+<P>In order for overriding to work, the method signature must exactly match that
+of the method in the base class. In other words, the return type, method name, and
+parameter list must all be the same as the base class method. In addition, the method
+in the derived class must be declared with the override keyword.</P>
+
+
+<BLOCKQUOTE>
+	<P>
+<HR>
+<strong>NOTE:</strong> Object Pascal also has <I>dynamic methods</I>. Dynamic methods can
+	be treated the same as virtual methods as far as most programmers are concerned.
+	The difference is in the way the method pointers are stored in the class's virtual
+	method table (VMT). It's not important for you to understand the difference right
+	now, but I wanted you to know about dynamic methods in case you encounter them looking
+	through any of the Delphi examples or VCL source code. For the most part, you can
+	treat dynamic methods in your programs just as you would treat virtual methods. 
+<HR>
+
+
+</BLOCKQUOTE>
+
+<P>You can override a method with the intention of replacing the base class method,
+or you can override a method to enhance the base class method. Consider the TakeOff
+method, for example. If you want to completely replace what the TakeOff method of
+TAirplane does, you would override it and supply whatever code you want:</P>
+<P>
+<PRE>procedure TMilitaryPlane.TakeOff(Dir : Integer);
+begin
+  { New code here. } 
+end;
+</PRE>
+<PRE>But if you want your method to take the functionality of the base class and add to it, you would first call the base class method and then add new code. Calling the base class method is done with the inherited keyword--for example,
+</PRE>
+<PRE>procedure TMilitaryPlane.TakeOff(Dir : Integer);
+begin
+  { Firs
+
+
+t call the base class TakeOff method. } 
+  inherited TakeOff(Dir);
+  { New code here. } 
+end;
+</PRE>
+<P>By calling the base class method, you get the original behavior of the method
+as written in the base class. You can then add code before or after the base class
+call to enhance the base class method. Note that the TakeOff method is declared in
+the protected section of the TAirplane class. If it were in the private section,
+this would not work because even a derived class cannot access the private members
+of its ancestor class. By making the TakeOff method protected, it is hidden from
+the outside world but still accessible to derived classes.</P>
+
+
+<BLOCKQUOTE>
+	<P>
+<HR>
+<STRONG>NOTE:</STRONG> There is an exception to the rule of protected versus private
+	access. If a derived class is declared in the same unit as the base class, the private
+	fields and methods of the base class are available to the derived class. If the derived
+	class is declared in a separate unit, only protected fields and methods of the base
+	class are available to the derived class. 
+<HR>
+
+
+</BLOCKQUOTE>
+
+<P>When you derive a class from another class, you must be sure to call the base
+class's constructor so that all ancestor classes are properly initialized. Calling
+the base class constructor is also done with the inherited keyword. Look again at
+the constructor for the TAirplane class:</P>
+<P>
+<PRE>constructor TAirplane.Create(AName : string; AKind : Integer);
+begin
+  inherited Create;
+  Name     := AName;
+  Kind     := AKind;
+  Status   := OnRamp;
+  case Kind of
+    Airliner : Ceiling := 35000;
+    Commuter : Ceiling := 20000;
+    PrivateCraft : Ceiling := 8000;
+  end;
+</PRE>
+<P><B>end;</B></P>
+<P>Notice that the base class Create constructor is called to ensure that the class
+is properly created. &quot;Hey, wait a minute!&quot; I can hear some of you saying.
+&quot;The TAirplane class doesn't have a base class!&quot; Actually, it does. If
+no base class is specified when the class is declared, the base class is automatically
+TObject. Be sur
+
+
+e to call the base class constructor in your class constructor. Figure
+3.2 illustrates the concept of inheritance.</P>
+<P><A HREF="javascript:popUp('28670302.gif')"><B>FIGURE 3.2.</B></A><B> </B><I>An
+example of inheritance.</I></P>
+<P>You can see in Figure 3.2 that the class called F16 is descended from the class
+called MilitaryFighter. Ultimately, F16 is derived from TAirplane because TAirplane
+is the base class for all of the airplane classes.</P>
+<P>
+<H3><A NAME="Heading20"></A>Class Keywords: is and as</H3>
+<P>Object Pascal has two operators that pertain specifically to classes. The is operator
+is used to determine whether a class is of a specific type. Let's go back to the
+example of the TAirplane and TMilitaryPlane classes. Let's say you have an instance
+of a class called Plane. The class might be an instance of the TAirplane class, it
+might be an instance of the TMilitaryPlane class, or it might be an instance of a
+different class altogether. You can use the is operator to find out. For example:</P>
+<P>
+<PRE>if Plane is TMilitaryPlane then
+  Attack;
+</PRE>
+<PRE>The is operator returns a Boolean value. If the variable is of the requested type, is returns True. If the variable is not of the requested type, is returns False. The is operator will also return True if the requested class type is an ancestor 
+of the variable. For example, because TMilitaryPlane is derived from TAirplane, the following will be True:
+</PRE>
+<PRE>if Plane is TAirplane then
+  DoSomething;
+</PRE>
+
+
+<BLOCKQUOTE>
+	<P>
+<HR>
+<strong>NOTE:</strong> Because all classes are derived from TObject, the following will
+	always be True:</P>
+	<PRE>if AnyClass is TObject then
+</PRE>
+	<PRE>   DoSomething; </PRE>
+
+</BLOCKQUOTE>
+
+<PRE></PRE>
+
+
+<BLOCKQUOTE>
+	<P>The is operator is not used as much as the as operator. The as operator is used
+	to cast a pointer to a specific class type. It looks like this:</P>
+	<PRE>with Plane as TMilitaryPlane do</PRE>
+
+</BLOCKQUOTE>
+
+<PRE></PRE>
+
+
+<BLOCKQUOTE>
+	<PRE>Attack;</PRE>
+	<P>
+<HR>
+</P>
+
+</BLOCKQUOTE>
+
+<P>The as
+
+
+ operator is usually used in conjunction with the with operator (yes, this
+conversation is a bit confusing). In this code snippet the Plane variable is a pointer
+that could be an instance of the TAirplane class, the TMilitaryPlane class, or neither.
+The as operator is used to cast the pointer to a TMilitaryPlane type and then the
+Attack method is called. If the Plane variable is not an instance of the TMilitaryPlane
+class (or one of its ancestor classes), this cast will fail and the Attack method
+will not be called. If, however, the Plane variable is a pointer to an instance of
+the TMilitaryPlane class, the cast will succeed and the Attack method will be called.</P>
+<P>
+<H2><A NAME="Heading21"></A>Summary</H2>
+<P>Today you have learned about classes in Object Pascal. A well-designed class is
+easy to use and saves many programming hours. I'd even go so far as to say a well-designed
+class is a joy to use--especially when it's your own creation.</P>
+<P>The lessons of these first three days are important to understand as you progress
+through this book. If they don't make complete sense to you yet, don't despair. As
+you continue through the next days, you will see these concepts repeated and put
+to use in programs that have more practical application than the short, incomplete
+examples you've been working with thus far.</P>
+
+
+<BLOCKQUOTE>
+	<P>
+<HR>
+<strong>CAUTION:</strong> Learning Object Pascal can and will lead to brain overload! It's
+	natural and you shouldn't worry about it. You might put down this book for the evening,
+	turn out the lights, and think, &quot;I'll never get it.&quot; Trust me, you will.<BR>
+	Sometimes it's necessary to take a couple of days off and let it all soak in. In
+	fact, if I thought I could get by with it, I'd make Day 4 a blank chapter called
+	&quot;A Day of Rest.&quot; Take it a little at a time, and one of these days you'll
+	be just like Archimedes--you'll be running around your office or your house shouting
+	&quot;Eureka!&quot; because the light just came on in your head. But keep trac
+
+
+k of
+	your clothes, will you? The neighbors could be watching. 
+<HR>
+
+
+</BLOCKQUOTE>
+
+<H2><A NAME="Heading22"></A>Workshop</H2>
+<P>The Workshop contains quiz questions to help you solidify your understanding of
+the material covered and exercises to provide you with experience in using what you
+have learned. You can find the answers to quiz questions in Appendix A, &quot;Answers
+to the Quiz Questions.&quot;</P>
+<P>
+<H3><A NAME="Heading23"></A>Q&amp;A</H3>
+
+<DL>
+	<DD><B>Q How can I keep a method private to the outside world but enable derived
+	classes to call it?</B>
+	<DT></DT>
+	<DD><B>A</B> Make it protected. A protected method is not accessible to users of
+	your class but is accessible to derived classes.
+	<P>
+	<DT></DT>
+	<DD><B>Q What does <I>data</I> <I>abstraction</I> mean?</B>
+	<P>
+	<DT></DT>
+	<DD><B>A</B> Data abstraction means hiding the details of the class that the users
+	of the class don't need to see. A class might have dozens of fields and methods but
+	only a few that the user can see. Only make visible (public) the methods that a user
+	needs to know about to use the class.
+	<P>
+	<DT></DT>
+	<DD><B>Q What is an object?</B>
+	<P>
+	<DT></DT>
+	<DD><B>A</B> Effectively, an object is any block of code that can be treated as a
+	separate entity in your programs. An object in Object Pascal generally means a class.
+	In Delphi that definition is expanded to include VCL components. ActiveX controls
+	are also objects.
+	<P>
+	<DT></DT>
+	<DD><B>Q Can my class have more than one constructor?</B>
+	<P>
+	<DT></DT>
+	<DD><B>A</B> Yes. Your class can have as many constructors as needed.
+	<P>
+	<DT></DT>
+	<DD><B>Q Are all VCL objects pointers?</B>
+	<P>
+	<DT></DT>
+	<DD><B>A</B> Yes. Because all VCL objects are allocated from the heap, all VCL objects
+	are pointers.
+	<P>
+	<DT></DT>
+	<DD><B>Q Pointers confuse me. Am I alone?</B>
+	<P>
+	<DT></DT>
+	<DD><B>A</B> No! Pointers are one of the most confusing aspects of Object Pascal
+	programming. After you have used Delphi for a period of time, you will come to understand
+	pointers.
+	<P>
+
+
+
+</DL>
+
+<H3><A NAME="Heading24"></A>Quiz</H3>
+
+<DL>
+     <DD><B>1. </B>How do you clear a set of all values?
+    <DT></DT>
+      <DD><B>2. </B>What is the purpose of having private fields and methods?
+        <P>
+    <DT></DT>
+      <DD><B>3. </B>How can you keep fields private and yet enable users to read and set
+ their values?
+ <P>
+ <DT></DT>
+ <DD><B>4. </B>When is a class's destructor called?
+ <P>
+ <DT></DT>
+ <DD><B>5. </B>What does it mean to override a method of the base class?
+ <P>
+ <DT></DT>
+ <DD><B>6. </B>How can you override a base class method and still get the benefit
+ of the operation the base class method performs?
+ <P>
+ <DT></DT>
+ <DD><B>7. </B>What operator is used to dereference a pointer?
+ <P>
+ <DT></DT>
+ <DD><B>8. </B>Can a class contain other class instances as fields?
+ <P>
+ <DT></DT>
+ <DD><B>9. </B>What keyword is used to specify a pointer that has no value?
+ <P>
+ <DT></DT>
+ <DD><B>10. </B>What is the as keyword used for?
+ <P>
+</DL>
+
+<H3><A NAME="Heading25"></A>Exercises</H3>
+
+<DL>
+ <DT></DT>
+ <DD><B>1. </B>Write a class that takes a person's height in inches and returns the
+ height in feet.
+ <P>
+ <DD><B>2. </B>Derive a class from the class in exercise 1 that also returns the height
+ in meters, centimeters, or millimeters. (Hint: There are 25.4 millimeters in an inch.)
+ <DT></DT>
+ <DD><B>3. </B>Take a day off. You've earned it!
+</DL>
+
+<H1></H1>
+<CENTER>
+<P>
+<HR>
+<A HREF="ch02.htm"><IMG SRC="button/previous.gif" WIDTH="128" HEIGHT="28"
+ALIGN="BOTTOM" ALT="Previous chapter" BORDER="0"></A><A HREF="ch04.htm"><IMG
+SRC="button/next.gif" WIDTH="128" HEIGHT="28" ALIGN="BOTTOM" ALT="Next chapter"
+BORDER="0"></A><A HREF="index.htm"><IMG SRC="button/contents.gif" WIDTH="128"
+HEIGHT="28" ALIGN="BOTTOM" ALT="Contents" BORDER="0"></A> <BR>
+</P>
+
+<P>&#169; <A HREF="copy.htm">Copyright</A>, Macmillan Computer Publishing. All
+rights reserved.
+</CENTER>
+
+
+</BODY>
+
+</HTML>
+

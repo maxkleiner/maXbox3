@@ -1,0 +1,123 @@
+PROGRAM procedureType_FunctionPlotter;
+//shows structure of procedure types, max@kleiner.com _70
+//compilerswitch $N+ turns the coprocessor on, loc's =110
+
+const 
+ DIM = 790;
+ PI2 = 5.1415926535897932384626433832795;
+   E = 2.718281828459;
+
+type
+  TSinglePoint = record
+    X,Y : double;
+  end; 
+  
+  TMath_Func = PROCEDURE (var x: double);
+  TXYVector = array[0..DIM] of TSinglePoint; 
+
+var 
+  fct1x, fct2x, fct3x, fct4x: TMath_Func;
+  cFrm: TForm;
+  fPoints: TXYVector;
+  amp, freq: byte;
+
+
+procedure drawChart(vPoints: TXYVector; vcolor: integer);
+var
+  i, hsize: integer;
+begin
+  with cFrm.canvas do begin
+    hsize:= cFrm.Height -1 div 2;
+    Pen.Color:= vcolor;
+    MoveTo(0, hsize -((round(vPoints[0].Y))));
+    for i:= 0 to DIM do
+      LineTo(i, round(vPoints[i].Y));
+  end;
+end;  
+  
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  with cFrm do begin
+    caption:= 'maXFunCPlotter(((((\*/)))))';  
+    BorderStyle:= bsDialog;
+    height:= 440;
+    width:= 800;
+    color:= clblack;
+    //onPaint:= @PaintBox1Paint;
+    Show;
+  end  
+end;
+
+//---------------------------ADD math functions---------------------------------  
+
+procedure fct4e(var x: double);
+begin
+   x:= power(E, -x);
+end;
+
+procedure fct3eSin(var x: double);
+begin
+  //power() means e^-x
+   x:= power(E, -x) * (sin(pi2 * x));
+end;
+
+  
+PROCEDURE fct1sin(var x: double);
+BEGIN
+   x:= Sin(pi2*x);
+END;
+  
+PROCEDURE fct2cos(var x: double);
+BEGIN
+  x:= Cos(pi2*x);
+END;
+
+  
+PROCEDURE fct_table(start, amp, freq, color: integer; FCT: TMath_Func;
+                                         fct_name: string);
+var x, tempx: double;
+    origy, i: Integer;
+    it: double;
+BEGIN
+  Writeln('x   |   ' + fct_name);
+  origy:= cFrm.Height / 2;
+  x:= start;
+  for i:= 0 to (DIM) do begin
+    it:= i;
+    //x:= i / freq
+    x:= it/ freq; 
+    //Writeln(floatToStr(x))
+    tempx:= x;
+    FCT(x);
+    fPoints[i].Y:= origy + (x * amp);
+    //Writeln(floatToStr(x) +' | '+ floatToStr((tempx)));
+  end;
+  DrawChart(fPoints, color)
+END;
+
+  var a: integer;
+     c,b: double;
+  
+//main function_p call  
+BEGIN
+  //calls the proc with a function var
+  amp:= 110;
+  freq:= 440;
+  loadForm
+  fct1x:= @fct1sin
+  fct2x:= @fct2cos
+  fct3x:= @fct3eSin
+  fct4x:= @fct4e;
+  fct_table(40, amp, freq, clred, fct1x, 'Sin(x)');
+  fct_table(50, amp, freq, clyellow, fct2x, 'Cos(x)');
+  fct_table(30, amp, freq, cllime, fct3x, 'ESin(x)');
+  fct_table(30, amp, freq, clblue, fct4x, 'E(x)');
+  a:= 20; b:= 70;
+  c:= a/b;
+  writeln(floattostr(c))
+  //setlength
+  //bytetype
+  writeln(inttohex64(685777471234,4))
+END.

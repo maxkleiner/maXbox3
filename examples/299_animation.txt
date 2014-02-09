@@ -1,0 +1,219 @@
+//shows structure of procedure types, max@kleiner.com ex. _299
+//compilerswitch $N+ turns the coprocessor on, {$mode objfpc}{$H+} loc's =1
+//example from Lazarus 1.0 - motiongraphics ,add graphic by mX
+
+PROGRAM Wind_Animatione;
+
+procedure TFrm1_FormPaint(Sender: TObject); forward;
+procedure TFrm1_timerRedrawTimer(Sender: TObject); forward;
+procedure TFrm1_CloseClick(Sender: TObject); forward;
+procedure TFrm1_PauseClick(Sender: TObject); forward;
+procedure TFrm1_trackSpeedChange(Sender: TObject); forward;
+procedure TFrm1_closeForm(Sender: TObject; var Action: TCloseAction); forward;
+
+Const MILLISECONDS = 50; //for timer, sync with trackbar 1000/50= position 20
+  
+var 
+  aFrm: TForm;
+  mT: TTimer;
+  tB: TTrackBar;
+  CurStep: Double;
+
+
+procedure DrawRosette2;
+var m,p: TPoint;
+  rho,phi: real;
+  i,r: integer;
+begin
+   with afrm.Canvas do begin
+     Pen.Width:= 2;
+     Pen.Color:= clyellow;
+     //Brush.Color:= clblue;
+     Brush.Style:= bsClear;
+     //compute centerpoint and draw circle
+     m.x:=170; m.y:=165; r:=75;
+     rho:=360/18;
+     for i:=1 to 18 do begin
+       phi:=i*rho*pi/180;
+       p.x:=m.x+round(r*cos(phi));
+       p.y:=m.y+round(r*sin(phi));
+       Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+       Ellipse(p.x-3,p.y-3,p.x+3,p.y+3);
+     end;
+     //application.processMessages;
+  end;
+end;
+
+
+function TForm1_RotatePoint(APoint,ACenter: TPoint; AAngle: Double): TPoint;
+var
+  dx,dy: Double;
+begin
+  dx:= (ACenter.Y * Sin(AAngle)) - (ACenter.X * Cos(AAngle)) + ACenter.X;
+  dy:= -(ACenter.X * Sin(AAngle)) - (ACenter.Y * Cos(AAngle)) + ACenter.Y;
+  Result.X:= Round((APoint.X * Cos(AAngle)) - (APoint.Y * Sin(AAngle)) + dx);
+  Result.Y:= Round((APoint.X * Sin(AAngle)) + (APoint.Y * Cos(AAngle)) + dy);
+end;
+  
+procedure TForm1_RotatePolygon(var APoints: array of TPoint; AAngle: Double);
+var
+  aCentr: TPoint;
+  i: Integer;
+begin
+  aCentr:= Point(10, 10);
+  for i:= 0 to Length(APoints)-1 do begin
+    aCentr.X:= aCentr.X + APoints[i].X;
+    aCentr.Y:= aCentr.Y + APoints[i].Y;
+  end;
+  aCentr.X:= aCentr.X div Length(APoints);
+  aCentr.Y:= aCentr.Y div Length(APoints);
+  for i:= 0 to Length(APoints)-1 do
+    APoints[i]:= TForm1_RotatePoint(APoints[i], aCentr, AAngle);
+end;
+
+procedure TFrm1_FormPaint(Sender: TObject);
+var
+  //lPoints: array[0..2] of TPoint;
+  lPoints: array of TPoint;
+begin
+  SetLength(lpoints,3);
+  lPoints[0].X:= 100;
+  lPoints[0].Y:= 250;
+  lPoints[1].X:= 200;
+  lPoints[1].Y:= 20;
+  lPoints[2].X:= 200;
+  lPoints[2].Y:= 200;
+  TForm1_RotatePolygon(lpoints, CurStep);
+  afrm.Canvas.Pen.color:= clBlue;
+  afrm.Canvas.Pen.Width:= 15;
+  afrm.Canvas.Polygon(lPoints);
+  Drawrosette2;
+  //application.processMessages;
+end;
+
+//**************************Form Builder*******************************
+procedure loadForm;
+begin
+  aFrm:= TForm.Create(self);
+  mT:= TTimer.Create(self);
+  mt.onTimer:= @TFrm1_timerRedrawTimer;
+  mt.interval:= MILLISECONDS;
+  //mt.free;  in on close
+  with aFrm do begin
+    caption:= '********Wind_Animation************';  
+    height:= 510;
+    width:= 680;
+    Position:= poScreenCenter;
+    //Color:= clBlack;
+    onClose:= @TFrm1_closeForm;
+    onPaint:= @TFrm1_FormPaint;
+    Canvas.Pen.color:= clBlue;
+    Canvas.Pen.Width:= 15;
+    Show;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(310, 350,150, 55);
+    caption:= 'Pause';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPAUSE'); 
+    mXButton(05,05,width, height,12,12,handle);
+    //event handler
+    onclick:= @TFrm1_PauseClick;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(480, 350,150, 55);
+    caption:= 'Close';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP'); 
+    mXButton(05,05,width, height,12,12,handle);
+    onclick:= @TFrm1_CloseClick;
+  end;
+  tB:= TTrackBar.create(aFrm);
+    with tB do begin
+      parent:= aFrm;
+      setBounds(40,360,230,40);
+      Min:= 10;
+      Max:= 100
+      Frequency:= 10
+      Position:= 1000 div MILLISECONDS;
+      linesize:= 4;
+      ThumbLength:= 30;
+      SetFocus;
+      OnChange:= @TFrm1_trackSpeedChange;
+    end;
+end;  
+
+
+//**************************Event Handlers*******************************
+procedure TFrm1_trackSpeedChange(Sender: TObject);
+begin
+  mt.Interval:= 1000 div tB.Position;
+end;
+
+procedure TFrm1_timerRedrawTimer(Sender: TObject);
+begin
+  CurStep:= CurStep + 0.1;
+  if CurStep > 360 then CurStep:= 0;
+  afrm.Invalidate;  //redraw
+end;
+
+procedure TFrm1_closeForm(Sender: TObject; var Action: TCloseAction);
+begin
+  if mt <> NIL then begin
+    mT.enabled:= false;
+    mT.Free;
+    mT:= NIL;
+  end;
+  ///afrm.Free;  
+  action:= caFree;
+  afrm:= NIL;
+end;
+
+procedure TFrm1_CloseClick(Sender: TObject);
+begin
+  afrm.Close;
+end;
+
+procedure TFrm1_PauseClick(Sender: TObject);
+begin
+  if mT <> NIL then
+    mt.enabled:= not mt.enabled;
+end;
+
+var    //test vars
+   str3: string;
+   sstr: shortstring;
+   s_length, i: integer;
+     
+  //main form list call  
+  Begin
+    //calls some test functions
+    writeln(floattostr(maxcalc('e^ln(2)')));
+    writeln(floattostr(maxcalc('ln(2)^e')));
+    printF('this is %.18f ',[maxcalc('ln(2)^e')]);
+    printF('this is %.18f ',[maxcalc('sqr(cos(ln(2)^e))')]);
+    printF('this is %.4f ',[maxcalc('sqrt(e^(ln(2)))')]);
+    writeln(getVersionString(exepath+'maxbox3.exe'));
+    str3:= loadFileAsString(exepath+'maxbox_functions_all.pdf');
+    writeln('file compare j: '+inttoStr(CompText(str3, str3)));
+    writeln('file compare d: '+inttoStr(CompareText(str3, str3)));
+    writeln(intToStr(length(str3)));
+    S_Length:= Ord(str3[1]);
+    writeln(inttostr(s_length));
+
+ //--------------------------Main Topic--------------------------
+    loadForm;
+     //drawrosette2;
+     //for i:= 1 to 500 do
+     //   TForm1_timerRedrawTimer(self);
+End.
+  
+
+ //ShellExecute in W64
+    //ExecuteCommand('cmd','/k FC /L /N C:\maxbook\maxbox3\maxbox391.exe C:\maxbook\maxbox3\maxbox3.exe')
+ //  ExecuteCommand('cmd','/k FC /L /N C:\maxbook\maxbox3\maxboxdef1.ini C:\maxbook\maxbox3\maxboxdef2.ini')
+   
+
+getRulesbyContract  

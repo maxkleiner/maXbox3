@@ -1,0 +1,40 @@
+program motion_FTP_Download;
+
+//HTTP/FTP Series 101 - 120
+//shows download with IndySockets on maXbox webbox ex. _105, locs=39
+//also a idFTP.Get2 is available
+
+const MY_FILE = 'pas_includebox.txt';
+
+var myFTP_URL: string;
+    idFTP: TIdFTP;
+    //idTCP: TIdTCPClient;
+    ftpStream: TFileStream;
+
+begin
+  //myFTP_URL:= 'http://www.softwareschule.ch/download/'+ MY_FILE;
+  //myURL:= 'http://www.softwareschule.ch/download/maxbox_examples.zip';
+ 
+  myFTP_URL:= MY_FILE;
+  ftpStream:= TFileStream.create(MY_FILE, fmCreate)
+  idFTP:= TIdFTP.create(NIL)
+  try
+    with idFTP do begin
+      Host:= 'www.softwareschule.ch';
+      Username:= 'YOUR NAME';
+      //Password:= 'YOUR PASSWORD';
+    end;
+    idFTP.Connect(true,20)
+    idFTP.Passive:= true;
+    idFTP.ChangeDir('httpdocs/download')  
+    idFTP.Get1(myFTP_URL, ftpStream, false)
+    //idhttp.get2('http://www.softwareschule.ch/maxbox.htm')
+    sleep(1000)
+  finally
+    idFTP.Quit
+    ftpStream.Free;
+  end;    
+  //initialization
+  //finalization 
+end.
+

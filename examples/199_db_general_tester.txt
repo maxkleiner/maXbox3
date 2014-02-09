@@ -1,0 +1,298 @@
+{****************************************************************
+ * Project  : DB Generals of maXbase Series
+ * App Name : 199_db_general_tester, loc's = 252
+ * Purpose  : Demonstrates versatile DB Functions and open scripts
+ * History  : CreateField(), FieldDefs[]. IndexFields
+ ****************************************************************}
+program DB_Generals_SysDLL_Tester;
+
+function  MyMessageBeep(para: integer): byte;
+  external 'MessageBeep@user32.dll stdcall';  
+
+function MyGetTickCount: Longint;
+  external 'GetTickCount@kernel32.dll stdcall';
+ 
+procedure MySleep(Milliseconds: Cardinal);
+  external 'Sleep@kernel32.dll stdcall';
+ 
+var
+  mytimestamp: TDateTime;
+  iDBCounter: integer;
+
+  
+Procedure DateTimeExample2;
+Var
+  S, S1 : String;
+begin
+  {Time, Date, and Now are all basically interchangable.}
+  {They all return a DateTime value.}
+  S1:=DateToStr(Now2);             
+  Case DayOfWeek(Date) of          
+     1: S:='Sunday';               
+     2: S:='Monday';               
+     3: S:='Tuesday';              
+     4: S:='Wednesday';            
+     5: S:='Thursday';             
+     6: S:='Friday';               
+     7: S:='Saturday';             
+  Else S:='Noneday';               
+  End; {Case}
+  writeln(S+' '+S1+' '+TimeToStr(Time));
+end;
+//where like 
+
+{Function CREATEFIELD(OWNER: TCOMPONENT; PARENTFIELD: TOBJECTFIELD; const FIELDNAME: String; CREATECHILDREN: BOOLEAN): TFIELD'); }
+
+procedure CreateFieldRuntime(Sender: TObject);
+var
+  Field: TField;
+  i: Integer;
+  Table1: TTable;
+begin
+  Table1.Active:=False;
+  for i:= 0 to Table1.FieldDefs.Count-1 do
+    Field:= Table1.FieldDefs[i].CreateField(Table1,NIL,'',False);
+  Field:= TStringField.Create(Table1);
+  with Field do begin
+    FieldName:='New Field';
+    Calculated:=True;
+    DataSet:=Table1;
+  end;
+  Table1.Active:= True;
+end;
+
+ //function CreateFieldComponent(Owner: TComponent;
+ //ParentField: TObjectField = nil; FieldName: WideString = ''): TField;
+{ ---------------------------------------------------------------------------- }
+procedure CloneFieldListToDataSet(ADataSetFrom, ADataSetTo: TDataSet);
+var
+  i: Integer;
+begin
+  if (ADataSetFrom=nil) or (ADataSetTo=nil) then
+    //MetaBaseError(sMb_DataSetNotAssigned);
+  if (ADataSetTo.Active) then
+    //MetaBaseError(sMb_DataSetNotClosed);
+  ADataSetTo.FieldDefs.Clear;
+  ADataSetTo.Fields.Clear;
+  for i:= 0 to ADataSetFrom.FieldDefs.Count - 1 do begin
+    ADataSetTo.FieldDefs.Add(ADataSetFrom.FieldDefs[i].Name,
+                             ADataSetFrom.FieldDefs[i].DataType,
+                             ADataSetFrom.FieldDefs[i].Size,
+                             ADataSetFrom.FieldDefs[i].Required);
+    ADataSetTo.FieldDefs[i].Precision:= ADataSetFrom.FieldDefs[i].Precision;
+    //if ADataSetTo.FieldDefs[i].DataType in ObjectFieldTypes then
+      //MetaBaseError(sMb_DataSetNoObjectFieldsAllowed);
+    ADataSetTo.FieldDefs[i].CreateField(ADataSetTo, NIL, '',false);
+  end;
+end;
+
+{ ---------------------------------------------------------------------------- }
+function CloneOpenDataBase(AOwner: TComponent; AMasterDB: TDatabase): TDataBase;
+begin
+  Result:= TDataBase.Create(AOwner);
+  Result.Params.Assign(AMasterDB.Params);
+  Result.Name:= 'CloneOf'+AMasterDB.Name+'Nr'+IntToStr(iDBCounter);
+  Result.AliasName:= AMasterDB.AliasName;
+  Result.DatabaseName:= 'CloneOf'+AMasterDB.DatabaseName+
+                                     'Nr'+IntToStr(iDBCounter);
+  Result.OnLogin:= AMasterDB.OnLogin;
+  Result.Open;
+  Inc(iDBCounter);
+end;
+
+procedure newDBTableScript(DBName,            //Alias or path
+                       TblName : String); //Table Name to Create
+begin
+  with TTable.Create(self) do begin
+    Active:= false;
+    databasename:= DBName;
+    tablename:= TblName;
+    tabletype:= ttparadox;
+    with fielddefs do begin
+      Clear;
+      add('field1',ftinteger,0,false)
+      add('field2',ftinteger,0,false)
+      add('field3',ftfloat,0,false)
+    end;
+    with IndexDefs do begin
+      Clear;
+      Add('Field1Index', 'field1', [ixPrimary,IxUnique]);
+    end;
+    CreateTable; 
+    active:= true;
+    Insert;
+      FieldbyName('field1').value:= random(444);
+      FieldbyName('field2').value:= random(55);
+      FieldbyName('field3').value:= 3.1415;
+    Post;
+    Close;  
+  end;
+end;  
+
+
+procedure CreateATable(DBName, TblName : String); //Path Alias & Table Name to Create
+var tbl: TTable;
+begin
+  tbl:= TTable.Create(self);
+  with tbl do begin
+    Active:= False;
+    DatabaseName:= DBName;
+    TableName:= TblName;
+    TableType:= ttParadox;
+    with FieldDefs do begin
+      Clear;
+      Add('LastName', ftString, 30, False);
+      Add('FirstName', ftString, 30, False);
+      Add('Address1', ftString, 40, False);
+      Add('Address2', ftString, 40, False);
+      Add('City', ftString, 30, False);
+      Add('ST', ftString, 2, False);
+      Add('Zip', ftString, 10, False);
+      Add('ZipCode', ftInteger, 0, False);
+    end;
+    {Add a Primary Key to the table}
+    with IndexDefs do begin
+      Clear;
+      Add('Field1Index2', 'LastName;FirstName', [ixPrimary,IxUnique]);
+    end;
+    CreateTable; {Make the table}
+  end;
+end;
+
+procedure addRecord(DBName, TblName : String); 
+begin
+  with TTable.Create(self) do begin
+    Active:= false;
+    databasename:= DBName;
+    tablename:= TblName;
+    active:= true;
+    Insert;
+      FieldbyName('LastName').value:= getRandomString(28);
+      FieldbyName('FirstName').value:= getRandomString(15);
+      FieldbyName('Address1').value:= getRandomString(39);
+      FieldbyName('Address2').value:= 'milkywaymax 42';
+      FieldbyName('City').value:= 'Randomia';
+      FieldbyName('ST').value:= '19';
+      FieldbyName('Zip').asString:= getrandomString(9);
+      FieldbyName('ZipCode').asInteger:= random(1000);
+    Post;
+    Close;  
+  end;
+end;  
+
+                 
+Procedure CopyRecord(const SourceTable, DestTable: TTable);
+var i: Word;
+begin
+  DestTable.Append;
+  For i:= 0 to SourceTable.FieldCount - 1 do
+    DestTable.Fields[i].Assign(SourceTable.Fields[i]);
+  DestTable.Post;
+end;
+
+procedure CopyTable(DBName,            //Alias or path
+                       TblName, tblname2 : String); //Table Name to Create
+var
+  tbl, tbl2: TTable;
+  db1: TDataBase;
+begin
+  tbl:= TTable.Create(Application);
+  tbl2:= TTable.Create(Application);
+  with tbl do begin
+    DatabaseName:= DBName;
+    TableName:= TblName;
+    TableType:= ttParadox;
+    Active:= True;
+    //db1:= TDataBase.Create(self)
+    //db1.DataBaseName:= DBName;
+    //CloneOpenDataBase(self, db1)
+    {Add a Primary Key to the table}
+  end;
+  with tbl2 do begin
+    DatabaseName:= DBName;
+    TableName:= TblName2;
+    TableType:= ttParadox;
+    Active:= True;
+    {Add a Primary Key to the table}
+  end;
+  CopyRecord(tbl, tbl2); {Copy the table}
+  tbl.close;
+  tbl2.close;
+end;
+
+begin
+  //newDBTableScript('DBDEMOS','maxtable3');
+  CreateATable('DBDEMOS','mxadd4');
+  addRecord('DBDEMOS','mxadd4'); 
+  CreateATable('DBDEMOS','mxadd6');
+  CopyTable('DBDEMOS','mxadd4', 'mxadd6')
+  
+  writeln(Format('Pi starts off as %.15f',[PI]));
+  dateTimeExample2;
+  writeln('machine name is: '+getHostName)
+  writeln('user name is: '+getUserName)
+  mytimestamp:= GetFileCreationTime(exepath+'maxbox3.exe')
+  writeln(datetimetoStr(mytimestamp)+' Creation Date of maXbox3')
+  writeln('tick count from func ' +IntToStr(GetTickCount));
+  writeln('tick count from api   ' +IntToStr(MyGetTickCount));
+  MyMessageBeep(60);
+  MySleep(10);
+  writeln(gethostbyname('www.softwareschule.ch'))
+  //CreateATable('DBDEMOS','mxadd5');
+  //CopyTable('DBDEMOS','mxadd5', 'mxadd5')
+  CreateFileFromString(ExePath+'mycopy.txt',memo2.text);
+  WriteLog(ExePath+'mylog.txt',memo2.text)
+  //CaptureScreenPNG(ExePath+'secondshot.png');
+  maxform1.terminalStyle1Click(self)
+  //popupurl('www.softwareschule.ch')
+  //capturescreenformat(exepath+'mypng2','.gif')
+    //ConvertImage(Exepath+'mypng233.png',Exepath+'mypng233_bmp.bmp')
+    //ConvertImage(Exepath+'mypng233_bmp.bmp',Exepath+'mypng111.png')
+
+End.   
+
+
+*******************************************************
+There is no place like 127.0.0.1 
+
+
+function BinToOct(BinStr: string): string;
+var
+  i: Integer;
+  OctPart: single;
+  LastPart, OctStr: string;
+  Error: Boolean;
+begin
+  Error:=False;
+  OctStr:='';
+  case Length(BinStr) mod 3 of
+    1: BinStr:='00'+BinStr;
+    2: BinStr:='0'+BinStr;
+  end;
+
+  while Length(BinStr)>0 do
+  begin
+    LastPart:=Copy(BinStr, Length(BinStr)-2, 3);
+    Delete(BinStr, Length(BinStr)-2, 3);
+    OctPart:=0;
+    for i:=1 to 3 do
+      if not ((LastPart[i] ='1') or (LastPart[i] ='0')) then begin
+        ShowMessage('This is not binary number');
+        Error:=True;
+        Break;
+      end
+      else
+        OctPart:=OctPart+StrToInt(LastPart[i])*Power(2, 3-i);
+    OctStr:=OctStr+FloatToStr(OctPart);
+  end;
+  Result:='';
+  if Error<>True then begin
+    for i:=1 to Length(OctStr) do
+      Result:=Result+OctStr[Length(OctStr)-i+1];
+    while (Result[1]='0') and (Length(Result)>1) do
+      Delete(Result, 1, 1);
+  end;
+end;
+
+
+

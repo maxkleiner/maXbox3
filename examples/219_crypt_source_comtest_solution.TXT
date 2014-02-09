@@ -1,0 +1,143 @@
+Program cipher_suite_source_solution;
+
+//shows the ex.220 in full source code inline in editor
+
+{type
+  Tbuf = record
+    case boolean of
+      true : (ch : char);
+      false : (b : byte);
+    end; }
+
+type
+  TSte = Array[1..8] of Integer; 
+  
+
+Function CharToBin(vChr: Char): String;
+Var
+  i: Integer;
+Begin
+  For i:= SizeOf(vChr) * 8 - 1 Downto 0 Do
+    Result:= Format('%s%d', [Result, Byte((Ord(vChr) And (1 Shl i)) <> 0)]);
+End;
+
+
+function ByteToChar(const value: Byte): Char;
+begin
+  //Result := Char(Byte);
+  Result:= (chr(value));
+end;
+
+
+function BinToChar(var St: String): Char;
+var
+  S: String;
+  C, I: Byte;
+  Ste: TSte;
+begin
+  Ste[1]:= 128; Ste[2]:= 64; Ste[3]:= 32; Ste[4]:=16;
+  Ste[5]:= 8;   Ste[6]:= 4;  Ste[7]:= 2;  Ste[8]:=1;
+  S:= Copy(St,1,8);
+  Delete(St,1,8);
+  C:= 0;
+  For I:=1 to 8 do
+    C:=C+Ste[I]*StrToInt(S[I]);
+  Result:= Chr(C);
+end;
+
+
+function S_StrEncrypt96_m(const vString: string; StartKey,
+                                 MultKey, AddKey: Integer): string;
+var
+  i: integer;
+  B,B2, nibble: Byte;
+begin
+  Result:= '';
+  for I:= 1 to Length(vString) do begin
+    { encode next byte }
+    //B2:= StrToInt(CharToBin(InString[I]))
+    B2:= Ord(vString[I])
+    B:= (B2 xor (StartKey shr 8));
+    { convert to string of binary numbers }
+    Nibble := B shr 4;
+    if (Nibble > 9) then
+      Nibble:= nibble +7;
+    Result:= Result + Chr((Nibble+$30));
+    //writeln(result)
+    Nibble:= B and $0F;
+    if (Nibble > 9) then
+      Nibble:= nibble +7;
+    Result:= Result + Chr(Nibble+$30);
+    {next XOR pattern }
+    StartKey:= (B + StartKey) * MultKey + AddKey;
+  end;
+end;
+
+{ ---------------------------------------------------------------------------- }
+function S_StrDecrypt96_m(const vString: string; StartKey, MultKey,
+                                          AddKey: Integer): string;
+var
+  I, Idx: integer;
+  B, nibble: Byte;
+begin
+  Result:= '';
+  Idx:= 1;
+  for I:= 1 to (Length(vString) div 2) do begin
+    { get byte from string }
+    //writeln(inttostr(strtoint(chr(CharToBin('9')))))
+    Nibble := (ord(vString[Idx]))- $30;
+    if (Nibble > 9) then
+      Nibble:= Nibble -7;
+    B:= Nibble shl 4;
+    Nibble:= ord(vString[Idx+1]) - $30;
+    //writeln(inttostr(nibble))
+    if (Nibble > 9) then
+      Nibble:= Nibble -7;
+    B:= B or Nibble;
+    //Result := Result + BintoChar(IntToStr(B xor (StartKey shr 8)));
+    Result:= Result + ByteToChar(B xor (StartKey shr 8));
+     Idx:= Idx + 2;
+    { get next XOR pattern }
+    StartKey:= (B + StartKey) * MultKey + AddKey;
+  end;
+end;
+
+ var //i: integer;
+     b: shortint;
+     cryptin, clearout, filetocrypt, cryptfile, decryptfile, cfile: string;
+
+begin
+  fileToCrypt:= ExePath+'maxboxerrorlog.txt';
+  cryptFile:= ExePath+'maxboxerrorlog2_crypted.txt';
+  decryptFile:= ExePath+'maxboxerrorlog2_cleared.txt'
+  Writeln('test A '+InttoStr(StrToInt(CharToBin('A'))))
+  Writeln('test 2 '+InttoStr(StrToInt(CharToBin('2'))))
+   //test from exe; S_key: 874190377 M_key: 742074668 A_key: 622602518 
+  cfile:= LoadFileAsString(fileToCrypt); 
+  cryptin:= S_StrEncrypt96_m(cfile, 339683886, 137568553, 1024735531);
+  CreateFileFromString(cryptFile, cryptin);
+  Writeln(cryptin)
+  Writeln(' ');
+  //WriteLog(cryptLog, memo2.text)
+  clearout:= S_StrDEcrypt96_m(cryptin, 339683886, 137568553, 1024735531);
+  CreateFileFromString(decryptFile, clearout);
+  Writeln(clearout)
+end.
+
+
+-----------------------------------------------
+  b:= 300; i:= 2000;
+  i:= integer(b);
+  
+  {for i:= 1 to 300  do begin
+   b:= i;
+   b:= integer(b)
+  write(inttostr(b)+' ')
+  end }
+  //for i:= 1 to 100 do
+   //if (round(power(2,i)) mod 9 = 7) then
+   //writeln(inttostr(i) +' '+ floattostr((power(2,i))))
+   //writeln(format('this is %f',[power(2,i)]))
+
+
+----code_cleared_checked----

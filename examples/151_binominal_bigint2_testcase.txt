@@ -1,0 +1,894 @@
+PROGRAM Binomial_BigIntTester;
+
+//Check the forensic task at the end of the app
+//   (Fast) binomial coefficient computing
+//http://4coder.org/delphi-source-code/?72
+  // ------------------------------------------------
+
+//uses Sysutils, Funct, MyBigInt;
+
+//function DMathFact(N: Integer): float;
+//external 'Fact@dmath.dll';
+
+function DBinomial(N, K: Integer): float;
+                         external 'Binomial@dmath.dll';
+
+    //external 'PlaySound@winmm.dll stdcall';
+
+function ggT(x, y: Integer): Integer; forward;
+function CalculateBinomKoeff(n, k: Integer): string; forward;
+
+CONST 
+//<Constant declarations> 
+//TEXTOUT = 'hi world of code';
+  WIPEDIR='NewWipeDir\';
+  ZAEHLER = 0; 
+  NENNER  = 1; 
+  POSIT   = 0;
+
+TYPE 
+//<Type declarations> 
+   TFILE1 = integer;
+   //TDynFloatArray', 'array of Extended');
+  //TDynLWordArray', 'array of LongWord');
+  //TDynLIntArray', 'array of LongInt');
+  //TDynFloatMatrix', 'array of TDynFloatArray');
+  //TDynLWordMatrix', 'array of TDynLWordArray');
+  //TDynLIntMatrix', 'array of TDynLIntArray');
+ 
+
+VAR 
+//<Variable declarations>
+  fileHandle: TFILE1;
+  //textforfile, texr: string;
+  k: integer;
+ //textback : array[0..50] of char;
+    
+
+function ggT(x, y: Integer): Integer;
+begin
+  if y > x then Result := ggT(y, x)
+  else if y = 0 then Result := x
+  else 
+    Result:= ggT(y, x mod y);
+end;
+          
+
+ FUNCTION GetWipePattern(const signcount: integer): string;
+ begin
+   Randomize;
+   result:='';
+      for k:= 1 to signcount do
+        result:= result + Chr(Random(95)+33);
+ end; 
+ 
+
+{function int2str(value: integer; base: unsigned; split: unsigned; splitchar: char): string;
+begin
+  result := int2str(int64(value), base, split, splitchar);
+end;}
+
+//const
+  //xdigits = 10; //(( = string; // = c_base_str;
+
+
+function int2str(const value: uint64; base: cardinal; split: cardinal; splitchar: char): string;
+//const
+  //digits: string = c_base_str;
+var
+  i: integer;
+  v: uint64;
+  adigiset : string; //set of char;
+begin
+  adigiset:= '0123456789'
+  if (0 = value) then
+    result := '0'
+    //digiset
+  else
+    result:= '';
+  //
+  if ((1 < base) and (cardinal(length(adigiset)) > base)) then begin
+    //
+    v := value;
+    while (0 <> v) do begin
+      //
+      result := adigiset[v mod base + 1] + result;  //digits
+      v := v div base;
+    end;
+  end;
+  //
+  if (split > 0) then begin
+    //
+    if (' ' = splitchar) then
+      splitchar := ','; //g_thousandSeparator;
+    //
+    i := length(result) - integer(split) + 1;
+    while (i > 1) do begin
+      //
+      insert(splitchar, result, i);
+      //dec(i, split);
+    end;
+  end;
+end;
+
+
+function float2str(const value: extended): string;
+begin
+  //result:= adjust(int2str(trunc(abs(frac(value)) * 1000000000)), 9, '0');
+  //
+  while ((result <> '0') and ('0' = result[length(result)]) )  do
+    delete(result, length(result), 1);
+  //
+  //result := int2str(trunc(value)) + '.' + result;
+end;
+ 
+ 
+ function GetIEVersion(Key: string): string;
+var
+ Reg: TRegistry;
+begin
+ Reg:=TRegistry.Create;
+ try
+  Reg.RootKey:=HKEY_LOCAL_MACHINE;
+  Reg.OpenKey('Software\Microsoft\Internet Explorer', False);
+   try
+    Result:=Reg.ReadString(Key);
+   except
+    Result:='';
+   end;
+   Reg.CloseKey;
+ finally
+  Reg.Free;
+ end;
+end;
+
+ 
+function CalculateBinomKoeff(n, k: Integer): string;
+var 
+  m, i, j, iGgT: Integer; 
+  arBruch: array[0..1] of array of Integer;
+  mbResult: TMyBigInt;
+begin
+  //"n-k" soll kleiner als "k" sein, gilt wegen Symmetrie des BinomKoeff. im Nenner
+  if (n - k) > k then k := n - k;
+  m := n - k;
+
+  // Initialisierung der Variablen
+  for i := Low(arBruch) to High(arBruch) do SetLength(arBruch[i], m + 1);
+  // Setzen der gebliebenen Faktoren, "nur" n-k Faktoren sind wichtig
+  for i:= 1 to m do begin
+    arBruch[zaehler][i] := i + k;
+    arBruch[nenner][i]:= i;
+  end;
+  arBruch[zaehler][Posit] := 1; // max{m+1: arBruch[zaehler][i]=1 für alle i=1...m}
+  arBruch[nenner][Posit]  := 2; // max{m+1: arBruch[nenner][i]=1 für alle i=1...m}
+  while arBruch[nenner][Posit] <= m do begin
+    for i := m downto arBruch[nenner][Posit] do begin
+      for j := m downto arBruch[zaehler][Posit] do begin
+        // Bestimmung des ggTs
+        iGgT := ggT(arBruch[nenner][i], arBruch[zaehler][j]);
+        if iGgT > 1 then begin
+          // shorten 
+          arBruch[zaehler][j] := Round(arBruch[zaehler][j] / iGgT);
+          arBruch[nenner][i]  := Round(arBruch[nenner][i] / iGgT);
+          if arBruch[nenner][i] = 1 then break;
+        end;
+      end;
+      // Verschieben der Position im Zaehler
+      for j:= arBruch[zaehler][Posit] to m do
+        if arBruch[zaehler][j] = 1 then arBruch[zaehler][Posit] := j + 1
+      else 
+        break;
+    end;
+    // Verschieben der Position im Nenner
+    for i:= arBruch[nenner][Posit] to m do
+      if arBruch[nenner][i] = 1 then arBruch[nenner][Posit] := i + 1
+    else 
+      break;
+  end;
+  //unit mybigint
+  mbResult:= TMyBigInt.Create(1);
+  try
+    // Faktoren im Zaehler aufmultiplizieren
+    for i:= arBruch[zaehler][Posit] to m do 
+             mbResult.Multiply1(mbResult, arBruch[zaehler][i]);
+    Result:= mbResult.ToString;
+  finally 
+    //FreeAndNil(mbResult);
+    mbResult.Free;
+  end;
+end;
+
+procedure TestMSSysutilsandESBMath;
+begin
+
+ //HideTaskBarButton( hWindow : HWND)');
+ writeln(msLoadStr(62549));
+ writeln(msLoadStr(62458));
+ writeln(msLoadStr(62401));
+
+ {msFormat( fmt : String; params : array of const) : String');
+ msFileExists( const FileName : String) : Boolean');
+ msIntToStr( Int : Int64) : String');
+ msStrPas( const Str : PChar) : String');
+ 
+ msRenameFile( const OldName, NewName : String) : Boolean');}
+ //renamefile
+ //CutFileName( s : String) : String');
+ //GetVersionInfo( var VersionString : String) : DWORD');
+ //FormatTime( t : Cardinal) : String');
+ //msCreateDir( const Dir : string) : Boolean');
+ //SetAutoRun( NeedAutoRun : Boolean; AppName : String) : Boolean');
+ //SetTreeViewStyle( const hTV : HWND; dwNewStyle : dword) : DWORD');
+ //msStrLen( Str : PChar) : Integer');
+ //msDirectoryExists( const Directory : String) : Boolean');
+ //GetFolder( hWnd : hWnd; RootDir : Integer; Caption : String) : String');
+ //SetBlendWindow( hWnd : HWND; AlphaBlend : Byte) : LongBool');
+ //((EditWindowProc( hWnd : HWND; Msg : UINT; wParam : WPARAM; lParam : LPARAM) : LRESULT');
+ //SetEditWndProc( hWnd : HWND; ptr : Pointer)');
+ //GetTextFromFile( Filename : String) : string');
+ //IsTopMost( hWnd : HWND) : Bool');
+ //msStrToIntDef( const s : String; const i : Integer) : Integer');
+ //msStrToInt( s : String) : Integer');
+ //GetItemText( hDlg : THandle; ID : DWORD) : String');
+ //CL.AddConstantN('LWA_ALPHA','LongWord').SetUInt( $00000002);
+ //getfolder
+   //formattime
+   //mnorm
+  //UMul( const Num1, Num2 : LongWord) : LongWord');
+  //UMulDiv2p32( const Num1, Num2 : LongWord) : LongWord');
+  //UMulDiv( const Num1, Num2, Divisor : LongWord) : LongWord');
+  //UMulMod( const Num1, Num2, Modulus : LongWord) : LongWord');
+  //SameFloat( const X1, X2 : Extended) : Boolean');
+  //FloatIsZero( const X : Extended) : Boolean');
+  //FloatIsPositive( const X : Extended) : Boolean');
+  //FloatIsNegative( const X : Extended) : Boolean');
+  //IncLim( var B : Byte; const Limit : Byte)');
+  //IncLimSI( var B : ShortInt; const Limit : ShortInt)');
+  //IncLimW( var B : Word; const Limit : Word)');
+  //IncLimI( var B : Integer; const Limit : Integer)');
+  //IncLimL( var B : LongInt; const Limit : LongInt)');
+  //DecLim( var B : Byte; const Limit : Byte)');
+  //DecLimSI( var B : ShortInt; const Limit : ShortInt)');
+  //DecLimW( var B : Word; const Limit : Word)');
+  //DecLimI( var B : Integer; const Limit : Integer)');
+  //DecLimL( var B : LongInt; const Limit : LongInt)');
+  //MaxB( const B1, B2 : Byte) : Byte');
+  //MinB( const B1, B2 : Byte) : Byte');
+  //MaxSI( const B1, B2 : ShortInt) : ShortInt');
+  //MinSI( const B1, B2 : ShortInt) : ShortInt');
+  //MaxW( const B1, B2 : Word) : Word');
+  //MinW( const B1, B2 : Word) : Word');
+  //MaxI( const B1, B2 : Integer) : Integer');
+  //MinI( const B1, B2 : Integer) : Integer');
+  //MaxL( const B1, B2 : LongInt) : LongInt');
+  //MinL( const B1, B2 : LongInt) : LongInt');
+  //SwapB( var B1, B2 : Byte)');
+  //SwapSI( var B1, B2 : ShortInt)');
+  //SwapW( var B1, B2 : Word)');
+  //SwapI( var B1, B2 : SmallInt)');
+  //SwapL( var B1, B2 : LongInt)');
+  //SwapI32( var B1, B2 : Integer)');
+  //SwapC( var B1, B2 : LongWord)');
+  //SwapInt64( var X, Y : Int64)');
+  //Sign( const B : LongInt) : ShortInt');
+  //Max4Word( const X1, X2, X3, X4 : Word) : Word');
+  //Min4Word( const X1, X2, X3, X4 : Word) : Word');
+  {Max3Word( const X1, X2, X3 : Word) : Word');
+  Min3Word( const X1, X2, X3 : Word) : Word');
+  MaxBArray( const B : array of Byte) : Byte');
+  MaxWArray( const B : array of Word) : Word');
+  MaxSIArray( const B : array of ShortInt) : ShortInt');
+  MaxIArray( const B : array of Integer) : Integer');
+  MaxLArray( const B : array of LongInt) : LongInt');
+  MinBArray( const B : array of Byte) : Byte');
+  MinWArray( const B : array of Word) : Word');
+  MinSIArray( const B : array of ShortInt) : ShortInt');
+  MinIArray( const B : array of Integer) : Integer');
+  MinLArray( const B : array of LongInt) : LongInt');
+  SumBArray( const B : array of Byte) : Byte');
+  SumBArray2( const B : array of Byte) : Word');
+  SumSIArray( const B : array of ShortInt) : ShortInt');
+  SumSIArray2( const B : array of ShortInt) : Integer');
+  SumWArray( const B : array of Word) : Word');
+  SumWArray2( const B : array of Word) : LongInt');
+  SumIArray( const B : array of Integer) : Integer');
+  SumLArray( const B : array of LongInt) : LongInt');
+  SumLWArray( const B : array of LongWord) : LongWord');
+  ESBDigits( const X : LongWord) : Byte');
+  BitsHighest( const X : LongWord) : Integer');
+  ESBBitsNeeded( const X : LongWord) : Integer');}
+  //GCD( const X, Y : LongWord) : LongWord');
+  //LCM( const X, Y : LongInt) : Int64');
+  //LCM( const X, Y : LongInt) : LongInt');
+  //RelativePrime( const X, Y : LongWord) : Boolean');
+  {Get87ControlWord : TBitList');
+  Set87ControlWord( const CWord : TBitList)');
+  SwapExt( var X, Y : Extended)');
+  SwapDbl( var X, Y : Double)');
+  SwapSing( var X, Y : Single)'); }
+  //Sgn( const X : Extended) : ShortInt');
+  //Distance( const X1, Y1, X2, Y2 : Extended) : Extended');
+  //ExtMod( const X, Y : Extended) : Extended');
+  {ExtRem( const X, Y : Extended) : Extended');
+  CompMOD( const X, Y : Comp) : Comp');
+  Polar2XY( const Rho, Theta : Extended; var X, Y : Extended)');
+  XY2Polar( const X, Y : Extended; var Rho, Theta : Extended)');
+  DMS2Extended( const Degs, Mins, Secs : Extended) : Extended');
+  Extended2DMS( const X : Extended; var Degs, Mins, Secs : Extended)');}
+  //MaxExt( const X, Y : Extended) : Extended');
+  //MinExt( const X, Y : Extended) : Extended');
+  {MaxEArray( const B : array of Extended) : Extended');
+  MinEArray( const B : array of Extended) : Extended');
+  MaxSArray( const B : array of Single) : Single');
+  MinSArray( const B : array of Single) : Single');
+  MaxCArray( const B : array of Comp) : Comp');
+  MinCArray( const B : array of Comp) : Comp');
+  SumSArray( const B : array of Single) : Single');
+  SumEArray( const B : array of Extended) : Extended');
+  SumSqEArray( const B : array of Extended) : Extended');
+  SumSqDiffEArray( const B : array of Extended; Diff : Extended) : Extended');}
+  //SumXYEArray( const X, Y : array of Extended) : Extended');
+  //SumCArray( const B : array of Comp) : Comp');
+  //FactorialX( A : LongWord) : Extended');
+  //PermutationX( N, R : LongWord) : Extended');
+  //BinomialCoeff( N, R : LongWord) : Extended');
+  //IsPositiveEArray( const X : array of Extended) : Boolean');
+  //GeometricMean( const X : array of Extended) : Extended');
+  //HarmonicMean( const X : array of Extended) : Extended');
+  //ESBMean( const X : array of Extended) : Extended');
+  //SampleVariance( const X : array of Extended) : Extended');
+  //PopulationVariance( const X : array of Extended) : Extended');
+  //SampleVarianceAndMean( const X : array of Extended; var Variance, Mean : Extended)');
+  //PopulationVarianceAndMean( const X : array of Extended; var Variance, Mean : Extended)');
+  //GetMedian( const SortedX : array of Extended) : Extended');
+  //GetMode( const SortedX : array of Extended; var Mode : Extended) : Boolean');
+  //GetQuartiles( const SortedX : array of Extended; var Q1, Q3 : Extended)');
+  {ESBMagnitude( const X : Extended) : Integer');
+  ESBTan( Angle : Extended) : Extended');
+  ESBCot( Angle : Extended) : Extended');
+  ESBCosec( const Angle : Extended) : Extended');
+  ESBSec( const Angle : Extended) : Extended');
+  ESBArcTan( X, Y : Extended) : Extended');
+  ESBSinCos( Angle : Extended; var SinX, CosX : Extended)');
+  ESBArcCos( const X : Extended) : Extended');
+  ESBArcSin( const X : Extended) : Extended');
+  ESBArcSec( const X : Extended) : Extended');
+  ESBArcCosec( const X : Extended) : Extended');
+  ESBLog10( const X : Extended) : Extended');
+  ESBLog2( const X : Extended) : Extended');
+  ESBLogBase( const X, Base : Extended) : Extended');}
+  writeln(floattoStr(Pow2(64)));
+  //IntPow( const Base : Extended; const Exponent : LongWord) : Extended');
+  //ESBIntPower( const X : Extended; const N : LongInt) : Extended');
+  //XtoY( const X, Y : Extended) : Extended');
+  //TenToY( const Y : Extended) : Extended');
+  //TwoToY( const Y : Extended) : Extended');
+  //LogXtoBaseY( const X, Y : Extended) : Extended');
+  //ISqrt( const I : LongWord) : Longword');
+  //ILog2( const I : LongWord) : LongWord');
+  //IGreatestPowerOf2( const N : LongWord) : LongWord');
+  {ESBArCosh( X : Extended) : Extended');
+  ESBArSinh( X : Extended) : Extended');
+  ESBArTanh( X : Extended) : Extended');
+  ESBCosh( X : Extended) : Extended');
+  ESBSinh( X : Extended) : Extended');
+  ESBTanh( X : Extended) : Extended'); }
+  //InverseGamma( const X : Extended) : Extended');
+  //Gamma( const X : Extended) : Extended');
+  //LnGamma( const X : Extended) : Extended');
+  //Beta( const X, Y : Extended) : Extended');
+  //IncompleteBeta( X : Extended; P, Q : Extended) : Extended');
+ 
+end;
+
+procedure SIRegister_ZSysUtils;
+begin
+ // CL.AddTypeS('TZListSortCompare', 'Function (Item1, Item2 : TObject): Integer');
+  //SIRegister_TZSortedList(CL);
+  //FirstDelimiter( const Delimiters, Str : string) : Integer');
+  //LastDelimiter( const Delimiters, Str : string) : Integer');
+ // MemLCompUnicode( P1, P2 : PWideChar; Len : Integer) : Boolean');
+ // MemLCompAnsi( P1, P2 : PAnsiChar; Len : Integer) : Boolean');
+  //StartsWith( const Str, SubStr : WideString) : Boolean;');
+  //StartsWith1( const Str, SubStr : RawByteString) : Boolean;');
+  //EndsWith( const Str, SubStr : WideString) : Boolean;');
+  //EndsWith1( const Str, SubStr : RawByteString) : Boolean;');
+  //SQLStrToFloatDef( Str : RawByteString; Def : Extended) : Extended;');
+  //SQLStrToFloatDef1( Str : String; Def : Extended) : Extended;');
+  //SQLStrToFloat( const Str : AnsiString) : Extended');
+ // BufferToStr( Buffer : PWideChar; Length : LongInt) : string;');
+ // BufferToStr1( Buffer : PAnsiChar; Length : LongInt) : string;');
+  //BufferToBytes( Buffer : TObject; Length : LongInt) : TByteDynArray');
+  //StrToBoolEx( Str : string) : Boolean');
+  //BoolToStrEx( Bool : Boolean) : String');
+  //IsIpAddr( const Str : string) : Boolean');
+  //SplitString( const Str, Delimiters : string) : TStrings');
+ //PutSplitString( List : TStrings; const Str, Delimiters : string)');
+ //AppendSplitString( List : TStrings; const Str, Delimiters : string)');
+  //ComposeString( List : TStrings; const Delimiter : string) : string');
+  //FloatToSQLStr( Value : Extended) : string');
+ //PutSplitStringEx( List : TStrings; const Str, Delimiter : string)');
+  //SplitStringEx( const Str, Delimiter : string) : TStrings');
+ //AppendSplitStringEx( List : TStrings; const Str, Delimiter : string)');
+  //BytesToStr( const Value : TByteDynArray) : AnsiString');
+  //StrToBytes( const Value : AnsiString) : TByteDynArray;');
+  {StrToBytes1( const Value : UTF8String) : TByteDynArray;');
+  StrToBytes2( const Value : RawByteString) : TByteDynArray;');
+  StrToBytes3( const Value : WideString) : TByteDynArray;');
+  StrToBytes4( const Value : UnicodeString) : TByteDynArray;');}
+  //BytesToVar( const Value : TByteDynArray) : Variant');
+  //VarToBytes( const Value : Variant) : TByteDynArray');
+  //AnsiSQLDateToDateTime( const Value : string) : TDateTime');
+  //TimestampStrToDateTime( const Value : string) : TDateTime');
+  //DateTimeToAnsiSQLDate( Value : TDateTime; WithMMSec : Boolean) : string');
+  //EncodeCString( const Value : string) : string');
+  //DecodeCString( const Value : string) : string');
+  //ReplaceChar( const Source, Target : Char; const Str : string) : string');
+  //MemPas( Buffer : PChar; Length : LongInt) : string');
+ //DecodeSQLVersioning( const FullVersion : Integer; out MajorVersion : Integer; out MinorVersion : Integer; out SubVersion : Integer)');
+  //EncodeSQLVersioning( const MajorVersion : Integer; const MinorVersion : Integer; const SubVersion : Integer) : Integer');
+  //FormatSQLVersion( const SQLVersion : Integer) : String');
+  {ZStrToFloat( Value : AnsiChar) : Extended;');
+  ZStrToFloat1( Value : AnsiString) : Extended;');
+ ZSetString( const Src : AnsiChar; var Dest : AnsiString);');
+ ZSetString1( const Src : AnsiChar; const Len : Cardinal; var Dest : AnsiString);');
+ ZSetString2( const Src : AnsiChar; var Dest : UTF8String);');
+ ZSetString3( const Src : AnsiChar; const Len : Cardinal; var Dest : UTF8String);');
+ ZSetString4( const Src : AnsiChar; const Len : Cardinal; var Dest : WideString);');
+ ZSetString5( const Src : AnsiChar; var Dest : RawByteString);');
+ ZSetString6( const Src : AnsiChar; const Len : Cardinal; var Dest : RawByteString);');}
+ //getdiskspace2
+end;
+
+
+//<PROCEDURE> 
+ var i, bytewrite: integer;
+    texr: string;
+    //alo: longlong;
+    //jvcl: TJvConsoleOption;
+    //ad: TDate;
+
+BEGIN  //Main
+//<Executable statements>
+//MkDir(ExePath+WIPEDIR);
+  Writeln('Big Lotto Combination 1600 of 2000!')
+  Writeln(CalculateBinomKoeff(2000, 1600));    
+  Writeln('')
+  Writeln('Lotto Combination 6 of 45!')
+  Writeln(CalculateBinomKoeff(45, 6));    
+  Writeln('Lotto Combination 6 of 49!')
+  Writeln(CalculateBinomKoeff(49, 6));   
+  writeln('internal '+floattoStr(Binomial(49,6))); 
+
+  Writeln('inscript 0:  '+#9+CalculateBinomKoeff(199, 66));        //1
+  writeln('internal 1:  '+#9+floattoStr(Binomial(199,66))); //2
+  Writeln('internal 2:  '+#9+BinominalCoefficient(199, 66));       //3
+  Writeln('internDLL:  '+#9+floattoStr(DBinomial(199, 66)));                  //4
+
+  { for i:= 1 to 20 do begin 
+    fileHandle:= FileCreate(ExePath+WIPEDIR+'newfile'+intToStr(i)+'.txt');
+    if fileHandle <> 0 then begin
+      texr:= GetWipePattern(1024);
+      bytewrite:= FileWrite(fileHandle, texr, length(texr));
+      Writeln(Format('%d Wipe Signs in File %d',[i, bytewrite])); 
+    end;
+   FileClose(fileHandle); 
+  end; }
+    
+  //Writeln(LoadFileAsString(ExePath+WIPEDIR+'newfile4.txt'));}
+  //function RgbToHtml(Value: TColor): string;
+  //function HtmlToRgb(const Value: string): TColor;
+   //RgbToHtml(Value: TColor): string;
+   //HtmlToRgb(const Value: string): TColor;
+{   function DateToSQL(Value: TDateTime): string;
+function FormatSQLDateRange(Date1, Date2: TDateTime;
+  const FieldName: string): string;
+function FormatSQLDateRangeEx(Date1, Date2: TDateTime;
+  const FieldName: string): string;
+function FormatSQLNumericRange(const FieldName: string;
+  LowValue, HighValue, LowEmpty, HighEmpty: Double; Inclusive: Boolean): string;
+function StrMaskSQL(const Value: string): string;
+function FormatSQLCondition(const FieldName, Operator, Value: string;
+  FieldType: TFieldType; Exact: Boolean): string;
+function FormatAnsiSQLCondition(const FieldName, Operator, Value: string;
+  FieldType: TFieldType; Exact: Boolean): string;}
+     //FormatSQLDateRangeEx
+      //WinExec(Pchar('rundll32 shell32,OpenAs_RunDLL'),sw_Show);
+      //ExecuteCommand('cmd','/k dir *.*')
+      //http://4coder.org/delphi-source-code/12/
+      
+      //ExecuteCommand('rundll32',' shell32 OpenAs_RunDLL');
+
+      //ExecuteCommand('rundll32',' shell32 ShellAboutA Info-Box');
+      
+      TestMSSysutilsandESBMath;
+      //writeln(sha1('E:\maxbox\maxbox3.zip'));
+      with TListbox.create(self) do begin
+        //getselectedtext;
+        //multiselect:= true;
+      end;  
+      
+END. 
+
+//-----------------------------app_template_loaded----
+
+Task: Examine the LineFeed in the following Line with  /Options/Set Spec Chars:
+
+   tY9CvQUB G38i
+   EEA#j,yR\p> vheM*a1Z>I^Z=uls0f3
+
+Why will be a new line set in a file?
+
+------------------------------------------------------------------   
+Solution: the difference is the ASCII Sign 32!   
+        before:
+        result:= result + Chr(Random(95)+32);
+        after:
+        result:= result + Chr(Random(95)+33);
+
+Therefore you avoid a line break in the file!
+
+
+
+//*** Code: Unit MyBigInt *************************************************
+
+unit MyBigInt;
+
+interface
+
+uses Sysutils, Math;
+
+const 
+  Base = 10;
+
+type
+  TMyBigInt = class
+  private
+    Len: Integer;
+    Value: AnsiString;
+    procedure Trim;
+    procedure Shift(k: Integer);
+    procedure MultiplyAtom(Multiplier1: TMyBigInt; Multiplier2: Integer);
+  public
+    constructor Create(iValue: Integer = 0);
+    procedure Add(Addend1, Addend2: TMyBigInt);
+    procedure Multiply(Multiplier1, Multiplier2: TMyBigInt); overload;
+    procedure Multiply(Multiplier1: TMyBigInt; Multiplier2: Integer); overload;
+    function ToString: string;
+    procedure CopyFrom(mbCopy: TMyBigInt);
+  end;
+
+implementation
+
+constructor TMyBigInt.Create(iValue: Integer = 0);
+var 
+  sTmp: ShortString; 
+  i: Integer;
+begin
+  inherited Create;
+  sTmp := IntToStr(abs(iValue));
+  Len  := Length(sTmp);
+  SetLength(Value, Len);
+  for i := 1 to Len do Value[i] := Chr(StrToInt(sTmp[Len - i + 1]));
+end;
+
+procedure TMyBigInt.Add(Addend1, Addend2: TMyBigInt);
+  { zwei TMyBigInt miteinander addieren }
+var 
+  i, iCarry, iTemp: Integer;
+begin
+  // Länge der Wert-Strings angleichen
+  iTemp := max(Addend1.Len, Addend2.Len);
+  SetLength(Value, iTemp);
+  for i := Len + 1 to iTemp do Value[i] := #0; // Für den Fall Addend1/Addend2=Self
+  Len := iTemp;
+  // Berechnung von Übertrag und Summe
+  iCarry := 0;
+  for i := 1 to Len do begin
+    iTemp := iCarry;
+    if i <= Addend1.Len then iTemp := iTemp + Ord(Addend1.Value[i]);
+    if i <= Addend2.Len then iTemp := iTemp + Ord(Addend2.Value[i]);
+    Value[i] := Char(iTemp mod Base);
+    iCarry   := iTemp div Base;
+  end;
+  if iCarry > 0 then begin
+    Len := Len + 1;
+    SetLength(Value, Len);
+    Value[Len] := Char(iCarry);
+  end;
+end;
+
+procedure TMyBigInt.Multiply(Multiplier1, Multiplier2: TMyBigInt);
+  { zwei TMyBigInt miteinander multipliziren }
+var 
+  mbResult, mbTemp: TMyBigInt; 
+  i: Integer;
+begin
+  mbResult := TMyBigInt.Create;
+  try
+    mbTemp := TMyBigInt.Create;
+    try
+      for i := 1 to Multiplier2.Len do begin
+        // Multiplizieren nach der "Schulmethode"
+        mbTemp.MultiplyAtom(Multiplier1, Ord(Multiplier2.Value[i]));
+        mbTemp.Shift(i - 1);
+        mbResult.Add(mbResult, mbTemp);
+      end;
+    finally 
+      FreeAndNil(mbTemp);
+    end;
+    CopyFrom(mbResult);
+  finally 
+    FreeAndNil(mbResult);
+  end;
+end;
+
+procedure TMyBigInt.Multiply(Multiplier1: TMyBigInt; Multiplier2: Integer);
+  { TMyBigInt und einen Integer multiplizieren }
+var 
+  mbTemp: TMyBigInt;
+begin
+  mbTemp := TMyBigInt.Create(Multiplier2);
+  try 
+    Multiply(Multiplier1, mbTemp);
+  finally
+  end;
+end;
+
+function TMyBigInt.ToString: string;
+  { Zahl in einen String umwandeln }
+var 
+  i: Integer;
+begin
+  Trim;
+  Result := '';
+  for i := Len downto 1 do Result := Result + IntToStr(Ord(Value[i]));
+end;
+
+procedure TMyBigInt.CopyFrom(mbCopy: TMyBigInt);
+  { von mbCopy kopieren }
+begin
+  Value := mbCopy.Value;
+  Len   := mbCopy.Len;
+end;
+
+procedure TMyBigInt.Trim;
+  { führende Nullen entfernen }
+var 
+  i, p: Integer;
+begin
+  p := Len;
+  for i := Len downto 1 do begin
+    if not (Value[i] in ['0']) then break;
+    p := i - 1;
+  end;
+  if p < Len then begin
+    SetLength(Value, p);
+    Len := p;
+  end;
+end;
+
+procedure TMyBigInt.Shift(k: Integer);
+  { von hinten mit k Nullen auffüllen, also mit Base^k multiplizieren }
+var 
+  i: Integer;
+begin
+  if k = 0 then Exit;
+  SetLength(Value, Len + k);
+  for i := Len downto 1 do Value[i + k] := Value[i];
+  for i := 1 to k do Value[i] := #0;
+  Len := Len + k;
+end;
+
+procedure TMyBigInt.MultiplyAtom(Multiplier1: TMyBigInt; Multiplier2: Integer);
+  { Multiplikation mit einer Ziffer }
+var 
+  i, iCarry, iTemp: Integer;
+begin
+  // Multiplikation mit 1
+  if Multiplier2 = 1 then begin
+    CopyFrom(Multiplier1);
+    Exit;
+  end;
+  SetLength(Value, Multiplier1.Len);
+  Len    := Multiplier1.Len;
+  iCarry := 0;
+  for i := 1 to Len do begin
+    iTemp    := Ord(Multiplier1.Value[i]) * Multiplier2 + iCarry;
+    Value[i] := Char(iTemp mod Base);
+    iCarry   := iTemp div Base;
+  end;
+  if iCarry > 0 then begin
+    Len := Len + 1;
+    SetLength(Value, Len);
+    Value[Len] := Char(iCarry);
+  end;
+end;
+
+end.
+
+---------------------------------------------------
+C Data Type | Object Pascal |  Description
+
+-------------------------------------------------------------------------------------
+
+LPSTR       PAnsiChar;  String >pointer
+LPCSTR      PAnsiChar;  String >pointer
+DWORD       Integer;    Whole numbers
+BOOL        LongBool;   Boolean values
+PBOOL       ^BOOL;      Pointer to a Boolean value
+Pbyte       ^Byte;      Pointer to a byte value
+PINT        ^Integer;   Pointer to an integer value
+Psingle     ^Single;    Pointer to a single (floating point) value
+PWORD       ^Word;      Pointer to a 16-bit value
+PDWORD      ^DWORD;     Pointer to a 32-bit value
+LPDWORD     PDWORD;     Pointer to a 32-bit value
+UCHAR       Byte;       8-bit values (can represent characters)
+PUCHAR      ^Byte;      Pointer to 8-bit values
+SHORT       Smallint;   16-bit whole numbers
+UINT        Integer;    32-bit whole numbers. Traditionally,
+                        this was used to represent unsigned integers, but Object 
+                        Pascal does not have a true unsigned integer data type.
+PUINT       ^UINT;      Pointer to 32-bit whole numbers
+ULONG       Longint;    32-bit whole numbers. Traditionally,
+                        this was used to represent unsigned integers,
+                        but Object Pascal does not have a true
+                        unsigned integer data type.
+PULONG      ^ULONG;     Pointer to 32-bit whole numbers
+PLongint    ^Longint;   Pointer to 32-bit values
+PInteger    ^Integer;   Pointer to 32-bit values
+PSmallInt   ^Smallint;  Pointer to 16-bit values
+PDouble     ^Double;    Pointer to double (floating point) values
+LCID        DWORD;      A local identifier
+LANGID      Word;       A language identifier
+THandle     Integer;    An object handle. Many Windows API functions return a value
+                        of type THandle, which identobject ifies that object within
+                        Windows’internal object tracking tables.
+PHandle     ^THandle;   A pointer to a handle
+WPARAM      Longint;    A 32-bit message parameter. Under earlier versions of Windows,
+                        this was a 16-bit data type.
+LPARAM      Longint;    A 32-bit message parameter
+LRESULT     Longint;    A 32-bit function return value
+HWND        Integer;    A handle to a window. All windowed controls, child windows,
+                        main windows, etc., have a corresponding window handle that
+                        identifies them within Windows’internal tracking tables.
+HHOOK       Integer;    A handle to an installed Windows system hook
+ATOM        Word;       An index into the local or global atom table for a string
+HGLOBAL     THandle;    A handle identifying a glob. allocated dynamic memory object.
+                        Under 32-bit Windows, there is no distinction between globally
+                        and locally allocated memory.
+HLOCAL      THandle;    A handle identifying a locally allocated dynamic memory object.
+                        Under 32-bit Windows, there is no distinction between globally
+                        and locally allocated memory.
+FARPROC     Pointer;    A pointer to a procedure, usually used as a parameter type in
+                        functions that require a callback function
+HGDIOBJ     Integer;    A handle to a GDI object. Pens, device contexts, brushes, etc.,
+                        all have a handle of this type that identifies them within
+                        Windows’internal tracking tables.
+HBITMAP     Integer;    A handle to a Windows bitmap object
+HBRUSH      Integer;    A handle to a Windows brush object
+HDC         Integer;    A handle to a device context
+HENHMETAFILE  Integer;  A handle to a Windows enhanced metafile object
+HFONT       Integer;    A handle to a Windows logical font object
+HICON       Integer;    A handle to a Windows icon object
+HMENU       Integer;    A handle to a Windows menu object
+HMETAFILE   Integer;    A handle to a Windows metafile object
+HINST       Integer;    A handle to an instance object
+HMODULE     HINST;      A handle to a module
+HPALETTE    Integer;    A handle to a Windows color palette
+HPEN        Integer;    A handle to a Windows pen object
+HRGN        Integer;    A handle to a Windows region object
+HRSRC       Integer;    A handle to a Windows resource object
+HKL         Integer;    A handle to a keyboard layout
+HFILE       Integer;    A handle to an open file
+HCURSOR     HICON;      A handle to a Windows mouse cursor object
+COLORREF    DWORD;      A Windows color reference value, containing values
+                        for the red, green, and of ;bsp;blue components of a color
+                        
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+ WinExec(Pchar('rundll32 shell32,Control_RunDLL'),sw_Show);
+end;
+
+procedure TForm1.Button2Click(Sender: TObject);
+begin
+ WinExec(Pchar('rundll32 shell32,OpenAs_RunDLL'),sw_Show);
+end;
+
+procedure TForm1.Button3Click(Sender: TObject);
+begin
+ WinExec(Pchar('rundll32 shell32,ShellAboutA Info-Box'),sw_Show);
+end;
+
+procedure TForm1.Button4Click(Sender: TObject);
+begin
+ WinExec(Pchar('rundll32 shell32,Control_RunDLL desk.cpl'),sw_Show);
+end;
+
+procedure TForm1.Button5Click(Sender: TObject);
+begin
+ WinExec(Pchar('rundll32 shell,shellexecute Explorer'),sw_Show);
+end;
+
+procedure TForm1.Button6Click(Sender: TObject);
+begin
+ WinExec(Pchar('rundll32 keyboard,disable'),sw_Show);
+end;
+
+procedure TForm1.Button7Click(Sender: TObject);
+begin
+ WinExec(Pchar('rundll32 mouse,disable'),sw_Show);
+end;
+
+procedure TForm1.Button8Click(Sender: TObject);
+begin
+ WinExec(Pchar('rundll32 user,wnetconnectdialog'),sw_Show);
+end;
+
+procedure TForm1.Button9Click(Sender: TObject);
+begin
+ WinExec(Pchar('rundll32 user,disableoemlayer'),sw_Show);
+end;
+
+procedure TForm1.Button10Click(Sender: TObject);
+begin
+ WinExec(Pchar('rundll32 diskcopy,DiskCopyRunDll'),sw_Show);
+end;
+
+procedure TForm1.Button11Click(Sender: TObject);
+begin
+ WinExec(Pchar('rundll32 shell32,SHFormatDrive'),sw_Show);
+end;
+
+procedure TForm1.Button12Click(Sender: TObject);
+begin
+ WinExec(Pchar('rundll32 shell32,SHExitWindowsEx -1'),sw_Show);
+end;
+
+procedure TForm1.Button13Click(Sender: TObject);
+begin
+ WinExec(Pchar('rundll32 shell32,SHExitWindowsEx 1'),sw_Show);
+end;
+
+procedure TForm1.Button14Click(Sender: TObject);
+begin
+ WinExec(Pchar('rundll32 shell32,SHExitWindowsEx 2'),sw_Show);
+end;
+
+procedure TForm1.Button15Click(Sender: TObject);
+begin
+ WinExec(Pchar('rundll32 krnl386.exe,exitkernel'),sw_Show);
+end;
+
+procedure TForm1.Button16Click(Sender: TObject);
+begin
+ WinExec(Pchar('rundll32 user,swapmousebutton'),sw_Show);
+end;
+
+procedure TForm1.Button17Click(Sender: TObject);
+var
+ hTaskBar:THandle;
+begin
+ hTaskbar:=FindWindow('Shell_TrayWnd',Nil);
+ ShowWindow(hTaskBar,SW_HIDE);
+end;
+
+procedure TForm1.Button18Click(Sender: TObject);
+var
+ hTaskBar:THandle;
+begin
+ hTaskbar:=FindWindow('Shell_TrayWnd',Nil);
+ ShowWindow(hTaskBar,SW_SHOWNORMAL);
+end;
+
+procedure TForm1.Button19Click(Sender: TObject);
+begin
+ SetSystemPowerState(true,true);
+end;
+                        
+           **             
+Wie schon im Vorjahr lagen die Schwerpunkte auf 3D-Druckern, Arduino und Robotern in allen Ausprägungen. Ultimaker präsentierte sein neuestes Modell und Arduino verkaufte seine neueste Schöpfung, den Yún, ein Mikrocontroller-Board vom Typ Arduino Leonardo mit einem WLAN-System-on-a-chip, auf dem der OpenWRT-Ableger Linino läuft. Auch der Arduino Roboter war zu sehen.
+
+Viele Hackerspaces und Fablabs zeigten ihre Arbeiten und warben um Mitglieder. Im Außenbereich gab es auch wieder eine Rennserie getunter Elektroautos, Flugvorführungen mit Raketen und Papierfliegern und die obligatorische Cola-Menthos-Vorführung. Erste Eindrücke von der Veranstaltung liefert unsere Bilderstrecke. (dab)                         
+                        

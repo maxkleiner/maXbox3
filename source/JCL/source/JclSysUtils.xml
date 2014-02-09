@@ -1,0 +1,913 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<namespace name="JclSysUtils">
+  <interface name="ISafeGuard">
+    <function name="ReleaseItem" visibility="public" procflags="abstract virtual">
+      <parameters>
+        <retval type="Pointer" />
+      </parameters>
+    </function>
+    <function name="GetItem" visibility="public" procflags="abstract virtual">
+      <parameters>
+        <retval type="Pointer" />
+      </parameters>
+    </function>
+    <procedure name="FreeItem" visibility="public" procflags="abstract virtual">
+    </procedure>
+    <property name="Item" visibility="public" read="GetItem" type="Pointer" />
+  </interface>
+  <interface name="IMultiSafeGuard">
+    <function name="AddItem" visibility="public" procflags="abstract virtual">
+      <parameters>
+        <parameter name="Item" type="Pointer" />
+        <retval type="Pointer" />
+      </parameters>
+    </function>
+    <procedure name="FreeItem" visibility="public" procflags="abstract virtual">
+      <parameters>
+        <parameter name="Index" type="Integer" />
+      </parameters>
+    </procedure>
+    <function name="GetCount" visibility="public" procflags="abstract virtual">
+      <parameters>
+        <retval type="Integer" />
+      </parameters>
+    </function>
+    <function name="GetItem" visibility="public" procflags="abstract virtual">
+      <parameters>
+        <parameter name="Index" type="Integer" />
+        <retval type="Pointer" />
+      </parameters>
+    </function>
+    <function name="ReleaseItem" visibility="public" procflags="abstract virtual">
+      <parameters>
+        <parameter name="Index" type="Integer" />
+        <retval type="Pointer" />
+      </parameters>
+    </function>
+    <property name="Count" visibility="public" read="GetCount" type="Integer" />
+    <property name="Items" visibility="public" read="GetItem" type="Pointer" />
+  </interface>
+  <class name="TJclReferenceMemoryStream">
+    <ancestor name="TCustomMemoryStream" namespace="Classes">
+      <methodref name="SetPointer" visibility="protected">
+      </methodref>
+      <methodref name="Read" visibility="public">
+      </methodref>
+      <methodref name="Seek" visibility="public">
+      </methodref>
+      <methodref name="SaveToStream" visibility="public">
+      </methodref>
+      <methodref name="SaveToFile" visibility="public">
+      </methodref>
+      <propertyref name="Memory" visibility="public">
+      </propertyref>
+      <ancestor name="TStream" namespace="Classes">
+        <methodref name="GetPosition" visibility="private">
+        </methodref>
+        <methodref name="SetPosition" visibility="private">
+        </methodref>
+        <methodref name="SetSize64" visibility="private">
+        </methodref>
+        <methodref name="GetSize" visibility="public">
+        </methodref>
+        <methodref name="SetSize" visibility="public">
+        </methodref>
+        <methodref name="SetSize" visibility="public">
+        </methodref>
+        <methodref name="Read" visibility="public">
+        </methodref>
+        <methodref name="Write" visibility="public">
+        </methodref>
+        <methodref name="Seek" visibility="public">
+        </methodref>
+        <methodref name="Seek" visibility="public">
+        </methodref>
+        <methodref name="ReadBuffer" visibility="public">
+        </methodref>
+        <methodref name="WriteBuffer" visibility="public">
+        </methodref>
+        <methodref name="CopyFrom" visibility="public">
+        </methodref>
+        <methodref name="ReadComponent" visibility="public">
+        </methodref>
+        <methodref name="ReadComponentRes" visibility="public">
+        </methodref>
+        <methodref name="WriteComponent" visibility="public">
+        </methodref>
+        <methodref name="WriteComponentRes" visibility="public">
+        </methodref>
+        <methodref name="WriteDescendent" visibility="public">
+        </methodref>
+        <methodref name="WriteDescendentRes" visibility="public">
+        </methodref>
+        <methodref name="WriteResourceHeader" visibility="public">
+        </methodref>
+        <methodref name="FixupResourceHeader" visibility="public">
+        </methodref>
+        <methodref name="ReadResHeader" visibility="public">
+        </methodref>
+        <propertyref name="Position" visibility="public">
+        </propertyref>
+        <propertyref name="Size" visibility="public">
+        </propertyref>
+        <ancestor name="TObject" namespace="System">
+          <methodref name="Create" visibility="public">
+          </methodref>
+          <methodref name="Free" visibility="public">
+          </methodref>
+          <methodref name="InitInstance" visibility="public">
+          </methodref>
+          <methodref name="CleanupInstance" visibility="public">
+          </methodref>
+          <methodref name="ClassType" visibility="public">
+          </methodref>
+          <methodref name="ClassName" visibility="public">
+          </methodref>
+          <methodref name="ClassNameIs" visibility="public">
+          </methodref>
+          <methodref name="ClassParent" visibility="public">
+          </methodref>
+          <methodref name="ClassInfo" visibility="public">
+          </methodref>
+          <methodref name="InstanceSize" visibility="public">
+          </methodref>
+          <methodref name="InheritsFrom" visibility="public">
+          </methodref>
+          <methodref name="MethodAddress" visibility="public">
+          </methodref>
+          <methodref name="MethodName" visibility="public">
+          </methodref>
+          <methodref name="FieldAddress" visibility="public">
+          </methodref>
+          <methodref name="GetInterface" visibility="public">
+          </methodref>
+          <methodref name="GetInterfaceEntry" visibility="public">
+          </methodref>
+          <methodref name="GetInterfaceTable" visibility="public">
+          </methodref>
+          <methodref name="SafeCallException" visibility="public">
+          </methodref>
+          <methodref name="AfterConstruction" visibility="public">
+          </methodref>
+          <methodref name="BeforeDestruction" visibility="public">
+          </methodref>
+          <methodref name="Dispatch" visibility="public">
+          </methodref>
+          <methodref name="DefaultHandler" visibility="public">
+          </methodref>
+          <methodref name="NewInstance" visibility="public">
+          </methodref>
+          <methodref name="FreeInstance" visibility="public">
+          </methodref>
+          <methodref name="Destroy" visibility="public">
+          </methodref>
+        </ancestor>
+      </ancestor>
+    </ancestor>
+    <members>
+      <constructor name="Create" visibility="public">
+        <parameters>
+          <parameter name="Ptr" type="Pointer" paramflags="const" />
+          <parameter name="Size" type="Integer" />
+        </parameters>
+      </constructor>
+      <function name="Write" visibility="public" procflags="override">
+        <parameters>
+          <parameter name="Buffer" paramflags="const" />
+          <parameter name="Count" type="Integer" />
+          <retval type="Integer" />
+        </parameters>
+      </function>
+    </members>
+  </class>
+  <class name="EJclVMTError">
+    <ancestor name="EJclError" namespace="JclBase">
+      <methodref name="CreateResRec" visibility="public" />
+      <methodref name="CreateResRecFmt" visibility="public" />
+      <ancestor name="Exception" namespace="SysUtils">
+        <methodref name="Create" visibility="public">
+        </methodref>
+        <methodref name="CreateFmt" visibility="public">
+        </methodref>
+        <methodref name="CreateRes" visibility="public">
+        </methodref>
+        <methodref name="CreateRes" visibility="public">
+        </methodref>
+        <methodref name="CreateResFmt" visibility="public">
+        </methodref>
+        <methodref name="CreateResFmt" visibility="public">
+        </methodref>
+        <methodref name="CreateHelp" visibility="public">
+        </methodref>
+        <methodref name="CreateFmtHelp" visibility="public">
+        </methodref>
+        <methodref name="CreateResHelp" visibility="public">
+        </methodref>
+        <methodref name="CreateResHelp" visibility="public">
+        </methodref>
+        <methodref name="CreateResFmtHelp" visibility="public">
+        </methodref>
+        <methodref name="CreateResFmtHelp" visibility="public">
+        </methodref>
+        <propertyref name="HelpContext" visibility="public">
+        </propertyref>
+        <propertyref name="Message" visibility="public">
+        </propertyref>
+        <ancestor name="TObject" namespace="System">
+          <methodref name="Create" visibility="public">
+          </methodref>
+          <methodref name="Free" visibility="public">
+          </methodref>
+          <methodref name="InitInstance" visibility="public">
+          </methodref>
+          <methodref name="CleanupInstance" visibility="public">
+          </methodref>
+          <methodref name="ClassType" visibility="public">
+          </methodref>
+          <methodref name="ClassName" visibility="public">
+          </methodref>
+          <methodref name="ClassNameIs" visibility="public">
+          </methodref>
+          <methodref name="ClassParent" visibility="public">
+          </methodref>
+          <methodref name="ClassInfo" visibility="public">
+          </methodref>
+          <methodref name="InstanceSize" visibility="public">
+          </methodref>
+          <methodref name="InheritsFrom" visibility="public">
+          </methodref>
+          <methodref name="MethodAddress" visibility="public">
+          </methodref>
+          <methodref name="MethodName" visibility="public">
+          </methodref>
+          <methodref name="FieldAddress" visibility="public">
+          </methodref>
+          <methodref name="GetInterface" visibility="public">
+          </methodref>
+          <methodref name="GetInterfaceEntry" visibility="public">
+          </methodref>
+          <methodref name="GetInterfaceTable" visibility="public">
+          </methodref>
+          <methodref name="SafeCallException" visibility="public">
+          </methodref>
+          <methodref name="AfterConstruction" visibility="public">
+          </methodref>
+          <methodref name="BeforeDestruction" visibility="public">
+          </methodref>
+          <methodref name="Dispatch" visibility="public">
+          </methodref>
+          <methodref name="DefaultHandler" visibility="public">
+          </methodref>
+          <methodref name="NewInstance" visibility="public">
+          </methodref>
+          <methodref name="FreeInstance" visibility="public">
+          </methodref>
+          <methodref name="Destroy" visibility="public">
+          </methodref>
+        </ancestor>
+      </ancestor>
+    </ancestor>
+  </class>
+  <array name="TDynamicIndexList" low="0" high="134217727">
+    <element type="Word" />
+  </array>
+  <pointer name="PDynamicIndexList" type="TDynamicIndexList" indircnt="1" />
+  <array name="TDynamicAddressList" low="0" high="134217727">
+    <element type="Pointer" />
+  </array>
+  <pointer name="PDynamicAddressList" type="TDynamicAddressList" indircnt="1" />
+  <pointer name="PFieldEntry" type="TFieldEntry" indircnt="1" />
+  <struct name="TFieldEntry" packed="true">
+    <field name="OffSet" type="Integer" visibility="public" />
+    <field name="IDX" type="Word" visibility="public" />
+    <field name="Name" type="ShortString" visibility="public" />
+  </struct>
+  <pointer name="PFieldClassTable" type="TFieldClassTable" indircnt="1" />
+  <struct name="TFieldClassTable" packed="true">
+    <field name="Count" type="Smallint" visibility="public" />
+    <field name="Classes" visibility="public">
+      <array name="Classes" low="0" high="8191">
+        <element />
+      </array>
+    </field>
+  </struct>
+  <pointer name="PFieldTable" type="TFieldTable" indircnt="1" />
+  <struct name="TFieldTable" packed="true">
+    <field name="EntryCount" type="Word" visibility="public" />
+    <field name="FieldClassTable" type="PFieldClassTable" visibility="public" />
+    <field name="FirstEntry" type="TFieldEntry" visibility="public" />
+  </struct>
+  <pointer name="PMethodEntry" type="TMethodEntry" indircnt="1" />
+  <struct name="TMethodEntry" packed="true">
+    <field name="EntrySize" type="Word" visibility="public" />
+    <field name="Address" type="Pointer" visibility="public" />
+    <field name="Name" type="ShortString" visibility="public" />
+  </struct>
+  <pointer name="PMethodTable" type="TMethodTable" indircnt="1" />
+  <struct name="TMethodTable" packed="true">
+    <field name="Count" type="Word" visibility="public" />
+    <field name="FirstEntry" type="TMethodEntry" visibility="public" />
+  </struct>
+  <const name="INVALID_MODULEHANDLE_VALUE" type="Cardinal">
+    <value>
+      $0
+    </value>
+  </const>
+  <class name="EJclConversionError">
+    <ancestor name="EJclError" namespace="JclBase">
+      <methodref name="CreateResRec" visibility="public" />
+      <methodref name="CreateResRecFmt" visibility="public" />
+      <ancestor name="Exception" namespace="SysUtils">
+        <methodref name="Create" visibility="public">
+        </methodref>
+        <methodref name="CreateFmt" visibility="public">
+        </methodref>
+        <methodref name="CreateRes" visibility="public">
+        </methodref>
+        <methodref name="CreateRes" visibility="public">
+        </methodref>
+        <methodref name="CreateResFmt" visibility="public">
+        </methodref>
+        <methodref name="CreateResFmt" visibility="public">
+        </methodref>
+        <methodref name="CreateHelp" visibility="public">
+        </methodref>
+        <methodref name="CreateFmtHelp" visibility="public">
+        </methodref>
+        <methodref name="CreateResHelp" visibility="public">
+        </methodref>
+        <methodref name="CreateResHelp" visibility="public">
+        </methodref>
+        <methodref name="CreateResFmtHelp" visibility="public">
+        </methodref>
+        <methodref name="CreateResFmtHelp" visibility="public">
+        </methodref>
+        <propertyref name="HelpContext" visibility="public">
+        </propertyref>
+        <propertyref name="Message" visibility="public">
+        </propertyref>
+        <ancestor name="TObject" namespace="System">
+          <methodref name="Create" visibility="public">
+          </methodref>
+          <methodref name="Free" visibility="public">
+          </methodref>
+          <methodref name="InitInstance" visibility="public">
+          </methodref>
+          <methodref name="CleanupInstance" visibility="public">
+          </methodref>
+          <methodref name="ClassType" visibility="public">
+          </methodref>
+          <methodref name="ClassName" visibility="public">
+          </methodref>
+          <methodref name="ClassNameIs" visibility="public">
+          </methodref>
+          <methodref name="ClassParent" visibility="public">
+          </methodref>
+          <methodref name="ClassInfo" visibility="public">
+          </methodref>
+          <methodref name="InstanceSize" visibility="public">
+          </methodref>
+          <methodref name="InheritsFrom" visibility="public">
+          </methodref>
+          <methodref name="MethodAddress" visibility="public">
+          </methodref>
+          <methodref name="MethodName" visibility="public">
+          </methodref>
+          <methodref name="FieldAddress" visibility="public">
+          </methodref>
+          <methodref name="GetInterface" visibility="public">
+          </methodref>
+          <methodref name="GetInterfaceEntry" visibility="public">
+          </methodref>
+          <methodref name="GetInterfaceTable" visibility="public">
+          </methodref>
+          <methodref name="SafeCallException" visibility="public">
+          </methodref>
+          <methodref name="AfterConstruction" visibility="public">
+          </methodref>
+          <methodref name="BeforeDestruction" visibility="public">
+          </methodref>
+          <methodref name="Dispatch" visibility="public">
+          </methodref>
+          <methodref name="DefaultHandler" visibility="public">
+          </methodref>
+          <methodref name="NewInstance" visibility="public">
+          </methodref>
+          <methodref name="FreeInstance" visibility="public">
+          </methodref>
+          <methodref name="Destroy" visibility="public">
+          </methodref>
+        </ancestor>
+      </ancestor>
+    </ancestor>
+  </class>
+  <procedure name="FreeAndNil" visibility="public">
+    <parameters>
+      <parameter name="Obj" paramflags="var" />
+    </parameters>
+  </procedure>
+  <procedure name="GetAndFillMem" visibility="public">
+    <parameters>
+      <parameter name="P" type="Pointer" paramflags="var" />
+      <parameter name="Size" type="Integer" paramflags="const" />
+      <parameter name="Value" type="Byte" paramflags="const" />
+    </parameters>
+  </procedure>
+  <procedure name="FreeMemAndNil" visibility="public">
+    <parameters>
+      <parameter name="P" type="Pointer" paramflags="var" />
+    </parameters>
+  </procedure>
+  <function name="PCharOrNil" visibility="public">
+    <parameters>
+      <parameter name="S" type="string" paramflags="const" />
+      <retval type="PAnsiChar" />
+    </parameters>
+  </function>
+  <function name="SizeOfMem" visibility="public">
+    <parameters>
+      <parameter name="APointer" type="Pointer" paramflags="const" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="Guard" visibility="public" procflags="overload">
+    <parameters>
+      <parameter name="Mem" type="Pointer" />
+      <parameter name="SafeGuard" type="IMultiSafeGuard" paramflags="var" />
+      <retval type="Pointer" />
+    </parameters>
+  </function>
+  <function name="Guard" visibility="public" procflags="overload">
+    <parameters>
+      <parameter name="Obj" type="TObject" />
+      <parameter name="SafeGuard" type="IMultiSafeGuard" paramflags="var" />
+      <retval type="TObject" />
+    </parameters>
+  </function>
+  <function name="Guard" visibility="public" procflags="overload">
+    <parameters>
+      <parameter name="Mem" type="Pointer" />
+      <parameter name="SafeGuard" type="ISafeGuard" paramflags="out" />
+      <retval type="Pointer" />
+    </parameters>
+  </function>
+  <function name="Guard" visibility="public" procflags="overload">
+    <parameters>
+      <parameter name="Obj" type="TObject" />
+      <parameter name="SafeGuard" type="ISafeGuard" paramflags="out" />
+      <retval type="TObject" />
+    </parameters>
+  </function>
+  <function name="GuardGetMem" visibility="public">
+    <parameters>
+      <parameter name="Size" type="Cardinal" />
+      <parameter name="SafeGuard" type="ISafeGuard" paramflags="out" />
+      <retval type="Pointer" />
+    </parameters>
+  </function>
+  <function name="GuardAllocMem" visibility="public">
+    <parameters>
+      <parameter name="Size" type="Cardinal" />
+      <parameter name="SafeGuard" type="ISafeGuard" paramflags="out" />
+      <retval type="Pointer" />
+    </parameters>
+  </function>
+  <function name="SearchSortedList" visibility="public">
+    <parameters>
+      <parameter name="List" type="TList" />
+      <parameter name="SortFunc" type="TListSortCompare" />
+      <parameter name="Item" type="Pointer" />
+      <parameter name="Nearest" type="Boolean">
+        <value>
+          False
+        </value>
+      </parameter>
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="SearchSortedUntyped" visibility="public">
+    <parameters>
+      <parameter name="Param" type="Pointer" />
+      <parameter name="ItemCount" type="Integer" />
+      <parameter name="SearchFunc" type="TUntypedSearchCompare" />
+      <parameter name="Value" paramflags="const" />
+      <parameter name="Nearest" type="Boolean">
+        <value>
+          False
+        </value>
+      </parameter>
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <procedure name="SortDynArray" visibility="public">
+    <parameters>
+      <parameter name="ArrayPtr" type="Pointer" paramflags="const" />
+      <parameter name="ElementSize" type="Cardinal" />
+      <parameter name="SortFunc" type="TDynArraySortCompare" />
+    </parameters>
+  </procedure>
+  <function name="SearchDynArray" visibility="public">
+    <parameters>
+      <parameter name="ArrayPtr" type="Pointer" paramflags="const" />
+      <parameter name="ElementSize" type="Cardinal" />
+      <parameter name="SortFunc" type="TDynArraySortCompare" />
+      <parameter name="ValuePtr" type="Pointer" />
+      <parameter name="Nearest" type="Boolean">
+        <value>
+          False
+        </value>
+      </parameter>
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="DynArrayCompareByte" visibility="public">
+    <parameters>
+      <parameter name="Item1" type="Pointer" />
+      <parameter name="Item2" type="Pointer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="DynArrayCompareShortInt" visibility="public">
+    <parameters>
+      <parameter name="Item1" type="Pointer" />
+      <parameter name="Item2" type="Pointer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="DynArrayCompareWord" visibility="public">
+    <parameters>
+      <parameter name="Item1" type="Pointer" />
+      <parameter name="Item2" type="Pointer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="DynArrayCompareSmallInt" visibility="public">
+    <parameters>
+      <parameter name="Item1" type="Pointer" />
+      <parameter name="Item2" type="Pointer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="DynArrayCompareInteger" visibility="public">
+    <parameters>
+      <parameter name="Item1" type="Pointer" />
+      <parameter name="Item2" type="Pointer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="DynArrayCompareCardinal" visibility="public">
+    <parameters>
+      <parameter name="Item1" type="Pointer" />
+      <parameter name="Item2" type="Pointer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="DynArrayCompareInt64" visibility="public">
+    <parameters>
+      <parameter name="Item1" type="Pointer" />
+      <parameter name="Item2" type="Pointer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="DynArrayCompareSingle" visibility="public">
+    <parameters>
+      <parameter name="Item1" type="Pointer" />
+      <parameter name="Item2" type="Pointer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="DynArrayCompareDouble" visibility="public">
+    <parameters>
+      <parameter name="Item1" type="Pointer" />
+      <parameter name="Item2" type="Pointer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="DynArrayCompareExtended" visibility="public">
+    <parameters>
+      <parameter name="Item1" type="Pointer" />
+      <parameter name="Item2" type="Pointer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="DynArrayCompareFloat" visibility="public">
+    <parameters>
+      <parameter name="Item1" type="Pointer" />
+      <parameter name="Item2" type="Pointer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="DynArrayCompareAnsiString" visibility="public">
+    <parameters>
+      <parameter name="Item1" type="Pointer" />
+      <parameter name="Item2" type="Pointer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="DynArrayCompareAnsiText" visibility="public">
+    <parameters>
+      <parameter name="Item1" type="Pointer" />
+      <parameter name="Item2" type="Pointer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="DynArrayCompareString" visibility="public">
+    <parameters>
+      <parameter name="Item1" type="Pointer" />
+      <parameter name="Item2" type="Pointer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="DynArrayCompareText" visibility="public">
+    <parameters>
+      <parameter name="Item1" type="Pointer" />
+      <parameter name="Item2" type="Pointer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <procedure name="ClearObjectList" visibility="public">
+    <parameters>
+      <parameter name="List" type="TList" />
+    </parameters>
+  </procedure>
+  <procedure name="FreeObjectList" visibility="public">
+    <parameters>
+      <parameter name="List" type="TList" paramflags="var" />
+    </parameters>
+  </procedure>
+  <function name="Iff" visibility="public" procflags="overload">
+    <parameters>
+      <parameter name="Condition" type="Boolean" paramflags="const" />
+      <parameter name="TruePart" type="string" paramflags="const" />
+      <parameter name="FalsePart" type="string" paramflags="const" />
+      <retval type="string" />
+    </parameters>
+  </function>
+  <function name="Iff" visibility="public" procflags="overload">
+    <parameters>
+      <parameter name="Condition" type="Boolean" paramflags="const" />
+      <parameter name="TruePart" type="Char" paramflags="const" />
+      <parameter name="FalsePart" type="Char" paramflags="const" />
+      <retval type="Char" />
+    </parameters>
+  </function>
+  <function name="Iff" visibility="public" procflags="overload">
+    <parameters>
+      <parameter name="Condition" type="Boolean" paramflags="const" />
+      <parameter name="TruePart" type="Byte" paramflags="const" />
+      <parameter name="FalsePart" type="Byte" paramflags="const" />
+      <retval type="Byte" />
+    </parameters>
+  </function>
+  <function name="Iff" visibility="public" procflags="overload">
+    <parameters>
+      <parameter name="Condition" type="Boolean" paramflags="const" />
+      <parameter name="TruePart" type="Integer" paramflags="const" />
+      <parameter name="FalsePart" type="Integer" paramflags="const" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="Iff" visibility="public" procflags="overload">
+    <parameters>
+      <parameter name="Condition" type="Boolean" paramflags="const" />
+      <parameter name="TruePart" type="Cardinal" paramflags="const" />
+      <parameter name="FalsePart" type="Cardinal" paramflags="const" />
+      <retval type="Cardinal" />
+    </parameters>
+  </function>
+  <function name="Iff" visibility="public" procflags="overload">
+    <parameters>
+      <parameter name="Condition" type="Boolean" paramflags="const" />
+      <parameter name="TruePart" type="Extended" paramflags="const" />
+      <parameter name="FalsePart" type="Extended" paramflags="const" />
+      <retval type="Extended" />
+    </parameters>
+  </function>
+  <function name="Iff" visibility="public" procflags="overload">
+    <parameters>
+      <parameter name="Condition" type="Boolean" paramflags="const" />
+      <parameter name="TruePart" type="Boolean" paramflags="const" />
+      <parameter name="FalsePart" type="Boolean" paramflags="const" />
+      <retval type="Boolean" />
+    </parameters>
+  </function>
+  <function name="Iff" visibility="public" procflags="overload">
+    <parameters>
+      <parameter name="Condition" type="Boolean" paramflags="const" />
+      <parameter name="TruePart" type="Pointer" paramflags="const" />
+      <parameter name="FalsePart" type="Pointer" paramflags="const" />
+      <retval type="Pointer" />
+    </parameters>
+  </function>
+  <function name="Iff" visibility="public" procflags="overload">
+    <parameters>
+      <parameter name="Condition" type="Boolean" paramflags="const" />
+      <parameter name="TruePart" type="Int64" paramflags="const" />
+      <parameter name="FalsePart" type="Int64" paramflags="const" />
+      <retval type="Int64" />
+    </parameters>
+  </function>
+  <function name="Iff" visibility="public" procflags="overload">
+    <parameters>
+      <parameter name="Condition" type="Boolean" paramflags="const" />
+      <parameter name="TruePart" type="Variant" paramflags="const" />
+      <parameter name="FalsePart" type="Variant" paramflags="const" />
+      <retval type="Variant" />
+    </parameters>
+  </function>
+  <function name="GetVirtualMethodCount" visibility="public">
+    <parameters>
+      <parameter name="AClass" type="TClass" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="GetVirtualMethod" visibility="public">
+    <parameters>
+      <parameter name="AClass" type="TClass" />
+      <parameter name="Index" type="Integer" paramflags="const" />
+      <retval type="Pointer" />
+    </parameters>
+  </function>
+  <procedure name="SetVirtualMethod" visibility="public">
+    <parameters>
+      <parameter name="AClass" type="TClass" />
+      <parameter name="Index" type="Integer" paramflags="const" />
+      <parameter name="Method" type="Pointer" paramflags="const" />
+    </parameters>
+  </procedure>
+  <function name="GetDynamicMethodCount" visibility="public">
+    <parameters>
+      <parameter name="AClass" type="TClass" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="GetDynamicIndexList" visibility="public">
+    <parameters>
+      <parameter name="AClass" type="TClass" />
+      <retval type="PDynamicIndexList" />
+    </parameters>
+  </function>
+  <function name="GetDynamicAddressList" visibility="public">
+    <parameters>
+      <parameter name="AClass" type="TClass" />
+      <retval type="PDynamicAddressList" />
+    </parameters>
+  </function>
+  <function name="HasDynamicMethod" visibility="public">
+    <parameters>
+      <parameter name="AClass" type="TClass" />
+      <parameter name="Index" type="Integer" />
+      <retval type="Boolean" />
+    </parameters>
+  </function>
+  <function name="GetDynamicMethod" visibility="public">
+    <parameters>
+      <parameter name="AClass" type="TClass" />
+      <parameter name="Index" type="Integer" />
+      <retval type="Pointer" />
+    </parameters>
+  </function>
+  <function name="GetInitTable" visibility="public">
+    <parameters>
+      <parameter name="AClass" type="TClass" />
+      <retval type="PTypeInfo" />
+    </parameters>
+  </function>
+  <function name="GetFieldTable" visibility="public">
+    <parameters>
+      <parameter name="AClass" type="TClass" />
+      <retval type="PFieldTable" />
+    </parameters>
+  </function>
+  <function name="GetMethodTable" visibility="public">
+    <parameters>
+      <parameter name="AClass" type="TClass" />
+      <retval type="PMethodTable" />
+    </parameters>
+  </function>
+  <function name="GetMethodEntry" visibility="public">
+    <parameters>
+      <parameter name="MethodTable" type="PMethodTable" />
+      <parameter name="Index" type="Integer" />
+      <retval type="PMethodEntry" />
+    </parameters>
+  </function>
+  <procedure name="SetClassParent" visibility="public">
+    <parameters>
+      <parameter name="AClass" type="TClass" />
+      <parameter name="NewClassParent" type="TClass" />
+    </parameters>
+  </procedure>
+  <function name="GetClassParent" visibility="public">
+    <parameters>
+      <parameter name="AClass" type="TClass" />
+      <retval type="TClass" />
+    </parameters>
+  </function>
+  <function name="IsClass" visibility="public">
+    <parameters>
+      <parameter name="Address" type="Pointer" />
+      <retval type="Boolean" />
+    </parameters>
+  </function>
+  <function name="IsObject" visibility="public">
+    <parameters>
+      <parameter name="Address" type="Pointer" />
+      <retval type="Boolean" />
+    </parameters>
+  </function>
+  <function name="GetImplementorOfInterface" visibility="public">
+    <parameters>
+      <parameter name="I" type="IInterface" paramflags="const" />
+      <retval type="TObject" />
+    </parameters>
+  </function>
+  <function name="IntToStrZeroPad" visibility="public">
+    <parameters>
+      <parameter name="Value" type="Integer" />
+      <parameter name="Count" type="Integer" />
+      <retval type="string" />
+    </parameters>
+  </function>
+  <function name="LoadModule" visibility="public">
+    <parameters>
+      <parameter name="Module" type="Cardinal" paramflags="var" />
+      <parameter name="FileName" type="string" />
+      <retval type="Boolean" />
+    </parameters>
+  </function>
+  <function name="LoadModuleEx" visibility="public">
+    <parameters>
+      <parameter name="Module" type="Cardinal" paramflags="var" />
+      <parameter name="FileName" type="string" />
+      <parameter name="Flags" type="Cardinal" />
+      <retval type="Boolean" />
+    </parameters>
+  </function>
+  <procedure name="UnloadModule" visibility="public">
+    <parameters>
+      <parameter name="Module" type="Cardinal" paramflags="var" />
+    </parameters>
+  </procedure>
+  <function name="GetModuleSymbol" visibility="public">
+    <parameters>
+      <parameter name="Module" type="Cardinal" />
+      <parameter name="SymbolName" type="string" />
+      <retval type="Pointer" />
+    </parameters>
+  </function>
+  <function name="GetModuleSymbolEx" visibility="public">
+    <parameters>
+      <parameter name="Module" type="Cardinal" />
+      <parameter name="SymbolName" type="string" />
+      <parameter name="Accu" type="Boolean" paramflags="var" />
+      <retval type="Pointer" />
+    </parameters>
+  </function>
+  <function name="ReadModuleData" visibility="public">
+    <parameters>
+      <parameter name="Module" type="Cardinal" />
+      <parameter name="SymbolName" type="string" />
+      <parameter name="Buffer" paramflags="var" />
+      <parameter name="Size" type="Cardinal" />
+      <retval type="Boolean" />
+    </parameters>
+  </function>
+  <function name="WriteModuleData" visibility="public">
+    <parameters>
+      <parameter name="Module" type="Cardinal" />
+      <parameter name="SymbolName" type="string" />
+      <parameter name="Buffer" paramflags="var" />
+      <parameter name="Size" type="Cardinal" />
+      <retval type="Boolean" />
+    </parameters>
+  </function>
+  <function name="StrToBoolean" visibility="public">
+    <parameters>
+      <parameter name="S" type="string" paramflags="const" />
+      <retval type="Boolean" />
+    </parameters>
+  </function>
+  <function name="IntToBool" visibility="public">
+    <parameters>
+      <parameter name="I" type="Integer" />
+      <retval type="Boolean" />
+    </parameters>
+  </function>
+  <function name="BoolToInt" visibility="public">
+    <parameters>
+      <parameter name="B" type="Boolean" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="SystemTObjectInstance" visibility="public">
+    <parameters>
+      <retval type="Cardinal" />
+    </parameters>
+  </function>
+  <function name="IsCompiledWithPackages" visibility="public">
+    <parameters>
+      <retval type="Boolean" />
+    </parameters>
+  </function>
+</namespace>

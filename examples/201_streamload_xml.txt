@@ -1,0 +1,95 @@
+program xml_streamloader;
+
+// load and save an xml-file, ex_201
+// shows subroutines of a webservice factory and save copy of a binary! 
+
+//type IVCLScanner = string; //interface class;
+
+//type
+  //IVCLScanner = interface(IInvokable)
+  //['{7FC432BE-087E-EC81-4052-0CEC41DBF999}']
+  {function  PostData(const UserData: WideString; const CheckSum: Cardinal): Boolean; stdcall;
+  procedure PostUser(const Email: WideString; const FirstName: WideString; const LastName: WideString); stdcall;
+    function  GetTicketNr: Integer; stdcall;
+  end;}
+
+const
+  defWSDL = 'D:\Program Files\Apache Group\Apache2\cgi-bin\IVCLScanner.xml';
+  defURL  = 'http://APSN21/cgi-bin/VCLScannerServer.exe/soap/IVCLScanner';
+  defSvc  = 'IVCLScannerservice';
+  defPrt  = 'IVCLScannerPort';
+  
+  StrHttpwebsrv_path_scripts =
+                'http://APSN21/cgi-bin/vclscannerserver.exe/soap/IVCLScanner';
+
+  StrSomethingWentWrong = 'Something went wrong while sending report.';
+  StrSendingReportFaile = 'Sending report failed...';
+  StrSomethingWentWrongT = 'Something went wrong while sending your ticket.';
+  StrSendingTicketFaileT = 'Sending ticket failed...';
+  
+var
+  mi: IStreamLoader;
+  mm: TMemoryStream;
+
+//function GetWS(UseWSDL: Boolean; Addr: string; HTTPRIO: THTTPRIO): IVCLScanner;
+
+function GetWSObj(UseWSDL: Boolean; Addr: string; HTTPRIO: THTTPRIO): THTTPRIO;
+var
+  RIO: THTTPRIO;
+begin
+  Result:= NIL;
+  if (Addr = '') then begin
+    if UseWSDL then
+      Addr:= defWSDL
+    else
+      Addr:= defURL;
+  end;
+  if HTTPRIO = NIL then
+    RIO:= THTTPRIO.Create(NIL)
+  else
+    RIO:= HTTPRIO;
+  try
+    //Result := (RIO as IVCLScanner);
+      Result:= (RIO);
+    if UseWSDL then begin
+      RIO.WSDLLocation := Addr;
+      RIO.Service:= defSvc;
+      RIO.Port:= defPrt;
+      //rio.classtype
+    end else
+      RIO.URL:= Addr;
+  finally
+    if (Result = NIL) and (HTTPRIO = NIL) then
+      //RIO.Free;
+  end;
+end;
+
+
+begin
+   Writeln((GetWSObj(true, '',NIL).WSDLLocation));
+
+   mi:= GetDefaultStreamLoader;
+   mm:= TMemoryStream.Create;
+   mi.Load(defWSDL, mm);
+   //mi.Load(ExePath+'maxbox3.exe', mm);
+   //Writeln(mi.GetUsername)
+   mm.SaveToFile(Exepath+'myxmlws.xml')
+   //mm.saveToFile(Exepath+'maxcopy4.exe')
+   mm.Free;
+   ExecuteShell(ExePath+'maxbox3.exe',ExePath+'myxmlws.xml');
+  //Application.MessageBox(StrSomethingWentWrong,StrSendingReportFaile,0);
+End.
+
+
+-------------------------------------------------
+ // Call a Web Service sequence
+      // http://milo2/scripts/vclscannerserver.exe/soap/IVCLScanner
+      WS:= HTTPRIO1 as IVCLScanner;
+      WS.PostData(reFinalResults.Text,CRC);
+      //WS:= HTTPRIO1 as IVCLScanner;
+      
+      WS: IVCLScanner;
+begin
+  CRC:= UpdateCrc32($FFFFFFFF,PChar(reFinalResults.Text),
+                                    Length(reFinalResults.Text));
+

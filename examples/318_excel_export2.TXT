@@ -1,0 +1,1236 @@
+PROGRAM Excel_maXcel_Export2;
+
+//http://regexpstudio.com/tregexpr/help/article_mrdecorator.html
+//First contribution 2004 and then EKON 16 2012! ex. 310 of maXbox, loc's= 232
+//selftest functions of cutils alias cfundamentutils, cfileutils, cdatetime, ctimers!
+//dynamic array paras & databuilder
+
+const
+  xlWBATWorksheet = -4167;
+
+var 
+  chset, cset1, cset2: Charset;
+  S: AnsiString;
+  A: TDateTime;
+  
+type TMSheet = array of array of string;
+  
+  
+function RefToCell(ARow, ACol: Integer): string;
+begin
+  Result:= Chr(Ord('A')+ ACol-1)+IntToStr(ARow);
+end;
+
+procedure SetArrayLength2String(arr: array of array of string; asize1, asize2: integer);
+var i: integer;
+begin
+   for i:= 0 to asize1 do
+     SetArrayLength(arr[i], asize2);
+end;    
+
+procedure SetArrayLength2Integer(arr: array of array of integer; asize1, asize2: integer);
+var i: integer;
+begin
+   for i:= 0 to asize1 do
+     SetArrayLength(arr[i], asize2);
+end;    
+
+
+function SaveAsExcelFile2(AGrid: TStringGrid; ASheetName, AFileName: string): Boolean;
+var
+  GridPrevFile: string;
+  XLApp, Sheet{, aData}: OLEVariant;
+  adata2: array of array of string;
+  i, j: Integer;
+begin
+  // Prepare Data
+  //aData := VarArrayCreate([1, AGrid.RowCount, 1, AGrid.ColCount], varVariant);
+   SetArrayLength(adata2,AGrid.rowCount+2)
+   //for i:= 0 to AGrid.rowCount do
+     //SetArrayLength(adata2[i],AGrid.colCount+2);
+      SetArrayLength2string(adata2, AGrid.rowcount, AGrid.colCount+2);
+     //writeln(inttostr(agrid.colcount)+ '  '+inttostr(agrid.rowcount));  debug
+  for i:= 0 to AGrid.ColCount - 1 do         //temp layer
+    for j:= 0 to AGrid.RowCount - 1 do 
+        aData2[i+1][j+1]:= AGrid.Cells[i, j];
+         
+  // Create Excel-OLE Object
+  Result:= False;
+  XLApp:= CreateOleObject('Excel.Application');
+  try
+    // Hide Excel
+    XLApp.Visible:= true;//False;
+    // Add new Workbook
+    XLApp.Workbooks.Add(xlWBatWorkSheet);
+    Sheet:= XLApp.Workbooks[1].WorkSheets[1];
+    Sheet.Name := ASheetName;
+    // Fill up the sheet
+    //Sheet.Range[RefToCell(1, 1), RefToCell(AGrid.RowCount,
+      //AGrid.ColCount)].Value:= aData2;
+  for i:= 0 to AGrid.ColCount do
+    for j:= 0 to AGrid.RowCount do 
+       XLApp.Cells[i+1,j+1]:= adata2[i][j];
+    // Save Excel Worksheet
+    try
+      XLApp.Workbooks[1].SaveAs(AFileName);
+      Result:= True;
+    except
+      msg('maxcel export error'); // Error ?
+    end;
+  finally
+    // Quit Excel
+    if not VarIsEmpty(XLApp) then begin
+      XLApp.DisplayAlerts:= False;
+      XLApp.Quit;
+      XLAPP:= Unassigned;
+      Sheet:= Unassigned;
+    end;
+  end;
+end;
+
+
+function SaveAsExcelFileDirect(AGrid: TStringGrid; aSheetName, aFileName: string): Boolean;
+var
+  XLApp, Sheet: OLEVariant;
+  i, j: Integer;
+begin
+  // Create Excel-OLE Object
+  Result:= False;
+  XLApp:= CreateOleObject('Excel.Application');
+  try
+    // Hide or show Excel
+    XLApp.Visible:= true;
+    // Add new Workbook
+    XLApp.Workbooks.Add(xlWBatWorkSheet);
+    Sheet:= XLApp.Workbooks[1].WorkSheets[1];
+    Sheet.Name:= aSheetName;
+  for i:= 0 to AGrid.ColCount -1 do
+    for j:= 0 to AGrid.RowCount -1 do 
+       XLApp.Cells[i+2,j+1]:= agrid.cells[i,j]; //direct fill
+    try  // Save Worksheet
+      XLApp.Workbooks[1].SaveAs(aFileName);
+      Result:= True;
+    except
+      Msg('maxcel export error'); // Error ?
+    end;
+  finally   // Quit Excel
+    if not VarIsEmpty(XLApp) then begin
+      XLApp.DisplayAlerts:= False;
+      XLApp.Quit;
+      XLAPP:= Unassigned;
+      Sheet:= Unassigned;
+    end;
+  end;
+end;
+
+procedure setArrayDataBuilder;
+var
+  myst: TStringGrid;
+  k,t: integer;
+begin
+  myst:= TStringGrid.create(self)
+  myst.rowcount:= 11;
+  myst.colcount:= 11;
+  for k:= 1 to 40 do begin     //frame numbers
+     myst.Cells[k ,0]:= inttoStr(k);
+     myst.Cells[0,(k div 2)]:= inttoStr(k+1);   
+  end;  
+  for k:= 1 to myst.ColCount - 1 do
+    for t:= 1 to myst.RowCount - 1 do
+      myst.Cells[k ,t]:= inttoStr(t*k);    //one to one
+   
+    (*for i:= 0 to AGrid.ColCount - 1 do
+      for j:= 0 to AGrid.RowCount - 1 do begin
+        write(agrid.cells[i,j]+ '   ');
+        if j= agrid.rowcount-1 then
+        writeln('');
+        aData2[j+1][i+1]:= (AGrid.Cells[i, j]);
+      end; *)
+       
+  for k:= 0 to myst.ColCount - 1 do
+    for t:= 0 to myst.RowCount - 1 do begin
+     write(myst.cells[k,t]+ '   ');
+        if t= myst.rowcount-1 then
+        writeln('');
+    end;  
+ 
+  if SaveAsExcelFile2(myst, 'maxceltestmap',Exepath+'maxceltest2.xls')
+              then msg('maxcel export success');
+
+  if SaveAsExcelFileDirect(myst, 'maxceltestmap',Exepath+'maxceltest3.xls')
+              then msg('maxcel export success');
+  myst.Free;
+end; 
+  
+
+
+BEGIN  //Main
+//<Executable statements>
+  
+  ShowMessage(ReplaceRegExpr('World','Hello, EKON TRex maXcel Tester World!', 'Earth',true));
+  
+  setArrayDataBuilder;
+  
+  // test routines with assert or assert2
+  SelftestPEM;
+  SelfTestCFundamentUtils;
+  SelfTestCFileUtils;
+  SelfTestCDateTime;
+  SelfTestCTimer;
+  SelfTestCRandom;
+  
+  Writeln(' 6 Units Tested with success ')
+  ShowMessageBig(' 6 Units Tested with success!');
+           
+  Assert2(FilePath('C', '..\X\Y', 'A\B', '\') = 'A\X\Y\C', 'FilePath');
+  Assert2(PathCanonical('\A\B\..\C\D\..\..\..\..\', '\') = '\', 'PathCanonical');
+  Assert2(UnixPathToWinPath('/c/d.f') = '\c\d.f', 'UnixPathToWinPath');
+  Assert2(WinPathToUnixPath('\c\d.f') = '/c/d.f', 'WinPathToUnixPath');
+  
+  A:= EncodeDateTime(2001, 09, 02, 12, 11, 10, 0);
+  Assert2(Month(A) = 9, 'EncodeDateTime');
+  S:= GMTTimeToRFC1123TimeA(A, True);
+  Assert2(S = '12:11:10 GMT','GMT');
+  S:= GMTDateTimeToRFC1123DateTimeA(A, True);
+ 
+  Assert2(S = 'Sun, 02 Sep 2001 12:11:10 GMT', 'GMTDateTimeToRFC1123DateTime');
+  Assert2(TickDeltaW($FFFFFFF6, 0) = 10,'TrickDelta');
+  Assert2(CPUClockFrequency > 0,'RTC Prepare');
+  Assert2(Length(RandomPassword(0, 0, True, True, True)) = 0,'random passwd');
+  Assert2(Length(RandomPassword(1, 1, True, True, True)) = 1,'random passwd');
+ 
+  CompareDateTime(DateOf(Now),DateOf(Now)+1)
+  chset:= ['M','A','X','B','O','X','4']
+  //'abcdefghijklmnopqrstuvwxyz0123456789+/'];
+  writeln(intToStr(cCharCount(chset)));
+  
+  cset1:= ['M','A','X','B','O','X'];
+  cset2:= ['M','A','X','S','I','X'];
+  Union(cset1, cset2); 
+  Difference(cset1,cset2); //overload;
+  Intersection(cset1,cset2); //overload;
+  writeln(createClassID);
+  writeln(floattostr(eval('3 * 3 + ln(3)')))
+  printF('sin  test in RAD %.18f',[sin((3))]); 
+  printF('sinj test in RAD %.18f',[sinj((3))]); 
+  printF('sin  test in GRAD %.18f',[sin(gradtorad(60))]); 
+  printF('sinj test in GRAD %.18f',[sinj(gradtorad(60))]); 
+  printF('sin  test in DEG %.18f',[Sin(degtorad(60))]); 
+  printF('cos  test in DEG %.18f',[Cos(degtorad(60))]); 
+  //printF('cos  test in DEG %.18f',[Cos(degtorad(60))]); 
+  //sin(60)=0.866 --> arcsin(0.866)=59,99999999 
+  printF('ARCSIN test in DEG %.18f',[radtodeg(arcsin(Sin(degtorad(60))))]); 
+  printF('ARCSIN test in DEG %.18f',[radtodeg(arcsin(Sinj(degtorad(60))))]); 
+  printF('ARCSIN test in DEG %.18f',[radtodeg(stinvSin(Sinj(degtorad(60))))]); 
+  //CL.AddDelphiFunction('Function StInvSin( Y : Double) : Double');
+   printF('ARCCOS test in DEG %.18f',[radtodeg(arccos(Cos(degtorad(60))))]); 
+  //printF('sinj test in DEG %.18f',[sinj(degtorad(60))]); 
+  printF('sin test not %f',[sin(radtograd(60))]); 
+  
+//<Definitions>  
+  //hextobin
+END. 
+
+
+//**************************************** snippets ***********************
+function RefToCell(ARow, ACol: Integer): string;
+begin
+  Result := Chr(Ord('A') + ACol - 1) + IntToStr(ARow);
+end;
+
+function SaveAsExcelFile(AGrid: TStringGrid; ASheetName, AFileName: string): Boolean;
+const
+  xlWBATWorksheet = -4167;
+var
+  Row, Col: Integer;
+  GridPrevFile: string;
+  XLApp, Sheet, Data: OLEVariant;
+  i, j: Integer;
+begin
+  // Prepare Data
+  Data := VarArrayCreate([1, AGrid.RowCount, 1, AGrid.ColCount], varVariant);
+  for i := 0 to AGrid.ColCount - 1 do
+    for j := 0 to AGrid.RowCount - 1 do
+      Data[j + 1, i + 1] := AGrid.Cells[i, j];
+  // Create Excel-OLE Object
+  Result := False;
+  XLApp := CreateOleObject('Excel.Application');
+  try
+    // Hide Excel
+    XLApp.Visible := False;
+    // Add new Workbook
+    XLApp.Workbooks.Add(xlWBatWorkSheet);
+    Sheet := XLApp.Workbooks[1].WorkSheets[1];
+    Sheet.Name := ASheetName;
+    // Fill up the sheet
+    XLApp.sheet.cells[2,2]:= 'thisis5';
+    //Sheet.Range[RefToCell(1, 1), RefToCell(AGrid.RowCount,
+      //AGrid.ColCount)].Value := Data;
+    // Save Excel Worksheet
+    try
+      XLApp.Workbooks[1].SaveAs(AFileName);
+      Result := True;
+    except
+      // Error ?
+    end;
+  finally
+    // Quit Excel
+    if not VarIsEmpty(XLApp) then
+    begin
+      XLApp.DisplayAlerts := False;
+      XLApp.Quit;
+      XLAPP := Unassigned;
+      Sheet := Unassigned;
+    end;
+  end;
+end;
+
+// Example:
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  if SaveAsExcelFile(stringGrid1, 'My Stringgrid Data', 'c:\MyExcelFile.xls') then
+    ShowMessage('StringGrid saved!');
+end;
+
+
+
+{**************************************************************}
+{2. Without OLE }
+
+procedure XlsWriteCellLabel(XlsStream: TStream; const ACol, ARow: Word;
+  const AValue: string);
+var
+  L: Word;
+const
+  //{$J+}
+  CXlsLabel: array[0..5] of Word = ($204, 0, 0, 0, 0, 0);
+  //{$J-}
+begin
+  L := Length(AValue);
+  CXlsLabel[1] := 8 + L;
+  CXlsLabel[2] := ARow;
+  CXlsLabel[3] := ACol;
+  CXlsLabel[5] := L;
+  XlsStream.WriteBuffer(CXlsLabel, SizeOf(CXlsLabel));
+  XlsStream.WriteBuffer(Pointer(AValue)^, L);
+end;
+
+
+function SaveAsExcelFile(AGrid: TStringGrid; AFileName: string): Boolean;
+const
+  //{$J+} CXlsBof: array[0..5] of Word = ($809, 8, 00, $10, 0, 0); {$J-}
+  CXlsEof: array[0..1] of Word = ($0A, 00);
+var
+  FStream: TFileStream;
+  I, J: Integer;
+begin
+  Result := False;
+  FStream := TFileStream.Create(PChar(AFileName), fmCreate or fmOpenWrite);
+  try
+    CXlsBof[4] := 0;
+    FStream.WriteBuffer(CXlsBof, SizeOf(CXlsBof));
+    for i := 0 to AGrid.ColCount - 1 do
+      for j := 0 to AGrid.RowCount - 1 do
+        XlsWriteCellLabel(FStream, I, J, AGrid.cells[i, j]);
+    FStream.WriteBuffer(CXlsEof, SizeOf(CXlsEof));
+    Result := True;
+  finally
+    FStream.Free;
+  end;
+end;
+
+// Example:
+
+procedure TForm1.Button2Click(Sender: TObject);
+begin
+  if SaveAsExcelFile(StringGrid1, 'c:\MyExcelFile.xls') then
+    ShowMessage('StringGrid saved!');
+end;
+
+{**************************************************************}
+{3. Code by Reinhard Schatzl }
+
+uses
+  ComObj;
+
+// Hilfsfunktion für StringGridToExcelSheet
+// Helper function for StringGridToExcelSheet
+function RefToCell(RowID, ColID: Integer): string;
+var
+  ACount, APos: Integer;
+begin
+  ACount := ColID div 26;
+  APos := ColID mod 26;
+  if APos = 0 then
+  begin
+    ACount := ACount - 1;
+    APos := 26;
+  end;
+
+  if ACount = 0 then
+    Result := Chr(Ord('A') + ColID - 1) + IntToStr(RowID);
+
+  if ACount = 1 then
+    Result := 'A' + Chr(Ord('A') + APos - 1) + IntToStr(RowID);
+
+  if ACount > 1 then
+    Result := Chr(Ord('A') + ACount - 1) + Chr(Ord('A') + APos - 1) + IntToStr(RowID);
+end;
+
+// StringGrid Inhalt in Excel exportieren
+// Export StringGrid contents to Excel
+function StringGridToExcelSheet(Grid: TStringGrid; SheetName, FileName: string;
+  ShowExcel: Boolean): Boolean;
+const
+  xlWBATWorksheet = -4167;
+var
+  SheetCount, SheetColCount, SheetRowCount, BookCount: Integer;
+  XLApp, Sheet, Data: OLEVariant;
+  I, J, N, M: Integer;
+  SaveFileName: string;
+begin
+  //notwendige Sheetanzahl feststellen
+  SheetCount := (Grid.ColCount div 256) + 1;
+  if Grid.ColCount mod 256 = 0 then
+    SheetCount := SheetCount - 1;
+  //notwendige Bookanzahl feststellen
+  BookCount := (Grid.RowCount div 65536) + 1;
+  if Grid.RowCount mod 65536 = 0 then
+    BookCount := BookCount - 1;
+
+  //Create Excel-OLE Object
+  Result := False;
+  XLApp  := CreateOleObject('Excel.Application');
+  try
+    //Excelsheet anzeigen
+    if ShowExcel = False then
+      XLApp.Visible := False
+    else
+      XLApp.Visible := True;
+    //Workbook hinzufügen
+    for M := 1 to BookCount do
+    begin
+      XLApp.Workbooks.Add(xlWBATWorksheet);
+      //Sheets anlegen
+      for N := 1 to SheetCount - 1 do
+      begin
+        XLApp.Worksheets.Add;
+      end;
+    end;
+    //Sheet ColAnzahl feststellen
+    if Grid.ColCount <= 256 then
+      SheetColCount := Grid.ColCount
+    else
+      SheetColCount := 256;
+    //Sheet RowAnzahl feststellen
+    if Grid.RowCount <= 65536 then
+      SheetRowCount := Grid.RowCount
+    else
+      SheetRowCount := 65536;
+
+    //Sheets befüllen
+    for M := 1 to BookCount do
+    begin
+      for N := 1 to SheetCount do
+      begin
+        //Daten aus Grid holen
+        Data := VarArrayCreate([1, Grid.RowCount, 1, SheetColCount], varVariant);
+        for I := 0 to SheetColCount - 1 do
+          for J := 0 to SheetRowCount - 1 do
+            if ((I + 256 * (N - 1)) <= Grid.ColCount) and
+              ((J + 65536 * (M - 1)) <= Grid.RowCount) then
+              Data[J + 1, I + 1] := Grid.Cells[I + 256 * (N - 1), J + 65536 * (M - 1)];
+        //-------------------------
+        XLApp.Worksheets[N].Select;
+        XLApp.Workbooks[M].Worksheets[N].Name := SheetName + IntToStr(N);
+        //Zellen als String Formatieren
+        XLApp.Workbooks[M].Worksheets[N].Range[RefToCell(1, 1),
+          RefToCell(SheetRowCount, SheetColCount)].Select;
+        XLApp.Selection.NumberFormat := '@';
+        XLApp.Workbooks[M].Worksheets[N].Range['A1'].Select;
+        //Daten dem Excelsheet übergeben
+        Sheet := XLApp.Workbooks[M].WorkSheets[N];
+        Sheet.Range[RefToCell(1, 1), RefToCell(SheetRowCount, SheetColCount)].Value :=
+          Data;
+      end;
+    end;
+    //Save Excel Worksheet
+    try
+      for M := 1 to BookCount do
+      begin
+        SaveFileName := Copy(FileName, 1,Pos('.', FileName) - 1) + IntToStr(M) +
+          Copy(FileName, Pos('.', FileName),
+          Length(FileName) - Pos('.', FileName) + 1);
+        XLApp.Workbooks[M].SaveAs(SaveFileName);
+      end;
+      Result := True;
+    except
+      // Error ?
+    end;
+  finally
+    //Excel Beenden
+    if (not VarIsEmpty(XLApp)) and (ShowExcel = False) then
+    begin
+      XLApp.DisplayAlerts := False;
+      XLApp.Quit;
+      XLAPP := Unassigned;
+      Sheet := Unassigned;
+    end;
+  end;
+end;
+
+//Example
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  //StringGrid inhalt in Excel exportieren
+  //Grid : stringGrid, SheetName : stringgrid Print, Pfad : c:\Test\ExcelFile.xls, Excelsheet anzeigen
+  StringGridToExcelSheet(StringGrid, 'Stringgrid Print', 'c:\Test\ExcelFile.xls', True);
+end;
+
+
+
+--------------------------------------------------------------}
+
+
+//{$IFDEF DEBUG}{$IFDEF SELFTEST}
+//{$ASSERTIONS ON}
+procedure SelfTest;    //cfileutils
+begin
+  // PathHasDriveLetter
+  Assert(PathHasDriveLetterA('A:'), 'PathHasDriveLetter');
+  Assert(PathHasDriveLetterA('a:'), 'PathHasDriveLetter');
+  Assert(PathHasDriveLetterA('A:\'), 'PathHasDriveLetter');
+  Assert(not PathHasDriveLetterA('a\'), 'PathHasDriveLetter');
+  Assert(not PathHasDriveLetterA('\a\'), 'PathHasDriveLetter');
+  Assert(not PathHasDriveLetterA('::'), 'PathHasDriveLetter');
+
+  Assert(PathHasDriveLetter('A:'), 'PathHasDriveLetter');
+  Assert(PathHasDriveLetter('a:'), 'PathHasDriveLetter');
+  Assert(PathHasDriveLetter('A:\'), 'PathHasDriveLetter');
+  Assert(not PathHasDriveLetter('a\'), 'PathHasDriveLetter');
+  Assert(not PathHasDriveLetter('\a\'), 'PathHasDriveLetter');
+  Assert(not PathHasDriveLetter('::'), 'PathHasDriveLetter');
+
+  // PathIsDriveLetter
+  Assert(PathIsDriveLetterA('B:'), 'PathIsDriveLetter');
+  Assert(not PathIsDriveLetterA('B:\'), 'PathIsDriveLetter');
+
+  Assert(PathIsDriveLetter('B:'), 'PathIsDriveLetter');
+  Assert(not PathIsDriveLetter('B:\'), 'PathIsDriveLetter');
+
+  // PathIsDriveRoot
+  Assert(PathIsDriveRootA('C:\'), 'PathIsDriveRoot');
+  Assert(not PathIsDriveRootA('C:'), 'PathIsDriveRoot');
+  Assert(not PathIsDriveRootA('C:\A'), 'PathIsDriveRoot');
+
+  Assert(PathIsDriveRoot('C:\'), 'PathIsDriveRoot');
+  Assert(not PathIsDriveRoot('C:'), 'PathIsDriveRoot');
+  Assert(not PathIsDriveRoot('C:\A'), 'PathIsDriveRoot');
+
+  // PathIsAbsolute
+  Assert(PathIsAbsoluteA('\'), 'PathIsAbsolute');
+  Assert(PathIsAbsoluteA('\C'), 'PathIsAbsolute');
+  Assert(PathIsAbsoluteA('\C\'), 'PathIsAbsolute');
+  Assert(PathIsAbsoluteA('C:\'), 'PathIsAbsolute');
+  Assert(PathIsAbsoluteA('C:'), 'PathIsAbsolute');
+  Assert(PathIsAbsoluteA('\C\..\'), 'PathIsAbsolute');
+  Assert(not PathIsAbsoluteA(''), 'PathIsAbsolute');
+  Assert(not PathIsAbsoluteA('C'), 'PathIsAbsolute');
+  Assert(not PathIsAbsoluteA('C\'), 'PathIsAbsolute');
+  Assert(not PathIsAbsoluteA('C\D'), 'PathIsAbsolute');
+  Assert(not PathIsAbsoluteA('C\D\'), 'PathIsAbsolute');
+  Assert(not PathIsAbsoluteA('..\'), 'PathIsAbsolute');
+
+  Assert(PathIsAbsolute('\'), 'PathIsAbsolute');
+  Assert(PathIsAbsolute('\C'), 'PathIsAbsolute');
+  Assert(PathIsAbsolute('\C\'), 'PathIsAbsolute');
+  Assert(PathIsAbsolute('C:\'), 'PathIsAbsolute');
+  Assert(PathIsAbsolute('C:'), 'PathIsAbsolute');
+  Assert(PathIsAbsolute('\C\..\'), 'PathIsAbsolute');
+  Assert(not PathIsAbsolute(''), 'PathIsAbsolute');
+  Assert(not PathIsAbsolute('C'), 'PathIsAbsolute');
+  Assert(not PathIsAbsolute('C\'), 'PathIsAbsolute');
+  Assert(not PathIsAbsolute('C\D'), 'PathIsAbsolute');
+  Assert(not PathIsAbsolute('C\D\'), 'PathIsAbsolute');
+  Assert(not PathIsAbsolute('..\'), 'PathIsAbsolute');
+
+  // PathIsDirectory
+  Assert(PathIsDirectoryA('\'), 'PathIsDirectory');
+  Assert(PathIsDirectoryA('\C\'), 'PathIsDirectory');
+  Assert(PathIsDirectoryA('C:'), 'PathIsDirectory');
+  Assert(PathIsDirectoryA('C:\'), 'PathIsDirectory');
+  Assert(PathIsDirectoryA('C:\D\'), 'PathIsDirectory');
+  Assert(not PathIsDirectoryA(''), 'PathIsDirectory');
+  Assert(not PathIsDirectoryA('D'), 'PathIsDirectory');
+  Assert(not PathIsDirectoryA('C\D'), 'PathIsDirectory');
+
+  Assert(PathIsDirectory('\'), 'PathIsDirectory');
+  Assert(PathIsDirectory('\C\'), 'PathIsDirectory');
+  Assert(PathIsDirectory('C:'), 'PathIsDirectory');
+  Assert(PathIsDirectory('C:\'), 'PathIsDirectory');
+  Assert(PathIsDirectory('C:\D\'), 'PathIsDirectory');
+  Assert(not PathIsDirectory(''), 'PathIsDirectory');
+  Assert(not PathIsDirectory('D'), 'PathIsDirectory');
+  Assert(not PathIsDirectory('C\D'), 'PathIsDirectory');
+
+  // PathInclSuffix
+  Assert(PathInclSuffixA('', '\') = '', 'PathInclSuffix');
+  Assert(PathInclSuffixA('C', '\') = 'C\', 'PathInclSuffix');
+  Assert(PathInclSuffixA('C\', '\') = 'C\', 'PathInclSuffix');
+  Assert(PathInclSuffixA('C\D', '\') = 'C\D\', 'PathInclSuffix');
+  Assert(PathInclSuffixA('C\D\', '\') = 'C\D\', 'PathInclSuffix');
+  Assert(PathInclSuffixA('C:', '\') = 'C:\', 'PathInclSuffix');
+  Assert(PathInclSuffixA('C:\', '\') = 'C:\', 'PathInclSuffix');
+
+  Assert(PathInclSuffix('', '\') = '', 'PathInclSuffix');
+  Assert(PathInclSuffix('C', '\') = 'C\', 'PathInclSuffix');
+  Assert(PathInclSuffix('C\', '\') = 'C\', 'PathInclSuffix');
+  Assert(PathInclSuffix('C\D', '\') = 'C\D\', 'PathInclSuffix');
+  Assert(PathInclSuffix('C\D\', '\') = 'C\D\', 'PathInclSuffix');
+  Assert(PathInclSuffix('C:', '\') = 'C:\', 'PathInclSuffix');
+  Assert(PathInclSuffix('C:\', '\') = 'C:\', 'PathInclSuffix');
+
+  // PathExclSuffix
+  Assert(PathExclSuffixA('', '\') = '', 'PathExclSuffix');
+  Assert(PathExclSuffixA('C', '\') = 'C', 'PathExclSuffix');
+  Assert(PathExclSuffixA('C\', '\') = 'C', 'PathExclSuffix');
+  Assert(PathExclSuffixA('C\D', '\') = 'C\D', 'PathExclSuffix');
+  Assert(PathExclSuffixA('C\D\', '\') = 'C\D', 'PathExclSuffix');
+  Assert(PathExclSuffixA('C:', '\') = 'C:', 'PathExclSuffix');
+  Assert(PathExclSuffixA('C:\', '\') = 'C:', 'PathExclSuffix');
+
+  Assert(PathExclSuffix('', '\') = '', 'PathExclSuffix');
+  Assert(PathExclSuffix('C', '\') = 'C', 'PathExclSuffix');
+  Assert(PathExclSuffix('C\', '\') = 'C', 'PathExclSuffix');
+  Assert(PathExclSuffix('C\D', '\') = 'C\D', 'PathExclSuffix');
+  Assert(PathExclSuffix('C\D\', '\') = 'C\D', 'PathExclSuffix');
+  Assert(PathExclSuffix('C:', '\') = 'C:', 'PathExclSuffix');
+  Assert(PathExclSuffix('C:\', '\') = 'C:', 'PathExclSuffix');
+
+  // PathCanonical
+  Assert(PathCanonical('', '\') = '', 'PathCanonical');
+  Assert(PathCanonical('.', '\') = '', 'PathCanonical');
+  Assert(PathCanonical('.\', '\') = '', 'PathCanonical');
+  Assert(PathCanonical('..\', '\') = '..\', 'PathCanonical');
+  Assert(PathCanonical('\..\', '\') = '\', 'PathCanonical');
+  Assert(PathCanonical('\X\..\..\', '\') = '\', 'PathCanonical');
+  Assert(PathCanonical('\..', '\') = '', 'PathCanonical');
+  Assert(PathCanonical('X', '\') = 'X', 'PathCanonical');
+  Assert(PathCanonical('\X', '\') = '\X', 'PathCanonical');
+  Assert(PathCanonical('X.', '\') = 'X', 'PathCanonical');
+  Assert(PathCanonical('.', '\') = '', 'PathCanonical');
+  Assert(PathCanonical('\X.', '\') = '\X', 'PathCanonical');
+  Assert(PathCanonical('\X.Y', '\') = '\X.Y', 'PathCanonical');
+  Assert(PathCanonical('\X.Y\', '\') = '\X.Y\', 'PathCanonical');
+  Assert(PathCanonical('\A\X..Y\', '\') = '\A\X..Y\', 'PathCanonical');
+  Assert(PathCanonical('\A\.Y\', '\') = '\A\.Y\', 'PathCanonical');
+  Assert(PathCanonical('\A\..Y\', '\') = '\A\..Y\', 'PathCanonical');
+  Assert(PathCanonical('\A\Y..\', '\') = '\A\Y..\', 'PathCanonical');
+  Assert(PathCanonical('\A\Y..', '\') = '\A\Y..', 'PathCanonical');
+  Assert(PathCanonical('X', '\') = 'X', 'PathCanonical');
+  Assert(PathCanonical('X\', '\') = 'X\', 'PathCanonical');
+  Assert(PathCanonical('X\Y\..', '\') = 'X', 'PathCanonical');
+  Assert(PathCanonical('X\Y\..\', '\') = 'X\', 'PathCanonical');
+  Assert(PathCanonical('\X\Y\..', '\') = '\X', 'PathCanonical');
+  Assert(PathCanonical('\X\Y\..\', '\') = '\X\', 'PathCanonical');
+  Assert(PathCanonical('\X\Y\..\..', '\') = '', 'PathCanonical');
+  Assert(PathCanonical('\X\Y\..\..\', '\') = '\', 'PathCanonical');
+  Assert(PathCanonical('\A\.\.\X\.\Y\..\.\..\.\', '\') = '\A\', 'PathCanonical');
+  Assert(PathCanonical('C:', '\') = 'C:', 'PathCanonical');
+  Assert(PathCanonical('C:\', '\') = 'C:\', 'PathCanonical');
+  Assert(PathCanonical('C:\A\..', '\') = 'C:', 'PathCanonical');
+  Assert(PathCanonical('C:\A\..\', '\') = 'C:\', 'PathCanonical');
+  Assert(PathCanonical('C:\..\', '\') = 'C:\', 'PathCanonical');
+  Assert(PathCanonical('C:\..', '\') = 'C:', 'PathCanonical');
+  Assert(PathCanonical('C:\A\..\..', '\') = 'C:', 'PathCanonical');
+  Assert(PathCanonical('C:\A\..\..\', '\') = 'C:\', 'PathCanonical');
+  Assert(PathCanonical('\A\B\..\C\D\..\', '\') = '\A\C\', 'PathCanonical');
+  Assert(PathCanonical('\A\B\..\C\D\..\..\', '\') = '\A\', 'PathCanonical');
+  Assert(PathCanonical('\A\B\..\C\D\..\..\..\', '\') = '\', 'PathCanonical');
+  Assert(PathCanonical('\A\B\..\C\D\..\..\..\..\', '\') = '\', 'PathCanonical');
+
+ (* Assert(PathExpandA('', '', '\') = '', 'PathExpand');
+  Assert(PathExpandA('', '\', '\') = '\', 'PathExpand');
+  Assert(PathExpandA('', '\C', '\') = '\C', 'PathExpand');
+  Assert(PathExpandA('', '\C\', '\') = '\C\', 'PathExpand');
+  Assert(PathExpandA('..\', '\C\', '\') = '\', 'PathExpand');
+  Assert(PathExpandA('..', '\C\', '\') = '', 'PathExpand');
+  Assert(PathExpandA('\..', '\C\', '\') = '', 'PathExpand');
+  Assert(PathExpandA('\..\', '\C\', '\') = '\', 'PathExpand');
+  Assert(PathExpandA('A', '..\', '\') = '..\A', 'PathExpand');
+  Assert(PathExpandA('..\', '..\', '\') = '..\..\', 'PathExpand');
+  Assert(PathExpandA('\', '', '\') = '\', 'PathExpand');
+  Assert(PathExpandA('\', '\C', '\') = '\', 'PathExpand');
+  Assert(PathExpandA('\A', '\C\', '\') = '\A', 'PathExpand');
+  Assert(PathExpandA('\A\', '\C\', '\') = '\A\', 'PathExpand');
+  Assert(PathExpandA('\A\B', '\C', '\') = '\A\B', 'PathExpand');
+  Assert(PathExpandA('A\B', '\C', '\') = '\C\A\B', 'PathExpand');
+  Assert(PathExpandA('A\B', '\C', '\') = '\C\A\B', 'PathExpand');
+  Assert(PathExpandA('A\B', '\C\', '\') = '\C\A\B', 'PathExpand');
+  Assert(PathExpandA('A\B', '\C\', '\') = '\C\A\B', 'PathExpand');
+  Assert(PathExpandA('A\B', 'C\D', '\') = 'C\D\A\B', 'PathExpand');
+  Assert(PathExpandA('..\A\B', 'C\D', '\') = 'C\A\B', 'PathExpand');
+  Assert(PathExpandA('..\A\B', '\C\D', '\') = '\C\A\B', 'PathExpand');
+  Assert(PathExpandA('..\..\A\B', 'C\D', '\') = 'A\B', 'PathExpand');
+  Assert(PathExpandA('..\..\A\B', '\C\D', '\') = '\A\B', 'PathExpand');
+  Assert(PathExpandA('..\..\..\A\B', '\C\D', '\') = '\A\B', 'PathExpand');
+  Assert(PathExpandA('\..\A\B', '\C\D', '\') = '\A\B', 'PathExpand');
+  Assert(PathExpandA('..\A\B', '\..\C\D', '\') = '\C\A\B', 'PathExpand');
+  Assert(PathExpandA('..\A\B', '..\C\D', '\') = '..\C\A\B', 'PathExpand');
+  Assert(PathExpandA('..\A\B', 'C:\C\D', '\') = 'C:\C\A\B', 'PathExpand');
+  Assert(PathExpandA('..\A\B\', 'C:\C\D', '\') = 'C:\C\A\B\', 'PathExpand');*)
+
+ (* Assert(FilePathA('C', '..\X\Y', 'A\B', '\') = 'A\X\Y\C', 'FilePath');
+  Assert(FilePathA('C', '\X\Y', 'A\B', '\') = '\X\Y\C', 'FilePath');
+  Assert(FilePathA('C', '', 'A\B', '\') = 'A\B\C', 'FilePath');
+  Assert(FilePathA('', '\X\Y', 'A\B', '\') = '', 'FilePath');
+  Assert(FilePathA('C', 'X\Y', 'A\B', '\') = 'A\B\X\Y\C', 'FilePath');
+  Assert(FilePathA('C', 'X\Y', '', '\') = 'X\Y\C', 'FilePath');*)
+
+  Assert(FilePath('C', '..\X\Y', 'A\B', '\') = 'A\X\Y\C', 'FilePath');
+  Assert(FilePath('C', '\X\Y', 'A\B', '\') = '\X\Y\C', 'FilePath');
+  Assert(FilePath('C', '', 'A\B', '\') = 'A\B\C', 'FilePath');
+  Assert(FilePath('', '\X\Y', 'A\B', '\') = '', 'FilePath');
+  Assert(FilePath('C', 'X\Y', 'A\B', '\') = 'A\B\X\Y\C', 'FilePath');
+  Assert(FilePath('C', 'X\Y', '', '\') = 'X\Y\C', 'FilePath');
+
+  Assert(DirectoryExpand('', '', '\') = '', 'DirectoryExpand');
+  Assert(DirectoryExpand('', '\X', '\') = '\X\', 'DirectoryExpand');
+  Assert(DirectoryExpand('\', '\X', '\') = '\', 'DirectoryExpand');
+  Assert(DirectoryExpand('\A', '\X', '\') = '\A\', 'DirectoryExpand');
+  Assert(DirectoryExpand('\A\', '\X', '\') = '\A\', 'DirectoryExpand');
+  Assert(DirectoryExpand('\A\B', '\X', '\') = '\A\B\', 'DirectoryExpand');
+  Assert(DirectoryExpand('A', '\X', '\') = '\X\A\', 'DirectoryExpand');
+  Assert(DirectoryExpand('A\', '\X', '\') = '\X\A\', 'DirectoryExpand');
+  Assert(DirectoryExpand('C:', '\X', '\') = 'C:\', 'DirectoryExpand');
+  Assert(DirectoryExpand('C:\', '\X', '\') = 'C:\', 'DirectoryExpand');
+
+  Assert(UnixPathToWinPath('/c/d.f') = '\c\d.f', 'UnixPathToWinPath');
+  Assert(WinPathToUnixPath('\c\d.f') = '/c/d.f', 'WinPathToUnixPath');
+end;
+//{$ENDIF}{$ENDIF}
+
+
+procedure SelfTest;       //cdatetime
+var Ye, Mo, Da         : Word;
+    Ho, Mi, Se, Ms     : Word;
+    Ye2, Mo2, Da2      : Word;
+    Ho2, Mi2, Se2, Ms2 : Word;
+    A, B               : TDateTime;
+    S                  : AnsiString;
+    T1                 : THPTimer;
+    E                  : Int64;
+    I                  : Integer;
+    F                  : LongWord;
+begin
+  Ho := 7;
+  Mi := 10;
+  Da := 8;
+  Ms := 3;
+  for Ye := 1999 to 2001 do
+    for Mo := 1 to 12 do
+      for Se := 0 to 59 do
+        begin
+          A := EncodeDateTime(Ye, Mo, Da, Ho, Mi, Se, Ms);
+          DecodeDateTime(A, Ye2, Mo2, Da2, Ho2, Mi2, Se2, Ms2);
+          Assert(Ye = Ye2, 'DecodeDate');
+          Assert(Mo = Mo2, 'DecodeDate');
+          Assert(Da = Da2, 'DecodeDate');
+          Assert(Ho = Ho2, 'DecodeDate');
+          Assert(Mi = Mi2, 'DecodeDate');
+          Assert(Se = Se2, 'DecodeDate');
+          Assert(Ms = Ms2, 'DecodeDate');
+          Assert(Year(A) = Ye, 'Year');
+          Assert(Month(A) = Mo, 'Month');
+          Assert(Day(A) = Da, 'Day');
+          Assert(Hour(A) = Ho, 'Hour');
+          Assert(Minute(A) = Mi, 'Minute');
+          Assert(Second(A) = Se, 'Second');
+          Assert(Millisecond(A) = Ms, 'Millisecond');
+        end;
+  A := EncodeDateTime(2002, 05, 31, 07, 04, 01, 02);
+  Assert(IsEqual(A, 2002, 05, 31), 'IsEqual');
+  Assert(IsEqual(A, 07, 04, 01, 02), 'IsEqual');
+  Assert(IsFriday(A), 'IsFriday');
+  Assert(not IsMonday(A), 'IsMonday');
+  A := AddWeeks(A, 2);
+  Assert(IsEqual(A, 2002, 06, 14), 'AddWeeks');
+  A := AddHours(A, 2);
+  Assert(IsEqual(A, 09, 04, 01, 02), 'AddHours');
+  A := EncodeDateTime(2004, 03, 01, 0, 0, 0, 0);
+  Assert(DayOfYear(A) = 61, 'DayOfYear');
+  Assert(DaysInMonth(2004, 02) = 29, 'DaysInMonth');
+  Assert(DaysInMonth(2005, 02) = 28, 'DaysInMonth');
+  Assert(DaysInMonth(2001, 01) = 31, 'DaysInMonth');
+  Assert(DaysInYear(2000) = 366, 'DaysInYear');
+  Assert(DaysInYear(2004) = 366, 'DaysInYear');
+  Assert(DaysInYear(2006) = 365, 'DaysInYear');
+  A := EncodeDateTime(2001, 09, 02, 12, 11, 10, 0);
+  Assert(Month(A) = 9, 'EncodeDateTime');
+  S := GMTTimeToRFC1123TimeA(A, True);
+  Assert(S = '12:11:10 GMT');
+  S := GMTDateTimeToRFC1123DateTimeA(A, True);
+  Assert(S = 'Sun, 02 Sep 2001 12:11:10 GMT', 'GMTDateTimeToRFC1123DateTime');
+  for Ye := 1999 to 2004 do
+    for Mo := 1 to 2 do
+      for Da := 1 to 2 do
+        for Ho := 0 to 23 do
+          begin
+            A := EncodeDateTime(Ye, Mo, Da, Ho, 11, 10, 0);
+            S := GMTDateTimeToRFC1123DateTimeA(A, True);
+            B := RFCDateTimeToGMTDateTime(S);
+            Assert(IsEqual(A, B), 'RFCDateTimeToGMTDateTime');
+          end;
+
+  Assert(RFCMonthNamesA[1] = 'Jan', 'RFCMonthNames');
+  Assert(RFCMonthNamesA[12] = 'Dec', 'RFCMonthNames');
+  Assert(RFC850DayNamesA[1] = 'Sunday', 'RFC850DayNames');
+  Assert(RFCMonthA('Jan') = 1, 'RFCMonth');
+  Assert(RFCMonthA('Nov') = 11, 'RFCMonth');
+  Assert(EnglishLongMonthNamesA[12] = 'December', 'EnglishLongMonthNames');
+  Assert(RFCTimeZoneToGMTBias('GMT') = 0, 'RFCTimeZoneToGMTBias');
+  Assert(RFCTimeZoneToGMTBias('est') = -300, 'RFCTimeZoneToGMTBias');
+
+  Assert(TickDelta(9, 9) = 0, 'TickDelta');
+  Assert(TickDelta(100, 120) = 20, 'TickDelta');
+  Assert(TickDelta(9, 8) = -1, 'TickDelta');
+  Assert(TickDelta(MaxLongWord, 10) = 11, 'TickDelta');
+  Assert(GetHighPrecisionFrequency >= 1000, 'GetHighPrecisionFrequency');
+  for I := 1 to 10 do
+    begin
+      StartTimer(T1);
+      WaitMicroseconds(1000 * I);
+      E := MicrosecondsElapsed(T1, True);
+
+      if not ((E >= 1000 * I) and (E <= 1000 * I * 2 + 15000)) then
+        begin
+          // ?? Debug why this fails every once in a while
+          Writeln('DEBUG this: ', 1000 * I, ' ', E, ' ', 1000 * I * 2 + 15000, ' ', T1);
+          Readln;
+        end;
+
+      Assert((E >= 1000 * I) and (E <= 1000 * I * 2 + 15000), 'MicrosecondsElapsed');
+    end;
+  I := GMTBias;
+  Assert((I <= 12 * 60) and (I >= -12 * 60), 'GMTBias');
+  A := EncodeDateTime(2002, 05, 31, 07, 04, 01, 02);
+  B := UnixTimeToDateTime(DateTimeToUnixTime(A));
+  Assert(DiffSeconds(A, B) = 0, 'DateTimeToUnixTime');
+  I := 0;
+  F := GetTick;
+  repeat
+    WaitMicroseconds(1000);
+    I := I + 1;
+  until (GetTick <> F) or (I > 100);
+  Assert(GetTick <> F, 'GetTick');
+  for I := 0 to 59 do
+    begin
+      Assert(DiffMinutes(EncodeDateTime(2006, 1, 1, 6, I, 0, 0), EncodeDateTime(2006, 1, 1, 7, 30, 0, 0)) = 90 - I, 'DiffMinutes');
+      Assert(DiffMinutes(EncodeDateTime(2006, 1, 1, 7, 30, 0, 0), EncodeDateTime(2006, 1, 1, 6, I, 0, 0)) = -(90 - I), 'DiffMinutes');
+      Assert(DiffSeconds(EncodeDateTime(2006, 1, 1, 6, I, 0, 0), EncodeDateTime(2006, 1, 1, 7, 30, 0, 0)) = (90 - I) * 60, 'DiffSeconds');
+      Assert(DiffMilliseconds(EncodeDateTime(2006, 1, 1, 6, I, 0, 0), EncodeDateTime(2006, 1, 1, 7, 30, 0, I)) = (90 - I) * 60 * 1000 + I, 'DiffMilliseconds');
+      Assert(DiffMilliseconds(EncodeDateTime(2006, 1, 1, 7, 30, 0, 0), EncodeDateTime(2006, 1, 1, 6, I, 0, 0)) = -((90 - I) * 60 * 1000), 'DiffMilliseconds');
+      Assert(DiffMinutes(EncodeDateTime(2001, 1, 1, 0, 0, 0, 0), EncodeDateTime(2004, 1, 1, 0, I, 0, 0)) = 3 * 365 * 24 * 60 + I, 'DiffMinutes');
+      Assert(DiffSeconds(EncodeDateTime(2001, 1, 1, 0, 0, 0, 0), EncodeDateTime(2004, 1, 1, 0, 0, I, 0)) = 3 * 365 * 24 * 60 * 60 + I, 'DiffSeconds');
+    end;
+  for I := 0 to 999 do
+    Assert(DiffMilliseconds(EncodeDateTime(2001, 1, 1, 0, 0, 0, 0), EncodeDateTime(2001, 1, 22, 0, 0, 0, I)) = 21 * 24 * 60 * 60 * 1000 + I, 'DiffMilliseconds');
+  Assert(DiffDays(EncodeDateTime(2006, 1, 1, 0, 0, 0, 0), EncodeDateTime(2006, 1, 1, 23, 59, 59, 999)) = 0, 'DiffDays');
+  Assert(DiffDays(EncodeDateTime(2006, 1, 1, 0, 0, 0, 0), EncodeDateTime(2006, 1, 2, 0, 00, 0, 0)) = 1, 'DiffDays');
+  Assert(DiffDays(EncodeDateTime(2006, 1, 2, 0, 0, 0, 0), EncodeDateTime(2006, 1, 1, 0, 00, 0, 0)) = -1, 'DiffDays');
+  Assert(NextWorkDay(EncodeDate(2006, 1, 11)) = EncodeDate(2006, 1, 12), 'NextWorkDay');
+  Assert(NextWorkDay(EncodeDate(2006, 1, 12)) = EncodeDate(2006, 1, 13), 'NextWorkDay');
+  Assert(NextWorkDay(EncodeDate(2006, 1, 13)) = EncodeDate(2006, 1, 16), 'NextWorkDay');
+  Assert(NextWorkDay(EncodeDate(2006, 1, 16)) = EncodeDate(2006, 1, 17), 'NextWorkDay');
+end;
+
+
+Note, that You can easely extract any part of URL (see AFlags parameter).
+
+
+Fundamental Conclusion
+
+"Free Your mind" ((c) The Matrix ;)) and You'll find many other tasks there regular expressions can save You incredible part of stupid coding work !
+
+
+//    MinI(const A, B: Integer): Integer;   {$IFDEF UseInline}inline;{$ENDIF}
+//function  MaxI(const A, B: Integer): Integer;   {$IFDEF UseInline}inline;{$ENDIF}
+//function  MinC(const A, B: Cardinal): Cardinal; {$IFDEF UseInline}inline;{$ENDIF}
+//function  MaxC(const A, B: Cardinal): Cardinal; {$IFDEF UseInline}inline;{$ENDIF}
+
+{ Clip returns Value if in Low..High range, otherwise Low or High              }
+//function  SumClipI(const A, I: Integer): Integer;
+//function  SumClipC(const A: Cardinal; const I: Integer): Cardinal;
+
+{ InXXXRange returns True if A in range of type XXX                            }
+  //InByteRange(const A: Int64): Boolean;     {$IFDEF UseInline}inline;{$ENDIF}
+//function  InWordRange(const A: Int64): Boolean;     {$IFDEF UseInline}inline;{$ENDIF}
+//function  InLongWordRange(const A: Int64): Boolean; {$IFDEF UseInline}inline;{$ENDIF}
+//function  InShortIntRange(const A: Int64): Boolean; {$IFDEF UseInline}inline;{$ENDIF}
+//function  InSmallIntRange(const A: Int64): Boolean; {$IFDEF UseInline}inline;{$ENDIF}
+//function  InLongIntRange(const A: Int64): Boolean;  {$IFDEF UseInline}inline;{$ENDIF}
+
+
+
+{                                                                              }
+{ Boolean types                                                                }
+{                                                                              }
+{   Boolean    -        -                                                      }
+{   ByteBool   Bool8    8 bits                                                 }
+{   WordBool   Bool16   16 bits                                                }
+{   LongBool   Bool32   32 bits                                                }
+{                                                                              }
+{                                                                              }
+{ Comparison                                                                   }
+{                                                                              }
+
+{                                                                              }
+{ Real types                                                                   }
+{                                                                              }
+{   Floating point                                                             }
+{     Single    32 bits  7-8 significant digits                                }
+{     Double    64 bits  15-16 significant digits                              }
+{     Extended  80 bits  19-20 significant digits (mapped to Double in .NET)   }
+{                                                                              }
+{   Fixed point                                                                }
+{     Currency  64 bits  19-20 significant digits, 4 after the decimal point.  }
+{                                                                              }
+
+{ Min returns smallest of A and B                                              }
+{ Max returns greatest of A and B                                              }
+{ Clip returns Value if in Low..High range, otherwise Low or High              }
+function  MinF(const A, B: Float): Float; {$IFDEF UseInline}inline;{$ENDIF}
+function  MaxF(const A, B: Float): Float; {$IFDEF UseInline}inline;{$ENDIF}
+function  ClipF(const Value: Float; const Low, High: Float): Float;
+
+{ InXXXRange returns True if A in range of type XXX                            }
+function  InSingleRange(const A: Float): Boolean; {$IFDEF UseInline}inline;{$ENDIF}
+function  InDoubleRange(const A: Float): Boolean; {$IFDEF UseInline}inline;{$ENDIF}
+{$IFNDEF CLR}
+function  InCurrencyRange(const A: Float): Boolean; overload;
+function  InCurrencyRange(const A: Int64): Boolean; overload;
+{$ENDIF}
+
+{ FloatExponent returns the exponent component of an Extended value            }
+function  FloatExponentBase2(const A: Extended; var Exponent: Integer): Boolean;
+function  FloatExponentBase10(const A: Extended; var Exponent: Integer): Boolean;
+
+{ FloatIsInfinity is True if A is a positive or negative infinity.             }
+{ FloatIsNaN is True if A is Not-a-Number.                                     }  
+  //FloatIsInfinity(const A: Extended): Boolean;
+   //FloatIsNaN(const A: Extended): Boolean;
+
+
+
+  SingleCompareDelta   = 1.0E-34;
+  DoubleCompareDelta   = 1.0E-280;
+  {$IFDEF CLR}
+  ExtendedCompareDelta = DoubleCompareDelta;
+  {$ELSE}
+  ExtendedCompareDelta = 1.0E-4400;
+  {$ENDIF}   
+
+  // Default CompareDelta is set to SingleCompareDelta. This allows any type
+  // of floating-point value to be compared with any other.
+//  DefaultCompareDelta = SingleCompareDelta;
+
+
+
+{                                                                              }
+{ Bit functions                                                                }
+{                                                                              }
+  //ClearBit(const Value, BitIndex: LongWord): LongWord;
+  //SetBit(const Value, BitIndex: LongWord): LongWord;
+  //IsBitSet(const Value, BitIndex: LongWord): Boolean;
+  //ToggleBit(const Value, BitIndex: LongWord): LongWord;
+  //IsHighBitSet(const Value: LongWord): Boolean;
+
+  SetBitScanForward(const Value: LongWord): Integer; overload;
+  SetBitScanForward(const Value, BitIndex: LongWord): Integer; overload;
+  SetBitScanReverse(const Value: LongWord): Integer; overload;
+  SetBitScanReverse(const Value, BitIndex: LongWord): Integer; overload;
+  ClearBitScanForward(const Value: LongWord): Integer; overload;
+  ClearBitScanForward(const Value, BitIndex: LongWord): Integer; overload;
+  ClearBitScanReverse(const Value: LongWord): Integer; overload;
+  ClearBitScanReverse(const Value, BitIndex: LongWord): Integer; overload;
+
+  ReverseBits(const Value: LongWord): LongWord; overload;
+  ReverseBits(const Value: LongWord; const BitCount: Integer): LongWord; overload;
+  SwapEndian(const Value: LongWord): LongWord;
+
+  RotateLeftBits16(const Value: Word; const Bits: Byte): Word;
+  RotateLeftBits32(const Value: LongWord; const Bits: Byte): LongWord;
+  RotateRightBits16(const Value: Word; const Bits: Byte): Word;
+  RotateRightBits32(const Value: LongWord; const Bits: Byte): LongWord;
+
+  BitCount(const Value: LongWord): LongWord;
+  IsPowerOfTwo(const Value: LongWord): Boolean;
+
+  LowBitMask(const HighBitIndex: LongWord): LongWord;
+  HighBitMask(const LowBitIndex: LongWord): LongWord;
+  RangeBitMask(const LowBitIndex, HighBitIndex: LongWord): LongWord;
+
+  SetBitRange(const Value: LongWord;
+          const LowBitIndex, HighBitIndex: LongWord): LongWord;
+  ClearBitRange(const Value: LongWord;
+          const LowBitIndex, HighBitIndex: LongWord): LongWord;
+  ToggleBitRange(const Value: LongWord;
+          const LowBitIndex, HighBitIndex: LongWord): LongWord;
+  IsBitRangeSet(const Value: LongWord;
+          const LowBitIndex, HighBitIndex: LongWord): Boolean;
+  IsBitRangeClear(const Value: LongWord;
+          const LowBitIndex, HighBitIndex: LongWord): Boolean;   
+
+
+ //compare
+
+ //csgn
+ //ComplementChar(var C: CharSet; const Ch: AnsiChar);
+ //ClearCharSet(var C: CharSet);
+ //FillCharSet(var C: CharSet);
+ //ComplementCharSet(var C: CharSet);
+ //AssignCharSet(var DestSet: CharSet; const SourceSet: CharSet); overload;
+ //Union(var DestSet: CharSet; const SourceSet: CharSet); overload;
+ //Difference(var DestSet: CharSet; const SourceSet: CharSet); overload;
+ //Intersection(var DestSet: CharSet; const SourceSet: CharSet); overload;
+ //XORCharSet(var DestSet: CharSet; const SourceSet: CharSet);
+  //IsSubSet(const A, B: CharSet): Boolean;
+  //IsEqual(const A, B: CharSet): Boolean; overload;
+  //IsEmpty(const C: CharSet): Boolean;
+  //IsComplete(const C: CharSet): Boolean;
+  //CharCount(const C: CharSet): Integer; overload;
+ //ConvertCaseInsensitive(var C: CharSet);
+  //CaseInsensitiveCharSet(const C: CharSet): CharSet;
+
+{                                                                              }
+{ Range functions                                                              }
+{                                                                              }
+{   RangeLength      Length of a range                                         }
+{   RangeAdjacent    True if ranges are adjacent                               }
+{   RangeOverlap     True if ranges overlap                                    }
+{   RangeHasElement  True if element is in range                               }
+{                                                                              }
+function  IntRangeLength(const Low, High: Integer): Int64;
+function  IntRangeAdjacent(const Low1, High1, Low2, High2: Integer): Boolean;
+function  IntRangeOverlap(const Low1, High1, Low2, High2: Integer): Boolean;
+function  IntRangeHasElement(const Low, High, Element: Integer): Boolean;
+
+function  IntRangeIncludeElement(var Low, High: Integer;
+          const Element: Integer): Boolean;
+function  IntRangeIncludeElementRange(var Low, High: Integer;
+          const LowElement, HighElement: Integer): Boolean;
+
+function  CardRangeLength(const Low, High: Cardinal): Int64;
+function  CardRangeAdjacent(const Low1, High1, Low2, High2: Cardinal): Boolean;
+function  CardRangeOverlap(const Low1, High1, Low2, High2: Cardinal): Boolean;
+function  CardRangeHasElement(const Low, High, Element: Cardinal): Boolean;
+
+function  CardRangeIncludeElement(var Low, High: Cardinal;
+          const Element: Cardinal): Boolean;
+function  CardRangeIncludeElementRange(var Low, High: Cardinal;
+          const LowElement, HighElement: Cardinal): Boolean;
+
+
+{                                                                              }
+{ Direct comparison                                                            }
+{                                                                              }
+{   Compare(I1, I2) returns crLess if I1 < I2, crEqual if I1 = I2 or           }
+{   crGreater if I1 > I2.                                                      }
+{                                                                              }
+function  Compare(const I1, I2: Boolean): TCompareResult; overload;
+function  Compare(const I1, I2: Integer): TCompareResult; overload;
+function  Compare(const I1, I2: Int64): TCompareResult; overload;
+function  Compare(const I1, I2: Extended): TCompareResult; overload;
+function  CompareA(const I1, I2: AnsiString): TCompareResult;
+function  CompareW(const I1, I2: WideString): TCompareResult;
+function  CompareU(const I1, I2: UnicodeString): TCompareResult;
+
+function  Sgn(const A: LongInt): Integer; overload;
+function  Sgn(const A: Int64): Integer; overload;
+function  Sgn(const A: Extended): Integer; overload;
+
+
+
+{                                                                              }
+{ Convert result                                                               }
+{                                                                              }
+
+{                                                                              }
+{ Integer-String conversions                                                   }
+{                                                                              }
+
+//widechar
+ AnsiCharToInt(const A: AnsiChar): Integer;                            {$IFDEF UseInline}inline;{$ENDIF}
+  WideCharToInt(const A: WideChar): Integer;                            {$IFDEF UseInline}inline;{$ENDIF}
+  CharToInt(const A: Char): Integer;                                    {$IFDEF UseInline}inline;{$ENDIF}
+
+  IntToAnsiChar(const A: Integer): AnsiChar;                            {$IFDEF UseInline}inline;{$ENDIF}
+  IntToWideChar(const A: Integer): WideChar;                            {$IFDEF UseInline}inline;{$ENDIF}
+  IntToChar(const A: Integer): Char;                                    {$IFDEF UseInline}inline;{$ENDIF}
+
+  IsHexAnsiChar(const Ch: AnsiChar): Boolean;
+  IsHexWideChar(const Ch: WideChar): Boolean;
+  IsHexChar(const Ch: Char): Boolean;                                   {$IFDEF UseInline}inline;{$ENDIF}
+
+  HexAnsiCharToInt(const A: AnsiChar): Integer;
+  HexWideCharToInt(const A: WideChar): Integer;
+  HexCharToInt(const A: Char): Integer;                                 {$IFDEF UseInline}inline;{$ENDIF}
+
+  IntToUpperHexAnsiChar(const A: Integer): AnsiChar;
+  IntToUpperHexWideChar(const A: Integer): WideChar;
+  IntToUpperHexChar(const A: Integer): Char;                            {$IFDEF UseInline}inline;{$ENDIF}
+
+  IntToLowerHexAnsiChar(const A: Integer): AnsiChar;
+  IntToLowerHexWideChar(const A: Integer): WideChar;
+  IntToLowerHexChar(const A: Integer): Char;                            {$IFDEF UseInline}inline;{$ENDIF}
+
+  IntToStringA(const A: Int64): AnsiString;
+  IntToStringW(const A: Int64): WideString;
+  IntToStringU(const A: Int64): UnicodeString;
+  IntToString(const A: Int64): String;
+
+  UIntToStringA(const A: NativeUInt): AnsiString;
+  UIntToStringW(const A: NativeUInt): WideString;
+  UIntToStringU(const A: NativeUInt): UnicodeString;
+  UIntToString(const A: NativeUInt): String;
+
+  LongWordToStrA(const A: LongWord; const Digits: Integer = 0): AnsiString;
+  LongWordToStrW(const A: LongWord; const Digits: Integer = 0): WideString;
+  LongWordToStrU(const A: LongWord; const Digits: Integer = 0): UnicodeString;
+  LongWordToStr(const A: LongWord; const Digits: Integer = 0): String;
+
+  LongWordToHexA(const A: LongWord; const Digits: Integer = 0; const UpperCase: Boolean = True): AnsiString;
+  LongWordToHexW(const A: LongWord; const Digits: Integer = 0; const UpperCase: Boolean = True): WideString;
+  LongWordToHexU(const A: LongWord; const Digits: Integer = 0; const UpperCase: Boolean = True): UnicodeString;
+  LongWordToHex(const A: LongWord; const Digits: Integer = 0; const UpperCase: Boolean = True): String;
+
+  LongWordToOctA(const A: LongWord; const Digits: Integer = 0): AnsiString;
+  LongWordToOctW(const A: LongWord; const Digits: Integer = 0): WideString;
+  LongWordToOctU(const A: LongWord; const Digits: Integer = 0): UnicodeString;
+  LongWordToOct(const A: LongWord; const Digits: Integer = 0): String;
+
+  LongWordToBinA(const A: LongWord; const Digits: Integer = 0): AnsiString;
+  LongWordToBinW(const A: LongWord; const Digits: Integer = 0): WideString;
+  LongWordToBinU(const A: LongWord; const Digits: Integer = 0): UnicodeString;
+  LongWordToBin(const A: LongWord; const Digits: Integer = 0): String;
+
+  TryStringToInt64PA(const BufP: Pointer; const BufLen: Integer; out Value: Int64; out StrLen: Integer): TConvertResult;
+  TryStringToInt64PW(const BufP: Pointer; const BufLen: Integer; out Value: Int64; out StrLen: Integer): TConvertResult;
+  TryStringToInt64P(const BufP: Pointer; const BufLen: Integer; out Value: Int64; out StrLen: Integer): TConvertResult;
+
+  TryStringToInt64A(const S: AnsiString; out A: Int64): Boolean;
+  TryStringToInt64W(const S: WideString; out A: Int64): Boolean;
+  TryStringToInt64U(const S: UnicodeString; out A: Int64): Boolean;
+  TryStringToInt64(const S: String; out A: Int64): Boolean;
+
+  StringToInt64DefA(const S: AnsiString; const Default: Int64): Int64;
+  StringToInt64DefW(const S: WideString; const Default: Int64): Int64;
+  StringToInt64DefU(const S: UnicodeString; const Default: Int64): Int64;
+  StringToInt64Def(const S: String; const Default: Int64): Int64;
+
+  StringToInt64A(const S: AnsiString): Int64;
+  StringToInt64W(const S: WideString): Int64;
+  StringToInt64U(const S: UnicodeString): Int64;
+  StringToInt64(const S: String): Int64;
+
+  TryStringToIntA(const S: AnsiString; out A: Integer): Boolean;
+  TryStringToIntW(const S: WideString; out A: Integer): Boolean;
+  TryStringToIntU(const S: UnicodeString; out A: Integer): Boolean;
+  TryStringToInt(const S: String; out A: Integer): Boolean;
+
+  StringToIntDefA(const S: AnsiString; const Default: Integer): Integer;
+  StringToIntDefW(const S: WideString; const Default: Integer): Integer;
+  StringToIntDefU(const S: UnicodeString; const Default: Integer): Integer;
+  StringToIntDef(const S: String; const Default: Integer): Integer;
+
+  StringToIntA(const S: AnsiString): Integer;
+  StringToIntW(const S: WideString): Integer;
+  StringToIntU(const S: UnicodeString): Integer;
+  StringToInt(const S: String): Integer;
+
+  TryStringToLongWordA(const S: AnsiString; out A: LongWord): Boolean;
+  TryStringToLongWordW(const S: WideString; out A: LongWord): Boolean;
+  TryStringToLongWordU(const S: UnicodeString; out A: LongWord): Boolean;
+  TryStringToLongWord(const S: String; out A: LongWord): Boolean;
+
+  StringToLongWordA(const S: AnsiString): LongWord;
+  StringToLongWordW(const S: WideString): LongWord;
+  StringToLongWordU(const S: UnicodeString): LongWord;
+  StringToLongWord(const S: String): LongWord;
+
+  HexToUIntA(const S: AnsiString): NativeUInt;
+  HexToUIntW(const S: WideString): NativeUInt;
+  HexToUIntU(const S: UnicodeString): NativeUInt;
+  HexToUInt(const S: String): NativeUInt;
+
+  TryHexToLongWordA(const S: AnsiString; out A: LongWord): Boolean;
+  TryHexToLongWordW(const S: WideString; out A: LongWord): Boolean;
+  TryHexToLongWordU(const S: UnicodeString; out A: LongWord): Boolean;
+  TryHexToLongWord(const S: String; out A: LongWord): Boolean;
+
+  HexToLongWordA(const S: AnsiString): LongWord;
+  HexToLongWordW(const S: WideString): LongWord;
+  HexToLongWordU(const S: UnicodeString): LongWord;
+  HexToLongWord(const S: String): LongWord;
+
+  TryOctToLongWordA(const S: AnsiString; out A: LongWord): Boolean;
+  TryOctToLongWordW(const S: WideString; out A: LongWord): Boolean;
+  TryOctToLongWordU(const S: UnicodeString; out A: LongWord): Boolean;
+  TryOctToLongWord(const S: String; out A: LongWord): Boolean;
+
+  OctToLongWordA(const S: AnsiString): LongWord;
+  OctToLongWordW(const S: WideString): LongWord;
+  OctToLongWordU(const S: UnicodeString): LongWord;
+  OctToLongWord(const S: String): LongWord;
+
+  TryBinToLongWordA(const S: AnsiString; out A: LongWord): Boolean;
+  TryBinToLongWordW(const S: WideString; out A: LongWord): Boolean;
+  TryBinToLongWordU(const S: UnicodeString; out A: LongWord): Boolean;
+  TryBinToLongWord(const S: String; out A: LongWord): Boolean;
+
+  BinToLongWordA(const S: AnsiString): LongWord;
+  BinToLongWordW(const S: WideString): LongWord;
+  BinToLongWordU(const S: UnicodeString): LongWord;        
+  //BinToLongWord(const S: String): LongWord;
+
+
+
+{                                                                              }
+{ Base64                                                                       }
+{                                                                              }
+{   EncodeBase64 converts a binary string (S) to a base 64 string using        }
+{   Alphabet. if Pad is True, the result will be padded with PadChar to be a   }
+{   multiple of PadMultiple.                                                   }
+{                                                                              }
+{   DecodeBase64 converts a base 64 string using Alphabet (64 characters for   }
+{   values 0-63) to a binary string.                                           }
+{                                                                              }
+  EncodeBase64(const S, Alphabet: AnsiString;
+          const Pad: Boolean = False;
+          const PadMultiple: Integer = 4;
+          const PadChar: AnsiChar = '='): AnsiString;
+
+  DecodeBase64(const S, Alphabet: AnsiString;
+          const PadSet: CharSet{$IFNDEF CLR} = []{$ENDIF}): AnsiString;
+
+   
+  //ObjectToStr(const O: TObject): String;
+  //CharSetToStr(const C: CharSet): AnsiString;
+    //StrToCharSet(const S: AnsiString): CharSet;
+
+  //HashInteger(const I: Integer; const Slots: LongWord = 0): LongWord;
+  //HashLongWord(const I: LongWord; const Slots: LongWord = 0): LongWord;
+
+
+
+const
+  Bytes1KB  = 1024;
+  Bytes1MB  = 1024 * Bytes1KB;
+  Bytes1GB  = 1024 * Bytes1MB;
+  Bytes64KB = 64 * Bytes1KB;
+  Bytes64MB = 64 * Bytes1MB;
+  Bytes2GB  = 2 * LongWord(Bytes1GB);
+
+
+----app_template_loaded_code----

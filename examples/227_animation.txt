@@ -1,0 +1,375 @@
+//Example of the memo load and save capabilities of the VCL
+//Task: Code the button with Open a Video!
+//Get the text and write your memo memories, locs=218 
+
+program Memo_Form_Animation_Demo;
+
+const LEFTBASE = 20;
+      TOPBASE = 25; 
+
+var 
+  mymemo: TMemo;
+  mpanel: TPanel;
+  mPlayer: TMediaPlayer;
+  inFrm: TForm;  
+  mbtn3: TBitBtn;
+  Lstbox: TListbox;
+  stat: TStatusbar;
+  cal: TCalendar;
+  manimate: TAnimate;
+  selectedFile: string;
+
+  
+Function getRandomText: string;
+var i, getback: integer;
+begin
+  for i:= 1 to 1400 do begin
+    getback:=  random(58)+65
+    if (getback < 91) OR (getback > 96) then
+      result:= result + Chr(getback) +Chr(32)
+  end;
+end;  
+  
+//Event Handler - Closure  
+Procedure GetMediaData(self: TObject);
+begin
+  if PromptForFileName(selectedFile,
+                       'Text files (*.txt)|*.txt',
+                       '',
+                       'Select your mX3 test file',
+                       ExePath+'examples\', False)  // Means not a Save dialog !
+   then begin
+     // Display this full file/path value
+     ShowMessage('Selected file = '+selectedFile);
+     Stat.simpletext:= selectedFile;
+     mymemo.lines.LoadFromFile(selectedFile);
+     // Split this full file/path value into its constituent parts
+     //writeln('PromptForFileName_28: Res of processpath '+tmp)
+   end;
+end;  
+  
+//Event Handler - Closure
+procedure BtnSaveClick(self: TObject);
+begin
+  //mymemo.lines.savetofile(ExePath+'\examples\mymemomemoire.txt');
+  mymemo.lines.SaveToFile(selectedFile);
+  Stat.simpletext:= selectedFile+ ' has been saved' ;
+end; 
+
+procedure PlayAnimation;
+begin
+  with TAnimate.Create(NIL) do begin
+   { Load the animation from the AVI file in the startup directory.  An
+    alternative to this would be to create a .RES file including the cool.avi
+    as an AVI resource and use the ResName or ResId properties of Animate1 to
+    point to it. }
+    Parent:= inFrm;
+    SetBounds(LEFTBASE+30,TOPBASE+250,360,180)
+    FileName:= ExtractFilePath(Application.ExeName) + '/examples/cool.avi';
+  { Find the home page - needs to be posted because HTML control hasn't been
+    registered yet. }
+    //PostMessage(Handle, CM_HOMEPAGEREQUEST, 0, 0);
+    //ResName := 'MyBitVideo';
+     { Play the avi from the first frame indefinitely }
+    Active:= True;
+    //Hide;
+    //Play;
+  { Stop the avi and show the first frame }
+  //Animate1.Active := False;
+    //Free;
+  end; 
+  //findfirst 
+end;
+
+procedure SetForm;
+var
+  mbtn, mbtn2: TBitBtn;
+  mi, mi1, mi2, mi3: TMenuItem;
+  mt: TMainMenu;
+  mlbl, mlbl1: TLabel; 
+
+begin
+  inFrm:= TForm.Create(self);
+  mLbl:= TLabel.create(inFrm);
+  mLbl1:= TLabel.create(inFrm);
+  mPanel:= TPanel.Create(inFrm);
+  stat:= TStatusbar.Create(inFrm);
+  Lstbox:= TListbox.create(inFrm);
+  mymemo:= TMemo.create(inFrm);
+
+  with inFrm do begin
+    caption:= '********MediaMonster3************';  
+    height:= 610;
+    width:= 980;
+    //color:= clred;
+    Position:= poScreenCenter;
+    //onClose:= @CloseClick;
+    Show;
+  end;
+  with mPanel do begin
+     caption:= '*****maXboxTV*****';  
+     Parent:= inFrm;  
+     SetBounds(LEFTBASE+10,TOPBASE+40,460,400)
+     color:= clsilver;
+     font.color:= clyellow;
+     font.size:= 30;
+     Show;
+  end; 
+  
+  with mymemo do begin
+    Parent:= inFrm;
+    SetBounds(LEFTBASE+490, TOPBASE+40, 420, 400)
+    font.size:= 14;
+    color:= clYellow;
+    wordwrap:= true;
+    scrollbars:= ssvertical;
+    //lines.loadfromfile(ExePath+'\examples\mymemomemoire.txt');
+    //onClick:= @ChangeSong;  
+  end;
+  
+  mBtn:= TBitBtn.Create(inFrm)
+  with mBtn do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 590, TOPBASE+ 460,150, 40);
+    caption:= 'Open Text';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'OPENFOLDER'); 
+    //event handler
+    onclick:= @GetMediaData;
+  end;
+  mBtn2:= TBitBtn.Create(inFrm)
+  with mBtn2 do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 430, TOPBASE+460,150, 40);
+    caption:= 'Open Video';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'FLOPPY'); 
+    //event handler
+    //onclick:= @GetVideoData;
+  end;
+  mBtn3:= TBitBtn.Create(inFrm)
+  with mBtn3 do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 750, TOPBASE+460,150, 40);
+    caption:= 'Save Text';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'PREVIEWGLYPH'); 
+    //event handler
+    onclick:= @BtnSaveClick;
+  end;
+  cal:= TCalendar.Create(self);
+  with cal do begin
+    enabled:= true;
+    updateCalendar
+    Parent:= inFrm;
+    top:= 80;
+    left:= 50;
+    CalendarDate:= Now;
+  end;
+
+  with mlbl do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+15,TOPBASE-15,180,20);
+    font.size:= 28;
+    font.color:= clred;
+    //font.style:= [fsunderline]
+    caption:= 'MediaAnimateApp';
+  end;  
+  with mlbl1 do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+495,TOPBASE-1,180,20);
+    font.size:= 20;
+    font.color:= clred;
+    caption:= 'Text File:';
+  end;  
+  mt:= TMainMenu.Create(infrm)
+  with mt do begin
+   //parent:= frmMon;
+  end;  
+  mi:= TMenuItem.Create(mt)
+  mi1:= TMenuItem.Create(mt)
+  mi2:= TMenuItem.Create(mt)
+  mi3:= TMenuItem.Create(mi)
+  with mi do begin
+    //parent:= frmMon;
+    Caption:='Play Media';
+    Name:='ITEM';
+    mt.Items.Add(mi);   
+    //OnClick:= @GetMediaData;
+  end;
+  with mi1 do begin
+    //parent:= frmMon;
+    Caption:='Show Video';
+    Name:='ITEM2';
+    mt.Items.Add(mi1) ;
+    //OnClick:= @GetVideoData
+  end;
+  with mi2 do begin
+    //parent:= frmMon;
+    Caption:='Open CD Player';
+    Name:='ITEM3';
+    mt.Items.Add(mi2);
+    //OnClick:= @OPenCD;
+  end;
+  with mi3 do begin
+    Caption:='Open maXbook';
+    Name:='ITEM4';
+    //mi.Items[0].add(mi3);
+  end;
+  with Stat do begin
+    parent:= inFrm;
+    stat.SimplePanel:= true;
+  end;
+  MPlayer:= TMediaPlayer.create(self);
+  with MPlayer do begin
+    parent:= inFrm; 
+    height:= 38;
+    top:= TOPBASE + 460;
+    left:= LEFTBASE+ 10;
+    Display:= mPanel;   //for video show
+  end;
+end; 
+  
+ 
+begin
+  memo2.font.size:= 14;
+  SetForm;
+  mymemo.lines.text:= getRandomText;
+  //SearchAndOpenDoc(ExePath+MEDIAPATH)
+  //mylistview:= TFormListView.Create(self);
+  //exit;
+  PlayAnimation;
+  maxform1.color:= clsilver;
+End.
+
+//-------------------------------------------------
+
+TAnimate is a rather nice component. However if you don't want to use the built in AVI files and want to create your own AVI files from BMP files, then you may have a problem as there is no tool in Delphi to do this. While browsing the web for information on AVI file formats I came upon a site www.shrinkwrapvb.com/avihelp/avihelp.htm that is maintained by Ray Mercer. In this tutorial he explains how to manipulate,read and write AVI files. I was particularly interested in "Step 5" in which he shows a utility that takes a list of BMP files that creates an AVI file which can be used by the TAnimate component. The only problem was that the examples are in Visual Basic, thus a conversion to Delphi was required. I have posted the procedure CreateAVI(const FileName : string; BMPFileList : TStrings; FramesPerSec : integer = 10); To keep the text of the example simple and readable I have left out most to the error checking (try except etc.). You can also play with the AVISaveOptions dialog box, but I can only seem to get it to work with "Full Frames Uncompressed" with BMP files. Can anyone shed some light on this ? Errors you should check for are .. All files are valid BMP files and are of the same size. All Blockreads are valid with no read errors. Ray has a downloadable EXE that works quite nicely, however I am about to write my own utility that incorporates the following ... Multiline file selection. Listbox line reordering (drag/drop). Sort File list Layout Save and Load . AVI Preview. (I have beta version 1.0.0.0 ready, if anyone wants a copy of exe or source code, drop me a mail at mheydon@eoh.co.za) 
+
+
+source is tlistview
+target is tform
+
+procedure TfMerit.SourceLVStartDrag(Sender: TObject;
+var DragObject: TDragObject);
+var TargetLV:TListView;
+begin
+// TargetLV:=nejak urcit dle potreby
+  TargetLV.BeginDrag(True)
+end;
+
+procedure TfMerit.SourceLVMouseDown(Sender: TObject;
+Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+MouseIsDown:=True;
+end;
+
+procedure TfMerit.SourceLVMouseUp(Sender: TObject; Button: TMouseButton;
+Shift: TShiftState; X, Y: Integer);
+begin
+MouseIsDown:=False;
+if (Sender as TListView).Dragging then
+(Sender as TListView).EndDrag(False);
+end;
+
+procedure TfMerit.SourceLVMouseMove(Sender: TObject; Shift: TShiftState;
+X, Y: Integer);
+begin
+if (Sender.ClassNameIs('TListView')) then
+begin
+if MouseIsDown and ((Sender as TListView).SelCount>0) then
+(Sender as TListView).BeginDrag(True);
+end;
+end;
+
+
+procedure TfMerit.TargetLVDragOver(Sender, Source: TObject; X,
+Y: Integer; State: TDragState; var Accept: Boolean);
+var T:TListView;
+begin
+T:=Sender as TListView;
+Accept:=Assigned(T.GetItemAt(X,Y));
+end;
+
+
+procedure TfMerit.TargetLVDragDrop(Sender, Source: TObject; X,
+Y: Integer);
+var It:TListItem;
+LV1,LV2:TListView;
+begin
+LV1:=Source as TListView;
+LV2:=Sender as TListview;
+
+It:=LV2.GetItemAt(X,Y);
+if Assigned(It) then
+begin
+// zpracuj polozku ze zdrojoveho listview
+end;
+end;
+
+
+procedure TControlParentR(Self: TControl; var T:TWinControl); begin T:= Self.Parent; end;
+procedure TControlParentW(Self: TControl; T: TWinControl); begin Self.Parent:= T; end;
+    RegisterPropertyHelper(@TControlParentR, @TControlParentW, 'PARENT');
+    RegisterProperty('Parent', 'TWinControl', iptRW);
+
+procedure TTXPTool.LVPFFDblClick(Sender: TObject);
+var
+tmpList : TListItem;
+fn ; string;
+ft : integer;
+fs : integer;
+begin
+tmpList := LVPFF.Selected;
+if tmplist<>nil then
+begin
+  fn := tmpList.Caption
+  ft := tmpList.SubItems.Strings[1];
+  fs := tmpList.SubItems.Strings[3];
+  if pos('Wave', ft)>0 then
+    PlayThisOne1Click(nil);
+  if pos('Jpg', ft)>0 then
+    ShowJpg1Click(nil);
+  if pos('Targa', ft)>0 then
+    ShowTga1Click(nil);
+  if pos('Pcx', ft)>0 then
+    ShowPcx1Click(nil);
+  if pos('Mission Sound Collection', ft)>0 then
+    ShowPwf1Click(nil);
+end;
+end;
+
+
+function GetLongPathName(APath:String):String;
+var
+  i : Integer;
+  h : THandle;
+  Data : TWin32FindData;
+  IsBackSlash : Boolean;
+begin
+  APath:=ExpandFileName(APath);
+  i:=Pos('\',APath);
+  Result:=Copy(APath,1,i);
+  Delete(APath,1,i);
+  repeat
+    i:=Pos('\',APath);
+    IsBackSlash:=i>0;
+    if Not IsBackSlash then 
+      i:=Length(APath)+1;
+    h:=FindFirst(PChar(Result+Copy(APath,1,i-1)),Data);
+    if h<>INVALID_HANDLE_VALUE then begin
+      try
+        Result:=Result+Data.cFileName;
+        if IsBackSlash then 
+          Result:=Result+'\';
+      finally
+        Windows.FindClose(h);
+      end;
+    end
+    else begin
+      Result:=Result+APath;
+      Exit;
+    end;
+    Delete(APath,1,i);
+  until Length(APath)=0;
+end; {Peter Haas}

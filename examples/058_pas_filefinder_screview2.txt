@@ -1,0 +1,80 @@
+Program ZukoFileSearch_CodeReview2;
+
+// complex filefunctions in directories and subdirectories
+// has findfirst with a TSearchRec structure, #locs=80
+{Start NotePad and load a file (system "knows" the location of NotePad.exe, therefore we don't have to specify the full path):}
+// TODO: Set the directory output in two lines for full information 
+
+Const EXT = 'txt';
+      SW = 'SW_SHOW';
+      //faAnyFile=$0000003F;
+      MMASK ='*.exe';
+      //PATHTOFIND = '\';
+      FILENAME = 'examples\filesfound2.txt';
+      
+var cntr: integer;      
+  
+procedure FindAllFiles(FilesList: TStringList; StartDir, FileMask: string);
+var
+  //SR: TSearchRec;
+  DirList: TStringList;
+  IsFound: Boolean;
+  i: integer;
+  year, month, day: word;
+  myDosdate: TDateTime;
+begin
+  if StartDir[length(StartDir)] <> '\' then
+                       StartDir:= StartDir + '\';
+  { Build a list of files in directory StartDir (not the directories!)}
+  IsFound:= FindFirst(StartDir+FileMask, faAnyFile-faDirectory) = 0;
+  while IsFound do begin
+    //FilesList.Add(StartDir + searchrecName);
+    myDosdate:= fileDatetoDateTime(searchrectime);
+    decodedate(myDosDate, year, month, day)
+    inc(cntr)
+    FilesList.Add(Format('%d:  %35s %62s %15.d %25s ',
+                            [cntr, searchrecName, copy(Startdir,0,60),
+                              searchrecSize, datetimetostr(mydosdate)]));
+    IsFound:=FindNext=0;
+  end;
+  FindClose;
+  //Build list of subdirectories
+  DirList:= TStringList.Create;
+    IsFound:= FindFirst(StartDir+'*.*', faAnyFile) = 0;
+    while IsFound do begin
+      if ((searchrecAttr and faDirectory) <> 0) and
+         (searchrecName[1] <> '.') then
+           DirList.Add(StartDir + searchrecName);
+        IsFound:= FindNext = 0;
+    end;
+    FindClose;
+  //Scans list of subdirectories recursive!
+  for i:= 0 to DirList.Count - 1 do
+    FindAllFiles(FilesList, DirList[i], FileMask);
+  DirList.Free;
+end;
+
+procedure StartFileFinder(vmask: shortstring);
+var
+  FilesList: TStringList;
+begin
+  cntr:= 0;
+  FilesList:= TStringList.Create;
+  try
+    //FindAllFiles(FilesList, ExePath+'examples', '*.*');
+    FindAllFiles(FilesList, ExePath, vmask);
+    Fileslist.SaveToFile(EXEPATH+FILENAME);
+  finally 
+    FilesList.Free;
+  end;
+end;
+
+//main script
+begin
+  //mysearch;
+  beep;
+  StartFileFinder(MMASK);
+  SearchAndOpenDoc(EXEPATH+FILENAME)
+  //shellexecute(0, 'open', 'notepad', 'rec_files.txt', '', 2)
+  //orthogonal and idempotent
+end.

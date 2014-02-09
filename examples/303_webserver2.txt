@@ -1,0 +1,183 @@
+program Motion_HTTPServer_Get;
+
+// first interpreter of runmax of internet series
+// shows subroutines new section 101 - 120 http examples _101, locs=172
+
+const
+  CAUTHENTICATIONREALM = 'openSSL maXbox https server demo';
+
+
+var
+    i: integer;
+    idHTTP: TIDHTTP;
+    idHTTP2: TIDHTTPRequest;
+    MIMEMap: TIdMIMETable;
+    HTTPServer: TIdCustomHTTPServer;
+
+    //myevent: TIdHTTPGetEvent;
+    //myevent2: TIdHTTPOtherEvent;
+    //AThread: TIdContext;
+    
+function GetMIMEType(sFile: TFileName): string;
+//var  MIMEMap: TIdMIMETable;
+begin
+   MIMEMap:= TIdMIMETable.Create(true);
+   try
+     result:= MIMEMap.GetFileMIMEType(sFile);
+   finally
+     //MIMEMap.Free;
+  end;  
+end;
+    
+    
+    
+procedure HTTPServerCommandGet(AThread: TIdPeerThread  {TIdContext};
+                         RequestInfo: TIdHTTPRequestInfo; ResponseInfo: TIdHTTPResponseInfo);
+var
+  LocalDoc: string;
+  ByteSent: Cardinal;
+  ResultFile: TFileStream;
+begin
+    (*procedure AuthFailed;
+     begin
+      ResponseInfo.ContentText:=
+      '<html><head><title>Error</title></head><body><h1>Authentication failed</h1>'#13 +
+      'Check the file ip_a.ini to discover the demo password:<br><ul><li>Search for '#13 +
+      '<b>AuthUsername</b> in <b>maXboxMain.pas</b>!</ul></body></html>';
+    ResponseInfo.AuthRealm:= CAUTHENTICATIONREALM; *)
+
+   ResponseInfo.ContentText:=
+      '<html><head><title>maXbox Web</title></head><body><h1>Welcome to the WebBox3</h1>'#13 +
+      'Check the script 303_webserver2 to discover more information:<br><ul><li>Search for '#13 +
+      '<b>ResponseInfo</b> in <b>the event OnCommandGet</b>!</ul></body></html>';
+   // Log the request with time stamp
+   Writeln(Format('Command %s %s at %-10s received from %s:%d',[RequestInfo.Command, RequestInfo.Document, DateTimeToStr(Now), AThread.Connection.socket.binding.PeerIp,
+                           AThread.Connection.socket.binding.Peerport]));
+    // Interprete the command to it's final path (avoid sending files in parent folders)
+    LocalDoc:= ExpandFilename(Exepath+'/web' + RequestInfo.Document);
+    Writeln('search for local doc what: '+localdoc);
+    Writeln('search for Request Command: '+RequestInfo.Document);
+   
+    // Default document (index.htm) for folder
+    if not FileExists(LocalDoc) and DirectoryExists(LocalDoc) and
+      FileExists(ExpandFileName(LocalDoc + '/web/index.htm')) then
+       LocalDoc:= ExpandFileName(LocalDoc + '/web/index.htm');
+    if FileExists(LocalDoc) then begin// File exists
+      if AnsiSameText(Copy(LocalDoc, 1, Length(LocalDoc)), LocalDoc) then begin
+        // File down in dir structure
+        writeln('found 1main site')
+        writeln(RequestInfo.Command)
+        //if AnsiSameText(RequestInfo.Command, 'HEAD') then begin
+        if AnsiSameText(RequestInfo.Command, 'HEAD') then begin
+        writeln('found 2main site')
+          // HEAD request, don't send the document but still send back it's size
+          ResultFile:= TFileStream.create(LocalDoc, fmOpenRead or fmShareDenyWrite);
+          try
+            ResponseInfo.ResponseNo:= 200;
+            ResponseInfo.ContentType:= GetMIMEType(LocalDoc);
+            ResponseInfo.ContentLength:= ResultFile.Size;
+            writeln(inttostr(ResultFile.Size));
+          finally
+            ResultFile.Free;
+              // Free this file since it won't be done by web server component
+          end;
+        end else begin
+          // Normal document request
+          // Send the document back
+          ResponseInfo.ContentType:= GetMIMEType(LocalDoc);
+          ByteSent := HTTPServer.ServeFile(AThread, ResponseInfo, LocalDoc);
+          //ByteSent:= ResponseInfo.ServeFile(AThread, LocalDoc);
+          Writeln(Format('Serving file %s (%d bytes / %d bytes sent) to %s:%d',
+            [LocalDoc, ByteSent, FileSizeByName(LocalDoc),
+          AThread.Connection.Socket.Binding.PeerIP, AThread.Connection.Socket.Binding.PeerPort]));
+        end;
+      end else
+        //AccessDenied;
+    end else begin
+      ResponseInfo.ResponseNo:= 404; // Not found
+      ResponseInfo.ContentText:=
+        '<html><head><title>Sorry WebBox Error</title></head><body><h1>' +
+        ResponseInfo.ResponseText + '</h1></body></html>';
+    end;
+  //end;
+end;
+    
+    
+procedure HTTPServerTestExecute(Sender: TObject);
+var
+  aBinding : TIdSocketHandle;
+  //HTTPServer: TIdCustomHTTPServer;
+begin
+  //acActivate.Checked := not acActivate.Checked;
+  //lbSessionList.Items.Clear;
+  HTTPServer:= TIdCustomHTTPServer.create(self)
+  with  HTTPServer do begin
+    //AutoStartSession;
+    if active then Free;
+    if not active then begin
+      Bindings.Clear;
+      //binding:= Bindings.items[1].Add;
+      //Binding.Port := StrToIntDef(edPort.text, 80);
+      abinding:= Bindings.Add;
+      abinding.port:= 8080;
+      abinding.ip:= '127.0.0.1';
+      //bindings.items[0].port:= 80;
+      //bindings.defaultport:= 80;
+      //bindings.items[0].ip:= '127.0.0.1';
+         Active:= true;
+       oncommandget:= @HTTPServerCommandGet;
+      if Active then begin
+          //statusbar1.SimpleText:= 'http active on v1.9';
+          //+ [IdServerInterceptOpenSSL.SSLOptions.Method]
+          //DisplayMessage(Format('OpenSSLVersion is: %s', [getOpenSSLVersion]))
+          writeln('HTTP server active');
+        end else writeln('HTTP server inactive');
+       Writeln(format('Listening for HTTP connections on %s:%d.',
+                 [HTTPServer.Bindings[0].IP, HTTPServer.Bindings[0].Port]));
+    writeln(' http server software: '+serversoftware)
+    //Free;
+    end;
+    Showmessage('Click OK to Close HTTP Server');
+    //MIMEMap.Free;
+    HTTPServer.Free;
+    end;
+  (*if not HTTPServer.Active then begin
+    HTTPServer.Bindings.Clear;
+    Binding := HTTPServer.Bindings.Add;
+    Binding.Port := StrToIntDef(edPort.text, 80);
+    Binding.IP := '127.0.0.1';
+  end;*)
+  end;
+
+ Procedure getHTTPTest;
+ begin   
+ idHTTP:= TIdHTTP.Create(NIL)
+  try
+    memo2.lines.text:= idHTTP.Get('http://www.softwareschule.ch/')
+    for i:= 1 to 10 do 
+       memo2.lines.add(intToStr(i)+' :'+memo2.lines[i]);
+    //idhttp.get2('http://www.softwareschule.ch/maxbox.htm')
+  finally
+    idHTTP.Free
+  end;
+ end;     
+   
+begin
+  //getHTTPTest;
+  HTTPServerTestExecute(self);
+  Writeln('Server Closed at '+DateTimeToInternetStr(Now, true))
+  //GetTimeZoneInformation
+  //initialization
+  //finalization 
+End.
+
+
+ (*procedure AccessDenied;
+  begin
+    ResponseInfo.ContentText:=
+      '<html><head><title>Error</title></head><body><h1>Access denied</h1>'#13 +
+      'You do not have sufficient priviligies to access this document.</body></html>';
+    ResponseInfo.ResponseNo:= 403;
+  end;*)
+
+

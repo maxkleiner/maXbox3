@@ -1,0 +1,141 @@
+{***************************************************************
+ * Project  : System Information Thread
+ * App Name: 141_thread.txt, loc's = 108 
+ * Purpose  : Demonstrates thread functions and Internals
+ * Date  : 05/12/2010  -  17:07
+ * History  : convert to maXbox Nov 2010
+ *          : system demo for mX3 beta, not finished yet!!
+ ****************************************************************}
+Program ThreadDemo;
+{BOOL WINAPI MessageBeep(
+  __in  UINT uType
+);}
+//TThreadFunction = function(P: Pointer): Longint; stdcall;
+//Procedure ExecuteThread(afunc: TThreadFunction; var thrOK: boolean);
+
+function  MessageBeep(para: integer): byte;
+  external 'MessageBeep@user32.dll stdcall';  
+
+var
+  except_state, execute_state: string;
+  mytimestamp: TDateTime;
+  osType: TIdWin32Type;
+  diskTotal, amtFree: int64;
+  ptr: ___Pointer;
+  thresult: boolean;
+  //thfct: TThreadFunction;   //procedure type
+  
+
+procedure getMaxBoxIni;
+var
+  Ini: TIniFile;   
+begin
+  Ini:= TIniFile.Create(ExePath+'maxboxdef.ini');
+  try
+    except_state:= Ini.ReadString('Form', 'EXCEPTIONLOG','');
+    execute_state:= Ini.ReadString('Form', 'EXECUTESHELL','');
+  finally
+    writeln('inifile sysdata test: '+(except_state)+ ' '+(execute_state))
+    ini.Free;
+  end;
+end;
+
+//------------------------------------------thread func
+Function myThread(p: integer): Longint; //stdcall;
+var x: Integer;
+begin
+  inc(x)
+end;
+
+Procedure signal_Sounds;
+var sound: integer;
+begin
+for sound:= 1 to 100 do
+  if sound mod 10 = 0 then begin
+    MessageBeep(sound)
+    sleep(1500)
+  end  
+end;
+//---------------------------------------------------------
+
+procedure getDriveTypesF;
+var
+  Drive: byte;
+  DriveLetter: String;
+begin
+  for Drive:= ord('A') to ord('Z') do begin
+    DriveLetter:= chr(Drive) + ':\';
+    case GetDriveType(PChar(chr(Drive) + ':\')) of
+      0: //DRIVE_UNKNOWN
+      Memo2.Lines.Add(DriveLetter + ' Unknown Drive');
+      {1: //DRIVE_NO_ROOT_DIR
+      Memo2.Lines.Add(DriveLetter + ' No Root Dir or mount Point');}
+      2: //DRIVE_REMOVABLE:
+      Memo2.Lines.Add(DriveLetter + ' Removable or Floppy Drive');
+      3: //DRIVE_FIXED:
+      Memo2.Lines.Add(DriveLetter + ' Fixed Drive');
+      4: //DRIVE_REMOTE:
+      Memo2.Lines.Add(DriveLetter + ' Network Drive');
+      5: //DRIVE_CDROM:
+      Memo2.Lines.Add(DriveLetter + ' CD-ROM Drive');
+      6: //DRIVE_RAMDISK:
+      Memo2.Lines.Add(DriveLetter + ' RAM Disk');
+    end;
+  end;
+end;
+
+begin
+   //InifileRead;
+   getMaxBoxIni;
+   thresult:= false;
+   //thfct:= @myThread;
+   CurrentThreadID
+   writeln('Thread ID :'+intToStr(CurrentThreadID))
+   CurrentProcessId
+   writeln('Process ID :'+intToStr(CurrentProcessID))
+   //ExecuteThread(thfct, thresult)
+   //if thresult = true then
+   writeln('machine name is: '+getHostName)
+   writeln('user name is: '+getUserName)
+   osType:= Win32Type;
+   writeln('OS Type is: '+intToStr(ord(osType)));
+   mytimestamp:= GetFileCreationTime(exepath+'maxbox3.exe')
+   writeln(DateTimeToStr(mytimestamp)+' for maXbox3 file')
+   //searchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter2.pdf')
+   //signal_Sounds;
+   //ExecuteCommand('cmd','/k dir *.*')
+    getDriveTypesF;
+end.   
+
+------------------------------------------------
+Windows crashed again. I am the Blue Screen of Death. No one hears your screams.
+Three things are certain: Death, taxes, and lost data. Guess which has occurred.
+There is no place like 127.0.0.1 
+
+//----------------------------------------------
+ DiskSize returns -1 if the drive number is invalid. Drive parameter can be 
+ set to: 0 = Current drive, 1 = A, 2 = B, 3 = C and so on. 
+
+
+DRIVE_UNKNOWN
+0 The drive type cannot be determined.
+ 
+DRIVE_NO_ROOT_DIR
+1 The root path is invalid; for example, there is no volume mounted at the specified path.
+ 
+DRIVE_REMOVABLE
+2 The drive has removable media; for example, a floppy drive, thumb drive, or flash card reader.
+ 
+DRIVE_FIXED
+3 The drive has fixed media; for example, a hard drive or flash drive.
+ 
+DRIVE_REMOTE
+4 The drive is a remote (network) drive.
+ 
+DRIVE_CDROM
+5 The drive is a CD-ROM drive.
+ 
+DRIVE_RAMDISK
+6 The drive is a RAM disk.
+ 
+

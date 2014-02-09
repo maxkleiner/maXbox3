@@ -1,0 +1,120 @@
+Version:0.9
+StartHTML:0000000105
+EndHTML:0000008176
+StartFragment:0000001037
+EndFragment:0000008160
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>mXScriptasHTML</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="generator" content="SynEdit HTML exporter" />
+<style type="text/css">
+<!--
+body { color: #000000; background-color: #FFFFFF; }
+.pas1-assembler { }
+.pas1-character { text-decoration: underline; }
+.pas1-comment { color: #000080; font-style: italic; }
+.pas1-float { color: #800080; }
+.pas1-hexadecimal { color: #FF00FF; }
+.pas1-identifier { }
+.pas1-number { color: #FF0000; }
+.pas1-preprocessor { font-style: italic; }
+.pas1-reservedword { color: #000000; font-weight: bold; }
+.pas1-space { }
+.pas1-string { color: #008080; }
+.pas1-symbol { color: #000000; }
+-->
+</style>
+</head>
+<body>
+<!--StartFragment--><pre><code><span class="pas1-reservedword">program</span><span class="pas1-space"> Motion_HTTPServer_Minimal;
+
+</span><span class="pas1-comment">// first httpserver script of webmax of internet series
+// shows subroutines and events section 101 - 120 http examples _101, locs=55
+
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">   HTTPServer: TIdCustomHTTPServer;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> HTTPServerGet(aThr: TIdPeerThread; reqInfo: TIdHTTPRequestInfo;
+                                       respInfo: TIdHTTPResponseInfo);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> localDoc: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+    ByteSent: Cardinal;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    localDoc:= ExpandFilename(Exepath+</span><span class="pas1-string">'/web'</span><span class="pas1-symbol">+ReqInfo.Document);
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> FileExists(localDoc) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">       ByteSent:= HTTPServer.ServeFile(AThr, RespInfo, LocalDoc);
+       Writeln(Format(</span><span class="pas1-string">'Serving file %s (%d bytes / %d bytes sent) to %s:%d'</span><span class="pas1-symbol">,
+          [LocalDoc, ByteSent, FileSizeByName(LocalDoc),
+          aThr.Connection.Socket.Binding.PeerIP, aThr.Connection.Socket.Binding.PeerPort]));
+    </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      RespInfo.ResponseNo:= </span><span class="pas1-number">404</span><span class="pas1-symbol">; </span><span class="pas1-comment">//Not found
+</span><span class="pas1-space">      RespInfo.ContentText:=
+        </span><span class="pas1-string">'&lt;html&gt;&lt;head&gt;&lt;title&gt;Sorry WebBox Error&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;h1&gt;'</span><span class="pas1-space"> +
+      RespInfo.ResponseText + </span><span class="pas1-string">'&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;'</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    
+    
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> HTTPServerStartExecute(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  HTTPServer:= TIdCustomHTTPServer.Create(self)
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space">  HTTPServer </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Active </span><span class="pas1-reservedword">then</span><span class="pas1-space"> Free;
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> Active </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      Bindings.Clear;
+      bindings.Add;
+      bindings.items[</span><span class="pas1-number">0</span><span class="pas1-symbol">].Port:= </span><span class="pas1-number">80</span><span class="pas1-symbol">;
+      bindings.items[</span><span class="pas1-number">0</span><span class="pas1-symbol">].IP:= </span><span class="pas1-string">'127.0.0.1'</span><span class="pas1-symbol">;</span><span class="pas1-comment">//'192.168.1.53';
+</span><span class="pas1-space">      Active:= true;
+      onCommandGet:= @HTTPServerGet;
+      Writeln(format(</span><span class="pas1-string">'Listening for HTTP on %s:%d.'</span><span class="pas1-symbol">,
+                          [Bindings[</span><span class="pas1-number">0</span><span class="pas1-symbol">].IP, Bindings[</span><span class="pas1-number">0</span><span class="pas1-symbol">].Port]));
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    Showmessage(</span><span class="pas1-string">'Close OK to HTTP Server'</span><span class="pas1-symbol">);
+    HTTPServer.Free;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">begin</span><span class="pas1-space"> </span><span class="pas1-comment">//main server App 
+</span><span class="pas1-space">  writeln(GetIpAddress(getHostName))
+  HTTPServerStartExecute(self);
+  Writeln(</span><span class="pas1-string">'Server Closed at '</span><span class="pas1-symbol">+DateTimeToInternetStr(Now, true))
+  </span><span class="pas1-comment">//GetTimeZoneInformation
+</span><span class="pas1-reservedword">End</span><span class="pas1-symbol">.
+
+</span><span class="pas1-comment">//***********************************Code Snippets******************
+</span><span class="pas1-space"> </span><span class="pas1-comment">(*procedure AccessDenied;
+  begin
+    ResponseInfo.ContentText:=
+      '&lt;html&gt;&lt;head&gt;&lt;title&gt;Error&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;h1&gt;Access denied&lt;/h1&gt;'#13 +
+      'You do not have sufficient priviligies to access this document.&lt;/body&gt;&lt;/html&gt;';
+    ResponseInfo.ResponseNo:= 403;
+  end;*)
+</span><span class="pas1-space">  
+   </span><span class="pas1-comment">(*procedure AuthFailed;
+     begin
+      ResponseInfo.ContentText:=
+      '&lt;html&gt;&lt;head&gt;&lt;title&gt;Error&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;h1&gt;Authentication failed&lt;/h1&gt;'#13 +
+      'Check the file ip_a.ini to discover the demo password:&lt;br&gt;&lt;ul&gt;&lt;li&gt;Search for '#13 +
+      '&lt;b&gt;AuthUsername&lt;/b&gt; in &lt;b&gt;maXboxMain.pas&lt;/b&gt;!&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;';
+    ResponseInfo.AuthRealm:= CAUTHENTICATIONREALM; *)
+
+</span><span class="pas1-space">    </span><span class="pas1-comment">(*if not HTTPServer.Active then begin
+    HTTPServer.Bindings.Clear;
+    Binding := HTTPServer.Bindings.Add;
+    Binding.Port := StrToIntDef(edPort.text, 80);
+    Binding.IP := '127.0.0.1';
+  end;*)
+</span><span class="pas1-space">  
+     </span><span class="pas1-comment">//statusbar1.SimpleText:= 'http active on v1.9';
+</span><span class="pas1-space">     </span><span class="pas1-comment">//+ [IdServerInterceptOpenSSL.SSLOptions.Method]
+</span><span class="pas1-space">      </span><span class="pas1-comment">//DisplayMessage(Format('OpenSSLVersion is: %s', [getOpenSSLVersion]))
+</span><span class="pas1-space">     
+
+
+
+</span></code></pre><!--EndFragment--></body>
+</html>

@@ -1,0 +1,161 @@
+PROGRAM procedureType_FunctionPlotter4;
+//shows structure of procedure types, max@kleiner.com
+//compilerswitch $N+ turns the coprocessor on, loc's =110
+
+const 
+ DIM = 790;
+ PI2 = 5.1415926535897932384626433832795;
+   E = 2.718281828459;
+
+type
+  TSinglePoint = record
+    X,Y : single;
+  end; 
+  
+  TMath_Func = PROCEDURE (var x: single);
+  TXYVector = array[0..DIM] of TSinglePoint; 
+
+var 
+  fct1x, fct2x, fct3x, fct4x, fct5x, fct6x, fct7x, fct8x: TMath_Func;
+  cFrm: TForm;
+  fPoints: TXYVector;
+  amp, freq, i: byte;
+
+
+procedure drawChart(vPoints: TXYVector; vcolor: integer);
+var
+  i, hsize, 
+  origx, origy, xRngPixs, yRngPixs: integer;
+begin
+  with cFrm.canvas do begin
+    hsize:= cFrm.Height -1 div 2;
+     { Paint a coordinate cross }
+    origx:= (cfrm.Width div 2);
+    origy:= (cfrm.Height div 2);
+    Pen.Color:= clwhite;
+    Pen.Style:= psSolid;
+    Pen.Width:= 1;
+    MoveTo(1, origy);
+    LineTo(cfrm.Width - 1, origy);
+    MoveTo(origx, 1);
+    LineTo(origx, cFrm.Height - 1);
+    { Paint some tickmarks and label the axis }
+    Font.Name:= 'Georgia';
+    Font.Size:= 18;
+    Font.Color:= clblue;
+    xRngPixs:= (cFrm.Width - 20) div 4; { pixels in Pi }
+    yRngPixs:= (cFrm.Height - 20) div 2; { pixels in 1 }
+    TextOut(origx -2 * xRngPixs +2, origy -210,'maXplot ');
+    //TextOut(origx -2 * xRngPixs +2, origy -178,XNAME);
+    
+    Pen.Color:= vcolor;
+    MoveTo(0, hsize -((round(vPoints[0].Y))));
+    for i:= 0 to DIM do
+      LineTo(i, round(vPoints[i].Y));
+  end;
+end;  
+  
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  with cFrm do begin
+    caption:= 'maXFunCPlotter(((((\*/)))))';  
+    BorderStyle:= bsDialog;
+    height:= 440;
+    width:= 800;
+    color:= clblack;
+    //onPaint:= @PaintBox1Paint;
+    Show;
+  end  
+end;
+
+//---------------------------ADD math functions---------------------------------  
+procedure logistic_S(var x: single);
+begin
+  x:= 1/1 + power(E, (-x/0.5));
+end;  
+
+
+procedure gauss(var x: single);
+begin
+  x:= exp(-sqr(x/2));
+end;  
+
+
+procedure fct4e(var x: single);
+begin
+   x:= power(E, -x);
+end;
+
+procedure fct3eSin(var x: single);
+begin
+  //power() means e^-x
+   x:= power(E, -x) * (sin(pi2 * x));
+end;
+
+PROCEDURE fct1sin(var x: single);
+BEGIN
+   x:= Sin(pi2*x);
+END;
+  
+PROCEDURE fct2cos(var x: single);
+BEGIN
+  x:= Cos(pi2*x);
+END;
+
+PROCEDURE exp2(var x: single);
+BEGIN
+  x:= exp(-0.2*x)*sin((pi/4)*x);
+END;
+
+PROCEDURE sin2(var x: single);
+BEGIN
+  x:= sin((pi/4)*x)*(sin(3*pi*x));
+END;
+
+  
+PROCEDURE fct_table(start, amp, freq, color: integer; FCT: TMath_Func;
+                                         fct_name: string);
+var x, tempx, it: single;
+    origy, i: Integer;
+BEGIN
+  Writeln('x   |   ' + fct_name);
+  origy:= cFrm.Height div 2;
+  x:= start;
+  for i:= 0 to (DIM) do begin
+    it:= i;
+    x:= it/freq
+    tempx:= x;
+    FCT(x);
+    fPoints[i].Y:= origy + (x * amp);
+    Writeln(floatToStr(x) +' | '+ floatToStr((tempx)));
+  end;
+  DrawChart(fPoints, color)
+END;
+  
+//main function_p call  
+BEGIN
+  //calls the proc with a function var
+  amp:= 110;
+  freq:= 440;
+  loadForm
+  fct1x:= @fct1sin
+  fct2x:= @fct2cos
+  fct3x:= @fct3eSin
+  fct4x:= @fct4e;
+  fct5x:= @gauss;
+  fct6x:= @logistic_s;
+  fct7x:= @exp2;
+  fct8x:= @sin2;
+  //fct_table(40, amp, freq, clred, fct1x, 'Sin(x)');
+  //fct_table(50, amp, freq, clyellow, fct2x, 'Cos(x)');
+  //fct_table(30, amp, freq, cllime, fct3x, 'ESin(x)');
+  //fct_table(30, amp, freq, clblue, fct4x, 'E(x)');
+  //fct_table(50, amp, freq, clgreen, fct5x, 'exp(sqr(x))');
+  fct_table(40, 74, 200, clpurple, fct6x, 'logistic function');
+  fct_table(40, amp, 50, clwhite, fct7x, 'exp2 function');
+  fct_table(40, 74, 100, clred, fct8x, 'sin2 function');
+  for i:= 200 downto 160 do
+    fct_table(40, amp, i, clred, fct8x, '3D phase shifter2');
+END.

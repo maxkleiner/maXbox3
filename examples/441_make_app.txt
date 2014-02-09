@@ -1,0 +1,510 @@
+PROGRAM makeApp_Demo;   //example not finished yet!
+
+//////////////////////////////////////////////////////////////////////
+//  #sign:max: APSN21: 25.01.2014 21:28:36 
+//  Purpose: introduction to WIN API like Petzold below   //
+//  #path>ples\E:\maxbox\maxbox3\examples\                          //
+//  Lines of Code #locs:352
+//////////////////////////////////////////////////////////////////////
+
+Const TEXTOUT = 'hi world of native code app';
+{this MakeApiForm unit, is an example for a One Size Fits All unit, that
+can be used in many other programs, that need an API Main Form creation,
+a GetMessage Loop procedure, a Menu and a simple MakeFont function.
+there are 4 control creation functions}
+ AQRFILENAME= 'mX3pascalworldCode3.png';
+ 
+ //#perf:0:0:2.594
+ 
+
+//############################################################################
+// make App Native Archimedes Architect
+//############################################################################
+//TODO: Button with stop event, change color and save bitmap as png
+  //TODO: check the attribs of TXIntegerlist to 394 network graph Matrix!
+
+
+{TYPE <Type declarations>} 
+
+  var aform: TForm;
+      FWait, switch: Boolean;
+      FValueA: Float;
+      FValueB: Float;
+
+
+//<FUNCTION>
+//<PROCEDURE> 
+
+
+Procedure OVCInternationalDemoClass;
+begin
+ with TOvcIntlSup.Create do begin
+    //Function InternationalDate( ForceCentury : Boolean) : string');
+    writeln('InternationalDate: '+InternationalDate(true));
+    //Function InternationalDatePChar( Dest : PChar; ForceCentury : Boolean) : PChar');
+    writeln('InternationalLongDate: '+InternationalLongDate(false,false));
+  //Function InternationalLongDatePChar( Dest : PChar; ShortNames : Boolean; ExcludeDOW : Boolean) : PChar');
+    //Function InternationalTime( ShowSeconds : Boolean) : string');
+    writeln('InternationalTime: '+InternationalTime(false));
+    //Function InternationalTimePChar( Dest : PChar; ShowSeconds : Boolean) : PChar');
+    //Function MonthStringToMonth( const S : string; Width : Byte) : Byte');
+    writeln(Country)
+    Free;
+  end;
+  with TJclSimpleLog.create(exepath+'jclsimplelog.txt') do begin
+   openlog;
+   write('fits log: '+timetostr(time),23);
+   //writestamp(30);
+   free;
+  end; 
+  opendoc(exepath+'jclsimplelog.txt');
+end;    
+
+procedure TApplication_PaintView(Canvas: TCanvas);
+var
+  cx, cy, i: Integer;
+  angle,x,y: Float;
+
+begin
+  if FWait then Exit;
+   
+   FValueB:= FValueB + 0.001;
+   // Clear background
+   //Canvas.FillStyle := 'rgba(0,0,99,0.08)';
+   if switch then
+     Canvas.FillRect(rect(0,90, aForm.Width, aForm.Height));
+   //Draw our framerate on the screen
+    cx:= aForm.width div 2;
+    cy:= aForm.Height div 2;
+
+  //Canvas.BeginPath;
+  for i:= 42 downto 0 do begin
+    angle:= FValueB * i;
+    x:= cx + (FValueA + FValueB * angle) * Cos(angle);
+    y:= cy + (FValueA + FValueB * angle) * Sin(angle);
+    if i = 42 then Canvas.MoveTo(round(x), round(y)) 
+      else Canvas.LineTo(round(x),round(y));
+  end;
+  //Canvas.StrokeStyle := '#FFF';
+  //Canvas.Stroke;
+end;
+
+
+Const
+   UrlGoogleQrCode='http://chart.apis.google.com/chart?chs=%dx%d&cht=qr&chld=%s&chl=%s';
+
+function GetQrCode4_script(Width,Height: Word; Correct_Level: string;
+           const Data:string; aformat: string): TLinearBitmap;
+var
+  encodedURL: string;
+  idhttp: TIdHttp;// THTTPSend;
+  png: TLinearBitmap;//TPNGObject;
+  pngStream: TMemoryStream;
+begin
+  encodedURL:= Format(UrlGoogleQrCode,[Width,Height, Correct_Level, HTTPEncode(Data)]);
+  //WinInet_HttpGet(EncodedURL,StreamImage);
+  idHTTP:= TIdHTTP.Create(NIL);
+  pngStream:= TMemoryStream.create;
+  png:= TLinearBitmap.Create;
+  with png do try
+    idHTTP.Get1(EncodedURL, pngStream);
+    pngStream.Position:= 0;
+    LoadFromStream2(pngStream,aformat);
+    //AssignTo(aimage.picture.bitmap);
+    result:= png;
+  finally
+    //Dispose;
+    //Free;
+    idHTTP.Free;
+    pngStream.Free;
+  end;
+end;
+
+
+function CheckIEStartCommand: string;
+begin
+  Application.ProcessMessages;
+  with TRegistry.Create do try
+     rootkey:= HKey_Classes_Root;
+     OpenKey('\htmlfile\shell\open\command',false);
+     try 
+       result:= ReadString('');
+     except
+       result:= ''; 
+     end;
+     CloseKey;
+  finally
+     Free;
+  end;
+end;
+
+function SplitToken(const Text: string; SplitChar: Char;
+    var First, Last: string): Boolean;
+var  SplitPos: Integer;
+begin
+  Result:= False;
+  SplitPos:= Pos(SplitChar, Text);
+  if SplitPos = 0 then Exit;
+  First:= Trim(Copy(Text, 1, SplitPos -1));
+  Last:= Trim(Copy(Text, SplitPos +1, Length(Text) -SplitPos));
+  Result:= (First <>'') and (Last <>'');
+end;
+
+function IsWindowsVista2: boolean;
+var
+  verInfo: TOSVersionInfo;
+begin
+  verinfo.dwOSVersionInfoSize:= sizeof(verinfo);
+  //verinfo.dwOSVersionInfoSize:= Sizeof(TOsVersioninfo);
+ 
+  GetVersionEx(Verinfo);
+  result:= Verinfo.dwMajorVersion >=6;
+  writeln(inttostr(Verinfo.dwMajorVersion))
+end;
+
+function GetOsVersionInfo2: TOSVersionInfo; 
+var
+  verInfo: TOSVersionInfo;
+begin
+  verinfo.dwOSVersionInfoSize:= sizeOf(verinfo);
+  GetVersionEx(Verinfo);
+  result:= Verinfo;
+end;  
+
+function JclGUIDToString(const GUID: TGUID): string;
+begin
+  {$IFDEf CLR}
+  Result := GUID.ToString();
+  {$ELSE}
+  Result := Format('{%.8x-%.4x-%.4x-%.2x%.2x-%.2x%.2x%.2x%.2x%.2x%.2x}',
+    [GUID.D1, GUID.D2, GUID.D3, GUID.D4[0], GUID.D4[1], GUID.D4[2],
+     GUID.D4[3], GUID.D4[4], GUID.D4[5], GUID.D4[6], GUID.D4[7]]);
+  {$ENDIF CLR}
+end;
+
+//type
+  //EJclConversionError = class(EJclError);
+
+function JclStringToGUID(const S: string): TGUID;
+begin
+  if (Length(S) <> 38) or (S[1] <> '{') or (S[10] <> '-') or (S[15] <> '-') or
+    (S[20] <> '-') or (S[25] <> '-') or (S[38] <> '}') then
+    {$IFDEF CLR}
+      raise EJclConversionError.CreateFmt(RsInvalidGUIDString, [S]);
+    {$ELSE}
+      raise; 
+      //EJclConversionError.CreateResFmt(@RsInvalidGUIDString, [S]);
+    //raise EJclConversionError.CreateResFmt(@RsSynchCreateEvent, [S]);
+    {$ENDIF CLR}
+
+  {$IFDEF CLR}
+  Result := System.GUID.Create(
+    Integer(StrToInt('$' + Copy(S, 2, 8))),
+    Smallint(StrToInt('$' + Copy(S, 11, 4))),
+    Smallint(StrToInt('$' + Copy(S, 16, 4))),
+    Byte(StrToInt('$' + Copy(S, 21, 2))),
+    Byte(StrToInt('$' + Copy(S, 23, 2))),
+    Byte(StrToInt('$' + Copy(S, 26, 2))),
+    Byte(StrToInt('$' + Copy(S, 28, 2))),
+    Byte(StrToInt('$' + Copy(S, 30, 2))),
+    Byte(StrToInt('$' + Copy(S, 32, 2))),
+    Byte(StrToInt('$' + Copy(S, 34, 2))),
+    Byte(StrToInt('$' + Copy(S, 36, 2))));
+  {$ELSE}
+  Result.D1 := StrToInt('$' + Copy(S, 2, 8));
+  Result.D2 := StrToInt('$' + Copy(S, 11, 4));
+  Result.D3 := StrToInt('$' + Copy(S, 16, 4));
+  Result.D4[0] := StrToInt('$' + Copy(S, 21, 2));
+  Result.D4[1] := StrToInt('$' + Copy(S, 23, 2));
+  Result.D4[2] := StrToInt('$' + Copy(S, 26, 2));
+  Result.D4[3] := StrToInt('$' + Copy(S, 28, 2));
+  Result.D4[4] := StrToInt('$' + Copy(S, 30, 2));
+  Result.D4[5] := StrToInt('$' + Copy(S, 32, 2));
+  Result.D4[6] := StrToInt('$' + Copy(S, 34, 2));
+  Result.D4[7] := StrToInt('$' + Copy(S, 36, 2));
+  {$ENDIF CLR}
+end;
+
+function secondMessFunc(hWnd,iMsg,wParam,lParam:Integer):Integer;
+begin
+  //writeln(inttostr(hWnd));
+  result:= hwnd;
+end;
+
+
+var formid: integer;
+  verInfo: TOSVersionInfo;
+  mymess: TMessagefunc;
+  //mymess2: 
+  png: TLinearBitmap;//TPNGObject;
+//type procedure mxapp;
+
+Begin  //Main
+//<Executable statements>
+  //TOutlookExport_Spy;
+  Writeln('');
+  Writeln('Start Command of IE: '+CheckIEStartCommand);  
+//<Definitions>  
+
+ //AddTypeS('TMessagefunc','function(hWnd,iMsg,wParam,lParam:Integer):Integer)');
+    mymess:= @secondMessFunc;
+
+//function SetWinClass(const ClassName: String; pMessFunc: Pointer;
+  //                wcStyle: Integer = CS_PARENTDC or CS_BYTEALIGNCLIENT): Word;
+  {the SetWinClass function will get the ClassName and Message Function
+   address, so it can register a new Window System Class for the Form here.
+   This function MUST be called BEFORE the MakeForm function}
+
+ {  DoInitMakeApp;
+ writeln('setwinclass '+
+    inttoStr(SetWinClass('myApp3', mymess, CS_PARENTDC or CS_BYTEALIGNCLIENT)));
+
+//Function MakeForm( Left, Top, Width, Height : Integer; const Caption : String; WinStyle : Integer) : Integer');
+ formid:= MakeForm(10,10,400,400, 'makeApp Demo',2);}
+ 
+ with TOvcCalculator.create(self) do begin
+  //parent
+  //free;
+    displaystr:= 'maxcalc';
+    free;
+  end;
+ with TJclTempFileStream.create('txt') do begin
+  //parent
+    writeln(filename) //:= 'this is stream shift';
+  //free;
+    //displaystr:= 'maxcalc';
+    free;
+  end;
+  
+ {with TJclCustomFileMapping.open('txt',true,20) do begin
+  //parent
+    //writeln(filename) //:= 'this is stream shift';
+  //free;
+    writeln(name) //:= 'this is stream shift';
+    //displaystr:= 'maxcalc';
+    free;
+  end;}
+  //ares:= TResolver.create;
+ { with TResolver.create do begin
+   //writeln(inttostr(GetHostByName(gethostname)));
+    Free;
+   end;  }
+    {repeat 
+     TApplication_PaintView(aform.canvas);
+     switch:= NOT switch;
+     Sleep(20);
+   until isKeyPressed or FWait;}
+    {with TledForm.create(self) do begin
+    showmodal;
+    free;
+   end;} 
+ // function GetMacAddresses(const Machine: string; const Addresses: TStrings):Integer;
+ OVCInternationalDemoClass;
+ writeln('IsWindowsVista '+booleantoString(IsWindowsVista2));
+ writeln('IsWindowsVista '+booleantoStr(IsWindowsVista2));
+
+ //GetOsVersionInfo.dwMajorVersion;
+  verinfo:= GetOsVersionInfo;
+  writeln(inttostr(Verinfo.dwMajorVersion))
+  verinfo:= GetOsVersionInfo2;
+  writeln(inttostr(Verinfo.dwMajorVersion))
+  //CL.AddDelphiFunction('Procedure xglBeginUpdate');
+   xglBeginUpdate;  //openGL test
+  //  function GetQrCode4(Width,Height: Word; Correct_Level: string;
+  //       const Data:string; aformat: string): TLinearBitmap;
+ 
+  {png:= TLinearBitmap.create;//TPNGObject;
+  png:= GetQrCode4_script(150,150,'Q','this is maXfox','PNG');
+  png.SaveToFile(ExePath+AFILENAME);
+    OpenDoc(ExePath+AFILENAME);
+  png.Dispose;
+  png.Free;}  
+  
+  {png:= TLinearBitmap.create;//TPNGObject;
+  png:= GetQrCode4(150,150,'Q','this is maXfox','PNG');
+  png.SaveToFile(ExePath+AFILENAME);
+    OpenDoc(ExePath+AFILENAME);
+  png.Dispose;
+  png.Free; } 
+  {if IsInternet then begin
+    GetQrCode4_script(150,150,'Q','this is maXfox','PNG').saveToFile(ExePath+AQRFILENAME);
+    OpenDoc(ExePath+AQRFILENAME);
+  end;}
+  if IsInternet then begin
+    GetQrCodetofile(150,150,'Q','this is maXfox','PNG').saveToFile(ExePath+AQRFILENAME);
+    OpenDoc(ExePath+AQRFILENAME);
+  end;
+
+ { if IsInternet then begin
+    GetQrCode4_script(150,150,'Q','this is maXfox','PNG').saveToFile(ExePath+'x'+AQRFILENAME);
+    OpenDoc(ExePath+'x'+AQRFILENAME);
+  end;}
+  writeln(GetWindowsComputerID) 
+  //JustNameS(Exepath+AQRFILENAME)
+   // SoundexS(Exepath+AQRFILENAME)
+    writeln(booleantoStr(IsStrAlphaS('1ABC')));
+    //writeln(readkey);
+{    Exception: System Error.  Code: 5.
+Zugriff verweigert.}
+     writeln(inttostr(MBVERIALL))
+     maxform1.CreateGUID1Click(self); 
+     maxform1.CreateDLLStub1Click(self); 
+
+ 
+END.
+
+//android doc 
+
+function MakeProgram: Boolean;
+var
+menuList: String;
+hSubM1, hSMenu: Integer;
+begin
+Result := False;
+// start by setting up the main form's window class with SetWinClass
+if SetWinClass('MakeApp '#9'Class', @MessageFunc) = Zero then Exit;
+     with android and arduino you can set  the uml or the UML
+{ these next lines of code will create the Main Form's main Menu with the
+  MakeSubMenu function, the sub-menu items will be in the ItemList parameter.
+  You can set item options in the ItemList with a character like #201}
+
+{this first call to MakeSubMenu will create a "Sub Menu" for the "Main Menu One"
+ the #251 is used in the ItemList parameter to tell the function to make a
+ Sub Menu that is NOT placed on the main Menu.
+ The ItemList MUST be #0 delimited, with a #0 at the end}
+hSubM1 := MakeSubMenu(#251'Move Panel 1'#0'Move Panel 2'#0'Change Color Panel 1'#0,
+                      id4menu(m_MoveP1,m_MoveP2,m_ColorP1), Zero);
+if hSubM1 = Zero then
+  begin
+  MessageBox(Zero, 'No Sub Menu - MakeSubMenu Failure',
+             'ERROR - No menu', MB_ICONERROR);
+  Exit;
+  end;
+
+{this menuList string will be used as the ItemList parameter in the MakeSubMenu.
+ It has the #250 as the first character to tell the function that this is a
+ Sub Menu for the main Menu. The first item name "&Main Menu One" will be
+ what is shown on the main Menu}
+menuList := #250'&Main Menu One'#0'&Top Menu Item'#0#201'&Second Menu Item'+
+            #0#203'Change Panels'#0'&Add to List Box'#0'&Change Edit'#0#200' '+
+            #0'E &X I T        Alt+F4'#0;
+{the #201 places a Check on the menu item, and the #200 makes a "Separator"
+ menu Item, and the #203 will add the Sub Menu  -> hSubM1}
+
+MakeSubMenu(menuList, id4menu(m_TopItem,m_Second,m_Add2ListBox,m_ChangeEdit),
+            id4menu(m_Exit, Zero), hSubM1);
+{when you call MakeSubMenu above, it automaticaly creates the Form's main Menu
+ and creates the "Main Menu One" sub menu for the main Menu}
+
+
+MakeSubMenu(#250'&Next'#0'Message Box'#0'Do Test'#0'List Box Add'#0'non'#0,
+            id4menu(m_MessBox,m_Second,m_Add2ListBox,66), Zero);
+{the Next menu above has 4 menu Items and will be added to the mainMenu
+ because it has the #250 first character in ItemList}
+
+menuList := #251'mMove Panel 1'#0'mMove Panel 2'#0'mChange Color Panel 1'#0;
+hSubM1 := MakeSubMenu(menuList, id4menu(m_MoveP1,m_MoveP2,m_ColorP1), Zero);
+// this Sub Menu will be added to the Big Menu below
+
+menuList := #250'&Big Menu'#0'MessageBox'#0#200' '#0'Top Item'#0#202'Next Item'+
+            #0#203'Sub Menu Item'#0'Some Item'#0#201'This Item'#0'That Item'+
+            #0'Bottom Item'#0#200' '#0'Close Program'#0;
+hSMenu := MakeSubMenu(menuList, id4menu(m_MessBox,m_Second,m_Add2ListBox,88),
+                      id4menu(m_MessBox,m_Second,m_MessBox,m_Exit), hSubM1);
+{the MakeSubMenu function is limited to 8 clickable Items, but you can use the
+API menu functions to add more Items after you create it.
+You must get the sub-menu Handle (hSMenu) to use the API menu functions below}
+InsertMenu(hSMenu, 3, MF_BYPOSITION or MF_STRING, m_AddedItem, 'LOOK Added Item');
+
+menuList := #251'Change Color Panel 1'#0'mMove Panel 2'#0'Exit'#0;
+hSubM1 := MakeSubMenu(menuList, id4menu(m_ColorP1,m_MoveP2,m_Exit), Zero);
+{the MakeSubMenu function can Only add ONE sub Menu Item, but more can be
+placed on that sub Menu with the InsertMenu function}
+InsertMenu(hSMenu, One, MF_BYPOSITION or MF_STRING or MF_POPUP,
+           hSubM1, 'LOOK Added PopUp');
+
+menuList := '';
+
+{ when MakeForm( ) is called the menu created above will automaticaly be the
+ Form's Main Menu, so you must Create the menu BEFORE you call MakeForm}
+hForm1 := MakeForm(DEF, DEF, 500, 291, 'Use MakeApp',
+                   WS_TILEDWINDOW or WS_CLIPCHILDREN);
+if hForm1 = Zero then Exit;
+Result := True;
+MakeControls; // control creation procedure above
+end;
+
+initialization
+
+finalization
+DeleteObject(Font1);
+DeleteObject(FontP);
+
+program UseMakeApp;
+
+uses
+  MakeApp, UseMakeAppU;
+
+//{$R *.RES}
+//{$R Theme.RES}
+// Theme.RES has a win XP theme manifest
+
+begin
+if MakeProgram then // MakeProgram in UseMakeAppU
+  RunMsgLoop; // RunMsgLoop in MakeApp
+end.
+
+
+//############################################################################
+// Archimedes Spiral App
+//############################################################################
+
+procedure SIRegister_MakeApp(CL: TPSPascalCompiler);
+begin
+ CL.AddConstantN('aZero','LongInt').SetInt( 0);
+ CL.AddConstantN('makeappDEF','LongInt').SetInt( - 1);
+  CL.AddConstantN('CS_VREDRAW','LongInt').SetInt( DWORD ( 1 ));
+ CL.AddConstantN('CS_HREDRAW','LongInt').SetInt( DWORD ( 2 ));
+ CL.AddConstantN('CS_KEYCVTWINDOW','LongInt').SetInt( 4);
+ CL.AddConstantN('CS_DBLCLKS','LongInt').SetInt( 8);
+ CL.AddConstantN('CS_OWNDC','LongWord').SetUInt( $20);
+ CL.AddConstantN('CS_CLASSDC','LongWord').SetUInt( $40);
+ CL.AddConstantN('CS_PARENTDC','LongWord').SetUInt( $80);
+ CL.AddConstantN('CS_NOKEYCVT','LongWord').SetUInt( $100);
+ CL.AddConstantN('CS_NOCLOSE','LongWord').SetUInt( $200);
+ CL.AddConstantN('CS_SAVEBITS','LongWord').SetUInt( $800);
+ CL.AddConstantN('CS_BYTEALIGNCLIENT','LongWord').SetUInt( $1000);
+ CL.AddConstantN('CS_BYTEALIGNWINDOW','LongWord').SetUInt( $2000);
+ CL.AddConstantN('CS_GLOBALCLASS','LongWord').SetUInt( $4000);
+ CL.AddConstantN('CS_IME','LongWord').SetUInt( $10000);
+ CL.AddConstantN('CS_DROPSHADOW','LongWord').SetUInt( $20000);
+  //CL.AddTypeS('PPanelFunc', '^TPanelFunc // will not work');
+ CL.AddTypeS('TPanelFunc', 'function(iMsg, wParam, lParam: Integer): Integer)'); // will not work');
+
+ //   TPanelFunc = function(iMsg, wParam, lParam: Integer): Integer;
+
+  CL.AddTypeS('TPanelStyle', '(psEdge, psTabEdge, psBorder, psTabBorder, psTab, psNone )');
+  CL.AddTypeS('TFontLook', '( flBold, flItalic, flUnderLine, flStrikeOut )');
+  CL.AddTypeS('TFontLooks', 'set of TFontLook');
+ CL.AddDelphiFunction('Function SetWinClass( const ClassName : String; pMessFunc : TObject; wcStyle : Integer) : Word');
+ CL.AddDelphiFunction('Function MakeForm( Left, Top, Width, Height : Integer; const Caption : String; WinStyle : Integer) : Integer');
+ CL.AddDelphiFunction('Procedure RunMsgLoop( Show : Boolean)');
+ CL.AddDelphiFunction('Function MakeFont( Height, Width : Integer; const FontName : String; Look : TFontLooks; Roman : Boolean) : Integer');
+ CL.AddDelphiFunction('Function MakeButton( Left, Top, Width, Height : Integer; pCaption : PChar; hParent, ID_Number : Cardinal; hFont : Integer) : Integer');
+ CL.AddDelphiFunction('Function MakeListBox( Left, Top, Width, Height, Parent : Integer; const ListItems : String; WinStyle : Integer) : Integer');
+ CL.AddDelphiFunction('Function MakeComboBox( Left, Top, Width, Height, Parent : Integer; const ListItems : String; WinStyle : Integer) : Integer');
+ CL.AddDelphiFunction('Function MakePanel( Left, Top, Width, Height, hParent : Integer; WndFunc : TPanelFunc; ID_Number : Cardinal; Style : TPanelStyle) : Integer');
+ CL.AddDelphiFunction('Function MakeSubMenu( const ItemList : String; ID1, ID2 : Cardinal; hMenu : Integer) : Integer');
+ CL.AddDelphiFunction('Function id4menu( a, b : Byte; c : Byte; d : Byte) : Cardinal');
+ CL.AddDelphiFunction('Procedure DoInitMakeApp');
+
+ end;
+
+
+
+
+
+end;
+
+
+----app_template_loaded_code----

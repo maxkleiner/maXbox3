@@ -1,0 +1,106 @@
+#include "variant.h"
+#include <stdio.h>
+#include <adk.h>
+#include <Scheduler.h>
+
+#define LED 13
+#define RED 2
+#define GREEN 3
+#define BLUE 4
+
+/*  mX4 Adaption
+Achtung: Serielle Schnittstelle muss unten rechts auf Newline stehen!
+*/  
+// Accessory descriptor. It's how Arduino identifies itself to Android.
+char model[] = "HelloWorldModel"; // model in xml
+char displayName[] = "A Hello World Accessory"; // your Arduino board
+char companyName[] = "Hello Inc";
+
+// Make up anything you want for these
+char versionNumber[] = "1.2";
+char serialNumber[] = "1";
+char url[] = "http://www.osciprime.com/repo/OsciPrimeICS.apk";
+
+volatile uint8_t pause = 255;
+USBHost Usb;
+ADK adk(&Usb, companyName, model, displayName,versionNumber,url,serialNumber);
+
+
+String received_string = "";
+char received_char;
+
+void setup()
+{
+  cpu_irq_enable();
+  pinMode(LED, OUTPUT);
+  Serial.begin(9600);
+  Scheduler.startLoop(adkLoop);
+  Scheduler.startLoop(serialLoop);
+  delay(200);
+}
+
+#define RCVSIZE 128
+
+void loop(){
+	yield();
+}
+
+void serialLoop(){
+  uint8_t cmd;
+  uint8_t val;
+  while(Serial.available()){
+    received_char = Serial.read();
+    if(received_char != '\r' && received_char != '\n')
+      received_string.concat(received_char);
+  }
+        
+  if(received_string != "" && (received_char == '\r' || received_char == '\n')){
+    cmd = received_string[0];
+    val = atoi(&received_string[1]);
+    if(cmd == 'r')
+      analogWrite(RED, (255-val));
+    if(cmd == 'g')
+      analogWrite(GREEN, (255-val));
+    if(cmd == 'b')
+      analogWrite(BLUE, (255-val));
+    received_string = "";
+  }
+
+  yield();
+}
+
+void adkLoop()
+{
+  uint8_t buf[RCVSIZE];
+  uint32_t nbread = 0;
+  uint8_t cmd;
+  uint8_t val;
+
+  Usb.Task();
+
+  if (adk.isReady()){
+    adk.read(&nbread, RCVSIZE, buf);
+    if (nbread > 0){
+      for(int i=0; i<nbread;i++){
+        if(buf[i] == '\n')
+          buf[i] = '\0';
+      }
+        
+      cmd = buf[0];
+      val = atoi((char*)&buf[1]);
+      
+      if(cmd == 'r'){
+        analogWrite(RED, (255-val));
+      }
+      if(cmd == 'g'){
+        analogWrite(GREEN, (255-val));
+      }
+      if(cmd == 'b'){
+        analogWrite(BLUE, (255-val));
+      }
+    }
+  }
+ 
+  yield();
+}
+

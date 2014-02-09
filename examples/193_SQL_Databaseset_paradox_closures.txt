@@ -1,0 +1,1099 @@
+//****************TimeTester**************************
+program DataBase_SQLQuery_ScholzSoft;
+
+// this is in conjunction with example _28_pas_dataset.txt
+// in V3.2 you find DBX, SQLExpress for Interbase, Firebird, Oracle 
+
+//GetShortPathName(PChar(LongName), ShortName, Max_Path);
+  
+
+function GetShortPathName(lname, sname: pchar; mpath: longint): bool;
+  external 'GetShortPathNameW@kernel32.dll stdcall';
+
+
+Const SCHOLZALIAS = 'SAS';
+
+//const SQLQuery = 'select * from customer where company like "%SCUBA%"''';    
+//const SQLQuery = 'select * from kasse';    
+//const SQLQuery = 'select suchbegriff from ZeitP';    
+//const SQLQuery = 'select suchbegriff from ZeitP';    
+//const SQLQuery = 'Select Fertig, AuftragsNr, LeistungsNr from ZeitBTmp'; 
+
+//const SQLQuery = 'Select Fertig, BeginnDatum, AuftragsNr, LeistungsNr from ZeitBtmp where '+
+  //                  ' AuftragsNr > 2000000'; 
+
+const SQLQuery = 'Select PersonalNr, KommDatum from ZeitA where PersonalNr = 1'; 
+                    
+//const SQLQuery = 'select count(*) from ZeitA';                     
+
+//const SQLQuery = 'Select Fertig, AuftragsNr, LeistungsNr from ZeitB'; 
+
+//const SQLQuery = 'select count(*) from ZeitB'; 
+
+//const SQLQuery = 'select count(*) from ZeitB where LeistungsNr > ''150'''; 
+   
+var
+   dbMain: TDatabase;   //@global
+   E: exception;
+
+
+function TFormMain_GetTime:TDateTime;
+begin
+  result:= StrToTime(FormatDateTime('h:n',time)); // Sekunden abschneiden
+end;
+
+
+function RoundSchweiz (value:Extended):Extended;
+  var i:integer;
+      j:double;
+  begin
+  // 0-3 Rappen --> auf 0 abrunden
+  // 4-5 Rappen --> auf 5 aufrunden
+  // 6-7 Rappen --> auf 5 abrunden
+  // 8-9 Rappen --> auf 0 aufrunden
+    i:= round(frac(abs(value)*10) * 10);
+    case i of
+      0: j:=0;
+      1: j:=-0.01;
+      2: j:=-0.02;
+      3: j:=-0.03;
+      4: j:= 0.01;
+      5: j:= 0;
+      6: j:=-0.01;
+      7: j:=-0.02;
+      8: j:= 0.02;
+      9: j:= 0.01;
+    end;
+    if j=0
+    then result:=value
+    else if value<0
+         then result:=value-j
+         else result:=value+j;
+  end;
+
+Function TDaten3_BerechneMwStBetrag(aNettobetrag, aMwStSatz:Extended;
+                 aWaehrung:string):Extended;
+BEGIN
+  result:=Round2Dec(aNettobetrag*aMwStSatz/100);
+  if AnsiUpperCase(aWaehrung)='SFR' then result:= RoundSchweiz(result);
+END;
+
+
+                             
+function GetQuery(SQLCommand: string; aQuery: TQuery): TFields;
+begin
+  aQuery.SQL.Text:= SQLCommand;
+  aQuery.Open;
+  aQuery.Active:= true;
+  result:= aQuery.Fields;
+end; 
+
+
+procedure DoQuery(aDB: TDataBase; afield: string);
+var i: integer;
+    dQuery: TQuery;
+begin
+   dQuery:= TQuery.create(self); 
+   with dQuery do begin
+   DatabaseName:= aDB.DataBaseName;
+     try
+        //openDataBase; or Close;
+        //GetQuery(SQLQuery, dQuery)
+        SQL.Clear;
+        //SQL.Text:= 'select * from customer';
+        SQL.Text:= SQLQuery;
+        Open;
+        Writeln(inttostr(RecordCount)+' Records found: ')
+        for i:= 0 to RecordCount - 1 do begin
+          Writeln(intToStr(i)+' '+fieldbyname(afield).asString)
+          Next;
+        end;  
+        //ExecSQL;
+       finally
+         Close;
+         Free;
+         CloseDataBase(aDB)
+       end;
+    end   
+end; 
+
+
+procedure DoQuery2(aDB: TDataBase; afilename: shortstring; fileout: boolean);
+var i,z: integer;
+    dQuery: TQuery;
+    reslist: TStringlist;
+    tmps: shortstring;
+begin
+   dQuery:= TQuery.create(self); 
+   reslist:= TStringList.create;
+   tmps:= '';
+   with dQuery do begin
+   DatabaseName:= aDB.DataBaseName;
+     try
+        SQL.Clear;
+        SQL.Text:= SQLQuery;
+        Open;
+        Writeln(inttostr(RecordCount)+' Records found: ')
+        if fileout then
+        for i:= 0 to Recordcount - 1 do begin
+          for z:= 0 to Fieldcount - 1 do  
+            tmps:= tmps + Fields[z].asString+' ';
+          reslist.Add(inttoStr(i)+' '+tmps);
+          tmps:='';
+          Next;
+        end else
+        for i:= 0 to Recordcount - 1 do begin
+          write(inttoStr(i)+' ')
+          for z:= 0 to Fieldcount - 1 do 
+            Write((Fields[z].asString)+' ');
+          writeln('');
+          Next;  
+        end;
+        writeln('');
+        reslist.SaveToFile(afilename);
+       //ExecSQL;
+       finally
+         reslist.Free;
+         Close;
+         Free;
+         //CloseDataBase(aDB)
+       end;
+    end   
+end; 
+
+
+procedure BDEDataBaseConnectQuery(aalias: shortstring;
+                                     afilen: shortstring; atextout: boolean);
+  var aParams, aTblNames: TStringList;
+      aSession: TSession;
+      //dbMain: TDatabase;
+      BDEAlias: string;
+      i: integer;
+begin 
+  //create alias params list 
+  AParams:= TStringList.Create;  
+  aTblNames:= TStringList.Create; 
+  //BDEAlias:= 'DBDEMOS';
+  BDEAlias:= aalias; //BDEAlias:= 'dBase Files';
+  //create a session to get alias parameters  
+  ASession:= TSession.Create(NIL);  
+  ASession.SessionName:= 'Session6';  
+  //dbMain:= TDatabase.Create(NIL);  
+  try  //except
+  try  
+    ASession.GetAliasParams(BDEAlias, AParams);
+    Writeln('***********DB Parameters************')
+    for i:= 0 to aparams.count -1 do 
+      writeln(aParams[i]);
+      //connect to database 
+    with dbMain do begin  
+      Params.Assign(AParams);  
+      dbMain:= ASession.OpenDatabase(BDEAlias);
+      Writeln('Database is: '+dbMain.DataBaseName)
+      KeepConnection:= True;
+      GetTableNames(aTblNames, true)
+      {for i:= 0 to atblNames.count -1 do 
+        Writeln(atblnames[i]);}
+      doQuery2(dbMain, afilen, atextout);    //Buchungstext true to fileout
+    end;
+  finally  
+    DBMain.Free;
+    ASession.Free;  
+    AParams.Free;
+    aTblNames.Free;
+  end;
+  except
+    writeln('BDE exception');
+    //ee.raise;
+  end;  
+end;
+  
+
+procedure MakeDataBase;
+begin
+  with TTable.Create(NIL) do begin
+    DatabaseName  := 'c:\temp';  (* alias *)
+    //TableName     := 'test.dbf';
+    TableType     := ttDBase;
+    with FieldDefs do begin
+      Add('F_NAME', ftString,20,false);
+      Add('L_NAME', ftString,30,false);
+    end;
+    CreateTable;
+    { create a calculated index }
+    with IndexDefs do begin
+      Clear;
+      { don't forget ixExpression in calculated indexes! }
+      //AddIndex('name','Upper(L_NAME)+Upper(F_NAME)',[ixExpression],'descript');
+    end;
+  end;
+end;
+
+{What you have to do is declare a TTable variable, create an instance, then with the TTable's FieldDefs property, add field definitions. Finally, you'll make a call to CreateTable, and your table will be created. Here's some example code:
+ }
+{ "Add" is the operative function here.
+  Add(const Name: string; DataType: TFieldType; Size: Word; Required: Boolean);
+}
+
+
+procedure CreateATable(DBName,           //Alias or path
+                       TblName : String); //Table Name to Create     
+var
+  tbl : TTable;
+begin
+  tbl := TTable.Create(Application);
+  with tbl do begin
+    Active := False;
+    DatabaseName := DBName;
+    //TableName := TblName;
+    TableType := ttParadox;
+    with FieldDefs do begin
+      Clear;
+      Add('LastName', ftString, 30, False);
+      Add('FirstName', ftString, 30, False);
+      Add('Address1', ftString, 40, False);
+      Add('Address2', ftString, 40, False);
+      Add('City', ftString, 30, False);
+      Add('ST', ftString, 2, False);
+      Add('Zip', ftString, 10, False);
+    end;
+    {Add a Primary Key to the table}
+   // with IndexDefs do begin
+     // Clear;
+      //Add('Field1Index', 'LastName;FirstName', [ixPrimary, ixUnique]);
+    //end;
+    CreateTable; {Make the table}
+  end;
+end;
+
+
+procedure TDaten_CopyDS(t:TDataSet);
+// Beim Kopieren immer AsVariant benutzen!!!
+// Leere, nicht initialisierte Integer-, Float- und DateTime-Felder liefern mit AsInteger oder value
+// den Wert 0 und nicht NULL.
+// Wenn das Feld eine Nachschlagetabelle benutzt, und das Nachschlagefeld mit Min/Max begrenzt ist,
+// gibt es bei Locate und Lookup eine Exception!!!
+var a:array[0..60] of Variant;
+    i:integer;
+begin
+  with T do begin
+       //if State in dsEditModes then Post;
+       for i:=0 to FieldCount-1 do a[i]:=Fields[i].AsVariant;
+       Insert;
+       if (Name='Kunde') or (Name='Liefer') or (Name='Personal') or
+          (Name='Angebot') or (Name='Auftrag') or (Name='Kasse') or (Name='Artikel')
+       then for i:=1 to FieldCount-1 do Fields[i].AsVariant:=a[i] // neue Knd-Nr oder Lft-Nr nicht überkopieren
+       else for i:=0 to FieldCount-1 do Fields[i].AsVariant:=a[i];
+  end;
+end;
+
+function ShortFilename(LongName:string):string;
+var ShortName : PChar;
+begin
+  ShortName:= StrAlloc(Max_Path);      //Max_Path
+  //function GetShortPathName; external kernel32 name 'GetShortPathNameW';
+  //GetShortPathName(PChar(LongName), ShortName, Max_Path);
+  writeln(booltoStr(GetShortPathName(LongName, Pchar(ShortName), Max_Path),true))
+  //Result:= string(ShortName);
+  Result:= string(ShortName);
+  //StrDispose(ShortName);
+end;
+
+function BinToInt(Value: string): Integer;
+var
+  i, iValueSize: Integer;
+begin
+  Result := 0;
+  iValueSize := Length(Value);
+  for i := iValueSize downto 1 do
+    if Value[i] = '1' then Result := Result + (1 shl (iValueSize - i));
+end; 
+
+//--------------------------closure test--------------------------
+type
+  TMath_func = PROCEDURE(VAR x: single);
+
+var 
+  fct1x, fct2x, fct3x: TMath_func;
+  
+  PROCEDURE fct1(var x: single);
+  BEGIN
+    x:= Sin(x);
+  END;
+  
+  PROCEDURE fct2(var x: single);
+  BEGIN
+    x:= Cos(x);
+  END;
+ 
+  PROCEDURE nth_power(var x: single);
+  BEGIN
+    x:= power(x,4);
+  END;
+  
+PROCEDURE fct_table(start, stop, step: single; fct: TMath_func;
+                                     fct_name: string);
+  VAR x: single;
+  BEGIN
+    x:= start;
+    Writeln('x | ' + fct_name);
+    WHILE x <= stop DO BEGIN
+      fct(x);
+      Writeln(floatToStr(x) +' | '+ floatToStr((x)));
+      x := x + step;
+    END;
+  END;  
+
+Function fct_table2(start, stop, step: single; fct: TMath_func;
+                                     fct_name: string): TMath_func;
+  VAR x: single;
+  BEGIN
+    x:= start;
+    Writeln('x | ' + fct_name);
+    WHILE x <= stop DO BEGIN
+      fct(x);
+      Writeln(floatToStr(x) +' | '+ floatToStr((x)));
+      x := x + step;
+    END;
+    {function a: boolean;
+    begin
+    end;}
+    result:= fct;
+  END; 
+  
+  function generate_power_func(var n: single; fct: TMath_func): TMath_func;
+  var x: single;
+  begin
+    //print "id(n): %X" % id(n)
+    result:= fct;//_power(x);   //nth_power(n);
+        //return x**n
+    //print "id(nth_power): %X" % id(nth_power)
+    //return nth_power
+  end;
+
+var 
+  mylst: TStringlist;
+       i: integer;
+       textout: boolean;
+       ms: string;
+       me: extended;
+       mes: single;
+begin
+
+ // maxform1.ShellStyle1click(self)
+    maxform1.Console1Click(self)
+    //maxform1.Decompile1Click(self)
+    textout:= false;
+
+{ try
+  dbMain:= TDatabase.Create(self);  
+  BDEDataBaseConnectQuery(SCHOLZALIAS, 'dbresult4.txt', textout); //alias to db, text out
+  //doQuery2(dbMain);    //Buchungstext
+  //DBMain.Free;
+  //CloseDataBase(aDB)
+ except
+   writeln('BDE Error')
+ end;  
+ 
+  dbMain.Close;
+  if textout then
+  SearchandOpenFile(ExePath+'dbresult4.txt');     }
+  
+
+  //MakeDataBase;
+  //Define_Let_OpenDB;
+  //queryperformancefrequency
+  //Function GetAliasPath( const AliasName : string) : string');
+  //addstandardalias
+  mylst:= TStringlist.create;
+  with TSession.Create(NIL) do try
+      SessionName:= 'Mars4'
+      getAliasNames(mylst);
+      Writeln('BDE / DB Alias List:  ******************************');
+      for i:= 1 to mylst.count-1 do
+        write(mylst[i]+' ');
+    finally
+      Free;
+      mylst.Free; 
+    end;      
+ 
+  Writeln('BDE/DB Parameters: ******************************');
+  Writeln('BDE Directory '+GetBdeDirectory);
+  writeln('DB Alias Path '+GetAliasPath(SCHOLZALIAS));
+  writeln('Temp File Path'+getTempDir)
+  Writeln('*************************************************');
+
+  //GetAliasDriverName('SAS')
+  
+  Writeln(floatToStr(TDaten3_BerechneMwStBetrag(260, 19, 'SFR')))
+  writeln(timetoStr(TFormMain_GetTime))
+  writeln(timeToStr(time))
+  gettickcount
+
+  //queryperformancecounter
+  writeln(inttoStr(max_path))
+  //gettemppath
+  //writeln(ShortFilename('thisisalongilfenema_iiiiiiiiii.txt'));
+  
+    fct1x:= @fct1
+    fct2x:= @fct2
+    fct3x:= @nth_power;
+    fct_table(0.1, 0.7, 0.1, fct1x, 'Sin(x)');
+    fct_table(0.1, 0.9, 0.1, fct2x, 'Cos(x)');
+    
+    fct1x:= fct_table2(0.1, 0.7, 0.1, fct1x, 'Sin(x)');
+    fct1x:= fct_table2(0.1, 0.7, 0.1, @fct1, 'Sin(x) closure scheme');
+ 
+    mes:= 0.5;
+    fct1x(mes);
+    writeln('back from pointer '+floattoStr(mes))
+    
+    ms:= roundfloattoStr(power(2,10),0);
+    writeln((ms))
+    assert2(ms='1024', ' must be 1024')
+    assert2(roundfloattoStr(power(2,10),0)='1024', ' must be 1024')
+    //msg
+    //computername
+    //charinset
+  
+end.
+
+beleg.rtm ist hauptvorlage
+
+Exception: An error occurred while attempting to initialize the Borland Database Engine (error $2A04) at 0.569
+
+$2A04 (10756) = Operation not applicable.
+DBIO will not start: BDE Error $2A04
+
+
+Full error:
+  CRITICAL (Work) An error occurred while attempting 
+  to initialize the Borland Database Engine (error $2A04)
+
+Issue:
+This error indicates a core problem with BDE configuration.
+
+
+Resolution:
+
+1) Close ALL application software, stop all OmniRush modules including
+   Launcher
+
+2) Open the BDE Administrator
+
+3) Go to the Configuration | System | INIT area
+
+4) Check the Default Driver setting. The recommended setting
+   (for ALL systems) is DBASE
+
+5) Go to the Configuration | Drivers | Native | Paradox area
+
+6) Check the NET DIR setting. This should be set to a LOCAL
+   drive and a simple directory that exists. For example, check
+   if you have a C:\TEMP\ directory. If not, create one and grant
+   all users full access to it.
+   Then set NET DIR to c:\temp\
+
+7) We advise that the PC now be rebooted.
+
+8) Check for proper operation.
+
+
+
+Re:Getting ERROR: "to initialize the Borland Database Engine (error $210D)"
+The errors are "shared memory conflict" and "insufficient memory to
+complete this operation" respectively.
+I assume that "several Delphi 7's running" means several programs
+created with Delphi7 not several instances of the Delphi 7 IDE. You
+need to change the SharedMemLocation and SharedMemSize in the BDE
+Administrator. Try 0x5BDE and 4096. If that does not work try some of
+the other locations suggested in the on-line help.
+--
+
+  
+  
+TABLE 16.1. PRIMARY TDataSet PROPERTIES.
+
+Property 	Description
+Active 	Opens the dataset when set to True and closes it when set to False.
+AutoCalcFields 	Determines when calculated fields are calculated.
+Bof 	Returns True if the cursor is on the first record in the dataset and False if it isn't.
+CachedUpdates 	When True, updates are held in a cache on the client machine until an entire transaction is complete. When False, all changes to the database are made on a record-by-record basis.
+CanModify 	Determines whether the user can edit the data in the dataset.
+DataSource 	The DataSource component associated with this dataset.
+DatabaseName 	The name of the database that is currently being used.
+Eof Returns True if the cursor is at the end of the file and False if it isn't.
+FieldCount 	The number of fields in the dataset. Because a dataset might be dynamic (the results of a query, for example), the number of fields can vary from one dataset request to the next.
+Fields 	An array of TFields objects that contains information about the fields in the dataset.
+FieldValues 	Returns the value of the specified field for the current record. The value is represented as a Variant.
+Filter 	An expression that determines which records a dataset contains.
+Filtered When True, the dataset is filtered based on either the Filter property or the OnFilterRecord event. When False, the entire dataset is returned.
+FilterOptions 	Determines how filters are applied.
+Found 	Indicates whether a find operation is successful.
+Handle 	A BDE cursor handle to the dataset. This is used only when making direct calls to the BDE.
+Modified Indicates whether the current record has been modified.
+RecNo 	The current record number in the dataset.
+RecordCount 	Returns the number of records in the dataset.
+State 	Returns the current state of the dataset (dsEdit, dsBrowse, dsInsert, and so on).
+UpdateObject 	Specifies the TUpdateObject component to use for cached updates.
+UpdatesPending 	When True, the cached update buffer contains edits not yet applied to the dataset.
+
+
+TABLE 16.2. PRIMARY TDataSet METHODS.
+
+Method 	Description
+Append 	Creates an empty record and adds it to the end of the dataset.
+AppendRecord 	Appends a record to the end of the dataset with the given field data and posts the edit.
+ApplyUpdates 	Instructs the database to apply any pending cached updates. Updates are not actually written until the CommitUpdates method is called.
+Cancel 	Cancels any edits to the current record if the edits have not yet been posted.
+CancelUpdates 	Cancels any pending cached updates.
+ClearFields 	Clears the contents of all fields in the current record.
+CommitUpdates 	Instructs the database to apply updates and clear the cached updates buffer.
+Close 	Closes the dataset.
+Delete 	Deletes the current record.
+DisableControls 	Disables input for all data controls associated with the dataset.
+Edit 	Enables editing of the current record.
+EnableControls 	Enables input for all data controls associated with the dataset.
+FetchAll 	Gets all records from the cursor to the end of the dataset and stores them locally.
+FieldByName 	Returns the TField pointer for a field name.
+
+FindFirst
+
+	
+
+
+check:
+procedure SIRegisterTDATASET(CL: TPSPascalCompiler);
+procedure TDATASETFIELDS_R(Self: TDATASET; var T: TFIELDS);
+begin T := Self.FIELDS; end;
+
+//{$IFNDEF FPC}
+
+procedure TDATASETFIELDLIST_R(Self: TDATASET; var T: TFIELDLIST);
+begin T := Self.FIELDLIST; end;
+
+_QSQ14.DB  ??
+
+
+http://mailer.newsabo.net/link.php?M=4355886&N=30&L=5&F=H
+
+
+get for Closures
+
+Warum Polyglot Programming nicht praxistauglich ist
+Anti-Babel
+
+Eine große Herausforderung für Entwickler ist es herauszufinden, ob es überhaupt sinnvoll ist, eine Programmiersprache nur für einen bestimmten Einsatzzweck zu verwenden. Reicht es nicht aus, nur eine Sprache für alle mögliche Zwecke zu nutzen? Eine kritische Auseinandersetzung mit Polyglot Programming und dem Sinn neuer JVM-Sprachen.
+
+Martin Fowler ist erstmals 2005 in seinem Artikel "Language Workbenches: The Killer-App for Domain Specific Languages?" auf die Programmierung mit speziellen Werkzeugen zur Entwicklung von Sprachen eingegangen. Mit ihnen soll es möglich sein, kleine spezifische Programmiersprachen, sogenannte Domain Specific Languages (DSL), zu entwerfen und umzusetzen. In Fowlers Konzept wird eine DSL als die Zukunft der Programmierung angesehen. Neal Ford führte dann 2006 den Begriff Polyglot Programming für die Kombination mehrerer Programmiersprachen in einer Anwendungsentwicklung ein. Auf dieser Basis entwarf wiederum Fowler das Paradigma Polyglot Persistence,das die Verwendung unterschiedlicher Datenbanktypen in einer einzigen Anwendung ermöglichen soll.
+
+Der Autor beschäftigt sich mit dem Mehrsprachen-Paradigma seit 2006. Damals sah er darin noch die Zukunft zum Beispiel der Java-Programmierung, nach der sich gleich mehrere Sprachen auf der Java Virtual Machine (JVM) ausführen lassen.
+
+Erfahrungen damit sammelte er in einem Projekt, in dem verschiedene Sprachen und DSLs zum Einsatz kamen: UML wurde für den Entwurf der Business-Objekte eingesetzt. Über das Konzept der MDA (Model Driven Architecture) wurden Artefakte generiert. Java kam für die Implementierung der Backend-Anwendungen zum Einsatz. Die Skriptsprache Groovy verwendete das Team für die Erweiterung der Backend-Anwendungen und vor allem für das Schreiben der Unit-Tests. Mit ANTLR entwarf und erstellte es eine eigene DSL für spezielle Aspekte der Anwendung. Das Projekt war aufregend, und einige gute Programmierer waren im Projekt involviert. Ein flexibles Produkt wurde erstellt, und es erfüllte die gestellten Erwartungen. Das ist alles in einem Erfahrungsbericht (PDF) nachzulesen.
+Gründe gegen Polyglot Programming
+
+Trotz dieser guten Erfahrungen ist nach Ansicht des Autors das Mehrsprachenkonzept in der Praxis gescheitert. Im Folgenden seien einige Gründe dafür genannt:
+
+    Da es keine leichte Aufgabe ist, eine oder gleich mehrere Programmiersprachen gut zu beherrschen, sollte grundsätzlich überlegt werden, ob man eine neue Programmiersprache beziehungsweise eine mittelkomplexe DSL zum Beispiel dem "gewöhnlichen", in einem Wartungsprojekt arbeitenden Entwickler Programmierer beibringen will. Nicht jeder ist gleichermaßen motiviert und nicht jeder ist scharf darauf, eine neue Sprache zu erlernen.
+    Wer Erfahrungen in der Entwicklung beispielsweise einer großen Java-Webanwendung mit Struts und AJAX besitzt, weiß, wie aufwendig es ist, eine neue Funktion einzuführen. Man wird mit dem Erstellen und Bearbeiten einer Menge unterschiedlicher Dateien konfrontiert, beispielsweise mit Action- und Formular-, XML-Konfigurations-, JavaScript- und auch HTML- oder JSP-Dateien. Es stellt sich die Frage, ob es angesichts der ohnehin hohen Komplexität da anzuraten ist, Groovy, Scala oder Dart in so einem Projekt zusätzlich einzuführen.
+    Das Arbeiten mit einer neuen Programmiersprache bedeutet auch, dass deren Umfeld gut durchdacht sein muss. Eine gute Entwicklungsumgebung, ausreichend Dokumentationsmaterial und Community-Unterstützung sowie eine eindeutige Roadmap und Abwärtskompatibilität sind hier zu nennen. Dafür ist Groovy ein schlechtes Beispiel. In der Frühzeit dieser Sprache war etwa der Editor für Eclipse nicht brauchbar. Nach einer Weile wurde er zwar besser, aber die Sprache erhielt eine Menge grundlegender Veränderungen, sodass alte Groovy-Anwendungen nicht mehr funktionierten. Es gab keinen Weg daran vorbei, auf eine neue Version der Sprache zu aktualisieren. Mit Java 1.1 erstellte Anwendungen lassen sich im Gegensatz dazu immer noch mit Java 6 kompilieren.
+    Bevor eine eigene Sprache beziehungsweise eine DSL entworfen und erstellt wird, sollten zunächst Sprachexperten befragt werden, wie schwer und aufwendig es ist, eine Programmiersprache langfristig zu warten. Besonders wenn man für KMUs (kleine und mittelständische Unternehmen) arbeitet, ist die Größe des Teams und das Budget zu beachten, denn die Wartung einer eigenen Sprache beziehungsweise DSL kann schnell zum Albtraum werden.
+
+Fazit
+
+So kommt der Autor sechs Jahre nach seiner anfänglichen Begeisterung für Polyglot Programming zu folgendem Bild in der Java-Welt:
+
+    Eine einzige Sprache für alle Aspekte in einer Anwendungsentwicklung – "One for All Programming Language Paradigma" – ist für ihn das beste Konzept. Dem vollends nachzukommen ist wahrscheinlich unrealistisch, aber zumindest anzustreben. In der Java-Welt ist das beste Rezept womöglich immer noch die Kombination aus Java und XML (vielleicht weniger XML). Die Integration mit Groovy, Dart, Ruby, Scala oder irgendwelchen DSLs in einer Anwendung führt schnell zum Chaos.
+    Besonders Programmierneulinge tendieren dazu, gerade angesagte, neue Sprachen partout einführen zu wollen, ohne dass deren Integration wohldurchdacht ist. Das soll nicht heißen, dass keine andere Programmiersprachen außer Java eingesetzt werden sollten. Wichtig ist, das Verhältnis von Kosten und Nutzung bei der Einführung einer neuen Programmiersprache oder einer neuen DSL ausdrücklich zu beleuchten.
+    Wer für KMUs arbeitet, sollte aus den oben genannten Gründen vorsichtig sein, eine neue Programmiersprache oder DSL einzusetzen.
+    Für das Paradigma einer einzigen Programmiersprache für alle Aspekte in einer Anwendungsentwicklung sind im Java-Bereich folgende Konzepte interessant: 
+
+    GWT (Google Web Toolkit) GWT ist ein Compiler, der aus Java JavaScript-Code erzeugt. Damit können Entwickler mit Java in ihrer gewöhnten Umgebung arbeiten, um interaktive Benutzeroberflächen – ganz ohne JavaScript – für das Web zu implementieren.
+    XMLC (XML Compiler): XMLC generiert aus XML und HTML Java-Klassen. Auf dieser Basis können Java-Entwickler XML- und HTML-Objekte ausschließlich mit Java manipulieren.
+    Bei der Auswahl von Frameworks sollte man auf die Anbindungstechniken achten. Ein Framework, das sich ausschließlich mit Java einbinden lässt, sollte bevorzugt werden, etwa Guice: Das Dependency-Injection-Framework verwendet ausschließlich Java. Eine XML-Konfiguration wird nicht benötigt. Damit verhält es sich anders als beispielsweise das Spring Framework oder JBoss Weld, die zur XML-Konfiguration applicationContext.xml beziehungsweise beans.xml verwenden. (Zugegeben, die XML-Nutzung kann sowohl bei Spring als auch Weld heute sehr gering sein.)
+
+    Last, but not least: Java als einzige Programmiersprache einzusetzen ist auch deswegen keine schlechte Idee, weil die Android-Community ebenfalls in Java programmiert. Damit hat sich das Paradigma "Learn Once Use Everywhere" auch heute noch bewahrheitet.
+
+In diesem Sinne ist zu hoffen, dass zukünftig mehr "reine" Java-Lösungen, -Konzepte und -Frameworks zu sehen sind. (ane)
+
+
+Kritische Java-Lücke wird im großen Stil ausgenutzt Update
+
+Kriminelle nutzen derzeit zunehmend eine kritische Lücke in der Java-Laufzeitumgebung aus, um Rechner beim Besuch speziell präparierter Webseiten mit Schadcode zu infizieren. Laut dem renommierten Security-Blogger Brian Krebs ist das darauf zurückzuführen, dass das Arsenal des weit verbreiteten Exploit-Kits BlackHole um einen passenden Exploit ausgebaut wurde.
+
+Durch die Lücke, die Oracle Mitte Februar gepatcht hat, kann Schadcode aus der Java-Sandbox ausbrechen und sich dauerhaft auf dem System verankern. Welche Art von Schadcode dabei injiziert wird, ist variabel. Unter anderem soll die Lücke zur Verbreitung des ZeuS-Trojaners genutzt werden.
+
+Laut einer Analyse von Microsoft ist der Dropper in zwei Java-Klassen aufgeteilt. Die erste Klasse nutzt die Schwachstelle bei der Verarbeitung von Arrays aus, um an höhere Rechte zu gelangen und führt anschließend die Loader-Klasse aus, sich um das Herunterladen und das Installieren der Payload kümmert.
+
+
+Mit der aktuellen Java-Version ist man vor dem Exploit geschützt. Vergrößern Schützen kann man sich, indem man eine der derzeit aktuellen Java-Versionen 6 Update 31 oder 7 Update 3 installiert. Ob und welche Version des Browser-Plugins installiert ist, erfährt man auf dieser Testseite.
+
+Allzu sicher sollte man sich jedoch selbst mit der aktuellsten Java-Version nicht fühlen: Brian Krebs berichtet von Gerüchten in Untergrundforen über einen neuen Exploit, der eine ungepatchte kritische Java-Lücke ausnutzt.
+
+Wer auf Nummer sicher gehen will, kann Java auch komplett deinstallieren oder zumindest das Browser-Plugin deaktivieren. Letzteres dürfte sich aufgrund der stetig abnehmenden Verbreitung von Java auf die meisten Webseiten nicht auswirken. 
+
+// Beim Kopieren immer AsVariant benutzen!!!
+// Leere, nicht initialisierte Integer-, Float- und DateTime-Felder liefern mit AsInteger oder value
+// den Wert 0 und nicht NULL.
+// Wenn das Feld eine Nachschlagetabelle benutzt, und das Nachschlagefeld mit Min/Max begrenzt ist,
+// gibt es bei Locate und Lookup eine Exception!!!
+var a:array[0..60] of Variant;
+
+
+> Ein Kunde möchte in unserer Anwendung einen Barcode-reader verwenden
+> um Patienten (um die geht's - sind in einer Datenbank) auszuwählen.
+>
+> Was tun handelsübliche Barcode-reader? Wo schicken die die Daten hin,
+> geht das an's Keyboard?
+>
+Sie decodieren Barcodes und senden den Zeichenstrom an den Rechner. Neue
+Barcode-Reader (z.B. der Heron von Datalogic) haben heutzutage meist
+einen USB-Anschluss.
+
+Durch Einlesen von Konfigurations-Codes, die im Handbuch abgedruckt
+sind, kann man den Barcode-Reader konfigurieren. So z.B. die
+Betriebsart. Der Heron (ich habe gerade selber 50 Stück davon in einem
+BDE-Projekt verwendet) kann sich als USB-Tastatur am System anmelden
+oder als serielles Gerät.
+
+Im Tastatur-Betrieb "denkt" der PC, er habe eine zweite USB-Tatstatur
+und leitet die vom Reader gelieferten Zeichen so ins System, als wären
+sie auf einer Tastatur getippt worden. Das klappt auch parallel zu einer
+bereits vorhandenen "echten" Tastatur. Der Nachteil ist, das zum
+falschen Zeitpunkt ausgelöste Lesevorgänge von der Software dahinter
+nicht nach ihrer Herkunft unterschieden werden können und evtl. im
+falschen Eingabefeld landen.
+
+Deshalb bevorzuge ich die serielle Betriebsart. Dazu muss auf dem PC ein
+Treiber installiert werden, der einen virtuellen COM-Port (z.B. COM 3
+bei 2 "echten" Ports) erzeugt. An dem kann man dann wie an einer echten
+seriellen Schnittstelle "horchen" und die Daten nur dann weiterleiten,
+wenn es gerade gewünscht ist.
+
+In dieser Betriebsart kann man den Barcodereader auch mit Kommandos
+konfigurieren, z.B. dass er nur bstimmte Code-Typen liest, die
+Empfindlichkeit, ob er Piepsen soll und tausend andere Parameter ...
+
+Frank
+
+> Kriegt man irgendwie (Message o.ä.) eine kleine Zusatzinfo, dass
+> dieser Text vom Barcode-Reader-stammt?
+>
+
+Hallo Ralf,
+
+ich kenne selbst den Jarltech 2009U USB Scanner. Der ist programmierbar. Man
+kann zum Beispiel einen Header und einen Trailer um den Text legen. Ich habe
+STX ($2) und ETX ($3) drumrumgelegt. Diese Zeichen können nicht über die
+Tastatur eingegeben werden. Damit kann man die Eingaben von der Tastatur
+unterscheiden. Der Scanner ist auch für weitere Zwecke weiterhin verwendbar,
+da normale Edit-Controls o.ä. die beiden Zeichen nicht verwerten.
+Die Konfiguration des Scanners geschieht über eine Barcode Sequenz, die man
+z.Bsp aus dem Handbuch scannt. Die Einstellungen sind anschließend dauerhaft
+im Scanner gespeichert.
+
+Gruß,
+Gerhardt
+
+????4?
+
+procedure TFormMain.FormKeyPress(Sender: TObject; var Key: Char);
+var i,n:integer;
+begin
+  if key=#13
+  then begin c2:=c1; c1:=''; end // Barcode ist vollständig eingegeben
+  else begin c1:=concat(c1,key); c2:=''; end; // Barcode wird eingelesen
+  key:=#0;
+
+  if c2<>'' then begin
+     LabelInfo.Caption:='';
+
+     // eventuelle vorherige Tatstauranschläge löschen
+     i:=pos('KOMMT',c2); if (i>1) then c2:=copy(c2,i,5);
+     i:=pos('GEHT',c2);  if (i>1) then c2:=copy(c2,i,4);
+     i:=pos('F01',c2);  if (i>1) then c2:=copy(c2,i,3);
+     i:=pos('F12',c2);  if (i>1) then c2:=copy(c2,i,3);
+     i:=pos('PERS',c2);  if (i>1) then c2:=copy(c2,i,12); // Personalkarte hat nur 12 Stellen
+//     if length(c2)>13 then c2:=copy(c2,length(c2)-13+1,13);
+     if length(c2)>14 then c2:=copy(c2,length(c2)-14+1,14);
+
+     n:=length(c2);
+     if      c2='KOMMT' then CodeTyp:=cKommt
+     else if c2='GEHT' then CodeTyp:=cGeht
+     else if c2='F01' then CodeTyp:=cF1
+     else if c2='F12' then CodeTyp:=cF12
+     else if pos('PERS',c2)=1 then CodeTyp:=cPersonalNr
+//     else if pos('  OK',c2)=10 then CodeTyp:=cAtbOk
+     else if pos('  OK',c2)=n-3 then CodeTyp:=cAtbOk
+//     else if length(c2)=13 then CodeTyp:=cAuftrag
+     else if (n=13) or (n=14) then CodeTyp:=cAuftrag
+     else SetError(zErrorReadScan);
+     CheckCode;
+  end;
+end;
+
+closures:
+
+http://tronicek.blogspot.com/2007/12/closures-closure-is-form-of-anonymous_28.html
+
+http://www.javac.info/
+
+Jan
+2
+Python Closures Explained
+
+A CLOSURE is a function object that remembers values in enclosing scopes regardless of whether those scopes are still present in memory. If you have ever written a function that returned another function, you probably may have used closures even without knowing about them.
+
+A quick look at closures
+
+For example, consider the following function generate_power_func which returns another function.
+
+def generate_power_func(n):
+    print "id(n): %X" % id(n)
+    def nth_power(x):
+        return x**n
+    print "id(nth_power): %X" % id(nth_power)
+    return nth_power
+
+The inner function nth_power is called a closure because, as you will see shortly, it will have access to n which is defined in generate_power_func (the enclosing scope) even after program flow is leaves it. If you want to get too technical, you can say that the function nth_power is closed over the variable n. Let’s call generate_power_func and assign the result to another variable to examine this further.
+
+>>> raised_to_4 = generate_power_func(4)
+id(n): CCF7DC
+id(nth_power): C46630
+>>> repr(raised_to_4)
+'<function nth_power at 0x00C46630>'
+
+As expected, when generate_power_func(4) was executed, it created an nth_power function object (at 0x00C46630), and returned it, which we just assigned to raised_to_4 (you can see that id(raised_to_4) == 0x00C46630 == id(nth_power)). Now let’s also delete the name of the original function generate_power_func from the global namespace.
+
+>>> del generate_power_func
+
+Now it’s time for the closure magic ...
+
+>>> raised_to_4(2)
+16
+
+Wait a minute! How did this work? We defined n = 4 outside of the local scope of nth_power. How does raised_to_4 (the nth_power function object) know that the value of n is 4? It makes sense that generate_power_func would know about n (and its value, 4) when the program flow is within generate_power_func. But the program flow is currently not within generate_power_func. For that matter generate_power_func does not even exist in the namespace anymore.
+
+The nth_power function object returned by generate_power_func is a closure because it knows about the details of the variable n from the enclosing scope.
+
+PHP:
+[/php]
+Just found a somewhat simpler example ...
+[php]# define a function within a function and return it to the calling scope
+# the inner function can access variables in the calling function, i.e. its closure
+
+def times(n):
+def _f(x):
+return x * n
+return _f
+
+t3 = times(3)
+print t3 #
+print t3(7) # 21
+[/php]
+Here the inner function _f() is the block of code of the closure, similar to the lambda code in the first example.
+
+I think that closures are a bit more obscure than objects. The examples here are in Python, but you can do pretty much the same thing in many other languages.
+
+Closures in Python
+
+A description of programming using closures with examples in Python
+
+I've previously written two tiny and not at all exhaustive posts about objects in Python (1, 2). Here's a similar discussion of another programming topic: closures. I think that closures are a bit more obscure than objects. The examples here are in Python, but you can do pretty much the same thing in many other languages.
+
+Closures fall out of two things that Python can do. The first is that in Python we can treat functions as though there were data. (That's approximately what's meant when some people say that functions in Python are "first-class objects".)
+
+If I define a function:
+
+>>> def f(x):
+...   print x+1
+
+I can assign it to a new name:
+
+>>> g=f
+
+And call the function with the new name:
+
+>>> g(42)
+43
+
+I can put it in a list:
+
+>>> l=[1,"a",f]
+>>> l[2]
+<function f at 0x4c670>
+
+And call it from there:
+
+>>> l[2](11)
+12
+
+It's not amazingly common, but it can occasionally be useful to put functions in various sorts of data structures. Perhaps a dictionary of functions indexed by the sort of data that they work on or produce.
+
+(For example, I once had occasion to parse a calendar format. In calendar formats, repeating events (such as "2:00 pm on the last Thursday of the month") aren't recorded as dates and times since there could be an infinite number of instances of such an event. Instead, they're recorded as specifications for generating the actual instances. It was convenient for me to have the functions that would generate the next event in a dictionary that was indexed by the kind of repetition they did (daily, weekly, etc). But that's by the way for our purpose here.)
+
+
+The second thing that closures depend on is that Python programs can have nested functions. That is, functions defined inside other functions:
+
+>>> def outer(x):
+...   def inner(y):
+...     return y+2
+...   print inner(x)
+...
+>>> outer(10)
+12
+
+Nesting functions can be useful in making a program more readable. If a particular function can be made clearer by defining a helper function and the helper function is only going to be useful to the first function, it can make sense to define the helper inside the first function. That way someone who's reading your program and sees the helper doesn't need to wonder where it's going to be used.
+
+
+Now, we can put those two facts together by having a function return a "customized" version of an inner function. For example:
+
+>>> def outer(x):
+...   def inner(y):
+...     return x+y
+...   return inner
+...
+>>> customInner=outer(2)
+>>> customInner(3)
+5
+
+The trick that you want to notice in what's going on there is what happens to the value of x. The argument x is a local variable in outer() and the behavior of local variables isn't normally very exciting. But in this case, x is global to the function inner(). And since inner() uses the name, it doesn't go away when outer() exits. Instead inner() captures it or "closes over" it. You can call outer() as many times as you like and each value of x will be captured separately.
+
+The function that's returned is called a closure. The idea is potentially useful because we can specify part of the behavior of a function based on data at runtime.
+
+
+At this stage you might say, "OK, I followed your tedious explanation, but what good is such a thing? Is it anything more than a curiosity for ordinary programming?" The answer to that is that it is occasionally useful when something, such as a library interface, requires a function and you want to specify more than a couple of them that are very similar.
+
+Imagine that you're designing a GUI interface and you need six buttons that do similar things. Tkinter buttons take a function to call as an argument and it would be tedious to write six very similar functions. Instead you might do something like this:
+
+
+from Tkinter import *
+
+def makeButtonFunc(buttonName):
+
+  def buttonFunc():
+    print buttonName
+
+  return buttonFunc
+
+class mainWin:
+
+  def __init__(self,root):
+    self.root=root
+    self.createWidgets()
+    return None
+
+  def createWidgets(self):
+    for buttonName in ("A","B","C","D","E","F"):
+      b=Button(self.root,text=buttonName,
+        command=makeButtonFunc(buttonName))
+      b.pack()
+    return None
+
+def main():
+  root=Tk()
+  mainWin(root)
+  root.mainloop()
+  return None
+
+if __name__=="__main__":
+  main()
+
+
+That's clearly better than writing six functions that are virtually identical.
+
+There are lots of people who like using closures. I, personally, don't. To me, it feels like using a subtle trick and I prefer my programs to be as obvious as possible. In a similar situation, I'd use a Python object with a __call__() method. If a Python object has that method and it's called as though it were a function, that method is run. In a program I wrote, I'd probably replace makeButtonFunc() with something like:
+
+
+class makeButtonFunc:
+  def __init__(self,buttonName):
+    self.buttonName=buttonName
+
+  def __call__(self):
+    print self.buttonName
+
+
+Which would do the same thing. Of course, I'd give the class a different name.
+
+Posted: Mon - September 18, 2006 at 08:07 PM   Main   Category:  Geek
+
+
+6.1 – Closures
+
+When a function is written enclosed in another function, it has full access to local variables from the enclosing function; this feature is called lexical scoping. Although that may sound obvious, it is not. Lexical scoping, plus first-class functions, is a powerful concept in a programming language, but few languages support that concept.
+
+Let us start with a simple example. Suppose you have a list of student names and a table that associates names to grades; you want to sort the list of names, according to their grades (higher grades first). You can do this task as follows:
+
+    names = {"Peter", "Paul", "Mary"}
+    grades = {Mary = 10, Paul = 7, Peter = 8}
+    table.sort(names, function (n1, n2)
+      return grades[n1] > grades[n2]    -- compare the grades
+    end)
+
+Now, suppose you want to create a function to do this task:
+
+    function sortbygrade (names, grades)
+      table.sort(names, function (n1, n2)
+        return grades[n1] > grades[n2]    -- compare the grades
+      end)
+    end
+
+The interesting point in the example is that the anonymous function given to sort accesses the parameter grades, which is local to the enclosing function sortbygrade. Inside this anonymous function, grades is neither a global variable nor a local variable. We call it an external local variable, or an upvalue. (The term "upvalue" is a little misleading, because grades is a variable, not a value. However, this term has historical roots in Lua and it is shorter than "external local variable".)
+
+Why is that so interesting? Because functions are first-class values. Consider the following code:
+
+    function newCounter ()
+      local i = 0
+      return function ()   -- anonymous function
+               i = i + 1
+               return i
+             end
+    end
+    
+    c1 = newCounter()
+    print(c1())  --> 1
+    print(c1())  --> 2
+
+Now, the anonymous function uses an upvalue, i, to keep its counter. However, by the time we call the anonymous function, i is already out of scope, because the function that created that variable (newCounter) has returned. Nevertheless, Lua handles that situation correctly, using the concept of closure. Simply put, a closure is a function plus all it needs to access its upvalues correctly. If we call newCounter again, it will create a new local variable i, so we will get a new closure, acting over that new variable:
+
+    c2 = newCounter()
+    print(c2())  --> 1
+    print(c1())  --> 3
+    print(c2())  --> 2
+
+So, c1 and c2 are different closures over the same function and each acts upon an independent instantiation of the local variable i. Technically speaking, what is a value in Lua is the closure, not the function. The function itself is just a prototype for closures. Nevertheless, we will continue to use the term "function" to refer to a closure whenever there is no possibility of confusion.
+
+Closures provide a valuable tool in many contexts. As we have seen, they are useful as arguments to higher-order functions such as sort. Closures are valuable for functions that build other functions too, like our newCounter example; this mechanism allows Lua programs to incorporate fancy programming techniques from the functional world. Closures are useful for callback functions, too. The typical example here occurs when you create buttons in a typical GUI toolkit. Each button has a callback function to be called when the user presses the button; you want different buttons to do slightly different things when pressed. For instance, a digital calculator needs ten similar buttons, one for each digit. You can create each of them with a function like the next one:
+
+    function digitButton (digit)
+      return Button{ label = digit,
+                     action = function ()
+                                add_to_display(digit)
+                              end
+                   }
+    end
+
+    Programmiersprachen werden stetig weiterentwickelt und von Version zu Version wächst – neben der Anzahl der Framework-Klassen – auch der syntaktische Sprachumfang. Dies gilt auch für das Sprachkonzept Closure. In der ersten C#-Version wurde dieses Sprachkonstrukt noch nicht direkt unterstützt, erst mit .NET 2.0 wurde es möglich, Closure-nahe Implementierungen einfach zu realisieren. Vor .NET 2.0 konnten Closure-Konstrukte nur durch explizite Implementierung innerer Klassen umgesetzt werden. Closures sind dabei keine neue Erfindung, Programmiersprachen wie Ruby unterstützen schon seit geraumer Zeit Closures. Das Closure-Konzept selbst wurde in den 60er- Jahren entwickelt und erstmals in der Programmiersprache Scheme – ein Dialekt der Sprache Lisp – vollständig unterstützt. Oft werden Closures im C#-Kontext mit anonymen Delegates gleichgesetzt, dem ist aber nicht so. Anonyme Delegates und Closure stellen zwei unterschiedliche Konzepte dar.
+
+Funktionale Welt
+Der Ursprung des Closure-Konzepts liegt in funktionalen Programmiersprachen wie Lisp oder Ruby. Damit Closures auch in imperativen Programmiersprachen verwendet werden können, muss es möglich sein, Funktionen als Parameter übergeben zu können. Funktionen können somit eine Aufrufkette bilden, in der Ergebnisse einer Berechnung einen weiteren Funktionsaufruf auslösen. Funktionale Programmiersprachen nutzen diese als „Continuation Passing Style“ bezeichnete Technik, um Ergebnisse einer Berechnung direkt zu einem weiteren Funktionsaufruf weiterzuleiten. Innerhalb von C# steht seit der ersten Version der Delegate-Typ bereit, der es ermöglicht, einen Funktionsaufruf über einen Parameter weiterzugeben. Listing 1 zeigt dazu ein einfaches Beispiel.
+
+    delegate void FuncCall();
+    class Program {
+    public static void A() {
+    Console.WriteLine("Delegate wurde aufgerufen ...");
+    }
+    public static void B(FuncCall func) {
+    Console.WriteLine("Delegate Aufruf folgt.");
+    func();
+    }
+    static void Main(string[] args) {
+    B(A);
+    }
+    }
+
+Quelltext in die Zwischenablage kopieren
+
+Der Methode B kann über den Parameter ein definierter Delegate übergeben werden. Innerhalb der Methode B wird dann der übergebene Delegate aufgerufen. Zusätzlich zeigt Listing 2 zwei weitere Möglichkeiten, einen Delegate anzulegen und zu übergeben. 
+
+Closures als Threads
+
+Closures implementieren von Hause aus das Interface Runnable und können somit auch asynchron ausgeführt werden. In dem folgenden Beispiel starten wir zwei Closures als parallel laufende Threads.
+
+groovy> Thread.start { ('A'..'Z').each {sleep 100; println it} }
+groovy> Thread.start { (1..26).each {sleep 100; println it} }
+A
+1
+B
+2
+
+Jeder Thread schreibt eine Liste von Buchstaben bzw. Zahlen, wobei er bei jedem Durchlauf eine kurze Pause einlegt, damit jeweils der andere Thread zum Zug kommen kann – und damit wir das Ganze besser verfolgen können.
+
+Beispiel: Logging
+
+Das folgende Beispiel soll einige der Möglichkeiten, die durch Closures gegeben sind, im Zusammenhang zeigen. Wir wollen eine Klasse schreiben, die irgendetwas tut, was uns hier nicht weiter interessieren soll, dies aber in einer flexiblen Weise protokollieren. Die Protokollmethode ist einfach durch eine Property definiert, der eine Closure zur Ausgabe des Protokolltextes zugewiesen werden kann.
+
+class LoggingWorker {
+
+  Closure log = { stufe, text ->}
+
+  def tuwas () {
+    log(0, "Tuwas begonnen")
+    //...
+    log(1, "Fehler aufgetreten")
+    //...
+    log(0, "Tuwas beendet")
+  }
+}
+
+def worker = new LoggingWorker()
+worker.log = { stufe, text -> println (['INFO','FEHLER'][stufe]+': '+text) }
+worker.tuwas()
+
+
+Beim Vergleich zu Hibernate ist die Idee, die Technische Dokumentation als Referenz zu Hibernate auszurichten, d.h. das Inhaltsverzeichnis mit den Themen ist wie das Framework Hibernate zu strukturieren.
+Das erleichtert dem Betrieb wie auch anderen Firmen den Einstieg in die proprietäre Daten Integrations Schicht. 
+
+
+anonymous in delphi
+{with TForm.Create(self) do begin
+    BorderStyle := bsNone;
+    WindowState := wsMaximized;
+    Show;
+  end;}   
+  
+  This JSR provides support for operating on an arbitrary "block of Java code", or body, which is either a statement list, an expression, or a combination of both. We call the mechanism a closure expression. Wrapping statements or an expression in a closure expression does not change their meaning, but merely defers their execution. Evaluating a closure expression produces a closure object. The closure object can later be invoked, which results in execution of the body, yielding the value of the expression (if one was present) to the invoker. A closure expression can have parameters, which act as variables whose scope is the body. In this case the invoker of the closure object must provide compatible arguments, which become the values for the parameters.' 
+  
+  
+  AW: [Spring-DI] MemoryLeak bei Einsatz von DelegatedConstructor
+  Ungelesen 1. Feb 2012, 13:54
+Zitat:
+What happens is that a local variable is added to the current routine which contains the address of the method or function pointer, and then this local variable is captured by a hidden anonymous method. This hidden anonymous method is kept alive for the duration of the current routine by a second local variable, of type IInterface (this prevents premature disposal).
+
+The trouble is that with unit initialiaztion, and program begin/end, and similar top-level blocks, "local" variables are in fact global variables.
+D.h. das "object behind the scene" (dcWallpaper$43200$ActRec), welches hinter der anonymen Methode sitzt (wir erinnern uns: eine Anonyme Methode ist eigentlich nix anderes als eine Interface Methode mit nen bisschen compiler magic) wird im Falle der Benutzung in initialization (auch in finalization oder in der "main" der dpr) in der globalen Variable gespeichert. Lagerst du aber den Code, welchen du zuvor direkt unter initialization hattest in eine Routine aus, wird die Variable lokal in der Routine angelegt. Somit ist sie nicht mehr global, da sie einen kleineren Scope hat (nämlich den der Routine) und du hast auch kein Memleak mehr.
+
+Das hat imho überhaupt nichts mit der Verwaltung des vom DI Container erzeugten Objekts zu tun.
+Stefan
+“Simplicity, carried to the extreme, becomes elegance.” Jon Franklin
+
+"Complex problems have simple, easy to understand, wrong answers." 
+
+
+Dependency Injection mit dem Spring4Delphi-Framework leistet bei mir seit einiger Zeit gute Dienste. Bislang habe ich das ausschließlich mit nicht-visuellen Klassen praktiziert.
+
+Nun möchte ich das Konzept auf DataModules erweitern:
+zusammenfalten · markieren
+Delphi-Quellcode:
+
+type
+  IdcWallpaper = interface
+    ['{E0D26B15-55CE-400A-9DD5-6EA5A999B375}']
+    procedure CreateControl(aStartScreen : IdcStartScreen; aParent : TWinControl);
+  end;
+
+  TdmWallpaper = class(TDataModule, IdcWallpaper)
+  private // IdcWallpaper
+    procedure CreateControl(aStartScreen : IdcStartScreen; aParent : TWinControl);
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+  end;
+
+implementation
+
+//{$R *.dfm}
+
+uses
+  Spring.Container,
+  Spring.Services;
+
+<..>
+
+initialization
+  GlobalContainer.RegisterComponent<TdmWallpaper>.Implements<IdcWallpaper>.AsSingleton.DelegateTo(
+    function: TdmWallpaper
+    begin
+      Result := TdmWallpaper.Create(nil);
+    end
+  )

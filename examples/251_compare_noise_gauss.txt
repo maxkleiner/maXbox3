@@ -1,0 +1,421 @@
+program RandomWalk_3_WhiteNoise_Gauss_Distribution;
+
+//*********************************************************************
+// chart example for analyzing random walk & graphic patterns loc's=388  
+// you have to set the iteration var i (in main) for density
+// shows the difference between random, noise and random walk _61
+//*********************************************************************
+(*
+ RRRRR    EEEEEE   AAAA   DDDDD    MM     MM   EEEEEE 
+ RR  RR   EE       AA AA  DD  DD   MMMM MMMM   EE    
+ RRRRR    EEEE    AAAAAA  DD   DD  MM MMM MM   EEEE
+ RR  RR   EE      AA   AA DD   DD  MM  M  MM   EE
+ RR   RR  EEEEEE AA    AA DDDDD    MM  M  MM   EEEEEE
+ more random and stat functions will be on the file RND.pas!
+*)
+
+const
+//values for generator and view
+  CHDAT = 1460;  
+  CHHEIGHT = 750;
+  LEFTBASE = 325;
+  TOPBASE = 215; 
+  DBASE = 530;
+  YBASE = 130;
+  REALDAT = CHDAT - DBASE;
+  //CHDAT = REALDAT;
+  MA_LONG = 200;
+  OFFSET = 150; 
+  CHARTFILE = 'examples\randomnoise1.txt';
+         
+type
+  TRandomArr = array[1..REALDAT+1] of SmallInt;
+  //EOptMovingAverage = class (Exception) end;
+
+var
+  cFrm: TForm;
+  chDat1, chDat2, chDat3: TRandomArr;
+
+{procedure scaleResults(const X, Y :double; 
+         var intX, intY: integer; width, height: integer);
+ var scaledX, scaledY: double; 
+  begin
+   scaledX:= (X-scaleX1)/(scaleX2-scaleX1);
+    scaledY:= (Y-scaleY2)/(scaleY1-scaleY2);
+     intX:= round(scaledX * width);
+    intY:= round(scaledY * height);
+  end;} 
+  
+procedure FormClick(sender: TObject); forward;
+
+procedure PaintBox1Paint(sender: TObject);
+var
+  ox, oy, xPix, yPix: Integer;
+begin
+  with cFrm.Canvas do begin
+    {Fill background}
+    Brush.Color:= clBtnFace;
+    Brush.Style:= bsSolid;
+    {Paint a coordinate cross }
+    ox:= (cfrm.Width -(DBASE-MA_LONG));
+    oy:= (cfrm.Height div 3);
+    Pen.Color:= clwhite;
+    Pen.Style:= psSolid;
+    Pen.Width:= 1;
+    MoveTo(1, oy);
+    LineTo(cfrm.Width-1, oy);
+    MoveTo(ox, 1);
+    LineTo(ox, cFrm.Height - 1);
+    { Paint some tickmarks and label the axis }
+    Font.Name:= 'Times';
+    Font.Size:= 26;
+    Font.Color:= clpurple;
+    xPix:= (cFrm.Width - 20) div 4; { pixels in Pi }
+    yPix:= (cFrm.Height- 20) div 2; { pixels in 1 }
+    TextOut(ox -2 * xPix +2, oy-215, ' Random Gauss Gen ');
+    font.Size:= 12;
+    { X axis }
+    MoveTo(ox -2 * xPix, oy -4);
+    LineTo(ox -2 * xPix, oy +4);
+    TextOut(ox-2 * xPix +2, oy +2,'2009');
+    MoveTo(ox -xPix, oy -4);
+    LineTo(ox -xPix, oy +4);
+    TextOut(ox -xPix +2, oy +2,'2010');
+    MoveTo(ox +xPix, oy -4);
+    LineTo(ox +xPix, oy +4);
+    TextOut(ox +xPix -2 -TextWidth('2012'), oy +2,'2012');
+    MoveTo(ox +2 * xPix, oy -4);
+    LineTo(ox +2 * xPix, oy +4);
+    TextOut(ox+2 * xPix -2 -TextWidth('2013'), oy +2,'2013');
+    { X axis 2}
+    oy:= (cfrm.Height div 2 +cfrm.Height div 6);
+    Pen.Color:= clwhite;
+    Pen.Style:= psSolid;
+    Pen.Width:= 1;
+    MoveTo(1, oy);
+    LineTo(cfrm.Width - 1, oy);
+    MoveTo(ox, 1);
+    LineTo(ox, cFrm.Height - 1);
+    MoveTo(ox -2 * xPix, oy -4);
+    LineTo(ox -2 * xPix, oy +4);
+    TextOut(ox-2 * xPix +2, oy +2,'2009');
+    MoveTo(ox -xPix, oy -4);
+    LineTo(ox -xPix, oy +4);
+    TextOut(ox -xPix +2, oy +2,'2010');
+    MoveTo(ox +xPix, oy -4);
+    LineTo(ox +xPix, oy +4);
+    TextOut(ox +xPix -2 -TextWidth('2012'),oy+2,'2012');
+    MoveTo(ox +2 * xPix, oy -4);
+    LineTo(ox +2 * xPix, oy +4);
+    TextOut(ox+2 * xPix -2 -TextWidth('2013'),oy+2,'2013');
+    { Y axis }
+    MoveTo(ox -4, oy - yPix div 1);
+    LineTo(ox +4, oy - yPix div 1);
+    TextOut(ox+4, oy - yPix,inttostr(CHHEIGHT-CHHEIGHT div 6));
+    MoveTo(ox -4, oy - yPix div 3);
+    LineTo(ox +4, oy - yPix div 3);
+    TextOut(ox+4, oy-(yPix+TextHeight('1'))div 3,intToStr(CHHEIGHT-CHHEIGHT div 2));
+    MoveTo(ox -4, oy + yPix div 6);
+    LineTo(ox +4, oy + yPix div 6);
+    TextOut(ox+4, oy+(yPix-TextHeight('1'))div 6,intToStr((CHHEIGHT div 3)-62));
+    MoveTo(ox -4, oy + yPix div 3);
+    LineTo(ox +4, oy + yPix div 3);
+    TextOut(ox+4, oy+(yPix-TextHeight('1'))div 3,intTostr(CHHEIGHT div 6));
+    Font.Name:= 'Arial';
+    Font.Color:= clred;
+      TextOut(ox-3 * xPix+10, oy -280, ' Random Noise 1/f  ');
+      TextOut(ox-3 * xPix+10, oy +195, ' Random Walk (Brownian Motion) 1/f^2 ');
+    Font.Color:= clred;
+      TextOut(ox-3 * xPix+10, oy-30,' White Noise 1/f^0 ');
+    Font.Color:= clblue;
+      TextOut(ox-2 * xPix+750, oy-30,' Clusterpoints ');
+    Pen.Color:= clBlue;
+    //procedure drawChart(vForm: TForm);
+  end;
+end;
+
+function KurtosisAll(const chartData: TRandomArr): string;
+var
+  m1, m2, m3, m4, skew, kurtosis: Extended;
+  vd: array[1..REALDAT] of double;
+  i: integer;
+begin
+  for i:= 1 to REALDAT do vd[i]:= chartdata[i];
+  momentSkewKurtosis(vd, m1, m2, m3, m4, skew, kurtosis);
+  result:= Format('All: m1 mean: %4.3f m2 '+ 
+                  'variance: %4.3f skew: %4.3f kurtosis: %4.3f',
+                                        [m1, m2, skew, kurtosis]);
+end;
+ 
+ 
+procedure letPrimeStatistics(const chartData:TRandomArr; var mn,std: extended);
+var vd: array[1..REALDAT] of double;
+    i: integer;                       
+begin
+  //vd:= chartdata;
+  for i:= 1 to REALDAT do vd[i]:= chartdata[i];
+  MeanAndStdDev(vd, mn, std);
+end; 
+
+
+procedure preInitArray;
+var i: Integer;
+begin
+  for i:= 1 to REALDAT-1 do chdat1[i]:= 0;
+  for i:= 1 to REALDAT-1 do chdat2[i]:= 0;
+  for i:= 1 to REALDAT-1 do chdat3[i]:= 0;
+end;
+
+function ChartGenerator(HBase,count: integer; var vdata: TRandomArr): Boolean;
+var
+  i, y3: Integer;
+  y2: double;
+begin
+  y2:= HBase - YBASE;
+    result:= false;
+    for i:= 1 to count do begin
+      y2:= randomF *SQRT(0.00025);   //Gauss Distribution from MATLAB
+      //y2:= RandG(00000.1, 00000000.2)
+      //writeln(floattostr(y2));
+      vdata[i]:= round(4000*y2)+580;
+    end;
+    result:= true;
+end;
+
+
+function ChartGenerator2(HBase, count: integer; var vdata: TRandomArr): Boolean;
+var
+  i, y2, y3: Integer;
+begin
+  y3:= HBase;
+  result:= false;
+  for i:= 1 to count do begin   //white noise 
+    y2:= (random(90) - random(90)) + y3;
+    //y2:= random(90) + y3;
+    vdata[i]:= y2
+  end;
+ result:= true;
+end;
+
+
+function ChartGenerator3(HBase, count: integer; var vdata: TRandomArr): Boolean;
+var i, y2, y3: Integer;
+begin
+  y2:= HBase-YBASE;
+  result:= false;
+  for i:= 1 to count do begin
+  //inc(i)
+    if i mod 4 = 0  then  begin   //random walk
+      y3:= random(6)-random(6)
+      y2:= y2+y3;
+    end else
+      y2:= y2+y3;
+   vdata[i]:= y2
+  end;
+ result:= true;
+end;
+
+
+function LoadChartList(HBase, count: integer; var vdata: TRandomArr): boolean;
+var
+  i: Integer;
+  chartlst: TStringList;
+begin
+  chartlst:= TStringlist.Create;
+  try
+    chartlst.loadFromFile(CHARTFILE)
+    for i:= 1 to count - 1 do 
+      vdata[i]:= strtoint(chartlst.Strings[i]);
+    result:= true;
+  finally
+    chartlst.free;
+  end;
+end;
+
+procedure drawCluster(vForm: TForm; vChart: TRandomArr; vset: byte);
+var
+  i, hsize: integer;
+begin
+  with vForm.canvas do begin
+    hsize:= vForm.Height-1 div 2;
+    Pen.Color:= clpurple;
+    lineto(0, hsize -vChart[1]);
+    case vset of
+    1: for i:= 2 to REALDAT do
+       //point logistic map
+         Pixels[vChart[i]+DBASE-50,vChart[i+1]-DBASE+50]:= clWhite;
+    2: for i:= 2 to REALDAT do   //x first
+         Pixels[vChart[i]+DBASE+200,vChart[i+1]]:= clWhite;
+    3: for i:= 2 to REALDAT do
+         Pixels[vChart[i]+DBASE+400,vChart[i+1]+DBASE-100]:= clred;
+    end;
+  end;  
+end;
+
+procedure drawChart(vForm: TForm; vChart: TRandomArr; vset: byte);
+var i, hsize: integer;
+begin
+  with vForm.canvas do begin
+    hsize:= vForm.Height-1 div 2;
+    Pen.Color:= Random(clblue);
+    if Pen.Color = clblack then
+      Pen.Color:= random(clblue);
+    //setZoomFact(high(chartdata), fileNameChart);
+    moveto(0, hsize -vChart[1]);
+    for i:= 1 to REALDAT -1 do
+      LineTo(i, hsize -vChart[i]);
+    case vset of
+      1: drawCluster(vForm, vChart, 1);
+      2: drawCluster(vForm, vChart, 2);
+      3: drawCluster(vForm, vChart, 3);
+    end;
+  end;
+end;
+
+procedure soundChart(vChart: TRandomArr; vset: byte);
+var i: integer;
+begin
+    for i:= 2 to high(vchart) -2 do
+      Beep2(vChart[i]+480, 5);
+      //Beep2(440, 200);
+end;
+
+//-----------------------------event handlers---------------------------------
+
+procedure SaveScreenshotC(sender: TObject);
+begin
+   SaveCanvas2(cFrm.canvas,ExePath+'examples\whitenoise.png') 
+  //CaptureScreenFormat(ExePath+'examples\whitenoise.','PNG');
+end;  
+ 
+procedure GenerateChartC(sender: TObject);
+begin
+  FormClick(self);
+end;
+
+
+procedure FormClick(sender: TObject);
+var mn, std: extended;
+begin
+  preInitArray;
+  cFrm.repaint;
+  if chartGenerator(cFrm.height, REALDAT, chDat1) then
+      drawChart(cfrm, chDat1, 1);
+  if chartGenerator2(cFrm.height div 2, REALDAT, chDat2) then
+      drawChart(cfrm, chDat2, 2);
+  if chartGenerator3(cFrm.height div 3, REALDAT, chDat3) then
+      drawChart(cfrm, chDat3, 3);
+  letPrimeStatistics(chDat1, mn, std);
+  PrintF('Stat Gauss: Mean: %f  Stddev: %f ',[mn, std]);
+  writeln(KurtosisAll(chDat1))
+  letPrimeStatistics(chDat2, mn, std)
+  PrintF('Stat RandomPure: Mean: %f  Stddev: %f ',[mn, std]);
+  writeln(KurtosisAll(chDat2))
+  letPrimeStatistics(chDat3, mn, std)
+  PrintF('Stat RandomWalk: Mean: %f  Stddev: %f ',[mn, std]);
+  writeln(KurtosisAll(chDat3))
+  Writeln('');
+  //soundChart(chdat3, 1)
+end;      
+
+procedure FormKeyPress(Sender: TObject; var Key: Char);
+begin
+ if Key =  #13 
+   then FormClick(self);
+ if Key = #27 then cFrm.close;
+end;
+
+procedure CloseChartC(Sender: TObject);
+begin
+  cFrm.Close;
+end;
+
+Function EinsteinEnergyCube: extended;
+// one sugar cube of 3 gram(m): E=mc^2 example
+begin
+ //result:= 0.003 * Power(300000000, 2);
+ result:= 3/1000 * Power(MetersPerLightSecond, 2);
+end; 
+
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.Create(self);
+  with cFrm do begin
+    caption:= 'Chart Noise Generator, Click or press Enter ';  
+    BorderStyle:= bsDialog;
+    height:= CHHEIGHT;
+    width:= CHDAT-MA_LONG;
+    color:= clblack;
+    onPaint:= @PaintBox1Paint;
+    onClick:= @FormClick;
+    onKeyPress:= @FormKeyPress
+    Show;
+  end;
+  with TBitBtn.Create(cFrm) do begin
+    Parent:= cFrm;
+    setBounds(LEFTBASE+280,TOPBASE+460,150,40);
+    caption:= 'Save';
+    font.size:= 12;
+    glyph.LoadFromResourceName(HINSTANCE,'CL_MPPLAY'); 
+    onClick:= @SaveScreenshotC;
+  end;
+  with TBitBtn.Create(cFrm) do begin
+    Parent:= cFrm;
+    setBounds(LEFTBASE+120,TOPBASE+460,150,40);
+    caption:= 'Generate';
+    font.size:= 12;
+    glyph.LoadFromResourceName(HINSTANCE,'CL_MPEJECT'); 
+    onClick:= @GenerateChartC;
+  end;
+  with TBitBtn.Create(cFrm) do begin
+    Parent:= cFrm;
+    setBounds(LEFTBASE+440,TOPBASE+460,150,40);
+    caption:= 'Close';
+    font.size:= 12;
+    glyph.LoadFromResourceName(HINSTANCE,'CL_MPSTOP'); 
+    onClick:= @CloseChartC;
+  end;
+end;
+
+//main generator loop
+
+begin
+//************* maXbox statistics series**************************************
+  loadForm;
+  preInitArray;
+  Randomize;
+  paintBox1Paint(self);
+  FormClick(self);
+  {//unit test drives
+  for i:= 1 to chdat-1 do 
+    writeln(floattostr(chartdata[i]))}
+  Writeln('E=mc^2 example: '+FloatToStr(EinsteinEnergyCube)) 
+  Writeln('One Sugar Cube has Energy in Joule: '+FloatToStr(EinsteinEnergyCube)) 
+  PrintF('One Sugar Cube has Energy in Joule: %0.2E',[EinsteinEnergyCube]) 
+  PrintF('E=mc^2 example: 2 Days Power for Hamburg: %0.2E',[EinsteinEnergyCube]); 
+  PrintF('E=mc^2 example: Joule to kWh: %f',[EinsteinEnergyCube/3600000]); 
+  PrintF('E=mc^2 example: Joule to kWh: %0.2E kWh',[EinsteinEnergyCube/3600000]); 
+  Writeln('');
+  Writeln('test '+floattostr(pij)) 
+  Writeln('test '+floattostr(pi)) 
+  Writeln(Format('format of PI %0.18f',[PI])) 
+  PrintF('PrintF of PI  %0.18f',[PI]) 
+  Writeln('test '+floattostr(EULER)) 
+  Writeln('test '+floattostr(exp(1))) 
+  writeln(floattoStr(random2(0)))
+
+End.
+
+just inside maxbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+
+        
+{        In probability theory and statistics, kurtosis (from the Greek word kyrtos
+ or kurtos, meaning bulging) is a measure of the "peakedness" of the probability distribution of a real-valued random variable. Higher kurtosis means more of the variance is the result of infrequent extreme deviations, as opposed to frequent modestly sized deviations.}
+                                     

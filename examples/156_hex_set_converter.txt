@@ -1,0 +1,103 @@
+{***************************************************************
+ *
+ * Project  : hexer
+ * Unit Name: 156 hex_set
+ * Purpose  : Demonstrates the functions of a hex converter
+ * Date  : 21/08/2011  -  14:38:56, loc's=66
+ *
+ ****************************************************************}
+
+
+program HEX_SET_Converter;
+
+ //const HexN : array[0..15] of char = '0123456789ABCDEF' ; 
+  
+ var hexn: THexArray;
+   //hexdigits
+     mbits: TBits;
+
+  procedure initHexSet;
+  var i: integer;
+  begin
+    for i:= 0 to 9 do 
+      hexn[i]:= Chr(i+48);
+    hexn[10]:= 'A'; hexn[11]:= 'B'; hexn[12]:= 'C'; hexn[13]:= 'D'; 
+    hexn[14]:= 'E'; hexn[15]:= 'F';
+  end;  
+
+
+  function Hex_ofB (b: byte): string; 
+  begin 
+    result:= HexN[b shr 4] + HexN[b and $0F];
+  end;
+   
+  function Hex_ofC (c: char): string;
+  begin
+    result:= Hex_ofB (ord(c));
+  end; 
+  
+  function Hex_ofW (w: word): string;
+  var ahi, alo: integer;
+  begin 
+    // hi and lo function (see below)
+    ahi:= w shr 8;
+    alo:= w and $FF;
+    result:= Hex_ofB(ahi) + Hex_ofB(alo);
+  end;
+  
+  function Hex_ofDW(i: Integer): string ;
+  begin
+    result:= Hex_ofW(word(i shr 16)) + Hex_ofW( word(i));
+  end; 
+
+begin
+  maxform1.console1click(self)
+  writeln('process id of hexer '+inttostr(currentprocessid))
+  Writeln('test ref ' +inttobin(2000))
+  InitHexSet;
+  writeln('from extern function '+bintohex2('11111010000'))
+  writeln('from extern function back '+hextobin2('000007D0'))
+  writeln('')
+  //writeln(chr(48))
+  write(Hex_ofB(255)+' '+Hex_ofC('F')+' '+Hex_ofW(65535)+ ' '+hex_ofDW(2147483647))
+  //just a test
+  mbits:= TBits.create;
+  mbits.free;
+end.
+
+
+Die Highlights der Delphi RTL.
+
+Dieser Speak ist garantiert werbefrei, auch wenn RTL dahintersteht.
+Ich zeige die besten Funktionen und Prozeduren aus der Delphi Runtime Library, die stetig (vor allem seit D2009) enorm zugenommen hat. In diesem Streifzug zeige ich krasse, exotische aber auch nützliche, mächtige Routinen aus der Bibliothek, die ja der Hauptlieferant zur VCL hin ist.
+Recht formlos zieht die Demo der Funktionen aus den Unit Kategorien von danen, die auch einige  versteckte Routinen aus der System und SysUtils aufdecken. Wir wagen zudem einen Blick auf die Indy- und Jedi RTL; einige Aussagen zu Packages, Lizenzen und 64bit- Compiler runden die Session dann ab.
+
+
+RTLConsts.pas
+
+function ReturnAddr: Pointer;
+  asm
+  	MOV	EAX,[EBP+4]
+  end;
+
+http://docwiki.embarcadero.com/CodeExamples/en/Code_Samples_by_Function
+
+Es gibt die Hi und Lo-Funktionen, geht aber auch selber ganz leicht:
+
+Delphi-Quellcode:
+  hibyte:= myword shr 8;
+  lobyte:= myword and $FF;
+Ein Word sieht ja so aus:
+
+Code:
+hh hh hh hh ll ll ll ll
+Wenn du das jetzt um 8 nach rechts shiftest, siehts so aus:
+
+Code:
+00 00 00 00 hh hh hh hh
+Und bei and $FF siehts so aus:
+
+Code:
+00 00 00 00 ll ll ll ll
+
+

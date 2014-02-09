@@ -1,0 +1,3135 @@
+PROGRAM Duallist_ParserForm_Natural_Interaction_ChartPlot;
+
+//file of :///E:/maxbox/maxbox3/exercices/tjvchartdemo13071259.htm
+CONST 
+//<Constant declarations>   TestBed, locs=119
+  TEXTOUT = ' hi time traveler ';
+  FILENAME = 'maxbox3.exe';
+
+{TYPE 
+<Type declarations>} 
+
+VAR 
+  i, N, SN: integer;
+  getlist: TStringList;
+  //gp: TGridpanel;
+
+//procedure StrtoList(s: string; const List: TStrings; const delimiter: char=';');
+procedure StrtoList(s: string; const List: TStrings; const delimiter: char);
+var tmp : string;
+    i   : integer;
+begin
+  List.BeginUpdate;
+  if delimiter = '' then delimiter:= ';';
+  try
+   List.Clear;
+   while pos(delimiter, s) > 0 do begin
+     i := pos(delimiter, s);
+     tmp := Copy(s, 1, i - 1);
+     Delete(s, 1, i);
+     List.Add(tmp);
+   end;
+   if s <> '' then
+     List.Add(s);
+  finally
+   List.EndUpdate;
+  end;
+  //frame3d
+end;
+
+function TJvPlaylist_GetPath(Value: string; Position: Integer): string;
+var
+  I: Integer;
+  ShowDrive, ShowExtension, ShowNumbers: boolean;
+begin
+  Result := Value;
+  if not ShowDrive then begin
+    I := Pos(':', Result);
+    if I > 0 then
+      Result := Copy(Result, I + 1, Length(Result));
+  end;
+  if not ShowExtension then
+    Result := ChangeFileExt(Result, '');
+  if ShowNumbers then
+    Result := IntToStr(Position + 1) + '. ' + Result;
+end;
+
+procedure TJvPlaylist_SortBySongName;
+var
+  A, B, C: Integer;
+   FItems: TStringList;
+    FShowExtension: Boolean;
+    FRefresh: Boolean;
+    FShowDrive: Boolean;
+    Items: TStrings;
+    mb: TListBox;
+begin
+  FRefresh:= True;
+  //with FItems do begin
+  for A := 0 to Items.Count - 1 do begin
+    C := A;
+    for B := A to Items.Count - 1 do
+      if ExtractFileName(Items[B]) < ExtractFileName(Items[C]) then
+        C := B;
+    Items.Exchange(A, C);
+  end;
+  FRefresh := False;
+  mb.Refresh;
+  //end;
+end;
+
+
+
+procedure runDuallistForm;
+//var acap: TCaption;
+var getList: TStringlist;
+    dlist: TJvDualListDialog;
+begin
+  getList:= TStringlist.create;
+   if PeBorFormNames(Exepath+FILENAME, getList) then
+       //for i:= 1 to getList.count-1 do 
+         writeln('forms found');
+    {dlist:= TJvDualListDialog.create(self);
+    TForm(dlist).Setbounds(10,10,400,400);
+    dlist.execute
+    dlist.free;}
+  with TJvDualListDialog.create(self) do begin
+    list1:= getList;
+    okbtncaption:= 'Dual OK';
+    //TJvDualListDialog(setbounds
+    title:= 'mX3 Form Names';
+    //width:= 700;
+    Execute;
+    //showmodal;
+    Free;
+  end;
+  getlist.Free;  
+end; 
+
+
+procedure runParserForm;
+//var acap: TCaption;
+begin
+  with TJvHTMLParserForm.create(self) do begin
+    //list1:= getList;
+    //SetBounds(10,10,350,200)
+    //okbtncaption:= 'Dual OK';
+    //TJvDualListDialog(setbounds
+    caption:= 'mX3 HTMLParser Form';
+    Showmodal;
+    //showmodal;
+    Free;
+  end;
+end; 
+
+
+procedure runYearGridForm;
+//var acap: TCaption;
+var it: Int64;
+begin
+  with TYearGridEditForm.create(self) do begin
+    //list1:= getList;
+    //SetBounds(10,10,350,200)
+    //okbtncaption:= 'Dual OK';
+    //TJvDualListDialog(setbounds
+    caption:= 'mX3 YearGrid Form';
+    Showmodal;
+    //FormShow(self);
+    //showmodal;
+    Free;
+  end;
+  for it:= 1 to 32 do
+    printF('Bin exponent with SHL: 2^%d = %d',[it, it SHL it DIV it]);
+end; 
+
+//TYearGridEditForm
+var 
+  aFrm: TForm;
+  mT: TTimer;
+  tB: TTrackBar;
+  statBar1: TStatusBar;
+
+//**************************Event Handlers*******************************
+procedure TFrm1_trackSpeedChange(Sender: TObject);
+begin
+  //mt.Interval:= 1000 div tB.Position;
+  writeln(intToStr(1000 div tB.Position));
+end;
+
+procedure TFrm1_closeForm(Sender: TObject; var Action: TCloseAction);
+begin
+  {if mt <> NIL then begin
+    mT.enabled:= false;
+    mT.Free;
+    mT:= NIL;
+  end;}
+  ///afrm.Free;  
+  action:= caFree;
+  afrm:= NIL;
+end;
+
+procedure TFrm1_CloseClick(Sender: TObject);
+begin
+  afrm.Close;
+end;
+
+procedure TFrm1_PauseClick(Sender: TObject);
+begin
+  {if mT <> NIL then
+    mt.enabled:= not mt.enabled; }
+end;
+
+//******************************TStatArray**********************************33
+//type
+  //TStatArray = array of double;
+
+var
+//TStatArray = class
+  StatArray: TStatArray;
+  //protected
+   //FFirst:Boolean;
+   FGrows: Boolean; // false=rolling average (circular buffer mode), true=average or sd of any number of samples (array grows without limit)
+   FValues: Array of Double;
+   FLength, // Array absolute size (may still be no data even if this is >0)
+   FIndex,  // Where will the next sample be stored into the array?
+   FCount:  // How many valid samples are in the array right now?
+      Integer;
+
+
+(*   procedure SetLen(aLength:Integer);
+    procedure AddValue(aValue:Double);
+      function Average:Double;
+      function StandardDeviation:Double;
+      property Grows:Boolean read FGrows write FGrows; // false=rolling average, true=average ALL samples (grows to fit)
+      property Length:Integer read FLength write SetLen;
+    property Count:Integer read FCount;
+    //property First:Boolean read FFirst;
+      procedure Reset; // Clear everything!
+      constructor Create; overload;
+    constructor Create(initialLength:Integer); overload;
+    destructor Destroy; override;
+
+uses  Windows, // OutputDebugString
+      SysUtils, // FloatToStr
+      Math;  //  VCL's statistics routines. StdDev, etc.
+
+// Begin Rolling Average      *)
+
+procedure  TStatArray_Create; // overload;
+begin
+   //FFirst := true;
+   FLength := 0;
+   FIndex := 0;
+   FCount:= 0;
+   FGrows := true;
+   SetLength(FValues,0);   
+end;
+
+procedure TStatArray_Reset;
+var
+ i:Integer;
+begin
+    FIndex := 0;
+    FCount := 0;
+    for i := 0 to FLength-1 do begin
+      FValues[i] := -999.0; // debug helper.
+    end;
+    //FFirst := true;
+end;
+
+procedure TStatArray_Create2(initialLength:Integer); // overload;
+begin
+//   FFirst := true;
+   SetLength(FValues,initialLength);
+   if (initialLength>0) then
+      FGrows := false
+   else
+      FGrows := true; 
+   FLength := initialLength;
+   FIndex := 0;
+   FCount:= 0;
+end;
+
+
+procedure  TStatArray_Destroy;
+begin
+  SetLength(FValues,0);
+end;
+
+
+function TStatArray_Average: Double;
+var
+ last,i:Integer;
+ sum:Double;
+begin
+ if FCount <= 0 then begin
+    result := 0;
+ end else begin
+    sum := 0;
+    if (FCount>FLength) then
+        last :=FLength-1
+    else
+        last :=FCount-1;
+    for i := 0 to last do begin
+       sum := sum + FValues[i];
+    end;
+    result := sum / (last+1);
+ end;
+end;
+
+function TStatArray_StandardDeviation:Double;
+var
+ i:Integer;
+// sum:Double;
+ TempArray:Array of Double;
+begin
+  if (FCount <= 0) then
+      result := 0
+  else if (FCount >= FLength) then begin
+      result := StdDev( FValues )
+  end else begin
+      SetLength(TempArray,FCount);
+      for i := 0 to FCount-1 do begin
+          TempArray[i] := FValues[i];
+      end;
+      result := StdDev( TempArray );
+      SetLength(TempArray,0);
+  end;
+end;
+
+procedure TStatArray_AddValue(aValue:Double);
+//var
+// i:Integer;
+begin
+ (*if FFirst then begin
+    FFirst := false;
+    FIndex := 0;
+    FValues[0] := aValue;
+    FCount := 1;
+ end else begin*)
+
+ // First time in we might need to create an array:
+  if FIndex>= FLength then begin
+     Assert(FGrows,'illegal condition'); // Illegal condition.
+     FLength := FIndex+1;
+     SetLength( FValues,FLength); // uninitialized, as of yet.
+  end;
+
+  FValues[FIndex] := aValue;
+  Inc(FIndex);
+  Inc(FCount);
+  if (not FGrows) then begin // circular?
+    if (FIndex>=FLength) then begin
+        FIndex := 0;
+        //FCount := FLength;//FCount does not exceed FLength in wraparounds.
+    end;
+  end else begin // grow after, in doublings of size, scales better!
+    if (FIndex>=FLength) then begin
+      FLength := FLength * 2;
+      SetLength( FValues,FLength); // uninitialized, as of yet.
+{$ifdef DEBUG_ASSERTIONS}  
+      Assert(FLength<20000); // Debug limit
+{$endif}      
+    end;
+  end;
+
+end;
+
+procedure TStatArray_SetLen(aLength:Integer);
+begin
+  if(aLength<1) then
+      aLength := 1;
+  FLength := aLength;
+  SetLength(FValues, FLength);
+
+end;
+
+
+// End Stats
+
+
+    procedure _outs(s:String);
+    begin
+        //OutputDebugString(PChar(s));
+    end;
+    procedure _outd(d:Double);
+    begin
+        //OutputDebugString(PChar(FloatToStr(d)));
+    end;
+
+
+//{$ifdef UNIT_TESTS}
+
+
+    {procedure _outs(s:String);
+    begin
+        OutputDebugString(PChar(s));
+    end;
+    procedure _outd(d:Double);
+    begin
+        OutputDebugString(PChar(FloatToStr(d)));
+    end;}
+    
+procedure StatsUnitTests;
+var
+    diff:Double;
+    a1: TStatArray;
+    (*procedure _outs(s:String);
+    begin
+        OutputDebugString(PChar(s));
+    end;
+    procedure _outd(d:Double);
+    begin
+        OutputDebugString(PChar(FloatToStr(d)));
+    end;*)
+    
+begin
+   _outs('StatsUnitTests begins');
+
+   a1 := TStatArray.Create1(0); // Growing array.
+   a1.AddValue( 3.5 );
+   a1.AddValue( 1.5 );
+   a1.AddValue( 25.5 );
+   a1.AddValue( 100.5 );
+   _outd( a1.Average );
+
+   diff := Abs(((3.5+1.5+25.5+100.5)/4.0)-a1.Average);
+   Assert(diff<0.001,'false');
+
+   a1.Reset;
+   Assert(Abs(a1.Average)<0.0001,'false');
+
+   a1.AddValue( 3.5 );
+   a1.AddValue( 1.5 );
+   a1.AddValue( 25.5 );
+   a1.AddValue( 100.5 );
+   _outd( a1.Average );
+
+   diff := Abs(((3.5+1.5+25.5+100.5)/4.0)-a1.Average);
+   Assert(diff<0.001,'false');
+
+   _outd( a1.StandardDeviation );
+   Assert(trunc(a1.StandardDeviation)=46,'false');
+
+   _outs('StatsUnitTests ends');   
+end; 
+
+
+
+// ***************************** Chart Form *******************************33
+//type TStatArray = array[-100..200] of integer;
+var 
+// Our waveform generator uses the following as state-variables:
+FGenerationIndex: Integer;
+Foo, Foo1, Foo2: Integer;
+Fhgt, Fhg0, Fhg2p: Double;
+
+FStatHgt, FStatHg0: TStatArray;
+Fdt, Fds: Double;
+FNegValueFlag: Boolean;
+
+
+PanelTop: TPanel;
+ButtonBarChart: TSpeedButton;
+ButtonLine: TSpeedButton;
+ButtonStackedBarAve: TSpeedButton;
+ButtonStackedBar: TSpeedButton;
+ButtonBarAve: TSpeedButton;
+ColorDialog1: TColorDialog;
+ButtonPie: TSpeedButton;
+FontDialog1: TFontDialog;
+ButtonMarkers: TSpeedButton;
+ButtonDeltaAverage: TSpeedButton;
+Chart: TJvChart;
+ButtonLineMarker: TSpeedButton;
+Label1: TLabel;
+MainMenu1: TMainMenu;
+Demo1: TMenuItem;
+Help1: TMenuItem;
+About1: TMenuItem;
+AboutJVCL301: TMenuItem;
+ShowgapinLineChart1: TMenuItem;
+N1: TMenuItem;
+Print1: TMenuItem;
+Generatenewrandomvalues1: TMenuItem;
+CopyToClipboard1: TMenuItem;
+N2: TMenuItem;
+SetHeaderFont1: TMenuItem;
+Scrolling1: TMenuItem;
+ListBox1: TListBox;
+//Splitter1: TSplitter;
+Timer1: TTimer;
+ShowDataInListbox1: TMenuItem;
+N4: TMenuItem;
+LargeDataset576samples1: TMenuItem;
+DateTimeAxisMode: TMenuItem;
+PrintOptions1: TMenuItem;
+PrinterSetupDialog1: TPrinterSetupDialog;
+PrintDialog1: TPrintDialog;
+MenuSecondaryAxisMode: TMenuItem;
+MenuNegValueTest: TMenuItem;
+SpeedButtonTestMouseOver: TSpeedButton;
+NewFeaturesfor20071: TMenuItem;
+
+
+Procedure InitChartFormOptions;
+begin
+  with Chart do begin
+    Left:= 10
+    Top:= 10
+    Width:= 589
+    Height:= 418
+    //Align:= alClient;
+    Options.XAxisValuesPerDivision:= 10
+    Options.XAxisLabelAlignment:= taLeftJustify
+    Options.XAxisDateTimeMode:= False
+    Options.XAxisLegendSkipBy:= 2
+    Options.PenCount:= 3
+    Options.XOrigin:= 0
+    Options.YOrigin:= 0
+    //Options.YStartOffset:= 42
+    Options.PrimaryYAxis.YMax:= 20
+    Options.PrimaryYAxis.YDivisions:= 20
+    Options.PrimaryYAxis.YLegendDecimalPlaces:= 1
+    Options.SecondaryYAxis.YMax:= 140
+    Options.SecondaryYAxis.YLegendDecimalPlaces:= 0
+    Options.SecondaryYAxis.DefaultYLegends:= 60
+    Options.MouseDragObjects:= False
+    Options.Legend:= clChartLegendBelow
+    Options.LegendRowCount:= 1
+    Options.PenLineWidth:= 2
+    Options.AxisLineWidth:= 3
+    Options.XValueCount:= 20
+    Options.HeaderFont.Charset:= DEFAULT_CHARSET
+    Options.HeaderFont.Color:= clWindowText
+    Options.HeaderFont.Height:= -11
+    Options.HeaderFont.Name:= 'MS Sans Serif'
+    Options.HeaderFont.Style:= []
+    Options.LegendFont.Charset:= DEFAULT_CHARSET
+    Options.LegendFont.Color:= clWindowText
+    Options.LegendFont.Height:= -11
+    Options.LegendFont.Name:= 'MS Sans Serif'
+    Options.LegendFont.Style:= []
+    Options.AxisFont.Charset:= DEFAULT_CHARSET
+    Options.AxisFont.Color:= clWindowText
+    Options.AxisFont.Height:= -11
+    Options.AxisFont.Name:= 'MS Sans Serif'
+    Options.AxisFont.Style:= []
+    Options.PaperColor:= clWhite
+    Options.AxisLineColor:= clBlack
+    Options.CursorColor:= clBlack
+    Options.CursorStyle:= psDot
+    //OnChartPaint:= @ChartChartPaint
+    //OnBeginFloatingMarkerDrag:= ChartBeginFloatingMarkerDrag
+    //OnEndFloatingMarkerDrag:= ChartEndFloatingMarkerDrag
+  end
+end;  
+
+
+
+{ Simple Chart Tests for finding bug }
+procedure TJvChartDemoForm_TestMouseOverClick(Sender: TObject);
+var
+i:Integer;
+n:Double;
+marker1,marker2,dragCursor:TJvChartFloatingMarker;
+begin
+ListBox1.Clear;
+Scrolling1.Checked := false;
+ 
+Chart.Options.Title := 'Click on the Red Diamonds or the vertical gray line and Drag them!';
+Chart.Options.ChartKind := ckChartLine;
+Chart.Options.XLegends.Clear;
+Chart.Options.XAxisHeader := '';
+ 
+Chart.Options.MouseDragObjects := true; // NEW: MOUSE DRAG FLOATING OBJECTS!
+ 
+for i := 0 to Chart.Options.PenCount - 1 do begin
+Chart.Options.PenMarkerKind[I] := pmkNone;
+end;
+Chart.Data.Clear;
+Chart.Options.XValueCount := 80;
+Chart.Data.ValueCount := 6;
+Chart.Options.PenCount := 1;
+for i := 0 to Chart.Options.XValueCount-1 do begin
+n := 30-(25*((1-((i-25)/15))*(1-((i-25)/15))));
+if n<5 then
+n := 5 -(Sqrt((Abs(n))/15));
+//ListBox1.Items.Add( FloatToStrF(n,ffFixed,6,4));
+Chart.Data.Value[0,i] := n;
+end;
+Chart.Options.PrimaryYAxis.YMax := 50;
+ 
+Chart.Options.PenStyle[0] := psSolid;
+ 
+// NEW: Add a floating marker:
+marker1 := Chart.AddFloatingMarker;
+marker1.XPosition := 13;
+marker1.YPosition := Chart.Data.Value[0,marker1.XPosition]; // Snap to Pen 1
+marker1.XDraggable := true; // make it mouse-moveable.
+marker1.YDraggable := true;
+marker1.Caption :='Start';
+marker1.Visible := true;
+ 
+ 
+marker2 := Chart.AddFloatingMarker;
+marker2.XPosition := 66;
+marker2.YPosition := Chart.Data.Value[0,marker2.XPosition]; // Snap to Pen 1
+marker2.LineToMarker := marker1.index; // Connect with a line to marker1
+marker2.XDraggable := true; // make it mouse-moveable.
+marker2.YDraggable := true;
+marker2.Caption := 'End';
+marker2.Visible := true;
+ 
+// NOTE: Do not Free marker1 or marker2.
+// Marker objects are freed automatically
+// by the Chart.
+ 
+// a draggable cursor object:
+dragCursor := Chart.AddFloatingMarker;
+dragCursor.LineVertical := true; // Make a vertical Line
+dragCursor.Marker := pmkNone; // No marker. So it is a line only.
+dragCursor.XDraggable := true; // make it draggable.
+dragCursor.XPosition := 40;
+dragCursor.LineColor := clDkGray;
+dragCursor.LineStyle := psSolid;
+dragCursor.LineWidth := 2;
+dragCursor.Caption:= FloatToStrF(Chart.Data.Value[0,dragCursor.XPosition],ffFixed,6,4 );
+dragCursor.Visible := true;
+ 
+ 
+Chart.PlotGraph;
+ 
+ 
+end;
+ 
+
+
+{ Bogus vageuly sinusoidal signal generator }
+ 
+procedure TJvChartDemoForm__Generate;
+begin
+FHgt := Abs(Random(80) + (Random(((FGenerationIndex div foo) mod foo1) * 250) * 5 + 9500));
+FHg0 := Abs(Random(280) + Random(((FGenerationIndex div foo) mod foo2) * 650) * 5 + 1003);
+if FNegValueFlag then begin
+if (Random(80) > 75) or (FGenerationIndex = 2) then begin
+  FHg0 := -1 * FHg0; // Generate a negative value! (just to show what it looks like)
+end;
+end;
+  Inc(FGenerationIndex);
+end;
+
+{ Bogus random spiky-looking function to simulate a QA value,
+  which hovers within +/- 10% of perfect (100%), but
+  with relatively infrequent spiky errors }
+ 
+function TJvChartDemoForm__QAProblemScatter: Integer;
+var
+n, m: Double;
+begin
+ n := Log10(Random(10000) + 1); // Random is my favourite function. How about you? -WP
+ n := n * Log10(Random(10000) + 1);
+ m := Log10(Random(10000) + 1);
+ m := m * Log10(Random(10000) + 1);
+ n := Abs(100 + n - m);
+ if (n < 0) then
+   n := 0;
+  if (n > 150) then
+  n := 150;
+ Result := Round(n);
+end;
+ 
+procedure TJvChartDemoForm__StoreValue(I: integer);
+begin
+  FStatHgt.AddValue(Fhgt);
+  FStatHg0.AddValue(Fhg0);
+ 
+// PAY ATTENTION HERE, this is where we set the Chart.Data.Value[ index,pen] := <values>
+// stuff which is the MOST IMPORTANT THING, unless you like blank charts:
+ 
+// Set Data.Value[Pen, Series] := dataValue ...
+  Chart.Data.Value[0, I]:= FStatHgt.Average / 1000;
+ 
+if FHg0 < 0 then begin
+Chart.Data.Value[1, I]:= FHg0 / 1000;
+// Don't show average with negative samples or negative demo ability goes away (averaged out!)
+end
+else  begin
+// Test blanks on big chart, show missing data:
+  Chart.Data.Value[1, I]:= FStatHg0.Average / 1000;
+end;
+ 
+Fhg2p := (FStatHgt.Average - FStatHg0.Average) / 1000;
+if Fhg2p < 0.0 then
+Fhg2p := 0.0;
+  Chart.Data.Value[2, I] := Fhg2p;
+ 
+Fds:= Fdt + (FGenerationIndex / 576);
+ 
+// There are TWO ways to get an X Axis label plotted:
+//if DateTimeAxisMode.Checked then
+Chart.Data.Timestamp[I] := Fds // X legends generated by timestamps
+//else
+// X Legends generated by user are used by default.
+// This would be redundant, and would be a waste of memory
+// if Chart.Options.XAxisDateTimeMode was also set.
+//Chart.Options.XLegends.Add(FormatDateTime('hh:nn:ss', Fds));
+ 
+//if MenuSecondaryAxisMode.Checked then
+begin
+if I = 1 then
+  //Chart.Data.Value[3, I]:= 100
+else
+if (I mod 4) = 3 then
+begin
+//Chart.Data.Value[3,I] := 1+ ((I mod 12) * 10) // stairstep
+//random:
+  //Chart.Data.Value[3, I] := TJvChartDemoForm__QAProblemScatter;//_QAProblemScatter;
+end
+else
+  //Chart.Data.Value[3, I] := NaN; // leave some blanks.
+end;
+end;
+ 
+procedure TJvChartDemoForm_NewFeaturesfor20071Click(Sender: TObject);
+var
+vbar:TJvChartVerticalBar;
+hbar:TJvChartHorizontalBar;
+begin
+// Try out new features for 2007:
+ 
+// Gradients.
+Chart.Options.GradientColor := $00FDEEDB; // powder blue (baby blue) mostly white.
+Chart.Options.GradientDirection :=grDown;
+
+// Vertical Bar.
+vbar := Chart.AddVerticalBar;
+vbar.Color := $00FDDDC7;
+vbar.Visible := true;
+vbar.XLeft := 6;
+vbar.XRight := 7;
+ 
+// Horizontal Bar.
+hbar := Chart.AddHorizontalBar;
+hbar.Color := $007CCAC7;
+hbar.Visible := true;
+hbar.YTop := 3;
+hbar.YBottom := 2;
+ 
+// Lots of things not shown here are new in 2007:
+// Floating Marker Count, Delete a floating marker, etc,
+// search for 'NEW 2007' in JvChart.pas for a complete
+// look at new things.
+ 
+// last thing, always update graph:
+Chart.PlotGraph;
+//Chart.Refresh;
+ 
+ 
+end;
+
+
+
+procedure TJvChartDemoForm_NewValues;
+var
+ I: Integer;
+ nValueCount: Integer;
+begin
+//Chart.Options.Title := 'Click on the Chart Title to change it!';
+ 
+Chart.ClearFloatingMarkers; // remove any previous markers.
+ 
+//ListBox1.Clear;
+Chart.Data.Clear;
+ 
+Chart.Options.PrimaryYAxis.YMax := 20;
+ 
+Randomize;
+ 
+//Chart.Options.XAxisDateTimeMode := DateTimeAxisMode.Checked; // Use datetime timestamp labels, just Fer Instance.
+
+Chart.Options.XAxisDateTimeMode:= true; // Use datetime timestamp labels, 
+if not Chart.Options.XAxisDateTimeMode then
+Chart.Options.XAxisLegendSkipBy := 5;
+ 
+// LargeDataset576samples1:= true;
+{if LargeDataset576samples1.Checked then begin
+  // A larger bogus data set for demonstration purposes.
+  nValueCount := 576; // 2.5 minute sample period, 576 samples = 1 day.
+  foo := 5; // Used in generating our bogus data below, not really important.
+  Chart.Options.XAxisValuesPerDivision := 24;
+  // 24 samples*150 seconds = 1 hour time divisions (Chart.Options.XAxisValuesPerDivision:= 4;
+end
+else begin }
+// A smaller bogus data set for demonstration purposes.
+  nValueCount := 24; // 2.5 minute sample period, 24 samples =1 hour.
+  foo := 1; // Used in generating our bogus data below, not really important.
+  Chart.Options.XAxisValuesPerDivision := 4; // five divisions, 4 values per division
+//end;
+ 
+  //Chart.ResetGraphModule; // Clears YMax.
+  Fdt := Trunc(now - 1.0); // yesterday, midnight.
+  Foo1 := Random(5) + 2; // more randomness
+  Foo2 := Random(3) + 5; // more randomness
+  FGenerationIndex := 1;
+for I := 0 to nValueCount - 1 do begin
+  if i > 0 then begin
+   // generate random data that appears to show a sawtooth-frequency-pattern plus a lot of random noise:
+   //_Generate;
+  TJvChartDemoForm__Generate; 
+  end else begin
+   Fhgt := 7000; // First sample always known value, helps me troubleshoot.
+   Fhg0 := 1000;
+end;
+ 
+//_StoreValue(I);
+
+TJvChartDemoForm__StoreValue(I);
+ 
+// Override stored value in special cases:
+ 
+{ How to make a gap in the data! }
+//if (nValueCount > 100) and ShowgapinLineChart1.Checked then begin
+if (nValueCount > 100) then begin
+
+if (I > 100) and (I < 130) then  begin
+  Chart.Data.Value[0, I] := NaN; // Use special Math.NaN const
+  Chart.Data.Value[1, I] := NaN; // Use special Math.NaN const
+  Chart.Data.Value[2, I] := NaN; // Use special Math.NaN const
+end;
+end;
+ 
+// Just so that the last two values are visibly different, to make sure
+// the chart handles the final vaulues correctly, we set all the final
+// values to known amounts also:
+if I = nValueCount - 2 then begin
+  Chart.Data.Value[0, I] := 6.0; // Use special Math.NaN const
+  Chart.Data.Value[1, I] := 4.0; // Use special Math.NaN const
+  Chart.Data.Value[2, I] := 2.0; // Use special Math.NaN const
+end
+else
+if I = nValueCount - 1 then begin
+  Chart.Data.Value[0, I] := 3.0; // Use special Math.NaN const
+  Chart.Data.Value[1, I] := 2.0; // Use special Math.NaN const
+  Chart.Data.Value[2, I] := 1.0; // Use special Math.NaN const
+ 
+end;
+ 
+  //ListBox1.Items.Append(Chart.Data.DebugStr(I));
+end;
+ 
+with Chart.Options do begin
+Title := 'Chart Title';
+XAxisHeader := 'Date/Time';
+YAxisHeader := 'Readings (ng/m3)';
+ 
+if FNegValueFlag then begin
+PrimaryYAxis.YMin := -20;
+PrimaryYAxis.YMax := 20;
+end
+else
+PrimaryYAxis.YMin := 0;
+// Try out the pen styles:
+if ChartKind = ckChartStackedBar then
+PenStyle[0] := psClear // THIS IS HOW YOU TEMPORARILY HIDE ONE PEN!
+else
+PenStyle[0] := psSolid;
+PenStyle[1] := psDash;
+PenStyle[2] := psDot;
+ 
+//if MenuSecondaryAxisMode.Checked then begin
+PenCount := 4; // Add a pen for right side demo.
+SecondaryYAxis.YMax := 140; // Example shows Q/A percentage. Experimental results
+// results are compared to expected results, and the
+// response percentage, is plotted from 0% to 140%
+// of expected value.
+ 
+SecondaryYAxis.YLegendDecimalPlaces := 2;
+ 
+PenSecondaryAxisFlag[3] := True; // Move pen index 3 (Fourth pen) to secondary axis.
+PenMarkerKind[3] := pmkDiamond;
+PenValueLabels[3] := true; // Label with text.
+PenStyle[3] := psClear; // Markers only, no lines.
+PenColor[3] := clGray;
+MarkerSize := 5; // Make 'em bigger.
+{end else begin
+PenCount := 3;
+MarkerSize := 3; // Make 'em little
+end;}
+ 
+PenLegends.Clear;
+PenLegends.Add('HgT');
+PenLegends.Add('Hg0');
+PenLegends.Add('Hg2+');
+//if MenuSecondaryAxisMode.Checked then
+PenLegends.Add('Quality%');
+ 
+PenUnit.Clear;
+PenUnit.Add('ug/m3');
+PenUnit.Add('ug/m3');
+PenUnit.Add('ug/m3');
+//if MenuSecondaryAxisMode.Checked then
+PenUnit.Add('%'); // Optional Pen in percentage scale.
+ 
+//ShowLegend := TRUE;
+Legend := clChartLegendBelow;
+ 
+//ChartKind := ckChartLine;
+end;
+ //Chart.AutoFormatGraph;
+Chart.PlotGraph;
+ 
+//Chart.ResizeChartCanvas;
+end;
+
+
+
+procedure TJvChartDemoForm_FormCreate(Sender: TObject);
+begin
+  FStatHgt:= TStatArray.Create1(10); // Initialize for rolling average of last 10 samples.
+  FStatHg0:= TStatArray.Create1(10);
+if Assigned(Chart) then
+// Chart.ShowAsLineWithMark;
+  TJvChartDemoForm_NewValues;
+  //NewValues;
+end;
+
+
+
+
+//**************************Form Builder*******************************
+procedure loadForm;
+begin
+  aFrm:= TForm.Create(self);
+  //mT:= TTimer.Create(self);
+  //mt.onTimer:= @TFrm1_timerRedrawTimer;
+  //mt.interval:= MILLISECONDS;
+  //mt.free;  in on close            
+  with aFrm do begin
+    Caption:= '********** Form Chart Template ***********';  
+    height:= 610;
+    width:= 700;
+    Position:= poScreenCenter;
+    //Color:= clBlack;
+    onClose:= @TFrm1_closeForm;
+    //onPaint:= @TFrm1_FormPaint;
+    Canvas.Pen.color:= clBlue;
+    Canvas.Pen.Width:= 15;
+    Show;
+    canvas.brush.bitmap:= getBitmapObject(Exepath+'examples\images\bmp47.bmp');
+    Canvas.FillRect(Rect(600,300,100,100));
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(310,490,150,55);
+    caption:= 'Pause';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'JVPOWEREDBYJVCL'); 
+    mXButton(05,05,width+200, height,12,12,handle);
+    //event handler
+    onClick:= @TFrm1_PauseClick;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(480,490,150,55);
+    caption:= 'Close';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP'); 
+    mXButton(05,05,width, height,12,12,handle);
+    onClick:= @TFrm1_CloseClick;
+  end;
+  tB:= TTrackBar.create(aFrm);
+  with tB do begin
+    parent:= aFrm;
+    setBounds(40,502,230,40);
+    Min:= 10; Max:= 100
+    Frequency:= 10
+    Position:= 1000 div 50;
+    linesize:= 4;
+    ThumbLength:= 30;
+    SetFocus;
+    OnChange:= @TFrm1_trackSpeedChange;
+  end;
+  statbar1:= TStatusBar.Create(aFrm);
+  with statbar1 do begin
+    parent:= aFrm;
+    showhint:= true;
+    hint:= 'this is a LED BoX';
+    Panels.add;
+      panels.items[0].width:= 200;
+      panels.items[0].text:= '200';
+    Panels.add;
+      panels.items[1].width:= 150;
+      panels.items[1].text:= '150';
+  end;
+  chart:= TJvChart.create(aFrm);
+  with chart do begin
+    parent:= aFrm;
+    setBounds(10,10,530,300);
+    DisplayBars;
+    //RegisterProperty('Data', 'TJvChartData', iptr);
+    //data;
+    //GraphHeader
+    //PlotGraph;
+    ClearFloatingMarkers; // remove any previous markers.
+    Data.Clear;
+    //Options.PrimaryYAxis.YMax := 20;
+    //onmouseOver
+  end;
+  InitChartFormOptions;
+  TJvChartDemoForm_FormCreate(self); //calls newvalues
+  TJvChartDemoForm_NewFeaturesfor20071Click(self);
+end;  
+
+BEGIN  //Main
+//<Executable statements>
+ {runDuallistForm;
+ runParserForm;
+ runYearGridForm;}
+ loadForm;
+
+ //writeln(floattostr(CPUUsage))
+ with TJvCpuUsage2.create(self) do
+   writeln('cpu '+floattostr(usage));
+ writeln(floattostr(kmtonm(23.3)))
+ writeln(floattostr(AttoPascal(10.3)))
+ writeln(floattostr(metretoFeet(10.0)))
+ writeln('PascalToBar  '+floattoStr(PascalToBar(47.5)));
+ writeln('PascalToAt   '+floattoStr(PascalToAt(47.5)));
+ writeln('PascalToTorr '+floattoStr(PascalToTorr(47.5)));
+ 
+  N:= 2; SN:= 1000;
+  {for i:= 1 to round(power(2,N)) do begin 
+    Writeln(intToStr(i)+TEXTOUT + DateTimeToStr(AddHours(Now,-i)));
+    Delay(SN);   //speed of time machine
+  end;}
+  getList:= TStringlist.create;
+     if IsValidPeFile(Exepath+FILENAME) then writeln ('Valid PE File!');
+     if PeVerifyCheckSum(Exepath+FILENAME) then writeln ('Valid CheckSum File!');
+     
+     if PeExportedFunctions(Exepath+FILENAME,  getList) then
+       for i:= 1 to getList.count-1 do 
+         writeln(getlist.strings[i]);
+     getList.Clear; 
+     if PeExportedNames(Exepath+FILENAME, getList) then
+       for i:= 1 to getList.count-1 do 
+         writeln(getlist.strings[i]);
+     getList.Clear; 
+     if PeBorFormNames(Exepath+FILENAME, getList) then
+       for i:= 1 to getList.count-1 do 
+         writeln(getlist.strings[i]);
+     getList.Clear; 
+     if PeResourceKindNames(Exepath+FILENAME, rtIcon, getList) then
+       for i:= 1 to getList.count-1 do 
+         writeln(getlist.strings[i]);
+      if PeDoesImportLibrary(Exepath+FILENAME,Exepath+'dmath.dll',false)
+       then writeln ('Import Lib!');
+    getList.Free;
+   Writeln(TEXTOUT + DateTimeToStr(AddHours(Now,-(round(power(2,24))))));
+//<Definitions> 
+
+StatsUnitTests; 
+
+   {with tpanel.create(self) do begin
+     parent:= aFrm;
+     color:= clred;
+     onclick;
+     onresize;
+   end;}
+END. 
+
+
+(* === compile-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJvHTMLParserForm(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TJvForm', 'TJvHTMLParserForm') do
+  with CL.AddClassN(CL.FindClass('TJvForm'),'TJvHTMLParserForm') do begin
+    RegisterProperty('ListBox1', 'TListBox', iptrw);
+    RegisterProperty('GroupBox1', 'TGroupBox', iptrw);
+    RegisterProperty('edKeyword', 'TEdit', iptrw);
+    RegisterProperty('Label1', 'TLabel', iptrw);
+    RegisterProperty('edStartTag', 'TEdit', iptrw);
+    RegisterProperty('Label2', 'TLabel', iptrw);
+    RegisterProperty('edEndTag', 'TEdit', iptrw);
+    RegisterProperty('Label3', 'TLabel', iptrw);
+    RegisterProperty('Label4', 'TLabel', iptrw);
+    RegisterProperty('Label5', 'TLabel', iptrw);
+    RegisterProperty('cbTakeText', 'TComboBox', iptrw);
+    RegisterProperty('edMustBe', 'TEdit', iptrw);
+    RegisterProperty('btnAdd', 'TButton', iptrw);
+    RegisterProperty('btnRemove', 'TButton', iptrw);
+    RegisterProperty('OkBtn', 'TButton', iptrw);
+    RegisterProperty('CancelBtn', 'TButton', iptrw);
+    RegisterMethod('Procedure edKeywordChange( Sender : TObject)');
+    RegisterMethod('Procedure Button1Click( Sender : TObject)');
+    RegisterMethod('Procedure ListBox1Click( Sender : TObject)');
+    RegisterMethod('Procedure Button2Click( Sender : TObject)');
+    RegisterMethod('Procedure edStartTagChange( Sender : TObject)');
+    RegisterMethod('Procedure edEndTagChange( Sender : TObject)');
+    RegisterMethod('Procedure cbTakeTextChange( Sender : TObject)');
+    RegisterMethod('Procedure edMustBeChange( Sender : TObject)');
+    RegisterMethod('Procedure OkBtnClick( Sender : TObject)');
+    RegisterMethod('Procedure CancelBtnClick( Sender : TObject)');
+    RegisterMethod('Procedure LoadFromStr( Value : TStrings)');
+    RegisterMethod('Procedure SaveToStr( Value : TStrings)');
+  end;
+end;
+
+----app_template_loaded_code----
+
+(* === compile-time registration functions === *)
+
+unit uPSI_JvChart;
+{
+   after all we got it the chart component, 3.9.8.
+}
+interface
+ 
+uses
+   SysUtils
+  ,Classes
+  ,uPSComponent
+  ,uPSRuntime
+  ,uPSCompiler
+  ;
+ 
+type 
+(*----------------------------------------------------------------------------*)
+  TPSImport_JvChart = class(TPSPlugin)
+  protected
+    procedure CompileImport1(CompExec: TPSScript); override;
+    procedure ExecImport1(CompExec: TPSScript; const ri: TPSRuntimeClassImporter); override;
+  end;
+ 
+ 
+{ compile-time registration functions }
+procedure SIRegister_TJvChart(CL: TPSPascalCompiler);
+procedure SIRegister_TJvChartOptions(CL: TPSPascalCompiler);
+procedure SIRegister_TJvChartYAxisOptions(CL: TPSPascalCompiler);
+procedure SIRegister_TJvChartData(CL: TPSPascalCompiler);
+procedure SIRegister_TJvChartVerticalBar(CL: TPSPascalCompiler);
+procedure SIRegister_TJvChartHorizontalBar(CL: TPSPascalCompiler);
+procedure SIRegister_TJvChartGradientBar(CL: TPSPascalCompiler);
+procedure SIRegister_TJvChartFloatingMarker(CL: TPSPascalCompiler);
+procedure SIRegister_JvChart(CL: TPSPascalCompiler);
+
+{ run-time registration functions }
+procedure RIRegister_TJvChart(CL: TPSRuntimeClassImporter);
+procedure RIRegister_TJvChartOptions(CL: TPSRuntimeClassImporter);
+procedure RIRegister_TJvChartYAxisOptions(CL: TPSRuntimeClassImporter);
+procedure RIRegister_TJvChartData(CL: TPSRuntimeClassImporter);
+procedure RIRegister_TJvChartVerticalBar(CL: TPSRuntimeClassImporter);
+procedure RIRegister_TJvChartHorizontalBar(CL: TPSRuntimeClassImporter);
+procedure RIRegister_TJvChartGradientBar(CL: TPSRuntimeClassImporter);
+procedure RIRegister_TJvChartFloatingMarker(CL: TPSRuntimeClassImporter);
+procedure RIRegister_JvChart(CL: TPSRuntimeClassImporter);
+
+procedure Register;
+
+implementation
+
+
+uses
+  // JclUnitVersioning
+  //,Windows
+  //,Messages
+  //,Types
+  Graphics
+  ,Controls
+  ,Contnrs
+  ,JvComponent
+  ,JvChart
+  ;
+ 
+ 
+procedure Register;
+begin
+  RegisterComponents('Pascal Script', [TPSImport_JvChart]);
+end;
+
+(* === compile-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJvChart(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TJvGraphicControl', 'TJvChart') do
+  with CL.AddClassN(CL.FindClass('TJvGraphicControl'),'TJvChart') do begin
+    RegisterMethod('Constructor Create( AOwner : TComponent)');
+    RegisterMethod('Function MouseToXValue( X : Integer) : Integer');
+    RegisterMethod('Function MouseToYValue( Y : Integer) : Double');
+    RegisterMethod('Procedure ResetGraphModule');
+    RegisterMethod('Procedure PlotGraph');
+    RegisterMethod('Procedure PlotPicture( picture : TPicture; fontScaling : Double)');
+    RegisterMethod('Procedure PrintGraph');
+    RegisterMethod('Procedure AddGraphToOpenPrintCanvas( XStartPos, YStartPos, GraphWidth, GraphHeight : Longint)');
+    RegisterMethod('Procedure GraphToClipboard');
+    RegisterMethod('Procedure ResizeChartCanvas');
+    RegisterMethod('Procedure PivotData');
+    RegisterMethod('Procedure AutoHint');
+    RegisterMethod('Procedure SetCursorPosition( Pos : Integer)');
+    RegisterMethod('Procedure DisplayBars');
+    RegisterMethod('Function AddFloatingMarker : TJvChartFloatingMarker');
+    RegisterProperty('FloatingMarker', 'TJvChartFloatingMarker Integer', iptr);
+    RegisterProperty('HorizontalBar', 'TJvChartHorizontalBar Integer', iptr);
+    RegisterProperty('VerticalBar', 'TJvChartVerticalBar Integer', iptr);
+    RegisterMethod('Procedure DeleteFloatingMarker( Index : Integer)');
+    RegisterMethod('Procedure DeleteFloatingMarkerObj( Marker : TJvChartFloatingMarker)');
+    RegisterMethod('Procedure CopyFloatingMarkers( Source : TJvChart)');
+    RegisterMethod('Procedure ClearFloatingMarkers');
+    RegisterMethod('Function FloatingMarkerCount : Integer');
+    RegisterMethod('Function AddHorizontalBar : TJvChartHorizontalBar');
+    RegisterMethod('Procedure ClearHorizontalBars');
+    RegisterMethod('Function HorizontalBarsCount : Integer');
+    RegisterMethod('Function AddVerticalBar : TJvChartVerticalBar');
+    RegisterMethod('Procedure ClearVerticalBars');
+    RegisterMethod('Function VerticalBarsCount : Integer');
+    RegisterProperty('Data', 'TJvChartData', iptr);
+    RegisterProperty('AverageData', 'TJvChartData', iptr);
+    RegisterProperty('Picture', 'TPicture', iptr);
+    RegisterProperty('CursorPosition', 'Integer', iptrw);
+    RegisterProperty('Options', 'TJvChartOptions', iptrw);
+    RegisterProperty('OnChartClick', 'TJvChartClickEvent', iptrw);
+    RegisterProperty('OnChartPaint', 'TJvChartPaintEvent', iptrw);
+    RegisterProperty('OnBeginFloatingMarkerDrag', 'TJvChartFloatingMarkerDragEvent', iptrw);
+    RegisterProperty('OnEndFloatingMarkerDrag', 'TJvChartFloatingMarkerDragEvent', iptrw);
+    RegisterProperty('OnYAxisClick', 'TJvChartEvent', iptrw);
+    RegisterProperty('OnXAxisClick', 'TJvChartEvent', iptrw);
+    RegisterProperty('OnAltYAxisClick', 'TJvChartEvent', iptrw);
+    RegisterProperty('OnTitleClick', 'TJvChartEvent', iptrw);
+  end;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJvChartOptions(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TPersistent', 'TJvChartOptions') do
+  with CL.AddClassN(CL.FindClass('TPersistent'),'TJvChartOptions') do begin
+    RegisterMethod('Constructor Create( Owner : TJvChart)');
+    RegisterMethod('Procedure Assign( Source : TPersistent)');
+    RegisterProperty('AverageValue', 'Double Integer', iptrw);
+    RegisterProperty('PenAxis', 'TJvChartYAxisOptions Integer', iptr);
+    RegisterProperty('XLegends', 'TStrings', iptrw);
+    RegisterProperty('XEnd', 'Longint', iptrw);
+    RegisterProperty('YEnd', 'Longint', iptrw);
+    RegisterProperty('GradientColor', 'TColor', iptrw);
+    RegisterProperty('GradientDirection', 'TJvChartGradientDirection', iptrw);
+    RegisterProperty('XPixelGap', 'Double', iptrw);
+    RegisterProperty('XLegendMaxTextWidth', 'Integer', iptrw);
+    RegisterProperty('PenColor', 'TColor Integer', iptrw);
+    RegisterProperty('PenStyle', 'TPenStyle Integer', iptrw);
+    RegisterProperty('PenMarkerKind', 'TJvChartPenMarkerKind Integer', iptrw);
+    RegisterProperty('PenSecondaryAxisFlag', 'Boolean Integer', iptrw);
+    RegisterProperty('PenValueLabels', 'Boolean Integer', iptrw);
+    RegisterProperty('PenLegends', 'TStrings', iptrw);
+    RegisterProperty('PenUnit', 'TStrings', iptrw);
+    RegisterProperty('ChartKind', 'TJvChartKind', iptrw);
+    RegisterProperty('Title', 'string', iptrw);
+    RegisterProperty('NoDataMessage', 'string', iptrw);
+    RegisterProperty('YAxisHeader', 'string', iptrw);
+    RegisterProperty('YAxisDivisionMarkers', 'Boolean', iptrw);
+    RegisterProperty('XAxisDivisionMarkers', 'Boolean', iptrw);
+    RegisterProperty('XAxisValuesPerDivision', 'Integer', iptrw);
+    RegisterProperty('XAxisLabelAlignment', 'TAlignment', iptrw);
+    RegisterProperty('XAxisDateTimeMode', 'Boolean', iptrw);
+    RegisterProperty('XAxisDateTimeDivision', 'Double', iptrw);
+    RegisterProperty('XAxisDateTimeFormat', 'string', iptrw);
+    RegisterProperty('XAxisHeader', 'string', iptrw);
+    RegisterProperty('XAxisLegendSkipBy', 'Integer', iptrw);
+    RegisterProperty('DateTimeFormat', 'string', iptrw);
+    RegisterProperty('PenCount', 'Integer', iptrw);
+    RegisterProperty('XGap', 'Double', iptrw);
+    RegisterProperty('XOrigin', 'Integer', iptrw);
+    RegisterProperty('YOrigin', 'Integer', iptrw);
+    RegisterProperty('XStartOffset', 'Longint', iptrw);
+    RegisterProperty('YStartOffset', 'Longint', iptrw);
+    RegisterProperty('MarkerSize', 'Integer', iptrw);
+    RegisterProperty('PrimaryYAxis', 'TJvChartYAxisOptions', iptrw);
+    RegisterProperty('SecondaryYAxis', 'TJvChartYAxisOptions', iptrw);
+    RegisterProperty('AutoUpdateGraph', 'Boolean', iptrw);
+    RegisterProperty('MouseEdit', 'Boolean', iptrw);
+    RegisterProperty('MouseDragObjects', 'Boolean', iptrw);
+    RegisterProperty('MouseInfo', 'Boolean', iptrw);
+    RegisterProperty('Legend', 'TJvChartLegend', iptrw);
+    RegisterProperty('LegendRowCount', 'Integer', iptrw);
+    RegisterProperty('LegendWidth', 'Integer', iptrw);
+    RegisterProperty('PenLineWidth', 'Integer', iptrw);
+    RegisterProperty('AxisLineWidth', 'Integer', iptrw);
+    RegisterProperty('XValueCount', 'Integer', iptrw);
+    RegisterProperty('HeaderFont', 'TFont', iptrw);
+    RegisterProperty('LegendFont', 'TFont', iptrw);
+    RegisterProperty('AxisFont', 'TFont', iptrw);
+    RegisterProperty('DivisionLineColor', 'TColor', iptrw);
+    RegisterProperty('ShadowColor', 'TColor', iptrw);
+    RegisterProperty('PaperColor', 'TColor', iptrw);
+    RegisterProperty('AxisLineColor', 'TColor', iptrw);
+    RegisterProperty('HintColor', 'TColor', iptrw);
+    RegisterProperty('AverageLineColor', 'TColor', iptrw);
+    RegisterProperty('CursorColor', 'TColor', iptrw);
+    RegisterProperty('CursorStyle', 'TPenStyle', iptrw);
+  end;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJvChartYAxisOptions(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TPersistent', 'TJvChartYAxisOptions') do
+  with CL.AddClassN(CL.FindClass('TPersistent'),'TJvChartYAxisOptions') do begin
+    RegisterMethod('Constructor Create( Owner : TJvChartOptions)');
+    RegisterMethod('Procedure Assign( Source : TPersistent)');
+    RegisterMethod('Procedure Normalize');
+    RegisterMethod('Procedure Clear');
+    RegisterProperty('YPixelGap', 'Double', iptrw);
+    RegisterProperty('Active', 'Boolean', iptr);
+    RegisterProperty('YGap', 'Double', iptr);
+    RegisterProperty('YGap1', 'Double', iptr);
+    RegisterProperty('YLegends', 'TStrings', iptrw);
+    RegisterProperty('YMax', 'Double', iptrw);
+    RegisterProperty('YMin', 'Double', iptrw);
+    RegisterProperty('YDivisions', 'Integer', iptrw);
+    RegisterProperty('MaxYDivisions', 'Integer', iptrw);
+    RegisterProperty('MinYDivisions', 'Integer', iptrw);
+    RegisterProperty('MarkerValueDecimals', 'Integer', iptrw);
+    RegisterProperty('YLegendDecimalPlaces', 'Integer', iptrw);
+    RegisterProperty('DefaultYLegends', 'Integer', iptrw);
+  end;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJvChartData(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TObject', 'TJvChartData') do
+  with CL.AddClassN(CL.FindClass('TObject'),'TJvChartData') do begin
+    RegisterMethod('Constructor Create');
+    RegisterMethod('Procedure Free');
+    RegisterMethod('Procedure PreGrow( Pen, ValueIndex : Integer)');
+    RegisterMethod('Function DebugStr( ValueIndex : Integer) : string');
+    RegisterMethod('Procedure Clear');
+    RegisterMethod('Procedure ClearPenValues');
+    RegisterMethod('Procedure Scroll');
+    RegisterProperty('Value', 'Double Integer Integer', iptrw);
+    SetDefaultPropery('Value');
+    RegisterProperty('Timestamp', 'TDateTime Integer', iptrw);
+    RegisterProperty('ValueCount', 'Integer', iptrw);
+    RegisterProperty('ClearToValue', 'Double', iptrw);
+    RegisterProperty('StartDateTime', 'TDateTime', iptrw);
+    RegisterProperty('EndDateTime', 'TDateTime', iptrw);
+  end;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJvChartVerticalBar(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TJvChartGradientBar', 'TJvChartVerticalBar') do
+  with CL.AddClassN(CL.FindClass('TJvChartGradientBar'),'TJvChartVerticalBar') do begin
+    RegisterProperty('XLeft', 'Integer', iptrw);
+    RegisterProperty('XRight', 'Integer', iptrw);
+  end;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJvChartHorizontalBar(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TJvChartGradientBar', 'TJvChartHorizontalBar') do
+  with CL.AddClassN(CL.FindClass('TJvChartGradientBar'),'TJvChartHorizontalBar') do begin
+    RegisterProperty('YTop', 'Double', iptrw);
+    RegisterProperty('YBottom', 'Double', iptrw);
+  end;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJvChartGradientBar(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TObject', 'TJvChartGradientBar') do
+  with CL.AddClassN(CL.FindClass('TObject'),'TJvChartGradientBar') do begin
+    RegisterProperty('Visible', 'boolean', iptrw);
+    RegisterProperty('YTop', 'Double', iptrw);
+    RegisterProperty('YBottom', 'Double', iptrw);
+    RegisterProperty('Color', 'TColor', iptrw);
+    RegisterProperty('GradDirection', 'TJvChartGradientDirection', iptrw);
+    RegisterProperty('GradColor', 'TColor', iptrw);
+    RegisterProperty('PenStyle', 'TPenStyle', iptrw);
+    RegisterProperty('PenColor', 'TColor', iptrw);
+  end;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJvChartFloatingMarker(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TPersistent', 'TJvChartFloatingMarker') do
+  with CL.AddClassN(CL.FindClass('TPersistent'),'TJvChartFloatingMarker') do begin
+    RegisterProperty('Index', 'Integer', iptr);
+    RegisterMethod('Procedure Assign( Source : TPersistent)');
+    RegisterProperty('Marker', 'TJvChartPenMarkerKind', iptrw);
+    RegisterProperty('MarkerColor', 'TColor', iptrw);
+    RegisterProperty('Visible', 'Boolean', iptrw);
+    RegisterProperty('XPosition', 'Integer', iptrw);
+    RegisterProperty('YPosition', 'Double', iptrw);
+    RegisterProperty('XDraggable', 'Boolean', iptrw);
+    RegisterProperty('XDragMin', 'Integer', iptrw);
+    RegisterProperty('XDragMax', 'Integer', iptrw);
+    RegisterProperty('YDraggable', 'Boolean', iptrw);
+    RegisterProperty('LineToMarker', 'Integer', iptrw);
+    RegisterProperty('LineVertical', 'Boolean', iptrw);
+    RegisterProperty('LineStyle', 'TPenStyle', iptrw);
+    RegisterProperty('LineColor', 'TColor', iptrw);
+    RegisterProperty('LineWidth', 'Integer', iptrw);
+    RegisterProperty('Caption', 'string', iptrw);
+    RegisterProperty('CaptionColor', 'TColor', iptrw);
+    RegisterProperty('CaptionPosition', 'TJvChartCaptionPosition', iptrw);
+    RegisterProperty('CaptionBoxed', 'Boolean', iptrw);
+    RegisterProperty('Tag', 'Integer', iptrw);
+  end;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_JvChart(CL: TPSPascalCompiler);
+begin
+ CL.AddConstantN('JvChartVersion','LongInt').SetInt( 300);
+ CL.AddConstantN('JvDefaultHintColor','LongWord').SetUInt( TColor ( $00DDFBFA ));
+ CL.AddConstantN('JvDefaultAvgLineColor','LongWord').SetUInt( TColor ( $00EEDDDD ));
+ //  clLtGray = TColor($C0C0C0);
+ CL.AddConstantN('JvDefaultDivisionLineColor','longword').SetUInt(TColor($C0C0C0));
+ CL.AddConstantN('JvDefaultShadowColor','longword').SetUint(TColor($C0C0C0));
+ CL.AddConstantN('JvDefaultYLegends','LongInt').SetInt( 20);
+ CL.AddConstantN('MaxShowXValueInLegends','LongInt').SetInt( 10);
+ CL.AddConstantN('jvChartAverageLineColorIndex','LongInt').SetInt( - 6);
+ CL.AddConstantN('jvChartDivisionLineColorIndex','LongInt').SetInt( - 5);
+ CL.AddConstantN('jvChartShadowColorIndex','LongInt').SetInt( - 4);
+ CL.AddConstantN('jvChartAxisColorIndex','LongInt').SetInt( - 3);
+ CL.AddConstantN('jvChartHintColorIndex','LongInt').SetInt( - 2);
+ CL.AddConstantN('jvChartPaperColorIndex','LongInt').SetInt( - 1);
+ CL.AddConstantN('JvChartDefaultMarkerSize','LongInt').SetInt( 3);
+  CL.AddTypeS('TJvChartKind', '( ckChartNone, ckChartLine, ckChartBar, ckChartS'
+   +'tackedBar, ckChartBarAverage, ckChartStackedBarAverage, ckChartPieChart, c'
+   +'kChartMarkers, ckChartDeltaAverage )');
+  CL.AddTypeS('TJvChartPenMarkerKind', '( pmkNone, pmkDiamond, pmkCircle, pmkSq'
+   +'uare, pmkCross )');
+  CL.AddTypeS('TJvChartGradientDirection', '( grNone, grUp, grDown, grLeft, grRight )');
+  CL.AddTypeS('TJvChartLegend', '(clChartLegendNone,clChartLegendRight, clChartLegendBelow )');
+  CL.AddTypeS('TJvChartDataArray', 'array of array of Double');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'TJvChart');
+  CL.AddTypeS('TJvChartCaptionPosition','(cpMarker, cpXAxisBottom, cpXAxisTop, cpTitleArea )');
+  SIRegister_TJvChartFloatingMarker(CL);
+  SIRegister_TJvChartGradientBar(CL);
+  SIRegister_TJvChartHorizontalBar(CL);
+  SIRegister_TJvChartVerticalBar(CL);
+  SIRegister_TJvChartData(CL);
+  CL.AddTypeS('TJvChartPaintEvent', 'Procedure ( Sender : TJvChart; ACanvas : TCanvas)');
+  CL.AddTypeS('TJvChartEvent', 'Procedure ( Sender : TJvChart)');
+  CL.AddTypeS('TJvChartFloatingMarkerDragEvent', 'Procedure ( Sender : TJvChart'
+   +'; FloatingMarker : TJvChartFloatingMarker)');
+  CL.AddTypeS('TJvChartClickEvent', 'Procedure ( Sender : TJvChart; Button : TM'
+   +'ouseButton; Shift : TShiftState; X, Y : Integer; ChartValueIndex : Integer'
+   +'; ChartPenIndex: Integer; var ShowHint, HintFirstLineBold: Boolean; HintStrs: TStrings)');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'TJvChartOptions');
+  SIRegister_TJvChartYAxisOptions(CL);
+  SIRegister_TJvChartOptions(CL);
+  SIRegister_TJvChart(CL);
+end;
+
+
+
+
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJvDualListDialog(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TJvComponent', 'TJvDualListDialog') do
+  with CL.AddClassN(CL.FindClass('TJvComponent'),'TJvDualListDialog') do begin
+    RegisterMethod('Constructor Create( AOwner : TComponent)');
+    RegisterMethod('Function Execute : Boolean');
+    RegisterProperty('Ctl3D', 'Boolean', iptrw);
+    RegisterProperty('Sorted', 'Boolean', iptrw);
+    RegisterProperty('Title', 'string', iptrw);
+    RegisterProperty('Label1Caption', 'TCaption', iptrw);
+    RegisterProperty('Label2Caption', 'TCaption', iptrw);
+    RegisterProperty('OkBtnCaption', 'TCaption', iptrw);
+    RegisterProperty('CancelBtnCaption', 'TCaption', iptrw);
+    RegisterProperty('HelpBtnCaption', 'TCaption', iptrw);
+    RegisterProperty('HelpContext', 'THelpContext', iptrw);
+    RegisterProperty('List1', 'TStrings', iptrw);
+    RegisterProperty('List2', 'TStrings', iptrw);
+    RegisterProperty('ShowHelp', 'Boolean', iptrw);
+  end;
+end;
+
+
+(* === compile-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TImageForm(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TForm', 'TImageForm') do
+  with CL.AddClassN(CL.FindClass('TForm'),'TImageForm') do begin
+    RegisterProperty('DirectoryList', 'TDirectoryListBox', iptrw);
+    RegisterProperty('DriveCombo', 'TDriveComboBox', iptrw);
+    RegisterProperty('PathLabel', 'TLabel', iptrw);
+    RegisterProperty('FileEdit', 'TEdit', iptrw);
+    RegisterProperty('ImagePanel', 'TPanel', iptrw);
+    RegisterProperty('Image', 'TImage', iptrw);
+    RegisterProperty('FileListBox', 'TFileListBox', iptrw);
+    RegisterProperty('ImageName', 'TLabel', iptrw);
+    RegisterProperty('FilterCombo', 'TFilterComboBox', iptrw);
+    RegisterProperty('StretchCheck', 'TCheckBox', iptrw);
+    RegisterProperty('FilePics', 'TJvPicClip', iptrw);
+    RegisterProperty('FormStorage', 'TJvFormStorage', iptrw);
+    RegisterProperty('OkBtn', 'TButton', iptrw);
+    RegisterProperty('CancelBtn', 'TButton', iptrw);
+    RegisterProperty('Label2', 'TLabel', iptrw);
+    RegisterProperty('Label3', 'TLabel', iptrw);
+    RegisterProperty('Label4', 'TLabel', iptrw);
+    RegisterProperty('Label5', 'TLabel', iptrw);
+    RegisterProperty('PreviewBtn', 'TSpeedButton', iptrw);
+    RegisterMethod('Procedure FileListBoxClick( Sender : TObject)');
+    RegisterMethod('Procedure StretchCheckClick( Sender : TObject)');
+    RegisterMethod('Procedure FormCreate( Sender : TObject)');
+    RegisterMethod('Procedure FileListBoxChange( Sender : TObject)');
+    RegisterMethod('Procedure FileListBoxDblClick( Sender : TObject)');
+    RegisterMethod('Procedure FormDestroy( Sender : TObject)');
+    RegisterMethod('Procedure PreviewBtnClick( Sender : TObject)');
+    RegisterMethod('Procedure OkBtnClick( Sender : TObject)');
+    RegisterProperty('FileName', 'string', iptrw);
+  end;
+end;
+
+procedure SIRegister_TYearGridEditForm(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TJvForm', 'TYearGridEditForm') do
+  with CL.AddClassN(CL.FindClass('TJvForm'),'TYearGridEditForm') do
+  begin
+    RegisterProperty('Panel1', 'TPanel', iptrw);
+    RegisterProperty('BitBtn1', 'TBitBtn', iptrw);
+    RegisterProperty('BitBtn2', 'TBitBtn', iptrw);
+    RegisterProperty('MemoText', 'TMemo', iptrw);
+    RegisterProperty('BtnLoad', 'TButton', iptrw);
+    RegisterProperty('BtnSave', 'TButton', iptrw);
+    RegisterProperty('OpenDialog', 'TOpenDialog', iptrw);
+    RegisterProperty('SaveDialog', 'TSaveDialog', iptrw);
+    RegisterMethod('Procedure BtnLoadClick( Sender : TObject)');
+    RegisterMethod('Procedure BtnSaveClick( Sender : TObject)');
+    RegisterMethod('Procedure FormShow( Sender : TObject)');
+  end;
+end;
+
+
+
+http://www.softwareschule.ch/download/maxbox_blix_the_programmer.pdf
+
+  
+  timec:= round(power(2,30)/24);
+  writeln(inttoStr(timec div 365));
+  writeln(intToStr(Round(Power(2,30)/24/365)));
+  writeln(inttoStr(round(power(2,12)) div 24));
+  maxcalcF('170*24');
+  
+  Energy = MemC * Work
+  W = KEt - KEº
+
+
+http://petshopboxstudio.com/goodies/free-vector-character-the-programmer/
+http://lifehacker.com/5401954/programmer-101-teach-yourself-how-to-code
+
+----code_cleared_checked----
+
+ 
+
+There are a lot of opinions out there, but there's no 88not one “best” language. Here's the thing to
+consider: In the end, language doesn't matter THAT much. Understanding data and control
+structures, algorithms, metrics, modelling and design patterns does matter very much. Every
+language, even a simple scripting language, will have elements that you'll use in other languages
+as well and will help 88your understanding. maXbox is build on Object Pascal and is similar to Java or C++ 88, a
+well known and mighty language.
+Script: Examples/336_digiclock2.txt
+Feedback @
+max@kleiner.com
+Literature:
+Kleiner et al., Patterns konkret, 2003, Software & Support
+Links of maXbox Tutorials:
+http://www.softwareschule.ch/maxbox.htm
+http://sourceforge.net/projects/maxbox
+http://sourceforge.net/apps/mediawiki/maxbox/
+http://en.wikipedia.org/wiki/Time_travel
+
+myform
+
+
+  
+  
+
+{-----------------------------------------------------------------------------
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at
+http://www.mozilla.org/MPL/MPL-1.1.html
+ 
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either expressed or implied. See the License for
+the specific language governing rights and limitations under the License.
+ 
+The Original Code is: JvChartDemoFm.Pas, released on 2002-10-04.
+ 
+The Initial Developer of the Original Code is AABsoft and M?rten Henrichson.
+(C) 1996 AABsoft and M?rten Henrichson.
+All Rights Reserved.
+ 
+Contributor(s): -
+ 
+Last Modified: 2005-01-14
+ 
+  Modified March 2007 by Warren Postma - Show new JvChart 2007 Features.
+ 
+ 
+You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
+located at http://jvcl.sourceforge.net
+ 
+Description:
+  BAR/LINE Charting Component for JEDI [Updated March 2007]
+ 
+Known Issues:
+-----------------------------------------------------------------------------}
+ 
+unit JvChartDemoFm;
+ 
+interface
+ 
+uses
+Windows, SysUtils, Messages, Classes, Graphics, Controls,
+Forms, Dialogs, ExtCtrls, StdCtrls, Buttons, Spin,
+JvChart, JvComponent, JvExControls, StatsClasses, Menus;
+ 
+type
+TJvChartDemoForm = class(TForm)
+PanelTop: TPanel;
+ButtonBarChart: TSpeedButton;
+ButtonLine: TSpeedButton;
+ButtonStackedBarAve: TSpeedButton;
+ButtonStackedBar: TSpeedButton;
+ButtonBarAve: TSpeedButton;
+ColorDialog1: TColorDialog;
+ButtonPie: TSpeedButton;
+FontDialog1: TFontDialog;
+ButtonMarkers: TSpeedButton;
+ButtonDeltaAverage: TSpeedButton;
+Chart: TJvChart;
+ButtonLineMarker: TSpeedButton;
+Label1: TLabel;
+MainMenu1: TMainMenu;
+Demo1: TMenuItem;
+Help1: TMenuItem;
+About1: TMenuItem;
+AboutJVCL301: TMenuItem;
+ShowgapinLineChart1: TMenuItem;
+N1: TMenuItem;
+Print1: TMenuItem;
+Generatenewrandomvalues1: TMenuItem;
+CopyToClipboard1: TMenuItem;
+N2: TMenuItem;
+SetHeaderFont1: TMenuItem;
+Scrolling1: TMenuItem;
+ListBox1: TListBox;
+Splitter1: TSplitter;
+Timer1: TTimer;
+ShowDataInListbox1: TMenuItem;
+N4: TMenuItem;
+LargeDataset576samples1: TMenuItem;
+DateTimeAxisMode: TMenuItem;
+PrintOptions1: TMenuItem;
+PrinterSetupDialog1: TPrinterSetupDialog;
+PrintDialog1: TPrintDialog;
+MenuSecondaryAxisMode: TMenuItem;
+MenuNegValueTest: TMenuItem;
+SpeedButtonTestMouseOver: TSpeedButton;
+NewFeaturesfor20071: TMenuItem;
+procedure FormResize(Sender: TObject);
+procedure ButtonLineClick(Sender: TObject);
+procedure ButtonBarChartClick(Sender: TObject);
+procedure ButtonStackedBarAveClick(Sender: TObject);
+procedure ButtonStackedBarClick(Sender: TObject);
+procedure SpeedButton7Click(Sender: TObject);
+procedure ButtonBarAveClick(Sender: TObject);
+procedure SpinEdit1Change(Sender: TObject);
+procedure Button2Click(Sender: TObject);
+procedure ButtonPieClick(Sender: TObject);
+procedure Button4Click(Sender: TObject);
+procedure ButtonMarkersClick(Sender: TObject);
+procedure ButtonDeltaAverageClick(Sender: TObject);
+procedure FormCreate(Sender: TObject);
+procedure ButtonLineMarkerClick(Sender: TObject);
+procedure Panel2DblClick(Sender: TObject);
+procedure ShowgapinLineChart1Click(Sender: TObject);
+procedure Print1Click(Sender: TObject);
+procedure Generatenewrandomvalues1Click(Sender: TObject);
+procedure CopyToClipboard1Click(Sender: TObject);
+procedure SetHeaderFont1Click(Sender: TObject);
+procedure About1Click(Sender: TObject);
+procedure AboutJVCL301Click(Sender: TObject);
+procedure Scrolling1Click(Sender: TObject);
+procedure Timer1Timer(Sender: TObject);
+procedure ShowDataInListbox1Click(Sender: TObject);
+procedure LargeDataset576samples1Click(Sender: TObject);
+procedure DateTimeAxisModeClick(Sender: TObject);
+procedure FormDestroy(Sender: TObject);
+procedure PrintOptions1Click(Sender: TObject);
+procedure MenuSecondaryAxisModeClick(Sender: TObject);
+procedure ListBox1DblClick(Sender: TObject);
+procedure ListBox1Click(Sender: TObject);
+procedure MenuNegValueTestClick(Sender: TObject);
+procedure SpeedButtonTestMouseOverClick(Sender: TObject);
+procedure ChartEndFloatingMarkerDrag(Sender: TJvChart;
+FloatingMarker: TJvChartFloatingMarker);
+procedure ChartBeginFloatingMarkerDrag(Sender: TJvChart;
+FloatingMarker: TJvChartFloatingMarker);
+procedure ChartChartPaint(Sender: TJvChart; aCanvas: TCanvas);
+procedure NewFeaturesfor20071Click(Sender: TObject);
+private
+ 
+// Our waveform generator uses the following as state-variables:
+FGenerationIndex: Integer;
+Foo, Foo1, Foo2: Integer;
+Fhgt, Fhg0, Fhg2p: Double;
+FStatHgt, FStatHg0: TStatArray;
+Fdt, Fds: Double;
+FNegValueFlag: Boolean;
+ 
+protected
+procedure _Generate;
+procedure _StoreValue(I: integer);
+function _QAProblemScatter: Integer;
+ 
+public
+procedure NewValues;
+end;
+ 
+var
+JvChartDemoForm: TJvChartDemoForm;
+ 
+implementation
+ 
+uses
+JvJVCLAboutForm, // JVCL About box stuff.
+Math, // Math:NaN handling, function isNan in D6 and higher.
+//{$IFDEF COMPILER5}
+JclMath, // JclMath:function isNan for Delphi 5
+//{$ENDIF COMPILER5}
+ShellApi; // ShellApi:ShellExecute function
+ 
+//{$R *.dfm}
+ 
+{ Bogus vageuly sinusoidal signal generator }
+ 
+procedure TJvChartDemoForm._Generate;
+begin
+FHgt := Abs(Random(80) + (Random(((FGenerationIndex div foo) mod foo1) * 250) * 5 + 9500));
+FHg0 := Abs(Random(280) + Random(((FGenerationIndex div foo) mod foo2) * 650) * 5 + 1003);
+if FNegValueFlag then
+begin
+if (Random(80) > 75) or (FGenerationIndex = 2) then
+begin
+FHg0 := -1 * FHg0; // Generate a negative value! (just to show what it looks like)
+end;
+end;
+Inc(FGenerationIndex);
+end;
+ 
+{ Bogus random spiky-looking function to simulate a QA value,
+  which hovers within +/- 10% of perfect (100%), but
+  with relatively infrequent spiky errors }
+ 
+function TJvChartDemoForm._QAProblemScatter: Integer;
+var
+n, m: Double;
+begin
+n := Log10(Random(10000) + 1); // Random is my favourite function. How about you? -WP
+n := n * Log10(Random(10000) + 1);
+m := Log10(Random(10000) + 1);
+m := m * Log10(Random(10000) + 1);
+n := Abs(100 + n - m);
+if (n < 0) then
+n := 0;
+if (n > 150) then
+n := 150;
+ 
+Result := Round(n);
+end;
+ 
+procedure TJvChartDemoForm._StoreValue(I: integer);
+begin
+FStatHgt.AddValue(Fhgt);
+FStatHg0.AddValue(Fhg0);
+ 
+// PAY ATTENTION HERE, this is where we set the Chart.Data.Value[ index,pen] := <values>
+// stuff which is the MOST IMPORTANT THING, unless you like blank charts:
+ 
+// Set Data.Value[Pen, Series] := dataValue ...
+Chart.Data.Value[0, I] := FStatHgt.Average / 1000;
+ 
+if FHg0 < 0 then
+begin
+Chart.Data.Value[1, I] := FHg0 / 1000;
+// Don't show average with negative samples or my negative demo ability goes away (averaged out!)
+end
+else
+begin
+// Test blanks on big chart, show missing data:
+Chart.Data.Value[1, I] := FStatHg0.Average / 1000;
+end;
+ 
+Fhg2p := (FStatHgt.Average - FStatHg0.Average) / 1000;
+if Fhg2p < 0.0 then
+Fhg2p := 0.0;
+Chart.Data.Value[2, I] := Fhg2p;
+ 
+Fds := Fdt + (FGenerationIndex / 576);
+ 
+// There are TWO ways to get an X Axis label plotted:
+if DateTimeAxisMode.Checked then
+Chart.Data.Timestamp[I] := Fds // X legends generated by timestamps
+else
+// X Legends generated by user are used by default.
+// This would be redundant, and would be a waste of memory
+// if Chart.Options.XAxisDateTimeMode was also set.
+Chart.Options.XLegends.Add(FormatDateTime('hh:nn:ss', Fds));
+ 
+if MenuSecondaryAxisMode.Checked then
+begin
+if I = 1 then
+Chart.Data.Value[3, I] := 100
+else
+if (I mod 4) = 3 then
+begin
+//Chart.Data.Value[3,I] := 1+ ((I mod 12) * 10) // stairstep
+//random:
+Chart.Data.Value[3, I] := _QAProblemScatter;
+end
+else
+Chart.Data.Value[3, I] := NaN; // leave some blanks.
+end;
+end;
+ 
+procedure TJvChartDemoForm.NewFeaturesfor20071Click(Sender: TObject);
+var
+vbar:TJvChartVerticalBar;
+hbar:TJvChartHorizontalBar;
+begin
+// Try out new features for 2007:
+ 
+// Gradients.
+Chart.Options.GradientColor := $00FDEEDB; // powder blue (baby blue) mostly white.
+Chart.Options.GradientDirection :=grDown;
+ 
+ 
+ 
+// Vertical Bar.
+vbar := Chart.AddVerticalBar;
+vbar.Color := $00FDDDC7;
+vbar.Visible := true;
+vbar.XLeft := 6;
+vbar.XRight := 7;
+ 
+// Horizontal Bar.
+hbar := Chart.AddHorizontalBar;
+hbar.Color := $007CCAC7;
+hbar.Visible := true;
+hbar.YTop := 3;
+hbar.YBottom := 2;
+ 
+ 
+ 
+ 
+ 
+// Lots of things not shown here are new in 2007:
+// Floating Marker Count, Delete a floating marker, etc,
+// search for 'NEW 2007' in JvChart.pas for a complete
+// look at new things.
+ 
+// last thing, always update graph:
+Chart.PlotGraph;
+//Chart.Refresh;
+ 
+ 
+end;
+ 
+procedure TJvChartDemoForm.NewValues;
+var
+I: Integer;
+nValueCount: Integer;
+begin
+//Chart.Options.Title := 'Click on the Chart Title to change it!';
+ 
+Chart.ClearFloatingMarkers; // remove any previous markers.
+ 
+ 
+ListBox1.Clear;
+Chart.Data.Clear;
+ 
+Chart.Options.PrimaryYAxis.YMax := 20;
+ 
+Randomize;
+ 
+Chart.Options.XAxisDateTimeMode := DateTimeAxisMode.Checked; // Use datetime timestamp labels, just Fer Instance.
+ 
+if not Chart.Options.XAxisDateTimeMode then
+Chart.Options.XAxisLegendSkipBy := 5;
+ 
+if LargeDataset576samples1.Checked then
+begin
+// A larger bogus data set for demonstration purposes.
+nValueCount := 576; // 2.5 minute sample period, 576 samples = 1 day.
+foo := 5; // Used in generating our bogus data below, not really important.
+Chart.Options.XAxisValuesPerDivision := 24;
+// 24 samples * 150 seconds = 1 hour time divisions ( Chart.Options.XAxisValuesPerDivision := 4;
+end
+else
+begin
+// A smaller bogus data set for demonstration purposes.
+nValueCount := 24; // 2.5 minute sample period, 24 samples =1 hour.
+foo := 1; // Used in generating our bogus data below, not really important.
+Chart.Options.XAxisValuesPerDivision := 4; // five divisions, 4 values per division
+end;
+ 
+//Chart.ResetGraphModule; // Clears YMax.
+Fdt := Trunc(now - 1.0); // yesterday, midnight.
+Foo1 := Random(5) + 2; // more randomness
+Foo2 := Random(3) + 5; // more randomness
+FGenerationIndex := 1;
+for I := 0 to nValueCount - 1 do
+begin
+if i > 0 then
+begin // generate random data that appears to show a sawtooth-frequency-pattern plus a lot of random noise:
+_Generate;
+end
+else
+begin
+Fhgt := 7000; // First sample always known value, helps me troubleshoot.
+Fhg0 := 1000;
+end;
+ 
+_StoreValue(I);
+ 
+// Override stored value in special cases:
+ 
+{ How to make a gap in the data! }
+if (nValueCount > 100) and ShowgapinLineChart1.Checked then
+begin
+if (I > 100) and (I < 130) then
+begin
+Chart.Data.Value[0, I] := NaN; // Use special Math.NaN const
+Chart.Data.Value[1, I] := NaN; // Use special Math.NaN const
+Chart.Data.Value[2, I] := NaN; // Use special Math.NaN const
+end;
+end;
+ 
+// Just so that the last two values are visibly different, to make sure
+// the chart handles the final vaulues correctly, we set all the final
+// values to known amounts also:
+if I = nValueCount - 2 then
+begin
+Chart.Data.Value[0, I] := 6.0; // Use special Math.NaN const
+Chart.Data.Value[1, I] := 4.0; // Use special Math.NaN const
+Chart.Data.Value[2, I] := 2.0; // Use special Math.NaN const
+end
+else
+if I = nValueCount - 1 then
+begin
+Chart.Data.Value[0, I] := 3.0; // Use special Math.NaN const
+Chart.Data.Value[1, I] := 2.0; // Use special Math.NaN const
+Chart.Data.Value[2, I] := 1.0; // Use special Math.NaN const
+ 
+end;
+ 
+ListBox1.Items.Append(Chart.Data.DebugStr(I));
+end;
+ 
+with Chart.Options do
+begin
+Title := 'Chart Title';
+XAxisHeader := 'Date/Time';
+YAxisHeader := 'Readings (ng/m3)';
+ 
+if FNegValueFlag then
+begin
+PrimaryYAxis.YMin := -20;
+PrimaryYAxis.YMax := 20;
+end
+else
+PrimaryYAxis.YMin := 0;
+// Try out the pen styles:
+if ChartKind = ckChartStackedBar then
+PenStyle[0] := psClear // THIS IS HOW YOU TEMPORARILY HIDE ONE PEN!
+else
+PenStyle[0] := psSolid;
+PenStyle[1] := psDash;
+PenStyle[2] := psDot;
+ 
+if MenuSecondaryAxisMode.Checked then
+begin
+PenCount := 4; // Add a pen for right side demo.
+SecondaryYAxis.YMax := 140; // Example shows Q/A percentage. Experimental results
+// results are compared to expected results, and the
+// response percentage, is plotted from 0% to 140%
+// of expected value.
+ 
+SecondaryYAxis.YLegendDecimalPlaces := 2;
+ 
+PenSecondaryAxisFlag[3] := True; // Move pen index 3 (Fourth pen) to secondary axis.
+PenMarkerKind[3] := pmkDiamond;
+PenValueLabels[3] := true; // Label with text.
+PenStyle[3] := psClear; // Markers only, no lines.
+PenColor[3] := clGray;
+MarkerSize := 5; // Make 'em bigger.
+end
+else
+begin
+PenCount := 3;
+MarkerSize := 3; // Make 'em little
+end;
+ 
+PenLegends.Clear;
+PenLegends.Add('HgT');
+PenLegends.Add('Hg0');
+PenLegends.Add('Hg2+');
+if MenuSecondaryAxisMode.Checked then
+PenLegends.Add('Quality%');
+ 
+PenUnit.Clear;
+PenUnit.Add('ug/m3');
+PenUnit.Add('ug/m3');
+PenUnit.Add('ug/m3');
+if MenuSecondaryAxisMode.Checked then
+PenUnit.Add('%'); // Optional Pen in percentage scale.
+ 
+//ShowLegend := TRUE;
+Legend := clChartLegendBelow;
+ 
+//ChartKind := ckChartLine;
+end;
+// Chart.AutoFormatGraph;
+Chart.PlotGraph;
+ 
+//Chart.ResizeChartCanvas;
+end;
+ 
+procedure TJvChartDemoForm.FormResize(Sender: TObject);
+begin
+if Assigned(Chart) then
+Chart.ResizeChartCanvas;
+end;
+ 
+procedure TJvChartDemoForm.ButtonBarChartClick(Sender: TObject);
+begin
+Chart.Options.ChartKind := ckChartBar;
+NewValues;
+//Chart.PlotGraph;
+end;
+ 
+procedure TJvChartDemoForm.ButtonLineClick(Sender: TObject);
+var
+I: Integer;
+begin
+Chart.Options.ChartKind := ckChartLine;
+for I := 0 to Chart.Options.PenCount - 1 do
+begin
+Chart.Options.PenMarkerKind[I] := pmkNone;
+end;
+ 
+NewValues;
+end;
+ 
+procedure TJvChartDemoForm.ButtonLineMarkerClick(Sender: TObject);
+//var
+// I:Integer;
+begin
+Chart.Options.ChartKind := ckChartLine;
+Chart.Options.PenMarkerKind[0] := pmkDiamond; // demonstrate both Diamond and Circle Marks.
+Chart.Options.PenMarkerKind[1] := pmkDiamond;
+Chart.Options.PenMarkerKind[2] := pmkCircle;
+ 
+NewValues;
+end;
+ 
+procedure TJvChartDemoForm.ButtonStackedBarAveClick(Sender: TObject);
+begin
+Chart.Options.ChartKind := ckChartStackedBarAverage;
+NewValues;
+end;
+ 
+procedure TJvChartDemoForm.ButtonStackedBarClick(Sender: TObject);
+begin
+Chart.Options.ChartKind := ckChartStackedBar;
+NewValues;
+end;
+ 
+procedure TJvChartDemoForm.SpeedButton7Click(Sender: TObject);
+begin
+// Chart.PivotData; // TODO: This causes exceptions. not sure why we want this.
+end;
+ 
+procedure TJvChartDemoForm.ButtonBarAveClick(Sender: TObject);
+begin
+//Chart.ShowAsBarWithAve;
+Chart.Options.ChartKind := ckChartBarAverage;
+ 
+NewValues;
+//Chart.Plo
+end;
+ 
+procedure TJvChartDemoForm.ButtonPieClick(Sender: TObject);
+begin
+// Chart.ShowAsPie;
+Chart.Options.ChartKind := ckChartPieChart;
+end;
+ 
+procedure TJvChartDemoForm.ButtonMarkersClick(Sender: TObject);
+begin
+//Chart.ShowAsMark;
+Chart.Options.ChartKind := ckChartMarkers;
+end;
+ 
+procedure TJvChartDemoForm.SpinEdit1Change(Sender: TObject);
+begin
+// Chart.Options.ColorScheme := SpinEdit1.Value;
+// Chart.PlotGraph;
+end;
+ 
+procedure TJvChartDemoForm.Button2Click(Sender: TObject);
+begin
+Chart.PlotGraph;
+end;
+ 
+procedure TJvChartDemoForm.Button4Click(Sender: TObject);
+begin
+// Chart.AutoFormatGraph; WAP Removed. BAD CODE.
+Chart.PlotGraph;
+end;
+ 
+procedure TJvChartDemoForm.ButtonDeltaAverageClick(Sender: TObject);
+begin
+Chart.Options.ChartKind := ckChartDeltaAverage;
+end;
+ 
+procedure TJvChartDemoForm.FormCreate(Sender: TObject);
+begin
+FStatHgt := TStatArray.Create(10); // Initialize for rolling average of last 10 samples.
+FStatHg0 := TStatArray.Create(10);
+ 
+if Assigned(Chart) then
+// Chart.ShowAsLineWithMark;
+NewValues;
+end;
+ 
+procedure TJvChartDemoForm.Panel2DblClick(Sender: TObject);
+begin
+ShellExecute(HWND(nil), 'show', 'http://homepages.borland.com/jedi/jvcl/', nil, nil, SW_SHOW);
+end;
+ 
+procedure TJvChartDemoForm.ShowgapinLineChart1Click(Sender: TObject);
+begin
+ShowgapinLineChart1.Checked := not ShowgapinLineChart1.Checked;
+ButtonLine.Down := true;
+NewValues;
+end;
+ 
+procedure TJvChartDemoForm.Print1Click(Sender: TObject);
+begin
+if PrintDialog1.Execute then
+Chart.PrintGraph;
+end;
+ 
+procedure TJvChartDemoForm.Generatenewrandomvalues1Click(Sender: TObject);
+begin
+if SpeedButtonTestMouseOver.Down then exit;
+ 
+NewValues;
+end;
+ 
+procedure TJvChartDemoForm.CopyToClipboard1Click(Sender: TObject);
+begin
+Chart.GraphToClipboard;
+end;
+ 
+procedure TJvChartDemoForm.SetHeaderFont1Click(Sender: TObject);
+begin
+{Get the current font for the Header text...}
+FontDialog1.Font.Assign(Chart.Options.AxisFont);
+ 
+if FontDialog1.Execute then
+{Set the font for the Header text...}
+Chart.Options.AxisFont := FontDialog1.Font;
+Chart.PlotGraph;
+Chart.Invalidate;
+end;
+ 
+procedure TJvChartDemoForm.About1Click(Sender: TObject);
+begin
+Application.MessageBox(PChar(
+'JvChart comes from AABSoft Graph written by M?rten Henrichson, JVCL 3.0 ' +
+'version by Warren Postma. '), 'About JvChart', MB_OK);
+end;
+ 
+procedure TJvChartDemoForm.AboutJVCL301Click(Sender: TObject);
+begin
+TJvJVCLAboutForm.Execute(False);
+end;
+ 
+procedure TJvChartDemoForm.Scrolling1Click(Sender: TObject);
+begin
+if SpeedButtonTestMouseOver.Down then exit;
+ 
+Scrolling1.Checked := not Scrolling1.Checked;
+Timer1.Enabled := Scrolling1.Checked;
+end;
+ 
+procedure TJvChartDemoForm.Timer1Timer(Sender: TObject);
+begin
+if SpeedButtonTestMouseOver.Down then exit;
+ 
+Chart.Data.Scroll;
+_Generate;
+_StoreValue(Chart.Data.ValueCount - 1);
+Chart.PlotGraph;
+end;
+ 
+procedure TJvChartDemoForm.ShowDataInListbox1Click(Sender: TObject);
+begin
+ShowDataInListbox1.Checked := not ShowDataInListbox1.Checked;
+ListBox1.Visible := ShowDataInListbox1.Checked;
+ 
+if not ShowDataInListbox1.Checked then
+begin
+Chart.CursorPosition := -1; // Invisible.
+end;
+end;
+ 
+procedure TJvChartDemoForm.LargeDataset576samples1Click(Sender: TObject);
+begin
+if SpeedButtonTestMouseOver.Down then exit;
+ 
+LargeDataset576samples1.Checked := not LargeDataset576samples1.Checked;
+NewValues;
+end;
+ 
+procedure TJvChartDemoForm.DateTimeAxisModeClick(Sender: TObject);
+begin
+DateTimeAxisMode.Checked := not DateTimeAxisMode.Checked;
+if SpeedButtonTestMouseOver.Down then begin
+Chart.Options.XLegends.Clear;
+end else
+NewValues;
+end;
+ 
+procedure TJvChartDemoForm.FormDestroy(Sender: TObject);
+begin
+FreeAndNil(FStatHgt);
+FreeAndNil(FStatHg0);
+end;
+ 
+procedure TJvChartDemoForm.PrintOptions1Click(Sender: TObject);
+begin
+PrinterSetupDialog1.Execute;
+end;
+ 
+procedure TJvChartDemoForm.MenuSecondaryAxisModeClick(Sender: TObject);
+begin
+MenuSecondaryAxisMode.Checked := not MenuSecondaryAxisMode.Checked;
+ 
+if MenuSecondaryAxisMode.Checked then begin
+ButtonLine.Down := true;
+ButtonLineClick(Sender);
+end
+else
+NewValues;
+end;
+ 
+procedure TJvChartDemoForm.ListBox1DblClick(Sender: TObject);
+begin
+Chart.CursorPosition := ListBox1.ItemIndex; // Highlight one sample.
+end;
+ 
+procedure TJvChartDemoForm.ListBox1Click(Sender: TObject);
+begin
+Chart.CursorPosition := ListBox1.ItemIndex; // Highlight one sample.
+end;
+ 
+procedure TJvChartDemoForm.MenuNegValueTestClick(Sender: TObject);
+begin
+FNegValueFlag := MenuNegValueTest.Checked;
+NewValues;
+end;
+ 
+{ Simple Chart Tests for finding bug }
+procedure TJvChartDemoForm.SpeedButtonTestMouseOverClick(Sender: TObject);
+var
+i:Integer;
+n:Double;
+marker1,marker2,dragCursor:TJvChartFloatingMarker;
+begin
+ListBox1.Clear;
+Scrolling1.Checked := false;
+ 
+Chart.Options.Title := 'Click on the Red Diamonds or the vertical gray line and Drag them!';
+Chart.Options.ChartKind := ckChartLine;
+Chart.Options.XLegends.Clear;
+Chart.Options.XAxisHeader := '';
+ 
+Chart.Options.MouseDragObjects := true; // NEW: MOUSE DRAG FLOATING OBJECTS!
+ 
+for i := 0 to Chart.Options.PenCount - 1 do
+begin
+Chart.Options.PenMarkerKind[I] := pmkNone;
+end;
+Chart.Data.Clear;
+Chart.Options.XValueCount := 80;
+Chart.Data.ValueCount := 6;
+Chart.Options.PenCount := 1;
+for i := 0 to Chart.Options.XValueCount-1 do begin
+n := 30-(25*((1-((i-25)/15))*(1-((i-25)/15))));
+if n<5 then
+n := 5 -(Sqrt((Abs(n))/15));
+ListBox1.Items.Add( FloatToStrF(n,ffFixed,6,4));
+Chart.Data.Value[0,i] := n;
+end;
+Chart.Options.PrimaryYAxis.YMax := 50;
+ 
+Chart.Options.PenStyle[0] := psSolid;
+ 
+// NEW: Add a floating marker:
+marker1 := Chart.AddFloatingMarker;
+marker1.XPosition := 13;
+marker1.YPosition := Chart.Data.Value[0,marker1.XPosition]; // Snap to Pen 1
+marker1.XDraggable := true; // make it mouse-moveable.
+marker1.YDraggable := true;
+marker1.Caption :='Start';
+marker1.Visible := true;
+ 
+ 
+marker2 := Chart.AddFloatingMarker;
+marker2.XPosition := 66;
+marker2.YPosition := Chart.Data.Value[0,marker2.XPosition]; // Snap to Pen 1
+marker2.LineToMarker := marker1.index; // Connect with a line to marker1
+marker2.XDraggable := true; // make it mouse-moveable.
+marker2.YDraggable := true;
+marker2.Caption := 'End';
+marker2.Visible := true;
+ 
+// NOTE: Do not Free marker1 or marker2.
+// Marker objects are freed automatically
+// by the Chart.
+ 
+// a draggable cursor object:
+dragCursor := Chart.AddFloatingMarker;
+dragCursor.LineVertical := true; // Make a vertical Line
+dragCursor.Marker := pmkNone; // No marker. So it is a line only.
+dragCursor.XDraggable := true; // make it draggable.
+dragCursor.XPosition := 40;
+dragCursor.LineColor := clDkGray;
+dragCursor.LineStyle := psSolid;
+dragCursor.LineWidth := 2;
+dragCursor.Caption := FloatToStrF( Chart.Data.Value[0,dragCursor.XPosition], ffFixed, 6,4 );
+dragCursor.Visible := true;
+ 
+ 
+Chart.PlotGraph;
+ 
+end;
+ 
+procedure TJvChartDemoForm.ChartEndFloatingMarkerDrag(Sender: TJvChart;
+FloatingMarker: TJvChartFloatingMarker);
+begin
+// Snap to line:
+if (FloatingMarker.Index<2) then // One of the first two markers?
+FloatingMarker.YPosition := Chart.Data.Value[0, FloatingMarker.XPosition]
+else // update caption
+FloatingMarker.Caption := FloatToStrF( Chart.Data.Value[0,FloatingMarker.XPosition],ffFixed,6,4 );
+ 
+ 
+end;
+ 
+procedure TJvChartDemoForm.ChartBeginFloatingMarkerDrag(Sender: TJvChart;
+FloatingMarker: TJvChartFloatingMarker);
+begin
+if FloatingMarker.Index=2 then
+FloatingMarker.Caption := '?';
+ 
+end;
+ 
+procedure TJvChartDemoForm.ChartChartPaint(Sender: TJvChart;
+aCanvas: TCanvas);
+begin
+aCanvas.Pen.Color := clRed;
+aCanvas.Pen.Style := psSolid;
+aCanvas.MoveTo(0,0);
+aCanvas.LineTo(100,100);
+end;
+ 
+end.
+
+
+
+//***************************DFM 
+
+object JvChartDemoForm: TJvChartDemoForm
+  Left = 218
+  Top = 277
+  Caption = 'JEDI JvChart Demo'
+  ClientHeight = 453
+  ClientWidth = 713
+  Color = clWindow
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -13
+  Font.Name = 'System'
+  Font.Style = []
+  Menu = MainMenu1
+  OldCreateOrder = True
+  Position = poScreenCenter
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  OnResize = FormResize
+  PixelsPerInch = 96
+  TextHeight = 16
+  object Chart: TJvChart
+    Left = 124
+    Top = 35
+    Width = 589
+    Height = 418
+    Align = alClient
+    Options.XAxisValuesPerDivision = 10
+    Options.XAxisLabelAlignment = taLeftJustify
+    Options.XAxisDateTimeMode = False
+    Options.XAxisLegendSkipBy = 2
+    Options.PenCount = 3
+    Options.XOrigin = 0
+    Options.YOrigin = 0
+    Options.YStartOffset = 42
+    Options.PrimaryYAxis.YMax = 20
+    Options.PrimaryYAxis.YDivisions = 20
+    Options.PrimaryYAxis.YLegendDecimalPlaces = 1
+    Options.SecondaryYAxis.YMax = 140
+    Options.SecondaryYAxis.YLegendDecimalPlaces = 0
+    Options.SecondaryYAxis.DefaultYLegends = 60
+    Options.MouseDragObjects = False
+    Options.Legend = clChartLegendBelow
+    Options.LegendRowCount = 1
+    Options.PenLineWidth = 2
+    Options.AxisLineWidth = 3
+    Options.XValueCount = 20
+    Options.HeaderFont.Charset = DEFAULT_CHARSET
+    Options.HeaderFont.Color = clWindowText
+    Options.HeaderFont.Height = -11
+    Options.HeaderFont.Name = 'MS Sans Serif'
+    Options.HeaderFont.Style = []
+    Options.LegendFont.Charset = DEFAULT_CHARSET
+    Options.LegendFont.Color = clWindowText
+    Options.LegendFont.Height = -11
+    Options.LegendFont.Name = 'MS Sans Serif'
+    Options.LegendFont.Style = []
+    Options.AxisFont.Charset = DEFAULT_CHARSET
+    Options.AxisFont.Color = clWindowText
+    Options.AxisFont.Height = -11
+    Options.AxisFont.Name = 'MS Sans Serif'
+    Options.AxisFont.Style = []
+    Options.PaperColor = clWhite
+    Options.AxisLineColor = clBlack
+    Options.CursorColor = clBlack
+    Options.CursorStyle = psDot
+    OnChartPaint = ChartChartPaint
+    OnBeginFloatingMarkerDrag = ChartBeginFloatingMarkerDrag
+    OnEndFloatingMarkerDrag = ChartEndFloatingMarkerDrag
+  end
+  object Splitter1: TSplitter
+    Left = 121
+    Top = 35
+    Height = 418
+  end
+  object PanelTop: TPanel
+    Left = 0
+    Top = 0
+    Width = 713
+    Height = 35
+    Align = alTop
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Verdana'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 0
+    object ButtonBarChart: TSpeedButton
+      Left = 5
+      Top = 5
+      Width = 25
+      Height = 25
+      Hint = 'Bar Chart'
+      GroupIndex = 1
+      Flat = True
+      Glyph.Data = {
+        76010000424D7601000000000000760000002800000020000000100000000100
+        04000000000000010000120B0000120B00001000000000000000000000000000
+        800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333300030003
+        0003333377737773777333333333333333333FFFFFFFFFFFFFFF770000000000
+        0000777777777777777733039993BBB3CCC3337F737F737F737F37039993BBB3
+        CCC3377F737F737F737F33039993BBB3CCC33F7F737F737F737F77079997BBB7
+        CCC77777737773777377330399930003CCC3337F737F7773737F370399933333
+        CCC3377F737F3333737F330399933333CCC33F7F737FFFFF737F770700077777
+        CCC77777777777777377330333333333CCC3337F33333333737F370333333333
+        0003377F33333333777333033333333333333F7FFFFFFFFFFFFF770777777777
+        7777777777777777777733333333333333333333333333333333}
+      NumGlyphs = 2
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = ButtonBarChartClick
+    end
+    object ButtonLine: TSpeedButton
+      Left = 58
+      Top = 5
+      Width = 25
+      Height = 25
+      Hint = 'Line Chart'
+      GroupIndex = 1
+      Down = True
+      Flat = True
+      Glyph.Data = {
+        76010000424D7601000000000000760000002800000020000000100000000100
+        04000000000000010000120B0000120B00001000000000000000000000000000
+        800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00337333733373
+        3373337F3F7F3F7F3F7F33737373737373733F7F7F7F7F7F7F7F770000000000
+        000077777777777777773303333333333333337FF333333F33333709333333C3
+        333337773F3FF373F333330393993C3C33333F7F7F77F7F7FFFF77079797977C
+        77777777777777777777330339339333C333337FF73373F37F33370C333C3933
+        933337773F3737F37FF33303C3C33939C9333F7F7F7FF7F777FF7707C7C77797
+        7C97777777777777777733033C3333333C33337F37F33333373F37033C333333
+        33C3377F37333333337333033333333333333F7FFFFFFFFFFFFF770777777777
+        7777777777777777777733333333333333333333333333333333}
+      NumGlyphs = 2
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = ButtonLineClick
+    end
+    object ButtonStackedBarAve: TSpeedButton
+      Left = 345
+      Top = 7
+      Width = 25
+      Height = 25
+      Hint = 'Stacked Bars with Average'
+      GroupIndex = 1
+      Enabled = False
+      Flat = True
+      Glyph.Data = {
+        76010000424D7601000000000000760000002800000020000000100000000100
+        0400000000000001000000000000000000001000000000000000000000000000
+        80000080000000808000800000008000800080800000C0C0C000808080000000
+        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333300030003
+        0003333388838883888333333333333333333FFFFFFFFFFFFFFF880000000000
+        000088888888888888883303999399939993338F838F838F838F38039993BBB3
+        9993388F838F838F838F3303BBB3BBB399933F8F838F838F838F8808BBB8AAA8
+        999888888388838883883303AAA300039993338F838F8883838F3803AAA30003
+        BBB3388F838F3333838F3303AAA30003BBB33F8F838FFFFF838F880800080008
+        BBB88888888888888388330300030003AAA3338F33333333838F380300030003
+        0003388F33333333888333030003000300033F8FFFFFFFFFFFFF880888888888
+        8888888888888888888833333333333333333333333333333333}
+      NumGlyphs = 2
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = ButtonStackedBarAveClick
+    end
+    object ButtonStackedBar: TSpeedButton
+      Left = 111
+      Top = 5
+      Width = 26
+      Height = 25
+      Hint = 'Stacked Bars'
+      GroupIndex = 1
+      Flat = True
+      Glyph.Data = {
+        76010000424D7601000000000000760000002800000020000000100000000100
+        0400000000000001000000000000000000001000000000000000000000000000
+        80000080000000808000800000008000800080800000C0C0C000808080000000
+        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333300030003
+        0003333388838883888333333333333333333FFFFFFFFFFFFFFF880000000000
+        000088888888888888883303999399939993338F838F838F838F38039993BBB3
+        BBB3388F838F838F838F3303BBB3BBB3BBB33F8F838F838F838F8808BBB8AAA8
+        BBB888888388838883883303AAA30003BBB3338F838F8883838F3803AAA33333
+        BBB3388F838F3333838F3303AAA33333BBB33F8F838FFFFF838F880800088888
+        BBB88888888888888388330333333333AAA3338F33333333838F380333333333
+        0003388F33333333888333033333333333333F8FFFFFFFFFFFFF880888888888
+        8888888888888888888833333333333333333333333333333333}
+      NumGlyphs = 2
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = ButtonStackedBarClick
+    end
+    object ButtonBarAve: TSpeedButton
+      Left = 31
+      Top = 5
+      Width = 25
+      Height = 25
+      Hint = 'Bar Chart with Average Line'
+      GroupIndex = 1
+      Flat = True
+      Glyph.Data = {
+        76010000424D7601000000000000760000002800000020000000100000000100
+        0400000000000001000000000000000000001000000000000000000000000000
+        80000080000000808000800000008000800080800000C0C0C000808080000000
+        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333300030003
+        0003333388838883888333333333333333333FFFFFFFFFFFFFFF880000000000
+        0000888888888888888833039BA39BA39BA3338F838F838F838F38039BA39BA3
+        9BA3388F838F838F838F33039BA39BA39BA33F8F838F838F838F88089BA89BA8
+        9BA8888883888388838833039BA390A39BA3338F838F8883838F38039BA30B03
+        9BA3388F838F3333838F33039BA03B309BA33F8F838FFFFF838F88089B088B88
+        0BA8888888888888838833039033333390A3338F33333333838F380393333333
+        9BA3388F3333333388833303333333333B333F8FFFFFFFFFFFFF880888888888
+        8B88888888888888888833333333333333333333333333333333}
+      NumGlyphs = 2
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = ButtonBarAveClick
+    end
+    object ButtonPie: TSpeedButton
+      Left = 371
+      Top = 7
+      Width = 25
+      Height = 25
+      Hint = 'Show Pie Chart (one series only)'
+      GroupIndex = 1
+      Enabled = False
+      Flat = True
+      Glyph.Data = {
+        76010000424D7601000000000000760000002800000020000000100000000100
+        04000000000000010000120B0000120B00001000000000000000000000000000
+        800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333333333
+        3333333333FFFFF3333333333700073333333FFF3777773F3FFF00030990BB03
+        000077737337F373777733309990BBB0333333373337F3373F3333099990BBBB
+        033333733337F33373F337999990BBBBB73337F33337F33337F330999990BBBB
+        B03337F33337FFFFF7F3309999900000003337F33337777777F33099990A0CCC
+        C03337F3337373F337F3379990AAA0CCC733373F3733373F373333090AAAAA0C
+        033333737333337373333330AAAAAAA033333FF73F33333733FF00330AAAAA03
+        3000773373FFFF73377733333700073333333333377777333333333333333333
+        3333333333333333333333333333333333333333333333333333}
+      NumGlyphs = 2
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = ButtonPieClick
+    end
+    object ButtonMarkers: TSpeedButton
+      Left = 291
+      Top = 7
+      Width = 25
+      Height = 25
+      Hint = 'Show Markers'
+      GroupIndex = 1
+      Enabled = False
+      Flat = True
+      Glyph.Data = {
+        76010000424D7601000000000000760000002800000020000000100000000100
+        0400000000000001000000000000000000001000000000000000000000000000
+        80000080000000808000800000008000800080800000C0C0C000808080000000
+        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00338333833383
+        3383338F3F8F3F8F3F8F33838383838383833F8F8F8F8F8F8F8F880000000000
+        000088888888888888883303333333333333338F33333333333338033393A333
+        333A388833333333333333033C333C3333333F8FFFFFFFFFFFFF88088888988C
+        888A88888888888888883303333333333333338F333333333333380A33A33333
+        3333388833333333333333033333333A33333F8FFFFFFFFFFFFF880888888898
+        889888888888888888883303933C33333333338F333333333333380333333333
+        3A33388F3333333333333303C333333333333F8FFFFFFFFFFFFF880888888888
+        8888888888888888888833333333333333333333333333333333}
+      NumGlyphs = 2
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = ButtonMarkersClick
+    end
+    object ButtonDeltaAverage: TSpeedButton
+      Left = 319
+      Top = 7
+      Width = 25
+      Height = 25
+      Hint = 'Delta Average'
+      GroupIndex = 1
+      Enabled = False
+      Flat = True
+      Glyph.Data = {
+        76010000424D7601000000000000760000002800000020000000100000000100
+        0400000000000001000000000000000000001000000000000000000000000000
+        80000080000000808000800000008000800080800000C0C0C000808080000000
+        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333300030003
+        0003333388838883888333333333333333333FFFFFFFFFFFFFFF888000000000
+        0000888888888888888833333333033333333333333F33333333333333330333
+        33333333333F3333333333CCCCCC033333333333333F3333333388CCCCCC0333
+        33333333333F3333333333333333033333333333333F33333333333333330AAA
+        A3333333333F33333333333333330AAAA3333333333F33333333833333330333
+        33333333333F3333333333333333099999993333333F33333333333333330999
+        99993333333F3333333333333333033333333FFFFFFFFFFFFFFF888000000000
+        0000888888888888888833333333333333333333333333333333}
+      NumGlyphs = 2
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = ButtonDeltaAverageClick
+    end
+    object ButtonLineMarker: TSpeedButton
+      Left = 84
+      Top = 5
+      Width = 25
+      Height = 25
+      Hint = 'Line with Markers'
+      GroupIndex = 1
+      Flat = True
+      Glyph.Data = {
+        76010000424D7601000000000000760000002800000020000000100000000100
+        04000000000000010000120B0000120B00001000000000000000000000000000
+        800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00337333733373
+        3373337F3F7F3F7F3F7F33737373737373733F7F7F7F7F7F7F7F770000000000
+        000077777777777777773303333333333333337FF333333F33333709333333C3
+        333337773F3FF373F333330393993C3C33333F7F7F77F7F7FFFF77079797977C
+        77777777777777777777330339339333C333337FF73373F37F33370C333C3933
+        933337773F3737F37FF33303C3C33939C9333F7F7F7FF7F777FF7707C7C79797
+        7C97777777777777777733033C3393933C33337F37F33333373F37033C333933
+        33C3377F3733333333733303CCC3393333C33F7FFFFFFFFFFFFF77077C777777
+        7CCC777777777777777733333333333333C33333333333333333}
+      NumGlyphs = 2
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = ButtonLineMarkerClick
+    end
+    object Label1: TLabel
+      Left = 398
+      Top = 10
+      Width = 210
+      Height = 16
+      Caption = '(TODO: Fix broken chart types)'
+      Enabled = False
+    end
+    object SpeedButtonTestMouseOver: TSpeedButton
+      Left = 139
+      Top = 5
+      Width = 26
+      Height = 25
+      Hint = 'Floating Markers Demo (new JAN 2005!)'
+      GroupIndex = 1
+      Flat = True
+      Glyph.Data = {
+        F6000000424DF600000000000000760000002800000010000000100000000100
+        0400000000008000000000000000000000001000000000000000000000000000
+        8000008000000080800080000000800080008080000080808000C0C0C0000000
+        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00D88888888888
+        888D79FFFFFFFFFFFF98999FFFFFFFFFF99979CFFFFFFFFFCF987FFCFFFFFFFF
+        CFF87FFCFFFFFFFCFFF87FFCFFFFFFFCFFF87FFFCFFFFFCFFFF87FFFCFFFFFCF
+        FFF87FFFCFFFFFCFFFF87FFFFCFFFCFFFFF87FFFFCFFFCFFFFF87FFFFFCFFCFF
+        FFF87FFFFFC9CFFFFFF87FFFFF999FFFFFF8D77777797777777D}
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = SpeedButtonTestMouseOverClick
+    end
+  end
+  object ListBox1: TListBox
+    Left = 0
+    Top = 35
+    Width = 121
+    Height = 418
+    Align = alLeft
+    Color = clBtnFace
+    Font.Charset = OEM_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -8
+    Font.Name = 'Terminal'
+    Font.Style = [fsBold]
+    ItemHeight = 8
+    Items.Strings = (
+      '<Pen Values>')
+    ParentFont = False
+    TabOrder = 1
+    Visible = False
+    OnClick = ListBox1Click
+    OnDblClick = ListBox1DblClick
+  end
+  object ColorDialog1: TColorDialog
+    Options = [cdFullOpen]
+    Left = 625
+    Top = 4
+  end
+  object FontDialog1: TFontDialog
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'System'
+    Font.Style = []
+    Options = []
+    Left = 656
+    Top = 5
+  end
+  object MainMenu1: TMainMenu
+    Left = 204
+    Top = 8
+    object Demo1: TMenuItem
+      Caption = '&Demo'
+      object SetHeaderFont1: TMenuItem
+        Caption = 'Set Header Font'
+        ShortCut = 16454
+        OnClick = SetHeaderFont1Click
+      end
+      object N2: TMenuItem
+        Caption = '-'
+      end
+      object Scrolling1: TMenuItem
+        Caption = 'Scrolling'
+        ShortCut = 16467
+        OnClick = Scrolling1Click
+      end
+      object CopyToClipboard1: TMenuItem
+        Caption = 'Copy To Clipboard'
+        ShortCut = 16451
+        OnClick = CopyToClipboard1Click
+      end
+      object Print1: TMenuItem
+        Caption = 'Print Chart to Printer'
+        ShortCut = 16464
+        OnClick = Print1Click
+      end
+      object PrintOptions1: TMenuItem
+        Caption = '&Print Options'
+        OnClick = PrintOptions1Click
+      end
+      object N1: TMenuItem
+        Caption = '-'
+      end
+      object Generatenewrandomvalues1: TMenuItem
+        Caption = '&Generate new random values'
+        ShortCut = 16466
+        OnClick = Generatenewrandomvalues1Click
+      end
+      object ShowgapinLineChart1: TMenuItem
+        Caption = '&Show gap in Line Chart'
+        ShortCut = 16455
+        OnClick = ShowgapinLineChart1Click
+      end
+      object DateTimeAxisMode: TMenuItem
+        Caption = 'Date/Time Axis Mode'
+        OnClick = DateTimeAxisModeClick
+      end
+      object MenuNegValueTest: TMenuItem
+        AutoCheck = True
+        Caption = 'Use Positive and Negative Demo Values (-20..+20)'
+        OnClick = MenuNegValueTestClick
+      end
+      object MenuSecondaryAxisMode: TMenuItem
+        Caption = '&Plot Markers+Values using Alternate Scale (0-120%)'
+        OnClick = MenuSecondaryAxisModeClick
+      end
+      object N4: TMenuItem
+        Caption = '-'
+      end
+      object ShowDataInListbox1: TMenuItem
+        Caption = '&Show Data in listbox'
+        ShortCut = 16452
+        OnClick = ShowDataInListbox1Click
+      end
+      object LargeDataset576samples1: TMenuItem
+        Caption = '&Large Dataset (576 samples)'
+        ShortCut = 16460
+        OnClick = LargeDataset576samples1Click
+      end
+      object NewFeaturesfor20071: TMenuItem
+        Caption = 'New Features for 2007'
+        OnClick = NewFeaturesfor20071Click
+      end
+    end
+    object Help1: TMenuItem
+      Caption = '&Help'
+      object About1: TMenuItem
+        Caption = '&About JvChart Component'
+        ShortCut = 16449
+        OnClick = About1Click
+      end
+      object AboutJVCL301: TMenuItem
+        Caption = '&About JVCL 3.0'
+        OnClick = AboutJVCL301Click
+      end
+    end
+  end
+  object Timer1: TTimer
+    Enabled = False
+    Interval = 100
+    OnTimer = Timer1Timer
+    Left = 170
+    Top = 6
+  end
+  object PrinterSetupDialog1: TPrinterSetupDialog
+    Left = 168
+    Top = 42
+  end
+  object PrintDialog1: TPrintDialog
+    Left = 204
+    Top = 40
+  end
+end
+
+
+
+//***************************** TStatArray
+
+{-----------------------------------------------------------------------------
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at
+http://www.mozilla.org/MPL/MPL-1.1.html
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either expressed or implied. See the License for
+the specific language governing rights and limitations under the License.
+
+The Original Code is: JvChartDemoFm.Pas, released on 2002-10-04.
+
+The Initial Developer of the Original Code is AABsoft and Mårten Henrichson.
+(C) 1996 AABsoft and Mårten Henrichson.
+All Rights Reserved.
+
+Contributor(s): -
+
+Last Modified: 2004-01-07
+  Modified 2003 Warren Postma
+
+You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
+located at http://jvcl.delphi-jedi.org
+
+Description:
+  TStatArray - Statistics, Rolling average helper class.
+
+Known Issues:
+  This version is part of JvChartDemo.
+-----------------------------------------------------------------------------}
+
+unit StatsClasses;
+
+
+interface
+
+
+type
+
+TStatArray = class
+  protected
+   //FFirst:Boolean;
+   FGrows:Boolean; // false=rolling average (circular buffer mode), true=average or sd of any number of samples (array grows without limit)
+   FValues: Array of Double;
+   FLength, // Array absolute size (may still be no data even if this is >0)
+   FIndex,  // Where will the next sample be stored into the array?
+   FCount:  // How many valid samples are in the array right now?
+      Integer;
+
+
+   procedure SetLen(aLength:Integer);
+
+
+  public
+    procedure AddValue(aValue:Double);
+
+    function Average:Double;
+
+    function StandardDeviation:Double;
+
+    property Grows:Boolean read FGrows write FGrows; // false=rolling average, true=average ALL samples (grows to fit)
+
+    property Length:Integer read FLength write SetLen;
+    property Count:Integer read FCount;
+    //property First:Boolean read FFirst;
+
+    procedure Reset; // Clear everything!
+
+    constructor Create; overload;
+    constructor Create(initialLength:Integer); overload;
+    destructor Destroy; override;
+end;
+
+implementation
+
+uses  Windows, // OutputDebugString
+      SysUtils, // FloatToStr
+      Math;  //  VCL's statistics routines. StdDev, etc.
+
+// Begin Rolling Average
+
+constructor  TStatArray.Create; // overload;
+begin
+   //FFirst := true;
+   FLength := 0;
+   FIndex := 0;
+   FCount:= 0;
+   FGrows := true;
+   SetLength(FValues,0);   
+end;
+
+procedure TStatArray.Reset;
+var
+ i:Integer;
+begin
+    FIndex := 0;
+    FCount := 0;
+    for i := 0 to FLength-1 do begin
+      FValues[i] := -999.0; // debug helper.
+    end;
+    //FFirst := true;
+end;
+
+constructor TStatArray.Create(initialLength:Integer); // overload;
+begin
+//   FFirst := true;
+   SetLength(FValues,initialLength);
+   if (initialLength>0) then
+      FGrows := false
+   else
+      FGrows := true; 
+   FLength := initialLength;
+   FIndex := 0;
+   FCount:= 0;
+end;
+
+
+destructor   TStatArray.Destroy;
+begin
+  SetLength(FValues,0);
+end;
+
+
+function TStatArray.Average:Double;
+var
+ last,i:Integer;
+ sum:Double;
+begin
+ if FCount <= 0 then begin
+    result := 0;
+ end else begin
+    sum := 0;
+    if (FCount>FLength) then
+        last :=FLength-1
+    else
+        last :=FCount-1;
+    for i := 0 to last do begin
+       sum := sum + FValues[i];
+    end;
+    result := sum / (last+1);
+ end;
+end;
+
+function TStatArray.StandardDeviation:Double;
+var
+ i:Integer;
+// sum:Double;
+ TempArray:Array of Double;
+begin
+  if (FCount <= 0) then
+      result := 0
+  else if (FCount >= FLength) then begin
+      result := Math.StdDev( FValues )
+  end else begin
+      SetLength(TempArray,FCount);
+      for i := 0 to FCount-1 do begin
+          TempArray[i] := FValues[i];
+      end;
+      result := Math.StdDev( TempArray );
+      SetLength(TempArray,0);
+  end;
+end;
+
+procedure    TStatArray.AddValue(aValue:Double);
+//var
+// i:Integer;
+begin
+ (*if FFirst then begin
+    FFirst := false;
+    FIndex := 0;
+    FValues[0] := aValue;
+    FCount := 1;
+ end else begin*)
+
+ // First time in we might need to create an array:
+  if FIndex>=Length then begin
+     Assert(FGrows); // Illegal condition.
+     FLength := FIndex+1;
+     SetLength( FValues,FLength); // uninitialized, as of yet.
+  end;
+
+  FValues[FIndex] := aValue;
+  Inc(FIndex);
+  Inc(FCount);
+  if (not FGrows) then begin // circular?
+    if (FIndex>=FLength) then begin
+        FIndex := 0;
+        //FCount := FLength;//FCount does not exceed FLength in wraparounds.
+    end;
+  end else begin // grow after, in doublings of size, scales better!
+    if (FIndex>=FLength) then begin
+      FLength := FLength * 2;
+      SetLength( FValues,FLength); // uninitialized, as of yet.
+{$ifdef DEBUG_ASSERTIONS}  
+      Assert(FLength<20000); // Debug limit
+{$endif}      
+    end;
+  end;
+
+end;
+
+procedure TStatArray.SetLen(aLength:Integer);
+begin
+  if(aLength<1) then
+      aLength := 1;
+  FLength := aLength;
+  SetLength(FValues, FLength);
+
+end;
+
+
+// End Stats
+
+
+//{$ifdef UNIT_TESTS}
+procedure StatsUnitTests;
+var
+   diff:Double;
+    a1:TStatArray;
+    procedure _outs(s:String);
+    begin
+        OutputDebugString(PChar(s));
+    end;
+    procedure _outd(d:Double);
+    begin
+        OutputDebugString(PChar(FloatToStr(d)));
+    end;
+    
+begin
+   _outs('StatsUnitTests begins');
+
+   a1 := TStatArray.Create(0); // Growing array.
+   a1.AddValue( 3.5 );
+   a1.AddValue( 1.5 );
+   a1.AddValue( 25.5 );
+   a1.AddValue( 100.5 );
+   _outd( a1.Average );
+
+   diff := Abs(((3.5+1.5+25.5+100.5)/4.0)-a1.Average);
+   Assert(diff<0.001);
+
+   a1.Reset;
+   Assert(Abs(a1.Average)<0.0001);
+
+   a1.AddValue( 3.5 );
+   a1.AddValue( 1.5 );
+   a1.AddValue( 25.5 );
+   a1.AddValue( 100.5 );
+   _outd( a1.Average );
+
+   diff := Abs(((3.5+1.5+25.5+100.5)/4.0)-a1.Average);
+   Assert(diff<0.001);
+
+   _outd( a1.StandardDeviation );
+   Assert(trunc(a1.StandardDeviation)=46);
+
+   _outs('StatsUnitTests ends');   
+end;
+
+initialization
+    StatsUnitTests;
+
+//{$endif}
+
+
+end.

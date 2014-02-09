@@ -1,0 +1,164 @@
+//**************************************************************************
+program FastFTP_Up_Downloader_MAX;
+// file read & write and FTP PUT / GET function , #locs=128
+// shows subroutines of assign file direct from filesystem to a FTP Upload!
+// set the file direct with PATH AND HOST , #file:111_FTP_Up_Downloader_Spec.txt
+// new with getfilelist FTP.List()
+
+const 
+   E6= 1000000;
+   //FILE_PATH = 'E:\maxbox\maxbox3.zip';
+   //FILE_PATH = 'E:\maxbox\maxbox3\maxbox_functions.pdf';
+   //FILE_PATH = 'E:\maxbox\maxbox3\docs\maxblog.txt';
+   //FILE_PATH = 'E:\maxbox\maxbox3\docs\maxboxblog.htm';
+   FILE_PATH = 'D:\kleiner2005\download\kleiner kommunikation_files\oposlogo.gif';
+
+const
+   CHOSTNAME = 'www.softwareschule.ch';
+   CUSERNAME = '';
+   CPASSWORD = '';
+    
+procedure FTP_Upload(myFile: string);
+var 
+  ftpUpStream: TFileStream;
+  myftp: TIdFTP;
+begin
+  //TFileStream.Create(afilename, fmOpenRead or fmShareCompat)
+  //ftpUpStream:= TFileStream.create(ExePath+'examples/'+myFile, fmOpenRead)
+  ftpUpStream:= TFileStream.create(FILE_PATH, fmopenread)
+  myftp:= TIdFTP.create(self);
+  try
+    with myftp do begin
+      Host:= CHOSTNAME;
+      Username:= CUSERNAME;
+      Password:= CPASSWORD;
+    end;
+    //Connect FTP server and Use PASV mode
+    myftp.Connect(true, 1200)
+    myftp.Passive:= true;
+    //Change directory and Upload
+    //myftp.ChangeDir('httpdocs/download')
+    myftp.ChangeDir('httpdocs/images')
+    myftp.Put1(ftpUpStream, myFile, false);
+    writeln(inttoStr(myftp.size(myfile)))
+  finally
+    ftpUpStream.Free;
+    //Disconnect to Quit();
+    myftp.Quit;
+    myftp.Free;
+    //test finally
+    maxForm1.color:= clBlue;
+  end;
+end;
+
+
+procedure FTP_Download(myFile: string);
+var
+  ftpDownStream: TFileStream;
+  myftp: TIdFTP;
+begin
+  ftpDownStream:= TFileStream.create(myFile, fmCreate)
+  myftp:= TIdFTP.create(self);
+  try
+    with myftp do begin
+      Host:= CHOSTNAME;
+      Username:= CUSERNAME;
+      Password:= CPASSWORD;
+    end;
+    myftp.Connect(true, 1200)
+    myftp.Passive:= true;
+    //myftp.filestructure
+    myftp.ChangeDir('httpdocs/images')
+    //download
+    myftp.Get1(myFile, ftpDownStream, false);
+    writeln(inttoStr(myftp.size(myfile)))
+  finally
+    ftpDownStream.Free;
+    myftp.Quit;
+    myftp.Free;
+    maxForm1.color:= clRed;
+  end;  
+end;
+
+
+procedure FTP_ListDirectoryFiles;
+var  mylist: TStringlist;
+     myFtp: TIdFTP;
+     i: integer;
+begin
+  myFtp:= TIdFTP.create(self);
+  try
+    with myFtp do begin
+      Host:= CHOSTNAME;
+      Username:= CUSERNAME;
+      Password:= CPASSWORD;
+    end;
+    //Connect FTP server and Use PASV mode
+    myFtp.Connect(true, 1200)
+    myFtp.Passive:= true;
+    myFtp.ChangeDir('httpdocs/images')
+    mylist:= TStringlist.create;
+    myFtp.list(mylist,'',True) ;    //boolean = details of filelist
+    for i:= 1 to mylist.count-1 do 
+       writeln(mylist[i]); 
+    //myFtp.directorylisting
+  finally
+    //Disconnect to Quit();
+    myFtp.Quit;
+    myFtp.Free;
+    mylist.Free;
+    //visual test finally
+    maxForm1.color:= clYellow;
+  end;
+end;  
+
+
+var 
+  AStructure : TIdFTPDataStructure;
+
+//main: MY_FTP_FILE is const
+begin
+  Writeln(extractFilename(FILE_PATH))
+    //writeln(getfilename(ftp_file))
+  
+  //FTP_UPload(extractFilename(FILE_PATH));
+  
+  FTP_DOWNload(extractfilename(FILE_PATH));
+  //myftp.Get2(MY_FTP_FILE, getFileStr, true, false);
+end.
+
+--------------------------------------------------------------------------
+{RegisterMethod('Procedure Put1( const ASource : TStream; const ADestFile:
+               string; const AAppend : boolean);');}
+
+ftp.Host = "www.yourftpserveraddress.ch"
+ftp.Username = "YourFtpUsername"
+ftp.Password = "YourFtpPassword"
+
+
+Example code : Using DelimitedText, Delimiter and QuoteChar
+var
+  cars : TStringList;            // Define our string list variable
+  i    : Integer;
+begin
+  // Define a string list object, and point our variable at it
+  cars := TStringList.Create;
+  // Now add some cars to our list - using the DelimitedText property
+  // with overriden control variables
+  cars.Delimiter := ' ';        // Each list item will be blank separated
+  cars.QuoteChar := '|';        // And each item will be quoted with |'s
+  cars.DelimitedText := '|Honda Jazz| |Ford Mondeo| |Jaguar "E-type"|';
+
+  // Now display these cars
+  for i := 0 to cars.Count-1 do
+    ShowMessage(cars[i]);       // cars[i] equates to cars.Strings[i]
+  // Free up the list object
+  cars.Free;
+end;
+
+   Honda Jazz
+   Ford Mondeo
+   Jaguar "E-type"
+
+
+  

@@ -1,0 +1,118 @@
+{***************************************************************
+ *
+ * Project  : maXCom Series NetInformation
+ * Unit Name: 143_pop3_mail_info /mailmax
+ * Purpose  : Demonstrates the functions of Indy POP3 and maXbox
+ * Date  : 21/09/2010  -  23:38:56 , loc's=66
+ * History  : translate and integrate connected
+ ****************************************************************}
+
+{type
+  TformMain = class(TForm)
+    IdPOP31: TIdPOP3;
+    ListView1: TListView;
+    butnGetHeaders: TButton;
+    IdMessage1: TIdMessage;
+    procedure butnGetHeadersClick(Sender: TObject);
+  //end;}
+
+var
+  IdPOP3: TIdPOP3;
+  IdMessage1: TIdMessage;
+
+//implementation
+
+procedure GetMailHeaders;
+var
+  i, z: Integer;
+begin
+  //with formServerInfo do begin
+  IdPOP3:= TIdPOP3.create(self);
+  IdMessage1:= TIdMessage.create(self);
+  //IdPOP3.Host:= 'getmail.kleiner.ch';
+  //IdPOP3.Host:= 'mail.kleiner.com';
+  IdPOP3.Username:= '';
+  IdPOP3.Password:= '';
+  try
+    IdPOP3.Connect(2000);
+    if IdPOP3.connected then begin
+      writeln('Size of your MaXmailbox: '+inttostr(IdPOP3.RetrieveMailBoxSize))
+      writeln('Numbers of Mails: '+inttostr(IdPOP3.CheckMessages))
+    end;
+    //last new messages
+    z:= IdPOP3.CheckMessages - 6;
+    for i:= z to IdPOP3.CheckMessages do begin
+      IdMessage1.clear;
+      try
+        IdPOP3.RetrieveHeader(i, IdMessage1);
+        writeln('-----------------------------------------------------------');
+        writeln('From: '+IdMessage1.From.Text);
+        writeln('To: '+IdMessage1.Recipients.EMailAddresses);
+        writeln('Subject: '+IdMessage1.Subject);
+        writeln('Date: '+DateToStr(IdMessage1.Date));
+        writeln('Size of: '+ IntToStr(IdPOP3.RetrieveMsgSize(i)));
+      except
+        //silent exception cause of invalid spam subject!
+      end;
+    end; //for
+  finally
+    IdPOP3.Disconnect;
+    IdMessage1.free;
+    IdPOP3.Free;
+  end;
+end;
+
+begin
+  GetMailHeaders;
+end.
+
+//TEST Script Robot
+-----------------------------------------------------------
+From: max kleiner <max@kleiner.com>
+To: max@kleiner.com
+Subject: test from milo1
+Date: 20.09.2010
+Size of: 1664
+-----------------------------------------------------------
+--------------------------------------------------------
+Size of your MaXbox: 1297374
+Numbers of Mails: 81
+-----------------------------------------------------------
+From: Facebook <update+pr===lg1@facebookmail.com>
+To: Max Kleiner <max@kleiner.com>
+Subject: Eko Indriyawan commented on his status.
+Date: 01.12.2010
+Size of: 7011
+-----------------------------------------------------------
+From: intranet@ibz.ch
+To: 
+Subject: Abwesenheit
+Date: 01.12.2010
+Size of: 2140
+-----------------------------------------------------------
+From: Facebook <notification+pr===lg1@facebookmail.com>
+To: Max Kleiner <max@kleiner.com>
+Subject: Mark Waber confirmed you as a friend on Facebook...
+Date: 01.12.2010
+Size of: 8448
+-----------------------------------------------------------
+From: Facebook <notification+pr===lg1@facebookmail.com>
+To: Max Kleiner <max@kleiner.com>
+Subject: Daniel Magin wants to be friends on Facebook.
+Date: 01.12.2010
+Size of: 8038
+-----------------------------------------------------------
+From: The Leukemia & Lymphoma Society <Newsletter@reply.lls.org>
+To: max@kleiner.com
+Subject: The many stories of thanks
+Date: 01.12.2010
+Size of: 19821
+-----------------------------------------------------------
+From: venture apero <einladung@nl.ventureapero.ch>
+To: max@kleiner.com
+Subject: Treffen Sie die Abacus-Gruender: Einladung zum Weihnachtsanlass
+Date: 01.12.2010
+Size of: 43290
+
+
+

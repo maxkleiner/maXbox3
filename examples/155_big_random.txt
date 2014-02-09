@@ -1,0 +1,196 @@
+{***************************************************************
+ * App      : Big Random Functionizer
+ * Unit Name: 155_big_random.txt
+ * Purpose  : Study for Random Generator
+ * Date     : 18/03/2011 
+ * History  :http://www.merlyn.demon.co.uk/pas-rand.htm
+ * ***************************************************************}
+Program Big_Random_Numbers_Max;
+
+{ $Project$
+  $Workfile$
+  $Revision$
+  $DateUTC$
+  The Turbo/Borland Pascal and Delphi function Random generates pseudo-random sequences by updating a 32-bit variable RandSeed, which is normally initialised by Randomize from a system clock. The return value is then calculated from RandSeed :-  }
+
+
+const
+  aMinInt64 = $8000000000000000;
+  aMaxInt64 = $7FFFFFFFFFFFFFFF;
+  aMaxInt_64 = 18446744073709551600;
+  aMinInt = 100;
+  Factor64 = 6364136223846793005 { Said to be OK by Knuth } ;
+  HalfTo64 = 1.0 / (65536.0 * 65536.0 * 65536.0 * 65536.0) ;
+
+   
+type 
+  RandomSet = array [1..aMinInt] of integer;
+  
+var 
+  RandSeed64: Int64;
+  aRSet: RandomSet;
+
+
+Function mStrToInt64(const S: string; const Default: Int64): Int64;
+begin
+  Result:= StrToInt64Def(Trim(S),Default);
+end;
+
+Function cStrToInt64(const S: string): Int64;
+begin
+  Result:= StrToInt64(Trim(S));
+end;
+
+procedure Randomise64;
+begin
+   RandSeed64:= GetClockValue;
+end {Randomise64} ;
+
+
+function Random64: extended; //overload ;
+begin
+  //{$OVERFLOWCHECKS OFF} {$RANGECHECKS OFF}
+  RandSeed64:= RandSeed64*Factor64 + 1 ;
+  //{$RANGECHECKS ON} {$OVERFLOWCHECKS ON}
+  Result:= RandSeed64*HalfTo64 ;
+  //gettickcount;
+end {Random64} ;
+
+
+
+{ Generate M non-repeating random numbers from 1 to N }
+procedure GenerateRandomSet(M, N: integer; var aSet: RandomSet) ;
+var J, i : integer ;
+begin
+  if M < 1 then for i:= 1 to high(aSet) do 
+    aSet[i]:= 0
+  else begin
+    GenerateRandomSet(M - 1, N - 1, aSet) ;
+    J:= Random(N) + 1 { J is in [1..N] } ;
+    for i:= 1 to high(aSet) do
+      if aSet[i] = J then aSet[i]:= N else 
+                 aSet[i]:= J;
+  end ;
+end {GenerateRandomSet} ;
+
+// non recursive
+{aSet := [] ;
+for K := N-M+1 to N do begin
+  J := Random(K)+1 ;
+  if J in aSet then aSet := aSet + [K] else aSet := aSet + [J] ;
+end ;}
+
+
+{ Marsaglia-Bray algorithm: }
+//Function RandG(Mean, StdDev : Extended) : Extended;
+
+function RandG(Mean, StdDev : extended) : extended ;
+var U1, S2 : extended ;
+begin
+  repeat
+    U1:= 2*Random2(1) - 1 ;
+    S2:= Sqr(U1) + Sqr(2*Random2(1) -1) ;
+    until S2 < 1 ;
+  Result := Sqrt(-2*Ln(S2)/S2) * U1 * StdDev + Mean ;
+end ;
+
+
+//cover a type of range say, 0..Pred(2^24) will IMHO need something like
+procedure BigRandomNumbers;
+var ran: longint;
+begin
+  Ran:= (longint((Random(256) shl 8) + Random(256)) shl 8) + Random(256) ;
+end;
+
+function BigRandomNumbers2: longint;
+begin
+  result:= (longint((Random(256) shl 8) + Random(256)) shl 8) + Random(256);
+end;
+
+procedure BIGMAXSCREEN;
+begin
+  try
+    CaptureScreenPNG(ExePath+'MyScreenBitmap.png');
+  finally
+    SearchandOpenDoc(ExePath+'MyScreenBitmap.png')
+  end;
+end; 
+
+function powerOf2(exponent: Integer): Int64;
+var shifter: int64;
+    counter: integer;
+begin
+  shifter:= 1;
+  for counter:= 1 to exponent do
+    shifter:= shifter + shifter;
+  result:= shifter;
+end;
+
+
+var 
+  bigI: Int64;
+  verybig: extended;
+  i: integer;
+  
+begin
+  Writeln('Big Numbers Function Tester ******************')
+  bigI:= round(Power(2,31)-1)
+  writeln('limit: '+intToStr((bigI)))
+  writeln('64bit: '+floatToStr(Power(2,64)))
+  writeln('Int64 max: '+IntToStr64(MinInt64)+'..'+IntToStr64(MaxInt64))
+  bigI:= powerOf2(62) - powerOf2(62)-1
+  writeln('must -1: '+inttostr64((bigI)))
+
+  writeln('int function: '+inttoStr64(powerOf2(63)-1))         
+  writeln('lib function: '+floattostr(Power(2,63)))         
+  writeln('const direct '+intToStr64(MaxInt64))
+  for i:= 1 to 1000 do Writeln(IntToStr(BigRandomNumbers2));
+  GenerateRandomSet(10, 50, aRSet);
+    for i:= 1 to high(aRSet) do write(intToStr(aRSet[i])+' ')  //not proofed!
+End.
+
+//---------------------------------------
+Links and Literature
+
+A standard paper is S.K. Park and K.W. Miller, " Random Number Generators: Good Ones Are Hard To Find", Communications of the ACM, October 1988, pp. 1192-1201. 
+
+******************************
+Big Random Numbers
+******************************
+A
+
+To cover a type of range, say, 0..Pred(2^24) will IMHO need something like
+
+Ran := (longint((Random(256) shl 8) + Random(256)) shl 8) + Random(256) ;
+
+or for the full longint range, as in this test program :-
+
+type X = array [0..3] of byte ;
+var Ran : longint ; K : byte ;
+const XMin = -500000000 ; XMax = 1000000000 ;
+begin repeat
+
+  repeat for K := 0 to 3 do X(Ran)[K] := Random(256)
+    until (Ran>=Xmin) and (Ran<=Xmax) ;
+
+  Write(Ran:14) ; Readln ; until false end.
+
+B
+
+One approach should be to use something like Trunc(N*Random), since Random returns 0.0?float<1.0; do not overestimate the quality of the result. Simple scaling up of a random integer will give missing values.
+
+Another should be to build up by concatenation of bytes & bits, as Random(N) produces random bit strings for N a power of 2 in [2..32768]; (Random(16384) shl 12)+Random(4096) should give a random 26-bit number (range 0..16384×4096). For a range not a power of two, use a "repeat until in-range" loop. Untested.
+
+In TP7/BP7, I believe that RandSeed, declared as longint, takes all 2^32 possible values as one successively calls Random. It is, therefore, a better start than Random is; but beware of detectable correlation between successive values (ISTM that RandSeed is alternately odd and even); just use the high word of it).
+
+
+---------------------------------
+Now that the "signed" Words are finally up-to-par with the unsigned integer types, Delphi 4 immediately introduces a new 64-bits integer type, called Int64, with a whopping range of -2^63..2^63 - 1  
+
+2^100=
+1267650600228229401496703205376
+
+
+
+
+----code_cleared_checked----

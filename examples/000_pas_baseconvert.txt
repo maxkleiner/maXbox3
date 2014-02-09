@@ -1,0 +1,74 @@
+program BaseConvert_MX_00;
+
+// convert numbers from one base to another? locs=73
+
+const MXERR ='mx_Error';
+
+function BaseConvert(NumIn: string; BaseIn: Byte; BaseOut: Byte): string;
+var
+  i: integer;
+  currentCharacter: char;
+  CharacterValue: Integer;
+  PlaceValue: Integer;
+  RunningTotal: Double;
+  Remainder: Double;
+  BaseOutDouble: Double;
+  NumInCaps: string;
+  s: string;
+begin
+   if (NumIn = '') or (BaseIn < 2) or (BaseIn > 36) or (BaseOut < 1) or 
+                                          (BaseOut > 36) then
+  begin
+    Result:= MXERR;
+    Exit;
+  end;
+
+  NumInCaps    := UpperCase(NumIn);
+  PlaceValue   := Length(NumInCaps);
+  RunningTotal := 0;
+
+  for i := 1 to Length(NumInCaps) do begin
+    PlaceValue       := PlaceValue - 1;
+    CurrentCharacter := NumInCaps[i];
+    CharacterValue   := 0;
+    if (Ord(CurrentCharacter) > 64) and (Ord(CurrentCharacter) < 91) then
+      CharacterValue := Ord(CurrentCharacter) - 55;
+
+    if CharacterValue = 0 then
+      if (Ord(CurrentCharacter) < 48) or (Ord(CurrentCharacter) > 57) then begin
+        result:= MXERR;
+        Exit;
+      end else
+        CharacterValue := Ord(CurrentCharacter);
+
+    if (CharacterValue < 0) or (CharacterValue > BaseIn - 1) then begin
+      result:= MXERR;
+      Exit;
+    end;
+    RunningTotal := RunningTotal + CharacterValue * (Power(BaseIn, PlaceValue));
+  end;
+
+  while RunningTotal > 0 do begin
+    BaseOutDouble := BaseOut;
+    Remainder     := RunningTotal - (int(RunningTotal / BaseOutDouble) *
+                             BaseOutDouble);
+    RunningTotal  := (RunningTotal - Remainder) / BaseOut;
+
+    if Remainder >= 10 then
+      CurrentCharacter := Chr(Trunc(Remainder + 55))
+    else begin
+      s := IntToStr(trunc(remainder));
+      CurrentCharacter := s[Length(s)];
+    end;
+    Result := CurrentCharacter + Result;
+  end;
+end;
+
+// main Example
+
+begin
+  // HexDez convert
+  Writeln(BaseConvert('FFFF', 16, 10));
+  writeln(SHA1(ExePath+'maxbox3.exe'))
+  // returns, result '65535'.
+end.

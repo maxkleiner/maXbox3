@@ -1,0 +1,193 @@
+program BuildHouse_Animation_Plus;
+//program DHouse;
+//*********************************************************************
+// example for analyzing and play with 3D aninmation loc's=183, ex. _79  
+// you have to change sleep() for speed adaption
+// experiment with speed() or and refresh/rectangle for effects 
+//*********************************************************************
+
+const Xline= 75;
+      Yline= 95;
+      Zline= 75+60;
+
+type
+  THaus = array[1..10] of record             {date}
+     x,y,z: Integer;
+  end;       
+
+  TFolge = array[1..20] of Byte;             {point sequence}
+
+var
+  cFrm: TForm;
+  Alpha, Beta, Mx, My: Integer;    { Drehwinkel mit Startwerten }
+  Groesse, a: single;       { Hausgroesse }
+  Haus: THaus;
+  Folge: TFolge;
+  Taste: char;
+  Haus3D: array[1..10] of TPoint;
+
+
+procedure loadHouseArray;
+ begin
+ Haus[1].x:= -xline;  Haus[1].y:= -yline;  Haus[1].z:= -zline;
+ Haus[2].x:= -xline;  Haus[2].y:= -yline;  Haus[2].z:= 0;
+ Haus[3].x:= 0;       Haus[3].y:= -yline;  Haus[3].z:= zline;
+ Haus[4].x:= xline;   Haus[4].y:= -yline;  Haus[4].z:= 0;
+ Haus[5].x:= xline;   Haus[5].y:= -yline;  Haus[5].z:= -zline;
+ Haus[6].x:= xline;   Haus[6].y:= yline;   Haus[6].z:= -zline;
+ Haus[7].x:= xline;   Haus[7].y:= yline;   Haus[7].z:= 0;
+ Haus[8].x:= 0;       Haus[8].y:= yline;   Haus[8].z:= zline;
+ Haus[9].x:= -xline;  Haus[9].y:= yline;   Haus[9].z:= 0;
+ Haus[10].x:= -xline; Haus[10].y:= yline;  Haus[10].z:= -zline;
+
+ Folge[1]:= 5; Folge[2]:= 1; Folge[3]:= 2; Folge[4]:= 3;  
+ Folge[5]:= 4; Folge[6]:= 5; Folge[7]:= 6; Folge[8]:= 7;  
+ Folge[9]:= 8; Folge[10]:= 9; Folge[11]:= 10; Folge[12]:= 6;  
+ Folge[13]:= 7; Folge[14]:= 4; Folge[15]:= 3; Folge[16]:= 8;  
+ Folge[17]:= 9; Folge[18]:= 2; Folge[19]:= 1; Folge[20]:= 10;  
+end; 
+ 
+
+procedure Projektion(Alpha, Beta,             { Drehwinkel }
+                     Mx, My: Integer;   { Mittelpunkt }
+                     Groesse: single);         { Vergroesserung}
+var  SinA, SinB, CosA, CosB : single;     { Zwischenvariablen }
+     Lauf : Integer;
+
+begin { Projektion }
+  SinA:= Sin(Alpha/180*Pi);          { Bogenmassberechnungen auáerhalb }
+  SinB:= Sin(Beta/180*Pi);                 { der Schleife, um }
+  CosA:= Cos(Alpha/180*Pi);            { Rechenzeit zu sparen }
+  CosB:= Cos(Beta/180*Pi);
+  cFrm.canvas.font.size:= 15;
+  cFrm.canvas.font.color:=clblue;
+
+  for Lauf:= 1 to 10 do                        
+    with Haus[Lauf] do begin 
+      Haus3D[Lauf].x:=  Round((CosA * Haus[Lauf].x - Haus[Lauf].y * SinA)
+                              * Groesse) + Mx ;
+      Haus3D[Lauf].y:= Round(((Haus[Lauf].x*SinA + Haus[Lauf].y*CosA)*CosB
+                                + Haus[Lauf].z*SinB)*Groesse) + My;
+      cFrm.canvas.Textout(Haus3D[Lauf].x,Haus3D[Lauf].y, inttoStr(Folge[Lauf+1])) 
+    end; { with }
+   //finish
+   cFrm.canvas.MoveTo(Haus3D[Folge[1]].x, Haus3D[Folge[1]].y);
+ 
+  //{draw Hausansicht }
+  for Lauf:= 2 to 20 do begin                 
+       cFrm.canvas.LineTo(Haus3D[Folge[Lauf]].x,Haus3D[Folge[Lauf]].y);
+  end;
+    cFrm.canvas.MoveTo(Haus3D[Folge[10]].x, Haus3D[Folge[10]].y);
+    cFrm.canvas.LineTo(Haus3D[Folge[13]].x, Haus3D[Folge[13]].y);
+    cFrm.canvas.MoveTo(Haus3D[Folge[3]].x, Haus3D[Folge[3]].y);
+    cFrm.canvas.LineTo(Haus3D[Folge[5]].x, Haus3D[Folge[5]].y);
+    sleep(70)    
+end; { Projektion }
+
+
+procedure FormKeyPress(Sender: TObject; var Key: Char);
+begin
+ Taste:= Key;
+ if Key = #27 then cfrm.close;
+ //cFrm.canvas;
+end;
+
+{PROCEDURE Beschriften ;
+  BEGIN
+    SETTEXTSTYLE (0, 0, 2);
+    OUTTEXTXY (5, 15, '       Space Race with MEGAMAX');
+    settextstyle(0,0,1);
+    SETTEXTSTYLE (0, 0, 1);
+    SETTEXTJUSTIFY (CenterText, BottomText);
+    OUTTEXTXY (GetMaxX DIV 2, GetMaxY-10, 'Virtual R. is an Inanity '#3' max');
+  END;}
+
+
+procedure SaveCanvas(vCanvas: TCanvas; FileName: string);
+var
+  Bmp: TBitmap;
+  MyRect: TRect;
+begin
+  Bmp:= TBitmap.Create;
+  try
+    MyRect := vCanvas.ClipRect;
+    Bmp.Width := MyRect.Right - MyRect.Left;
+    Bmp.Height := MyRect.Bottom - MyRect.Top;
+    Bmp.Canvas.CopyRect(MyRect, vCanvas, MyRect);
+    Bmp.SaveToFile(FileName);
+  finally
+    Bmp.Free;
+  end;
+end; 
+
+
+procedure LoadForm;
+begin
+  Alpha:= 45;    { Drehwinkel mit Startwerten }
+  Beta:= -105;
+  Groesse:= 1.5;      
+  cFrm:= TForm.create(self);
+  with cFrm do begin
+    caption:= '3D House Animation - press X or Z, save with s, end with q';  
+    BorderStyle:= bsDialog;
+    height:= 580;
+    width:= 450;
+    onKeyPress:= @FormKeyPress
+    color:= clblack;
+    canvas.pen.color:=clred;
+    canvas.Pen.Width:= 2;
+    show;
+  end  
+end;
+
+//main house circle
+begin
+//************* maXbox graphics serie***************************************
+  //ProcessMessagesON;
+  loadForm;
+  loadHouseArray;
+  Mx := cFrm.width div 2;                   { Hausmitte berechnen }
+  My := cFrm.height div 2;
+  repeat                                            
+    Projektion(Alpha,Beta,Mx,My,Groesse);      { Haus zeichnen }
+    application.processMessages;                      
+    a:= 1.05;
+    case Taste of
+     'g': Groesse:= Groesse * 1.05;                 
+     'k': groesse:= groesse / 1.05; 
+     's': begin
+           SaveCanvas(cfrm.canvas, ExePath+'myhouse.bmp')
+           repeat
+             Groesse:= Groesse / a;
+             Projektion(Alpha,Beta,Mx,My,Groesse); 
+             application.processMessages;    
+             a:= a+0.1;
+           until Taste = 'q';
+             groesse:= 1.5;
+           end; 
+     'l' : Dec(Mx);                           { nach links }
+     'r' : Inc(Mx);                          { nach rechts }
+     'u' : Inc(My);                           { nach unten }
+     'o' : Dec(My);                            { nach oben}        
+     'x' : Inc(Beta);                       { drehen um x-Achse }
+     'c' : Dec(Beta);                          { back }
+     'z' : Inc(Alpha);                     { drehen um z-Achse }
+     't' : Dec(Alpha);                       { back }     
+     //#0  : case Readkey of #72 #80 #77 #75 
+     end; { case }
+     //comment this out for more animation;
+     cfrm.canvas.Rectangle(0, 0, cfrm.Width, cfrm.Height);
+     //cfrm.canvas.refresh;
+  until Taste = 'q';
+  Projektion(Alpha,Beta,Mx,My,Groesse);      { Haus zeichnen } 
+end.
+
+just inside maxbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+                                     
+

@@ -1,0 +1,509 @@
+Version:0.9
+StartHTML:0000000105
+EndHTML:0000049807
+StartFragment:0000001037
+EndFragment:0000049791
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>mXScriptasHTML</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="generator" content="SynEdit HTML exporter" />
+<style type="text/css">
+<!--
+body { color: #000000; background-color: #FFFFFF; }
+.pas1-assembler { }
+.pas1-character { text-decoration: underline; }
+.pas1-comment { color: #000080; font-style: italic; }
+.pas1-float { color: #800080; }
+.pas1-hexadecimal { color: #FF00FF; }
+.pas1-identifier { }
+.pas1-number { color: #FF0000; }
+.pas1-preprocessor { font-style: italic; }
+.pas1-reservedword { color: #000000; font-weight: bold; }
+.pas1-space { }
+.pas1-string { color: #008080; }
+.pas1-symbol { color: #000000; }
+-->
+</style>
+</head>
+<body>
+<!--StartFragment--><pre><code><span class="pas1-comment">{****************************************************************
+ *
+ * Project  : OLE DB maXbase SeriesSystem Information Series 
+ * App Name : 241_db3_SQL_tutorial2.txt, floc's = 196  for Tutorial 12.2
+ * Purpose  : DB Access via OLE DB with Access and SQL, #locs:339
+ * History  : system for mX3, need: Database3.mdb in /Examples and ODBC DNS
+            : extensions to Tutorial 12.2 with Sorted DBGrid and Navigator
+            : to do: free objects with onclose event
+            : #sign: max: APSN21: 31.07.2013 11:25:49 
+ ****************************************************************}
+
+</span><span class="pas1-reservedword">Program</span><span class="pas1-space"> DB_ACCESS_SQL2;  
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> MyGetTickCount: Longint; </span><span class="pas1-reservedword">external</span><span class="pas1-space"> </span><span class="pas1-string">'GetTickCount@kernel32.dll stdcall'</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> CreateDBGridForm(aSet: TAdoDataSet); </span><span class="pas1-reservedword">forward</span><span class="pas1-symbol">;  
+ 
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  dCom: TADOCommand;
+  sl: TStringList;
+
+      
+</span><span class="pas1-reservedword">Procedure</span><span class="pas1-space"> ConnectTest;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> cnect: TADOConnection;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  cnect:= TADOConnection.Create(self);
+  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    cnect.Provider:= </span><span class="pas1-string">'Microsoft.Jet.OLEDB.4.0'
+</span><span class="pas1-space">    cnect.ConnectionString:= </span><span class="pas1-string">'Provider=SQLOLEDB;DataSource=MyServer;Integrated Security'</span><span class="pas1-symbol">+
+       </span><span class="pas1-string">'=SSPI;Initial Catalog=pubs;'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//or for MS Jet (MS Access):
+</span><span class="pas1-space">    cnect.ConnectionString:= </span><span class="pas1-string">'Provider=Microsoft.Jet.OLEDB.4.0;'</span><span class="pas1-symbol">+
+                                  </span><span class="pas1-string">'DataSource=c:\db.mdb;'</span><span class="pas1-symbol">;
+    cnect.Connected:= true;
+    cnect.LoginPrompt:= False;
+    cnect.Open(</span><span class="pas1-string">'Admin'</span><span class="pas1-symbol">,</span><span class="pas1-string">''</span><span class="pas1-symbol">);  </span><span class="pas1-comment">//cnect.Active:= true;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">    cnect.Free;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;     
+
+
+</span><span class="pas1-reservedword">Procedure</span><span class="pas1-space"> SetADOAccessSQL_Query;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> </span><span class="pas1-comment">//adoquery: TAdoDataSet;
+</span><span class="pas1-space">  adoQry: TAdoQuery;
+  adoqryset: TAdoDataSet;
+  i,z: integer;
+</span><span class="pas1-reservedword">begin</span><span class="pas1-space">  
+  adoQryset:= TAdoDataSet.Create(self);</span><span class="pas1-comment">//TAdoQuery.Create(self);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> adoQryset </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    cacheSize:= </span><span class="pas1-number">500</span><span class="pas1-symbol">;
+    commandType:= cmdText; </span><span class="pas1-comment">//or ctQuery;
+</span><span class="pas1-space">    connectionString:= </span><span class="pas1-string">'Provider=MSDASQL;DSN=mx3base;Uid=sa;Pwd=admin'</span><span class="pas1-symbol">;
+    </span><span class="pas1-comment">{commandText:= 'INSERT INTO Table1 (FirstName, LastName, Phone)'+
+                        'VALUES (''Max99'', ''Box5459'', ''031-333 77 88'')';}
+</span><span class="pas1-space">    CommandText:= </span><span class="pas1-string">'SELECT * FROM Table1'</span><span class="pas1-symbol">;
+    CommandTimeout:= </span><span class="pas1-number">5</span><span class="pas1-symbol">;  
+    </span><span class="pas1-comment">//SQL.Text:= commandText;
+</span><span class="pas1-space">    Open;
+    Writeln(intToStr(Recordcount)+</span><span class="pas1-string">' records found: '</span><span class="pas1-symbol">)
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> Recordcount - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">for</span><span class="pas1-space"> z:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> Fieldcount - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> 
+        Write((Fields[z].asString)+</span><span class="pas1-string">'  '</span><span class="pas1-symbol">);
+      Writeln(</span><span class="pas1-character">#13#10</span><span class="pas1-symbol">)
+      Next;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    CreateDBGridForm(adoQryset); 
+    </span><span class="pas1-comment">//Close;  //to do
+</span><span class="pas1-space">    </span><span class="pas1-comment">//Free;        
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//*******************SQL StringList Solution**********************************
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> splitAttributes(ast: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">; attrs: TStringList);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> x: integer; 
+   s: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> (Assigned(attrs)) </span><span class="pas1-reservedword">then</span><span class="pas1-space">  
+       attrs:= TStringList.Create;
+  s:= </span><span class="pas1-string">''</span><span class="pas1-symbol">;
+  x:= </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">while</span><span class="pas1-space"> (x &lt;= length(ast)) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ast[x] = </span><span class="pas1-string">','</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      attrs.Add(Trim(s));
+      s:=</span><span class="pas1-string">''</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else</span><span class="pas1-space"> 
+      s:= s + ast[x];
+    inc(x);
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  attrs.Add(Trim(s+ast[x-</span><span class="pas1-number">1</span><span class="pas1-symbol">]));
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;    
+    
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> deleteStr(</span><span class="pas1-reservedword">var</span><span class="pas1-space"> auxstr: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">; len: byte);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Delete(auxstr, </span><span class="pas1-number">1</span><span class="pas1-symbol">, len);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> fillRecords(aDBName, T,A,C, fs: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">; sl: TStringlist);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> attrs: TStringlist;
+    f: shortint;
+    auxstr: </span><span class="pas1-reservedword">shortstring</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  attrs:= TStringlist.Create;
+  splitAttributes(A, attrs);
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TAdoQuery.Create(self) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    cachesize:= </span><span class="pas1-number">500</span><span class="pas1-symbol">;
+    connectionString:= </span><span class="pas1-string">'Provider=MSDASQL;DSN='</span><span class="pas1-symbol">+aDBName+</span><span class="pas1-string">';Uid=sa;Pwd=admin'</span><span class="pas1-symbol">;
+    </span><span class="pas1-comment">//commandText:= 'SELECT * FROM Table1';
+</span><span class="pas1-space">    SQL;
+    commandText:= </span><span class="pas1-string">'SELECT '</span><span class="pas1-symbol">+A+</span><span class="pas1-string">' FROM '</span><span class="pas1-symbol">+T;
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> length(C) &gt; </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">      commandText:= </span><span class="pas1-string">'SELECT '</span><span class="pas1-symbol">+A+</span><span class="pas1-string">' FROM '</span><span class="pas1-symbol">+T+</span><span class="pas1-string">' WHERE '</span><span class="pas1-symbol">+C;
+    Open;
+    First;
+    </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">while</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-symbol">(EOF) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        auxstr:=</span><span class="pas1-string">''</span><span class="pas1-symbol">;
+        </span><span class="pas1-reservedword">for</span><span class="pas1-space"> f:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> attrs.count-</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">          auxstr:= auxstr + FS + fields[f].AsString;
+        deleteStr(auxstr, length(fs));
+        sl.add(auxstr);
+        Next;
+      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">      Close;
+      Free;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;      
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; </span><span class="pas1-comment">//with 
+</span><span class="pas1-space">  attrs.Free;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> ShowRecords;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> sl.count-</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> 
+    Writeln(sl[i]);
+  Writeln(</span><span class="pas1-string">''</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-comment">//*******************SQL StringList Solution  End******************************
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> GetDBProviders;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space">  ws: TWideStrings;
+     i: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  ws:= TWideStringList.Create;
+  getProviderNames(ws)
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> ws.count -</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> 
+    writeln(intToStr(i) +</span><span class="pas1-string">' '</span><span class="pas1-symbol">+ws.strings[i]);
+  ws.free;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> CloseDBGrid(sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  writeln(</span><span class="pas1-string">'dummy closed test...'</span><span class="pas1-symbol">)
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm_DBGridKeyPress(Sender: TObject; </span><span class="pas1-reservedword">var</span><span class="pas1-space"> Key: Char);
+</span><span class="pas1-reservedword">begin</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Key = </span><span class="pas1-character">#13</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> 
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> TDBGrid(Sender).DataSource.DataSet.State </span><span class="pas1-reservedword">in</span><span class="pas1-space"> [dsEdit, dsInsert] </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">     TDBGrid(Sender).DataSource.DataSet.Post;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm_DBGridKeyPress2(Sender: TObject; </span><span class="pas1-reservedword">var</span><span class="pas1-space"> Key: Char);
+ </span><span class="pas1-reservedword">begin</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Key = </span><span class="pas1-character">#13</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> TDBGrid(Sender).DataSource.DataSet.State </span><span class="pas1-reservedword">in</span><span class="pas1-space"> [dsEdit, dsInsert]
+    </span><span class="pas1-reservedword">then</span><span class="pas1-space"> TDBGrid(Sender).DataSource.DataSet.Post;
+     </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Key = </span><span class="pas1-character">#27</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> 
+     TDBGrid(Sender).DataSource.DataSet.Cancel;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+  
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm_DBGridKeyUp(Sender: TObject; </span><span class="pas1-reservedword">var</span><span class="pas1-space"> Key: Word; Shift: TShiftState);
+ </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Key = VK_DELETE </span><span class="pas1-reservedword">then</span><span class="pas1-space"> 
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (TDBGrid(Sender).DataSource.DataSet.State &lt;&gt; dsEdit) </span><span class="pas1-reservedword">and
+</span><span class="pas1-space">   (TDBGrid(Sender).DataSource.DataSet.State &lt;&gt; dsInsert) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> MessageDlg(</span><span class="pas1-string">'Jeste li sigurni da želite brisanje podataka?'</span><span class="pas1-symbol">,
+      mtConfirmation, [mbYes, mbNo], </span><span class="pas1-number">0</span><span class="pas1-symbol">) = mrYes </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">       TDBGrid(Sender).DataSource.DataSet.Delete;
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+   
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm_DBGridTitleClick(Column: TColumn);
+ </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TCustomADODataSet(TColumn(Column).Grid.DataSource.DataSet) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (Pos(Column.FieldName, Sort) = </span><span class="pas1-number">1</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (Pos(</span><span class="pas1-string">' DESC'</span><span class="pas1-symbol">, Sort)= </span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">      Sort:= Column.FieldName + </span><span class="pas1-string">' DESC'</span><span class="pas1-space"> </span><span class="pas1-reservedword">else</span><span class="pas1-space"> Sort:= Column.FieldName + </span><span class="pas1-string">' ASC'</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    writeln(column.fieldname +</span><span class="pas1-string">'Sort has been clicked'</span><span class="pas1-symbol">);
+ </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;     
+
+</span><span class="pas1-comment">{var tmpDataSource: TDataSource;
+     dbGrid: TDBGrid;
+     mynav: TDBNavigator;
+     dbFrm: TForm;}
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> CreateDBGridForm(aSet: TADODataSet</span><span class="pas1-comment">{TADOQuery}</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> tmpDatSource: TDataSource;
+    dbGrid: TDBGrid;
+    mynav: TDBNavigator;
+    dbFrm: TForm;
+    btnOK: TComponent;
+    acustdata: TCustomADODataSet;
+
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  dbFrm:= CreateMessageDialog(</span><span class="pas1-string">'FastForm SQL DBGrid'</span><span class="pas1-symbol">,mtwarning,[mball,mbhelp,mbok]);
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> dbFrm </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    caption:= </span><span class="pas1-string">'FFP SQL DBGrid Demo'</span><span class="pas1-symbol">;
+    setBounds(</span><span class="pas1-number">50</span><span class="pas1-symbol">,</span><span class="pas1-number">50</span><span class="pas1-symbol">,</span><span class="pas1-number">900</span><span class="pas1-symbol">,</span><span class="pas1-number">500</span><span class="pas1-symbol">)
+    formstyle:= fsstayontop;
+    color:= clWebGold;
+    Show;
+    </span><span class="pas1-comment">//onClose
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;   
+  btnOK:= dbFrm.FindComponent(</span><span class="pas1-string">'OK'</span><span class="pas1-symbol">); 
+  TButton(btnOK).onClick:= @CloseDBGrid;
+  
+  tmpDatSource:= TDatasource.Create(self);
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> tmpDatSource </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      </span><span class="pas1-comment">//DataSource is linked to a DataSet.
+</span><span class="pas1-space">      IsLinkedto(TDataSet(aSet))
+      dataSet:= TDataSet(aSet); 
+      Enabled:= true;
+      AutoEdit:= true;
+      </span><span class="pas1-comment">//Edit;
+</span><span class="pas1-space">      writeln(</span><span class="pas1-string">'fcount of tmpdatasource '</span><span class="pas1-symbol">+intToStr(dataset.fieldcount))
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  
+  dbgrid:= TDBGrid.Create(self)
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> dbGrid </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Parent:= dbFrm;
+    SetBounds(</span><span class="pas1-number">50</span><span class="pas1-symbol">,</span><span class="pas1-number">100</span><span class="pas1-symbol">,</span><span class="pas1-number">800</span><span class="pas1-symbol">,</span><span class="pas1-number">350</span><span class="pas1-symbol">);
+    ReadOnly:= False;
+    </span><span class="pas1-comment">//ondblclick:= TForm_DBGridTitleClick(dbgrid.column);
+</span><span class="pas1-space">    Options:= DBGrid.Options + [dgEditing]; 
+     </span><span class="pas1-comment">{Options:= [dgEditing, dgTitles, dgColumnResize, dgColLines,
+             dgRowLines, dgTabs, dgAlwaysShowSelection, dgCancelOnExit];}
+</span><span class="pas1-space">    dataSource:= tmpDatSource;
+     </span><span class="pas1-comment">//datasource.dataset:= TDataSet(aSet); 
+</span><span class="pas1-space">    onTitleClick:= @TForm_DBGridTitleClick;
+      </span><span class="pas1-comment">//OnDblClick = DBTabGrid1DblClick
+</span><span class="pas1-space">      </span><span class="pas1-comment">//OnEnter = KeyPreviewOff
+</span><span class="pas1-space">      </span><span class="pas1-comment">//OnExit = KeyPreviewOn
+</span><span class="pas1-space">      </span><span class="pas1-comment">//OnKeyDown = DBTabGrid1KeyDown
+</span><span class="pas1-space">      </span><span class="pas1-comment">//OnKeyPress = DBTabGrid1KeyPress
+</span><span class="pas1-space">     </span><span class="pas1-comment">//Showing
+</span><span class="pas1-space">     BeginLayout; </span><span class="pas1-comment">//!!
+</span><span class="pas1-space">     </span><span class="pas1-comment">//Invalidate;
+</span><span class="pas1-space">     </span><span class="pas1-comment">//Hide;
+</span><span class="pas1-space">     </span><span class="pas1-comment">//Show;  //Update
+</span><span class="pas1-space">    writeln(</span><span class="pas1-string">'fcount of dbgrid '</span><span class="pas1-symbol">+intToStr(fieldcount))
+    writeln(</span><span class="pas1-string">'rcount of dataset '</span><span class="pas1-symbol">+intToStr(dataSource.Dataset.recordcount)+CR+LF)
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+   
+   mynav:= TDBNavigator.create(self);
+   </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mynav </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     parent:= dbFrm; 
+     SetBounds(</span><span class="pas1-number">350</span><span class="pas1-symbol">,</span><span class="pas1-number">50</span><span class="pas1-symbol">,</span><span class="pas1-number">250</span><span class="pas1-symbol">,</span><span class="pas1-number">35</span><span class="pas1-symbol">)
+     </span><span class="pas1-comment">//datasource:= dbGrid.DataSource;
+</span><span class="pas1-space">     datasource:= tmpDatSource;
+     ConfirmDelete:= True;
+     ShowHint:= True;
+     </span><span class="pas1-comment">//OnClick:= @NavInsertClick
+</span><span class="pas1-space">     Enabled:= True;
+     VisibleButtons:= [nbFirst,nbPrior,nbNext,nbLast,nbEdit,nbPost,nbRefresh];
+     Show
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+   </span><span class="pas1-comment">//tmpDatSource.Free; 
+</span><span class="pas1-space">   </span><span class="pas1-comment">//dbGrid.Free;
+</span><span class="pas1-space">   </span><span class="pas1-comment">//dbFrm.Free;
+</span><span class="pas1-space">   </span><span class="pas1-comment">//myNav.Free;
+</span><span class="pas1-space">   </span><span class="pas1-comment">//aSet.Close; aSet.Free;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> StrtoList(s: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">; </span><span class="pas1-reservedword">const</span><span class="pas1-space"> List: TStrings; </span><span class="pas1-reservedword">const</span><span class="pas1-space"> delimiter: char</span><span class="pas1-comment">{=';'}</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> tmp : </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+    i   : integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  List.BeginUpdate;
+  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">   List.Clear;
+   </span><span class="pas1-reservedword">while</span><span class="pas1-space"> pos(delimiter, s) &gt; </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     i:= pos(delimiter, s);
+     tmp:= Copy(s, </span><span class="pas1-number">1</span><span class="pas1-symbol">, i - </span><span class="pas1-number">1</span><span class="pas1-symbol">);
+     Delete(s, </span><span class="pas1-number">1</span><span class="pas1-symbol">, i);
+     List.Add(tmp);
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">if</span><span class="pas1-space"> s &lt;&gt; </span><span class="pas1-string">''</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">     List.Add(s);
+  </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">   List.EndUpdate;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+ 
+ </span><span class="pas1-reservedword">var</span><span class="pas1-space"> slist: TStrings;
+    i: integer;
+
+</span><span class="pas1-reservedword">Begin</span><span class="pas1-space"> </span><span class="pas1-comment">//main app block
+</span><span class="pas1-space">  </span><span class="pas1-comment">//SetAdoQuery;
+</span><span class="pas1-space">  maxform1.ShellStyle1Click(self);
+  sl:= TStringList.Create;
+  FillRecords(</span><span class="pas1-string">'mx3base'</span><span class="pas1-symbol">,</span><span class="pas1-string">'table1'</span><span class="pas1-symbol">,</span><span class="pas1-string">'firstname'</span><span class="pas1-symbol">,</span><span class="pas1-string">''</span><span class="pas1-symbol">,</span><span class="pas1-string">'; '</span><span class="pas1-symbol">,sl); 
+  FillRecords(</span><span class="pas1-string">'mx3base'</span><span class="pas1-symbol">,</span><span class="pas1-string">'table1'</span><span class="pas1-symbol">,</span><span class="pas1-string">'firstname,lastname,phone'</span><span class="pas1-symbol">,</span><span class="pas1-string">''</span><span class="pas1-symbol">,</span><span class="pas1-string">'; '</span><span class="pas1-symbol">,sl); 
+  </span><span class="pas1-comment">//FillRecord('mx3base','table1','firstname,lastname,phone','firstname =''max''','; ',sl);
+</span><span class="pas1-space">  ShowRecords;
+  sl.Free;
+  
+  </span><span class="pas1-comment">//Some Infos &amp; Tests
+</span><span class="pas1-space">  SetADOAccessSQL_Query;
+  GetDBProviders;
+  Writeln(</span><span class="pas1-string">'Data Link Dir is: '</span><span class="pas1-symbol">+ DataLinkDir);
+  Writeln(</span><span class="pas1-string">'Machinename is: '</span><span class="pas1-symbol">+getHostName)
+  Writeln(</span><span class="pas1-string">'Username is: '</span><span class="pas1-symbol">+getUserName)
+  Writeln(</span><span class="pas1-string">'BDE/DB Parameters: ******************************'</span><span class="pas1-symbol">);
+  Writeln(</span><span class="pas1-string">'BDE Directory '</span><span class="pas1-symbol">+GetBdeDirectory);
+  </span><span class="pas1-comment">//writeln('DB Alias Path '+GetAliasPath('DBDEMOS'));
+</span><span class="pas1-space">  writeln(</span><span class="pas1-string">'Temp File Path'</span><span class="pas1-symbol">+getTempDir)
+  Writeln(</span><span class="pas1-string">'*************************************************'</span><span class="pas1-symbol">);
+
+  </span><span class="pas1-comment">//DLL Test
+</span><span class="pas1-space">  Writeln(</span><span class="pas1-string">'tick count from dll func '</span><span class="pas1-space"> +IntToStr(MyGetTickCount));
+  </span><span class="pas1-comment">{Writeln((getASCII))  
+  Writeln(S_UTF_8ToString(getASCII))  
+  Writeln(S_StringToUTF_8(getASCII))}</span><span class="pas1-space"> 
+   </span><span class="pas1-comment">{case CreateMessageDialog('Text the maXbox', mtWarning,[mbYes,mbNo,mbCancel]).ShowModal 
+          of  mrYes: ShowMessage('Yes');
+              mrNo: ShowMessage('No');
+              mrCancel: ShowMessage('Cancel');
+          end;}</span><span class="pas1-space">  
+   </span><span class="pas1-comment">{If MessageDlg('Delete this record?', 
+               mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+       Table1.Delete;}</span><span class="pas1-space">  
+       
+    </span><span class="pas1-comment">//RunAndGetOutput  
+</span><span class="pas1-space">    slist:= TStringlist.create; 
+    StrToList(</span><span class="pas1-string">'this.is.my.simple.list.string'</span><span class="pas1-symbol">,slist,</span><span class="pas1-string">'.'</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> slist.count-</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> 
+       write(slist[i]+</span><span class="pas1-string">' '</span><span class="pas1-symbol">); 
+    slist.Free;       
+</span><span class="pas1-reservedword">End</span><span class="pas1-symbol">.   
+
+
+</span><span class="pas1-comment">// with BDE or ODBC Example
+{ with TQuery.Create(NIL) do begin
+    databasename:= dbname;
+    //filteroptions
+    SQL.Add('SELECT'+A+'FROM'+T);
+    if length(C)&gt;0 then
+      SQL.Add('WHERE'+C);
+    prepare;  
+    while not(prepared) do 
+    open;
+    first;
+    try
+      while not(EOF) do begin
+        auxstr:='';
+        for f:= 0 to attrs.count-1 do
+          auxstr:= auxstr + FS + fields[F].asstring;
+        deleteSTR(auxstr, length(fs));
+        sl.add(auxstr);
+        next;
+      end;
+      close;
+    finally
+      Free;
+    end;      
+ end;}
+</span><span class="pas1-space"> 
+ 
+*******************************************************
+There </span><span class="pas1-reservedword">is</span><span class="pas1-space"> no place like </span><span class="pas1-float">127.0.0.1</span><span class="pas1-space"> 
+
+Exception: Access violation at address </span><span class="pas1-number">4</span><span class="pas1-identifier">DE2F83C </span><span class="pas1-reservedword">in</span><span class="pas1-space"> module </span><span class="pas1-string">'msado15.dll'</span><span class="pas1-symbol">. Read </span><span class="pas1-reservedword">of</span><span class="pas1-space"> address </span><span class="pas1-float">78742E67</span><span class="pas1-space"> at </span><span class="pas1-float">0.1057
+</span><span class="pas1-identifier">Access violation at address </span><span class="pas1-number">1</span><span class="pas1-identifier">B041FC6 </span><span class="pas1-reservedword">in</span><span class="pas1-space"> module </span><span class="pas1-string">'msjet40.dll'</span><span class="pas1-symbol">. Read </span><span class="pas1-reservedword">of</span><span class="pas1-space"> address </span><span class="pas1-float">0003242E</span><span class="pas1-space"> at </span><span class="pas1-float">37.408
+</span><span class="pas1-symbol">[Microsoft][ODBC Driver Manager] Data source name </span><span class="pas1-reservedword">not</span><span class="pas1-space"> found </span><span class="pas1-reservedword">and</span><span class="pas1-space"> no </span><span class="pas1-reservedword">default</span><span class="pas1-space"> driver specified at </span><span class="pas1-float">35.440
+</span><span class="pas1-symbol">[Microsoft][ODBC Microsoft Access Driver] Query </span><span class="pas1-reservedword">is</span><span class="pas1-space"> too complex at </span><span class="pas1-float">35.607
+</span><span class="pas1-symbol">[Microsoft][ODBC Microsoft Access Driver] The Microsoft Jet database engine cannot find the input table </span><span class="pas1-reservedword">or</span><span class="pas1-space"> query </span><span class="pas1-string">'Table1d'</span><span class="pas1-symbol">.  Make sure it exists </span><span class="pas1-reservedword">and</span><span class="pas1-space"> that its name </span><span class="pas1-reservedword">is</span><span class="pas1-space"> spelled correctly at </span><span class="pas1-float">35.556
+</span><span class="pas1-symbol">[Microsoft][ODBC Microsoft Access Driver] Syntax error (missing </span><span class="pas1-reservedword">operator</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">in</span><span class="pas1-space"> query expression </span><span class="pas1-string">'031-333 77 88'</span><span class="pas1-space"> at </span><span class="pas1-float">41.356
+</span><span class="pas1-symbol">[Microsoft][ODBC Microsoft Access Driver] Too few parameters. Expected </span><span class="pas1-number">2</span><span class="pas1-space"> at </span><span class="pas1-float">41.354
+
+
+</span><span class="pas1-identifier">The syntax </span><span class="pas1-reservedword">for</span><span class="pas1-space"> the INSERT statement </span><span class="pas1-reservedword">is</span><span class="pas1-symbol">:
+
+    INSERT INTO table
+    (column-</span><span class="pas1-number">1</span><span class="pas1-symbol">, column-</span><span class="pas1-number">2</span><span class="pas1-symbol">, ... column-n)
+    VALUES
+    (value-</span><span class="pas1-number">1</span><span class="pas1-symbol">, value-</span><span class="pas1-number">2</span><span class="pas1-symbol">, ... value-n);
+    
+dbs.Execute &quot; INSERT INTO Employees &quot; _
+        &amp; &quot;(FirstName,LastName, Title) VALUES &quot; _
+        &amp; &quot;(</span><span class="pas1-string">'Harry'</span><span class="pas1-symbol">, </span><span class="pas1-string">'Washington'</span><span class="pas1-symbol">, </span><span class="pas1-string">'Trainee'</span><span class="pas1-symbol">);&quot;
+        
+        
+ADOConnection1.Open;
+ADOQuery1.Close;
+ADOQuery1.SQL.Text:= </span><span class="pas1-string">'SELECT * FROM database1 WHERE
+</span><span class="pas1-identifier">value1=</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">AND</span><span class="pas1-space"> value2= </span><span class="pas1-string">' + inttostr(array[3]);
+</span><span class="pas1-space">        
+QuotedStr rather than </span><span class="pas1-string">''''</span><span class="pas1-space">    
+
+CommandText does </span><span class="pas1-reservedword">not</span><span class="pas1-space"> return a result </span><span class="pas1-reservedword">set</span><span class="pas1-space"> at </span><span class="pas1-float">41.360
+</span><span class="pas1-identifier">CommandText does </span><span class="pas1-reservedword">not</span><span class="pas1-space"> return a result </span><span class="pas1-reservedword">set</span><span class="pas1-space"> at </span><span class="pas1-float">38.372
+
+</span><span class="pas1-identifier">ADOQuery1.SQL.Clear;
+ADOQuery1.SQL.Add(</span><span class="pas1-string">'Insert into Score ([Score],[Round],[FighterID],[FightID])
+</span><span class="pas1-identifier">Values(</span><span class="pas1-string">'+quotedstr(cbrf1.text)+'</span><span class="pas1-symbol">,</span><span class="pas1-string">'+QuotedStr(inttostr(countround))+'</span><span class="pas1-symbol">, )</span><span class="pas1-string">');
+</span><span class="pas1-identifier">ADOQuery1.ExecSQL;
+ADOQuery1.SQL.Clear;
+
+tools </span><span class="pas1-reservedword">and</span><span class="pas1-space"> configuration:
+mdbviewer </span><span class="pas1-reservedword">for</span><span class="pas1-space"> Database3.mdb
+dns-entry </span><span class="pas1-reservedword">in</span><span class="pas1-space"> ODBC DataSources: Provider=MSDASQL;DSN=mx3base
+
+
+
+Meine Erfahrung </span><span class="pas1-reservedword">in</span><span class="pas1-space"> SOA und WebServices haben im Jahr </span><span class="pas1-number">2005</span><span class="pas1-space"> mit dem Bau eines Frameworks begonnen, dass wir SOA Cells betitelten.
+SOA ist eigentlich eine Geschichte von RPC, Remote </span><span class="pas1-reservedword">Procedure</span><span class="pas1-space"> Call </span><span class="pas1-number">1985</span><span class="pas1-symbol">, IPC (Inter Process
+Communication) zu DCOM und Web Service </span><span class="pas1-number">2001</span><span class="pas1-space"> hin zur SOA, Service Oriented Architecture so um </span><span class="pas1-number">2006</span><span class="pas1-space"> um.
+The term SOA (Service Oriented Architecture) expresses a software concept that defines the
+use </span><span class="pas1-reservedword">of</span><span class="pas1-space"> services </span><span class="pas1-reservedword">to</span><span class="pas1-space"> support the requirements (use cases) </span><span class="pas1-reservedword">of</span><span class="pas1-space"> users.
+wikipedia.org </span><span class="pas1-float">20.</span><span class="pas1-space"> March </span><span class="pas1-number">06
+
+</span><span class="pas1-identifier">Da ich schon fr&uuml;h UML mit UseCase </span><span class="pas1-reservedword">in</span><span class="pas1-space"> der armasuisse einf&uuml;hrte, kann ich mit dem Konzept gut umgehen, jedoch bei der Security und der Availability sind noch grosse L&ouml;cher vorhanden.
+
+Im </span><span class="pas1-number">2007</span><span class="pas1-space"> hatte ich dann einen Vortrag auf der EKON und dot.net Konferenz zum Thema:
+
+http:</span><span class="pas1-comment">//www.softwareschule.ch/download/soa_delphi_ekon10_1.pdf 
+
+</span><span class="pas1-identifier">Im </span><span class="pas1-number">2008</span><span class="pas1-space"> haben wir dann mit MIL Office den MILO Gateway gebaut, der ein WebService ist und via https-Zertifikaten funktioniert. Bei der Studie zum MIL Geo Service und JAP II Security habe ich weitere Erfahrungen aufgebaut.
+
+
+ TObject  = </span><span class="pas1-reservedword">class
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">constructor</span><span class="pas1-space"> Create;
+    </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> Free;
+    </span><span class="pas1-reservedword">class</span><span class="pas1-space"> </span><span class="pas1-reservedword">function</span><span class="pas1-space"> InitInstance(Instance: Pointer): TObject;
+    </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> CleanupInstance;
+    </span><span class="pas1-reservedword">function</span><span class="pas1-space"> ClassType: TClass;
+    </span><span class="pas1-reservedword">class</span><span class="pas1-space"> </span><span class="pas1-reservedword">function</span><span class="pas1-space"> ClassName: </span><span class="pas1-reservedword">ShortString</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">class</span><span class="pas1-space"> </span><span class="pas1-reservedword">function</span><span class="pas1-space"> ClassNameIs(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> Name: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">): Boolean;
+    </span><span class="pas1-reservedword">class</span><span class="pas1-space"> </span><span class="pas1-reservedword">function</span><span class="pas1-space"> ClassParent: TClass;
+    </span><span class="pas1-reservedword">class</span><span class="pas1-space"> </span><span class="pas1-reservedword">function</span><span class="pas1-space"> ClassInfo: Pointer;
+    </span><span class="pas1-reservedword">class</span><span class="pas1-space"> </span><span class="pas1-reservedword">function</span><span class="pas1-space"> InstanceSize: Longint;
+    </span><span class="pas1-reservedword">class</span><span class="pas1-space"> </span><span class="pas1-reservedword">function</span><span class="pas1-space"> InheritsFrom(AClass: TClass): Boolean;
+    </span><span class="pas1-reservedword">class</span><span class="pas1-space"> </span><span class="pas1-reservedword">function</span><span class="pas1-space"> MethodAddress(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> Name: </span><span class="pas1-reservedword">ShortString</span><span class="pas1-symbol">): Pointer;
+    </span><span class="pas1-reservedword">class</span><span class="pas1-space"> </span><span class="pas1-reservedword">function</span><span class="pas1-space"> MethodName(Address: Pointer): </span><span class="pas1-reservedword">ShortString</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">function</span><span class="pas1-space"> FieldAddress(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> Name: </span><span class="pas1-reservedword">ShortString</span><span class="pas1-symbol">): Pointer;
+    </span><span class="pas1-reservedword">function</span><span class="pas1-space"> GetInterface(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> IID: TGUID; </span><span class="pas1-reservedword">out</span><span class="pas1-space"> Obj): Boolean;
+    </span><span class="pas1-reservedword">class</span><span class="pas1-space"> </span><span class="pas1-reservedword">function</span><span class="pas1-space"> GetInterfaceEntry(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> IID: TGUID): PInterfaceEntry;
+    </span><span class="pas1-reservedword">class</span><span class="pas1-space"> </span><span class="pas1-reservedword">function</span><span class="pas1-space"> GetInterfaceTable: PInterfaceTable;
+    </span><span class="pas1-reservedword">function</span><span class="pas1-space"> SafeCallException(ExceptObject: TObject;
+      ExceptAddr: Pointer): HResult; </span><span class="pas1-reservedword">virtual</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> AfterConstruction; </span><span class="pas1-reservedword">virtual</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> BeforeDestruction; </span><span class="pas1-reservedword">virtual</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> Dispatch(</span><span class="pas1-reservedword">var</span><span class="pas1-space"> </span><span class="pas1-reservedword">Message</span><span class="pas1-symbol">); </span><span class="pas1-reservedword">virtual</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> DefaultHandler(</span><span class="pas1-reservedword">var</span><span class="pas1-space"> </span><span class="pas1-reservedword">Message</span><span class="pas1-symbol">); </span><span class="pas1-reservedword">virtual</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">class</span><span class="pas1-space"> </span><span class="pas1-reservedword">function</span><span class="pas1-space"> NewInstance: TObject; </span><span class="pas1-reservedword">virtual</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> FreeInstance; </span><span class="pas1-reservedword">virtual</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">destructor</span><span class="pas1-space"> Destroy; </span><span class="pas1-reservedword">virtual</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm1.btn1Click(Sender: TObject);
+</span><span class="pas1-reservedword">const
+</span><span class="pas1-space">  SSQL: </span><span class="pas1-reservedword">string</span><span class="pas1-space"> =
+    </span><span class="pas1-string">'DECLARE    @intLoop int '</span><span class="pas1-character">#13#10
+</span><span class="pas1-space">    + </span><span class="pas1-string">'SET @intLoop = 10 '</span><span class="pas1-character">#13#10
+</span><span class="pas1-space">    + </span><span class="pas1-string">'WHILE @intLoop &gt; 1 '</span><span class="pas1-character">#13#10
+</span><span class="pas1-space">    + </span><span class="pas1-string">'BEGIN '</span><span class="pas1-character">#13#10
+</span><span class="pas1-space">    + </span><span class="pas1-string">' SELECT  @intLoop, GetDate() '</span><span class="pas1-character">#13#10
+</span><span class="pas1-space">    + </span><span class="pas1-string">' WAITFOR DELAY ''00:00:01'' '</span><span class="pas1-character">#13#10
+</span><span class="pas1-space">    + </span><span class="pas1-string">' SELECT  @intLoop = @intLoop -1 '</span><span class="pas1-character">#13#10
+</span><span class="pas1-space">    + </span><span class="pas1-string">'END '</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  qry1.SQL.Text := SSQL;
+  TADODataSet(qry1).CommandTimeout := </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+  qry1.ExecSQL;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span></code></pre><!--EndFragment--></body>
+</html>

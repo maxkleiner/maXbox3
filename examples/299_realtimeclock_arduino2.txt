@@ -1,0 +1,645 @@
+//shows structure of procedure types, max@kleiner.com ex. _299
+
+//compilerswitch $N+ turns the coprocessor on, {$mode objfpc}{$H+} loc's =255
+
+PROGRAM RTC_Arduino_ClockLab;
+
+
+// To stop the while loop, click on Options/Show Include (boolean switch)!
+
+procedure TFrm1_CloseClick(Sender: TObject); forward;
+procedure TFrm1_SendClick(Sender: TObject); forward;
+procedure TFrm1_trackSpeedChange(Sender: TObject); forward;
+procedure TFrm1_closeForm(Sender: TObject; var Action: TCloseAction); forward;
+
+
+Const MILLISECONDS = 50; //for timer, sync with trackbar 1000/50= position 20
+      COMPORT ='COM3';  
+var 
+  aFrm: TForm;
+  tB: TTrackBar;
+  CurStep: Double;
+  cPort: TComPort;
+  StatusBar1: TStatusBar;
+
+
+procedure CreateComPort(Sender: TObject);
+begin
+  cPort:= TComPort.Create(self);
+  with cPort do begin
+    //close;
+    BaudRate:= br9600;
+    Port:= COMPORT; //'COM5';
+    Parity.Bits:= prNone;
+    StopBits:= sbOneStopBit;
+    DataBits:= dbEight;
+    Connected:= true;
+   {FlowControl.OutCTSFlow:= False;
+    FlowControl.OutDSRFlow:= False;
+    FlowControl.ControlDTR:= dtrDisable;
+    FlowControl.ControlRTS:= rtsDisable;
+    FlowControl.XonXoffOut:= False;
+    FlowControl.XonXoffIn:= False;}
+  end;
+end;
+
+procedure TForm1_btn_SetupClick(Sender: TObject);
+begin
+ cport.ShowSetupDialog;                                   // Opens the predefined Setup Dialog (part of ComPort component)
+ writeln('statusbar1.Panels[0].Text:= Port in use ' + cport.Port);  // Status bar is set to display Port in use after setup dialog
+end;
+
+//**************************Form Builder*******************************
+procedure loadForm;
+begin
+  aFrm:= TForm.Create(self);
+  //mt.free;  in on close
+  with aFrm do begin
+    caption:= '********Wind_Animation************';  
+    height:= 510;
+    width:= 680;
+    FormStyle := fsStayOnTop;
+    Position:= poScreenCenter;
+    //Color:= clBlack;
+    onClose:= @TFrm1_closeForm;
+    Canvas.Pen.color:= clBlue;
+    Canvas.Pen.Width:= 15;
+    Show;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(310, 350,150, 55);
+    caption:= 'Send Time';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPAUSE'); 
+    mXButton(05,05,width, height,12,12,handle);
+    //event handler
+    onclick:= @TFrm1_SendClick;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(480, 350,150, 55);
+    caption:= 'Close';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP'); 
+    mXButton(05,05,width, height,12,12,handle);
+    onclick:= @TFrm1_CloseClick;
+  end;
+ with TBitBtn.create(afrm) do begin
+   parent:= afrm;
+   setbounds(480,280,150,55)
+   font.size:= 12;
+   glyph.LoadFromResourceName(HINSTANCE,'ledbulbon'); //Knownfile
+   mXButton(05,05,width, height,12,12,handle);
+   caption:= '&Settings';
+   onClick:= @TForm1_btn_SetupClick;
+ end;
+ tB:= TTrackBar.create(aFrm);
+    with tB do begin
+      parent:= aFrm;
+      setBounds(40,360,230,40);
+      Min:= 60;
+      Max:= 200;
+      Frequency:= 10
+      Position:= 1000 div MILLISECONDS;
+      linesize:= 4;
+      ThumbLength:= 30;
+      SetFocus;
+      OnChange:= @TFrm1_trackSpeedChange;
+    end;
+    CreateComPort(Self);
+ statusbar1:= TStatusBar.create(self);
+  with statusbar1 do begin
+    parent:= aFrm;
+    //simplepanel:= true;
+    //align:= alleft;
+    showhint:= true;
+    hint:= 'this is a led motor box';
+     Panels.add;
+     panels.items[0].width:= 200;
+     panels.items[0].text:= '200';
+     Panels.add;
+     panels.items[1].width:= 150;
+     panels.items[1].text:= '150';
+  end;
+end;  
+
+
+//**************************Event Handlers*******************************
+// Hier ist der eigentliche Code
+procedure TFrm1_trackSpeedChange(Sender: TObject);
+var aout: string;
+begin
+  {cPort.WriteStr(inttostr(tb.Position));
+  printF('motor out %d', [tb.Position]);
+  //cport.readStr(aout,length(aout));
+  cport.readStr(aout,3);
+  writeln('ardu back '+aout);}
+end;
+
+procedure TFrm1_timerRedrawTimer(Sender: TObject);
+begin
+  CurStep:= CurStep + 0.1;
+  if CurStep > 360 then CurStep:= 0;
+  afrm.Invalidate;  //redraw
+end;
+
+procedure TFrm1_closeForm(Sender: TObject; var Action: TCloseAction);
+begin
+  try
+  cPort.WriteStr(inttostr(0));
+  if cPort.Connected then begin
+    cPort.Close;
+  end;
+  ///afrm.Free;
+  except
+  end;  
+  action:= caFree;
+  afrm:= NIL;
+end;
+
+procedure closePort;
+begin
+  try
+  if cPort.Connected then begin
+    cPort.Close;
+    cPort.Free;
+  end;
+  except;
+    writeln('cPort could not been closed...');
+  end;
+  writeln('cPort been closed and freed');  
+end;
+
+procedure TFrm1_CloseClick(Sender: TObject);
+begin
+  afrm.Close;
+  Writeln('port closed');
+end;
+
+procedure TFrm1_SendClick(Sender: TObject);
+var arduinotime, aaout: string;
+    mydatetime: TDateTime;
+    aback, aoutint,ato, cnt: integer;
+begin
+   IncludeON;   //control the while loop
+   //String arduinoTime = String.Format("{0:HHmmssddMMyy}",
+   mydatetime:= now; //+dayoftheweek(now);
+   arduinotime:= FormatDateTime('0:HHmmssddMMyy'+inttoStr(dayOfTheWeek(now)), MyDateTime);
+   writeln(arduinotime);
+  //arduinotime:= 'A';
+  
+ try
+   aback:= cPort.WriteStr(arduinotime);
+ //105:   writeln(formatdatetime('"stop is:" hh:mm:ss:zzz', time)) 
+  //while (true) do
+  writeln('send: '+inttostr(aback)+ ': '+arduinotime)
+  //ato:= inttostr(aback);
+  cnt:= 0;
+  while maxform1.ShowInclude1.checked do begin   //menu event 
+    mydatetime:= now; //+dayoftheweek(now);
+    arduinotime:='';
+    inc(cnt);
+    arduinotime:= FormatDateTime('0:HHmmssddMMyy'+inttoStr(dayOfTheWeek(now)), MyDateTime);
+    aback:= cPort.WriteStr(arduinotime);
+    writeln(inttoStr(cnt)+'  send: '+inttostr(aback)+ ': '+arduinotime)
+    sleep(1000);
+    aback:= cport.ReadStr(aaout,15)
+    if arduinotime=aaout then showmessage('compare timestamp success');
+
+  if aaout <> '' then
+     writeln('From Arduino ' + aaout +' :'+inttostr(aback));
+  end;
+  except
+    writeln('wrong with serial sending');
+  end;
+end;
+
+var    //test vars
+   str3: string;
+   sstr: shortstring;
+   myctl:  TCustomImageList;
+
+  //main form list call  
+Begin
+    //calls some test functions
+    writeln(floattostr(maxcalc('e^ln(2)')));
+    writeln(floattostr(maxcalc('ln(2)^e')));
+    printF('this is %.18f ',[maxcalc('ln(2)^e')]);
+    printF('this is %.18f ',[maxcalc('sqr(cos(ln(2)^e))')]);
+    printF('this is %.4f ',[maxcalc('sqrt(e^(ln(2)))')]);
+ 
+ //--------------------------Main Topic--------------------------
+    //loadForm;
+    
+     CreateComPort(Self);
+     TFrm1_SendClick(self);
+      
+     if MessageDlg('Close CPort',mtCustom,
+                    [mbYes,mbAll,mbCancel], 0) = mrYes  then 
+     begin
+       closePort;
+     end;
+       
+    //   TFrm1_CloseClick(Self);
+    Writeln(DateTimeToInternetStr(Now, true))
+     //drawrosette2;
+     //for i:= 1 to 500 do
+     //   TForm1_timerRedrawTimer(self);
+     //DrawBitmapTransparent
+       //CreateRotatedFont
+       //launchcpl
+         //fHideFormCaption(FormHandle: THandle; Hide: Boolean);
+     writeln(inttostr(screencolorCount));
+       //writeln(inttostr(pixels));
+End.
+  
+  
+//SKetch   Arduino Code
+ 
+//#include <Time.h> 
+
+// Pin 13 has an LED connected on most Arduino boards.
+// give it a name:
+int led = 13;
+int val = 0;
+//int i = 0;
+char incoming[16] = {}; //wegen Endzeichen
+
+// the setup routine runs once when you press reset:
+void setup() {                
+  // initialize the digital pin as an output.
+  pinMode(led, OUTPUT); 
+  Serial.begin(9600); // connect to the serial port 
+  //setTime(12,0,0,1,1,13);
+}
+
+// the loop routine runs over and over again forever:
+void loop() {
+  
+  if (Serial.available() > 0) {
+    int i = 0;
+    //Array of Char leeren
+    memset(incoming, 0, sizeof(incoming));
+    //Zeit wird geliefert als HHmmssddMMyyw, z.B. 1329002001137
+    //letzte Ziffer Wochentag von 0 Sonntag bis 6 Samstag
+    while (Serial.available() > 0 && i < sizeof(incoming) - 1) {
+      incoming[i] = Serial.read();
+      i++;
+      delay(3);
+    }
+  }
+  
+  //val = Serial.read();
+  //Serial.print(val);
+  //Serial.write(incoming);
+  Serial.print(incoming);
+  //int bytesSent = Serial.write(incoming);
+  //Serial.println();
+  //serial.write(bytessent);
+ //for (int f = 0; f < 3; f++) {
+  //for (int i=0; sizeof(incoming)-1; i++) { 
+    //Serial.print(incoming[i]);
+  //}
+  
+  //Serial.println();
+  
+  //digitalWrite(led, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(1000);               // wait for a second
+  //digitalWrite(led, LOW);    // turn the LED off by making the voltage LOW
+  //delay(1000);               // wait for a second
+   
+}
+ //ShellExecute in W64
+    //ExecuteCommand('cmd','/k FC /L /N C:\maxbook\maxbox3\maxbox391.exe C:\maxbook\maxbox3\maxbox3.exe')
+ //  ExecuteCommand('cmd','/k FC /L /N C:\maxbook\maxbox3\maxboxdef1.ini C:\maxbook\maxbox3\maxboxdef2.ini')
+   
+
+getRulesbyContract  
+
+
+using System;
+using System.IO.Ports;
+using System.Configuration;
+using ch.ecotronics.arduino.time.Properties;
+
+/*
+* Arduino als Uhr
+* Aktuelle Zeit und Tagesdatum an serielle Schnittstelle senden
+* Autorin: Silvia Rothen, rothen ecotronics, Bern, Switzerland
+*
+http://ecotronics.ch.honorius.sui-inter.net/wordpress/2012/arduino-als-uhr/
+*
+*/
+namespace ch.ecotronics.arduino.time {
+class ArduinoTimeSetter {
+
+static void Main(string[] args) {
+Settings settings = new Settings();
+SerialPort port = new SerialPort(settings.port, 9600);
+DateTime now = DateTime.Now;
+port.Open();
+//die Zeit wird für Arduino passend formatiert
+//Achtung neues Format inkl. Wochentag für DS1307
+String arduinoTime = String.Format("{0:HHmmssddMMyy}",
+DateTime.Now) + ((int) DateTime.Now.DayOfWeek);
+Console.WriteLine(arduinoTime);
+//hier wird die Zeit an die serielle Schnittstelle geschickt
+port.Write(arduinoTime);
+while (true) {
+Console.WriteLine("From Arduino " + port.ReadLine());
+}
+
+}
+
+  //Arduino 1.0+ Only
+//Funktioniert zusammen mit C:\dateienmitback\dropbox\arduino\_doku\csharp\ConsoleApplication1\ConsoleApplication1\
+//Quellen u.a.
+// http://ur5uppe.blogspot.ch/2012/05/arduino-und-rtc-real-time-clock.html
+
+#include "Wire.h"
+#define DS1307_ADDRESS 0x68
+byte zero = 0x00; //workaround for issue #527
+char incoming[14] = {}; //wegen Endzeichen
+
+void setup(){
+  Wire.begin();
+  Serial.begin(9600);
+}
+
+void loop(){
+  setDateTime(); //MUST CONFIGURE IN FUNCTION
+  printDate();
+  delay(1000);
+}
+
+void setDateTime(){
+  if (Serial.available() > 0) {
+    int i = 0;
+    //Array of Char leeren
+    memset(incoming, 0, sizeof(incoming));
+    //Zeit wird geliefert als HHmmssddMMyyw, z.B. 1329002001137
+    //letzte Ziffer Wochentag von 0 Sonntag bis 6 Samstag
+    while (Serial.available() > 0 && i < sizeof(incoming) - 1) {
+      incoming[i] = Serial.read();
+      i++;
+      delay(3);
+    }
+ 
+    //in Zeit umwandeln
+    char hr[3] = {};
+    char min[3] = {};
+    char sec[3] = {};
+    char day[3] = {};
+    char month[3] = {};
+    char yr[3] = {};
+    char wochentag[2] = {};
+    hr[0] = incoming[0];
+    hr[1] = incoming[1];
+    min[0] = incoming[2];
+    min[1] = incoming[3];
+    sec[0] = incoming[4];
+    sec[1] = incoming[5];
+    day[0] = incoming[6];
+    day[1] = incoming[7];
+    month[0] = incoming[8];
+    month[1] = incoming[9];
+    yr[0] = incoming[10];
+    yr[1] = incoming[11];
+    wochentag[0] = incoming[12];
+
+    Serial.print("Neues Datum ");
+    printDigits(atoi(day), "");
+    printDigits(atoi(month), ".");
+    printDigits(atoi(yr), ".");
+    Serial.println("");
+    byte second =      atoi(sec); //0-59
+    byte minute =      atoi(min); //0-59
+    byte hour =        atoi(hr); //0-23
+    byte weekDay =     atoi(wochentag); //0-6 -> sunday - Saturday
+    byte monthDay =    atoi(day); //1-31
+    byte monthb =       atoi(month); //1-12
+    byte year  =       atoi(yr); //0-99
+  
+    Wire.beginTransmission(DS1307_ADDRESS);
+    Wire.write(zero); //stop Oscillator
+  
+    Wire.write(decToBcd(second));
+    Wire.write(decToBcd(minute));
+    Wire.write(decToBcd(hour));
+    Wire.write(decToBcd(weekDay));
+    Wire.write(decToBcd(monthDay));
+    Wire.write(decToBcd(monthb));
+    Wire.write(decToBcd(year));
+  
+    Wire.write(zero); //start 
+  
+    Wire.endTransmission();
+  }
+}
+
+byte decToBcd(byte val){
+// Convert normal decimal numbers to binary coded decimal
+  return ( (val/10*16) + (val%10) );
+}
+
+byte bcdToDec(byte val)  {
+// Convert binary coded decimal to normal decimal numbers
+  return ( (val/16*10) + (val%16) );
+}
+
+void printDate(){
+
+  // Reset the register pointer
+  Wire.beginTransmission(DS1307_ADDRESS);
+  Wire.write(zero);
+  Wire.endTransmission();
+
+  Wire.requestFrom(DS1307_ADDRESS, 7);
+
+  int second = bcdToDec(Wire.read());
+  int minute = bcdToDec(Wire.read());
+  int hour = bcdToDec(Wire.read() & 0b111111); //24 hour time
+  int weekDay = bcdToDec(Wire.read()); //0-6 -> sunday - Saturday
+  int monthDay = bcdToDec(Wire.read());
+  int month = bcdToDec(Wire.read());
+  int year = bcdToDec(Wire.read());
+
+  //print the date EG   3/1/11 23:59:59
+  switch (weekDay) {
+    case 1:
+      Serial.print("Montag");
+      break;
+    case 2:
+      Serial.print("Dienstag");
+      break;
+    case 3:
+      Serial.print("Mittwoch");
+      break;
+    case 4:
+      Serial.print("Donnerstag");
+      break;
+    case 5:
+      Serial.print("Freitag");
+      break;
+    case 6:
+      Serial.print("Samstag");
+      break;
+    case 7:
+      Serial.print("Sonntag");
+      break;
+  }
+  printDigits(monthDay, " ");
+  printDigits(month, ".");
+  printDigits(year, ".");
+  printDigits(hour, " ");
+  printDigits(minute, ":");
+  printDigits(second, ":");
+  Serial.println("");
+}
+
+void printDigits(int digits, char trennzeichen[2] ){
+  // Hilfsfunktion zur Datums-/Zeitdarstellung: Gibt vorstehenden Doppelpunkt und f?hrende 0 aus
+  Serial.print(trennzeichen);
+  if(digits < 10) {
+    Serial.print('0');
+  }
+  Serial.print(digits);
+}
+
+
+//Arduino 1.0+ Only
+//Arduino 1.0+ Only
+
+#include "Wire.h"
+#define DS1307_ADDRESS 0x68
+byte zero = 0x00; //workaround for issue #527
+
+void setup(){
+  Wire.begin();
+  Serial.begin(9600);
+  setDateTime(); //MUST CONFIGURE IN FUNCTION
+}
+
+void loop(){
+  printDate();
+  delay(1000);
+}
+
+void setDateTime(){
+
+  byte second =      00; //0-59
+  byte minute =      47; //0-59
+  byte hour =        19; //0-23
+  byte weekDay =     6; //1-7
+  byte monthDay =    19; //1-31
+  byte month =       1; //1-12
+  byte year  =       13; //0-99
+
+  Wire.beginTransmission(DS1307_ADDRESS);
+  Wire.write(zero); //stop Oscillator
+
+  Wire.write(decToBcd(second));
+  Wire.write(decToBcd(minute));
+  Wire.write(decToBcd(hour));
+  Wire.write(decToBcd(weekDay));
+  Wire.write(decToBcd(monthDay));
+  Wire.write(decToBcd(month));
+  Wire.write(decToBcd(year));
+
+  Wire.write(zero); //start 
+
+  Wire.endTransmission();
+
+}
+
+byte decToBcd(byte val){
+// Convert normal decimal numbers to binary coded decimal
+  return ( (val/10*16) + (val%10) );
+}
+
+byte bcdToDec(byte val)  {
+// Convert binary coded decimal to normal decimal numbers
+  return ( (val/16*10) + (val%16) );
+}
+
+void printDate(){
+
+  // Reset the register pointer
+  Wire.beginTransmission(DS1307_ADDRESS);
+  Wire.write(zero);
+  Wire.endTransmission();
+
+  Wire.requestFrom(DS1307_ADDRESS, 7);
+
+  int second = bcdToDec(Wire.read());
+  int minute = bcdToDec(Wire.read());
+  int hour = bcdToDec(Wire.read() & 0b111111); //24 hour time
+  int weekDay = bcdToDec(Wire.read()); //0-6 -> sunday - Saturday
+  int monthDay = bcdToDec(Wire.read());
+  int month = bcdToDec(Wire.read());
+  int year = bcdToDec(Wire.read());
+
+  //print the date EG   3/1/11 23:59:59
+  Serial.print(month);
+  Serial.print("/");
+  Serial.print(monthDay);
+  Serial.print("/");
+  Serial.print(year);
+  Serial.print(" ");
+  Serial.print(hour);
+  Serial.print(":");
+  Serial.print(minute);
+  Serial.print(":");
+  Serial.println(second);
+
+}
+///////////////////////////////////////7
+
+int led = 13;
+int val = 0;
+//int i = 0;
+char incoming[16] = {}; //wegen Endzeichen
+
+// the setup routine runs once when you press reset:
+void setup() {                
+  // initialize the digital pin as an output.
+  pinMode(led, OUTPUT); 
+Serial.begin(9600); // connect to the serial port  
+}
+
+// the loop routine runs over and over again forever:
+void loop() {
+  
+  if (Serial.available() > 0) {
+    int i = 0;
+    //Array of Char leeren
+    memset(incoming, 0, sizeof(incoming));
+    //Zeit wird geliefert als HHmmssddMMyyw, z.B. 1329002001137
+    //letzte Ziffer Wochentag von 0 Sonntag bis 6 Samstag
+    while (Serial.available() > 0 && i < sizeof(incoming) - 1) {
+      incoming[i] = Serial.read();
+      i++;
+      delay(3);
+    }
+  }
+  
+  
+  //val = Serial.read();
+  //Serial.print(val);
+  //Serial.write(incoming);
+  Serial.print(incoming);
+ //for (int f = 0; f < 3; f++) {
+  //for (int i=0; sizeof(incoming)-1; i++) { 
+    //Serial.print(incoming[i]);
+  //}
+  
+  Serial.println();
+  
+  //digitalWrite(led, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(1000);               // wait for a second
+  //digitalWrite(led, LOW);    // turn the LED off by making the voltage LOW
+  //delay(1000);               // wait for a second
+  
+  
+}

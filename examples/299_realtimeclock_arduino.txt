@@ -1,0 +1,322 @@
+//shows structure of procedure types, max@kleiner.com ex. _299
+
+//compilerswitch $N+ turns the coprocessor on, {$mode objfpc}{$H+} loc's =248
+//example from Lazarus 1.0 - motiongraphics ,add graphic by mX
+
+PROGRAM RTC_Arduino;
+
+procedure TFrm1_CloseClick(Sender: TObject); forward;
+procedure TFrm1_PauseClick(Sender: TObject); forward;
+procedure TFrm1_trackSpeedChange(Sender: TObject); forward;
+procedure TFrm1_closeForm(Sender: TObject; var Action: TCloseAction); forward;
+
+
+
+Const MILLISECONDS = 50; //for timer, sync with trackbar 1000/50= position 20
+      COMPORT ='COM3';  
+var 
+  aFrm: TForm;
+  tB: TTrackBar;
+  CurStep: Double;
+  cPort: TComPort;
+  StatusBar1: TStatusBar;
+  
+
+procedure DrawRosette2;
+var m,p: TPoint;
+  rho,phi: real;
+  i,r: integer;
+begin
+   with afrm.Canvas do begin
+     Pen.Width:= 2;
+     Pen.Color:= clyellow;
+     //Brush.Color:= clblue;
+     Brush.Style:= bsClear;
+     //compute centerpoint and draw circle
+     m.x:=170; m.y:=165; r:=75;
+     rho:= 18;
+     for i:=1 to 18 do begin
+       phi:=i*rho*pi/180;
+       p.x:=m.x+round(r*cos(phi));
+       p.y:=m.y+round(r*sin(phi));
+       Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+       Ellipse(p.x-3,p.y-3,p.x+3,p.y+3);
+     end;
+     //application.processMessages;
+  end;
+end;
+
+
+function TForm1_RotatePoint(APoint,ACenter: TPoint; AAngle: Double): TPoint;
+var
+  dx,dy: Double;
+begin
+  dx:= (ACenter.Y * Sin(AAngle)) - (ACenter.X * Cos(AAngle)) + ACenter.X;
+  dy:= -(ACenter.X * Sin(AAngle)) - (ACenter.Y * Cos(AAngle)) + ACenter.Y;
+  Result.X:= Round((APoint.X * Cos(AAngle)) - (APoint.Y * Sin(AAngle)) + dx);
+  Result.Y:= Round((APoint.X * Sin(AAngle)) + (APoint.Y * Cos(AAngle)) + dy);
+end;
+  
+procedure TForm1_RotatePolygon(var APoints: array of TPoint; AAngle: Double);
+var
+  aCentr: TPoint;
+  i: Integer;
+begin
+  aCentr:= Point(10, 10);
+  for i:= 0 to Length(APoints)-1 do begin
+    aCentr.X:= aCentr.X + APoints[i].X;
+    aCentr.Y:= aCentr.Y + APoints[i].Y;
+  end;
+  aCentr.X:= aCentr.X div Length(APoints);
+  aCentr.Y:= aCentr.Y div Length(APoints);
+  for i:= 0 to Length(APoints)-1 do
+    APoints[i]:= TForm1_RotatePoint(APoints[i], aCentr, AAngle);
+end;
+
+
+procedure CreateCom(Sender: TObject);
+begin
+  cPort:= TComPort.Create(self);
+  with cPort do begin
+    BaudRate:= br9600;
+    Port:= COMPORT; //'COM5';
+    Parity.Bits:= prNone;
+    StopBits:= sbOneStopBit;
+    DataBits:= dbEight;
+    Connected:= true;
+   {FlowControl.OutCTSFlow:= False;
+    FlowControl.OutDSRFlow:= False;
+    FlowControl.ControlDTR:= dtrDisable;
+    FlowControl.ControlRTS:= rtsDisable;
+    FlowControl.XonXoffOut:= False;
+    FlowControl.XonXoffIn:= False;}
+  end;
+  end;
+procedure TForm1_btn_SetupClick(Sender: TObject);
+begin
+ cport.ShowSetupDialog;                                   // Opens the predefined Setup Dialog (part of ComPort component)
+ statusbar1.Panels[0].Text:= 'Port in use ' + cport.Port;  // Status bar is set to display Port in use after setup dialog
+end;
+
+//**************************Form Builder*******************************
+procedure loadForm;
+begin
+  aFrm:= TForm.Create(self);
+  //mt.free;  in on close
+  with aFrm do begin
+    caption:= '********Wind_Animation************';  
+    height:= 510;
+    width:= 680;
+    FormStyle := fsStayOnTop;
+    Position:= poScreenCenter;
+    //Color:= clBlack;
+    onClose:= @TFrm1_closeForm;
+    Canvas.Pen.color:= clBlue;
+    Canvas.Pen.Width:= 15;
+    Show;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(310, 350,150, 55);
+    caption:= 'Send Time';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPAUSE'); 
+    mXButton(05,05,width, height,12,12,handle);
+    //event handler
+    onclick:= @TFrm1_PauseClick;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(480, 350,150, 55);
+    caption:= 'Close';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP'); 
+    mXButton(05,05,width, height,12,12,handle);
+    onclick:= @TFrm1_CloseClick;
+  end;
+ with TBitBtn.create(afrm) do begin
+   parent:= afrm;
+   setbounds(480,280,150,55)
+   font.size:= 12;
+   glyph.LoadFromResourceName(HINSTANCE,'ledbulbon'); //Knownfile
+   mXButton(05,05,width, height,12,12,handle);
+   caption:= '&Settings';
+   onClick:= @TForm1_btn_SetupClick;
+ end;
+ 
+  tB:= TTrackBar.create(aFrm);
+    with tB do begin
+      parent:= aFrm;
+      setBounds(40,360,230,40);
+      Min:= 60;
+      Max:= 200;
+      Frequency:= 10
+      Position:= 1000 div MILLISECONDS;
+      linesize:= 4;
+      ThumbLength:= 30;
+      SetFocus;
+      OnChange:= @TFrm1_trackSpeedChange;
+    end;
+    CreateCom(Self);
+    
+ statusbar1:= TStatusBar.create(self);
+  with statusbar1 do begin
+    parent:= aFrm;
+    //simplepanel:= true;
+    //align:= alleft;
+    showhint:= true;
+    hint:= 'this is a led motor box';
+     Panels.add;
+     panels.items[0].width:= 200;
+     panels.items[0].text:= '200';
+     Panels.add;
+     panels.items[1].width:= 150;
+     panels.items[1].text:= '150';
+  end;
+
+end;  
+
+
+//**************************Event Handlers*******************************
+// Hier ist der eigentliche Code
+procedure TFrm1_trackSpeedChange(Sender: TObject);
+var aout: string;
+begin
+  {cPort.WriteStr(inttostr(tb.Position));
+  printF('motor out %d', [tb.Position]);
+  //cport.readStr(aout,length(aout));
+  cport.readStr(aout,3);
+  writeln('ardu back '+aout);}
+end;
+
+procedure TFrm1_timerRedrawTimer(Sender: TObject);
+begin
+  CurStep:= CurStep + 0.1;
+  if CurStep > 360 then CurStep:= 0;
+  afrm.Invalidate;  //redraw
+end;
+
+procedure TFrm1_closeForm(Sender: TObject; var Action: TCloseAction);
+begin
+  cPort.WriteStr(inttostr(0));
+  if cPort.Connected then begin
+    cPort.Close;
+  end;
+  ///afrm.Free;  
+  action:= caFree;
+  afrm:= NIL;
+end;
+
+procedure TFrm1_CloseClick(Sender: TObject);
+begin
+  afrm.Close;
+  Writeln('port closed');
+end;
+
+procedure TFrm1_PauseClick(Sender: TObject);
+var arduinotime, aaout: string;
+    mydatetime: TDateTime;
+begin
+
+//String arduinoTime = String.Format("{0:HHmmssddMMyy}",
+   mydatetime:= now; //+dayoftheweek(now);
+    arduinotime:= FormatDateTime('0:HHmmssddMMyy'+inttoStr(dayOfTheWeek(now)), MyDateTime);
+  writeln(arduinotime);
+ 
+ cPort.WriteStr(arduinotime);
+ //105:   writeln(formatdatetime('"stop is:" hh:mm:ss:zzz', time)) 
+  //while (true) do
+  cport.ReadStr(aaout,3)
+  writeln('From Arduino ' + aaout);
+
+end;
+
+var    //test vars
+   str3: string;
+   sstr: shortstring;
+   s_length, i: integer;
+    myctl:  TCustomImageList;
+
+     
+  //main form list call  
+  Begin
+    //calls some test functions
+    writeln(floattostr(maxcalc('e^ln(2)')));
+    writeln(floattostr(maxcalc('ln(2)^e')));
+    printF('this is %.18f ',[maxcalc('ln(2)^e')]);
+    printF('this is %.18f ',[maxcalc('sqr(cos(ln(2)^e))')]);
+    printF('this is %.4f ',[maxcalc('sqrt(e^(ln(2)))')]);
+    writeln(getVersionString(exepath+'maxbox3.exe'));
+    str3:= loadFileAsString(exepath+'maxbox_functions_all.pdf');
+    writeln('file compare j: '+inttoStr(CompText(str3, str3)));
+    writeln('file compare d: '+inttoStr(CompareText(str3, str3)));
+    writeln(intToStr(length(str3)));
+    S_Length:= Ord(str3[1]);
+    writeln(inttostr(s_length));
+
+ //--------------------------Main Topic--------------------------
+    loadForm;
+    Writeln(DateTimeToInternetStr(Now, true))
+     //drawrosette2;
+     //for i:= 1 to 500 do
+     //   TForm1_timerRedrawTimer(self);
+     //strisinteger
+     //makeyear4digit
+     //inttoextended
+     //strdelete
+     //DrawBitmapTransparent
+       //CreateRotatedFont
+       //launchcpl
+         //fHideFormCaption(FormHandle: THandle; Hide: Boolean);
+           writeln(inttostr(screencolorcount));
+           //pixels
+       //showmenu
+         //LoadIcoToImage
+         //(msgabout
+       //sendmessage2
+       
+       
+End.
+  
+
+ //ShellExecute in W64
+    //ExecuteCommand('cmd','/k FC /L /N C:\maxbook\maxbox3\maxbox391.exe C:\maxbook\maxbox3\maxbox3.exe')
+ //  ExecuteCommand('cmd','/k FC /L /N C:\maxbook\maxbox3\maxboxdef1.ini C:\maxbook\maxbox3\maxboxdef2.ini')
+   
+
+getRulesbyContract  
+
+
+using System;
+using System.IO.Ports;
+using System.Configuration;
+using ch.ecotronics.arduino.time.Properties;
+
+/*
+* Arduino als Uhr
+* Aktuelle Zeit und Tagesdatum an serielle Schnittstelle senden
+* Autorin: Silvia Rothen, rothen ecotronics, Bern, Switzerland
+*
+http://ecotronics.ch.honorius.sui-inter.net/wordpress/2012/arduino-als-uhr/
+*
+*/
+namespace ch.ecotronics.arduino.time {
+class ArduinoTimeSetter {
+
+static void Main(string[] args) {
+Settings settings = new Settings();
+SerialPort port = new SerialPort(settings.port, 9600);
+DateTime now = DateTime.Now;
+port.Open();
+//die Zeit wird für Arduino passend formatiert
+//Achtung neues Format inkl. Wochentag für DS1307
+String arduinoTime = String.Format("{0:HHmmssddMMyy}",
+DateTime.Now) + ((int) DateTime.Now.DayOfWeek);
+Console.WriteLine(arduinoTime);
+//hier wird die Zeit an die serielle Schnittstelle geschickt
+port.Write(arduinoTime);
+while (true) {
+Console.WriteLine("From Arduino " + port.ReadLine());
+}
+
+}

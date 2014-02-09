@@ -1,0 +1,222 @@
+program RegularExpressionTask_PascalNames;
+
+// first interpreter of regex , loc's = 64
+{The current version of RegEx is 1.2 - I have used the library extensively in
+ my own code (albeit for simple expressions), so it is now ready for others
+  to have a go.}
+// profile based, TASK: replace the regeX to match!
+// check also the function ExecRegExpr(), see below
+  
+var 
+  myRegEX, oexpression: TniRegularExpression;  
+  flagset: TniRegularExpressionMatchFlags;  
+  //oMatcher: TniRegularExpressionMatcher;          
+  oExpression2: TniExtendedRegularExpression;
+  TniRegularExpressionMatchResult: (mrNone, mrFail, mrMatch, mrInsufficient);
+  //flagset : set of TniRegularExpressionMatchFlag;
+  regexres: TStrings;
+
+function fac(numb: integer): longint;
+begin
+  if numb = 0 then
+    result:= 1 else
+  result:= numb * fac(numb-1)
+end; 
+
+function TniRegularExpression_Match( const sString: string):
+                                      TniRegularExpressionMatchResult;
+var
+  oMatcher: TniRegularExpressionMatcher;
+  addmatch: string;
+  xNotify : TniRegularExpressionMatchFoundEvent;
+  fomatches: TStringlist;
+begin
+  // Prepare for Matching
+  //ClearMatches;
+  oMatcher:= TniRegularExpressionMatcher.Create(oExpression, flagset);
+  try
+    oMatcher.FindMatches(sString, xNotify);
+  finally
+    oMatcher.Free;
+  end;
+  if FoMatches.Count>0 then
+    Result:= mrMatch
+  else Result:= mrFail;
+End;
+
+var regstr: string;
+
+// main script
+begin
+  //myflag:= [mfStartOnly];
+  flagset:= [mfStartOnly,mfLongMatches];
+  myregEx:= TniRegularExpression.create('\d+(.\d+)?',flagset)
+  flagset:= [mfLongMatches]
+  //RegEx of Pascal Names:
+   //[a-zA-Z_][a-zA-Z0-9_]*
+  
+  oExpression:= TniRegularExpression.Create('PascalNames:[a-zA-Z_][a-zA-Z0-9_]*',[ ]);
+  
+  //TniRegularExpressionMatchResult = (mrNone, mrFail, mrMatch, mrInsufficient);
+   if oExpression.match('PascalNames:Get_function_A999') = mrMatch then
+           writeln('expression matched! '+intToStr(oExpression.MatchCount)) else
+             writeln('no matching');
+
+   //constructor TniRegularExpressionMatcher.Create( oOwner: TniRegularExpression;
+   //          xFlags: TniRegularExpressionMatchFlags);
+   //if VerifyAssigned( oExpression, 'Should have an expression to test');
+   
+   
+   // Function ExecRegExpr( const ARegExpr, AInputStr : RegExprString) : boolean');
+    ///regex1 [12][09]\d{2}-\d{2}-\d{2}T12:[23]\d:\d{2}/
+    //regex2 result group = /((19)|(20))(\d{2}-\d{2}-\d{2}T)(12:[23]\d:\d{2})/
+    if ExecRegExpr('((19)|(20))\d{2}-\d{2}-\d{2}T12:[23]\d:\d{2}',
+    '1925-04-01T12:23:29') then writeln('regex true') else writeln('regex false');
+  
+    if ExecRegExpr('((19)|(20))(\d{2}-\d{2}-\d{2}T)(12:[23]\d:\d{2})',
+    '1925-04-01T12:23:29') then writeln('regex true') else writeln('regex false');
+    //4464: Function RegExprSubExpressions( const ARegExpr : string; ASubExprs : TStrings; AExtendedSyntax : boolean) :
+   regexres:= TStringlist.Create;
+   RegExprSubExpressions('((19)|(20))(\d{2}-\d{2}-\d{2}T)(12:[23]\d:\d{2})', regexres, true);
+   writeln(regexres[4]);
+ //Procedure SplitRegExpr( const ARegExpr, AInputStr : RegExprString; APieces : TStrings)');
+   
+   regexres.clear;
+//java.util.regex.Matcher[pattern=((19)|(20))(\d{2}-\d{2}-\d{2}T)(12:[23]\d:\d{2}) region=0,19 lastmatch=] 12:33:29
+
+  SplitRegExpr('((19)|(20))(\d{2}-\d{2}-\d{2}T)(12:[23]\d:\d{2})',
+                   '1925-04-01T12:233:29',regexres);
+   writeln(regexres[0]);
+  //regexres.Free;
+   //last two müller - maierhuber are false
+   //[ae] a oder e
+   //e? -> 0 oder 1 e
+
+    if ExecRegExpr('M[ae][iy]e?r',
+    '"Meyer", "Meier", "Mair", "Mayer", "Maier", "Meir", "Müller", "Maierhuber') 
+    then writeln('regex maier true') else writeln('regex maier false');
+  
+    if ExecRegExpr('M[ae][iy]e?r[be]', 'Maierhuber') 
+    then writeln('regex maierhuber true') else writeln('regex maierhuber false');
+    
+    
+    regstr:= '[a-z0-9\-_]?[a-z0-9.\-_]+[a-z0-9\-_]?@[a-z.-]+\.[a-z]{2,}'; //{2,}#i
+      if ExecRegExpr(regstr,
+    'max.kleinb@kleiner.com') then writeln('mail regex true') else writeln('mail regex false');
+  
+
+   writeln('fractal of 5: '+inttostr(fac(5)))
+end.
+
+RegEx of Pascal Names:
+   [a-zA-Z_][a-zA-Z0-9_]*
+
+
+Regular Expressions
+------------------------------------------------------------
+Regular Expressions are a powerful mechanism for searching and matching within plain text. This object implements Regular expressions with the following syntax:
+
+    * a matches the character a
+    * abc matches characters a, b and c in that order
+    * a|b matches either a or b
+    * a? matches a or no a (optionality)
+    * a* matches any number of a or no a (optional with repetition)
+    * a+ matches one or more a (required with repetition)
+    * . matches any one character (tab, space or visible character)
+    * [abc] matches any one of a, b, c
+    * [a-g] matches any letter from a to g
+    * \d matches any digit [0-9]
+    * \a matches any letter [A-Za-z]
+    * \w matches any letter or digit [0-9A-Za-z]
+    * \t matches a tab (#9)
+    * \n matches a newline (#10 or #13)
+    * \b matches space (#32) or tab (#9)
+    * \+ matches + (escape)
+    * \. matches .
+    * ^ matches start of string
+    * $ matches end of string
+
+
+Description
+These specifiers are used to configure the Matcher for the type of matches desired. Note that lack of a flag implies the reverse state ie a match is case insensitive unless mfCaseSensitive is specified.
+
+Some useful combinations:
+
+    * mfStartOnly + mfLongMatches: Find longest match at the start
+      Useful for parsing
+    * mfMultipleMatches + mfOverlapMatches: Find all matches anywhere
+    * mfStartOnly + mfFinishOnly: Entire line must match, not just a portion
+
+Combining mfAllMatches with mvOverlapMatches may result in a large number of results.
+Combinging mfStartOnly with mfFinishOnly requires that the entire line match the expression.
+
+TniRegularExpression Example
+Sample Expressions
+
+    * Integer: \d+
+      (one or more digits)
+    * Number: \d+(.\d+)?
+      (one or more digits optionally followed by decimal point
+       and one or more digits)
+    * Money: \$\d+(,\d\d\d)*(\.\d\d)
+      (Optional dollar sign, followed by 1 or more digits, followed by comma
+       and three digits multiple times, optionally followed by a decimal point
+        and two digits)
+    * Words: colou?r
+      (Match c, o, l, o, optional u, r - american or english spelling)
+    * Number as word: one|two|three|four|five|six|seven|eight|nine|ten
+      Exactly one of one, two, three, four, five, six, seven, eight, nine, ten
+      
+Operation
+Developed from first principals and NFA/DFA theory, this object works as follows (note that this description uses terminology which should in reality be confined to a Computer Science paper):
+
+   1. Parse Regular Expression into a Non-deterministic Finite State Automata (NFA) with lambda transitions
+   2. Merge identical states
+   3. Eliminate Lambda transitions
+   4. Merge identical states
+      (The Removal of lambda transitions can reveal that two transitions are actually identical when they didn't appear so initially)
+   5. Removal of unreachable states
+   6. Removal of non-determinism
+   7. Use the resultant DFA to match an input stream
+
+   
+//oExpression:= TniRegularExpression.Create('ID:[A-Za-z]+=VALUE:[0-9]+',[ ]);
+   
+procedure TniTestExtendedRegularExpression.RunTest;
+var
+  oEx: TniExtendedRegularExpression;
+begin
+  oEx:= TniExtendedRegularExpression.Create('{ID:[A-Za-z]+}={VALUE:[0-9]+}',
+                                                      [ ]);
+  try
+    VerifyAssigned( oExpression, 'Should have an expression to test');
+
+    TestMatch( oEx, 'X=4', 'X=4',
+                            'X', '4');
+    TestMatch( oEx, 'one two three x=4 five six', 'x=4',
+                            'x', '4');
+    TestMatch( oEx, 'twohundredfiftytwo=252', 'twohundredfiftytwo=252',
+                            'twohundredfiftytwo', '252');
+    TestMatch( oEx, 'one thousand and twohundredfiftytwo=252 does not'
+                +'match', 'twohundredfiftytwo=252', 'twohundredfiftytwo', '252');
+  finally
+    oEx.Free;
+  end;
+end;  
+
+
+Email Example Aufstellen des grundlegenden Suchmusters
+
+Zuerst stellen wir in groben Zügen unser Suchmuster zusammen. Es besteht vorerst nur aus den Delimitern und dem @ in der Mitte der Adresse: # ... @ ... #i Da in eMail-Adressen durchaus auch Großbuchstaben vorkommen können, setzen wir den Modifier i.
+Der vordere Teil
+
+Da wir eindeutig definiert haben, welche Zeichen in eMail-Adressen vorkommen dürfen, fällt es uns sehr leicht, ein passendes Suchmuster aufzustellen. Wir brauchen lediglich eine Zeichenklasse definieren, die die erlaubten Zeichen enthält: #[a-z0-9.\-_]@ ... #i Eventuell in Zeichenklassen gültige Metazeichen (z.B. den Bindestrich) müssen wir maskieren.
+
+Da der Teil vor dem @ quasi beliebig lang sein kann, setzen wir hinter die Zeichenklasse noch den Quantifier +. Um sicherzustellen, dass am Anfang und am Ende des local-part kein Punkt vorkommt, definieren wir jeweils noch eine Zeichenklasse, die alle erlaubten Zeichen enthält, den Punkt aber ausschließt. Diese versehen wir jeweils noch mit dem Quantifier ?, da es sonst bei kurzen Adressen zu Problemen käme.
+
+Unser Ausdruck sieht jetzt also so aus: #[a-z0-9\-_]?[a-z0-9.\-_]+[a-z0-9\-_]?@ ... #i
+Der hintere Teil
+
+Für den hinteren Teil können wir ähnlich vorgehen. Wir definieren wiederum eine Zeichenklasse, die die erlaubten Zeichen enthält, gefolgt vom Quantifier +. Dahinter folgt dann, durch einen Punkt verbunden, die Definition für die TLD, so dass der Ausdruck jetzt so aussieht: #[a-z0-9\-_]?[a-z0-9.\-_]+[a-z0-9\-_]?@[a-z.-]+\.[a-z]{2,}#i Der Bindestrich in der ersten Zeichenklasse braucht nicht zusätzlich maskiert sein, da er am Ende der Zeichenklasse steht und somit keinen Zeichenbereich definiert.
+
+Das war es dann quasi schon, unser Regulärer Ausdruck ist damit vollständig, wir können ihn nun auf den ausgelesenen Text anwenden.        

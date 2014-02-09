@@ -1,0 +1,93 @@
+program TextFinder;
+
+//find a text in a memo  _51, locs=90
+//The CheckBox controls the case.
+//The Find button always look for the 1st occurence.
+//The FindNext will highlight all the words one after another
+
+var
+  x: Integer;
+  find: Boolean;
+  beforetime, aftertime: string;
+
+
+{++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Search for a substring positioned between 2 markers.
+Call:
+ filterSubStr([Fullstring],[first mark],[second mark],[repeated searching])
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
+
+function filterSubStr(tmp, von, bis: string; a: Integer): string;
+var
+  SubStr, bck: string;
+  Pos1, Pos2, i: Integer;
+begin
+  i := 0;
+  while i < a do
+  begin
+    Pos1:= Pos(von, tmp);
+    Pos2:= Pos(bis, tmp);
+    SubStr:= Copy(tmp, Pos1 + Length(von), Pos2 - Pos1 - Length(von));
+    Delete(tmp, Pos1, Pos2 - Pos1 + Length(bis));
+    if SubStr = '' then {nothing} 
+    else if bck = '' then
+      bck:= SubStr
+    else
+      bck:= bck + #13#10 + SubStr;
+    i:= i + 1;
+  end;
+  Result:= bck;
+end;
+
+
+procedure FindText(myfind: string; casesense: boolean);
+var
+  i: Integer;
+  a: string;
+begin
+  find:= false;
+  Memo2.Lines.Add('');
+  Memo2.Lines.Text := ' ' + Memo2.Lines.Text;
+  for i:= 0 to Length(Memo2.Lines.Text) - Length(myfind) do begin
+    a:= Copy(Memo2.Lines.Text, i, Length(myfind));
+    if casesense then begin
+      if a = myfind then begin
+        find:= True;
+        x:= 2;
+        Memo2.Lines.Text:= Copy(memo2.Lines.Text,2,Length(memo2.Lines.Text) - 1);
+        Memo2.SetFocus;
+        Memo2.SelStart:= i - 2;
+        Memo2.SelLength:= Length(myfind);
+        break;
+      end;
+    end
+    else begin
+      if lowercase(a) = lowercase(myfind) then begin
+        Memo2.Lines.Text:= Copy(Memo2.Lines.Text,2,Length(Memo2.Lines.Text) - 1);
+        find:= True;
+        x:= 2;
+        Memo2.SetFocus;
+        Memo2.SelStart:= i - 2;
+        Memo2.SelLength:= Length(myfind);
+        break;
+      end;
+    end;
+  end;
+  if find = False then ShowMessage('SearchString not found') 
+  else begin
+    ShowMessage('SearchString found');
+    find:= False;
+  end;  
+end;
+
+//main script
+begin
+  //load text or check time performance
+  memo2.lines.loadfromFile('readmefirst_maxbox.txt')     
+  beforetime:= DateTimeToStr(now);
+    findText('maXbox', false) 
+    // ShowMessage('SearchString found');
+  aftertime:= DateTimeToStr(now);
+  writeln('start: '+ beforetime)
+  writeln('stop: ' + aftertime)
+end.

@@ -1,0 +1,128 @@
+program Form_Parent_Bitmap_load_Close;
+
+//This function stretches a bitmap with specified number of pixels _180,locs=128
+// in horizontal, vertical dimension and manages forms to close or not
+
+var
+  Image1: TImage;
+  frmMon, frmMon1: TForm;
+                    
+procedure Image1MouseDown(Sender: TObject; Button: TMouseButton;
+Shift: TShiftState; X, Y: Integer);
+var i: byte;
+begin
+//test
+  Image1.Canvas.MoveTo(X,Y);
+  for i:= 1 to 70 do
+    Image1.Canvas.LineTo(X+random(140),Y+random(140));
+end;  
+
+Function RGB(R,G,B: Byte): TColor;
+Begin
+  Result:= B Shl 16 Or
+            G Shl 8  Or  R;
+End;
+
+function ResizeBmp(bitmap: TBitmap; wid, hei: Integer): Boolean;
+var 
+  TmpBmp: TBitmap;
+  ARect: TRect;
+begin
+  Result:= False;
+  try
+    TmpBmp:= TBitmap.Create;
+    try
+      TmpBmp.Width := wid;
+      TmpBmp.Height:= hei;
+      ARect:= Rect(0,0, wid, hei);
+      TmpBmp.Canvas.StretchDraw(ARect, Bitmap);
+      TmpBmp.loadfromfile(ExePath+'\examples\citymax.bmp')
+      bitmap.Assign(TmpBmp);
+      //tmpbmp.canvas:= bitmap;
+      //tmpbmp.monochrome;
+    finally
+      TmpBmp.Free;
+    end;
+    Result:= True;
+  except
+    Result:= False;
+  end;
+end;
+
+procedure FormClose(Sender: TObject; var Action: TCloseAction);
+var
+  buttonSelected : Integer;
+  save: boolean;
+begin
+  save:= false;
+  if save= true then begin
+      frmmon1.close;
+  end
+  else begin
+    buttonSelected:= MessageDlg('not saved! Do you want to close frm_Seatplan?'
+                                       ,mtCustom,[mbYes,mbNo], 0);
+    if buttonSelected = mrYes then
+                     frmmon1.close;
+    if buttonSelected = mrNo then
+            exit;
+  end;
+end; 
+ 
+procedure LoadBitMap;
+var mybitmap: Tbitmap;
+   mycanvas: TCanvas;
+begin
+  mybitmap:= TBitmap.create;
+  mycanvas:= TCanvas.create;
+  if ResizeBmp(mybitmap, 300, 300) then
+    showmessage('picture resized');
+  image1.canvas.draw(10,10, mybitmap)
+  mybitmap.Free; 
+  myCanvas.Free;  
+end;
+ 
+procedure LoadBitmap1Click(Sender: TObject);
+begin
+  loadBitMap;
+end; 
+
+procedure InitForms;
+begin
+frmMon:= TForm.create(self);
+ with frmMon do begin
+   //FormStyle := fsStayOnTop;
+   Position := poScreenCenter;
+   caption:='click on the form';
+   color:= clred;
+   width:= 550;
+   height:= 600;
+   show;
+   onClose:= @FormClose;
+ end;
+frmMon1:= TForm.create(self);
+ with frmMon1 do begin
+   //FormStyle := fsStayOnTop;
+   Position := poScreenCenter;
+   caption:='click on the form';
+   color:= clblue;
+   width:= 450;
+   height:= 500;
+   onclick:= @loadBitmap1Click;
+   show;
+ end;
+
+
+Image1:= TImage.create(frmMon);
+ with Image1 do begin
+   parent:= frmMon;
+   setbounds(10,25, 400,320);
+   onMousedown:= @Image1MouseDown;
+   show;
+   //onMouseup:= @Image1MouseUp
+ end;
+end; 
+
+BEGIN
+  InitForms;
+  //LoadBitMap;
+END.  

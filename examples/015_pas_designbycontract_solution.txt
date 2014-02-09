@@ -1,0 +1,70 @@
+program LottoGeneratorService;
+// lotto generator as servicelevel design by contract _15, locs=70
+// all globals should be eliminated, funcproof is LOTRANGE = 6 and sum of 21!
+
+const LOTNUMB = 6;
+      LOTRANGE = 45;
+type 
+  TLottoList = array[1..LOTNUMB] of byte;
+  T_Status =(success, failure, pending);
+
+function initArray(var larray: TLottoList): boolean;
+var i: byte;
+begin
+ for i:= 1 to LOTNUMB do 
+   larray[i]:= 0;
+  result:= true
+end;
+
+procedure putNumbers(vrange: byte; var larray: TLottoList);
+var ti, z, myrand, sum: byte;
+    dup: boolean;
+begin
+  ti:= 1;
+  sum:= 0;
+  Randomize;
+  //precondition set by validation
+  if vrange < LOTNUMB then vrange:= 6; 
+  repeat
+    myrand:= Random(vrange)+ 1;     
+    dup:= false;
+    for z:= 1 to LOTNUMB do 
+      if (larray[z] = myrand) then dup:= true;
+    if (not dup) then begin
+      larray[ti]:= myrand;
+      ti:= ti + 1;
+      sum:= sum + myrand
+    end;
+  //postcondition & proof
+  until ti = LOTNUMB + 1
+  writeln('sum of numbers: ' + intToStr(sum))
+end;  
+
+procedure viewNumbers(larray: TLottoList);
+var i: byte;
+begin
+ for i:= 1 to LOTNUMB do
+   writeln(inttostr(i) +': '+inttostr(larray[i]))
+end;
+
+function startLottoService(lotrange: byte): T_Status;
+var larray: TLottoList;
+begin
+  result:= failure;  
+  if initArray(larray) then begin
+    putNumbers(LOTRANGE, larray)
+    viewNumbers(larray);
+    result:= success
+  end;
+end; 
+
+var start: TDateTime;
+// main script
+begin
+  //vlotrange:= strtoint(readln('how great is the range ?'));
+  start:= now;
+  if startLottoService(lotrange) = success then begin
+    writeln(inttoStr(compareDateTime(now, start)))
+    writeln('lotto service get at: ' + DateTimeToStr(Now)) end else
+    writeln('bad news from service: ' + DateTimeToStr(Now))
+end.

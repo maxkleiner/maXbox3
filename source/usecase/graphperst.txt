@@ -1,0 +1,111 @@
+How do you store all graphics like an object?
+
+
+Suppose you have to to design a diagram-editor with bitmaps, charts, arrows and a lot of shapes inside, you'll get the problem how to store (and hopefully load) all these objects. 
+Happy you find the proposition on delphi3000.com, all objects descend from a baseclass (TmCustomShape) and you call the class method from a SaveDialog1 like this:
+
+procedure TMainDlg.SaveBtnClick(Sender: TObject);
+begin
+  if SaveDialog1.Execute then begin
+    TmCustomShape.SaveToFile(SaveDialog1.FileName,ScrollBox1);
+  end;
+end;
+
+A class method is a method (other than a normal constructor) that operates on classes instead of objects. The definition of a class method must begin with the reserved word class. If the method is called in the class TMainDlg in our case, then Self is of the type class of TMainDlg. Thus you cannot use Self to access fields, properties, and normal (object) methods, but you can use it to call constructors and other class methods. Our graphic base class TmCustomShape (the descendant of TGraphicControl) with other class methods goes like this:
+
+
+TmCustomShape = class (TGraphicControl)
+  private
+  protected 
+    .....
+  public
+    constructor Create(AOwner : TComponent); override;
+    destructor Destroy; override;
+    procedure AlignCaption(Alignment : TAlignment);
+    class procedure DeleteAllShapes(ParentControl : TWinControl);
+    class procedure DeleteSelectedShapes(ParentControl : TWinControl);
+
+    class procedure LoadFromFile(const FileName : string;ParentControl : TWinControl);
+    class procedure SaveToFile(const FileName : string;ParentControl :  TWinControl);
+
+    procedure SetBounds(ALeft,ATop,AWidth,AHeight : Integer); override;
+    class procedure UnselectAllShapes(ParentControl : TWinControl);
+    property Selected: Boolean read FSelected write SetSelected;
+  published
+    property Caption: TmTextShape read FCaption write SetCaption;
+    property OnClick;
+    property OnDblClick;
+  end;
+  
+
+As we can see, we paint all graphic objects on a ScrollBox1 which has the type of TWinControl. So every object has the parent of ScrollBox1. To maintain a consistent appearance across your diagram editor, you can make any control look like its container—called its parent—by setting the parent properties to ScrollBox1. And TWinControl is the base class for all windowed controls, including many of the items that you will use in the user interface of an application. 
+The following SaveToFile method profits from a Stream Class. Streams are just ways of reading and writing data. Streams provide a common interface for reading and writing to different media such as memory, strings, sockets, and blob streams. In the following we use TFileStream to access the information in disk files.
+
+1. Create a TFileStream instance with passing FileName
+2. Create a writer object, it allocates memory for a filer object, and associates it with the stream passed in      the Stream parameter, with a buffer of size BufSize in our case 1024. 
+3. Write all the components, in our case from ScrollBox1 
+
+WriteComponent is used internally in the Delphi component streaming system, but can also be called directly when writing components to memory streams or database blobs.
+WriteComponent constructs a writer object and calls its WriteRootComponent method to write the component specified by Instance, and its owned objects, to the stream.
+TWriter handles the mechanics of writing the data associated with a component to a stream. It is the writer object, rather than the stream, that is responsible for handling the complexities of streaming components.
+
+
+class procedure TmCustomShape.SaveToFile(const FileName : string;ParentControl : TWinControl);
+var
+  FS: TFileStream;
+  Writer: TWriter;
+  RealName: string;
+begin
+  FS     := TFileStream.Create(Filename,fmCreate or fmShareDenyWrite);
+  Writer := TWriter.Create(FS,1024);
+  try
+    Writer.Root  := ParentControl.Owner;
+    RealName := ParentControl.Name;
+    ParentControl.Name := '';
+    Writer.WriteComponent(ParentControl);
+    ParentControl.Name := RealName;
+  finally
+    Writer.Free;
+    FS.Free;
+  end;
+end;
+
+
+Once the streaming process is underway, programs do not need to directly manipulate writer objects. The interaction between the writer, component, and stream objects happens automatically in methods of these objects that make calls to each other !
+We also check the RealName to prevent from duplicates so we loop through all the components on the form to ensure that this name is not already in use:
+
+    for i := 0 to Owner.ComponentCount - 1 do begin
+      if Owner.Components[i].Name = TempName then begin
+         AlreadyUsed := True;
+        Break;
+      end;
+    end;
+
+The question arise how do we store all the shapes during runtime, is it an internal structure like TList or TConnection or a great bitmap ? Not at all, we simple profit from ObjectPascal in the way using the ParentControl list from TWinControl and add or delete shapes dynamically at runtime (KISS, keep it smart and simple;)): 
+
+ while i < ParentControl.ControlCount do begin
+    if ParentControl.Controls[i] is TmCustomShape then begin
+      ParentControl.Controls[i].Free;
+        // Note that there is no need to increment the counter, because the
+        // next component (if any) will now be at the same position in Controls[]
+    end else begin
+      Inc(i);
+    end;
+  end;
+
+
+At last the creation of  a graphic object must be an descendant of TmCustomShape with overriding the paint methode and the parent is ScrollBox1, so we can save it with WriteComponent in a StreamFile:  
+
+      with TMoveableChart.Create(Self) do begin
+         Caption:= TmTextShape.Create(Self);
+         Caption.Text:= 'Chart Generator';
+         Caption.OnDblClick := CaptionDblClick;
+         ShapeType    := stEllipse;
+         Top                 := Y;
+         Left                 := X;
+         OnClick          := ShapeClick;
+         Parent            := ScrollBox1;
+         AlignCaption(taCenter);
+     end;
+
+So I hope to bring a glance at this framework, please send me an email to get the full source code. 

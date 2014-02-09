@@ -1,0 +1,97 @@
+//shows the recursive solution to the 8 queens chess problem, max@kleiner.com
+//small output of solution in text mode or file list!, loc's =96
+//92 board solutions are possible! you can find the solutions in a txt file
+
+program EightQueensSolutions;
+
+type
+  Play = array[1..8] of boolean;
+  Play2 = array[1..8] of Play;
+  RowCheck = array[1..8] of boolean;
+  LeftDiagCheck = array[2..16] of boolean;
+  RightDiagCheck = array[-7..7] of boolean;
+  
+var 
+  Board : Play2;
+  safeRow: rowCheck;
+  safeleftDiag: LeftDiagCheck;
+  safeRightDiag: RightDiagCheck;
+  row, column, i, tester: integer;
+  reslist: TStringList;
+  
+  
+function Safe(row,col: shortint; saferow: rowCheck; safeleftDiag: leftDiagCheck;
+                      saferightDiag: rightDiagCheck): boolean;
+//true if a queen can be safely placed in the current position
+begin
+ result:= safeRow[row] and safeLeftDiag[row+col] and safeRightDiag[row-col]
+end;
+ 
+procedure chessPrint(board: Play2);
+var i,j: integer;
+    tempstr, codestr: string;
+//shows the current board layout
+begin
+  tempstr:= '';
+  codestr:= '';
+  reslist.add(inttostr(tester+1))
+  //i is column , j is row ! 
+  for j:= 1 to 8 do begin
+    for i:= 1 to 8 do
+      if (board[i][j]) then begin
+        tempstr:= tempstr + 'Q'
+        codestr:= codestr + inttostr(i)
+      end else tempstr:= tempstr + 'X';
+        reslist.add(tempstr)
+        tempstr:= '';
+        //write('Q') else write('*'); 
+        //writeln('');
+  end; //for   
+  reslist.add(codestr); 
+  reslist.add('-----------------');
+  inc(tester)
+  writeln(inttostr(tester) + ': '+codestr);
+end;
+
+procedure TryColumn(column: integer; var board: Play2);
+//recursive procedure for attempting queen placement
+var row: integer;
+begin
+  row:= 1
+  repeat 
+    if safe(row, column, saferow, safeleftdiag, saferightdiag) then begin
+      //set the queen
+      saferow[row]:= false;
+      safeleftdiag[row+column]:= false;
+      saferightdiag[row-column]:= false;
+      board[row][column]:= true;
+      if column < 8 then
+        Trycolumn(column + 1, board) else 
+           chessPrint(board);
+      //removes queens
+      safeRow[row]:= true;
+      safeleftDiag[row+column]:= true;
+      saferightDiag[row-column]:= true;
+      board[row][column]:= false;
+    end;
+    //row was safe
+    inc(row);
+  until row > 8
+end;
+
+begin
+  //init board & main
+  tester:= 0;
+  reslist:= TStringlist.create;
+  for row:= 1 to 8 do safeRow[row]:= true;    
+  for i:= 2 to 16 do safeleftDiag[i]:= true;
+  for i:= -7 to 7 do saferightDiag[i]:= true;
+  for row:= 1 to 8 do 
+    for column:= 1 to 8 do
+      board[row][column]:= false;
+      //make the first recursive call
+    tryColumn(1, board);
+    reslist.savetoFile('chesssolution_result.txt')
+    memo2.lines.add('all codestrings of solutions');
+    reslist.free; 
+end.                                                                                     

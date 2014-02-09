@@ -1,0 +1,139 @@
+program LED_Matrix;
+
+//*********************************************************************
+// logic led wall example with objects & size, loc's=139, example _69  
+// first you define a size und pattern (word) and alter the pattern with
+// the function letShowVerify(); 
+// task: set the last stone from blue to alter color!
+//*********************************************************************
+
+
+var
+  ppForm: TForm;
+  mylabel: TLabel;
+  pattern1: string;
+  labelList: TStringList;
+  psize: integer;
+
+
+procedure letShowVerify;
+var
+  i: integer;
+  o: TLabel;
+begin
+  for i:= 1 to psize do begin
+    o:= TLabel(labelList.objects[i-1]);
+    //o.caption:= inttostr(i);
+    if i < length(pattern1) then 
+      if pattern1[i] = '1' then o.color:= random(clwhite);
+  end;
+  application.ProcessMessages;
+  //if (nbok=psize) then  showMessage('***Congratulate***'#13#10+
+  //                                   'You win with maXbox Delphi!');
+end;
+
+
+procedure randomLED;
+var i: byte;
+begin
+  pattern1:= '';
+  for i:= 1 to psize  do
+    pattern1:= pattern1 + chr(random(2)+48);
+  //test string on memo
+  writeln(pattern1)
+end;  
+
+
+procedure Label1Click(Sender: TObject);
+var i: byte;
+begin
+  for i:= 1 to 100 do begin
+    randomLED;
+    letShowVerify();
+  end
+  //sleep(10)
+end;
+
+
+procedure loadPForm(vx, vy: integer);
+begin
+  psize:= vx*vy
+  //constructor
+  ppform:= Tform.create(self);
+  with ppform do begin
+    caption:= 'this is LED maXland, please click...';  
+    width:= (vx*psize)+ 10;
+    height:= (vy*psize)+ 30;
+    BorderStyle:= bsDialog;
+    Position:= poScreenCenter;
+    //OnClick:= @Label1Click;
+    show;
+  end  
+end;
+
+
+procedure InitPuzzle(vx: byte);
+var
+  i,x,y: integer;
+begin
+  //pattern1:= '000010000010011111100010010000011100110011000100100000100010';
+  labelList:= TStringList.Create;
+  x:= 1;
+  y:= 1;
+  for i:= 1 to psize do begin
+    mylabel:= TLabel.Create(ppform);
+    with mylabel do begin
+      Parent:= ppForm;
+      color:= clblue;
+      AutoSize:= false;
+      layout:= tlcenter;
+      alignment:= tacenter;
+      font.Size:= (psize div vx) + 12;
+      //font.Style:= [fsbold];
+      font.Color:= clyellow;
+      width:= psize;
+      height:= psize;
+      Left:= (x-1)*(psize + 1);
+      Top:= (y-1)*(psize + 1);
+      //event handler to click!  
+      OnClick:= @Label1Click;
+    end;
+    //set next line of stones
+    if (i mod vx = 0) then begin
+      x:= 1; 
+      inc(y);
+    end else
+      inc(x);
+    //add stones to the list
+    labelList.addObject(inttostr(i), mylabel);
+  end;
+end;
+
+procedure deSolver;
+var i: integer;
+begin
+  //moveStone(TLabel(labellist.objects[4]));
+  //moveStone(TLabel(labellist.objects[7]));
+  //to demonstrate and destroy the objects on the list
+  for i:= 0 to 8-1 do begin
+    sleep(400)
+    application.processMessages;
+    TLabel(labelList.objects[i]).free
+  end
+end;
+
+//main of LED
+begin
+//**************************** OOP in maXbox *******************************
+//sizex, sizey as paras()
+  loadPForm(8,12);
+  initPuzzle(8);
+  //deSolver()
+end.
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |
+        |____/  |___| |____| |_|     |_| |_| |_| 
+          

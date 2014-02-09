@@ -1,0 +1,125 @@
+program OLE_DB_Info;
+
+// this is in serie of maXbase 193-199
+// 197_OLEDB_Info.txt, loc's = 68
+
+const E6= 1000000;    
+
+var provlist: TStringlist;
+    i: integer;
+
+// - Split Attributes -
+Procedure SplitAttributes(A: String; Var Attrs: TStringList);
+Var X: Integer;
+    S: String;
+Begin
+     If Not(Assigned(Attrs)) Then
+       Attrs:= TStringList.Create;
+     S:= '';
+     X:= 1;
+     While (X <= Length(A)) Do Begin
+          If (A[X] = ',') Then Begin
+               Attrs.Add(Trim(S));
+               S:= '';
+          End Else
+           S:= S + A[X];
+          Inc(X);
+     End;
+     Attrs.Add(Trim(S + A[X]));
+End; 
+
+Procedure CopyRecord(const SourceTable, DestTable : TTable);
+var i: Word;
+begin
+  DestTable.Append;
+  For i:= 0 to SourceTable.FieldCount - 1 do
+    DestTable.Fields[i].Assign(SourceTable.Fields[i]);
+  DestTable.Post;
+end;
+
+begin
+  Writeln(datetostr(Today))
+  //CreateUDLFile( const FileName, ProviderName, DataSourceName : WideString)');
+  Writeln('DataLink Dir is: '+DataLinkDir);
+  Writeln('');
+  Writeln('Provider List of OLE DB:')
+  provlist:= TStringlist.create;;
+ //Procedure GetProviderNames(Names : TWideStrings);');
+  GetProviderNames1(provlist);
+  for i:= 1 to provlist.count - 1 do 
+    Writeln(StringPad(provlist[i],'-',55,True));
+  //memo2.text:= provlist.text;
+     provlist.Clear;
+     provlist.add('');
+     provlist.add('');
+   provlist.add('Data Link Files found of: '+ DataLinkDir)
+   provlist.add('');
+   GetDataLinkFiles1(provlist, DataLinkDir)
+   for i:= 1 to provlist.count - 1 do 
+     Writeln(provlist[i]);
+   provlist.Free;
+   Writeln('');
+   Writeln('DBX Info: ');
+   Writeln(GetDriverRegistryFile(True));
+   Writeln(GetConnectionRegistryFile(True));
+   Writeln(inttostr(GetFileVersion(ExePath+'maxbox3.exe')))
+   maxform1.TerminalStyle1Click(self);
+   memo2.color:= clsilver;
+End.
+
+//NOTES and snippets:
+//------------------------------------------------------------------
+The DOS "netstat" command can only show me the active IP connections, but it doesn't say who's sending them.
+
+procedure TForm1.FormShow(Sender: TObject);
+var
+  i:integer;
+begin
+  i:=1;
+  while i <= ADODataSet1.RecordCount do begin
+     ComboBox1.Items.Add(ADODataSet1.Fieldbyname('name').AsString);
+     ADODataSet1.Next;
+   i:=i+1;
+  end;
+end; 
+
+
+//In this example we use dbdemos database with Country table  
+object ADODataSet1: TADODataSet
+    ConnectionString =
+      'Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Program Files\Co' +
+      'mmon Files\Borland Shared\Data\dbdemos.mdb;Persist Security Info' +
+      '=False'
+    CommandText = 'select Name  from country'
+  end
+  
+  
+Example:
+  {set up database component}
+  ABSDatabase1.DatabaseName := 'emp_db';
+  ABSDatabase1.DatabaseFileName := 'c:\data\employee_db.abs';
+  {set up query component}
+  ABSQuery1.DatabaseName := 'emp_db';
+  ABSQuery1.SQL.Text := 'select * from employee';
+  ABSQuery1.RequestLive := True;
+  if (not ABSDatabase1.Exists) then
+    raise Exception.Create('Database file does not exist');
+  {execute and open query}
+  ABSQuery1.Open;
+
+	
+procedure SIRegisterTDATASET(CL: TPSPascalCompiler);
+procedure TDATASETFIELDS_R(Self: TDATASET; var T: TFIELDS);
+begin T := Self.FIELDS; end;
+
+//{$IFNDEF FPC}
+
+procedure TDATASETFIELDLIST_R(Self: TDATASET; var T: TFIELDLIST);
+begin T := Self.FIELDLIST; end;
+
+
+TSQLDataSet is a forward only read only dataset. As you move the cursor
+through the dataset by calling TSQLDataSet.Next it fetches the rows one
+at a time. It does not buffer multiple rows on the client. That is the
+function of TClientDataSet.
+

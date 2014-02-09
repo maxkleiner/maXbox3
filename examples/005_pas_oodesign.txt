@@ -1,0 +1,58 @@
+program oop_design;
+
+//example with objects and exception handling _05
+//TASK: store GetWinner in the file, locs= 58
+
+function GetWinner: TStringList;
+var
+  i, bet: Integer;
+  betS: string;
+begin
+  Result:= TStringList.Create;
+  try
+    randomize;
+    for i:= 1 to 15 do begin
+      bet:= random((1000)+100);
+      if bet < 1000 then begin
+        bet:= bet+1000;
+        betS:= intTostr(bet);
+        betS[1]:= '0';
+      end else
+        betS:=intToStr(bet);
+      result.add(betS);
+    end;
+    result.Sort;
+  except
+    Result.Free;
+    raiseLastOSError;
+  end;
+end;
+
+function executeTemplate: TStrings;
+var
+  Mst: TMemoryStream;
+begin
+  Mst:= TMemoryStream.Create;
+  Result:= TStringList.Create;
+  try
+    Mst.LoadFromFile('firstdemo.txt');
+    Mst.Seek(0,0);
+     with result do begin
+       Clear;
+       loadFromFile('firstdemo.txt') 
+     end;
+    Memo2.Lines.LoadFromStream(Mst);      
+  finally
+    Mst.Free;
+  end;
+end;
+
+//main
+var 
+  myFilestr: TStrings;
+begin
+  myFilestr:= TStrings.create;
+  myFilestr:= executeTemplate;
+  myFilestr.SaveToFile('firstdemo_copy.txt')
+  myFilestr.Free;
+end.

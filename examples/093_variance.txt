@@ -1,0 +1,94 @@
+program Statisticgenerator;
+
+// first interpreter of chartanalysis  _93
+// some stat functions type IEEE at last, locs=93
+
+const DAT = 160; 
+
+type 
+  
+  TMemor= array[1..DAT] of double; //or integer
+  //EMovingAverage = class (Exception)
+
+var //i,c,irange: byte;
+    runners: integer;
+    mem: TMemor;
+    mean, stddev: extended;
+
+
+function initarray: boolean;
+var t: integer;
+begin
+ if max (4,6) > 3 then //test
+ for t:= 1 to DAT do 
+   mem[t]:= 0;
+ result:= true
+end;
+
+procedure viewnumbers;
+var i: integer;
+   mylist: TStringlist;
+begin
+ memo2.wordwrap:= true;
+ mylist:= TStringlist.create;
+ for i:= 1 to DAT do begin
+   writeln(inttostr(i) +': '+floattostr(mem[i]))
+   mylist.add(floattostr(mem[i]));
+  end;
+  mylist.savetoFile('memlist_statistixcs.txt');
+  memo2.lines.addstrings(mylist)
+  mylist.Free; 
+end;
+
+{procedure viewlottstat(vrun: integer);
+var whole, averages: integer;
+      tt: byte;
+begin
+ whole:= 0;
+ averages:= (vrun * lotnumb) div lotrange; 
+ for tt:= 1 to lotrange do begin
+   writeln(inttostr(tt) +':  '+inttostr(lstat[tt] - averages))
+   whole:= whole + lstat[tt];
+  end;
+   writeln(inttostr(whole));
+end;}
+
+function ChartGenerator(HBase: double; count: integer; var vdata: TMemor): 
+        Boolean;
+var
+  i: integer;
+  y2: extended;
+  delta: integer;
+begin
+  randomize;
+  y2:= HBase;
+  delta:= 0;
+  try
+   result:= false;
+    for i:= 1 to count do begin
+      delta:= (random(9) - random(9)); 
+      y2:= y2 + delta
+      writeln(inttostr(delta));
+      vdata[i]:= (abs(y2));
+    end;
+   result:= true;
+  finally
+   // y1 := y2;
+  end;
+end;
+
+// main script
+begin
+  runners:= 1;
+  if initArray then begin
+    randomize;   
+    ChartGenerator(15.7, 160, mem)
+    viewnumbers;
+    MeanAndStdDev(mem, mean, stddev)
+    writeln('mean is: '+ floattostr(mean) +'  '+ 
+               'stddeviation is: '+ floattostr(stddev))
+    writeln('exe function: '+DateTimeToInternetStr(now, true))           
+    //viewlottstat(runners);
+  end;
+end.
+

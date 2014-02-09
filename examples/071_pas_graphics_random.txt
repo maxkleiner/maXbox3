@@ -1,0 +1,162 @@
+program simple_Graphics_Draw_Random_Experiment;
+
+//*********************************************************************
+// ...draw a spray effect and paint with mouse, loc's=151, example 71
+// Font.Height = -Font.Size * Font.PixelsPerInch/72  
+//*********************************************************************
+(*
+ RRRRR    EEEEEE   AAAA   DDDDD    MM     MM   EEEEEE 
+ RR  RR   EE       AA AA  DD  DD   MMMM MMMM   EE    
+ RRRRR    EEEE    AAAAAA  DD   DD  MM MMM MM   EEEE
+ RR  RR   EE      AA   AA DD   DD  MM  M  MM   EE
+ RR   RR  EEEEEE AA    AA DDDDD    MM  M  MM   EEEEEE
+*)
+
+const
+  S    = 10; // Seitenlänge der Pfeilspitze
+  BETA = 50; // Spannwinkel der Pfeilspitze
+  
+type TXYVector = array[0..2] of TPoint;   
+
+var
+  cFrm: TForm;
+  STATStop: boolean;
+  //PaintBox1: TPaintBox;
+
+//gibt den Winkel im Gradmaß an
+function GetDEG(Winkel: Extended): Extended;
+  begin
+    Result:= (Winkel * 2 * Pi) / 360;
+  end;
+  
+//gibt den Winkel im Winkelmaß an
+function GetRAD(Winkel: Extended): Extended;
+  begin
+    Result := (Winkel * 360) / (2 * Pi);
+  end;
+  
+procedure drawPolygon(vPoints: TXYVector);
+var
+  i, hsize: integer;
+begin
+  with cFrm.canvas do begin
+    hsize:= cFrm.Height - 1 div 2;
+    Pen.Color:= (clred);
+    //setZoomFact(high(chartdata), fileNameChart);
+    //moveto(0, hsize -((vPoints[0].y)));
+    cFrm.Canvas.MoveTo(vpoints[1].X, vpoints[1].Y);
+    for i:= 0 to 2 do
+      LineTo(vPoints[i].x, vPoints[i].y);
+  end;
+end;  
+
+procedure ZeichnePfeil(I: Tform; P1X, P2X, P1Y, P2Y: longint);
+  //created by Christof Urbaczek
+var
+  points: TXYVector; // Array für die Punkte der Pfeilspitze
+  Alpha, AlphaZ: Extended; // Winkel zur horizontalen Achse durch P1
+begin
+  //Linie zeichnen
+  I.Canvas.Brush.Color:= clRed;
+  I.Canvas.Pen.Style:= psSolid;
+  I.Canvas.MoveTo(P1X, P1Y);
+  I.Canvas.LineTo(P2X, P2Y);
+  //Pfeilspitze (1.Punkt)
+  points[0].X:= P2X;
+  points[0].Y:= P2Y;
+  //Winkel ermitteln
+  Alpha:= 0;
+  if P2X = P1X then
+    AlphaZ:= 10
+  else
+    AlphaZ:= GetRAD(((P2Y - P1Y) / (P2X - P1X)));
+  if (P2X > P1X) and (P2Y = P1Y) then Alpha := 0          
+  else if (P2X > P1X) and (P2Y < P1Y) then Alpha:= 0 - AlphaZ 
+  else if (P2X = P1X) and (P2Y < P1Y) then Alpha:= 90          
+  else if (P2X < P1X) and (P2Y < P1Y) then Alpha:= 180 - AlphaZ 
+  else if (P2X < P1X) and (P2Y = P1Y) then Alpha:= 180          
+  else if (P2X < P1X) and (P2Y > P1Y) then Alpha:= 180 - AlphaZ 
+  else if (P2X = P1X) and (P2Y > P1Y) then Alpha:= 270          
+  else if (P2X > P1X) and (P2Y > P1Y) then Alpha:= 360 - AlphaZ;
+  //2.Punkt
+  points[1].X:= round(P2X - S * cos(GetDEG(Alpha - BETA div 2)));
+  points[1].Y:= round(P2Y + S * sin(GetDEG(Alpha - BETA div 2)));
+  //3.Punkt
+  points[2].X:= round(P2X - S * cos(GetDEG(Alpha + BETA div 2)));
+  points[2].Y:= round(P2Y + S * sin(GetDEG(Alpha + BETA div 2)));
+  //Pfeil zeichnen
+  I.Canvas.Brush.Color:= clRed;
+  drawPolygon(points);
+end;
+
+procedure Spray(Canvas: TCanvas; x,y,r: Integer; Color: TColor);
+var
+  rad, a: Single;
+  i: Integer;
+begin
+  //canvas.pen.width:= 100;
+  for i:= 0 to 150 do begin
+    a:= Random(20) * 2 * pi;
+    rad:= Random(10) * r;
+    Canvas.Pixels[x + Round(rad*Cos(a)), y + Round(rad*Sin(a))]:= Color;
+  end;
+end;
+
+procedure Image1MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+var i: integer;
+begin
+  for i:= 1 to 10 do
+  if ssLeft in Shift then 
+           Spray(cfrm.Canvas, x +random(i), y +random(10), 4, clRed);
+end;
+
+procedure Image1MouseDown(Sender: TObject; Button: TMouseButton;
+                                         Shift: TShiftState; X, Y: Integer);
+begin
+  if ssLeft in Shift then Spray(cfrm.Canvas, x, y, 3, clRed);
+  STATStop:= true;
+end;
+
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  with cFrm do begin
+    height:= 440;
+    width:= 450;
+    Position:= poScreenCenter;
+    onMouseMove:= @Image1MouseMove;
+    onMouseDown:= @Image1MouseDown
+    color:= clBlack;
+    caption:= 'this is drawing on wing - press mouse & move';  
+    show;
+  end  
+end;
+
+var x,y: integer;
+//main drawing
+ {TShiftState = set of (ssShift, ssAlt, ssCtrl,
+    ssLeft, ssRight, ssMiddle, ssDouble);} 
+begin
+//*****************maXbox graphics series**********************************
+  ProcessMessagesON;
+  loadForm();
+  ZeichnePfeil(cFrm, 40,70, 200,250);
+  STATStop:= false;
+  repeat 
+    x:=100;
+    y:=100;
+    application.ProcessMessages;
+    //processmessagesON;
+    Image1MouseMove(self, [ssLeft] ,random(x), random(y));
+  until STATStop=true;
+end.
+
+just inside maxbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+                                     

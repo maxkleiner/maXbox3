@@ -1,0 +1,304 @@
+program Sierpinski_meets_Hilbert;
+
+//*********************************************************************
+// the world of fractals, chaos, patterns & topology, loc's=237, ex. 284_  
+// strange worlds of mandelbrot, lorenz attractors & bifurcations;)
+// you can switch in main between the functions(), Voice is on! 
+//*********************************************************************
+(*RRRR    EEEEEE   AAAA   DDDDD    MM     MM   EEEEEE 
+ RR  RR   EE       AA AA  DD  DD   MMMM MMMM   EE    
+ RRRRR    EEEE    AAAAAA  DD   DD  MM MMM MM   EEEE
+ RR  RR   EE      AA   AA DD   DD  MM  M  MM   EE
+ RR   RR  EEEEEE AA    AA DDDDD    MM  M  MM   EEEEEE *)
+ 
+const
+  DAT = 1200;
+  CHDAT = 450;  
+  
+type
+  TMemor= array[1..DAT] of double;
+
+var
+  scaleX1, scaleX2, scaleY1, scaleY2: double;
+  cFrm: TForm;
+  chartData: TMemor;
+  time1, time2, diff: TDateTime;
+  
+  
+procedure scaleResults(const X, Y : double; var intX, intY : integer;
+                                        width, height: integer);
+var scaledX, scaledY: double; 
+ begin
+   scaledX:= (X-scaleX1)/(scaleX2-scaleX1);
+   scaledY:= (Y-scaleY2)/(scaleY1-scaleY2);
+   intX:= round(scaledX * width);
+   intY:= round(scaledY * height);
+ end; 
+
+procedure Mandelbrot_process(X, Y, au,bu: double; X2, Y2: integer; vForm: TForm);
+var 
+  c1, c2, z1, z2, tmp: single;
+  i, j, count: integer;
+begin
+  c2:= bu;
+for i:= 10 to X2 do begin
+  c1:= au;  
+  for j:= 0 to Y2 do begin
+    z1:= 0;
+    z2:= 0;
+    count:= 0;
+    {count is deep of iteration of the mandelbrot set
+     if |z| >=2 then z is not a member of a mandelset}
+    while (((z1*z1 + z2*z2 <4) AND (count <= 90))) do begin
+      tmp:=z1;
+      z1:= z1*z1 - z2*z2 + c1;
+      z2:= 2*tmp*z2+c2;
+      inc(count);
+    end;    
+    //the color-palette depends on TColor(n*count mod t)
+    //vForm.Canvas.pen.Color:= (16*count mod 155);
+    vForm.Canvas.Pixels[j,i]:= (16*count mod 255);
+    c1:=c1 + X;
+  end;
+  c2:= c2 + Y;
+end;
+end; 
+
+procedure Mandelbrotsetup(vForm: TForm);
+var 
+  X1, X2, Y1, Y2, au, ao: integer;
+  dX, dY, bo, bu: double;
+begin
+  X1:=0; X2:=420;
+  Y1:=0; Y2:=440;
+  ao:=1; au:=-2; bo:=1.5;
+  bu:= -1.5; dX:= (ao-au)/(X2-X1);
+  //direct scaling cause of speed
+  dY:= (bo-bu)/(Y2-Y1); 
+  Mandelbrot_process(dX, dY, au,bu, X2, Y2, vForm);
+end;  
+ 
+
+procedure Lorenz_process(var X, Y, Z: double; vForm: TForm);
+var intX, intY : integer;
+  dX, dY, dZ: double; 
+begin 
+  dY:= X * (28-Z)-Y; 
+  dX:= 10 * (Y-X); 
+  dZ:= X * Y- (8/3) * Z; 
+  scaleResults(X,Y,intX,intY, vForm.ClientWidth, vForm.ClientHeight);
+  {$IFDEF LINUX}
+    vForm.Canvas.DrawPoint(intX,intY);
+  {$ELSE}
+    vForm.Canvas.Pixels[intX, intY]:= clRed; 
+  {$ENDIF}
+  X:= X+ 0.01 * dX;
+  Y:= Y+ 0.01 * dY; 
+  Z:= Z+ 0.01 * Dz;
+end;
+
+procedure ModelLorenzsetup(vForm: TForm);
+var
+  i: integer;
+  x, y, z: double; 
+begin
+  scaleX1:=-20; scaleX2:=20;
+  scaleY1:=-25; scaleY2:=30; 
+  X:= 0.1; Y:= 0.1; Z:= 0.1; 
+  for i:= 1 to 6500 do 
+    Lorenz_process(X,Y,Z, vForm);
+end; 
+
+
+Procedure THilbertKurve(Stufe: Byte; h: Double; x,y: Double;
+                              var First: Boolean; acanvas: TCanvas);
+  begin
+        //cfrm.Canvas.Rectangle(0,0,cfrm.width-200,cfrm.width-200);
+    if (stufe <> 0) then begin
+      x:= x - H/4.5;
+      y:= Y + H/1.2;
+      if not first then aCanvas.LineTo(round(x),round(y));
+        aCanvas.MoveTo(round(x),round(y));
+      THilbertKurve(Stufe-1,h/2,x,y, first, acanvas);
+      y:= y - h;
+      THilbertKurve(Stufe-1,h/2,x,y, first, acanvas);
+      x:= x - h/1;
+      y:= y - h/8;
+      THilbertKurve(Stufe-1,h/2,x,y, first, acanvas);
+    end
+    else begin
+      aCanvas.LineTo(round(x),round(y));
+      x:= x + h;
+      aCanvas.LineTo(round(x),round(y));
+      y:= y - h;
+      aCanvas.LineTo(round(x),round(y));
+      x:= x - h;
+      aCanvas.LineTo(round(x),round(y));
+    end;
+  end;
+  
+  
+procedure THilbert_Setup;
+var
+  Stufe: Byte;
+  Hoehe, X, Y: Double;
+  first: Boolean;
+  begin
+    //Stufe := sp_edt.Value;
+    X:= 0;
+    Y:= 0;
+    first:= true;
+    //cfrm.Canvas.Rectangle(0,0,cfrm.width-200,cfrm.width-200);
+    begin
+      stufe:= 8;
+      Hoehe := cFrm.Width/1.8;
+      cFrm.Canvas.Pen.Color:= clpurple;
+      x := X + Hoehe + Hoehe/1;
+      y := Y + Hoehe/2;
+      cfrm.Canvas.MoveTo(round(x),round(y));
+      THilbertKurve(Stufe,hoehe,x,y, first, cfrm.canvas);
+    end;
+    begin
+      stufe:= 9;
+      Hoehe:= cFrm.Width/1.7;
+      cFrm.Canvas.Pen.Color:= clwebgold;
+      x:= X + Hoehe + Hoehe/5.6;
+      y:= Y + Hoehe/1.5;
+      cfrm.Canvas.MoveTo(round(x),round(y));
+      THilbertKurve(Stufe,hoehe,x,y, first, cfrm.canvas);
+    end;
+  end;  
+
+
+procedure Sierpinski(a,b,c: TPoint; Recdeepth: integer; aCanvas: TCanvas);
+{
+Sierpinski Dreieck (Rekursiv)
+Algorithmus von Alleinherrscher ([url]www.delphipraxis.net[/url])
+28.10.2009 , MX, small correction by c.y, cause sinus() won't work, just cos }
+var new_a,new_b,new_c: TPoint;
+begin
+  acanvas.Pen.Color:= clred;
+  with acanvas do begin
+    moveto((a.x),(a.y));
+    lineto((b.x),(b.y));
+    lineto((c.x),(c.y));
+    lineto((a.x),(a.y));
+  end;
+  new_c.x:= (a.x+b.x ) div 2;
+  new_c.y:= (a.y+b.y) div 2;
+  new_a.x:= (b.x+c.x ) div 2;
+  new_a.y:= (b.y+c.y) div 2;
+  new_b.x:= (a.x+c.x) div 2;
+  new_b.y:= (a.y+c.y) div 2;             
+  if Recdeepth > 0 then begin
+    Sierpinski(a,new_c,new_b, Recdeepth-1, aCanvas);
+    Sierpinski(new_c,b,new_a, Recdeepth-1, aCanvas);
+    Sierpinski(new_b,new_a,c, Recdeepth-1, aCanvas);
+  end;
+end; 
+
+procedure Sierpinski_Setup(vForm: TForm);
+var a,b,c:TPoint;
+    awidth, atop, aleft, i: integer;
+begin
+  awidth:=650;
+  atop:=680;
+  aleft:=50;
+  //edgepoints of first triangle left, bottom:
+  a.x:= aleft;
+  a.y:= atop;
+  b.X:= awidth+a.x;
+  b.y:= atop;
+  c.X:= awidth div 2+aleft;
+  c.y:= atop - awidth;
+  //c.y:= round(atop-Cos((60/360)*2*Pi)*awidth);
+  for i:= 1 to 6 do begin
+    Sierpinski(a,b,c,i,vForm.canvas);
+    sleep(500)
+  end;  
+end; 
+
+procedure drawChart(vForm: TForm);
+var
+  i, hsize: integer;
+begin
+  with vForm.canvas do begin
+    hsize:= vForm.Height - 1 div 2;
+    Pen.Color:= clblue;
+    moveto(0, hsize -(round(chartData[1])));
+    for i:= 1 to CHDAT do
+      LineTo(i, hsize -(round(chartData[i])));
+  end;
+end;
+
+procedure preInitArray;
+var
+  i: Integer;
+begin
+   for i:= 1 to DAT-1 do chartdata[i]:= 0;
+end;
+
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  try
+    with cFrm do begin
+      caption:= 'Sierpinski by maXbox((((*))))';  
+      height:= 1000;
+      width:= 1200;
+      color:= clblack;
+      Position := poScreenCenter;
+      show;
+    end;
+    Application.processMessages;
+  except
+    exit
+  end  
+end;
+
+//main theme
+begin
+//*************maXbox graphics series***********************************
+  //processMessagesOff;  for speed
+  with memo2 do begin
+    height:= 390;
+    color:= clblack;
+    font.size:= 18;
+    font.color:= clred;
+    //clear;
+  end;  
+  time1:= time;
+  writeln(formatdatetime('"performance start is:" hh:mm:ss:zzz', time)) 
+  loadForm();
+  //Mandelbrotsetup(cFrm);
+  //ModelLorenzsetup(cFrm);
+  Sierpinski_Setup(cFrm);
+  THilbert_Setup;
+  time2:= time;
+  writeln(formatdatetime('"performance stop is:" hh:mm:ss:zzz', time)) 
+  Diff:= time2 - time1; 
+  writeln(IntToStr(Trunc(Diff * 24)) + 
+                   FormatDateTime('" h elapsed run time is:" nn:ss:zzz',Diff));
+  //Voice('Chaos done and gone')                 
+end.
+
+just inside maxbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+                              
+                              
+                              
+performance start is: 17:25:09:093
+performance stop is: 17:26:06:062
+0 h elapsed run time is: 00:56:969                              
+
+new record:
+performance start is: 11:56:14:171
+performance stop is: 11:57:09:140
+0 h elapsed run time is: 00:54:969
+ mX3 executed on: 07.10.2011 11:57:20

@@ -1,0 +1,182 @@
+//*************************************************************************
+//Shows the use of mp3 and filefinder as a play list
+//don't forget command closeMP3 in between, locs= 168
+//Codesign rocks manual: set the Path to your mp3 directory in line 13
+//*************************************************************************
+
+program Soundbox_MP3_2;
+
+const 
+  EXT = 'mp3';
+  //faDirectory = $00000010;
+  //faAnyFile   = $0000003F;
+  //SONGPATH = 'C:\myMPSongs\examples\';
+  SONGPATH = 'E:\mp3\bowie\David Bowie - Ziggy Stardust\';
+  
+var 
+  inFrm: TForm;
+  LstBox: TListBox;
+  myButton, myButton2: TButton;
+  mp3List: TStringList;
+  actidx: byte;
+
+function MSecToTime(mSec: Int64): string;
+var dt: TDateTime;
+begin
+  dt:= (mSec/1000/86400);  //SecsPerDay;
+  Result:= FormatDateTime('" song length is:" nn:ss:zzz',dt);
+end; 
+
+procedure FindAllFiles(FilesList: TStringList; StartDir, FileMask: string);
+var //SR: TSearchRec;
+  DirList: TStringList;
+  IsFound: Boolean;
+  i: integer;
+begin
+  if StartDir[length(StartDir)] <> '\' then
+                       StartDir:= StartDir + '\';
+  {Build a list of the files in dir StartDir (not the directories!)}
+  IsFound:= FindFirst(StartDir+FileMask, faAnyFile-faDirectory) = 0;
+  while IsFound do begin
+    FilesList.Add(searchrecName);
+    IsFound:= FindNext = 0;
+  end;
+  FindClose;
+  //Build a list of subdirectories
+  DirList:= TStringList.Create;
+    IsFound:= FindFirst(StartDir+'*.*', faAnyFile) = 0;
+    while IsFound do begin
+      if ((searchrecAttr and faDirectory) <> 0) and
+         (searchrecName[1] <> '.') then
+           DirList.Add(StartDir + searchrecName);
+      IsFound:= FindNext = 0;
+    end;
+    FindClose;
+  //Scan the list of subdirectories recursive!
+  for i:= 0 to DirList.Count - 1 do
+    FindAllFiles(FilesList, DirList[i], FileMask);
+  DirList.Free;
+end;
+
+procedure StartFileFinder;
+begin
+  FindAllFiles(mp3list, SONGPATH, '*.mp3');
+  mp3list.saveToFile('maXbox_mp3files.txt');
+end;
+
+procedure LetLogoDraw(mCanvas: TCanvas; x,y,r: integer; vclr: TColor);
+var
+  rad, a: Single;
+  i: Integer;
+begin
+  mCanvas.Pen.Color:= random(vclr);
+  mCanvas.Pen.width:= 4;
+  for i:= 0 to 400 do begin
+    inc(y); inc(x);
+    a:= Random(150) * 0.8 * pi;
+    rad:= Random(35) * r;
+    mCanvas.MoveTo(X, Y);
+    mCanvas.LineTo(x + Round(rad*Cos(a)), y + Round(rad*Sin(a)));
+  end;
+end;
+
+procedure SetForm;
+var i: integer;
+begin
+  inFrm:= TForm.create(self)
+  Lstbox:= TListbox.create(inFrm);
+  mp3list:= TStringList.Create;
+  StartFileFinder;
+  with inFrm do begin
+    position := poScreenCenter;
+    color:= clblue;
+    caption:= 'maXbox in a SoundBox'
+    width:= 450; height:= 400;
+    show;
+  end;
+  with Lstbox do begin
+    parent:= inFrm;
+    top:= 40; left:= 120;
+    height:= 205; width:= 260;
+    font.size:= 13; color:= clPurple;
+    for i:= 0 to mp3list.count - 1 do 
+      items.add(mp3List[i])
+  end;
+  mp3List.Free;  
+end;  
+
+//************************** Event Handler Method************************
+procedure BtnplayClick(Sender: TObject);
+var mp3time, idx, i: integer;
+begin
+  idx:= lstbox.itemIndex
+  if idx <> -1 then begin
+     if idx <> actidx then
+       closemp3;
+     actidx:= idx;
+     mp3time:= lengthmp3(SONGPATH+lstbox.items[idx])
+     writeln(Format('%s',[lstbox.items[idx]+MSecToTime(mp3time)]));
+     LetLogoDraw(inFrm.Canvas, 10, 5, 5, clwhite);
+     playmp3(SONGPATH+lstbox.items[idx])
+  end else
+  //closemp3;
+  for i:= 0 to lstbox.items.count - 1 do begin
+     mp3time:= lengthmp3(SONGPATH+lstbox.items[i])
+     writeln(Format('%s',[lstbox.items[i]+MSecToTime(mp3time)]));
+     LetLogoDraw(inFrm.Canvas, 10, 5, 3, clpurple);
+     playmp3(SONGPATH+lstbox.items[i])
+     sleep(mp3time)
+     closemp3;
+  end;
+end;
+
+procedure BtnstopClick(Sender: TObject);
+begin
+  stopmp3
+end;
+
+procedure ConstructButtons;
+begin 
+ myButton:= TButton.create(inFrm)
+ with myButton do begin
+   parent:= infrm;
+   setbounds(20,290,160,50);
+   caption:= 'Play MP3...';
+   font.size:= 12;
+   font.Style:= [fsbold];
+   //event handler
+   onclick:= @btnplayClick;
+ end;
+ myButton2:= TButton.create(inFrm)
+ with myButton2 do begin
+   parent:= infrm;
+   setbounds(220,290,160,50);
+   caption:= 'Stop MP3';
+   font.size:= 12;
+   //event handler
+   onclick:= @btnstopClick;
+ end;
+end;     
+  
+
+begin
+  SetForm;  
+  ConstructButtons;
+  LetLogoDraw(inFrm.Canvas, 10, 5, 4, clRed);
+  closeMP3;
+  //inFrm.close;
+end.
+
+//check the demo: 38_pas_box_demonstrator.txt
+{ max@kleiner.com  V2.9.2 August 2010
+  new version and examples from
+     http://www.softwareschule.ch/maxbox.htm }
+     
+just inside maXbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_|                                   
+

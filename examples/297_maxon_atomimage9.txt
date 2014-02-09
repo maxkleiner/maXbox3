@@ -1,0 +1,666 @@
+//maXbox is a scripter tool with an inbuild delphi engine in one exe!
+//Demo shows the functions of maXbook in images, sound and text,
+//based on picture atomimage2 I added a move animation roseAtom, loc's =366
+//*************************************************************************
+
+Program maXbook_atomimage_3DCipher_move;
+
+Const LOGO = 'Welcome to maXbook Art Exhibiton look, mouseDown to move!';
+      myPIC1 = 'http://www.softwareschule.ch/images/atomimage2.png';
+      myPIC2 = 'http://www.softwareschule.ch/images/maxworld.png';
+      myPIC1loc = 'examples\atomimage2.png';
+      myPIC2loc = 'examples\earthplay\maxworld.png';
+      myMusic = 'http://www.softwareschule.ch/download/airmaxloop3.mp3';
+      mySong = 'airmaxloop3.mp3';
+      myText = ' atomimage2';
+      MILLISECONDS = 50;
+      Xline= 45; Yline= 45;
+      Zline= 15+60;
+      OUTH= 'MAXONMOTOR';//'HELLOMAXON';
+
+var
+  inFrm: TForm;
+  image1, image2: TImage;
+  mT: TTimer;
+  E: Exception;
+  CurStep: Double;
+
+procedure loadImageLocal(vimage: TImage; picpath: shortstring); forward;
+
+procedure drawText(vFrm: TForm; vcolor: TColor);
+var
+  theRect: TRect;
+begin
+  with vFrm.canvas do begin
+    //brush.Color:= clred;
+      Brush.Style:= bsClear;
+    //.left/.top/.right/.bottom
+    theRect:= Rect(350,350,600,400);
+    font.color:= vColor;
+    font.size:= 22;
+    TextOut(460,395,myText);
+  end;
+end;  
+
+//********************************* Cube ***********************************//
+type
+  TCube = array[1..10] of record             {date}
+     x,y,z: Integer;
+  end;       
+  TStep = array[1..20] of Byte;             {point sequence}
+
+var  H: TCube;
+     step: TStep;
+     H3D: array[1..10] of TPoint;
+     Alpha, Beta, Mx, My: Integer;    { turnpoint init}
+     size, a: single;
+
+procedure loadHouseArray;
+ begin
+ H[1].x:= -xline;  H[1].y:= -yline;  H[1].z:= -zline;
+ H[2].x:= -xline;  H[2].y:= -yline;  H[2].z:= 0;
+ H[3].x:= 0;       H[3].y:= -yline;  H[3].z:= zline;
+ H[4].x:= xline;   H[4].y:= -yline;  H[4].z:= 0;
+ H[5].x:= xline;   H[5].y:= -yline;  H[5].z:= -zline;
+ H[6].x:= xline;   H[6].y:= yline;   H[6].z:= -zline;
+ H[7].x:= xline;   H[7].y:= yline;   H[7].z:= 0;
+ H[8].x:= 0;       H[8].y:= yline;   H[8].z:= zline;
+ H[9].x:= -xline;  H[9].y:= yline;   H[9].z:= 0;
+ H[10].x:= -xline; H[10].y:= yline;  H[10].z:= -zline;
+
+ step[1]:= 5; step[2]:= 1; step[3]:= 2; step[4]:= 3;  
+ step[5]:= 4; step[6]:= 5; step[7]:= 6; step[8]:= 7;  
+ step[9]:= 8; step[10]:= 9; step[11]:= 10; step[12]:= 6;  
+ step[13]:= 7; step[14]:= 4; step[15]:= 3; step[16]:= 8;  
+ step[17]:= 9; step[18]:= 2; step[19]:= 1; step[20]:= 10;  
+end; 
+
+procedure Projektion(Alpha, Beta,       { turnpoint (drehwinkel)}
+                     Mx, My: Integer;   { middlepoint }
+                     size: single; acanvas: TCanvas);    
+var  SinA, SinB, CosA, CosB : single;     
+     run: Integer;
+
+begin { Projection }
+  SinA:= Sin(Alpha/180*Pi);          { calculation of projection before }
+  SinB:= Sin(Beta/180*Pi);                 { loop to save time}
+  CosA:= Cos(Alpha/180*Pi);            
+  CosB:= Cos(Beta/180*Pi);
+  acanvas.font.size:= 24;
+  acanvas.font.color:=clyellow;
+  for run:= 1 to 10 do                        
+    with H[run] do begin 
+      H3D[run].x:= Round((CosA * H[run].x-H[run].y * SinA) * size) + Mx ;
+      H3D[run].y:= Round(((H[run].x*SinA + H[run].y*CosA)*CosB
+                                + H[run].z*SinB)*size) + My;
+      //inFrm.canvas.Textout(H3D[run].x,H3D[run].y, inttoStr(step[run+1])) 
+      acanvas.Textout(H3D[run].x,H3D[run].y, OUTH[run])   //Sign 
+    end; { with }
+   acanvas.MoveTo(H3D[step[1]].x, H3D[step[1]].y);
+   acanvas.pen.color:= clPurple;
+   acanvas.pen.width:= 4;
+  for run:= 2 to 20 do                 
+    acanvas.LineTo(H3D[step[run]].x,H3D[step[run]].y);
+  acanvas.MoveTo(H3D[step[10]].x, H3D[step[10]].y);
+  acanvas.LineTo(H3D[step[13]].x, H3D[step[13]].y);
+  acanvas.MoveTo(H3D[step[3]].x, H3D[step[3]].y);
+  acanvas.LineTo(H3D[step[5]].x, H3D[step[5]].y);
+    sleep(5)    
+end; { Projection }
+//************************************ Cube finish ***************************
+
+procedure getMP3File;
+var 
+  fStream: TFileStream;
+begin
+  fStream:= TFileStream.create(mySong, fmCreate)
+  with TIdHTTP.create(NIL) do begin
+    try
+      Get1(myMusic, fStream)
+    finally
+      Free
+      fStream.Free;
+    end;
+  end;    
+end;
+
+procedure getHTTP_PNG(vimage: TImage; vURL: string); 
+var
+  idHTTP: TIDHTTP;
+  pngStream: TMemoryStream;
+begin
+  with TLinearBitmap.Create do
+  try
+    idHTTP:= TIdHTTP.Create(NIL)
+    pngStream:= TMemoryStream.Create;
+    try
+      idHTTP.Get1(vURL, pngStream)
+    except
+      showmessage(E.message)
+    end  
+    pngStream.Position:= 0;
+    LoadFromStream2(pngstream,'PNG');
+    vimage.Picture:= NIL;
+    AssignTo(vimage.picture);
+    //SaveToFile(ExePath+'mX3_open.png');
+  finally
+    Dispose;
+    Free;
+    idHTTP.Free
+    pngStream.Free;
+  end; 
+end; 
+
+function TForm1_RotatePoint(APoint,ACenter: TPoint; AAngle: Double): TPoint;
+var dx,dy: Double;
+begin
+  dx:= (ACenter.Y * Sin(AAngle)) - (ACenter.X * Cos(AAngle)) + ACenter.X;
+  dy:= -(ACenter.X * Sin(AAngle)) - (ACenter.Y * Cos(AAngle)) + ACenter.Y;
+  Result.X:= Round((APoint.X * Cos(AAngle)) - (APoint.Y * Sin(AAngle)) + dx);
+  Result.Y:= Round((APoint.X * Sin(AAngle)) + (APoint.Y * Cos(AAngle)) + dy);
+end;
+  
+procedure TForm1_RotatePolygon(var APoints: array of TPoint; AAngle: Double);
+var
+  aCentr: TPoint;
+  i: Integer;
+begin
+  aCentr:= Point(10, 10);
+  for i:= 0 to Length(APoints)-1 do begin
+    aCentr.X:= aCentr.X + APoints[i].X;
+    aCentr.Y:= aCentr.Y + APoints[i].Y;
+  end;
+  aCentr.X:= aCentr.X div Length(APoints);
+  aCentr.Y:= aCentr.Y div Length(APoints);
+  for i:= 0 to Length(APoints)-1 do
+    APoints[i]:= TForm1_RotatePoint(APoints[i], aCentr, AAngle);
+end;
+
+procedure TFrm1_FormPaint(Sender: TObject; vimage: TImage);
+var //lPoints: array[0..5] of TPoint;
+  lPoints: array of TPoint;
+begin
+  SetLength(lpoints,5); //composition of roseAtom
+  lPoints[0].X:= 50;
+  lPoints[0].Y:= 125;
+  lPoints[1].X:= 100;
+  lPoints[1].Y:= 10;
+  lPoints[2].X:= 100;
+  lPoints[2].Y:= 100;
+  lPoints[3].X:= 125;
+  lPoints[3].Y:= 125;
+  lPoints[4].X:= 150;
+  lPoints[4].Y:= 150;
+  TForm1_RotatePolygon(lpoints, CurStep);
+  //infrm.Canvas.Pen.Width:= 5;
+  //infrm.Canvas.Polygon(lPoints);
+   with vimage.canvas do begin
+      Pen.color:= random(clred);
+      Pen.Width:= 1;
+      brush.Color:= clblack;
+      Polygon(lPoints);        //does a redraw !
+      Brush.Style:= bsClear;
+   end;  
+     Projektion(Alpha,Beta,Mx,My,size, infrm.canvas);  { draw house }
+     //Inc(Beta);
+     Inc(Alpha);
+  //application.processMessages;
+end;
+
+ 
+//------------------------------event handler----------------------------------
+procedure closeForm(Sender: TObject; var Action: TCloseAction);
+begin
+  ///afrm.Free;
+   if mt <> NIL then begin
+    mT.enabled:= false;
+    mT.Free;
+    mT:= NIL;
+  end;
+  image1.Free;
+  //image2.Free;  
+  action:= caFree;
+  infrm:= NIL;
+end;
+
+procedure TFrm1_timerRedrawTimer(Sender: TObject);
+begin
+  CurStep:= CurStep + 0.1;
+  if CurStep > 360 then CurStep:= 0;
+   //infrm.Invalidate;  //redraw
+   TFrm1_FormPaint(Self, image1);
+end;
+
+procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+begin
+  Mx:= X+120;  //on image
+  My:= Y-40;
+  if sender = infrm then begin
+    Mx:= X;  //on form
+    My:= Y;
+  end;
+end;  
+
+procedure FormMouseDown(Sender: TObject; Button: TMouseButton;Shift: TShiftState; X, Y: Integer);
+begin
+  image1.onMouseMove:= @FormMouseMove;
+end;  
+
+procedure FormMouseUp(Sender: TObject; Button: TMouseButton;Shift: TShiftState; X, Y: Integer);
+begin
+  image1.onMouseMove:= NIL;
+end;  
+
+procedure loadForm;
+begin
+  Alpha:= 45;    { Drehwinkel mit Startwerten }
+  Beta:= -105;
+  size:= 1.5;
+  a:= 1.05;
+  inFrm:= TForm.create(self)
+  image1:= TImage.create(inFrm);
+  with inFrm do begin
+    position:= poScreenCenter;
+    color:= clblack;
+    setBounds(5,5, 650, 490);
+    caption:= LOGO;
+    onClose:= @closeForm;
+    //onPaint:= @TFrm1_FormPaint;
+    Show;
+    Mx:= width div 2-50;        {cube position}
+    My:= height div 2-80;  
+    onMouseMove:= @FormMouseMove;
+  end; 
+  with image1 do begin
+    parent:= infrm;
+    setBounds(100,0, 572,513);
+    //onPaint
+    //onMousedown:= @Image1MouseDown;
+    stretch:= true;
+    onMouseMove:= NIL; //@FormMouseMove;
+    onMouseDown:= @FormMouseDown;
+    onMouseUp:= @FormMouseUp;
+  end;
+  mT:= TTimer.Create(self);
+  mt.onTimer:= @TFrm1_timerRedrawTimer;
+  mt.interval:= MILLISECONDS;
+  (*image2:= TImage.create(inFrm);
+  with image2 do begin
+    parent:= infrm;
+    setBounds(0,0, inFrm.width, inFrm.height);
+    show;
+  end; *)
+end; 
+
+procedure loadImageLocal(vimage: TImage; picpath: shortstring);
+//var jpeg, jpeg2: tjpegimage;
+begin
+  //jpeg2:= TJpegImage.create();
+ with TLinearBitmap.Create do
+  try
+    LoadFromFile(picpath);
+    vimage.Picture:= NIL;
+    AssignTo(vimage.picture);
+    //SaveToFile(ExePath+'mX3_open.png');
+  finally
+    Dispose;
+    Free;
+  end; 
+  {@to save from bmp to jpg }
+  //Image1.Picture.BitMap.LoadFromFile(ExePath+'examples\citymax.bmp');
+  //jpeg2.loadfromfile(ExePath+'examples\maxbox_logo2.jpg');
+  //image1.picture.assign(jpeg);
+  //Image1.Picture.LoadFromFile(ExePath+'examples\citymax.bmp');
+  //jpeg.Free;
+  //jpeg2.Free;
+end; 
+
+procedure loadImageLocalCanvas(vimage: TCanvas; picpath: shortstring);
+begin
+ with TLinearBitmap.Create do
+  try
+    LoadFromFile(picpath);
+    vimage.brush.bitmap:= NIL;
+    AssignTo(vimage.brush.bitmap);
+    //SaveToFile(ExePath+'mX3_open.png');
+  finally
+    Dispose;
+    Free;
+  end; 
+end; 
+
+procedure SaveComposition(vCanvas: TCanvas; FileName: string);
+var
+  Bmp: TBitmap;
+  MyRect: TRect;
+begin
+  Bmp:= TBitmap.Create;
+  try
+    MyRect:= vCanvas.ClipRect;
+    Bmp.Width:= MyRect.Right;
+    Bmp.Height:= MyRect.Bottom;
+    Bmp.Canvas.CopyRect(MyRect, vCanvas, MyRect);
+    Bmp.SaveToFile(FileName);
+  finally
+    Bmp.Free;
+  end;
+end;
+
+//------------------MAIN APP--------------------------------------------
+begin
+  ProcessMessagesON;
+   E:= Exception.create('Any internet connect problem'); 
+   loadForm;
+   loadHouseArray;
+  if fileExists(mySong) = false then 
+    getMP3File;
+  closeMP3;
+  playMP3(mySong); 
+  if isInternet then  
+     getHTTP_PNG(image1, myPIC1)
+  else 
+     loadImagelocal(image1, ExePath+myPIC1loc);
+  drawText(inFrm, clPurple);   //hidden signature
+  //TFrm1_FormPaint(Self, image1);
+  //SaveComposition(inFrm.canvas, 'myatomcard2.bmp')
+  //stripspaces
+End.
+
+
+
+Pictures from:
+
+http://www.softwareschule.ch/images/atomimage1.png
+http://www.softwareschule.ch/images/atomimage2.png
+http://www.softwareschule.ch/images/maxboxlogo.bmp
+http://www.softwareschule.ch/images/maxlindau2.png
+http://www.softwareschule.ch/images/citymax.bmp
+http://www.softwareschule.ch/images/oposlogo.gif
+
+---------------------------------------------------------------------
+code of version mX3.9 from http://www.softwareschule.ch/maxbox.htm
+//Load examples pas_*.txt from directory examples and press F9!
+//please read the readmefirst...
+//or start with the tutorial in /help
+//memo1 is script editor
+//memo2 is output space
+  new version and examples from
+     http://www.softwareschule.ch/maxbox.htm }
+
+
+just inside maXbox
+
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_|  
+        
+
+Latest News of Free Pascal
+
+                                         
+
+----code_cleared_checked----
+
+
+
+Electronics/Computer Systems Engineering CV
+
+ 
+
+    Electronics Careers http://www.kent.ac.uk/careers/electronics.htm
+    Computing Careers page http://www.kent.ac.uk/careers/computersci.htm
+
+ 
+Michael Faraday
+	
+
+    Gauss Road, Canterbury, Kent CT9 9ZZ  mf999@kent.ac.uk
+
+    Tel. 01234 5667 Mob. 0777 777777
+
+	  	Due to recent age discrimination legislation, you don't have to include your date of birth, if you don't wish to.
+Profile
+	
+
+    Well developed project management and IT skills combined with a flexible attitude to work.
+    Strong organisational skills in a variety of situations to achieve deadlines.
+    Have initiative and can work independently or as part of a team.
+    Get on well with people at all levels, easily making good working relationships.
+    Adaptable and quick to learn new skills.
+
+	  	It's not necessary to have a profile or career aim, but if you do, make it lively and succinct.
+Education
+	  	  	 
+University
+	2005-2008   THE UNIVERSITY OF KENT 
+BEng (Hons) Computer Systems Engineering (IEE accredited).
+I achieved a 2:1 in my first and second years. 	  	Mentions degree class as this is good
+Selected Course Modules
+	First year
+
+    Object-Oriented Programming 68%
+    Computer Systems 55%
+    Further Object-Oriented Programming 63%
+    Introduction to Electronics 59%
+    Robotics Project 61%
+    Digital Technologies 62%
+    Engineering Mathematics 54%
+    Engineering Analysis 71%
+
+	Second year
+
+    Operating Systems and Architecture 58%
+    Microcomputer Engineering 66%
+    Image Analysis and Applications 56%
+    Computer Interfacing 71%
+    Instrumentation & Measurement Systems 63%
+    Digital Implementation 63%
+    Digital Signal Processing 67%
+
+	Final year
+
+    Project
+    Embedded Computer Systems
+    Product Development
+    Digital Systems Design
+    Digital Control and Robotics
+    Computer Networks and Communication
+
+	  	Includes course modules as applying for jobs in area of degree subject. You would not need to do this if you were a History graduate applying for banking.
+  	  	  	 
+Projects
+	
+
+Group project based on sampling and study of an ECG signal via a single amplification circuit and software filtering and analysis systems. This required good communication between team members to ensure all work was accomplished within the specification. My role was to design and implement the software filtering system using LabView.
+
+Final year project involved development and construction of a Controller Area Network (CAN) based system suitable for demonstrating the fundamentals of CANBus from an automotive perspective. I achieved a 2:1 grade
+
+Electronics prize for a project to build a Digital Heart Rate meter in 2nd year.
+	  	
+
+Mentions the role he has taken in his group project and also the group dynamics
+
+Relevant projects and dissertations are well worth including.
+
+ 
+Page 2
+	
+
+ 
+	  	 
+ 
+Tommy Flowers School,
+Manchester
+1998 - 2005
+	
+
+ 
+
+2005 A Levels: Electronics B, Physics C, Mathematics D
+
+2003 9 GCSE passes at grade A to C including Mathematics, English and Science
+	  	Summarises GCSE results to save space
+  	  	  	 
+Computing and Other Skills
+	
+
+    Applications: LabView, MATLAB, OrCAD Capture and Layout, Microchip MPLAB, ModelSim (VHDL using the Altera MAX+plus II 10 compiler), Tina Electronic package, Web design using Dreamweaver, MS Office.
+    Programming Languages: Java, C++, SQL, , TLearn,
+    Operating Systems: Windows Xp, Vista, Symbian, Linux.
+    Can assemble Intel based PC's from component parts and fault diagnose hardware. Set up a home Ethernet network including wireless networks and firewalls/routers.
+    Full current clean driving licence
+    Speak basic conversational Spanish and French
+
+	  	 
+  	  	  	 
+Work
+	
+
+July - Sept. 2007  Wheatstone Engineering (technician), Manchester.
+I worked on a mobile communications project and I was doing SMT Soldering and fault finding and manufacturing of prototype boards.
+
+July 2004-September 2004 Tesco (Shop Assistant), Manchester
+Duties involved taking orders and stock control, generally dealing with customers and organising other assistants. I built a strong positive relationship with customers and staff.
+	  	Evidence of people and teamwork skills
+  	  	  	 
+Interests
+	
+
+    I was vice captain of the university hockey team. This involved organising squads, training sessions and competitions. 
+    While at school I took part in many group activities the most important of which was the Young Enterprise Scheme.  This scheme involved working in a group to manage and run a successful company and produce a viable product. The chosen product was a magazine which was demonstrated and sold at a nearby shopping centre. 
+    When in the Scouts, I was in charge of a group of 5 younger scouts. Scouts provided me with a variety of life skills including first aid and survival skills, but also gave me responsibility and leadership over groups of others at a young age.
+    Member of the Institute of Electronics and Technology (IET)
+
+	  	
+
+Shows evidence of people, leadership and organising skills
+
+Evidence of business skills
+
+ 
+References
+	I am happy to supply these on request
+	
+	
+	
+	
+{*******************************************************}
+{                                                       }
+{       WDosX Delphi Run-time Library                   }
+{       WDOSX TCP/IP Socket Utilities Unit              }
+{                                                       }
+{       for Delphi 4, 5 WDosX DOS-Extender              }
+{       Copyright (c) 2000 by Immo Wache                }
+{       e-mail: immo.wache@t-online.de                  }
+{                                                       }
+{*******************************************************}
+
+{
+  Version history:
+    IWA 11/20/00 Version 1.1
+}
+
+unit WDosSocketUtils;
+
+interface
+
+{$IFDEF DESIGNPACKAGE}
+uses
+  SysUtils;
+{$ELSE}
+uses
+  WDosSysUtils;
+{$ENDIF}
+
+const
+  IpAny       = $00000000;
+  IpLoopBack  = $7F000001;
+  IpBroadcast = $FFFFFFFF;
+  IpNone      = $FFFFFFFF;
+
+  PortAny     = $0000;
+
+  SocketMaxConnections = 5;
+
+type
+  TIpAddr =type LongWord;
+
+  TIpRec =packed record
+    case Integer of
+    0: (IpB1, IpB2, IpB3, IpB4: Byte);
+    1: (IpW1, IpW2: Word);
+  end;
+
+function HostToNetLong(HostLong: LongWord): LongWord;
+function HostToNetShort(HostShort: Word): Word;
+function NetToHostLong(NetLong: LongWord): LongWord;
+function NetToHostShort(NetShort: Word): Word;
+function StrToIp(Ip: string): TIpAddr;
+function IpToStr(Ip: TIpAddr): string;
+
+implementation
+
+function HostToNetLong(HostLong: LongWord): LongWord; assembler;
+asm
+        XCHG    AH,AL
+        ROR     EAX,16
+        XCHG    AH,AL
+end;
+
+function HostToNetShort(HostShort: Word): Word; assembler;
+asm
+        XCHG    AH,AL
+end;
+
+function NetToHostLong(NetLong: LongWord): LongWord; assembler;
+asm
+        XCHG    AH,AL
+        ROR     EAX,16
+        XCHG    AH,AL
+end;
+
+function NetToHostShort(NetShort: Word): Word; assembler;
+asm
+        XCHG    AH,AL
+end;
+
+function StrToIp(Ip: string): TIpAddr;
+var
+  S: string;
+  I, K: Integer;
+  P: packed array[1..4] of Byte absolute Result;
+  Code: Integer;
+begin
+  for K :=1 to 3 do
+  begin
+    I :=Pos('.', Ip);
+    S :=Copy(Ip, 1, I -1);
+    Ip :=Copy(Ip, I +1, Length(Ip));
+    if S ='' then S :='0';
+    Val(S, P[K], Code);
+    if Code <>0 then
+    begin
+      Result :=IpNone;
+      Exit;
+    end;
+  end;
+  Val(Ip, P[4], Code);
+  if Code <>0 then Result :=IpNone;
+end;
+
+function IpToStr(Ip: TIpAddr): string;
+begin
+  with TIpRec(Ip) do
+    Result :=Format('%d.%d.%d.%d', [IpB1, IpB2, IpB3, IpB4]);
+    stripspace
+end;
+
+end.
+
+----Simple Browser started----
+----Simple Browser started----
+----Simple Browser started----
+----Simple Browser started----

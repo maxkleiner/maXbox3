@@ -1,0 +1,1001 @@
+{***************************************************************
+ *            JProfiler and bITbox
+ * Project  : boolean logic education system bITbox
+ * Unit Name: 332_jprofiler.txt /308_bitbox3.txt
+ * Purpose  : Demonstrates all boolean circuits and all 16 boolean logics with a profiler 
+ * Date     : 18/10/2012  -  14:38:56, loc's=484, 39 intf
+ *          : 07/12/2012  - add a clock and starfield
+            : 13/12/2012  - set the profiler at the end
+ ****************************************************************}
+//shows structure of procedure types, max@kleiner.com ex. _299
+//compilerswitch $N- turns the coprocessor off, {$mode objfpc}{$H+} loc's =1
+//You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
+//located at http://jvcl.sourceforge.net
+
+
+PROGRAM Animation_BooleanLAB_Profiler;
+
+procedure TFrm1_FormPaint(Sender: TObject); forward;
+procedure TFrm1_timerRedrawTimer(Sender: TObject); forward;
+procedure TFrm1_CloseClick(Sender: TObject); forward;
+procedure TFrm1_PauseClick(Sender: TObject); forward;
+procedure TFrm1_trackSpeedChange(Sender: TObject); forward;
+procedure TFrm1_closeForm(Sender: TObject; var Action: TCloseAction); forward;
+
+Const MILLISECONDS = 50; //for timer, sync with trackbar 1000/50= position 20
+ 
+type
+  TBoolean_func = Function(a,b: boolean): boolean; 
+  
+var 
+  aFrm: TForm;
+  mT: TTimer;
+  tB: TTrackBar;
+  CurStep: Double;
+  btna, btnb, btnc: TBitBtn;
+  btnabool,btnbbool, astate,bstate,ledstate: boolean;
+  statbar: TStatusbar;
+  //boolfct: TBoolean_func;
+  Lbox: TLISTBOX;
+  boxidx: byte;
+
+
+procedure DrawRosette2;
+var m,p: TPoint;
+  rho,phi: real;
+  i,r: integer;
+begin
+   with afrm.Canvas do begin
+     Pen.Width:= 2;
+     Pen.Color:= clyellow;
+     //Brush.Color:= clblue;
+     Brush.Style:= bsClear;
+     //compute centerpoint and draw circle
+     m.x:=170; m.y:=165; r:=75;
+     rho:=360/18;
+     for i:=1 to 18 do begin
+       phi:=i*rho*pi/180;
+       p.x:=m.x+round(r*cos(phi));
+       p.y:=m.y+round(r*sin(phi));
+       Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+       Ellipse(p.x-3,p.y-3,p.x+3,p.y+3);
+     end;
+     //application.processMessages;
+  end;
+end;
+
+
+function TForm1_RotatePoint(APoint,ACenter: TPoint; AAngle: Double): TPoint;
+var dx,dy: Double;
+begin
+  dx:= (ACenter.Y * Sin(AAngle)) - (ACenter.X * Cos(AAngle)) + ACenter.X;
+  dy:= -(ACenter.X * Sin(AAngle)) - (ACenter.Y * Cos(AAngle)) + ACenter.Y;
+  Result.X:= Round((APoint.X * Cos(AAngle)) - (APoint.Y * Sin(AAngle)) + dx);
+  Result.Y:= Round((APoint.X * Sin(AAngle)) + (APoint.Y * Cos(AAngle)) + dy);
+end;
+  
+procedure TForm1_RotatePolygon(var APoints: array of TPoint; AAngle: Double);
+var aCentr: TPoint;
+    i: Integer;
+begin
+  aCentr:= Point(8, 20);
+  for i:= 0 to Length(APoints)-1 do begin
+    aCentr.X:= aCentr.X + APoints[i].X;
+    aCentr.Y:= aCentr.Y + APoints[i].Y;
+  end;
+  aCentr.X:= aCentr.X div Length(APoints);
+  aCentr.Y:= aCentr.Y div Length(APoints);
+  for i:= 0 to Length(APoints)-1 do
+    APoints[i]:= TForm1_RotatePoint(APoints[i], aCentr, AAngle);
+end;
+
+procedure TFrm1_FormPaint(Sender: TObject);
+var
+  //lPoints: array[0..2] of TPoint;
+  lPoints: array of TPoint;
+begin
+  SetLength(lpoints,3);
+  lPoints[0].X:= 100;
+  lPoints[0].Y:= 250;
+  lPoints[1].X:= 200;
+  lPoints[1].Y:= 20;
+  lPoints[2].X:= 200;
+  lPoints[2].Y:= 200;
+  TForm1_RotatePolygon(lpoints, CurStep);
+  afrm.Canvas.Pen.color:= clBlue;
+  afrm.Canvas.Pen.Width:= 15;
+  afrm.Canvas.Polygon(lPoints);
+  Drawrosette2;
+  if ledstate then begin
+    afrm.Canvas.Rectangle(600,320,350,180)
+    afrm.Canvas.Rectangle(170,165,450,180)
+  end
+  else begin
+    afrm.Canvas.Pen.color:= clblack;
+    afrm.Canvas.Rectangle(600,320,350,180);
+  end;
+  //application.processMessages;
+end;
+
+
+ FUNCTION boolFCT(solutionstring: shortstring; bfct: TBoolean_func;
+                                                  fct_name: string): boolean;
+  BEGIN
+    //Writeln('debug boolean x | '+solutionstring+'  ' + fct_name);
+    statbar.panels.items[1].text:= fct_name +' of: '+solutionstring;
+    result:= bfct(astate,bstate);    //boolfct rec.!
+  END;
+ 
+
+//************************* 16 all booleans ******************************//    
+  function Contradiction(a,b: boolean): boolean;  //1 FALSE Contradiction
+  begin
+    result:= false;
+  end;  
+  function Conjunction_AND(a,b: boolean):boolean; //2 AND Conjunction x*y
+  begin
+    result:= a AND b;
+  end;  
+  function Inhibition(a,b: boolean): boolean;     //3 Inhibition x*^y
+  begin
+    result:= a AND NOT b;
+  end;  
+  function Praependence(a,b: boolean): boolean;   //4 Praependence x
+  begin
+    result:= a;
+  end;  
+  function Praesection(a,b: boolean): boolean;    //5 Praesection ^x*y
+  begin
+    result:= NOT a AND b;
+  end;  
+  function Postpendence(a,b: boolean): boolean;   //6 Postpendence y
+  begin
+    result:= b;
+  end;  
+  function EXOR(a,b: boolean): boolean;           //7 exclusive OR XOR= x*^y+^x*y
+  begin
+    //result:= a XOR b; //alternative
+    //result:= a AND NOT b OR NOT a AND b;
+    result:= NOT(A=B);    //!
+  end;  
+  function Disjunction_OR(a,b: boolean): boolean; //8 Disjunction OR = x+y
+  begin
+    //result:= a XOR b;
+    result:= a OR b;
+  end;  
+  function NOR(a,b: boolean): boolean;            //9 Rejection
+  begin
+    result:= NOT(a OR b);
+  end;  
+  function Aequivalence(a,b: boolean): boolean;   //10 double implication ^x*^y+x*y
+  begin                                           //  x<-->y
+    result:= (NOT a OR b) AND (NOT b or a);
+    //result:= NOT a AND NOT b OR a AND b
+    //result:= NOT(a XOR b);
+    //result:= NOT(EXOR(a,b));
+   end;   
+  function NegationY(a,b: boolean): boolean;      //11 ynegation ^y
+  begin
+    result:= NOT b;
+   end;   
+  function ImplicationY(a,b: boolean): boolean;   //12 yimplication y-->x; x+^y
+  begin
+    result:=  a OR NOT b;
+   end;   
+  function NegationX(a,b: boolean): boolean;      //13 xnegation ^x
+  begin
+    result:= NOT a;
+   end;   
+  function ImplicationX(a,b: boolean): boolean;   //14 ximplication x-->y; ^x+y
+  begin
+    result:=  NOT a OR b;
+  end;   
+  function NAND(a,b: boolean): boolean;           //15 NAND Exclusion
+  begin
+    result:= NOT(a AND b);
+  end;  
+  function Tautologic(a,b: boolean): boolean;     //16 TRUE Tautologic
+  begin
+    result:= true;
+  end;  
+//************************* 16 all booleans end *****************************//    
+
+  
+procedure addAllBooleans;
+begin
+  //S:= StringOfChar(' ',i div 2) +S+ StringOfChar(' ',i-i div 2); 
+   lbox.Clear;
+   with LBox.Items do begin
+   add('All 16 Boolean Functions');
+   add('--------------------------------------------------------------');
+   add(format('01 FALSE(Contradiction)=0 %*s',[21,'0000']));
+   add(format('02 AND(Conjunction)=xy %*s',[27,'0001']));
+   add(format('03 Inhibition=x^y %*s',[42,'0010']));
+   add(format('04 Prependence=x %*s',[37,'0011']));
+   add(format('05 Presection=^xy %*s',[38,'0100']));
+   add(format('06 Postpendence=y %*s',[35,'0101']));
+   add(format('07 XOR(Exclusive OR)=x^y+^xy %*s',[12,'0110']));
+   add(format('08 OR(Disjunction)=x+y %*s',[29,'0111']));
+   add(format('09 NOR(Rejection)=^(x+y) %*s',[23,'1000']));
+   add(format('10 Aequivalence(BiCond)=^x^y+xy %*s',[05,'1001']));
+   add(format('11 NegationY=^y %*s',[40,'1010']));
+   add(format('12 ImplicationY(y-->x)=x+^y %*s',[21,'1011']));
+   add(format('13 NegationX=^x %*s',[41,'1100']));
+   add(format('14 ImplicationX(x-->y)=^x+y %*s',[21,'1101']));
+   add(format('15 NAND(Exclusion)=^(xy) %*s',[22,'1110']));
+   add(format('16 TRUE(Tautologic)=1 %*s',[27,'1111']));
+ end;    
+end; 
+
+procedure boxClick(Sender: TObject);
+//var idx: integer;
+begin 
+   boxidx:= lbox.itemindex;
+   //writeln((Lbox.Items[boxidx]))
+   statbar.panels.items[1].text:= Lbox.Items[boxidx]+' is set active';
+end;
+
+//*************************************************************************
+procedure SetLEDStates;
+//var ledstate: boolean;
+begin
+  //ledstate:= ImplicationX(astate, bstate);
+  //statbar.panels.items[1].text:= 'Implication';
+  case boxidx of
+    2:  ledstate:= boolFCT('0000', @Contradiction, 'Contradiction');
+    3:  ledstate:= boolFCT('0001', @Conjunction_AND, 'Conjunction');
+    4:  ledstate:= boolFCT('0010', @Inhibition, 'Inhibition');
+    5:  ledstate:= boolFCT('0011', @Praependence, 'Praependence');
+    6:  ledstate:= boolFCT('0100', @Praesection, 'Praesection');
+    7:  ledstate:= boolFCT('0101', @Postpendence, 'Postpendence');
+    8:  ledstate:= boolFCT('0110', @EXOR, 'Exclusive OR');
+    9:  ledstate:= boolFCT('0111', @Disjunction_OR, 'Disjunction OR');
+    10: ledstate:= boolFCT('1000', @NOR, 'NOR Rejection');
+    11: ledstate:= boolFCT('1001', @Aequivalence, 'Bi Implication');
+    12: ledstate:= boolFCT('1010', @NegationY, 'Negation of Y');
+    13: ledstate:= boolFCT('1011', @ImplicationY, 'Implication of Y');
+    14: ledstate:= boolFCT('1100', @NegationX, 'Negation of X');
+    15: ledstate:= boolFCT('1101', @ImplicationX, 'Implication of X');
+    16: ledstate:= boolFCT('1110', @NAND, 'Not AND');
+    17: ledstate:= boolFCT('1111', @Tautologic, 'Tautologic');
+    //ledstate:= boolFCT('1,0,0,1', @Aequivalence, 'Bi Implication');
+  end;
+  //ledstate:= Aequivalence(astate,bstate)
+  //statbar.panels.items[1].text:= 'Bi Implication';
+  if ledstate then begin
+    btnc.glyph.LoadFromResourceName(getHINSTANCE,'LEDREDON')
+    statbar.panels.items[0].text:= 'LED is ON';
+  end else begin 
+    btnc.glyph.LoadFromResourceName(getHINSTANCE,'LEDREDOFF');
+    statbar.panels.items[0].text:= 'LED is OFF';
+  end;
+end;
+
+
+procedure btnAClick(Sender: TObject);
+begin
+  btnabool:= NOT btnabool;
+  astate:= btnabool;
+  SetLEDStates;
+  if btnabool then begin
+    btna.glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPLAY'); 
+    btna.spacing:= 22;
+    btna.caption:= 'ON'; 
+  end else begin
+    btna.glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP'); 
+    btna.spacing:= 15;
+    btna.caption:= 'OFF'; 
+  end; 
+end; 
+  
+procedure btnBClick(Sender: TObject);
+begin
+  btnbbool:= NOT btnbbool;
+  bstate:= btnbbool;
+  SetLEDStates;
+  if btnbbool then begin
+    btnb.glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPLAY'); 
+    //btnb.Layout:= blGlyphRight;
+    btnb.spacing:= 22;
+    btnb.caption:= 'ON'; 
+  end else begin
+    btnb.glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP'); 
+    btnb.spacing:= 15;
+    btnb.caption:= 'OFF'; 
+  end; 
+end; 
+
+//**************************Form Builder JFormDemo****************************
+ 
+ Const
+   DefCaption = 'JvProfiler 32 Test program';
+
+ var 
+   jfrm: TForm;
+   ListBox1: TListBox;
+   UseIdBtn: TButton;
+   UseNameBtn: TButton;
+   ResultBtn: TButton;
+   //Label1: TLabel;
+   Progress: TProgressBar;
+   JP: TJvProfiler;
+   FTerminated:boolean;
+   
+   
+procedure TProfiler_FormCreate(Sender: TObject);
+begin
+  JP.Names:= ListBox1.Items;
+  JP.Sorted:= true;
+  JP.Enabled:= true;
+  FTerminated:= false;
+end;  
+
+procedure TProfiler_FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Fterminated:= true;
+  JP.Enabled:= false;
+  JP.Stop;
+  Writeln('Profiler Form Closed');
+end;
+
+procedure TProfiler_FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = 27 then FTerminated:= true;
+end; 
+
+procedure TProfiler_ResultBtnClick(Sender: TObject);
+begin
+  JP.ShowReport;
+end;
+
+procedure TProfiler32_UseNameBtnClick(Sender: TObject);
+var i,j,k:integer;
+begin
+  Randomize;
+  { just randomize to get some results }
+  Screen.Cursor:= crHourGlass;
+  UseIdBtn.Enabled:= false;
+  UseNameBtn.Enabled:= false;
+  ResultBtn.Enabled:= false;
+  JP.Start;
+  try
+    k:= Random(133);
+    Progress.Max:= k;
+    for j:= 0 to k do begin
+      Progress.Position:= j;
+      jfrm.Caption:= Format('%s - to do: %d',[DefCaption,k - j]);
+      i:= Random(ListBox1.Items.Count);
+      { use integer ID (Names[i] ID = i) }
+      JP.EnterID(i);
+      //SleepEx(random(333),false);
+      Sleep(random(333));
+      JP.ExitID(i);
+      Application.ProcessMessages;
+      if FTerminated then
+        Break;
+    end;
+  finally
+    Screen.Cursor:= crDefault;
+    UseIdBtn.Enabled:= true;
+    UseNameBtn.Enabled:= true;
+    ResultBtn.Enabled:= true;
+  end;
+  JP.Stop;
+  Beep;
+  Progress.Position:= 0;
+end;
+
+procedure TProfiler_UseIdBtnClick(Sender: TObject);
+var i,j,k:integer;
+begin
+  Randomize;
+  JP.Start;
+  { make distributed randomize to get some results }
+  Screen.Cursor:= crHourGlass;
+  UseIdBtn.Enabled:= false;
+  UseNameBtn.Enabled:= false;
+  ResultBtn.Enabled:= false;
+  try
+    k:= Random(100);
+    Progress.Max:= k;
+    for j:= 0 to k do
+    begin
+      Progress.Position := j;
+      jfrm.Caption:= Format('%s - to do: %d',[DefCaption,k - j]);
+      i:= Random(ListBox1.Items.Count);
+      { use string ID instead }
+      JP.EnterName(JP.Names[i]);
+      Sleep(10 * j);
+      JP.ExitName(JP.Names[i]);
+      Application.ProcessMessages;
+      if FTerminated then
+        Break;
+    end;
+  finally
+    Screen.Cursor:= crDefault;
+    UseIdBtn.Enabled:= true;
+    UseNameBtn.Enabled:= true;
+    ResultBtn.Enabled:= true;
+  end;
+  JP.Stop;
+  Beep;
+  Progress.Position:= 0;
+end;
+  
+
+
+procedure loadJDemoForm;
+var apanel: TPanel;
+begin
+  jFrm:= TForm.Create(self);
+  with jfrm do begin
+    setbounds(343,157,506,507)
+    Caption:= 'Profiler 32 test program';
+    Font.Style:= [];
+    KeyPreview:= True;
+    //OldCreateOrder:= True;
+    OnClose:= @TProfiler_FormClose;
+    //OnCreate = FormCreate
+    OnKeyDown:= @TProfiler_FormKeyDown;
+    PixelsPerInch:= 96;
+    Show;
+    //TextHeight:= 13;
+  end;
+  ListBox1:= TListBox.Create(jfrm)
+  with listbox1 do begin
+    parent:= jfrm;
+    SetBounds(0,41,498,225);
+    Align:= alClient;
+    //BorderStyle:= bsNone;
+    ItemHeight:= 13;
+    with Items do begin
+      add('ASSOC');
+      add('AT');
+      add('ATTRIB');
+      add('BREAK');
+      add('CACLS');
+      add('CALL');
+      add('CD');
+      add('CHCP');
+      add('CHDIR');
+      add('CHKDSK');
+      add('CLS');
+      add('CMD');
+      add('COLOR');
+      add('COMP');
+      add('COMPACT');
+      add('CONVERT');
+      add('COPY');
+      add('DATE');
+      add('DEL');
+      add('DIR');
+      add('DISKCOMP');
+      add('DISKCOPY');
+      add('DOSKEY');
+      add('ECHO');
+      add('ENDLOCAL');
+      add('ERASE');
+      add('EXIT');
+      add('FC');
+      add('FIND');
+      add('FINDSTR');
+      add('FOR');
+      add('FORMAT');
+      add('FTYPE');
+      add('GOTO');
+      add('GRAFTABL');
+      add('HELP');
+      add('IF');
+      add('KEYB');
+      add('LABEL');
+      add('MD');
+      add('MKDIR');
+      add('MODE');
+      add('MORE');
+      add('MOVE');
+      add('PATH');
+      add('PAUSE');
+      add('POPD');
+      add('PRINT');
+      add('PROMPT');
+      add('PUSHD');
+      add('RD');
+      add('RECOVER');
+      add('REM');
+      add('REN');
+      add('RENAME');
+      add('REPLACE');
+      add('RESTORE');
+      add('RMDIR');
+      add('SET');
+      add('SETLOCAL');
+      add('SHIFT');
+      add('SORT');
+      add('START');
+      add('SUBST');
+      add('TIME');
+      add('TITLE');
+      add('TREE');
+      add('TYPE');
+      add('VER');
+      add('VERIFY');
+      add('VOL');
+      add('XCOPY');
+      end;
+      TabOrder:= 0;
+   end;
+   apanel:= TPanel.Create(jfrm);
+   with apanel do begin
+    parent:= jfrm;
+    SetBounds(0,0,498,41);
+    Align:= alTop;
+    BevelOuter:= bvNone;
+    TabOrder:= 1;
+   end; 
+     with TLabel.create(jfrm) do begin
+       parent:= apanel;
+       SetBounds(10,10,64,13);
+       Caption:= 'Create report:';
+     end; 
+     UseIdBtn:= TButton.Create(jfrm);
+     with UseIdBtn do begin
+       parent:= apanel;
+       SetBounds(104,8,75,25)
+       Caption:= 'Use &ID';
+       TabOrder:= 0;
+       OnClick:= @TProfiler_UseIdBtnClick;
+    end;
+    UseNameBtn:= TButton.Create(jfrm)
+    with UseNameBtn do begin
+       parent:= apanel;
+       SetBounds(192,8,75,25);
+       Caption:= 'Use &name'
+       TabOrder:= 1;
+       OnClick:= @TProfiler32_UseNameBtnClick;
+    end;
+    ResultBtn:= TButton.Create(jfrm)
+    with ResultBtn do begin
+       parent:= apanel;
+       SetBounds(392,8,75,25);
+       Caption:= '&Result'
+       TabOrder:= 2;
+       OnClick:= @TProfiler_ResultBtnClick;
+    end;
+  Progress:= TProgressBar.Create(jfrm);
+   with progress do begin
+    parent:= jfrm;
+    SetBounds(0,266,498,16);
+    Align:= alBottom;
+    TabOrder:= 2;
+   end;
+  JP:= TJvProfiler.Create(jfrm);
+    //Left = 376
+    //Top = 56
+  //end
+  TProfiler_FormCreate(self);
+ 
+end;    
+
+//**************************Form Builder*******************************
+procedure loadForm;
+begin
+  aFrm:= TForm.Create(self);
+  mT:= TTimer.Create(self);
+  mt.onTimer:= @TFrm1_timerRedrawTimer;
+  mt.interval:= MILLISECONDS;
+  btnabool:= false; btnbbool:= false; //init
+  //mt.free;  in on close
+  with aFrm do begin
+    caption:= '************Boolean_Animation************';  
+    height:= 510;
+    width:= 950;
+    Position:= poScreenCenter;
+    onClose:= @TFrm1_closeForm;
+    onPaint:= @TFrm1_FormPaint;
+    Canvas.Pen.color:= clBlue;
+    Canvas.Pen.Width:= 15;
+    Show;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(310, 350,150, 55);
+    caption:= 'Pause';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPAUSE'); 
+    mXButton(05,05,width, height,12,12,handle);
+    //event handler
+    onclick:= @TFrm1_PauseClick;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(480, 350,150, 55);
+    caption:= 'Close';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP'); 
+    mXButton(05,05,width, height,12,12,handle);
+    onclick:= @TFrm1_CloseClick;
+  end;
+  btna:= TBitBtn.Create(aFrm);
+  with btna do begin
+    Parent:= aFrm;
+    setbounds(310, 290,150, 55);
+    caption:= 'ON';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPLAY'); 
+    mXButton(05,05,width, height,12,12,handle);
+    onclick:= @btnaClick;
+  end;
+  btnb:= TBitBtn.Create(aFrm);
+  with btnb do begin
+    Parent:= aFrm;
+    setbounds(480, 290,150, 55);
+    caption:= 'OFF';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP'); 
+    mXButton(05,05,width, height,12,12,handle);
+    onclick:= @btnbClick;
+  end;
+   btnc:= TBitBtn.Create(aFrm);
+  with btnc do begin
+    Parent:= aFrm;
+    setbounds(445, 150,60, 60);
+    caption:= '';  
+    glyph.LoadFromResourceName(getHINSTANCE,'LEDREDON'); 
+    mXButton(0,0,width, height,12,12,handle);
+    //onclick:= @TFrm1_CloseClick;
+  end;
+  tB:= TTrackBar.create(aFrm);
+   with tB do begin
+      parent:= aFrm;
+      setBounds(40,360,230,40);
+      Min:= 10; Max:= 100
+      Frequency:= 10
+      Position:= 1000 div MILLISECONDS;
+      linesize:= 4;
+      ThumbLength:= 30;
+      SetFocus;
+      OnChange:= @TFrm1_trackSpeedChange;
+   end;
+  with TJvAnalogClock.Create(aFrm) do begin 
+    parent:= aFrm;
+    colormin:= clred;
+    //spiderclock:= true;
+    //setBounds(10,10,300,300);
+    //Show;
+    //Free;
+  end;  
+  
+  with TJvStarfield.Create(aFrm) do begin
+    parent:= aFrm;
+    setBounds(350,40,250,100);
+    active:= true; 
+  end;  
+  
+  statbar:= TStatusBar.create(aFrm);
+  with statbar do begin
+    parent:= aFrm;
+    //simplepanel:= true;
+    showhint:= true;
+    hint:= 'LED Logger States';
+     Panels.add;
+     panels.items[0].width:= 200;
+     panels.items[0].text:= 'LED Data Log';
+     Panels.add;
+     panels.items[1].width:= 150;
+     panels.items[1].text:= 'Logic Logger State';
+  end;
+  lbox:= TListbox.Create(aFrm)
+   with lbox do begin
+    Parent:= afrm;
+    SetBounds(645,20,285,430)
+    font.size:= 10;
+    //color:= clsilver;
+    font.name:= 'MS Sans Serif'  //or Courier
+    font.color:= clblack;
+    //Style:= csOwnerDrawFixed;
+    onClick:= @boxClick;
+    //onDrawItem:= @Listbox1DrawItem;
+  end;
+  addAllbooleans;
+end;  
+
+
+//**************************Event Handlers*******************************
+procedure TFrm1_trackSpeedChange(Sender: TObject);
+begin
+  mt.Interval:= 1000 div tB.Position;
+end;
+
+procedure TFrm1_timerRedrawTimer(Sender: TObject);
+begin
+  CurStep:= CurStep + 0.1;
+  if CurStep > 360 then CurStep:= 0;
+  afrm.Invalidate;  //redraw
+end;
+
+procedure TFrm1_closeForm(Sender: TObject; var Action: TCloseAction);
+begin
+  if mt <> NIL then begin
+    mT.enabled:= false;
+    mT.Free;
+    mT:= NIL;
+  end;
+  ///afrm.Free;  
+  action:= caFree;
+  afrm:= NIL;
+end;
+
+procedure TFrm1_CloseClick(Sender: TObject);
+begin
+  afrm.Close;
+end;
+
+procedure TFrm1_PauseClick(Sender: TObject);
+begin
+  if mT <> NIL then
+    mt.enabled:= not mt.enabled;
+end;
+
+function steptest: boolean;
+begin
+  sleep(400);
+  result:= true;
+end;  
+
+var    //test vars
+   str3: string;
+   sstr: shortstring;
+   testprocnames: TStrings;
+  //main form list call  
+  Begin
+    maxform1.color:= clpurple;
+    //calls some test functions
+    writeln(floattostr(maxCalc('e^ln(2)')));
+    printF('this is %.18f ',[maxCalc('ln(2)^e')]);
+    printF('this is %.18f ',[maxCalc('sqr(cos(ln(2)^e))')]);
+    printF('this is %.4f ',[maxCalc('sqrt(e^(ln(2)))')]);
+    writeln(getVersionString(exepath+'maxbox3.exe'));
+    str3:= loadFileAsString(exepath+'maxbox_functions_all.pdf');
+    writeln('file compare j: '+inttoStr(CompText(str3, str3)));
+    writeln(intToStr(length(str3)));
+ //--------------------------Main Topic--------------------------
+    //loadForm;
+    
+    {testprocnames:= TStringlist.Create;
+    testprocnames.add('steptest')
+    testprocnames.add('loadform')
+    
+    with TJvProfiler.Create(self) do begin
+      names:= testprocnames;    //must before start!
+      enabled:= true;
+      //initialize;
+      //writeln('this is start '+names[0]);
+      writeln('this is jprofile start ');
+      //P.EnterName(P.Names[i]);
+      Entername(names[0]);
+      //Enterid(0);
+           start;
+        steptest;
+           stop;
+           start;
+        steptest;
+           stop;
+      ExitName(Names[0]);
+      Entername(names[1]);
+       start;
+       loadform;
+       stop;
+      ExitName(Names[1]);
+      //exitid(0);
+      //showreport;
+      //stop;
+      beep;
+      writeln('this is jprofile stop');
+      //enabled:= false;
+      Showreport;
+      enabled:= false;
+      //stop;
+      free;
+    end;  
+    testprocnames.Free; }
+    
+    loadJDemoForm;
+    
+End.
+
+
+
+///////////////////////////////7
+profiler32mainformu.pas
+
+he contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at
+http://www.mozilla.org/MPL/MPL-1.1.html
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either expressed or implied. See the License for
+the specific language governing rights and limitations under the License.
+The Original Code is: JvLookOut.PAS, released on 2002-05-26.
+The Initial Developer of the Original Code is Peter Th?nqvist [peter3@peter3.com]
+Portions created by Peter Th?nqvist are Copyright (C) 2002 Peter Th?nqvist.
+All Rights Reserved.
+Contributor(s):
+Last Modified: 2002-05-26
+You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
+located at http://jvcl.sourceforge.net
+Known Issues:
+-----------------------------------------------------------------------------}
+unit Profiler32MainFormU;
+interface
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  StdCtrls, ExtCtrls, ComCtrls, JvProfiler32, JvComponent;
+type
+  TProfiler32MainForm = class(TForm)
+    ListBox1: TListBox;
+    Panel1: TPanel;
+    UseIdBtn: TButton;
+    UseNameBtn: TButton;
+    ResultBtn: TButton;
+    Label1: TLabel;
+    Progress: TProgressBar;
+    P: TJvProfiler;
+    procedure FormCreate(Sender: TObject);
+    procedure ResultBtnClick(Sender: TObject);
+    procedure UseNameBtnClick(Sender: TObject);
+    procedure UseIdBtnClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+  private
+    FTerminated:boolean;
+  end;
+var
+  Profiler32MainForm: TProfiler32MainForm;
+implementation
+//{$R *.DFM}
+const
+  DefCaption = 'JvProfiler 32 Test program';
+procedure TProfiler32MainForm.FormCreate(Sender: TObject);
+begin
+  P.Names := ListBox1.Items;
+  P.Sorted := true;
+  P.Enabled := true;
+  FTerminated := false;
+end;
+procedure TProfiler32MainForm.ResultBtnClick(Sender: TObject);
+begin
+  P.ShowReport;
+end;
+procedure TProfiler32MainForm.UseNameBtnClick(Sender: TObject);
+var i,j,k:integer;
+begin
+  Randomize;
+  { just randomize to get some results }
+  Screen.Cursor := crHourGlass;
+  UseIdBtn.Enabled := false;
+  UseNameBtn.Enabled := false;
+  ResultBtn.Enabled := false;
+  P.Start;
+  try
+    k := Random(133);
+    Progress.Max := k;
+    for j := 0 to k do
+    begin
+      Progress.Position := j;
+      Caption := Format('%s - to do: %d',[DefCaption,k - j]);
+      i := Random(ListBox1.Items.Count);
+      { use integer ID (Names[i] ID = i) }
+      P.EnterID(i);
+      SleepEx(random(333),false);
+      P.ExitID(i);
+      Application.ProcessMessages;
+      if FTerminated then
+        Break;
+    end;
+  finally
+    Screen.Cursor := crDefault;
+    UseIdBtn.Enabled := true;
+    UseNameBtn.Enabled := true;
+    ResultBtn.Enabled := true;
+  end;
+  P.Stop;
+  Beep;
+  Progress.Position := 0;
+end;
+procedure TProfiler32MainForm.UseIdBtnClick(Sender: TObject);
+var i,j,k:integer;
+begin
+  Randomize;
+  P.Start;
+  { make distributed randomize to get some results }
+  Screen.Cursor := crHourGlass;
+  UseIdBtn.Enabled := false;
+  UseNameBtn.Enabled := false;
+  ResultBtn.Enabled := false;
+  try
+    k := Random(100);
+    Progress.Max := k;
+    for j := 0 to k do
+    begin
+      Progress.Position := j;
+      Caption := Format('%s - to do: %d',[DefCaption,k - j]);
+      i := Random(ListBox1.Items.Count);
+      { use string ID instead }
+      P.EnterName(P.Names[i]);
+      SleepEx(10 * j,false);
+      P.ExitName(P.Names[i]);
+      Application.ProcessMessages;
+      if FTerminated then
+        Break;
+    end;
+  finally
+    Screen.Cursor := crDefault;
+    UseIdBtn.Enabled := true;
+    UseNameBtn.Enabled := true;
+    ResultBtn.Enabled := true;
+  end;
+  P.Stop;
+  Beep;
+  Progress.Position := 0;
+end;
+procedure TProfiler32MainForm.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Fterminated := true;
+  P.Enabled := false;
+  P.Stop;
+end;
+procedure TProfiler32MainForm.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = 27 then FTerminated := true;
+end;
+end.
+
+
+
+Proposal for Abreviation Symbol:
+
+  01 FALSE    //Contradiction
+
+  02 AND      //Conjunction x*y
+
+  03 INHIB    //Inhibition x*^y
+
+  04 PRAEP    //Praependence x
+
+  05 PRAE     //Praesection ^x*y
+
+  06 POST     //Postpendence y
+
+  07 XOR      //Exclusive OR x*^y+^x*y
+
+  08 OR       //Disjunction OR = x+y
+
+  09 NOR      //Rejection
+
+  10 AEQ      //Aequivalence x<-->y, ^x*^y+x*y
+
+  11 NEGY     //YNegation ^y
+
+  12 IMPY     //YImplication y-->x; x+^y
+
+  13 NEGX     //Xnegation ^x
+
+  14 IMPX     //XImplication x-->y; ^x+y
+
+  15 NAND     //Exclusion
+
+  16 TRUE     //TRUE Tautologic
+  
+
+
+ //ShellExecute in W64
+    //ExecuteCommand('cmd','/k FC /L /N C:\maxbook\maxbox3\maxbox391.exe C:\maxbook\maxbox3\maxbox3.exe')
+ //  ExecuteCommand('cmd','/k FC /L /N C:\maxbook\maxbox3\maxboxdef1.ini C:\maxbook\maxbox3\maxboxdef2.ini')
+   
+
+getRulesbyContract  
+http://www.heise.de/newsticker/meldung/Leben-wir-in-einer-Computersimulation-1767578.html
+
+http://www.bestsoftware4download.com/software/k-ci-system-t-free-maxbox-download-sifqahci.html

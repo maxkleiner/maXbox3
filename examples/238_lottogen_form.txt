@@ -1,0 +1,125 @@
+//*****************************************************
+Program LottoGenerator_Form;
+
+// based on 001_pas_lottogen, with fancy form, loc's = 124
+// lotto generator event handler form, Ex. 238_
+// event & profile based, TASK: save the numbers in a file, compute a statistic!
+
+Const LOTNUMB = 6;
+      LRANGE = 49;
+
+Type 
+    TLottoStat = array[1..LRANGE] of integer;
+  
+var 
+    lottoNumbs: array[1..LRANGE] of integer;
+    hits: array[1..LOTNUMB] of integer;
+    lstat: TLottoStat;
+    mForm: TForm;
+    alabel: TLabel;
+    ashape: TShape;
+    labList: TComponentList;
+
+
+function InitStatArray: boolean;
+var g: byte;
+begin
+ for g:= 1 to LRANGE do 
+   lottoNumbs[g]:= 0;
+ result:= true
+end;
+
+
+procedure FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  labList.Free;
+  mForm.Free;
+  mForm:= NIL;
+end;    
+
+procedure FormKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = #27 then mForm.Close;
+end;
+
+procedure Viewnumbers;
+var i: integer;
+begin
+  for i:= 0 to LOTNUMB -1 do
+    TLabel(labList[i]).Caption:= IntToStr(hits[i+1]);
+end;
+
+procedure GetNumbers(Sender: TObject);
+var i, place: integer;
+begin
+  for i:= 1 to LRANGE do LottoNumbs[i]:= i; //set Array
+  for i:= 1 to LOTNUMB do begin 
+    place:= Random(LRANGE+1-i)+1; //random(49)+1, random(48)+1 etc.
+    hits[i]:= LottoNumbs[place];
+    LottoNumbs[place]:= LottoNumbs[LRANGE+1-i]; //replace to prevent dups
+  end;
+  Viewnumbers
+end;
+
+
+procedure CreateForm2;
+var i: integer;
+begin
+  mForm:= TForm.Create(self);
+  with mForm do begin
+    FormStyle:= fsStayOnTop;
+    Position:= poScreenCenter;
+    BorderStyle:= bsDialog;
+    Caption:= 'Pascal Lotto Generator PLG3';
+    width:= 640;
+    height:= 240;
+    color:= clgreen;
+    //onClose:= @FormClose;
+    onKeyPress:= @FormKeyPress
+    Show;
+  end;
+  for i:= 1 to LOTNUMB do begin
+    ashape:= TShape.Create(mForm);
+    with ashape do begin
+      Parent:= mForm;
+      top:= 50
+      left:= 80 * i;
+      shape:= stCircle;
+      brush.color:= clRed;
+      pen.width:= 5;
+    end;
+  end;
+  labList:= TComponentList.Create1(true); //owns objects
+  for i:= 1 to LOTNUMB do begin
+    alabel:= TLabel.Create(mForm);
+    with alabel do begin
+      Parent:= mForm;
+      color:= clRed;
+      top:= 66
+      left:= 20 + 79 * i;
+      font.size:= 22;
+      bringToFront;
+    end;
+   labList.Add(alabel);
+  end;
+  with TBitBtn.Create(mForm) do begin
+    Parent:= mForm;
+    SetBounds(400,150,180,40)
+    Caption:= ' Get Lotto Numbers';
+    glyph.LoadFromResourceName(getHINSTANCE,'OPENFOLDER'); 
+    onClick:= @GetNumbers;
+  end;   
+  with TBevel.Create(mForm) do begin
+    Parent:= mForm;  
+    SetBounds(40,30,540,100)
+  end;  
+end;
+        
+// main lotto script
+begin
+   Randomize;
+   CreateForm2;
+   GetNumbers(self);
+   ViewNumbers;
+end.
+

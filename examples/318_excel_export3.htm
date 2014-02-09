@@ -1,0 +1,246 @@
+Version:0.9
+StartHTML:0000000105
+EndHTML:0000026219
+StartFragment:0000001037
+EndFragment:0000026203
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>mXScriptasHTML</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="generator" content="SynEdit HTML exporter" />
+<style type="text/css">
+<!--
+body { color: #000000; background-color: #FFFFFF; }
+.pas1-assembler { }
+.pas1-character { text-decoration: underline; }
+.pas1-comment { color: #000080; font-style: italic; }
+.pas1-float { color: #800080; }
+.pas1-hexadecimal { color: #FF00FF; }
+.pas1-identifier { }
+.pas1-number { color: #FF0000; }
+.pas1-preprocessor { font-style: italic; }
+.pas1-reservedword { color: #000000; font-weight: bold; }
+.pas1-space { }
+.pas1-string { color: #008080; }
+.pas1-symbol { color: #000000; }
+-->
+</style>
+</head>
+<body>
+<!--StartFragment--><pre><code><span class="pas1-reservedword">PROGRAM</span><span class="pas1-space"> Excel_maXcel_Export3;
+
+</span><span class="pas1-comment">//http://regexpstudio.com/tregexpr/help/article_mrdecorator.html
+//First contribution 2004 and then EKON 16 2012! ex. 310 of maXbox, loc's= 184
+//selftest functions of cutils alias cfundamentutils, cfileutils, cdatetime, ctimers!
+//dynamic array paras &amp; databuilder to excel
+
+//uses ComObj;
+
+</span><span class="pas1-reservedword">const
+</span><span class="pas1-space">  xlWBATWorksheet = -</span><span class="pas1-number">4167</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> 
+  S: AnsiString;
+  A: TDateTime;
+  
+</span><span class="pas1-reservedword">type</span><span class="pas1-space"> TMSheet = </span><span class="pas1-reservedword">array</span><span class="pas1-space"> </span><span class="pas1-reservedword">of</span><span class="pas1-space"> </span><span class="pas1-reservedword">array</span><span class="pas1-space"> </span><span class="pas1-reservedword">of</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+  
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> RefToCell(ARow, ACol: Integer): </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Result:= Chr(Ord(</span><span class="pas1-string">'A'</span><span class="pas1-symbol">)+ ACol-</span><span class="pas1-number">1</span><span class="pas1-symbol">)+IntToStr(ARow);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> SaveAsExcelFile2(AGrid: TStringGrid; aSheetName, aFileName: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">): Boolean;
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  XLApp, Sheet: OLEVariant;
+  aData2: </span><span class="pas1-reservedword">array</span><span class="pas1-space"> </span><span class="pas1-reservedword">of</span><span class="pas1-space"> </span><span class="pas1-reservedword">array</span><span class="pas1-space"> </span><span class="pas1-reservedword">of</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+  i,j: Integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">// Prep Data in 2 dimension dyn array
+</span><span class="pas1-space">  SetArrayLength(adata2,AGrid.rowCount+</span><span class="pas1-number">2</span><span class="pas1-symbol">)
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> AGrid.rowCount </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">    SetArrayLength(adata2[i],AGrid.colCount+</span><span class="pas1-number">2</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> AGrid.ColCount - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space">   </span><span class="pas1-comment">//@temp layer
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> j:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> AGrid.RowCount - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> 
+      aData2[i+</span><span class="pas1-number">1</span><span class="pas1-symbol">][j+</span><span class="pas1-number">1</span><span class="pas1-symbol">]:= AGrid.Cells[i,j];
+  Result:= False;
+  XLApp:= CreateOLEObject(</span><span class="pas1-string">'Excel.Application'</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    </span><span class="pas1-comment">// Hide or show Excel
+</span><span class="pas1-space">    XLApp.Visible:= true;
+    </span><span class="pas1-comment">// Add Workbook
+</span><span class="pas1-space">    XLApp.Workbooks.Add(xlWBatWorkSheet);
+    Sheet:= XLApp.Workbooks[</span><span class="pas1-number">1</span><span class="pas1-symbol">].WorkSheets[</span><span class="pas1-number">1</span><span class="pas1-symbol">];
+    Sheet.Name:= ASheetName;
+    </span><span class="pas1-comment">// Fill up the sheet
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> AGrid.ColCount </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">for</span><span class="pas1-space"> j:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> AGrid.RowCount </span><span class="pas1-reservedword">do</span><span class="pas1-space"> 
+        XLApp.Cells[i+</span><span class="pas1-number">1</span><span class="pas1-symbol">,j+</span><span class="pas1-number">1</span><span class="pas1-symbol">]:= aData2[i][j];
+    </span><span class="pas1-comment">// Save Excel Worksheet
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">      XLApp.Workbooks[</span><span class="pas1-number">1</span><span class="pas1-symbol">].SaveAs(AFileName);
+      Result:= True;
+    </span><span class="pas1-reservedword">except
+</span><span class="pas1-space">      Msg(</span><span class="pas1-string">'maXcel export error'</span><span class="pas1-symbol">); </span><span class="pas1-comment">// Error ?
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">finally</span><span class="pas1-space"> </span><span class="pas1-comment">// Quit Excel
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> VarIsEmpty(XLApp) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      XLApp.DisplayAlerts:= False;
+      XLApp.Quit;
+      XLAPP:= Unassigned;
+      Sheet:= Unassigned;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> SaveAsExcelFileDirect(AGrid: TStringGrid; aSheetName, aFileName: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">): Boolean;
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  XLApp, Sheet: OLEVariant;
+  i, j: Integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Result:= False;
+  XLApp:= CreateOleObject(</span><span class="pas1-string">'Excel.Application'</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    XLApp.Visible:= true;
+    </span><span class="pas1-comment">// Add Workbook
+</span><span class="pas1-space">    XLApp.Workbooks.Add(xlWBatWorkSheet);
+    Sheet:= XLApp.Workbooks[</span><span class="pas1-number">1</span><span class="pas1-symbol">].WorkSheets[</span><span class="pas1-number">1</span><span class="pas1-symbol">];
+    Sheet.Name:= aSheetName;
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> AGrid.ColCount -</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">for</span><span class="pas1-space"> j:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> AGrid.RowCount -</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> 
+        XLApp.Cells[i+</span><span class="pas1-number">2</span><span class="pas1-symbol">,j+</span><span class="pas1-number">1</span><span class="pas1-symbol">]:= AGrid.cells[i,j]; </span><span class="pas1-comment">//direct fill
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">try</span><span class="pas1-space">  </span><span class="pas1-comment">// Save
+</span><span class="pas1-space">      XLApp.Workbooks[</span><span class="pas1-number">1</span><span class="pas1-symbol">].SaveAs(aFileName);
+      Result:= True;
+    </span><span class="pas1-reservedword">except
+</span><span class="pas1-space">      Msg(</span><span class="pas1-string">'maxcel export error'</span><span class="pas1-symbol">); </span><span class="pas1-comment">// Error ?
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">finally</span><span class="pas1-space">   </span><span class="pas1-comment">// Quit Excel
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> VarIsEmpty(XLApp) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      XLApp.DisplayAlerts:= False;
+      XLApp.Quit;
+      XLAPP:= Unassigned;
+      Sheet:= Unassigned;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> setArrayDataBuilder;
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  mySt: TStringGrid;
+  k,t: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  mySt:= TStringGrid.Create(self)
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mySt </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    rowcount:= </span><span class="pas1-number">11</span><span class="pas1-symbol">;
+    colcount:= </span><span class="pas1-number">11</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> k:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">40</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin</span><span class="pas1-space">     </span><span class="pas1-comment">//frame numbers
+</span><span class="pas1-space">      Cells[k ,</span><span class="pas1-number">0</span><span class="pas1-symbol">]:= inttoStr(k);
+      Cells[</span><span class="pas1-number">0</span><span class="pas1-symbol">,(k </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">)]:= inttoStr(k+</span><span class="pas1-number">1</span><span class="pas1-symbol">);   
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> k:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> ColCount - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">for</span><span class="pas1-space"> t:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> RowCount - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">        Cells[k ,t]:= intToStr(t*k);    </span><span class="pas1-comment">//one to one
+</span><span class="pas1-space">    </span><span class="pas1-comment">//test output to console   
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> k:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> ColCount - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">for</span><span class="pas1-space"> t:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> RowCount - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        write(Cells[k,t]+ </span><span class="pas1-character">#9</span><span class="pas1-symbol">);
+        </span><span class="pas1-reservedword">if</span><span class="pas1-space"> t= RowCount-</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">          writeln(</span><span class="pas1-string">''</span><span class="pas1-symbol">);
+      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+ 
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> SaveAsExcelFile2(mySt, </span><span class="pas1-string">'maxceltestmap'</span><span class="pas1-symbol">,Exepath+</span><span class="pas1-string">'maxceltest2.xls'</span><span class="pas1-symbol">)
+              </span><span class="pas1-reservedword">then</span><span class="pas1-space"> Msg(</span><span class="pas1-string">'maxcel export success'</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> SaveAsExcelFileDirect(mySt, </span><span class="pas1-string">'maxceltestmap'</span><span class="pas1-symbol">,Exepath+</span><span class="pas1-string">'maxceltest3.xls'</span><span class="pas1-symbol">)
+              </span><span class="pas1-reservedword">then</span><span class="pas1-space"> Msg(</span><span class="pas1-string">'maxcel export success'</span><span class="pas1-symbol">);
+    Free;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+  
+
+</span><span class="pas1-reservedword">BEGIN</span><span class="pas1-space">  </span><span class="pas1-comment">//Main
+//&lt;Executable statements&gt;
+</span><span class="pas1-space">  
+  ShowMessage(ReplaceRegExpr(</span><span class="pas1-string">'World'</span><span class="pas1-symbol">,</span><span class="pas1-string">'Hi, TRex maXcel Tester World!'</span><span class="pas1-symbol">, </span><span class="pas1-string">'Earth'</span><span class="pas1-symbol">,true));
+  
+  setArrayDataBuilder;
+  
+  </span><span class="pas1-comment">// test routines with assert or assert2
+</span><span class="pas1-space">  SelftestPEM;
+  SelfTestCFundamentUtils;
+  SelfTestCFileUtils;
+  SelfTestCDateTime;
+  SelfTestCTimer;
+  SelfTestCRandom;
+  
+  Writeln(</span><span class="pas1-string">' 6 Units Tested with success '</span><span class="pas1-symbol">)
+  ShowMessageBig(</span><span class="pas1-string">' 6 Units Tested with success!'</span><span class="pas1-symbol">);
+           
+  Assert2(FilePath(</span><span class="pas1-string">'C'</span><span class="pas1-symbol">, </span><span class="pas1-string">'..\X\Y'</span><span class="pas1-symbol">, </span><span class="pas1-string">'A\B'</span><span class="pas1-symbol">, </span><span class="pas1-string">'\'</span><span class="pas1-symbol">) = </span><span class="pas1-string">'A\X\Y\C'</span><span class="pas1-symbol">, </span><span class="pas1-string">'FilePath'</span><span class="pas1-symbol">);
+  Assert2(PathCanonical(</span><span class="pas1-string">'\A\B\..\C\D\..\..\..\..\'</span><span class="pas1-symbol">, </span><span class="pas1-string">'\'</span><span class="pas1-symbol">) = </span><span class="pas1-string">'\'</span><span class="pas1-symbol">, </span><span class="pas1-string">'PathCanonical'</span><span class="pas1-symbol">);
+  Assert2(UnixPathToWinPath(</span><span class="pas1-string">'/c/d.f'</span><span class="pas1-symbol">) = </span><span class="pas1-string">'\c\d.f'</span><span class="pas1-symbol">, </span><span class="pas1-string">'UnixPathToWinPath'</span><span class="pas1-symbol">);
+  Assert2(WinPathToUnixPath(</span><span class="pas1-string">'\c\d.f'</span><span class="pas1-symbol">) = </span><span class="pas1-string">'/c/d.f'</span><span class="pas1-symbol">, </span><span class="pas1-string">'WinPathToUnixPath'</span><span class="pas1-symbol">);
+  A:= EncodeDateTime(</span><span class="pas1-number">2001</span><span class="pas1-symbol">, </span><span class="pas1-number">09</span><span class="pas1-symbol">, </span><span class="pas1-number">02</span><span class="pas1-symbol">, </span><span class="pas1-number">12</span><span class="pas1-symbol">, </span><span class="pas1-number">11</span><span class="pas1-symbol">, </span><span class="pas1-number">10</span><span class="pas1-symbol">, </span><span class="pas1-number">0</span><span class="pas1-symbol">);
+  Assert2(Month(A) = </span><span class="pas1-number">9</span><span class="pas1-symbol">, </span><span class="pas1-string">'EncodeDateTime'</span><span class="pas1-symbol">);
+  S:= GMTTimeToRFC1123TimeA(A, True);
+  Assert2(S = </span><span class="pas1-string">'12:11:10 GMT'</span><span class="pas1-symbol">,</span><span class="pas1-string">'GMT'</span><span class="pas1-symbol">);
+  S:= GMTDateTimeToRFC1123DateTimeA(A, True);
+  Assert2(S = </span><span class="pas1-string">'Sun, 02 Sep 2001 12:11:10 GMT'</span><span class="pas1-symbol">, </span><span class="pas1-string">'GMTDateTimeToRFC1123DateTime'</span><span class="pas1-symbol">);
+  Assert2(TickDeltaW(</span><span class="pas1-hexadecimal">$FFFFFFF6</span><span class="pas1-symbol">, </span><span class="pas1-number">0</span><span class="pas1-symbol">) = </span><span class="pas1-number">10</span><span class="pas1-symbol">,</span><span class="pas1-string">'TrickDelta'</span><span class="pas1-symbol">);
+  Assert2(CPUClockFrequency &gt; </span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-string">'RTC Prepare'</span><span class="pas1-symbol">);
+  Assert2(Length(RandomPassword(</span><span class="pas1-number">0</span><span class="pas1-symbol">, </span><span class="pas1-number">0</span><span class="pas1-symbol">, True, True, True)) = </span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-string">'random passwd'</span><span class="pas1-symbol">);
+  Assert2(Length(RandomPassword(</span><span class="pas1-number">1</span><span class="pas1-symbol">, </span><span class="pas1-number">1</span><span class="pas1-symbol">, True, True, True)) = </span><span class="pas1-number">1</span><span class="pas1-symbol">,</span><span class="pas1-string">'random passwd'</span><span class="pas1-symbol">);
+  CompareDateTime(DateOf(Now),DateOf(Now)+</span><span class="pas1-number">1</span><span class="pas1-symbol">)
+  printF(</span><span class="pas1-string">'sin  test in RAD %.18f'</span><span class="pas1-symbol">,[sin((</span><span class="pas1-number">3</span><span class="pas1-symbol">))]); 
+  printF(</span><span class="pas1-string">'sinj test in RAD %.18f'</span><span class="pas1-symbol">,[sinj((</span><span class="pas1-number">3</span><span class="pas1-symbol">))]); 
+  printF(</span><span class="pas1-string">'sin  test in GRAD %.18f'</span><span class="pas1-symbol">,[sin(gradtorad(</span><span class="pas1-number">60</span><span class="pas1-symbol">))]); 
+  printF(</span><span class="pas1-string">'sinj test in GRAD %.18f'</span><span class="pas1-symbol">,[sinj(gradtorad(</span><span class="pas1-number">60</span><span class="pas1-symbol">))]); 
+  printF(</span><span class="pas1-string">'sin  test in DEG %.18f'</span><span class="pas1-symbol">,[Sin(degtorad(</span><span class="pas1-number">60</span><span class="pas1-symbol">))]); 
+  printF(</span><span class="pas1-string">'cos  test in DEG %.18f'</span><span class="pas1-symbol">,[Cos(degtorad(</span><span class="pas1-number">60</span><span class="pas1-symbol">))]); 
+  </span><span class="pas1-comment">//printF('cos  test in DEG %.18f',[Cos(degtorad(60))]); 
+</span><span class="pas1-space">  </span><span class="pas1-comment">//sin(60)=0.866 --&gt; arcsin(0.866)=59,99999999 
+</span><span class="pas1-space">  printF(</span><span class="pas1-string">'ARCSIN test in DEG %.18f'</span><span class="pas1-symbol">,[radtodeg(arcsin(Sin(degtorad(</span><span class="pas1-number">60</span><span class="pas1-symbol">))))]); 
+  printF(</span><span class="pas1-string">'ARCSIN test in DEG %.18f'</span><span class="pas1-symbol">,[radtodeg(arcsin(Sinj(degtorad(</span><span class="pas1-number">60</span><span class="pas1-symbol">))))]); 
+  printF(</span><span class="pas1-string">'ARCSIN test in DEG %.18f'</span><span class="pas1-symbol">,[radtodeg(stinvSin(Sinj(degtorad(</span><span class="pas1-number">60</span><span class="pas1-symbol">))))]); 
+  </span><span class="pas1-comment">//CL.AddDelphiFunction('Function StInvSin( Y : Double) : Double');
+</span><span class="pas1-space">  printF(</span><span class="pas1-string">'ARCCOS test in DEG %.18f'</span><span class="pas1-symbol">,[radtodeg(arccos(Cos(degtorad(</span><span class="pas1-number">60</span><span class="pas1-symbol">))))]); 
+  Writeln(createClassID);
+  writeln(intToStr(bytes1kb))
+</span><span class="pas1-comment">//&lt;Definitions&gt;  
+</span><span class="pas1-reservedword">END</span><span class="pas1-symbol">. 
+
+
+
+--------------------------------------------------------------}
+
+
+  SingleCompareDelta   = </span><span class="pas1-float">1.0E-34</span><span class="pas1-symbol">;
+  DoubleCompareDelta   = </span><span class="pas1-float">1.0E-280</span><span class="pas1-symbol">;
+  </span><span class="pas1-preprocessor">{$IFDEF CLR}
+</span><span class="pas1-space">  ExtendedCompareDelta = DoubleCompareDelta;
+  </span><span class="pas1-preprocessor">{$ELSE}
+</span><span class="pas1-space">  ExtendedCompareDelta = </span><span class="pas1-float">1.0E-4400</span><span class="pas1-symbol">;
+  </span><span class="pas1-preprocessor">{$ENDIF}</span><span class="pas1-space">   
+
+  </span><span class="pas1-comment">// Default CompareDelta is set to SingleCompareDelta. This allows any type
+</span><span class="pas1-space">  </span><span class="pas1-comment">// of floating-point value to be compared with any other.
+</span><span class="pas1-space">  </span><span class="pas1-comment">// DefaultCompareDelta = SingleCompareDelta;
+
+
+</span><span class="pas1-reservedword">const
+</span><span class="pas1-space">  Bytes1KB  = </span><span class="pas1-number">1024</span><span class="pas1-symbol">;
+  Bytes1MB  = </span><span class="pas1-number">1024</span><span class="pas1-space"> * Bytes1KB;
+  Bytes1GB  = </span><span class="pas1-number">1024</span><span class="pas1-space"> * Bytes1MB;
+  Bytes64KB = </span><span class="pas1-number">64</span><span class="pas1-space"> * Bytes1KB;
+  Bytes64MB = </span><span class="pas1-number">64</span><span class="pas1-space"> * Bytes1MB;
+  Bytes2GB  = </span><span class="pas1-number">2</span><span class="pas1-space"> * LongWord(Bytes1GB);
+
+
+----app_template_loaded_code----
+</span></code></pre><!--EndFragment--></body>
+</html>

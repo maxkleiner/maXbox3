@@ -1,0 +1,336 @@
+program puzzleGame_BitMapProductionTest;
+// not finished yet !!!  tester
+//*********************************************************************
+// logic game example with objects & structure, loc's=268, example 75  
+// you have to move letters/numbers in the box to the right word order;)
+// first you define a pattern (word) and remove the word with the 
+// function secret(); second someone else has to solve it (with solver())
+//*********************************************************************
+
+
+var
+  pForm: TForm;
+  myimage: Timage;
+  imageList: TStringList;
+  maxx, maxy, psize, maxtot: integer;
+  //object.hint is object id
+  im_y: array[1..8] of integer;
+  ok_x: array[1..8] of integer;
+  ok_y: array[1..8] of integer;
+  placed: array[1..8] of boolean;
+  pts: TRect;
+
+{type 
+  TRect2 = record
+  case Integer of
+    0: (Left, Top, Right, Bottom: Integer);
+    1: (TopLeft, BottomRight: TPoint);
+end;}
+
+
+procedure Verify;
+var
+  i, nbok: integer;
+  o: TImage;
+begin
+  nbok:= 0;
+  for i:= 1 to maxtot do begin
+    o:= TImage(imagelist.objects[i-1]);
+    if (o.tag=ok_x[strtoint(o.hint)])
+     and  (im_y[strtoint(o.hint)]= ok_y[strtoint(o.hint)])
+    //(o.lbly=o.oky))
+     then
+      inc(nbok);
+  end;
+  if (nbok=maxtot) then
+     showMessage('***Congratulations***'#13#10+
+                             'You win with maXbox Puzzle.Game !');
+end;
+
+procedure moveStone(o: TImage);
+begin
+  //maxy:= 2
+  if (o.tag + 1 = maxx) and (im_y[strtoint(o.hint)] = maxy) then begin
+    //right move
+    o.tag:= o.tag +1;
+    o.Left:= o.Left + psize +1;
+    o.Top:= o.Top;
+    dec(maxx);
+  end else
+  if (o.tag - 1 = maxx) and (im_y[strtoint(o.hint)] =maxy) then begin
+    //left move
+    o.tag:= o.tag -1;
+    o.Left:= o.Left - psize -1;
+    o.Top:= o.Top;
+    inc(maxx);
+  end else
+  if (o.tag = maxx) and (im_y[strtoint(o.hint)]-1 = maxy) then begin
+    //top move up
+    im_y[strtoint(o.hint)]:= im_y[strtoint(o.hint)] -1
+    o.Left:= o.Left;
+    o.Top:= o.Top - psize -1;
+    inc(maxy);
+  end else
+  if (o.tag = maxx) and (im_y[strtoint(o.hint)]+1 = maxy) then begin
+    //bottom move down
+    im_y[strtoint(o.hint)]:= im_y[strtoint(o.hint)] +1
+    //writeln(inttostr(im_y[strtoint(o.hint)]))
+    o.Left:= o.Left;
+    o.Top:= o.Top + psize +1;
+    dec(maxy);
+  end;
+  //verify if stones are in right order 
+  //verify()
+end;
+
+procedure Image1Click(Sender: TObject);
+begin
+  moveStone(TImage(Sender));
+  verify();
+end;
+
+procedure Meltpuzzle;
+var
+  i, nbplace, y, x: integer;
+  myfilePath: string;
+begin
+  nbplace:= 0;
+  x:= 1;
+  y:= 1;
+  for i:= 0 to maxtot-1  do begin
+    placed[i+1]:= false
+    //TImage(imagelist.objects[i]).placed:= false;
+    TImage(imagelist.objects[i]).Visible:= false;
+  end;
+  RANDOMIZE;
+  i:= 0;
+  while (nbplace < maxtot ) do begin
+    //i:= random(maxtot);
+    //o:= TImage(imagelist.objects[i-1]);
+    if not placed[strtoint(TImage(imagelist.objects[i]).hint)] then begin
+      inc(nbplace);
+      //with TImage(imagelist.objects[i]) do begin
+      with TImage(imagelist.objects[i]) do begin
+        placed[StrToInt(hint)]:= true;
+        Visible:= true;
+        //myFilePath:= ExtractFilePath(Application.ExeName)+
+         //           'examples\citymax'+inttoStr(i)+'.bmp'
+         myFilePath:= ExePath+'examples\citymax.bmp'
+        picture.bitmap.loadfromFile(myFilePath)
+        stretch:= false;
+        picture.bitmap.canvas.brush.color:= clred;
+        //picture.bitmap.canvas.assign(picture.bitmap)
+        //test to random 
+        picture.bitmap.canvas.textout(120,120,hint);
+        writeln('obj second'+inttostr(im_y[strToInt(hint)])+hint);
+        tag:= x;
+        im_y[strToInt(hint)]:= y;
+        //writeln('obj second'+inttostr(im_y[i+1])+hint)
+        //ALeft, ATop, AWidth, AHeight
+        Left:= (x-1)*(psize + 1);
+        Top:= (y-1)*(psize + 1);
+        pts.left:= 90 +x*20
+        pts.top:= 50 +y*15
+        pts.right:= 90;
+        pts.bottom:= 60;
+        picture.bitmap.canvas.fillrect(pts);
+        {myFilePath:= ExtractFilePath(Application.ExeName)+
+                               'examples\citymax'+inttoStr(i)+'.bmp'
+        picture.bitmap.saveToFile(myFilePath)}
+      end;
+      inc(x);
+      inc(i);
+      if (x mod maxx = 1) then begin
+        x:= 1;
+        inc(y);
+      end; //if NOT PLACED BY RANDOM
+    end;  //with object
+  end; //while
+end;
+
+ {set mxfile.inc
+ T = class(T)
+ private
+   FColor: TColor
+   ...
+ protected
+   function GetColor: TColor; virtual;
+   procedure SetColor(Value: TColor); virtual;
+ public
+   property Color: TColor read GetColor write SetColor; 
+ end;  }
+
+procedure loadPForm();
+
+begin
+  maxx:= 3
+  maxy:= 3
+  psize:= 164
+  maxtot:= (maxx*maxy)-1;
+  //constructor
+  pform:= Tform.create(self);
+  with pform do begin
+    caption:= 'this is maXMap II';  
+    width:= (maxx*psize)+ 10;
+    height:= (maxy*psize)+ 30;
+    BorderStyle:= bsDialog;
+    Position:= poScreenCenter;
+    show;
+  end  
+end;
+
+procedure InitPuzzle;
+var
+  i,x,y: integer;
+  pattern: string;
+  myFilePath: string;
+begin
+  pattern:= 'MAXBOX25';
+  //puzzle word
+  //pattern:= 'SOFTWARE';
+  //pattern:= 'DELPHI07';
+  imagelist:= TStringList.Create;
+  x:= 1;
+  y:= 1;
+  myFilePath:= ExePath+'examples\max_locomotion.bmp'
+  //myFilePath:= ExtractFilePath(Application.ExeName)+'examples\citymax.bmp'
+  for i:= 1 to maxtot do begin
+    myimage:= TImage.Create(pform);
+    with myimage do begin
+      Parent:= pForm;
+      //color:= clblue;
+      AutoSize:= false;
+      try
+        picture.bitmap.loadfromFile(myfilePath)
+      except
+        break
+      end 
+      //stretch:= true;
+      //canvas.fillrect
+      width:= psize; 
+      height:= psize;
+      Left:= (x-1)*(psize + 1);
+      Top:= (y-1)*(psize + 1);
+      center:= tacenter;
+      picture.bitmap.height:= pform.height + top;
+      picture.bitmap.width:= pform.width + left;
+      //hint is object_id;
+      hint:= inttostr(i);
+      tag:= x;
+      im_y[i]:= y
+      ok_x[i]:= x
+      ok_y[i]:= y
+       {myFilePath:= ExtractFilePath(Application.ExeName)+
+                    'examples\locomotion'+inttoStr(i)+'.bmp'
+       picture.bitmap.saveToFile(myFilePath)}
+   
+   end;
+    //set next line of stones
+    if (i mod maxx=0) then begin
+      x:= 1; 
+      inc(y);
+    end else
+      inc(x);
+    //if length(pattern)=maxtot then
+      //mylabel.caption:= pattern[i] else begin
+        //writeln('pattern must have size of puzzle -1: '+ inttoStr(maxtot));
+        //exit;
+      //end
+    //event handler to click!  
+    myimage.OnClick:= @Image1Click;
+    //add stones to the list
+    imagelist.addObject(inttostr(i), myimage);
+  end;
+end;
+
+procedure secret;
+begin
+  moveStone(TImage(imagelist.objects[7]));
+  moveStone(TImage(imagelist.objects[4]));
+  //moveStone(TMyLabel(labellist.objects[1]));
+end;
+
+
+procedure testVerify;
+begin
+  //moveStone(TMyLabel(labellist.objects[7]));
+  //moveStone(TMyLabel(labellist.objects[7]));
+end;
+
+//main of puzzle
+begin
+//**************************** OOP in 20 Days *******************************
+  loadPForm();
+  initPuzzle();
+  //meltPuzzle(); 
+  //secret()  
+  //testVerify
+end.
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+        
+        
+Werte Kollegen
+
+Im neuen Prospekt der tunbasel.ch kommt es wieder deutlich zum Ausdruck, die New Generation lässt die Finger von der Technik:
+
+damals wollten alle Ingenieur werden - heute will man Karriere machen
+damals löste Technik Problem - heute verursacht sie diese
+damals hatte es genügend qualifizierten Nachwuchs - heute mangelt es 
+
+Was kann die SWS tun oder wie stellen wir uns dieser Thematik.
+Christian Bernhart will in einem geplanten Artikel diesen Thesen nachgehen und als Beispiel die SWS als proaktive Institution ins Spiel bringen. Ich möchte deshalb mit euch eine Sitzung abmachen, welche die Stossrichtung aufzeigen will.
+Ich denke es gibt 3 Betätigungsfelder um unser Angebot zu verbessern:
+
+1. Ausbildungsplätze im Softwarebereich sind nicht genügend vorhanden, Aufträge in Milliardenhöhe fliessen jährlich ins Ausland ab.
+2. Applikationsentwickler sind nicht nur Techniker sondern der Beruf benötigt kreative Leute mit Geduld, Qualitätsdenken und Kommunikationsfähigkeiten- ist doch auch ein idealer Frauenjob, oder? Was tut unser Angebot um ein Potential von ca. 50% zu fördern. Applikationsentwicklung - auf Frauen zugeschnitten
+3. Die Tools und deren Methoden müssen einfacher werden, idealerweise beginnt man mit der Prozeduralen Programmierung und steigt dann in die Objektorientierung ein (siehe maXbox) - Niklaus Wirth hat immer recht;)
+siehe Beitrag zur Simplifikation:
+
+http://max.kleiner.com/download/simplifikation.pdf
+ 
+
+ http://www.tunbasel.ch/
+ http://www.tecmania.ch/
+
+var
+  Bitmap: TBitmap;
+begin
+  Bitmap := TBitmap.Create;
+  try
+    Bitmap.LoadFromFile('MyBitmap.bmppng');
+    Form1.Canvas.Brush.Bitmap := Bitmap;
+    Form1.Canvas.FillRect(Rect(0,0,100,100));
+  finally
+    Form1.Canvas.Brush.Bitmap := nil;
+    Bitmap.Free;
+  end;
+
+end; 
+ 
+        
+TCanvas provides an abstract drawing space for objects that must render their own images.
+
+Unit
+Graphics
+
+Description
+Use TCanvas as a drawing surface for objects that draw an image of themselves. Standard window controls such as edit controls or list boxes do not require a canvas, as they are drawn by the system.
+
+TCanvas prov. prop., events and methods that assist in creating an image by
+
+Specifying the type of brush, pen and font to use.
+	Drawing and filling a variety of shapes and lines.
+	Writing text.
+	Rendering graphic images.
+	Enabling a response to changes in the current image.
+
+TCanvas has two descendants, TControlCanvas and TMetafileCanvas, which assist in drawing images of controls and in creating metafile images for objects.        
+        
+        
+        
+          

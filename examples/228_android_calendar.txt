@@ -1,0 +1,308 @@
+//Example of the TDateTimePicker componente_in draft
+
+//Get the numbers you count and see, locs=58 
+
+program UMLRunner_TDateTimePicker_fromDarvik_API;
+
+const LEFTBASE = 20;
+      TOPBASE = 25; 
+      
+
+var 
+  mymemo: TMemo;
+  mycomb: TComboBox;
+  mtree: TTreeView;
+  myrich: TRichEdit;
+  mycal2: TDateTimePicker;
+  DirectoryListBox1: TDirectoryListBox;
+  DriveComboBox1: TDriveComboBox;
+  mpanel: TPanel;
+  inFrm: TForm;  
+  mbtn3: TBitBtn;
+  Lstbox: TListbox;
+  stat: TStatusbar;
+  STATchoice: boolean;
+  filepath: string;
+  mf: float;
+  
+  
+  
+procedure BtnplayClick(self: TObject);
+begin
+ mymemo.lines.savetofile(ExePath+'\examples\mymemomemoire_tester.txt');
+ showmessage('event test fire -etf');
+ //mymemo.ondblclick:= @btnplayclick;
+end; 
+
+procedure GeneralClick(Sender: TObject);
+ begin
+   writeln('you clicked '+objectToStr(sender));
+   
+  if sender is Tpanel then begin
+   writeln('you clicked '+inttostr(TPanel(sender).tag));
+   writeln('you clicked '+TPanel(sender).name);
+   end;
+ end;
+
+procedure changeDrive(Sender: TObject);
+ begin
+  with DriveComboBox1 do begin
+    DirList:= DirectoryListBox1;
+    end;
+ end;
+
+
+procedure DirectoryListBox1DblClick(Sender: TObject);
+var i: integer;
+    dirlist: TStringList;
+begin
+  lstBox.Items.Clear;
+  lstbox.Clear;
+  dirlist:= TStringList.Create;
+  dirlist.Clear;
+  filepath:= DirectoryListBox1.Directory;
+  //DirectoryListBox1.update;
+  GetDirList(filepath+'\*.*',dirlist,true)
+  //application.processmessages;
+  for i:= 0 to dirlist.count - 1 do
+      lstBox.items.add(ExtractFileName(dirlist[i]));
+   lstBox.update;
+   stat.SimpleText:= intToStr(dirlist.count)+ ' files found';
+   dirlist.Free;    
+end;
+
+
+Procedure SetForm;
+var
+  mbtn, mbtn2: TBitBtn;
+  mi, mi1, mi2, mi3: TMenuItem;
+  mt: TMainMenu;
+  mlbl, mlbl1: TLabel; 
+  i: integer;
+  dirlist: TStringlist;
+begin
+  STATChoice:= false;
+  inFrm:= TForm.Create(self);
+  mLbl:= TLabel.create(inFrm);
+  mLbl1:= TLabel.create(inFrm);
+  mPanel:= TPanel.Create(inFrm);
+  stat:= TStatusbar.Create(inFrm);
+  Lstbox:= TListbox.create(inFrm);
+  mymemo:= TMemo.create(inFrm);
+
+  with inFrm do begin
+     caption:= '********AndriodMonster3************';  
+     height:= 610;
+     width:= 980;
+     //color:= clred;
+     Position:= poScreenCenter;
+     //onClose:= @CloseClick;
+     Show;
+   end;
+   with mPanel do begin
+     caption:= '*****maXboxTV*****';  
+     parent:= inFrm;  
+     SetBounds(LEFTBASE+10,TOPBASE+40,560,405)
+     color:= clsilver;
+     font.color:= clyellow;
+     font.size:= 30;
+     ondblclick:= @generalClick;
+     Show;
+   end; 
+  
+  with mymemo do begin
+    parent:= inFrm;
+    SetBounds(LEFTBASE+600, TOPBASE+40, 320, 405)
+    font.size:= 20;
+    color:= clYellow;
+    wordwrap:= true;
+    lines.loadfromfile(ExePath+'\examples\mymemomemoire.txt');
+    ondblclick:= @btnplayclick; 
+  end;
+  
+  mBtn:= TBitBtn.Create(inFrm)
+  with mBtn do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 590, TOPBASE+ 460,150, 40);
+    caption:= 'Open Media';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'OPENFOLDER'); 
+    //event handler
+    //onclick:= @GetMediaData;
+  end;
+  mBtn2:= TBitBtn.Create(inFrm)
+  with mBtn2 do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 430, TOPBASE+460,150, 40);
+    caption:= 'Open Video';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'FLOPPY'); 
+    //event handler
+    //onclick:= @GetVideoData;
+  end;
+  mBtn3:= TBitBtn.Create(inFrm)
+  with mBtn3 do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 750, TOPBASE+460,150, 40);
+    caption:= 'Save Memo';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'PREVIEWGLYPH'); 
+    //event handler
+    onclick:= @BtnplayClick;
+  end;
+  
+  with mlbl do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+15,TOPBASE-15,180,20);
+    font.size:= 28;
+    font.color:= clred;
+    //font.style:= [fsunderline]
+    caption:= 'Android Calendar';
+  end;  
+  with mlbl1 do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+460,TOPBASE-1,180,20);
+    font.size:= 20;
+    font.color:= clred;
+    caption:= 'Click on:';
+  end;  
+  mt:= TMainMenu.Create(infrm)
+  mi:= TMenuItem.Create(mt)
+  mi1:= TMenuItem.Create(mt)
+  mi2:= TMenuItem.Create(mt)
+  mi3:= TMenuItem.Create(mi)
+  with mi do begin
+    //parent:= frmMon;
+    Caption:='Play Media';
+    Name:='ITEM';
+    mt.Items.Add(mi);   
+    //OnClick:= @GetMediaData;
+  end;
+  with mi1 do begin
+    //parent:= frmMon;
+    Caption:='Show Video';
+    Name:='ITEM2';
+    mt.Items.Add(mi1) ;
+    //OnClick:= @GetVideoData
+  end;
+  with mi2 do begin
+    //parent:= frmMon;
+    Caption:='Open CD Player';
+    Name:='ITEM3';
+    mt.Items.Add(mi2);
+    //OnClick:= @OPenCD;
+  end;
+  with mi3 do begin
+    //parent:= frmMon;
+    Caption:='Open maXbook';
+    Name:='ITEM4';
+    //mi.Items[0].add(mi3);
+  end;
+  with Stat do begin
+    parent:= inFrm;
+    stat.SimplePanel:= true;
+     ondblclick:= @generalClick;
+     //ondblclick:= 
+  end;
+
+ DriveComboBox1:= TDriveComboBox.Create(self);
+  with DriveComboBox1 do begin
+    parent:= inFrm; 
+    height:= 80;
+    width:= 250;
+    top:= TOPBASE + 460;
+    left:= LEFTBASE+ 10;
+    DirList:= DirectoryListBox1;
+    ondblclick:= @generalClick;
+    onclick:= @changeDrive;
+ 
+    //onclick
+    //Display:= mPanel;   //for video show
+  end;
+  
+   DirectoryListBox1:= TDirectoryListBox.create(self);
+  //mynav.source
+  with DirectoryListBox1 do begin
+    parent:= inFrm; 
+    SetBounds(LEFTBASE+30, TOPBASE+60, 200, 260)
+    OpenCurrent;
+    //ondclick:= 
+    ondblclick:= @directoryListBox1DblClick; 
+    //Display:= mPanel;   //for video show
+  end; 
+   
+ dirlist:= TStringList.Create;
+ with Lstbox do begin
+    parent:= inFrm;
+    //autocomplete:= true;
+    SetBounds(LEFTBASE+255, TOPBASE+125, 305, 310)
+    font.size:= 12; color:= clPurple;
+    //CANVAS.TEXTWIDTH
+    //SCROLLWIDTH:= width * 2;
+    filepath:= DirectoryListBox1.Directory;
+    writeln(filepath)
+    GetDirList(filepath+'\*.*',dirlist,true)
+    stat.SimpleText:= intToStr(dirlist.count)+ ' Files found';
+    for i:= 0 to dirlist.count - 1 do
+      items.add(ExtractFileName(dirlist[i]));
+      onclick:= @btnplayclick;
+    end;
+  dirlist.Free;
+  mycal2:= TDateTimePicker.Create(self)
+  with mycal2 do begin
+  parent:= inFrm;
+    //autocomplete:= true;
+    SetBounds(LEFTBASE+255, TOPBASE+60, 305, 60);
+    //font.size:= 12; color:= clPurple;
+    //SCROLLWIDTH:= width * 2;
+    checked;
+    //time;
+    show;
+    onclick:= @generalClick;
+    //tag
+   //format:= ;
+   //mycal2.Free;
+   end;
+end;
+
+ 
+begin
+  maxForm1.ShellStyle1Click(self); 
+  memo2.font.size:= 16;
+
+  SetForm;
+  
+  mf:= logN(2,300);
+  printf('this is %2.4f ',[mf])
+  Writeln('prec test: '+floattoStr(power(2,mf)))
+  PrintF('this is %2.4f ',[mf])
+  Writeln(floattoStr(logN(2,20)))
+  maxform1.color:= clsilver;
+  writeln(floattostr((combination(70,16))))
+  writeln(sha1(ExePath+'maxbox3.exe'))
+  Writeln(inttoStr(GetComCtlVersion))
+end.
+-------------------------------------------------
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title></title>
+</head>
+<body>
+ 
+</body>
+</html>
+
+Jouef H0 HJ2138 E-Lok BR CC 21003 SNCF rot/silber, digitale Schnittstelle,
+
+SNCF E-Lok CC 21003 rot/silbern, frontseitig mit rotem Rundlogo, filigrane Neukonstruktion mit feinen Dachdetails und Nachbildung der unterschiedlichen Pantos, Ep.4
+
+ 
+
+Die 4 Maschinen der Reihe CC 21.000 wurden ab 1969 für beide französische Stromsysteme gebaut (1500 V Gleichstrom sowie 25 kV Wechselstrom 50 Hz), und hatten zudem ein Schaltgetriebe für wechselnde Höchstgeschwindigkeiten, dass man zwischen 220 km/h für Personenzüge und 100 km/h für schwere Güterzüge umstellen konnte. Loks dieses Typs erlangten Berühmtheit, als sie Messzüge auf der damals neuen TGV-Strecke Paris-Lyon mit 280 km/h befuhren. 1996 wurden sie allesamt in die Gleichstromvariante CC 6.500 umgebaut. Bis zum Jahr 2007 waren die letzten Exemplare noch im regulären Dienst anzutreffen.
+ 
+
+
+

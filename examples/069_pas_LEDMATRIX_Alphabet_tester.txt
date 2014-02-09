@@ -1,0 +1,255 @@
+program LED_Matrix_Soundbox_Editor;
+
+//*********************************************************************
+// logic led wall example with objects & size, loc's=233, example 69ff  
+// first you define a size und pattern (word) and alter the pattern with
+// the function letShowVerify(); 
+// task: write the sentence in sequence: 'the world of code color!'
+//*********************************************************************
+
+const PATTERNPAUSE = 20;
+
+var
+  ppForm: TForm;
+  mylabel: TLabel;
+  pattern1: string;
+  labelList: TStringList;
+  psize: integer;
+  pattar: array[0..26] of shortstring;
+
+
+procedure letShowVerify(vpattern: string);
+var
+  i: integer;
+  o: TLabel;
+begin
+  for i:= 1 to psize do begin
+    o:= TLabel(labelList.objects[i-1]);
+    //o.caption:= inttostr(i);
+    if i <= length(vpattern) then 
+      if vpattern[i] = '1' then o.color:= clblack
+      else o.color:= clyellow;
+  end;
+  application.ProcessMessages;
+end;
+
+
+procedure SetLEDConsole(vpattern: string);
+var i: byte;
+begin
+  //pattern1:= '';
+  for i:= 1 to 4  do
+  //pattern1:= pattern1 + chr(random(2)+48);
+  //test string on memo
+    Writeln(vpattern)
+end;  
+
+
+procedure Label1Click_EditPattern(Sender: TObject);
+var o: TLabel;
+    sx: byte;
+begin
+  //70 in begin sound
+   //showMessage(intToStr(TLabel(sender).tag))
+   sx:= TLabel(sender).tag;
+   o:= TLabel(labelList.objects[sx-1]);
+   //o.caption:= inttostr(i);
+   if o.color = clBlack then o.color:= clyellow
+       else o.color:= clblack;
+end;
+
+procedure Label1DClick_WritePattern(Sender: TObject);
+var i: byte;
+   st: shortstring;
+    o: TLabel;
+begin
+  //70 in begin sound
+  st:= '00000000000000000000000000000000000';
+   for i:= 1 to psize do begin
+     o:= TLabel(labelList.objects[i-1]);
+     //o.caption:= inttostr(i);
+     if o.color = clBlack then st[i]:= '1'
+       else st[i]:= '0';
+   end;
+  SetLEDConsole(st)
+   //writeln(st)
+end;
+
+procedure pauseLED(vpatt: shortstring);
+begin
+  sleep(PATTERNPAUSE);
+  letShowVerify(vpatt);
+end;
+
+procedure InitLED_Patterns;
+begin
+   pattar[0]:= '00000000000000000000000000000000000';  //Empty;
+   pattar[1]:= '00100010100101010001111111000110001';  //A;
+   pattar[2]:= '11100100101001011100100101001011100';  //B;
+   pattar[3]:= '00110010001000010000100000100000110';  //C;
+   pattar[4]:= '11100100101000110001100011001011100';  //D;
+   pattar[5]:= '11110100001000011110100001000011110';  //E;
+   pattar[6]:= '11111100001000011110100001000010000';  //F;
+   pattar[7]:= '00110010011000010111100010100100110';  //G;
+   pattar[8]:= '10001100011000111111100011000110001';  //H;
+   pattar[9]:= '00100001000010000100001000010000100';  //I;
+   pattar[10]:= '00111000100001000010000101001001100'; //J;
+   pattar[11]:= '10001100101010011000101001001010001'; //K;
+   pattar[12]:= '10000100001000010000100001000011111'; //L;
+   pattar[13]:= '11011101011010110101100011000110001'; //M;
+   pattar[14]:= '10001110011010110011100011000110001'; //N;
+   pattar[15]:= '00100010101000110001100010101000100'; //O;
+   pattar[16]:= '11100100101001010010111001000010000'; //P;
+   pattar[17]:= '01110100011000110001100010111000011'; //Q;
+   pattar[18]:= '11100100101001011100101001001010001'; //R
+   pattar[19]:= '01110100001000001100000100001011100'; //S
+   pattar[20]:= '11111001000010000100001000010000100'; //T
+   pattar[21]:= '10001100011000110001100011101101110'; //U
+   pattar[22]:= '10001100011000101010010100010000100'; //V
+end;
+
+
+procedure ShowLED_TestSeq;
+var
+   pt0, pt1, pt11: shortstring;
+   il: integer;
+   tmpstr: shortstring;
+begin
+   pt0:=  '00000000000000000000000000000000000';
+   pt11:= '00100010101001111111011100111111100'; //hex store test 32+3=35
+   tmpstr:= pt11;
+   delete(tmpstr,4,32)
+   writeln('cut test '+tmpstr)
+   writeln(bintohex2(tmpstr)); //00000001
+   writeln(bintohex2(pt11));   //153FB9FC
+   writeln(tmpstr+hextobin2(bintohex2(pt11)));  //test to store pattern as HEX
+   writeln(pt11)
+  
+   for il:= 1 to 22 do begin
+     letShowVerify(pattar[il]);
+     //writeln('pt'+inttostr(il))
+     pauseLED(pt0)
+   end;  
+end;
+
+
+Procedure WriteLED_Set(sentence: string);
+var il,a: byte;
+begin
+   for il:= 1 to length(sentence) do begin
+     a:= Ord(sentence[il])-64;   //ASCII A=65
+     letShowVerify(pattar[a]);
+     pauseLED(pattar[0]);
+     write(sentence[il])  //test to console
+   end; 
+end;    
+ 
+
+procedure loadPForm(vx, vy: smallint);
+begin
+  psize:= vx*vy
+  //constructor
+  ppform:= Tform.create(self);
+  with ppform do begin
+    caption:= 'LEDBOX, click to edit, dblclick to write out pattern';  
+    width:= (vx*psize)+ 10;
+    height:= (vy*psize)+ 30;
+    writeln(inttostr(width))
+    writeln(inttostr(height))
+
+    BorderStyle:= bsDialog;
+    Position:= poScreenCenter;
+    //OnClick:= @Label1Click;
+    show;
+  end  
+end;
+
+
+procedure InitPuzzle(vx: byte);
+var
+  i,x,y: integer;
+begin
+  labelList:= TStringList.Create;
+  x:= 1;
+  y:= 1;
+  for i:= 1 to psize do begin
+    mylabel:= TLabel.Create(ppform);
+    with mylabel do begin
+      Parent:= ppForm;
+      color:= clyellow;
+      transparent:= false;
+      AutoSize:= false;
+      layout:= tlcenter;
+      alignment:= tacenter;
+      font.Size:= (psize div vx) + 12;
+      //font.Style:= [fsbold];
+      font.Color:= clyellow;
+      width:= psize;
+      height:= psize;
+      Left:= (x-1)*(psize + 1);
+      Top:= (y-1)*(psize + 1);
+      //event handler to click!  
+      OnClick:= @Label1Click_EditPattern;
+      OnDblClick:= @Label1DClick_WritePattern;
+      tag:= i; //save the position
+    end;
+    //set next line of labels
+    if (i mod vx = 0) then begin
+      x:= 1; 
+      inc(y);
+    end else
+      inc(x);
+    //add labels to the list
+    labellist.instancesize
+    labelList.addObject(inttostr(i), mylabel);
+  end;
+end;
+
+procedure deSolver;
+var i: integer;
+begin
+  //moveStone(TLabel(labellist.objects[4]));
+  //moveStone(TLabel(labellist.objects[7]));
+  //to demonstrate and destroy the objects on the list
+  for i:= 0 to 8-1 do begin
+    sleep(400)
+    application.processMessages;
+    TLabel(labelList.objects[i]).free
+  end
+end;
+
+//main of LED HEX BOX
+Begin
+//**************************** OOP in maXbox *******************************
+//sizex, sizey as paras()
+  loadPForm(5,7);
+  initPuzzle(5); 
+  InitLED_Patterns;
+  ShowLED_TestSeq;
+  WriteLed_Set('PASCAL')
+  //closeMP3;
+  //playMP3(ExePath+'examples\maxbox.mp3');
+  //200 in begin sound
+  //sleep(1400)
+  //label1click_EditPattern(self)
+  //deSolver()
+  //indygethostname
+  writeln(inttohex(9,8))
+  writeln(inttostr(396887878))
+  
+  writeln(inttostr64(strtoint64('33396887878')))
+  gettickcount;
+  writeln(inttostr64(getclockvalue));
+  //Writeln(GetASCII)
+End.
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |
+        |____/  |___| |____| |_|     |_| |_| |_| 
+        
+        
+Werte Studenten Bitte mir noch bis Ende Jahr die Aufgabenstellung zusenden, wer keine hat, kann eine LED Matrix entwickeln (Muster in der aktuellen Distribution mX3.8: 069_pas_LEDMATRIX_Alphabet.txt): Aufgabenstellung LED Matrix ------------------------------------------ 2 Zielbestimmungen 2.1 Musskriterien Eine LED Wand sei so zu programmieren, dass die Buchstaben A-Z und a-z darstellbar sind (wie ein LCD) und der Satz "Hello World of Code" als Prozedur vorliegt, d.h. aus der Distanz gelesen werden kann. Zusätzlich hört man einen beliebigen Sound zum Satz! Dazu wird ein Prototyp auf der maXbox realisiert. 2.2 Sollkriterien Es sind alle Buchstaben des Alphabets auf der LED Matrix darzustellen. Die LED Matrix ist in der Lage eine Buchstabenfolge (z.B. einen ganzen Satz) leserlich darzustellen. Im speziellen den Satz: „Hello world of Code“. Dazu ist ein beliebiger Sound zu hören. 2.3 Kannkriterien Die Ausgabe erfolgt via Arduino Board, welches über eine Schnittstelle angesteuert wird. 3.1 Anwendungsbereich Der Anwendungsbereich der LED Matrix ist die optische Darstellung in Form von Displays. Der Prototyp weist eine mindest Auflösung von 5*7 Pixel auf. Eine ähnliche Aufagabe ist die Erstellung eines Morsegenerators!
+ Aktuelle Version mX3.8 http://sourceforge.net/projects/maxbox/files/         
+          

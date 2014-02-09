@@ -1,0 +1,714 @@
+program All_LottoCombinations_bit_Power;
+//****************************************************************************
+// To provide a fast algo with large numbers (45bit ore more) can turn into a
+// complicated debate. Here's a solution for compiler or interpreter.
+// ZWEIHOCHFUENFUNDVIERZIG = 35184372088832; by Max & Beat Straehl
+// time consuming is about 45 sec.(minutes maXbox) without optimisation days!!
+// number of lotto spheres are 45 with 6 crosses on it(change), _97, #locs>104
+// #sign:max: APSN21: 12.12.2013 16:29:34 
+
+const NUMBER_OF_SPHERES = 17; //45;     //15
+      NUMBER_OF_BITS_ARRAY_UPPER_END = 255;
+
+var  counter, counterCopy, counterOffset, range: int64;
+     bitCounter, bitCount, bitPosition, combCounter: integer;
+     byteFragmentIndexOfCounter: integer;
+     positionOfLowestBitOutOfSix: integer;
+     numberOfBits: array[0..NUMBER_OF_BITS_ARRAY_UPPER_END] of byte;
+     before, after: TDateTime;        
+     combstr: string;
+     lottoList: TStringList;     
+
+function powerOf2(exponent: integer): int64;
+var shifter: int64;
+    counter: integer;
+begin
+  shifter:= 1;
+  for counter:= 1 to exponent do
+    shifter:= shifter + shifter;
+  result:= shifter;
+end;
+
+procedure presetBitCountLookupTable(highestIndex: integer);
+var arrayIndex: integer;
+    numberOfBitsSet: integer;
+    byteValue: integer;
+begin
+  //preset bit count lookup table
+  for arrayIndex:= 0 to highestIndex do begin 
+     byteValue:= arrayIndex;
+     numberOfBitsSet:= 0;
+     for bitCounter:= 1 to 8 do begin
+        if ((byteValue and 1) = 1) then
+          inc(numberOfBitsSet);
+        byteValue:= byteValue shr 1;
+     end;
+    numberOfBits[arrayIndex]:= numberOfBitsSet;
+  end;
+end;
+
+begin  //main
+  presetBitCountLookupTable(NUMBER_OF_BITS_ARRAY_UPPER_END);
+  range:= powerOf2(NUMBER_OF_SPHERES); 
+  lottoList:= TStringlist.create;
+  before:= Time;
+  combCounter:= 0;  
+  counter:= 0;
+  lottoList.add('All lotto combinations 6 from ' +IntToStr(NUMBER_OF_SPHERES));
+  lottoList.add('**********************************************************');
+  while counter < range do begin  //check cases
+      bitCount:= 0;
+      counterCopy:= counter;
+      for byteFragmentIndexOfCounter:= 0 to 5 do begin
+         bitCount:= bitCount+numberOfBits[counterCopy mod 256];
+         counterCopy:= counterCopy shr 8;
+      end;
+      if (bitCount=6) then begin  
+        counterCopy:= counter;
+        positionOfLowestBitOutOfSix:= -1;
+        inc(combCounter);
+        //write('combination #' + inttostr(combinationCounter) +': ');
+        for bitCounter:=1 to NUMBER_OF_SPHERES do begin
+            if ((counterCopy and 1) = 1) then begin
+               //write(inttoStr(bitCounter) +' ');
+               combstr:=  combstr+ ' '+IntToStr(bitCounter);
+               if (positionOfLowestBitOutOfSix= -1) then
+                 positionOfLowestBitOutOfSix:= bitCounter;
+            end;
+          counterCopy:= counterCopy shr 1;
+        end;
+        //writeln(' ');
+        lottoList.add('# '+IntToStr(combCounter)+': '+ combstr)
+        combstr:= '';  
+        counterOffset:= 1;
+        bitPosition:= 1;
+        while (bitPosition<positionOfLowestBitOutOfSix) do begin
+          counterOffset:= counterOffset + counterOffset;
+          inc(bitPosition);
+        end;
+        counter:= counter + counterOffset;
+      end else
+        counter:= counter + 1;
+  end; //while
+  after:= Time;
+  lottoList.add('Lotto started at: '+ FormatDateTime('hh:nn:ss.zzz',before));
+  lottoList.add('Lotto ended at: '+ FormatDateTime('hh:nn:ss.zzz',after));
+  lottoList.add('Lotto lasted: '+FormatDateTime('hh:nn:ss.zzz',after-before));
+  Writeln('Save lotto file at: ' +TimeToStr(after) + ' '+DateToStr(date));
+  lottoList.SaveToFile(Exepath+'All_lotto_combinations2.txt');
+  lottoList.Free;
+  Writeln('Lotto report started at: '+ FormatDateTime('hh:nn:ss.zzz',before));
+  Writeln('Lotto report ended at: '+ FormatDateTime('hh:nn:ss.zzz',after));
+  Writeln('Lotto report lasted: '+FormatDateTime('hh:nn:ss.zzz',after-before));
+  Writeln('6 of ' +IntToStr(NUMBER_OF_SPHERES)+' are: ' +IntToStr(combCounter));
+end. 
+
+
+//files at:
+www.softwareschule.ch/download/97_pas_lottocombinations_beat_plus.pdf
+for compiler file at:
+www.softwareschule.ch/download/maxbox97_lottoproject_allcombinations_dpr.txt
+
+{
+maXbox 97_pas_lottocombinations_beat_plus Compiled done: 28.04.2010 14:41:56
+--------------------------------------------------------
+Save lotto file at: 15:27:42 28.04.2010
+Lotto report started at: 14:41:56.970
+Lotto report ended at: 15:27:42.867
+Lotto report lasted: 00:45:45.897
+6 of 45 are: 8145060
+ruNMax executed on: 28.04.2010 15:27:55 }
+
+
+You may know this:
+Lotto combination 1-2-3-4-5-6 has the same chance of being drawn as any other
+lottery combination. But the combination 1,2,3,4,5,6 should not be played. It
+represents a weird arrangement of lottery numbers. Why?
+If one hits the jackpot, you should be advised to never play the statistically
+dreadful 1,2,3,4,5,6!
+
+1. If the lotto 6/45 has a total of 8,145,060 comb., and only one is drawn as 
+the winner, the probability is undeniably 1 / 8,145,060.
+
+All shapes have, however, the same probability of appearance. Reality only has
+a different idea! There been thousands of lotto drawings conducted worldwide.
+We should have seen by now a lottery combination of the type 1,2,3,4,5,6. There
+has been none so far or you know anyone?.
+
+2. Furthermore, you can use the code to generate all lotto combinations in
+lexicographic order for any experiment or game. Beware! The output files can be
+extremely large, for 6/45 is about 240 MB!
+
+One interesting point at all is the binominal coefficient. It means that you get
+the same amount of combinations with 6 or 39 tips (crosses) of 45!
+
+Cause the mathematics shows
+3. Combination (binominal coefficient)= nCr = n!/(k! * (n-k)!)
+                                             45! /6! * 39!
+so you can see 6 or 39 are interchangeable...
+
+The probabilities are equal, but the combinations are not equal.
+--------------------------------------------------------------------------- 
+
+
+
+   PrintF('gcd %d * lcm %d = %d ',[gcd(4,6), lcm(4,6), 4*6]);
+   
+   
+[TYPES]
+Type [0]: Pointer
+Type [1]: U32
+Type [2]: Variant
+Type [3]: Variant
+Type [4]: Unknown 14
+Type [5]: Unknown 24
+Type [6]: Extended
+Type [7]: Double
+Type [8]: Single
+Type [9]: S64
+Type [10]: String
+Type [11]: U32
+Type [12]: S32
+Type [13]: S16
+Type [14]: U16
+Type [15]: S8
+Type [16]: String
+Type [17]: String
+Type [18]: String
+Type [19]: String
+Type [20]: Unknown 28
+Type [21]: WideString
+Type [22]: WideChar
+Type [23]: Char
+Type [24]: U8
+Type [25]: U16
+Type [26]: U32
+Type [27]: U8 Export: BOOLEAN
+Type [28]: U8
+Type [29]: Class Export: TAPPLICATION
+Type [30]: Class Export: TSCREEN
+Type [31]: Class Export: TFORM
+Type [32]: Class Export: TSYNMEMO
+Type [33]: Class Export: TMEMO
+Type [34]: Class Export: TMAXFORM1
+Type [35]: Class Export: TDEBUGOUTPUT
+Type [36]: Class Export: THOTLOG
+Type [37]: StaticArray[256] of U8
+Type [38]: Double Export: TDATETIME
+Type [39]: Class Export: TSTRINGLIST
+Type [40]: Class Export: TOBJECT
+[VARS]
+Var [0]: 29 Class TAPPLICATION
+Var [1]: 30 Class TSCREEN
+Var [2]: 31 Class TFORM
+Var [3]: 32 Class TSYNMEMO
+Var [4]: 33 Class TMEMO
+Var [5]: 34 Class TMAXFORM1
+Var [6]: 35 Class TDEBUGOUTPUT
+Var [7]: 36 Class THOTLOG
+Var [8]: 9 S64 
+Var [9]: 9 S64 
+Var [10]: 9 S64 
+Var [11]: 9 S64 
+Var [12]: 12 S32 
+Var [13]: 12 S32 
+Var [14]: 12 S32 
+Var [15]: 12 S32 
+Var [16]: 12 S32 
+Var [17]: 12 S32 
+Var [18]: 37 StaticArray[256] of U8 
+Var [19]: 38 Double TDATETIME
+Var [20]: 38 Double TDATETIME
+Var [21]: 18 String 
+Var [22]: 39 Class TSTRINGLIST
+[PROCS]
+Proc [0] Export: !MAIN -1
+ [0] PUSHTYPE 12(S32) // 1
+ [5] ASSIGN Base[1], [255]
+ [20] CALL 2
+ [25] POP // 0
+ [26] PUSHTYPE 12(S32) // 1
+ [31] ASSIGN Base[1], [17]
+ [46] PUSHVAR GlobalVar[11] // 2
+ [52] CALL 1
+ [57] POP // 1
+ [58] POP // 0
+ [59] PUSHTYPE 11(U32) // 1
+ [64] ASSIGN Base[1], [39]
+ [79] PUSHVAR GlobalVar[22] // 2
+ [85] CALL 4
+ [90] POP // 1
+ [91] POP // 0
+ [92] PUSHVAR GlobalVar[19] // 1
+ [98] CALL 5
+ [103] POP // 0
+ [104] ASSIGN GlobalVar[15], [0]
+ [119] ASSIGN GlobalVar[8], [0]
+ [134] PUSHTYPE 12(S32) // 1
+ [139] PUSHTYPE 18(String) // 2
+ [144] PUSHTYPE 19(String) // 3
+ [149] ASSIGN Base[3], ['All lotto combinations 6 from ']
+ [194] PUSHTYPE 18(String) // 4
+ [199] PUSHTYPE 9(S64) // 5
+ [204] ASSIGN Base[5], [17]
+ [219] PUSHVAR Base[4] // 6
+ [225] CALL 7
+ [230] POP // 5
+ [231] POP // 4
+ [232] CALC Base[3] + Base[4]
+ [244] POP // 3
+ [245] ASSIGN Base[2], Base[3]
+ [256] POP // 2
+ [257] PUSHTYPE 39(Class) // 3
+ [262] ASSIGN Base[3], GlobalVar[22]
+ [273] PUSHVAR Base[1] // 4
+ [279] CALL 6
+ [284] POP // 3
+ [285] POP // 2
+ [286] POP // 1
+ [287] POP // 0
+ [288] PUSHTYPE 12(S32) // 1
+ [293] PUSHTYPE 18(String) // 2
+ [298] ASSIGN Base[2], ['**********************************************************']
+ [371] PUSHTYPE 39(Class) // 3
+ [376] ASSIGN Base[3], GlobalVar[22]
+ [387] PUSHVAR Base[1] // 4
+ [393] CALL 6
+ [398] POP // 3
+ [399] POP // 2
+ [400] POP // 1
+ [401] POP // 0
+ [402] PUSHTYPE 27(U8) // 1
+ [407] COMPARE into Base[1]: GlobalVar[8] < GlobalVar[11]
+ [424] COND_NOT_GOTO currpos + 971 Base[1] [1405]
+ [434] ASSIGN GlobalVar[13], [0]
+ [449] ASSIGN GlobalVar[9], GlobalVar[8]
+ [460] ASSIGN GlobalVar[16], [0]
+ [475] PUSHTYPE 27(U8) // 2
+ [480] COMPARE into Base[2]: GlobalVar[16] <= [5]
+ [501] COND_NOT_GOTO currpos + 182 Base[2] [693]
+ [511] PUSHTYPE 12(S32) // 3
+ [516] ASSIGN Base[3], GlobalVar[13]
+ [527] PUSHTYPE 0(Pointer) // 4
+ [532] SETPOINTER Base[4]: GlobalVar[18]
+ [543] PUSHTYPE 11(U32) // 5
+ [548] PUSHTYPE 12(S32) // 6
+ [553] PUSHTYPE 9(S64) // 7
+ [558] ASSIGN Base[7], GlobalVar[9]
+ [569] CALC Base[7] MOD [256]
+ [585] ASSIGN Base[6], Base[7]
+ [596] POP // 6
+ [597] CALC Base[6] - [0]
+ [613] ASSIGN Base[5], Base[6]
+ [624] POP // 5
+ [625] SETPOINTER Base[4]: Base[4].Base[5]
+ [640] POP // 4
+ [641] CALC Base[3] + Base[4]
+ [653] POP // 3
+ [654] ASSIGN GlobalVar[13], Base[3]
+ [665] POP // 2
+ [666] CALC GlobalVar[9] SHR [8]
+ [682] INC GlobalVar[16]
+ [688] GOTO currpos + 4294967083 [480]
+ [693] POP // 1
+ [694] PUSHTYPE 27(U8) // 2
+ [699] COMPARE into Base[2]: GlobalVar[13] = [6]
+ [720] SETFLAG NOT Base[2]
+ [727] POP // 1
+ [728] FLAGGOTO currpos + 651 [1384]
+ [733] ASSIGN GlobalVar[9], GlobalVar[8]
+ [744] ASSIGN GlobalVar[17], [-1]
+ [759] PUSHTYPE 0(Pointer) // 2
+ [764] SETPOINTER Base[2]: GlobalVar[15]
+ [775] CALL 3
+ [780] POP // 1
+ [781] ASSIGN GlobalVar[12], [1]
+ [796] PUSHTYPE 27(U8) // 2
+ [801] COMPARE into Base[2]: GlobalVar[12] <= [17]
+ [822] COND_NOT_GOTO currpos + 237 Base[2] [1069]
+ [832] PUSHTYPE 27(U8) // 3
+ [837] PUSHTYPE 9(S64) // 4
+ [842] ASSIGN Base[4], GlobalVar[9]
+ [853] CALC Base[4] AND [1]
+ [869] COMPARE into Base[3]: Base[4] = [1]
+ [890] POP // 3
+ [891] SETFLAG NOT Base[3]
+ [898] POP // 2
+ [899] FLAGGOTO currpos + 138 [1042]
+ [904] PUSHTYPE 19(String) // 3
+ [909] ASSIGN Base[3], GlobalVar[21]
+ [920] CALC Base[3] + [#32]
+ [933] PUSHTYPE 18(String) // 4
+ [938] PUSHTYPE 9(S64) // 5
+ [943] ASSIGN Base[5], GlobalVar[12]
+ [954] PUSHVAR Base[4] // 6
+ [960] CALL 7
+ [965] POP // 5
+ [966] POP // 4
+ [967] CALC Base[3] + Base[4]
+ [979] POP // 3
+ [980] ASSIGN GlobalVar[21], Base[3]
+ [991] POP // 2
+ [992] PUSHTYPE 27(U8) // 3
+ [997] COMPARE into Base[3]: GlobalVar[17] = [-1]
+ [1018] SETFLAG NOT Base[3]
+ [1025] POP // 2
+ [1026] FLAGGOTO currpos + 11 [1042]
+ [1031] ASSIGN GlobalVar[17], GlobalVar[12]
+ [1042] CALC GlobalVar[9] SHR [1]
+ [1058] INC GlobalVar[12]
+ [1064] GOTO currpos + 4294967028 [801]
+ [1069] POP // 1
+ [1070] PUSHTYPE 12(S32) // 2
+ [1075] PUSHTYPE 18(String) // 3
+ [1080] PUSHTYPE 19(String) // 4
+ [1085] ASSIGN Base[4], ['# ']
+ [1102] PUSHTYPE 18(String) // 5
+ [1107] PUSHTYPE 9(S64) // 6
+ [1112] ASSIGN Base[6], GlobalVar[15]
+ [1123] PUSHVAR Base[5] // 7
+ [1129] CALL 7
+ [1134] POP // 6
+ [1135] POP // 5
+ [1136] CALC Base[4] + Base[5]
+ [1148] POP // 4
+ [1149] CALC Base[4] + [': ']
+ [1167] CALC Base[4] + GlobalVar[21]
+ [1179] ASSIGN Base[3], Base[4]
+ [1190] POP // 3
+ [1191] PUSHTYPE 39(Class) // 4
+ [1196] ASSIGN Base[4], GlobalVar[22]
+ [1207] PUSHVAR Base[2] // 5
+ [1213] CALL 6
+ [1218] POP // 4
+ [1219] POP // 3
+ [1220] POP // 2
+ [1221] POP // 1
+ [1222] ASSIGN GlobalVar[21], ['']
+ [1237] ASSIGN GlobalVar[10], [1]
+ [1252] ASSIGN GlobalVar[14], [1]
+ [1267] PUSHTYPE 27(U8) // 2
+ [1272] COMPARE into Base[2]: GlobalVar[14] < GlobalVar[17]
+ [1289] COND_NOT_GOTO currpos + 67 Base[2] [1366]
+ [1299] PUSHTYPE 9(S64) // 3
+ [1304] ASSIGN Base[3], GlobalVar[10]
+ [1315] CALC Base[3] + GlobalVar[10]
+ [1327] ASSIGN GlobalVar[10], Base[3]
+ [1338] POP // 2
+ [1339] PUSHTYPE 0(Pointer) // 3
+ [1344] SETPOINTER Base[3]: GlobalVar[14]
+ [1355] CALL 3
+ [1360] POP // 2
+ [1361] GOTO currpos + 4294967202 [1272]
+ [1366] POP // 1
+ [1367] CALC GlobalVar[8] + GlobalVar[10]
+ [1379] GOTO currpos + 16 [1400]
+ [1384] CALC GlobalVar[8] + [1]
+ [1400] GOTO currpos + 4294966298 [407]
+ [1405] POP // 0
+ [1406] PUSHVAR GlobalVar[20] // 1
+ [1412] CALL 5
+ [1417] POP // 0
+ [1418] PUSHTYPE 12(S32) // 1
+ [1423] PUSHTYPE 18(String) // 2
+ [1428] PUSHTYPE 19(String) // 3
+ [1433] ASSIGN Base[3], ['Lotto started at: ']
+ [1466] PUSHTYPE 18(String) // 4
+ [1471] PUSHTYPE 38(Double) // 5
+ [1476] ASSIGN Base[5], GlobalVar[19]
+ [1487] PUSHTYPE 18(String) // 6
+ [1492] ASSIGN Base[6], ['hh:nn:ss.zzz']
+ [1519] PUSHVAR Base[4] // 7
+ [1525] CALL 8
+ [1530] POP // 6
+ [1531] POP // 5
+ [1532] POP // 4
+ [1533] CALC Base[3] + Base[4]
+ [1545] POP // 3
+ [1546] ASSIGN Base[2], Base[3]
+ [1557] POP // 2
+ [1558] PUSHTYPE 39(Class) // 3
+ [1563] ASSIGN Base[3], GlobalVar[22]
+ [1574] PUSHVAR Base[1] // 4
+ [1580] CALL 6
+ [1585] POP // 3
+ [1586] POP // 2
+ [1587] POP // 1
+ [1588] POP // 0
+ [1589] PUSHTYPE 12(S32) // 1
+ [1594] PUSHTYPE 18(String) // 2
+ [1599] PUSHTYPE 19(String) // 3
+ [1604] ASSIGN Base[3], ['Lotto ended at: ']
+ [1635] PUSHTYPE 18(String) // 4
+ [1640] PUSHTYPE 38(Double) // 5
+ [1645] ASSIGN Base[5], GlobalVar[20]
+ [1656] PUSHTYPE 18(String) // 6
+ [1661] ASSIGN Base[6], ['hh:nn:ss.zzz']
+ [1688] PUSHVAR Base[4] // 7
+ [1694] CALL 8
+ [1699] POP // 6
+ [1700] POP // 5
+ [1701] POP // 4
+ [1702] CALC Base[3] + Base[4]
+ [1714] POP // 3
+ [1715] ASSIGN Base[2], Base[3]
+ [1726] POP // 2
+ [1727] PUSHTYPE 39(Class) // 3
+ [1732] ASSIGN Base[3], GlobalVar[22]
+ [1743] PUSHVAR Base[1] // 4
+ [1749] CALL 6
+ [1754] POP // 3
+ [1755] POP // 2
+ [1756] POP // 1
+ [1757] POP // 0
+ [1758] PUSHTYPE 12(S32) // 1
+ [1763] PUSHTYPE 18(String) // 2
+ [1768] PUSHTYPE 19(String) // 3
+ [1773] ASSIGN Base[3], ['Lotto lasted: ']
+ [1802] PUSHTYPE 18(String) // 4
+ [1807] PUSHTYPE 38(Double) // 5
+ [1812] ASSIGN Base[5], GlobalVar[20]
+ [1823] CALC Base[5] - GlobalVar[19]
+ [1835] PUSHTYPE 18(String) // 6
+ [1840] ASSIGN Base[6], ['hh:nn:ss.zzz']
+ [1867] PUSHVAR Base[4] // 7
+ [1873] CALL 8
+ [1878] POP // 6
+ [1879] POP // 5
+ [1880] POP // 4
+ [1881] CALC Base[3] + Base[4]
+ [1893] POP // 3
+ [1894] ASSIGN Base[2], Base[3]
+ [1905] POP // 2
+ [1906] PUSHTYPE 39(Class) // 3
+ [1911] ASSIGN Base[3], GlobalVar[22]
+ [1922] PUSHVAR Base[1] // 4
+ [1928] CALL 6
+ [1933] POP // 3
+ [1934] POP // 2
+ [1935] POP // 1
+ [1936] POP // 0
+ [1937] PUSHTYPE 18(String) // 1
+ [1942] PUSHTYPE 19(String) // 2
+ [1947] ASSIGN Base[2], ['Save lotto file at: ']
+ [1982] PUSHTYPE 18(String) // 3
+ [1987] PUSHTYPE 38(Double) // 4
+ [1992] ASSIGN Base[4], GlobalVar[20]
+ [2003] PUSHVAR Base[3] // 5
+ [2009] CALL 10
+ [2014] POP // 4
+ [2015] POP // 3
+ [2016] CALC Base[2] + Base[3]
+ [2028] POP // 2
+ [2029] CALC Base[2] + [#32]
+ [2042] PUSHTYPE 18(String) // 3
+ [2047] PUSHTYPE 38(Double) // 4
+ [2052] PUSHVAR Base[4] // 5
+ [2058] CALL 12
+ [2063] POP // 4
+ [2064] PUSHVAR Base[3] // 5
+ [2070] CALL 11
+ [2075] POP // 4
+ [2076] POP // 3
+ [2077] CALC Base[2] + Base[3]
+ [2089] POP // 2
+ [2090] ASSIGN Base[1], Base[2]
+ [2101] POP // 1
+ [2102] CALL 9
+ [2107] POP // 0
+ [2108] PUSHTYPE 18(String) // 1
+ [2113] PUSHTYPE 19(String) // 2
+ [2118] PUSHTYPE 18(String) // 3
+ [2123] PUSHVAR Base[3] // 4
+ [2129] CALL 14
+ [2134] POP // 3
+ [2135] ASSIGN Base[2], Base[3]
+ [2146] POP // 2
+ [2147] CALC Base[2] + ['All_lotto_combinations2.txt']
+ [2190] ASSIGN Base[1], Base[2]
+ [2201] POP // 1
+ [2202] PUSHTYPE 39(Class) // 2
+ [2207] ASSIGN Base[2], GlobalVar[22]
+ [2218] CALL 13
+ [2223] POP // 1
+ [2224] POP // 0
+ [2225] PUSHTYPE 39(Class) // 1
+ [2230] ASSIGN Base[1], GlobalVar[22]
+ [2241] CALL 15
+ [2246] POP // 0
+ [2247] PUSHTYPE 18(String) // 1
+ [2252] PUSHTYPE 19(String) // 2
+ [2257] ASSIGN Base[2], ['Lotto report started at: ']
+ [2297] PUSHTYPE 18(String) // 3
+ [2302] PUSHTYPE 38(Double) // 4
+ [2307] ASSIGN Base[4], GlobalVar[19]
+ [2318] PUSHTYPE 18(String) // 5
+ [2323] ASSIGN Base[5], ['hh:nn:ss.zzz']
+ [2350] PUSHVAR Base[3] // 6
+ [2356] CALL 8
+ [2361] POP // 5
+ [2362] POP // 4
+ [2363] POP // 3
+ [2364] CALC Base[2] + Base[3]
+ [2376] POP // 2
+ [2377] ASSIGN Base[1], Base[2]
+ [2388] POP // 1
+ [2389] CALL 9
+ [2394] POP // 0
+ [2395] PUSHTYPE 18(String) // 1
+ [2400] PUSHTYPE 19(String) // 2
+ [2405] ASSIGN Base[2], ['Lotto report ended at: ']
+ [2443] PUSHTYPE 18(String) // 3
+ [2448] PUSHTYPE 38(Double) // 4
+ [2453] ASSIGN Base[4], GlobalVar[20]
+ [2464] PUSHTYPE 18(String) // 5
+ [2469] ASSIGN Base[5], ['hh:nn:ss.zzz']
+ [2496] PUSHVAR Base[3] // 6
+ [2502] CALL 8
+ [2507] POP // 5
+ [2508] POP // 4
+ [2509] POP // 3
+ [2510] CALC Base[2] + Base[3]
+ [2522] POP // 2
+ [2523] ASSIGN Base[1], Base[2]
+ [2534] POP // 1
+ [2535] CALL 9
+ [2540] POP // 0
+ [2541] PUSHTYPE 18(String) // 1
+ [2546] PUSHTYPE 19(String) // 2
+ [2551] ASSIGN Base[2], ['Lotto report lasted: ']
+ [2587] PUSHTYPE 18(String) // 3
+ [2592] PUSHTYPE 38(Double) // 4
+ [2597] ASSIGN Base[4], GlobalVar[20]
+ [2608] CALC Base[4] - GlobalVar[19]
+ [2620] PUSHTYPE 18(String) // 5
+ [2625] ASSIGN Base[5], ['hh:nn:ss.zzz']
+ [2652] PUSHVAR Base[3] // 6
+ [2658] CALL 8
+ [2663] POP // 5
+ [2664] POP // 4
+ [2665] POP // 3
+ [2666] CALC Base[2] + Base[3]
+ [2678] POP // 2
+ [2679] ASSIGN Base[1], Base[2]
+ [2690] POP // 1
+ [2691] CALL 9
+ [2696] POP // 0
+ [2697] PUSHTYPE 18(String) // 1
+ [2702] PUSHTYPE 19(String) // 2
+ [2707] ASSIGN Base[2], ['6 of ']
+ [2727] PUSHTYPE 18(String) // 3
+ [2732] PUSHTYPE 9(S64) // 4
+ [2737] ASSIGN Base[4], [17]
+ [2752] PUSHVAR Base[3] // 5
+ [2758] CALL 7
+ [2763] POP // 4
+ [2764] POP // 3
+ [2765] CALC Base[2] + Base[3]
+ [2777] POP // 2
+ [2778] CALC Base[2] + [' are: ']
+ [2800] PUSHTYPE 18(String) // 3
+ [2805] PUSHTYPE 9(S64) // 4
+ [2810] ASSIGN Base[4], GlobalVar[15]
+ [2821] PUSHVAR Base[3] // 5
+ [2827] CALL 7
+ [2832] POP // 4
+ [2833] POP // 3
+ [2834] CALC Base[2] + Base[3]
+ [2846] POP // 2
+ [2847] ASSIGN Base[1], Base[2]
+ [2858] POP // 1
+ [2859] CALL 9
+ [2864] POP // 0
+ [2865] RET
+Proc [1] Export: POWEROF2 9 @12
+ [0] PUSHTYPE 9(S64) // 1
+ [5] PUSHTYPE 12(S32) // 2
+ [10] ASSIGN Base[1], [1]
+ [25] ASSIGN Base[2], [1]
+ [40] PUSHTYPE 27(U8) // 3
+ [45] COMPARE into Base[3]: Base[2] <= Base[-2]
+ [62] COND_NOT_GOTO currpos + 51 Base[3] [123]
+ [72] PUSHTYPE 9(S64) // 4
+ [77] ASSIGN Base[4], Base[1]
+ [88] CALC Base[4] + Base[1]
+ [100] ASSIGN Base[1], Base[4]
+ [111] POP // 3
+ [112] INC Base[2]
+ [118] GOTO currpos + 4294967218 [45]
+ [123] POP // 2
+ [124] ASSIGN Base[-1], Base[1]
+ [135] RET
+Proc [2] Export: PRESETBITCOUNTLOOKUPTABLE -1 @12
+ [0] PUSHTYPE 12(S32) // 1
+ [5] PUSHTYPE 12(S32) // 2
+ [10] PUSHTYPE 12(S32) // 3
+ [15] ASSIGN Base[1], [0]
+ [30] PUSHTYPE 27(U8) // 4
+ [35] COMPARE into Base[4]: Base[1] <= Base[-1]
+ [52] COND_NOT_GOTO currpos + 303 Base[4] [365]
+ [62] ASSIGN Base[3], Base[1]
+ [73] ASSIGN Base[2], [0]
+ [88] ASSIGN GlobalVar[12], [1]
+ [103] PUSHTYPE 27(U8) // 5
+ [108] COMPARE into Base[5]: GlobalVar[12] <= [8]
+ [129] COND_NOT_GOTO currpos + 121 Base[5] [260]
+ [139] PUSHTYPE 27(U8) // 6
+ [144] PUSHTYPE 12(S32) // 7
+ [149] ASSIGN Base[7], Base[3]
+ [160] CALC Base[7] AND [1]
+ [176] COMPARE into Base[6]: Base[7] = [1]
+ [197] POP // 6
+ [198] SETFLAG NOT Base[6]
+ [205] POP // 5
+ [206] FLAGGOTO currpos + 22 [233]
+ [211] PUSHTYPE 0(Pointer) // 6
+ [216] SETPOINTER Base[6]: Base[2]
+ [227] CALL 3
+ [232] POP // 5
+ [233] CALC Base[3] SHR [1]
+ [249] INC GlobalVar[12]
+ [255] GOTO currpos + 4294967144 [108]
+ [260] POP // 4
+ [261] PUSHTYPE 0(Pointer) // 5
+ [266] SETPOINTER Base[5]: GlobalVar[18]
+ [277] PUSHTYPE 11(U32) // 6
+ [282] PUSHTYPE 12(S32) // 7
+ [287] ASSIGN Base[7], Base[1]
+ [298] CALC Base[7] - [0]
+ [314] ASSIGN Base[6], Base[7]
+ [325] POP // 6
+ [326] SETPOINTER Base[5]: Base[5].Base[6]
+ [341] POP // 5
+ [342] ASSIGN Base[5], Base[2]
+ [353] POP // 4
+ [354] INC Base[1]
+ [360] GOTO currpos + 4294966966 [35]
+ [365] POP // 3
+ [366] RET
+Proc [3]: External Decl: \00 INC
+Proc [4]: External Decl: class:TOBJECT|CREATE|\00\01 
+Proc [5]: External Decl: \01 TIME
+Proc [6]: External Decl: class:TSTRINGLIST|ADD|\00\01\00 
+Proc [7]: External Decl: \01\00 INTTOSTR
+Proc [8]: External Decl: \01\00\00 FORMATDATETIME
+Proc [9]: External Decl: \00\00 WRITELN
+Proc [10]: External Decl: \01\00 TIMETOSTR
+Proc [11]: External Decl: \01\00 DATETOSTR
+Proc [12]: External Decl: \01 DATE
+Proc [13]: External Decl: class:TSTRINGS|SAVETOFILE|\00\00\00 
+Proc [14]: External Decl: \01 EXEPATH
+Proc [15]: External Decl: class:TSTRINGLIST|FREE|\00\00 
+Proc [16] Export: !MASTERPROC -1
+ [0] CALL 0
+ [5] RET
+Decompiled Code maXbox: 097_pas_lottocombinations_beat_plus2.txt
+   
+
+on sony ref:
+Save lotto file at: 08:21:25 18.10.2013
+Lotto report started at: 08:21:20.046
+Lotto report ended at: 08:21:25.421
+Lotto report lasted: 00:00:05.375
+6 of 17 are: 12376
+ mX3 executed: 18.10.2013 08:21:25  Runtime: 0:0:6.391  Memoryload: 46% use

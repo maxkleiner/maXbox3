@@ -1,0 +1,187 @@
+{****************************************************************
+ * Project  : DB Demo - DataBaseSeries maXbase
+ * App Name : 194_SQL_NewDatabase.txt, loc's = 100
+ * Purpose  : Demonstrates 2 ways Queries in Datasets
+ * History  : TSession, TDatabase, TQuery, TTable, TStringlist
+ ****************************************************************}
+program DataBase_Create;
+
+// this path is set to your environment, e.g.: C:/temp.. or
+
+const SQLQuery = 'SELECT * FROM testmx32';    
+      cDATABASE= 'D:\kleiner2005\TestApp\maxbox2\maxbox2\source_2007\maxbox29\mx31mat';
+
+
+function GetQuery(SQLCommand: string; aQuery: TQuery): TFields;
+begin
+  aQuery.DatabaseName:= cDATABASE;//AddrSecond.dbf';
+  aQuery.SQL.Text:= SQLCommand;
+  aQuery.Open;
+  aQuery.Active:= true;
+  result:= aQuery.Fields;
+end; 
+
+
+procedure BDEDataBaseConnect;
+ var aParams, aTblNames: TStringList;
+      aSession: TSession;
+      dbMain: TDatabase;
+      BDEAlias: string;
+      i: integer;
+begin 
+  //create alias params list 
+  AParams:= TStringList.Create;  
+  aTblNames:= TStringList.Create; 
+  BDEAlias:= 'DBDEMOS'; 
+  //create a session to get alias parameters  
+  ASession:= TSession.Create(NIL);  
+  ASession.SessionName:= 'MainSession3';  
+  dbMain:= TDatabase.Create(NIL);  
+  try  
+    ASession.GetAliasParams(BDEAlias, AParams);
+    for i:= 0 to aparams.count -1 do 
+      writeln(aParams[i]);
+      //connect to database 
+    with dbMain do begin  
+      Params.Assign(AParams);  
+      dbMain:= ASession.OpenDatabase(BDEAlias);
+      Writeln('Database is: '+dbMain.DataBaseName)
+      KeepConnection:= True;
+      GetTableNames(aTblNames, false)
+    end;
+  finally  
+    DBMain.Free;
+    ASession.Free;  
+    AParams.Free;
+    aTblNames.Free;
+  end;  
+end;
+  
+
+procedure MakeDataBase;
+begin
+  with TTable.Create(NIL) do begin
+    DatabaseName  := CDATABASE;  (* Alias *)
+    TableName     := 'testmx32.dbf';
+    TableType     := ttDBase;
+    with FieldDefs do begin
+      Add('F_NAME', ftString,20,false);
+      Add('L_NAME', ftString,30,false);
+      Add('E_MAIL', ftString,40,false);
+    end;
+    CreateTable;
+    { create a calculated index }
+    with IndexDefs do begin
+      Clear;
+      { don't forget ixExpression in calculated indexes! }
+      AddIndex('idxname','Upper(L_NAME)+Upper(F_NAME)',ixExpression,'descript');
+    end;
+   Free;
+  end;
+end;
+
+{What you have to do is declare a TTable variable, create an instance, then with the TTable's FieldDefs property, add field definitions. Finally, you'll make a call to CreateTable, and your table will be created. Here's some example code:
+ { "Add" is the operative function here.
+  Add(const Name: string; DataType: TFieldType; Size: Word; Required: Boolean);
+}
+
+procedure CreateATable(DBName, TblName: String); //Alias & Table Name to Create
+var
+  tbl: TTable;
+begin
+  tbl:= TTable.Create(Self);
+  with tbl do begin
+    //Active := False;
+    DatabaseName:= DBName;
+    TableName:= TblName;
+    TableType:= ttDBase;     //or ttParadox;
+    with FieldDefs do begin
+      //Clear;
+      Add('LastName', ftString, 30, False);
+      Add('FirstName', ftString, 30, False);
+      Add('Address1', ftString, 40, False);
+      Add('City', ftString, 30, False);
+      Add('ST', ftString, 2, False);
+      Add('Zip', ftString, 10, False);
+    end;
+    {Add a Primary Key to the table}
+    with IndexDefs do begin
+      Clear;
+      AddIndex('idxname2','Upper(LastName)+Upper(FirstName)',ixExpression,'descript');
+      //Add('Field1Index', 'LastName;FirstName', ixPrimary+ixUnique);
+    end;
+    CreateTable; {Make the table}
+    Free;
+  end;
+end;
+
+var mq: TQuery;
+
+begin
+  //Let_OpenDB Test
+  BDEDataBaseConnect;
+  MakeDataBase;
+  CreateATable(cDATABASE, 'AddrSecond.dbf');
+  Writeln('Database created at: '+cDATABASE)
+  //Test new database
+  mq:= TQuery.Create(self);
+   GetQuery(SQLQuery, mq)
+   Writeln('query back '+mq.fieldbyname('L_NAME').asString)
+  mq.Free;
+  maxForm1.ShellStyle1Click(self)
+end.
+
+ 
+//------------------------------------------------------  
+TABLE 16.1. PRIMARY TDataSet PROPERTIES.
+
+Property 	Description
+Active 	Opens the dataset when set to True and closes it when set to False.
+AutoCalcFields 	Determines when calculated fields are calculated.
+Bof Returns True if the cursor is on the first record in the dataset and False.
+CachedUpdates 	When True, updates are held in a cache on the client machine until an entire transaction is complete. When False, all changes to the database are made on a record-by-record basis.
+CanModify 	Determines whether the user can edit the data in the dataset.
+DataSource 	The DataSource component associated with this dataset.
+DatabaseName 	The name of the database that is currently being used.
+Eof Returns True if the cursor is at the end of the file and False if it isn't.
+FieldCount 	The number of fields in the dataset. Because a dataset might be dynamic (the results of a query, for example), the number of fields can vary from one dataset request to the next.
+Fields 	An array of TFields objects that contains information about the fields in the dataset.
+FieldValues 	Returns the value of the specified field for the current record. The value is represented as a Variant.
+Filter 	An expression that determines which records a dataset contains.
+Filtered When True, the dataset is filtered based on either the Filter property or the OnFilterRecord event. When False, the entire dataset is returned.
+FilterOptions 	Determines how filters are applied.
+Found 	Indicates whether a find operation is successful.
+Handle 	A BDE cursor handle to the dataset. This is used only when making direct calls to the BDE.
+Modified Indicates whether the current record has been modified.
+RecNo 	The current record number in the dataset.
+RecordCount 	Returns the number of records in the dataset.
+State Returns the current state of the dataset (dsEdit, dsBrowse, dsInsert, and so on).
+UpdateObject 	Specifies the TUpdateObject component to use for cached updates.
+UpdatesPending 	When True, the cached update buffer contains edits not yet applied to the dataset.
+
+
+TABLE 16.2. PRIMARY TDataSet METHODS.
+
+Method 	Description
+Append 	Creates an empty record and adds it to the end of the dataset.
+AppendRecord 	Appends a record to the end of the dataset with the given field data and posts the edit.
+ApplyUpdates 	Instructs the database to apply any pending cached updates. Updates are not actually written until the CommitUpdates method is called.
+Cancel 	Cancels any edits to the current record if the edits have not yet been posted.
+CancelUpdates 	Cancels any pending cached updates.
+ClearFields 	Clears the contents of all fields in the current record.
+CommitUpdates 	Instructs database to apply updates and clear the cached updates buffer.
+Close 	Closes the dataset.
+Delete 	Deletes the current record.
+DisableControls Disables input for all data controls associated with the dataset.
+Edit 	Enables editing of the current record.
+EnableControls 	Enables input for all data controls associated with the dataset.
+FetchAll 	Gets all records from the cursor to the end of the dataset and stores them locally.
+FieldByName 	Returns the TField pointer for a field name.
+
+FindFirst
+
+	
+
+
+
+

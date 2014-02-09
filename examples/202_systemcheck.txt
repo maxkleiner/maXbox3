@@ -1,0 +1,127 @@
+{****************************************************************
+ *
+ * Project  : System Information Series
+ * Unit Name: 202_systemcheck, loc's = 125
+ * Purpose  : Checks your System with Info functions of external shell program
+ * History  : system check for mX3  - mX3ß
+ ****************************************************************}
+
+program System_Information_Check;
+
+function  MessageBeep(para: integer): byte;
+     external 'MessageBeep@user32.dll stdcall'; //DLL Functiontype 
+     
+const     
+   REGPATH3= '\Software\Microsoft\Internet Explorer\TypedURLs';  
+   REGROOT3= HKEY_CURRENT_USER;
+     
+var
+  mytimestamp: TDateTime;
+  myPlist: TStringList;
+  osType: TIdWin32Type;
+  int3: int64;
+  i: integer;
+  
+Function RegRead(keyRoot: Longint; keyPath, myField: String): string;
+begin
+  result:= RegistryRead(keyroot, keyPath, myField)
+end;  
+
+procedure getDriveTypesF;
+var
+  Drive: byte;
+  DriveLetter: String;
+begin   
+  for Drive:= ord('A') to ord('Z') do begin
+    DriveLetter:= chr(Drive) + ':\';
+    case GetDriveType(PChar(chr(Drive) + ':\')) of
+      0: //DRIVE_UNKNOWN
+      Memo2.Lines.Add(DriveLetter + ' Unknown Drive');
+      {1: //DRIVE_NO_ROOT_DIR
+      Memo2.Lines.Add(DriveLetter + ' No Root Dir or mount Point');}
+      2: //DRIVE_REMOVABLE:
+      Memo2.Lines.Add(DriveLetter + ' Removable or Floppy Drive');
+      3: //DRIVE_FIXED:
+      Memo2.Lines.Add(DriveLetter + ' Fixed Drive');
+      4: //DRIVE_REMOTE:
+      Memo2.Lines.Add(DriveLetter + ' Network Drive');
+      5: //DRIVE_CDROM:
+      Memo2.Lines.Add(DriveLetter + ' CD-ROM Drive');
+      6: //DRIVE_RAMDISK:
+      Memo2.Lines.Add(DriveLetter + ' RAM Disk');
+    end;
+  end;
+end;
+
+procedure Signal_Sounds;
+var sound: integer;
+begin
+for sound:= 1 to 100 do
+  if sound mod 10 = 0 then begin
+    MessageBeep(sound)
+    Sleep(1500)
+  end  
+end;
+
+Procedure PerformanceCounter;
+var time: longint;
+begin
+  time:= GetTickCount;
+  //Put the commands to measure...
+  CaptureScreenPNG(ExePath+'screenshotperftest.png');
+  SearchAndOpenDoc(ExePath+'screenshotperftest.png');
+  Sleep(500)
+  //maxform1.StatusBar1.SimpleText:= ('Time Diff: '+IntToStr(GetTickCount-time));
+  Writeln('Time Performance Diff: '+IntToStr(GetTickCount-time));
+end;
+
+
+begin
+  Writeln(DateTimeGMTToHttpStr(Now))
+  writeln('machine or host name is: '+getHostName)
+  writeln('user name is: '+getUserName)
+  writeln('domain name is: '+domainname('localhost'));
+    writeln('Check ProcessID : '+intToStr(CurrentProcessID))
+  if MessageBeep(50) > 0 then
+  //writeln(inttostr(messagebeep(50)))
+  Writeln('DLL Check succeed');  
+  Writeln('Processor Numbers: '+intToStr(GetNumberOfProcessors))
+  Writeln('Page Size: '+intToStr(GetPageSize))
+  Writeln('Internet Test with IP Address of: '
+                     +GetHostByName('www.softwareschule.ch'));
+  writeln('IP Address of own Host: '+GetHostByName(getHostName));
+  writeln('Registry read test of url2: '+RegRead(REGROOT3, REGPATH3, 'url2'))
+  writeln('Services File Path is: '+ServicesFilePath);
+  Writeln('Sound Test');  //Say('This is maXbox 3.1');
+  Writeln('Drive Test');
+  getDriveTypesF;   
+  Writeln('Network Volume Name is: '+NetworkVolume('C')); 
+  {myPlist:= TStringList.Create;
+   GetApplicationsRunning(myPlist);
+   for i:= 1 to myPlist.count - 1 do 
+     Writeln(myPlist[i]);
+   myPlist.Free;}
+  Writeln('DataLink Dir is: '+DataLinkDir);
+  Writeln('DBX Info: ');
+  Writeln(GetDriverRegistryFile(True));
+  Writeln(GetConnectionRegistryFile(True));
+  osType:= Win32Type;
+  writeln(IntToStr(ord(osType))+' is type of Operating System');
+  ShowMessage('Now we test the CD-ROM Harddrive: ')
+  OpenCdDrive;
+  CloseCdDrive; 
+  if OSCheck(true) then writeln('os check true'); 
+  PerformanceCounter;
+  mytimestamp:= GetFileCreationTime(exepath+'maxbox3.exe')
+  writeln(DateTimeToStr(mytimestamp)+' Creation Date of maXbox3')
+  writeln('Shell Version is: '+intToStr(GetShellVersion));
+  WriteLog(ExePath+'systemchecklog.txt',memo2.text)
+  //ExecuteShell('cmd','/k systeminfo > systeminfo_dell.txt')
+  ExecuteShell('cmd','/c systeminfo > systeminfo_machine.txt')
+  SearchAndOpenFile('systeminfo_machine.txt')
+  maxform1.ShellStyle1Click(self)
+  // BigInt 64 bit Test later
+End.   
+
+*******************************************************
+There is no place like 127.0.0.1 

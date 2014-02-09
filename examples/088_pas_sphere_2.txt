@@ -1,0 +1,168 @@
+program kugel1;
+
+//just to play with a 3d sphere
+//uses crt,graph,minigraf; _88
+
+const r=120; xmitte=319 ; ymitte=199;
+        xyratio=1.1;
+        pihalbe=1.570796327;
+var   w1, w2, s1, s2, c1, c2   : double;
+      xq, yq, xp, yp        : integer;
+      sicht                    : boolean;
+      anzahlbreitenkreise,anzahllaengenkreise : integer;
+      inFrm: TForm;
+
+
+procedure aufsichtparameter;
+var laengengrad,breitengrad,w1,w2 : double;
+   begin
+     //cls;
+     laengengrad:=-15; 
+     breitengrad:=40;
+     //textausgabe(  4,11,' L„ngengrad  des Aufsichtpunktes =       ø ');
+     //laengengrad := zahleingabe(284,11,laengengrad,4,0);
+     w1:=(90-laengengrad)*pi/180;
+     s1:=sin(w1);
+     c1:=cos(w1);
+     //textausgabe(  4,21,' Breitengrad des Aufsichtpunktes =       ø ');
+     //breitengrad:=zahleingabe(284,21,breitengrad,4,0);
+     w2:=(90-breitengrad)*pi/180;
+     s2:=sin(w2); c2:=cos(w2);
+   end;
+
+procedure kugellinie(x,y,z: double; vdrawFrm: TForm);
+var help,xt,yt,zt: double;
+  begin
+    help:=-s1*x+c1*y;
+    xt:=x*c1+y*s1;
+    yt:=help*c2+z*s2;
+    zt:=-s2*help+c2*z;
+    if zt<0 then sicht:=false;
+    xp:= xmitte+round(xyratio*xt);
+    yp:= ymitte-round(yt);
+    if sicht then begin 
+              //line(xq,yq,xp,yp)
+              vdrawFrm.canvas.moveto(xq, yq) 
+              vdrawFrm.canvas.lineto(xp,yp); 
+              xq:=xp; yq:=yp 
+              end
+         else begin
+         xq:=xp; 
+         yq:=yp
+      end
+    end;
+
+procedure sichtkreis(vdrawFrm: TForm);
+var x,y,w,um : double ;
+ i,n,xp,yp,xq,yq: integer;
+begin
+     n:=40;
+     um:=2*pi/n;
+     xq:= xmitte+round(xyratio*r);
+     yq:=ymitte;
+     i:=0;
+     repeat
+        inc(i);
+        w:=um*i;
+        x:=r*cos(w); y:=r*sin(w);
+        xp:= xmitte+round(xyratio*x);
+        yp:=ymitte-round(y);
+        vdrawFrm.canvas.moveto(xq,yq)
+        vdrawFrm.canvas.lineto(xp,yp);
+        xq:=xp;
+        yq:=yp
+     until (i=40); //or keypressed;
+end;
+
+procedure laengenkreise(vdrawFrm: TForm);
+var x,y,z,ph,de,umph,umde,si,co,c,s : double;
+    i,j,m:integer;
+   begin
+     m:= r div 2 + 10; 
+     umph:= 2*pi/anzahllaengenkreise;
+     umde:=pi/m;
+     i:= 0;
+     repeat
+        ph:=umph*i;
+        co:=r*cos(ph); si:=r*sin(ph);
+        sicht:=false;
+        kugellinie(0,0,-r, vdrawFrm);
+        j:=0;
+        repeat
+            inc(j);
+            sicht:=true;
+            de:=-pihalbe+umde*j; c:=cos(de); s:=sin(de);
+            x:=co*c; y:=si*c; z:=r*sin(de);
+            kugellinie(x,y,z, vdrawFrm);
+         until j=m;
+         inc(i);
+      until (i=anzahllaengenkreise); //or keypressed;
+end;
+
+procedure breitenkreise(vdrawFrm: TForm);
+var x,y,z,ph,de,umph,umde,si,co,c,s : double;
+    i,j,m :integer;
+    begin
+      m:= r div 2; 
+      umph:= 2*pi/m; 
+      umde:= pi/anzahlbreitenkreise;
+      i:=0;
+      repeat
+        de:= -pihalbe+umde*i;
+        co:= r*cos(de);
+        si:=r*sin(de);
+        sicht:=false;
+        kugellinie(co,0,si, vdrawFrm);
+        j:=0;
+        repeat
+            inc(j);
+            sicht:=true;
+            ph:=umph*j;
+            c:=cos(ph);
+            s:=sin(ph);
+            x:=co*c; y:=co*s; z:=si;
+            kugellinie(x,y,z, vdrawFrm)
+         until j=m;
+         inc(i);
+       until (i=anzahlbreitenkreise);// or keypressed;
+   end;
+
+procedure kugelzeichnen;
+begin
+  anzahlbreitenkreise:= 112;
+  anzahllaengenkreise:= 24;
+  sichtkreis(inFrm);
+  laengenkreise(inFrm);
+  breitenkreise(inFrm);
+end;
+
+procedure LoadForm;
+begin
+  inFrm:= TForm.create(self);
+  try
+    with inFrm do begin
+      caption:= '*****choasMAX*********';  
+      height:= 450;
+      width:= 660;
+      color:= clred;
+      Position:= poScreenCenter;
+      show;
+    end;
+    //Application.processMessages;
+  except
+    exit
+  end  
+end;
+
+
+begin
+  loadForm;
+  //repeat
+    aufsichtparameter;
+    kugelzeichnen;
+    //tastendruck;
+  //until ende;
+  //endegraphik;
+end.
+
+

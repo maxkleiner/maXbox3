@@ -1,0 +1,723 @@
+Version:0.9
+StartHTML:0000000105
+EndHTML:0000118253
+StartFragment:0000001053
+EndFragment:0000118237
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>mXScriptasHTML</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="generator" content="SynEdit HTML exporter" />
+<style type="text/css">
+<!--
+body { color: #000000; background-color: #FFFFFF; }
+.pas1-assembler { }
+.pas1-character { color: #000080; text-decoration: underline; }
+.pas1-comment { color: #000080; font-style: italic; }
+.pas1-float { color: #00FF00; }
+.pas1-hexadecimal { color: #FF00FF; }
+.pas1-identifier { }
+.pas1-number { color: #FF0000; }
+.pas1-preprocessor { font-style: italic; }
+.pas1-reservedword { color: #000080; font-weight: bold; }
+.pas1-space { }
+.pas1-string { color: #008080; }
+.pas1-symbol { color: #FF0000; }
+-->
+</style>
+</head>
+<body>
+<!--StartFragment--><pre><code><span class="pas1-reservedword">PROGRAM</span><span class="pas1-space"> DataGrid_2</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">///////////////////////////////////////////////////////////////////////////
+//  #sign:max: APSN21: 31.01.2014 23:10:08 
+//  Purpose: how to call a dll function, still on progress  
+//  #path&gt;ples\E:\maxbox\maxbox3\examples\                                
+//  Lines of Code #locs:518
+///////////////////////////////////////////////////////////////////////////
+
+</span><span class="pas1-reservedword">Const</span><span class="pas1-space"> TEXTOUT </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-string">'hi world of dll func in opcode '</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//############################################################################
+// Archimedes DLL Architect
+//############################################################################
+//TODO: Button with stop event, change color and save bitmap as png
+</span><span class="pas1-space">  </span><span class="pas1-comment">//TODO: transfer the App to a dll stub function!
+</span><span class="pas1-space">  </span><span class="pas1-comment">//{ TODO : the following line looks like a bug... }
+
+</span><span class="pas1-reservedword">type
+</span><span class="pas1-space"> TAppData </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-reservedword">record
+</span><span class="pas1-space">   Name</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">shortstring</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   Size</span><span class="pas1-symbol">:</span><span class="pas1-space"> longint</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   Release</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">shortstring</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   descript</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">shortstring</span><span class="pas1-symbol">;
+</span><span class="pas1-space"> </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-comment">{type  
+  PROCESS_MEMORY_COUNTERS = record
+    cb : DWORD;
+    PageFaultCount : DWORD;
+    PeakWorkingSetSize : DWORD;
+    WorkingSetSize : DWORD; //Task managers MemUsage number
+    QuotaPeakPagedPoolUsage : DWORD;
+    QuotaPagedPoolUsage : DWORD;
+    QuotaPeakNonPagedPoolUsage : DWORD;
+    QuotaNonPagedPoolUsage : DWORD;
+    PagefileUsage : DWORD; //TaskMan's VM Size number
+    PeakPagefileUsage : DWORD;
+  end;
+  TProcessMemoryCounters = PROCESS_MEMORY_COUNTERS;}
+</span><span class="pas1-space">  
+  </span><span class="pas1-comment">{ _OSVERSIONINFOA = record
+    dwOSVersionInfoSize: DWORD;
+    dwMajorVersion: DWORD;
+    dwMinorVersion: DWORD;
+    dwBuildNumber: DWORD;
+    dwPlatformId: DWORD;
+    szCSDVersion: array[0..127] of AnsiChar; { Maintenance AnsiString for PSS usage }
+</span><span class="pas1-space">  </span><span class="pas1-comment">{end;
+ //TIntegerList
+ //var aos: TOSVersionInfo;
+
+//  function  {**************************************************}
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> GetProcessMemoryInfo</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Process</span><span class="pas1-symbol">:</span><span class="pas1-space"> THandle</span><span class="pas1-symbol">;</span><span class="pas1-space"> </span><span class="pas1-reservedword">var</span><span class="pas1-space"> MemoryCounters</span><span class="pas1-symbol">:</span><span class="pas1-space"> TProcessMemoryCounters</span><span class="pas1-symbol">;
+</span><span class="pas1-space">                                    cb</span><span class="pas1-symbol">:</span><span class="pas1-space"> DWORD</span><span class="pas1-symbol">):</span><span class="pas1-space"> BOOL</span><span class="pas1-symbol">;</span><span class="pas1-space"> </span><span class="pas1-comment">//stdcall;; 
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">External</span><span class="pas1-space"> </span><span class="pas1-string">'GetProcessMemoryInfo@psapi.dll stdcall'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">     
+ </span><span class="pas1-reservedword">Function</span><span class="pas1-space"> OpenProcess2</span><span class="pas1-symbol">(</span><span class="pas1-identifier">dwDesiredAccess</span><span class="pas1-symbol">:</span><span class="pas1-space"> DWORD</span><span class="pas1-symbol">;</span><span class="pas1-space"> bInheritHandle</span><span class="pas1-symbol">:</span><span class="pas1-identifier">BOOL</span><span class="pas1-symbol">;</span><span class="pas1-space"> dwProcessId</span><span class="pas1-symbol">:</span><span class="pas1-space"> DWORD</span><span class="pas1-symbol">):</span><span class="pas1-identifier">THandle</span><span class="pas1-symbol">;
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">External</span><span class="pas1-space">  </span><span class="pas1-string">'OpenProcess@kernel32.dll stdcall'</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-comment">{TYPE &lt;Type declarations&gt;}</span><span class="pas1-space"> 
+  </span><span class="pas1-reservedword">var</span><span class="pas1-space"> FWait</span><span class="pas1-symbol">,</span><span class="pas1-space"> switch</span><span class="pas1-symbol">:</span><span class="pas1-space"> Boolean</span><span class="pas1-symbol">;
+</span><span class="pas1-space">      FValueA</span><span class="pas1-symbol">,</span><span class="pas1-space"> FValueB</span><span class="pas1-symbol">:</span><span class="pas1-space"> Float</span><span class="pas1-symbol">;
+</span><span class="pas1-space">      </span><span class="pas1-comment">//asd: TDoubleArray;
+</span><span class="pas1-space">    aGrid</span><span class="pas1-symbol">:</span><span class="pas1-space"> TStringGrid</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    app</span><span class="pas1-symbol">:</span><span class="pas1-space"> TAppData</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    f</span><span class="pas1-symbol">:</span><span class="pas1-space"> Text</span><span class="pas1-symbol">;</span><span class="pas1-space"> </span><span class="pas1-comment">{file of}</span><span class="pas1-space"> </span><span class="pas1-comment">//TAppData;
+</span><span class="pas1-space">    FaDatfile</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">String</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    Fmodified</span><span class="pas1-symbol">:</span><span class="pas1-space"> Boolean</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    myrec</span><span class="pas1-symbol">:</span><span class="pas1-space"> TSearchrec</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    </span><span class="pas1-comment">//file: dwstestbin
+</span><span class="pas1-space">  
+     
+</span><span class="pas1-comment">//&lt;FUNCTION&gt;
+//&lt;PROCEDURE&gt; 
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TBuildAppGrid_fillGrid</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  crow</span><span class="pas1-symbol">:</span><span class="pas1-space"> Integer</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-comment">//UTF8FileHeader: integer;
+</span><span class="pas1-space">  </span><span class="pas1-comment">//ad: UTF8FileHeader
+</span><span class="pas1-space">  mss</span><span class="pas1-symbol">:</span><span class="pas1-space"> TCopyFileFlag</span><span class="pas1-symbol">;</span><span class="pas1-space"> </span><span class="pas1-comment">//, TFileIterator, TFileSearcher;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  crow </span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">1;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> aGrid </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Cells</span><span class="pas1-symbol">[0,0]:=</span><span class="pas1-space"> </span><span class="pas1-string">'Application Name'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    ColWidths</span><span class="pas1-symbol">[0]:=</span><span class="pas1-space"> </span><span class="pas1-number">120;
+</span><span class="pas1-space">    Cells</span><span class="pas1-symbol">[1,0]:=</span><span class="pas1-space"> </span><span class="pas1-string">'App Size'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    ColWidths</span><span class="pas1-symbol">[1]:=</span><span class="pas1-space"> </span><span class="pas1-number">60;
+</span><span class="pas1-space">    Cells</span><span class="pas1-symbol">[2,0]:=</span><span class="pas1-space"> </span><span class="pas1-string">'Release Date'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    ColWidths</span><span class="pas1-symbol">[2]:=</span><span class="pas1-space"> </span><span class="pas1-number">90;
+</span><span class="pas1-space">    Cells</span><span class="pas1-symbol">[3,0]:=</span><span class="pas1-space"> </span><span class="pas1-string">'Description'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    ColWidths</span><span class="pas1-symbol">[3]:=</span><span class="pas1-space"> </span><span class="pas1-number">140;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> FaDatFile </span><span class="pas1-symbol">&lt;&gt;</span><span class="pas1-space"> </span><span class="pas1-string">''</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      </span><span class="pas1-comment">//AssignFileRead(f,FaDatFile);
+</span><span class="pas1-space">      </span><span class="pas1-comment">//AssignFile(f,FaDatFile);
+</span><span class="pas1-space">      </span><span class="pas1-comment">//findfirst
+</span><span class="pas1-space">      </span><span class="pas1-comment">//findfirstutf8
+</span><span class="pas1-space">      </span><span class="pas1-comment">//findfirst2
+</span><span class="pas1-space">      </span><span class="pas1-comment">//ReadFileToString
+</span><span class="pas1-space">        </span><span class="pas1-comment">//keypressed
+</span><span class="pas1-space">        </span><span class="pas1-comment">//findnext2
+</span><span class="pas1-space">        </span><span class="pas1-comment">//findclose
+</span><span class="pas1-space">       </span><span class="pas1-comment">// Reset2(f);
+</span><span class="pas1-space">       </span><span class="pas1-comment">//reset2
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">        </span><span class="pas1-comment">//while not Eof(F) do begin
+</span><span class="pas1-space">          </span><span class="pas1-comment">//Read (F, app);
+</span><span class="pas1-space">          Cells</span><span class="pas1-symbol">[0,</span><span class="pas1-identifier">crow</span><span class="pas1-symbol">]:=</span><span class="pas1-space"> app</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Name</span><span class="pas1-symbol">;
+</span><span class="pas1-space">          Cells</span><span class="pas1-symbol">[1,</span><span class="pas1-identifier">crow</span><span class="pas1-symbol">]:=</span><span class="pas1-space"> intToStr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">app</span><span class="pas1-symbol">.</span><span class="pas1-identifier">size</span><span class="pas1-symbol">);
+</span><span class="pas1-space">          Cells</span><span class="pas1-symbol">[2,</span><span class="pas1-identifier">crow</span><span class="pas1-symbol">]:=</span><span class="pas1-space"> app</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Release</span><span class="pas1-symbol">;
+</span><span class="pas1-space">          Cells</span><span class="pas1-symbol">[3,</span><span class="pas1-identifier">crow</span><span class="pas1-symbol">]:=</span><span class="pas1-space"> app</span><span class="pas1-symbol">.</span><span class="pas1-identifier">descript</span><span class="pas1-symbol">;
+</span><span class="pas1-space">          Inc</span><span class="pas1-symbol">(</span><span class="pas1-identifier">cRow</span><span class="pas1-symbol">);
+</span><span class="pas1-space">          RowCount</span><span class="pas1-symbol">:=</span><span class="pas1-space"> crow </span><span class="pas1-symbol">+1;</span><span class="pas1-space">  </span><span class="pas1-comment">//new entry
+</span><span class="pas1-space">        </span><span class="pas1-comment">//end;
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">        </span><span class="pas1-comment">//CloseFile(f);
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;</span><span class="pas1-comment">// if FileExists...
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;</span><span class="pas1-space"> </span><span class="pas1-comment">//with
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">var</span><span class="pas1-space">  nYear</span><span class="pas1-symbol">,
+</span><span class="pas1-space">  nMonth</span><span class="pas1-symbol">,
+</span><span class="pas1-space">  nDay</span><span class="pas1-symbol">,
+</span><span class="pas1-space">  fcounter</span><span class="pas1-symbol">:</span><span class="pas1-space"> word</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  dflistView</span><span class="pas1-symbol">:</span><span class="pas1-space"> TListBox</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> </span><span class="pas1-comment">{constructor}</span><span class="pas1-space"> TChangeFinder_Create_prepList_and_Date</span><span class="pas1-symbol">(</span><span class="pas1-identifier">alistView</span><span class="pas1-symbol">:</span><span class="pas1-space"> TListBox</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//GetDate(Year, Month, Day, DayofWeek);
+</span><span class="pas1-space">  </span><span class="pas1-comment">//now date is to slow
+</span><span class="pas1-space">  </span><span class="pas1-comment">//inherited Create;
+</span><span class="pas1-space">  dflistView</span><span class="pas1-symbol">:=</span><span class="pas1-space"> alistView</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  decodedate</span><span class="pas1-symbol">(</span><span class="pas1-identifier">date</span><span class="pas1-symbol">,</span><span class="pas1-space"> nyear</span><span class="pas1-symbol">,</span><span class="pas1-space"> nmonth</span><span class="pas1-symbol">,</span><span class="pas1-space"> nday</span><span class="pas1-symbol">);
+</span><span class="pas1-space">    dflistView</span><span class="pas1-symbol">.</span><span class="pas1-identifier">items</span><span class="pas1-symbol">.</span><span class="pas1-identifier">insert</span><span class="pas1-symbol">(0,</span><span class="pas1-space"> format</span><span class="pas1-symbol">(</span><span class="pas1-string">'%-120s %10s -%5s'</span><span class="pas1-symbol">,
+</span><span class="pas1-space">       </span><span class="pas1-symbol">[</span><span class="pas1-string">'Filename:'</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-string">'Size:'</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-string">'Time:'</span><span class="pas1-symbol">]));
+</span><span class="pas1-space">     fcounter</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">1;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> alistView</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Items </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    BeginUpdate</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    Clear</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    EndUpdate</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  
+      </span><span class="pas1-comment">//faDirectory = $00000010;
+</span><span class="pas1-space">      </span><span class="pas1-comment">//faAnyFile   = $0000003F;   
+
+
+</span><span class="pas1-reservedword">PROCEDURE</span><span class="pas1-space"> TChangeFinder_ShowFiles</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Showpath</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">STRING</span><span class="pas1-symbol">;</span><span class="pas1-space"> sr</span><span class="pas1-symbol">:</span><span class="pas1-space"> TSearchRec</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">VAR
+</span><span class="pas1-space">  arcdisp</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">shortSTRING</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  DateRec</span><span class="pas1-symbol">:</span><span class="pas1-space"> TDateTime</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  lenStr</span><span class="pas1-symbol">,
+</span><span class="pas1-space">  insertStr</span><span class="pas1-symbol">,
+</span><span class="pas1-space">  fname</span><span class="pas1-symbol">,
+</span><span class="pas1-space">  fext</span><span class="pas1-symbol">,</span><span class="pas1-space"> outPutStr</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  len      </span><span class="pas1-symbol">:</span><span class="pas1-space"> BYTE</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  AYear</span><span class="pas1-symbol">,</span><span class="pas1-space"> AMonth</span><span class="pas1-symbol">,</span><span class="pas1-space"> ADay</span><span class="pas1-symbol">:</span><span class="pas1-space"> Word</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  aHour</span><span class="pas1-symbol">,</span><span class="pas1-space"> aMin</span><span class="pas1-symbol">,</span><span class="pas1-space"> aSec</span><span class="pas1-symbol">,</span><span class="pas1-space"> aMsec</span><span class="pas1-symbol">:</span><span class="pas1-space"> word</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">BEGIN
+</span><span class="pas1-space">  </span><span class="pas1-comment">//IF sr.Attr IN [$8..$F] {, $28..$2F]} THEN BEGIN
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> Pos</span><span class="pas1-symbol">(</span><span class="pas1-string">'.'</span><span class="pas1-symbol">,</span><span class="pas1-space"> sr</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Name</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-symbol">&gt;</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">THEN
+</span><span class="pas1-space">      Delete</span><span class="pas1-symbol">(</span><span class="pas1-identifier">sr</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Name</span><span class="pas1-symbol">,</span><span class="pas1-space"> Pos</span><span class="pas1-symbol">(</span><span class="pas1-string">'.'</span><span class="pas1-symbol">,</span><span class="pas1-space"> sr</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Name</span><span class="pas1-symbol">),</span><span class="pas1-space"> </span><span class="pas1-number">1);
+</span><span class="pas1-space">  </span><span class="pas1-comment">//END;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">Pos</span><span class="pas1-symbol">(</span><span class="pas1-string">'.'</span><span class="pas1-symbol">,</span><span class="pas1-space"> sr</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Name</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-symbol">&gt;</span><span class="pas1-space"> </span><span class="pas1-number">0)</span><span class="pas1-space"> </span><span class="pas1-reservedword">AND</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">Length</span><span class="pas1-symbol">(</span><span class="pas1-identifier">sr</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Name</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-symbol">&gt;</span><span class="pas1-space"> </span><span class="pas1-number">0)</span><span class="pas1-space"> </span><span class="pas1-reservedword">THEN</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    fname</span><span class="pas1-symbol">:=</span><span class="pas1-space"> Copy</span><span class="pas1-symbol">(</span><span class="pas1-identifier">sr</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Name</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-number">1,</span><span class="pas1-space"> Pos</span><span class="pas1-symbol">(</span><span class="pas1-string">'.'</span><span class="pas1-symbol">,</span><span class="pas1-space"> sr</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Name</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-symbol">-</span><span class="pas1-space"> </span><span class="pas1-number">1);
+</span><span class="pas1-space">    fext</span><span class="pas1-symbol">:=</span><span class="pas1-space"> sr</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Name</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    Delete</span><span class="pas1-symbol">(</span><span class="pas1-identifier">fext</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-number">1,</span><span class="pas1-space"> Pos</span><span class="pas1-symbol">(</span><span class="pas1-string">'.'</span><span class="pas1-symbol">,</span><span class="pas1-space"> fext</span><span class="pas1-symbol">));
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">END</span><span class="pas1-space"> </span><span class="pas1-reservedword">ELSE</span><span class="pas1-space"> </span><span class="pas1-reservedword">BEGIN
+</span><span class="pas1-space">    fname</span><span class="pas1-symbol">:=</span><span class="pas1-space"> sr</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Name</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    fext</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-string">'  '</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">END</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  arcdisp</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-string">'    '</span><span class="pas1-symbol">;
+</span><span class="pas1-comment">//&amp;&amp;{$WARN SYMBOL_PLATFORM OFF}
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> sr</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Attr </span><span class="pas1-reservedword">AND</span><span class="pas1-space"> faArchive  </span><span class="pas1-symbol">=</span><span class="pas1-space"> faArchive  </span><span class="pas1-reservedword">THEN</span><span class="pas1-space"> arcdisp</span><span class="pas1-symbol">[1]</span><span class="pas1-space"> </span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-string">'A'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> sr</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Attr </span><span class="pas1-reservedword">AND</span><span class="pas1-space"> faReadOnly </span><span class="pas1-symbol">=</span><span class="pas1-space"> faReadOnly </span><span class="pas1-reservedword">THEN</span><span class="pas1-space"> arcdisp</span><span class="pas1-symbol">[2]</span><span class="pas1-space"> </span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-string">'R'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> sr</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Attr </span><span class="pas1-reservedword">AND</span><span class="pas1-space"> faHidden   </span><span class="pas1-symbol">=</span><span class="pas1-space"> faHidden   </span><span class="pas1-reservedword">THEN</span><span class="pas1-space"> arcdisp</span><span class="pas1-symbol">[3]</span><span class="pas1-space"> </span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-string">'H'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> sr</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Attr </span><span class="pas1-reservedword">AND</span><span class="pas1-space"> faSysFile  </span><span class="pas1-symbol">=</span><span class="pas1-space"> faSysFile  </span><span class="pas1-reservedword">THEN</span><span class="pas1-space"> arcdisp</span><span class="pas1-symbol">[4]</span><span class="pas1-space"> </span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-string">'S'</span><span class="pas1-symbol">;
+</span><span class="pas1-comment">//{$WARN SYMBOL_PLATFORM ON}
+</span><span class="pas1-space">  </span><span class="pas1-comment">//8..15, 40..47
+</span><span class="pas1-space">  </span><span class="pas1-comment">//IF NOT (sr.Attr IN [$8..$F, $28..$2F]) THEN BEGIN
+</span><span class="pas1-space">    </span><span class="pas1-comment">//Str(sr.Size, lenStr);
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> Length</span><span class="pas1-symbol">(</span><span class="pas1-identifier">lenStr</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-symbol">&gt;</span><span class="pas1-space"> </span><span class="pas1-number">3</span><span class="pas1-space"> </span><span class="pas1-reservedword">THEN</span><span class="pas1-space"> </span><span class="pas1-reservedword">BEGIN
+</span><span class="pas1-space">      insertStr</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-string">'.'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">      len</span><span class="pas1-symbol">:=</span><span class="pas1-space"> Length</span><span class="pas1-symbol">(</span><span class="pas1-identifier">lenStr</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-symbol">-</span><span class="pas1-space"> </span><span class="pas1-number">2;
+</span><span class="pas1-space">      Insert</span><span class="pas1-symbol">(</span><span class="pas1-identifier">insertStr</span><span class="pas1-symbol">,</span><span class="pas1-space"> lenStr</span><span class="pas1-symbol">,</span><span class="pas1-space"> len</span><span class="pas1-symbol">);
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> Length</span><span class="pas1-symbol">(</span><span class="pas1-identifier">lenStr</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-symbol">&gt;</span><span class="pas1-space"> </span><span class="pas1-number">7</span><span class="pas1-space"> </span><span class="pas1-reservedword">THEN</span><span class="pas1-space"> </span><span class="pas1-reservedword">BEGIN
+</span><span class="pas1-space">        len</span><span class="pas1-symbol">:=</span><span class="pas1-space"> Length</span><span class="pas1-symbol">(</span><span class="pas1-identifier">lenStr</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-symbol">-</span><span class="pas1-space"> </span><span class="pas1-number">6;
+</span><span class="pas1-space">        Insert</span><span class="pas1-symbol">(</span><span class="pas1-identifier">insertStr</span><span class="pas1-symbol">,</span><span class="pas1-space"> lenStr</span><span class="pas1-symbol">,</span><span class="pas1-space"> len</span><span class="pas1-symbol">);
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">END</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">END</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-comment">//END;
+</span><span class="pas1-space">  </span><span class="pas1-comment">//IF NOT (sr.Attr IN [$8..$F, $28..$2F]) THEN BEGIN
+</span><span class="pas1-space">   </span><span class="pas1-comment">//check the system now date
+</span><span class="pas1-space">    dateRec</span><span class="pas1-symbol">:=</span><span class="pas1-space"> FileDatetoDateTime</span><span class="pas1-symbol">(</span><span class="pas1-identifier">sr</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Time</span><span class="pas1-symbol">);
+</span><span class="pas1-space">    DecodeDate</span><span class="pas1-symbol">(</span><span class="pas1-identifier">dateRec</span><span class="pas1-symbol">,</span><span class="pas1-space"> AYear</span><span class="pas1-symbol">,</span><span class="pas1-space"> AMonth</span><span class="pas1-symbol">,</span><span class="pas1-space"> ADay</span><span class="pas1-symbol">);
+</span><span class="pas1-space">    DecodeTime</span><span class="pas1-symbol">(</span><span class="pas1-identifier">dateRec</span><span class="pas1-symbol">,</span><span class="pas1-space"> aHour</span><span class="pas1-symbol">,</span><span class="pas1-space"> aMin</span><span class="pas1-symbol">,</span><span class="pas1-space"> aSec</span><span class="pas1-symbol">,</span><span class="pas1-space"> aMsec</span><span class="pas1-symbol">);</span><span class="pas1-space"> </span><span class="pas1-comment">//new 1.8
+</span><span class="pas1-space">    </span><span class="pas1-comment">//daterec:= now;  //testroutine
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">ADay </span><span class="pas1-symbol">=</span><span class="pas1-space"> nDay</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">AND</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">AYear </span><span class="pas1-symbol">=</span><span class="pas1-space"> nYear</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">AND</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">AMonth </span><span class="pas1-symbol">=</span><span class="pas1-space"> nMonth</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">THEN</span><span class="pas1-space"> </span><span class="pas1-reservedword">BEGIN
+</span><span class="pas1-space">        </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> Showpath</span><span class="pas1-symbol">[</span><span class="pas1-identifier">Length</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Showpath</span><span class="pas1-symbol">)]</span><span class="pas1-space"> </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-string">'\'</span><span class="pas1-space"> </span><span class="pas1-reservedword">THEN
+</span><span class="pas1-space">        Delete</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Showpath</span><span class="pas1-symbol">,</span><span class="pas1-space"> Length</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Showpath</span><span class="pas1-symbol">),</span><span class="pas1-space"> </span><span class="pas1-number">1);
+</span><span class="pas1-space">        outPutStr</span><span class="pas1-symbol">:=</span><span class="pas1-space"> Showpath </span><span class="pas1-symbol">+</span><span class="pas1-space"> </span><span class="pas1-string">'\'</span><span class="pas1-space"> </span><span class="pas1-symbol">+</span><span class="pas1-space"> fname </span><span class="pas1-symbol">+</span><span class="pas1-space"> </span><span class="pas1-string">'.'</span><span class="pas1-space"> </span><span class="pas1-symbol">+</span><span class="pas1-space"> fext</span><span class="pas1-symbol">;
+</span><span class="pas1-space">        </span><span class="pas1-comment">//dflistview.Columns:= 3;
+</span><span class="pas1-space">        </span><span class="pas1-comment">//dflistView.TabWith:= 50;
+</span><span class="pas1-space">        </span><span class="pas1-comment">//dflistView.Items.add(outPutStr +^I+ lenStr);  // ^I is the Tab char
+</span><span class="pas1-space">        dflistView</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Items</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Insert</span><span class="pas1-symbol">(0,</span><span class="pas1-space"> format</span><span class="pas1-symbol">(</span><span class="pas1-string">'%-80s %10s -%5s'</span><span class="pas1-symbol">,
+</span><span class="pas1-space">           </span><span class="pas1-symbol">[</span><span class="pas1-identifier">outPutStr</span><span class="pas1-symbol">,</span><span class="pas1-space"> lenStr</span><span class="pas1-symbol">,</span><span class="pas1-space"> inttoStr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">aHour</span><span class="pas1-symbol">)+</span><span class="pas1-string">':'</span><span class="pas1-symbol">+</span><span class="pas1-identifier">inttoStr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">aMin</span><span class="pas1-symbol">)]));
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">END</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-comment">//END;
+</span><span class="pas1-reservedword">END</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">PROCEDURE</span><span class="pas1-space"> TChangeFinder_SearchDirectories</span><span class="pas1-symbol">(</span><span class="pas1-identifier">path</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;</span><span class="pas1-space"> </span><span class="pas1-reservedword">const</span><span class="pas1-space"> fname</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">STRING</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">VAR
+</span><span class="pas1-space">  sRecord </span><span class="pas1-symbol">:</span><span class="pas1-space"> TSearchRec</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  Showpath</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">STRING</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-comment">//myf: TChangeFinder; 
+</span><span class="pas1-space">  </span><span class="pas1-comment">//amod: TmodCommand;
+</span><span class="pas1-reservedword">BEGIN
+</span><span class="pas1-space">  </span><span class="pas1-comment">(* Suche nach Dateien: *)
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> Length</span><span class="pas1-symbol">(</span><span class="pas1-identifier">path</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-symbol">&gt;</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">THEN
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> path</span><span class="pas1-symbol">[</span><span class="pas1-identifier">Length</span><span class="pas1-symbol">(</span><span class="pas1-identifier">path</span><span class="pas1-symbol">)]</span><span class="pas1-space"> </span><span class="pas1-symbol">&lt;&gt;</span><span class="pas1-space"> </span><span class="pas1-string">'\'</span><span class="pas1-space"> </span><span class="pas1-reservedword">THEN
+</span><span class="pas1-space">      path </span><span class="pas1-symbol">:=</span><span class="pas1-space"> path </span><span class="pas1-symbol">+</span><span class="pas1-space"> </span><span class="pas1-string">'\'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  SRecord</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Name</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-string">''</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> FindFirst2</span><span class="pas1-symbol">(</span><span class="pas1-identifier">path</span><span class="pas1-symbol">+</span><span class="pas1-identifier">fname</span><span class="pas1-symbol">,</span><span class="pas1-space"> faAnyfile </span><span class="pas1-reservedword">MOD</span><span class="pas1-space"> faDirectory</span><span class="pas1-symbol">,</span><span class="pas1-space"> SRecord</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Showpath</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-string">'        .   '</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> SRecord</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Name </span><span class="pas1-symbol">&lt;&gt;</span><span class="pas1-space"> </span><span class="pas1-string">''</span><span class="pas1-space"> </span><span class="pas1-reservedword">THEN</span><span class="pas1-space"> </span><span class="pas1-reservedword">BEGIN
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> Length</span><span class="pas1-symbol">(</span><span class="pas1-identifier">path</span><span class="pas1-symbol">)</span><span class="pas1-space">  </span><span class="pas1-symbol">&gt;</span><span class="pas1-space"> </span><span class="pas1-number">3</span><span class="pas1-space"> </span><span class="pas1-reservedword">THEN
+</span><span class="pas1-space">      Showpath</span><span class="pas1-symbol">:=</span><span class="pas1-space"> Copy</span><span class="pas1-symbol">(</span><span class="pas1-identifier">path</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-number">1,</span><span class="pas1-space"> Length</span><span class="pas1-symbol">(</span><span class="pas1-identifier">path</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-symbol">-</span><span class="pas1-space"> </span><span class="pas1-number">1)
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">ELSE</span><span class="pas1-space"> Showpath</span><span class="pas1-symbol">:=</span><span class="pas1-space"> path</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">END</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">repeat
+</span><span class="pas1-space">     </span><span class="pas1-comment">//0..14, 32..46
+</span><span class="pas1-space">      </span><span class="pas1-comment">//IF SRecord.Attr IN [$0..$E, $20..$2E] THEN
+</span><span class="pas1-space">      </span><span class="pas1-comment">//IF (SRecord.Attr &lt;=$E) or (SRecord.Attr &gt;=$20) or (SRecord.Attr &lt;=$2E) then
+</span><span class="pas1-space">      </span><span class="pas1-comment">//IN [$0..$E, $20..$2E] THEN
+</span><span class="pas1-space">      
+      </span><span class="pas1-comment">//FindFirst(StartDir+FileMask, faAnyFile-faDirectory) = 0;
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">SRecord</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Attr </span><span class="pas1-symbol">=</span><span class="pas1-space"> faAnyFile</span><span class="pas1-symbol">-</span><span class="pas1-identifier">faDirectory</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">          TChangeFinder_ShowFiles</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Showpath</span><span class="pas1-symbol">,</span><span class="pas1-identifier">SRecord</span><span class="pas1-symbol">);
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">until</span><span class="pas1-space"> FindNext2</span><span class="pas1-symbol">(</span><span class="pas1-identifier">sRecord</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-symbol">&lt;&gt;</span><span class="pas1-space"> </span><span class="pas1-number">0;
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">      WFindClose</span><span class="pas1-symbol">(</span><span class="pas1-identifier">sRecord</span><span class="pas1-symbol">.</span><span class="pas1-identifier">findhandle</span><span class="pas1-symbol">);
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-comment">(* Suche nach Verzeichnissen: *)
+</span><span class="pas1-space">  </span><span class="pas1-comment">// hidden dir available with fahidden
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> FindFirst2</span><span class="pas1-symbol">(</span><span class="pas1-identifier">path </span><span class="pas1-symbol">+</span><span class="pas1-space"> </span><span class="pas1-string">'*.*'</span><span class="pas1-symbol">,</span><span class="pas1-space"> faDirectory </span><span class="pas1-reservedword">or</span><span class="pas1-space"> faHidden</span><span class="pas1-symbol">,</span><span class="pas1-space"> SRecord</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">repeat
+</span><span class="pas1-space">        </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">SRecord</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Attr </span><span class="pas1-reservedword">AND</span><span class="pas1-space"> faDirectory </span><span class="pas1-symbol">&lt;&gt;</span><span class="pas1-space"> </span><span class="pas1-number">0)</span><span class="pas1-space"> </span><span class="pas1-reservedword">AND
+</span><span class="pas1-space">       </span><span class="pas1-symbol">(</span><span class="pas1-identifier">SRecord</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Name</span><span class="pas1-symbol">[1]</span><span class="pas1-space"> </span><span class="pas1-symbol">&lt;&gt;</span><span class="pas1-space"> </span><span class="pas1-string">'.'</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">THEN
+</span><span class="pas1-space">      </span><span class="pas1-comment">//recursion to get subdirectories
+</span><span class="pas1-space">      TChangeFinder_SearchDirectories</span><span class="pas1-symbol">(</span><span class="pas1-identifier">path </span><span class="pas1-symbol">+</span><span class="pas1-space"> SRecord</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Name</span><span class="pas1-symbol">,</span><span class="pas1-space"> fname</span><span class="pas1-symbol">);
+</span><span class="pas1-space">      writeln</span><span class="pas1-symbol">(</span><span class="pas1-identifier">path </span><span class="pas1-symbol">+</span><span class="pas1-space"> SRecord</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Name</span><span class="pas1-symbol">)
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">until</span><span class="pas1-space"> FindNext2</span><span class="pas1-symbol">(</span><span class="pas1-identifier">sRecord</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-symbol">&lt;&gt;</span><span class="pas1-space"> </span><span class="pas1-number">0;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">      WFindClose</span><span class="pas1-symbol">(</span><span class="pas1-identifier">sRecord</span><span class="pas1-symbol">.</span><span class="pas1-identifier">findhandle</span><span class="pas1-symbol">);
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+
+
+</span><span class="pas1-comment">{**************************************************}
+//function GetProcessMemoryInfo; external 'psapi.dll';
+{****************************************************}
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> ProcessMemoryUsage</span><span class="pas1-symbol">(</span><span class="pas1-identifier">ProcessID </span><span class="pas1-symbol">:</span><span class="pas1-space"> DWORD</span><span class="pas1-symbol">):</span><span class="pas1-space"> DWORD</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> ProcessHandle </span><span class="pas1-symbol">:</span><span class="pas1-space"> THandle</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    MemCounters   </span><span class="pas1-symbol">:</span><span class="pas1-space"> TProcessMemoryCounters</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Result</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">0;
+</span><span class="pas1-space">  ProcessHandle</span><span class="pas1-symbol">:=</span><span class="pas1-space"> OpenProcess2</span><span class="pas1-symbol">(</span><span class="pas1-identifier">PROCESS_QUERY_INFORMATION </span><span class="pas1-reservedword">or</span><span class="pas1-space"> PROCESS_VM_READ</span><span class="pas1-symbol">,
+</span><span class="pas1-space">                               false</span><span class="pas1-symbol">,</span><span class="pas1-space"> ProcessID</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> GetProcessMemoryInfo</span><span class="pas1-symbol">(</span><span class="pas1-identifier">ProcessHandle</span><span class="pas1-symbol">,
+</span><span class="pas1-space">                            MemCounters</span><span class="pas1-symbol">,</span><span class="pas1-space"> sizeof</span><span class="pas1-symbol">(</span><span class="pas1-identifier">MemCounters</span><span class="pas1-symbol">))
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">then</span><span class="pas1-space"> Result</span><span class="pas1-symbol">:=</span><span class="pas1-space"> MemCounters</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WorkingSetSize</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">    CloseHandle</span><span class="pas1-symbol">(</span><span class="pas1-identifier">ProcessHandle</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> ProcessPageUsage</span><span class="pas1-symbol">(</span><span class="pas1-identifier">ProcessID </span><span class="pas1-symbol">:</span><span class="pas1-space"> DWORD</span><span class="pas1-symbol">):</span><span class="pas1-space"> DWORD</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> ProcessHandle </span><span class="pas1-symbol">:</span><span class="pas1-space"> THandle</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    MemCounters   </span><span class="pas1-symbol">:</span><span class="pas1-space"> TProcessMemoryCounters</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Result</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">0;
+</span><span class="pas1-space">  ProcessHandle</span><span class="pas1-symbol">:=</span><span class="pas1-space"> OpenProcess2</span><span class="pas1-symbol">(</span><span class="pas1-identifier">PROCESS_QUERY_INFORMATION </span><span class="pas1-reservedword">or</span><span class="pas1-space"> PROCESS_VM_READ</span><span class="pas1-symbol">,
+</span><span class="pas1-space">                               false</span><span class="pas1-symbol">,</span><span class="pas1-space"> ProcessID</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> GetProcessMemoryInfo</span><span class="pas1-symbol">(</span><span class="pas1-identifier">ProcessHandle</span><span class="pas1-symbol">,
+</span><span class="pas1-space">                            MemCounters</span><span class="pas1-symbol">,</span><span class="pas1-space"> sizeof</span><span class="pas1-symbol">(</span><span class="pas1-identifier">MemCounters</span><span class="pas1-symbol">))
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">then</span><span class="pas1-space"> Result</span><span class="pas1-symbol">:=</span><span class="pas1-space"> MemCounters</span><span class="pas1-symbol">.</span><span class="pas1-identifier">PagefileUsage</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">    CloseHandle</span><span class="pas1-symbol">(</span><span class="pas1-identifier">ProcessHandle</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> ProcessAllRec</span><span class="pas1-symbol">(</span><span class="pas1-identifier">ProcessID </span><span class="pas1-symbol">:</span><span class="pas1-space"> DWORD</span><span class="pas1-symbol">):</span><span class="pas1-space"> TProcessMemoryCounters</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> ProcessHandle </span><span class="pas1-symbol">:</span><span class="pas1-space"> THandle</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    MemCounters   </span><span class="pas1-symbol">:</span><span class="pas1-space"> TProcessMemoryCounters</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//Result:= NULL;
+</span><span class="pas1-space">  ProcessHandle</span><span class="pas1-symbol">:=</span><span class="pas1-space"> OpenProcess2</span><span class="pas1-symbol">(</span><span class="pas1-identifier">PROCESS_QUERY_INFORMATION </span><span class="pas1-reservedword">or</span><span class="pas1-space"> PROCESS_VM_READ</span><span class="pas1-symbol">,
+</span><span class="pas1-space">                               false</span><span class="pas1-symbol">,</span><span class="pas1-space"> ProcessID</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> GetProcessMemoryInfo</span><span class="pas1-symbol">(</span><span class="pas1-identifier">ProcessHandle</span><span class="pas1-symbol">,
+</span><span class="pas1-space">                            MemCounters</span><span class="pas1-symbol">,</span><span class="pas1-space"> sizeof</span><span class="pas1-symbol">(</span><span class="pas1-identifier">MemCounters</span><span class="pas1-symbol">))
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">then</span><span class="pas1-space"> Result</span><span class="pas1-symbol">:=</span><span class="pas1-space"> MemCounters</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">    CloseHandle</span><span class="pas1-symbol">(</span><span class="pas1-identifier">ProcessHandle</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">Procedure</span><span class="pas1-space"> OVCInternationalDemoClass</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space"> </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TOvcIntlSup</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Create </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-comment">//Function InternationalDate( ForceCentury : Boolean) : string');
+</span><span class="pas1-space">    writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'InternationalDate: '</span><span class="pas1-symbol">+</span><span class="pas1-identifier">InternationalDate</span><span class="pas1-symbol">(</span><span class="pas1-identifier">true</span><span class="pas1-symbol">));
+</span><span class="pas1-space">    </span><span class="pas1-comment">//Function InternationalDatePChar( Dest : PChar; ForceCentury : Boolean) : PChar');
+</span><span class="pas1-space">    writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'InternationalLongDate: '</span><span class="pas1-symbol">+</span><span class="pas1-identifier">InternationalLongDate</span><span class="pas1-symbol">(</span><span class="pas1-identifier">false</span><span class="pas1-symbol">,</span><span class="pas1-identifier">false</span><span class="pas1-symbol">));
+</span><span class="pas1-space">    </span><span class="pas1-comment">//Function InternationalTime( ShowSeconds : Boolean) : string');
+</span><span class="pas1-space">    writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'InternationalTime: '</span><span class="pas1-symbol">+</span><span class="pas1-identifier">InternationalTime</span><span class="pas1-symbol">(</span><span class="pas1-identifier">false</span><span class="pas1-symbol">));
+</span><span class="pas1-space">    </span><span class="pas1-comment">//Function InternationalTimePChar( Dest : PChar; ShowSeconds : Boolean) : PChar');
+</span><span class="pas1-space">    </span><span class="pas1-comment">//Function MonthStringToMonth( const S : string; Width : Byte) : Byte');
+</span><span class="pas1-space">    writeln</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Country</span><span class="pas1-symbol">)
+</span><span class="pas1-space">    Free</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-comment">//TerminateProcess( hProcess : THandle; uExitCode : UINT) : BOOL');
+</span><span class="pas1-space">  </span><span class="pas1-comment">//GetExitCodeProcess( hProcess : THandle; var lpExitCode : DWORD) : BOOL');
+</span><span class="pas1-space"> </span><span class="pas1-comment">//FatalExit( ExitCode : Integer)');
+</span><span class="pas1-space"> </span><span class="pas1-comment">//ExecuteAndWait(cmdLine : String; visibility : Word;
+</span><span class="pas1-space">   </span><span class="pas1-comment">//                     timeout : Cardinal = MaxInt;
+</span><span class="pas1-space">     </span><span class="pas1-comment">//                   killAppOnTimeOut : Boolean = True) : Integer;
+</span><span class="pas1-space">  </span><span class="pas1-comment">//GetTemporaryFilesPath : String;
+</span><span class="pas1-space"> </span><span class="pas1-comment">//GetTemporaryFileName : String;
+</span><span class="pas1-space"> </span><span class="pas1-comment">//Zero
+</span><span class="pas1-space"> </span><span class="pas1-comment">//TPanelStyle
+</span><span class="pas1-space">   </span><span class="pas1-comment">//TFontLook
+</span><span class="pas1-space"> </span><span class="pas1-comment">//FindFileInPaths(const fileName, paths : String) : String;
+</span><span class="pas1-space">     </span><span class="pas1-comment">//MakeForm
+</span><span class="pas1-space"> </span><span class="pas1-comment">//PathsToString(const paths : TStrings) : String;
+</span><span class="pas1-space"> </span><span class="pas1-comment">//StringToPaths(const pathsString : String; paths : TStrings);
+</span><span class="pas1-space"> </span><span class="pas1-comment">//MacroExpandPath(const aPath : String) : String;
+</span><span class="pas1-space"> </span><span class="pas1-comment">//TOnGetItemEvent
+</span><span class="pas1-space">   </span><span class="pas1-comment">//TCacheRecord
+</span><span class="pas1-space">   </span><span class="pas1-comment">//tMessagefunc
+</span><span class="pas1-space">   </span><span class="pas1-comment">//EFilerException(CL: TPSPascalCompiler);
+//EInvalidFileSignature(CL: TPSPascalCompiler);
+//TTextWriter(CL: TPSPascalCompiler);
+//TTextReader(CL: TPSPascalCompiler);
+//TBinaryWriter(CL: TPSPascalCompiler);
+//TBinaryReader(CL: TPSPascalCompiler);
+//TPersistentObjectList(CL: TPSPascalCompiler);
+//TPersistentObject(CL: TPSPascalCompiler);
+//IPersistentObject(CL: TPSPascalCompiler);
+//TVirtualWriter(CL: TPSPascalCompiler);
+//TVirtualReader(CL: TPSPascalCompiler);
+//PersistentClasses(CL: TPSPascalCompiler);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;</span><span class="pas1-space">    
+
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> SplitToken</span><span class="pas1-symbol">(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> Text</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;</span><span class="pas1-space"> SplitChar</span><span class="pas1-symbol">:</span><span class="pas1-space"> Char</span><span class="pas1-symbol">;
+</span><span class="pas1-space">                          </span><span class="pas1-reservedword">var</span><span class="pas1-space"> First</span><span class="pas1-symbol">,</span><span class="pas1-space"> Last</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">):</span><span class="pas1-space"> Boolean</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space">  SplitPos</span><span class="pas1-symbol">:</span><span class="pas1-space"> Integer</span><span class="pas1-symbol">;
+</span><span class="pas1-space">      ec</span><span class="pas1-symbol">:</span><span class="pas1-space"> EJclError</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Result</span><span class="pas1-symbol">:=</span><span class="pas1-space"> False</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  SplitPos</span><span class="pas1-symbol">:=</span><span class="pas1-space"> Pos</span><span class="pas1-symbol">(</span><span class="pas1-identifier">SplitChar</span><span class="pas1-symbol">,</span><span class="pas1-space"> Text</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> SplitPos </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> Exit</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  First</span><span class="pas1-symbol">:=</span><span class="pas1-space"> Trim</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Copy</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Text</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-number">1,</span><span class="pas1-space"> SplitPos </span><span class="pas1-symbol">-1));
+</span><span class="pas1-space">  Last</span><span class="pas1-symbol">:=</span><span class="pas1-space"> Trim</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Copy</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Text</span><span class="pas1-symbol">,</span><span class="pas1-space"> SplitPos </span><span class="pas1-symbol">+1,</span><span class="pas1-space"> Length</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Text</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-symbol">-</span><span class="pas1-identifier">SplitPos</span><span class="pas1-symbol">));
+</span><span class="pas1-space">  Result</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">First </span><span class="pas1-symbol">&lt;&gt;</span><span class="pas1-string">''</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">and</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">Last </span><span class="pas1-symbol">&lt;&gt;</span><span class="pas1-string">''</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> TForm1_scrollAllNode</span><span class="pas1-symbol">(</span><span class="pas1-identifier">aNode</span><span class="pas1-symbol">:</span><span class="pas1-space"> TalXmlNode</span><span class="pas1-symbol">):</span><span class="pas1-space"> Integer</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">Var</span><span class="pas1-space"> aStack</span><span class="pas1-symbol">:</span><span class="pas1-space"> Tstack</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    i</span><span class="pas1-symbol">:</span><span class="pas1-space"> integer</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Result </span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">0;
+</span><span class="pas1-space">  aStack </span><span class="pas1-symbol">:=</span><span class="pas1-space"> Tstack</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Create</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">For</span><span class="pas1-space"> i </span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> aNode</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ChildNodes</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Count </span><span class="pas1-symbol">-</span><span class="pas1-space"> </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">        aStack</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Push</span><span class="pas1-symbol">((</span><span class="pas1-identifier">ANode</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ChildNodes</span><span class="pas1-symbol">[</span><span class="pas1-identifier">i</span><span class="pas1-symbol">]));
+</span><span class="pas1-space">         </span><span class="pas1-reservedword">While</span><span class="pas1-space"> astack</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Count </span><span class="pas1-symbol">&gt;</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        inc</span><span class="pas1-symbol">(</span><span class="pas1-identifier">result</span><span class="pas1-symbol">);
+</span><span class="pas1-space">        aNode </span><span class="pas1-symbol">:=</span><span class="pas1-space"> TalxmlNode</span><span class="pas1-symbol">(</span><span class="pas1-identifier">astack</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Pop</span><span class="pas1-symbol">);
+</span><span class="pas1-space">        </span><span class="pas1-reservedword">If</span><span class="pas1-space"> assigned</span><span class="pas1-symbol">(</span><span class="pas1-identifier">ANode</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ChildNodes</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">          </span><span class="pas1-reservedword">For</span><span class="pas1-space"> i </span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> ANode</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ChildNodes</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Count </span><span class="pas1-symbol">-</span><span class="pas1-space"> </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">            aStack</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Push</span><span class="pas1-symbol">((</span><span class="pas1-identifier">ANode</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ChildNodes</span><span class="pas1-symbol">[</span><span class="pas1-identifier">i</span><span class="pas1-symbol">]));
+</span><span class="pas1-space">           </span><span class="pas1-reservedword">If</span><span class="pas1-space"> assigned</span><span class="pas1-symbol">(</span><span class="pas1-identifier">ANode</span><span class="pas1-symbol">.</span><span class="pas1-identifier">AttributeNodes</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">          </span><span class="pas1-reservedword">For</span><span class="pas1-space"> i </span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> ANode</span><span class="pas1-symbol">.</span><span class="pas1-identifier">attributeNodes</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Count </span><span class="pas1-symbol">-</span><span class="pas1-space"> </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">            aStack</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Push</span><span class="pas1-symbol">((</span><span class="pas1-identifier">ANode</span><span class="pas1-symbol">.</span><span class="pas1-identifier">AttributeNodes</span><span class="pas1-symbol">[</span><span class="pas1-identifier">i</span><span class="pas1-symbol">]));
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">    aStack</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Free</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> IntToStrZeroPad</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Value</span><span class="pas1-symbol">,</span><span class="pas1-space"> Count</span><span class="pas1-symbol">:</span><span class="pas1-space"> Integer</span><span class="pas1-symbol">):</span><span class="pas1-space"> AnsiString</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Result </span><span class="pas1-symbol">:=</span><span class="pas1-space"> IntToStr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Value</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Length</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Result</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-symbol">&lt;</span><span class="pas1-space"> Count </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    Result </span><span class="pas1-symbol">:=</span><span class="pas1-space"> StrFillChar</span><span class="pas1-symbol">(</span><span class="pas1-string">'0'</span><span class="pas1-symbol">,</span><span class="pas1-space"> Count </span><span class="pas1-symbol">-</span><span class="pas1-space"> Length</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Result</span><span class="pas1-symbol">))</span><span class="pas1-space"> </span><span class="pas1-symbol">+</span><span class="pas1-space"> Result</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> JclGUIDToString</span><span class="pas1-symbol">(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> GUID</span><span class="pas1-symbol">:</span><span class="pas1-space"> TGUID</span><span class="pas1-symbol">):</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-preprocessor">{$IFDEf CLR}
+</span><span class="pas1-space">  Result </span><span class="pas1-symbol">:=</span><span class="pas1-space"> GUID</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ToString</span><span class="pas1-symbol">();
+</span><span class="pas1-space">  </span><span class="pas1-preprocessor">{$ELSE}
+</span><span class="pas1-space">  Result </span><span class="pas1-symbol">:=</span><span class="pas1-space"> Format</span><span class="pas1-symbol">(</span><span class="pas1-string">'{%.8x-%.4x-%.4x-%.2x%.2x-%.2x%.2x%.2x%.2x%.2x%.2x}'</span><span class="pas1-symbol">,
+</span><span class="pas1-space">    </span><span class="pas1-symbol">[</span><span class="pas1-identifier">GUID</span><span class="pas1-symbol">.</span><span class="pas1-identifier">D1</span><span class="pas1-symbol">,</span><span class="pas1-space"> GUID</span><span class="pas1-symbol">.</span><span class="pas1-identifier">D2</span><span class="pas1-symbol">,</span><span class="pas1-space"> GUID</span><span class="pas1-symbol">.</span><span class="pas1-identifier">D3</span><span class="pas1-symbol">,</span><span class="pas1-space"> GUID</span><span class="pas1-symbol">.</span><span class="pas1-identifier">D4</span><span class="pas1-symbol">[0],</span><span class="pas1-space"> GUID</span><span class="pas1-symbol">.</span><span class="pas1-identifier">D4</span><span class="pas1-symbol">[1],</span><span class="pas1-space"> GUID</span><span class="pas1-symbol">.</span><span class="pas1-identifier">D4</span><span class="pas1-symbol">[2],
+</span><span class="pas1-space">     GUID</span><span class="pas1-symbol">.</span><span class="pas1-identifier">D4</span><span class="pas1-symbol">[3],</span><span class="pas1-space"> GUID</span><span class="pas1-symbol">.</span><span class="pas1-identifier">D4</span><span class="pas1-symbol">[4],</span><span class="pas1-space"> GUID</span><span class="pas1-symbol">.</span><span class="pas1-identifier">D4</span><span class="pas1-symbol">[5],</span><span class="pas1-space"> GUID</span><span class="pas1-symbol">.</span><span class="pas1-identifier">D4</span><span class="pas1-symbol">[6],</span><span class="pas1-space"> GUID</span><span class="pas1-symbol">.</span><span class="pas1-identifier">D4</span><span class="pas1-symbol">[7]]);
+</span><span class="pas1-space">  </span><span class="pas1-preprocessor">{$ENDIF CLR}
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> GetOsVersionInfo2</span><span class="pas1-symbol">:</span><span class="pas1-space"> TOSVersionInfo</span><span class="pas1-symbol">;</span><span class="pas1-space"> 
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  verInfo</span><span class="pas1-symbol">:</span><span class="pas1-space"> TOSVersionInfo</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  verinfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">dwOSVersionInfoSize</span><span class="pas1-symbol">:=</span><span class="pas1-space"> sizeof</span><span class="pas1-symbol">(</span><span class="pas1-identifier">verinfo</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  GetVersionEx</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Verinfo</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  result</span><span class="pas1-symbol">:=</span><span class="pas1-space"> Verinfo</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;</span><span class="pas1-space">  
+
+</span><span class="pas1-reservedword">var</span><span class="pas1-space">  verInfo</span><span class="pas1-symbol">:</span><span class="pas1-space"> TOSVersionInfo</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">Begin</span><span class="pas1-space">  </span><span class="pas1-comment">//Main
+//&lt;Executable statements&gt;
+</span><span class="pas1-space">  </span><span class="pas1-comment">//TOutlookExport_Spy;
+</span><span class="pas1-space">  Writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">''</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  </span><span class="pas1-comment">//Writeln('Start Command of DLL: '+CheckIEStartCommand);  
+//&lt;Definitions&gt;  
+</span><span class="pas1-space">   </span><span class="pas1-comment">//ares:= TResolver.create;
+</span><span class="pas1-space"> </span><span class="pas1-comment">{ with TResolver.create do begin
+   //writeln(inttostr(GetHostByName(gethostname)));
+    Free;   end;  }
+</span><span class="pas1-space">    </span><span class="pas1-comment">{repeat 
+     TApplication_PaintView(aform.canvas);
+     switch:= NOT switch;
+     Sleep(20);
+   until isKeyPressed or FWait;}
+</span><span class="pas1-space">    </span><span class="pas1-comment">{with TledForm.create(self) do begin
+    showmodal; free; end;}</span><span class="pas1-space"> 
+ </span><span class="pas1-comment">// function GetMacAddresses(const Machine: string; const Addresses: TStrings):Integer;
+</span><span class="pas1-space">   OVCInternationalDemoClass</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  
+ </span><span class="pas1-comment">//GetProcessMemoryInfo(Process 
+</span><span class="pas1-space">     writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'mem from dll '</span><span class="pas1-symbol">+</span><span class="pas1-identifier">inttostr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">ProcessMemoryUsage</span><span class="pas1-symbol">(</span><span class="pas1-identifier">GetCurrentProcessID</span><span class="pas1-symbol">)));
+</span><span class="pas1-space">     writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'page from dll '</span><span class="pas1-symbol">+</span><span class="pas1-identifier">inttostr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">ProcessPageUsage</span><span class="pas1-symbol">(</span><span class="pas1-identifier">GetCurrentProcessID</span><span class="pas1-symbol">)));
+</span><span class="pas1-space">     writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'proc all from dll '
+</span><span class="pas1-space">                 </span><span class="pas1-symbol">+</span><span class="pas1-identifier">inttostr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">ProcessAllRec</span><span class="pas1-symbol">(</span><span class="pas1-identifier">GetCurrentProcessID</span><span class="pas1-symbol">).</span><span class="pas1-identifier">workingsetsize</span><span class="pas1-symbol">));
+</span><span class="pas1-space">     writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'proc peak workingset '
+</span><span class="pas1-space">              </span><span class="pas1-symbol">+</span><span class="pas1-identifier">inttostr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">ProcessAllRec</span><span class="pas1-symbol">(</span><span class="pas1-identifier">GetCurrentProcessID</span><span class="pas1-symbol">).</span><span class="pas1-identifier">PeakWorkingSetSize </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">1024));
+</span><span class="pas1-space">     writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'proc peak paged use '
+</span><span class="pas1-space">              </span><span class="pas1-symbol">+</span><span class="pas1-identifier">inttostr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">ProcessAllRec</span><span class="pas1-symbol">(</span><span class="pas1-identifier">GetCurrentProcessID</span><span class="pas1-symbol">).</span><span class="pas1-identifier">QuotaPeakPagedPoolUsage</span><span class="pas1-symbol">));
+</span><span class="pas1-space">     writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'proc page peak file '
+</span><span class="pas1-space">              </span><span class="pas1-symbol">+</span><span class="pas1-identifier">inttostr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">getProcMemInfo</span><span class="pas1-symbol">(</span><span class="pas1-identifier">GetCurrentProcessID</span><span class="pas1-symbol">).</span><span class="pas1-identifier">PeakPagefileUsage </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">1024));
+</span><span class="pas1-space"> 
+    </span><span class="pas1-comment">// SplitImages(self);
+</span><span class="pas1-space">     </span><span class="pas1-comment">//deletefiles(PICPATH,'*.bmp');
+</span><span class="pas1-space">      </span><span class="pas1-comment">//GetCurrentHwProfile( var lpHwProfileInfo : THWProfileInfo) : BOOL');
+</span><span class="pas1-space">        </span><span class="pas1-comment">//SetPriorityClass
+</span><span class="pas1-space">        </span><span class="pas1-comment">//GetPriorityClass
+</span><span class="pas1-space">     </span><span class="pas1-comment">//OpenClipboard( 
+</span><span class="pas1-space">     </span><span class="pas1-comment">//booleantostr(false);
+</span><span class="pas1-space">     </span><span class="pas1-comment">//JclGUIDToString
+</span><span class="pas1-space">       </span><span class="pas1-comment">//TJclNumericFormat 
+</span><span class="pas1-space">          </span><span class="pas1-comment">//function IsClass(Address: Pointer): Boolean;
+</span><span class="pas1-space">          </span><span class="pas1-comment">//function IsObject(Address: Pointer): Boolean;
+</span><span class="pas1-space">           </span><span class="pas1-comment">//IsClass(Address: Pointer): Boolean;
+</span><span class="pas1-space">           </span><span class="pas1-comment">//IsObject(Address: Pointer): Boolean;
+</span><span class="pas1-space">           </span><span class="pas1-comment">//ReadKey
+</span><span class="pas1-space">             </span><span class="pas1-comment">//IntToStrZeroPad
+</span><span class="pas1-space">           </span><span class="pas1-comment">//  StrFillChar
+</span><span class="pas1-space">           </span><span class="pas1-comment">//EndDialog( 
+</span><span class="pas1-space">             </span><span class="pas1-comment">//GetDlgItem(
+</span><span class="pas1-space">             </span><span class="pas1-comment">//SetDlgItemInt( 
+</span><span class="pas1-space">               </span><span class="pas1-comment">//dialogbox
+</span><span class="pas1-space">         </span><span class="pas1-comment">//TQuaternionList(CL: TPSPascalCompiler);
+//TByteList(CL: TPSPascalCompiler);
+</span><span class="pas1-space">   </span><span class="pas1-comment">//TSingleList(CL: TPSPascalCompiler);
+</span><span class="pas1-space">   </span><span class="pas1-comment">//TIntegerList(CL: TPSPascalCompiler);
+</span><span class="pas1-space">   </span><span class="pas1-comment">//TTexPointList(CL: TPSPascalCompiler);
+</span><span class="pas1-space">   </span><span class="pas1-comment">//TVectorList(CL: TPSPascalCompiler);
+</span><span class="pas1-space">   </span><span class="pas1-comment">//TAffineVectorList(CL: TPSPascalCompiler);
+</span><span class="pas1-space">   </span><span class="pas1-comment">//TBaseVectorList(CL: TPSPascalCompiler);
+</span><span class="pas1-space">   </span><span class="pas1-comment">//TBaseList(CL: TPSPascalCompiler);
+</span><span class="pas1-space">   </span><span class="pas1-comment">//VectorLists(CL: TPSPascalCompiler);
+</span><span class="pas1-space">   </span><span class="pas1-comment">//TXIntegerList
+</span><span class="pas1-space">   </span><span class="pas1-comment">//TJclSimpleLog
+</span><span class="pas1-space">     </span><span class="pas1-comment">//jExecute 
+</span><span class="pas1-space">       writeln</span><span class="pas1-symbol">(</span><span class="pas1-identifier">booleantostr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">samepath</span><span class="pas1-symbol">(</span><span class="pas1-identifier">exepath</span><span class="pas1-symbol">,</span><span class="pas1-space"> exepath</span><span class="pas1-symbol">)))
+</span><span class="pas1-space">       
+  verinfo</span><span class="pas1-symbol">:=</span><span class="pas1-space"> GetOsVersionInfo2</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'OS Verinfo '</span><span class="pas1-symbol">+</span><span class="pas1-identifier">inttostr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Verinfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">dwMajorVersion</span><span class="pas1-symbol">))
+</span><span class="pas1-space">  writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'OS Verinfo '</span><span class="pas1-symbol">+</span><span class="pas1-identifier">inttostr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Verinfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">dwMinorVersion</span><span class="pas1-symbol">))
+</span><span class="pas1-space">  writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'OS Versizeinfo '</span><span class="pas1-symbol">+</span><span class="pas1-identifier">inttostr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Verinfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">dwOSVersionInfoSize</span><span class="pas1-symbol">))
+</span><span class="pas1-space">  </span><span class="pas1-comment">//Function IsDelphiProject( const FileName : string) : Boolean');
+</span><span class="pas1-space">  writeln</span><span class="pas1-symbol">(</span><span class="pas1-identifier">booleantoStr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">IsDelphiProject</span><span class="pas1-symbol">(</span><span class="pas1-identifier">exepath</span><span class="pas1-symbol">+</span><span class="pas1-string">'maxbox3.exe'</span><span class="pas1-symbol">)));
+</span><span class="pas1-space">  </span><span class="pas1-comment">//FileBackup(const 
+</span><span class="pas1-space">  
+  TChangeFinder_SearchDirectories</span><span class="pas1-symbol">(</span><span class="pas1-identifier">exepath</span><span class="pas1-symbol">+</span><span class="pas1-string">'examples'</span><span class="pas1-symbol">,</span><span class="pas1-string">'*.txt'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">         
+</span><span class="pas1-reservedword">END</span><span class="pas1-symbol">.</span><span class="pas1-space"> 
+
+small </span><span class="pas1-reservedword">set</span><span class="pas1-space"> </span><span class="pas1-reservedword">for</span><span class="pas1-space"> </span><span class="pas1-reservedword">arduino</span><span class="pas1-space"> </span><span class="pas1-reservedword">and</span><span class="pas1-space"> </span><span class="pas1-reservedword">android</span><span class="pas1-space"> testing 
+
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> drive</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">[20];
+</span><span class="pas1-space">    mycf</span><span class="pas1-symbol">:</span><span class="pas1-space"> TChangeFinder</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  screen</span><span class="pas1-symbol">.</span><span class="pas1-identifier">cursor</span><span class="pas1-symbol">:=</span><span class="pas1-identifier">crHourglass</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    drive</span><span class="pas1-symbol">:=</span><span class="pas1-space"> dcbHD</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Drive</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    drive</span><span class="pas1-symbol">:=</span><span class="pas1-space"> drive </span><span class="pas1-symbol">+</span><span class="pas1-space"> </span><span class="pas1-string">':'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    mycf</span><span class="pas1-symbol">:=</span><span class="pas1-space"> TChangeFinder</span><span class="pas1-symbol">.</span><span class="pas1-identifier">prepList_and_Date</span><span class="pas1-symbol">(</span><span class="pas1-identifier">frmMain</span><span class="pas1-symbol">.</span><span class="pas1-identifier">livchangefind</span><span class="pas1-symbol">);
+</span><span class="pas1-space">    mycf</span><span class="pas1-symbol">.</span><span class="pas1-identifier">SearchDirectories</span><span class="pas1-symbol">(</span><span class="pas1-identifier">drive </span><span class="pas1-symbol">+</span><span class="pas1-space"> </span><span class="pas1-string">'\'</span><span class="pas1-symbol">,</span><span class="pas1-string">'*.*'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">    mycf</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Free</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    screen</span><span class="pas1-symbol">.</span><span class="pas1-identifier">cursor</span><span class="pas1-symbol">:=</span><span class="pas1-identifier">crDefault</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;</span><span class="pas1-space"> </span><span class="pas1-symbol">}
+
+
+
+</span><span class="pas1-identifier">http</span><span class="pas1-symbol">:</span><span class="pas1-comment">//glscene.sourceforge.net/wikka/HomePage
+
+{-Modulename and path: udwsfiler
+//
+//D:\franktech\Delphmax\dws\DWSServer.mpb
+//Category    Access method
+//
+//Developer kleiner kommunikation
+//Last Modification on 30.06.03 17:51:54:
+//question is destructor of grid
+  descript as a new field on 20.6.03
+  modified flag on 30.6.03
+//==========================================================================}
+</span><span class="pas1-reservedword">unit</span><span class="pas1-space"> udwsfilerwiz</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">interface
+
+uses</span><span class="pas1-space"> QGrids</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">type
+</span><span class="pas1-space"> TAppData </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-reservedword">record
+</span><span class="pas1-space">   Name</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">[50];
+</span><span class="pas1-space">   Size</span><span class="pas1-symbol">:</span><span class="pas1-space"> longint</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   Release</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">[30];
+</span><span class="pas1-space">   descript</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">[80];
+</span><span class="pas1-space"> </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-space">  TBuildAppGrid </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-reservedword">class</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">TObject</span><span class="pas1-symbol">)
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">private
+</span><span class="pas1-space">    aGrid</span><span class="pas1-symbol">:</span><span class="pas1-space"> TStringGrid</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    app</span><span class="pas1-symbol">:</span><span class="pas1-space"> TAppData</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    f</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">file</span><span class="pas1-space"> </span><span class="pas1-reservedword">of</span><span class="pas1-space"> TAppData</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    FaDatfile</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">ShortString</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    Fmodified</span><span class="pas1-symbol">:</span><span class="pas1-space"> Boolean</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">protected
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">function</span><span class="pas1-space"> GetaDatfile</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">ShortString</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> SetaDatfile</span><span class="pas1-symbol">(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> Value</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">ShortString</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">public
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">constructor</span><span class="pas1-space"> initGrid</span><span class="pas1-symbol">(</span><span class="pas1-identifier">vGrid</span><span class="pas1-symbol">:</span><span class="pas1-space"> TStringGrid</span><span class="pas1-symbol">;</span><span class="pas1-space"> vFile</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">shortString</span><span class="pas1-symbol">);
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> fillGrid</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> storeGrid</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">property</span><span class="pas1-space"> aDatfile</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">ShortString</span><span class="pas1-space"> </span><span class="pas1-reservedword">read</span><span class="pas1-space"> GetaDatfile </span><span class="pas1-reservedword">write</span><span class="pas1-space"> SetaDatfile</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">property</span><span class="pas1-space"> modified</span><span class="pas1-symbol">:</span><span class="pas1-space"> Boolean </span><span class="pas1-reservedword">read</span><span class="pas1-space"> Fmodified </span><span class="pas1-reservedword">write</span><span class="pas1-space"> Fmodified</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">implementation
+
+uses</span><span class="pas1-space"> sysutils</span><span class="pas1-symbol">,</span><span class="pas1-space"> QDialogs</span><span class="pas1-symbol">,</span><span class="pas1-space"> QControls</span><span class="pas1-symbol">,
+</span><span class="pas1-space">  QStdCtrls</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-comment">{
+******************************** TBuildAppGrid *********************************
+}
+</span><span class="pas1-reservedword">constructor</span><span class="pas1-space"> TBuildAppGrid</span><span class="pas1-symbol">.</span><span class="pas1-identifier">initGrid</span><span class="pas1-symbol">(</span><span class="pas1-identifier">vGrid</span><span class="pas1-symbol">:</span><span class="pas1-space"> TStringGrid</span><span class="pas1-symbol">;</span><span class="pas1-space"> vFile</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">shortString</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  aGrid</span><span class="pas1-symbol">:=</span><span class="pas1-space"> vGrid</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  aDatfile</span><span class="pas1-symbol">:=</span><span class="pas1-space"> vFile</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> aGrid </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    ScrollBars</span><span class="pas1-symbol">:=</span><span class="pas1-space"> ssAutoVertical</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    FixedRows </span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">1;
+</span><span class="pas1-space">    FixedCols</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">0;
+</span><span class="pas1-space">    ColCount</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">4;
+</span><span class="pas1-space">    RowCount</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">2;</span><span class="pas1-space"> </span><span class="pas1-comment">//title is one row
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TBuildAppGrid</span><span class="pas1-symbol">.</span><span class="pas1-identifier">fillGrid</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  crow</span><span class="pas1-symbol">:</span><span class="pas1-space"> Integer</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  crow </span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">1;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> aGrid </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Cells</span><span class="pas1-symbol">[0,0]:=</span><span class="pas1-space"> </span><span class="pas1-string">'Application Name'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    ColWidths</span><span class="pas1-symbol">[0]:=</span><span class="pas1-space"> </span><span class="pas1-number">120;
+</span><span class="pas1-space">    Cells</span><span class="pas1-symbol">[1,0]:=</span><span class="pas1-space"> </span><span class="pas1-string">'App Size'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    ColWidths</span><span class="pas1-symbol">[1]:=</span><span class="pas1-space"> </span><span class="pas1-number">60;
+</span><span class="pas1-space">    Cells</span><span class="pas1-symbol">[2,0]:=</span><span class="pas1-space"> </span><span class="pas1-string">'Release Date'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    ColWidths</span><span class="pas1-symbol">[2]:=</span><span class="pas1-space"> </span><span class="pas1-number">90;
+</span><span class="pas1-space">    Cells</span><span class="pas1-symbol">[3,0]:=</span><span class="pas1-space"> </span><span class="pas1-string">'Description'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    ColWidths</span><span class="pas1-symbol">[3]:=</span><span class="pas1-space"> </span><span class="pas1-number">140;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> aDatFile </span><span class="pas1-symbol">&lt;&gt;</span><span class="pas1-space"> </span><span class="pas1-string">''</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      AssignFile</span><span class="pas1-symbol">(</span><span class="pas1-identifier">f</span><span class="pas1-symbol">,</span><span class="pas1-identifier">aDatFile</span><span class="pas1-symbol">);
+</span><span class="pas1-space">      Reset</span><span class="pas1-symbol">(</span><span class="pas1-identifier">f</span><span class="pas1-symbol">);
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">        </span><span class="pas1-reservedword">while</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> Eof</span><span class="pas1-symbol">(</span><span class="pas1-identifier">F</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">          Read </span><span class="pas1-symbol">(</span><span class="pas1-identifier">F</span><span class="pas1-symbol">,</span><span class="pas1-space"> app</span><span class="pas1-symbol">);
+</span><span class="pas1-space">          Cells</span><span class="pas1-symbol">[0,</span><span class="pas1-identifier">crow</span><span class="pas1-symbol">]:=</span><span class="pas1-space"> app</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Name</span><span class="pas1-symbol">;
+</span><span class="pas1-space">          Cells</span><span class="pas1-symbol">[1,</span><span class="pas1-identifier">crow</span><span class="pas1-symbol">]:=</span><span class="pas1-space"> intToStr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">app</span><span class="pas1-symbol">.</span><span class="pas1-identifier">size</span><span class="pas1-symbol">);
+</span><span class="pas1-space">          Cells</span><span class="pas1-symbol">[2,</span><span class="pas1-identifier">crow</span><span class="pas1-symbol">]:=</span><span class="pas1-space"> app</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Release</span><span class="pas1-symbol">;
+</span><span class="pas1-space">          Cells</span><span class="pas1-symbol">[3,</span><span class="pas1-identifier">crow</span><span class="pas1-symbol">]:=</span><span class="pas1-space"> app</span><span class="pas1-symbol">.</span><span class="pas1-identifier">descript</span><span class="pas1-symbol">;
+</span><span class="pas1-space">          Inc</span><span class="pas1-symbol">(</span><span class="pas1-identifier">cRow</span><span class="pas1-symbol">);
+</span><span class="pas1-space">          RowCount</span><span class="pas1-symbol">:=</span><span class="pas1-space"> crow </span><span class="pas1-symbol">+1;</span><span class="pas1-space">  </span><span class="pas1-comment">//new entry
+</span><span class="pas1-space">        </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">        CloseFile</span><span class="pas1-symbol">(</span><span class="pas1-identifier">f</span><span class="pas1-symbol">);
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;</span><span class="pas1-comment">// if FileExists...
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;</span><span class="pas1-space"> </span><span class="pas1-comment">//with
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> TBuildAppGrid</span><span class="pas1-symbol">.</span><span class="pas1-identifier">GetaDatfile</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">ShortString</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> FileExists</span><span class="pas1-symbol">(</span><span class="pas1-identifier">FaDatFile</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">  result</span><span class="pas1-symbol">:=</span><span class="pas1-space"> FaDatFile
+  </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     AssignFile</span><span class="pas1-symbol">(</span><span class="pas1-identifier">f</span><span class="pas1-symbol">,</span><span class="pas1-space"> FaDatFile</span><span class="pas1-symbol">);
+</span><span class="pas1-space">     Rewrite</span><span class="pas1-symbol">(</span><span class="pas1-identifier">f</span><span class="pas1-symbol">);
+</span><span class="pas1-space">     closefile</span><span class="pas1-symbol">(</span><span class="pas1-identifier">f</span><span class="pas1-symbol">);
+</span><span class="pas1-space">     result</span><span class="pas1-symbol">:=</span><span class="pas1-space"> FaDatFile</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TBuildAppGrid</span><span class="pas1-symbol">.</span><span class="pas1-identifier">SetaDatfile</span><span class="pas1-symbol">(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> Value</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">ShortString</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> FaDatfile </span><span class="pas1-symbol">&lt;&gt;</span><span class="pas1-space"> Value </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    FaDatfile </span><span class="pas1-symbol">:=</span><span class="pas1-space"> Value</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TBuildAppGrid</span><span class="pas1-symbol">.</span><span class="pas1-identifier">storeGrid</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  crow</span><span class="pas1-symbol">:</span><span class="pas1-space"> Integer</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> FModified </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> MessageDlg</span><span class="pas1-symbol">(</span><span class="pas1-string">'Save Changes in '</span><span class="pas1-space"> </span><span class="pas1-symbol">+
+</span><span class="pas1-space">             aDatFile</span><span class="pas1-symbol">,</span><span class="pas1-space"> mtConfirmation</span><span class="pas1-symbol">,</span><span class="pas1-identifier">mbOkCancel</span><span class="pas1-symbol">,0)</span><span class="pas1-space"> </span><span class="pas1-symbol">=</span><span class="pas1-space"> mrOK </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     AssignFile</span><span class="pas1-symbol">(</span><span class="pas1-identifier">f</span><span class="pas1-symbol">,</span><span class="pas1-space"> aDatfile</span><span class="pas1-symbol">);
+</span><span class="pas1-space">     Rewrite</span><span class="pas1-symbol">(</span><span class="pas1-identifier">f</span><span class="pas1-symbol">);
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">for</span><span class="pas1-space"> crow</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> Pred</span><span class="pas1-symbol">(</span><span class="pas1-identifier">aGrid</span><span class="pas1-symbol">.</span><span class="pas1-identifier">RowCount</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">       app</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Name</span><span class="pas1-symbol">:=</span><span class="pas1-space"> aGrid</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Cells</span><span class="pas1-symbol">[0,</span><span class="pas1-space"> crow</span><span class="pas1-symbol">];
+</span><span class="pas1-space">       app</span><span class="pas1-symbol">.</span><span class="pas1-identifier">size</span><span class="pas1-symbol">:=</span><span class="pas1-space"> strToInt</span><span class="pas1-symbol">(</span><span class="pas1-identifier">aGrid</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Cells</span><span class="pas1-symbol">[1,</span><span class="pas1-space"> crow</span><span class="pas1-symbol">]);
+</span><span class="pas1-space">       app</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Release</span><span class="pas1-symbol">:=</span><span class="pas1-space"> aGrid</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Cells</span><span class="pas1-symbol">[2,</span><span class="pas1-space"> crow</span><span class="pas1-symbol">];
+</span><span class="pas1-space">       app</span><span class="pas1-symbol">.</span><span class="pas1-identifier">descript</span><span class="pas1-symbol">:=</span><span class="pas1-space"> aGrid</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Cells</span><span class="pas1-symbol">[3,</span><span class="pas1-space"> crow</span><span class="pas1-symbol">];
+</span><span class="pas1-space">       Write </span><span class="pas1-symbol">(</span><span class="pas1-identifier">f</span><span class="pas1-symbol">,</span><span class="pas1-space"> app</span><span class="pas1-symbol">);
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">     CloseFile</span><span class="pas1-symbol">(</span><span class="pas1-identifier">f</span><span class="pas1-symbol">);
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;</span><span class="pas1-space"> </span><span class="pas1-comment">//if MessageDlg...
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">.
+
+
+</span><span class="pas1-identifier">und am TV </span><span class="pas1-reservedword">in</span><span class="pas1-space"> SRF Info   um </span><span class="pas1-number">22:30</span><span class="pas1-space"> oder um </span><span class="pas1-number">23</span><span class="pas1-space"> Uhr
+
+Wieso dann ausgerechnet um </span><span class="pas1-number">10</span><span class="pas1-space"> vor </span><span class="pas1-number">10!?!
+----</span><span class="pas1-identifier">Simple Browser started</span><span class="pas1-symbol">----
+----</span><span class="pas1-identifier">Simple Browser started</span><span class="pas1-symbol">----
+</span></code></pre><!--EndFragment--></body>
+</html>

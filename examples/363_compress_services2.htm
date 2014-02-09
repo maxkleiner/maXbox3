@@ -1,0 +1,545 @@
+Version:0.9
+StartHTML:0000000105
+EndHTML:0000043715
+StartFragment:0000001037
+EndFragment:0000043699
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>mXScriptasHTML</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="generator" content="SynEdit HTML exporter" />
+<style type="text/css">
+<!--
+body { color: #000000; background-color: #FFFFFF; }
+.pas1-assembler { }
+.pas1-character { text-decoration: underline; }
+.pas1-comment { color: #000080; font-style: italic; }
+.pas1-float { color: #800080; }
+.pas1-hexadecimal { color: #FF00FF; }
+.pas1-identifier { }
+.pas1-number { color: #FF0000; }
+.pas1-preprocessor { font-style: italic; }
+.pas1-reservedword { color: #000000; font-weight: bold; }
+.pas1-space { }
+.pas1-string { color: #008080; }
+.pas1-symbol { color: #000000; }
+-->
+</style>
+</head>
+<body>
+<!--StartFragment--><pre><code><span class="pas1-reservedword">program</span><span class="pas1-space"> CompressServices2;
+
+</span><span class="pas1-comment">//Purpose: implement a service routine based on a class of a unit, locs= 220
+//uses Unit: ..\maxbox3\examples\units\shellZipTool.PAS
+//we compress folder ..\examples\earthplay2 and decompress it 
+
+{type
+  TShellZip = class(TObject)
+  private
+    FFilter: string;
+    FZipfile: WideString;
+    shellobj: OleVariant;
+
+    procedure CreateEmptyZip;
+    function GetNameSpaceObj(x:OleVariant):OleVariant;
+    function GetNameSpaceObj_zipfile:OleVariant;
+  public
+     procedure ZipFolder(const sourcefolder: WideString);
+     procedure Unzip(const targetfolder: WideString);
+     property Zipfile: WideString read FZipfile write FZipfile;
+     property Filter: string read FFilter write FFilter;
+  end;}
+
+</span><span class="pas1-reservedword">Const
+</span><span class="pas1-space">  SHCONTCH_NOPROGBOX = </span><span class="pas1-number">4</span><span class="pas1-symbol">;
+  SHCONTCH_AUTORENAME = </span><span class="pas1-number">8</span><span class="pas1-symbol">;
+  SHCONTCH_RESPONDYESTOALL = </span><span class="pas1-number">16</span><span class="pas1-symbol">;
+  SHCONTF_INCHIDDEN = </span><span class="pas1-number">128</span><span class="pas1-symbol">;
+  SHCONTF_FOLDS = </span><span class="pas1-number">32</span><span class="pas1-symbol">;
+  SHCONTF_NONFOLDS = </span><span class="pas1-number">64</span><span class="pas1-symbol">;
+  AZIPFILE = </span><span class="pas1-string">'maxzip2.zip'</span><span class="pas1-symbol">;
+   
+ </span><span class="pas1-reservedword">var</span><span class="pas1-space"> zipfile: widestring;
+     shellObj: OlEVariant;
+
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> NumProcessThreads2: integer;
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  hsnapshot: THandle;
+  Te32: TTHREADENTRY32;
+  proch: dword;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Result:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+  proch:= GetCurrentProcessID;
+  hSnapShot:= CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, </span><span class="pas1-number">0</span><span class="pas1-symbol">);
+  </span><span class="pas1-comment">//Te32.dwSize:= sizeof(TTHREADENTRY32);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Thread32First(hSnapShot, Te32) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> te32.th32OwnerProcessID = proch </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">      inc(Result);
+    </span><span class="pas1-reservedword">while</span><span class="pas1-space"> Thread32Next(hSnapShot, Te32) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> te32.th32OwnerProcessID = proch </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">        inc(Result);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  CloseHandle(hSnapShot);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-comment">//****************************** from unit shellZipTool.PAS
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> IsValidDispatch(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> v: OleVariant): Boolean;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  result:= (VarType(v)=varDispatch);</span><span class="pas1-comment">// and Assigned(TVarData(v).VDispatch);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;       
+       
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> TShellZip_GetNameSpaceObj(ax: Variant): Variant;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">// WARNING: the argument of .NameSpace must be a OleVariant
+</span><span class="pas1-space">  </span><span class="pas1-comment">// don't change &quot;x&quot; to string or WideString
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    Result:= shellobj.NameSpace(ax);
+  </span><span class="pas1-reservedword">except
+</span><span class="pas1-space">    showmessage(</span><span class="pas1-string">'Not a valid folder or namespace!'</span><span class="pas1-symbol">)
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> TShellZip_GetNameSpaceObj_zipfile: OleVariant;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Result:= TShellZip_GetNameSpaceObj(Zipfile);
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> IsValidDispatch(Result) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  EInvalidOperation.Create; </span><span class="pas1-comment">//('&lt;%s&gt; invalid zipfile [zipfile]');
+</span><span class="pas1-space">  </span><span class="pas1-comment">//EInvalidOperation.CreateFmt('&lt;%s&gt; invalid zipfile', [zipfile]);
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">raise</span><span class="pas1-symbol">; </span><span class="pas1-comment">//CreateFmt('&lt;%s&gt; invalid zipfile', [zipfile]);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;   
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;       
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TShellZip_CreateEmptyZip;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i: integer;
+  </span><span class="pas1-comment">//ezip: TByteArray; = (80,75,5,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+</span><span class="pas1-space">  ezip: TByteDynArray;
+  ms: TMemoryStream;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  SetLength(ezip, </span><span class="pas1-number">25</span><span class="pas1-symbol">);   </span><span class="pas1-comment">//for ZIP Header
+</span><span class="pas1-space">  ezip[</span><span class="pas1-number">0</span><span class="pas1-symbol">]:=</span><span class="pas1-number">80</span><span class="pas1-symbol">; ezip[</span><span class="pas1-number">1</span><span class="pas1-symbol">]:=</span><span class="pas1-number">75</span><span class="pas1-symbol">; ezip[</span><span class="pas1-number">2</span><span class="pas1-symbol">]:=</span><span class="pas1-number">5</span><span class="pas1-symbol">; ezip[</span><span class="pas1-number">3</span><span class="pas1-symbol">]:=</span><span class="pas1-number">6</span><span class="pas1-symbol">; 
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">4</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">23</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> ezip[i]:= </span><span class="pas1-number">0</span><span class="pas1-symbol">; 
+
+  zipfile:= exepath+</span><span class="pas1-string">'examples\'</span><span class="pas1-symbol">+AZIPFILE;
+  </span><span class="pas1-comment">// create a new empty ZIP file
+</span><span class="pas1-space">  ms:= TMemoryStream.Create;
+  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    </span><span class="pas1-comment">//ms.WriteBuffer array of byte of dynamic size;
+</span><span class="pas1-space">    ms.WriteBufferABD(ezip, length(ezip));
+    ms.SaveToFile(Zipfile);
+  </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">    ms.Free;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TShellZipZipFolder(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> sourcefolder: WideString);
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  srcfldr, destfldr, shellfldritems: OleVariant;
+  numt: integer;
+  filter: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  zipfile:= exepath+</span><span class="pas1-string">'examples\'</span><span class="pas1-symbol">+AZIPFILE;
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> FileExists(zipfile) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> 
+     TShellZip_CreateEmptyZip;
+  numt:= NumProcessThreads;
+  </span><span class="pas1-comment">//almost  numt:= 1;
+</span><span class="pas1-space">  shellobj:= CreateOleObject(</span><span class="pas1-string">'Shell.Application'</span><span class="pas1-symbol">);
+  srcfldr:= TShellZip_GetNameSpaceObj(sourcefolder);
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> IsValidDispatch(srcfldr) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">     </span><span class="pas1-comment">//raise; //EInvalidOperation.CreateFmt('&lt;%s&gt; invalid source', [sourcefolder]);
+</span><span class="pas1-space">     writeln(</span><span class="pas1-string">'EInvalidOperation.CreateFmt(invalid source'</span><span class="pas1-symbol">);
+
+  destfldr:= TShellZip_GetNameSpaceObj_zipfile;     
+  shellFldritems:= srcfldr.Items;
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (filter &lt;&gt; </span><span class="pas1-string">''</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    shellFldritems.Filter(SHCONTF_INCHIDDEN </span><span class="pas1-reservedword">or</span><span class="pas1-space"> SHCONTF_NONFOLDS </span><span class="pas1-reservedword">or</span><span class="pas1-space"> SHCONTF_FOLDS,filter);
+  destfldr.CopyHere(shellFldritems, </span><span class="pas1-number">0</span><span class="pas1-symbol">);
+  </span><span class="pas1-comment">// wait till all shell threads are terminated
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">while</span><span class="pas1-space"> NumProcessThreads &lt;&gt; numt </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">    sleep(</span><span class="pas1-number">100</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TShellZip_Unzip(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> targetfolder: WideString);
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  srcfldr, destfldr, shellfldritems: OleVariant;
+  filter: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  zipfile:= exepath+</span><span class="pas1-string">'examples\'</span><span class="pas1-symbol">+AZIPFILE;
+
+  shellobj:= CreateOleObject(</span><span class="pas1-string">'Shell.Application'</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> DirectoryExists(targetfolder) = false </span><span class="pas1-reservedword">then</span><span class="pas1-space">  </span><span class="pas1-comment">//in case of
+</span><span class="pas1-space">               CreateDir(targetfolder);
+  srcfldr:= TShellZip_GetNameSpaceObj_zipfile;
+  destfldr:= TShellZip_GetNameSpaceObj(targetfolder);
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> IsValidDispatch(destfldr) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">raise</span><span class="pas1-symbol">; </span><span class="pas1-comment">//EInvalidOperation.CreateFmt('&lt;%s&gt; invalid folder', [targetfolder]);
+</span><span class="pas1-space">  shellfldritems:= srcfldr.Items;
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (filter &lt;&gt; </span><span class="pas1-string">''</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    shellfldritems.Filter(SHCONTF_INCHIDDEN </span><span class="pas1-reservedword">or</span><span class="pas1-space"> SHCONTF_NONFOLDS </span><span class="pas1-reservedword">or</span><span class="pas1-space"> SHCONTF_FOLDS,filter);
+  destfldr.CopyHere(shellfldritems, SHCONTCH_NOPROGBOX </span><span class="pas1-reservedword">or</span><span class="pas1-space"> SHCONTCH_RESPONDYESTOALL);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-comment">//***************************Services Provider**********************************
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> XCompress(azipfolder, azipfile: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TShellZip.create </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    zipfile:= azipfile;
+    ZipFolder(azipfolder);
+    Free;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+ </span><span class="pas1-comment">//compress
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> XDeCompress(azipfolder, azipfile: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TShellZip.create </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    zipfile:= azipfile;
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> DirectoryExists(azipfolder) = false </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">         CreateDir(azipfolder);
+    UnZip(azipfolder);
+    Free;
+ </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+ </span><span class="pas1-comment">//decompress
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">   </span><span class="pas1-comment">//incomeReal: TIncomeRealIntf;
+</span><span class="pas1-space">   interlist: TStringlist;
+   i: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   </span><span class="pas1-comment">//JvZlibMultiple.DecompressFile('h:\test.zip','h:\test',true,true) 
+</span><span class="pas1-space">   </span><span class="pas1-comment">//procedure TShellZipZipFolder(const sourcefolder: WideString);
+</span><span class="pas1-space">   
+   </span><span class="pas1-comment">//TShellZipZipFolder(exepath+'examples\earthplay2');
+</span><span class="pas1-space">   </span><span class="pas1-comment">//TShellZip_UnZip(exepath+'examples\decompress2');
+
+</span><span class="pas1-space">   TShellZip_CreateEmptyZip;
+   
+   </span><span class="pas1-comment">//XCompress(exepath+'examples\earthplay2', exepath+'examples\maxboxziptest.zip');
+</span><span class="pas1-space">   Writeln(</span><span class="pas1-string">'thread count: '</span><span class="pas1-symbol">+inttoStr(NumProcessThreads));
+   </span><span class="pas1-comment">//XDeCompress(exepath+'examples\Decompress2', exepath+'examples\maxboxziptest.zip');
+</span><span class="pas1-space">   
+   </span><span class="pas1-comment">//Compress(exepath+'examples\earthplay2', exepath+'examples\maxboxziptest2.zip');
+</span><span class="pas1-space">   Writeln(</span><span class="pas1-string">'thread count: '</span><span class="pas1-symbol">+inttoStr(NumProcessThreads));
+   </span><span class="pas1-comment">//DeCompress(exepath+'examples\Decompress2', exepath+'examples\maxboxziptest2.zip');
+
+</span><span class="pas1-space">   writeln(inttoStr(BytesPerCardinal));
+   writeln(inttoStr64(minint64));
+   writeln(inttoStr64(maxint64));
+   writeln(inttoStr64(mincardinal));
+   writeln(inttoStr64(maxcardinal));
+   writeln(inttoStr(minnativeint));
+   writeln(inttoStr(maxnativeint));
+   
+   </span><span class="pas1-comment">{interlist:= TStringlist.create;
+   JCLLocalesInfoList(interlist, 2);
+   for i:= 1 to interlist.count-1 do 
+     writeln(interlist[i]);
+   interlist.Free;}</span><span class="pas1-space">  
+   
+   </span><span class="pas1-comment">//LetPDFGen;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">.
+
+-------------------------------------------------
+
+
+
+   </span><span class="pas1-comment">{if QueryInterface(IIncomeInt, incomeIntRef) = S_OK
+      then begin //_addRef; test
+        SetRate(strToInt(edtZins.text),
+                       strToInt(edtJahre.text));
+        cIncome:=strTofloat(edtBetrag.text);
+        cIncome:= GetIncome(cIncome);
+      end;}
+
+</span><span class="pas1-space">   IInterface  = </span><span class="pas1-reservedword">interface
+</span><span class="pas1-space">     [</span><span class="pas1-string">'{00000000-0000-0000-C000-000000000046}'</span><span class="pas1-symbol">]
+     </span><span class="pas1-reservedword">function</span><span class="pas1-space"> QueryInterface(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> IID: TGUID; </span><span class="pas1-reservedword">out</span><span class="pas1-space"> Obj): HResult; </span><span class="pas1-reservedword">stdcall</span><span class="pas1-symbol">;
+     </span><span class="pas1-reservedword">function</span><span class="pas1-space"> _AddRef: Integer; </span><span class="pas1-reservedword">stdcall</span><span class="pas1-symbol">;
+     </span><span class="pas1-reservedword">function</span><span class="pas1-space"> _Release: Integer; </span><span class="pas1-reservedword">stdcall</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+ 
+    IIncomeInt  = </span><span class="pas1-reservedword">interface</span><span class="pas1-space"> (IUnknown)
+      [</span><span class="pas1-string">'{DBB42A04-E60F-41EC-870A-314D68B6913C}'</span><span class="pas1-symbol">]
+      </span><span class="pas1-reservedword">function</span><span class="pas1-space"> GetIncome(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> aNetto: Extended): Extended; </span><span class="pas1-reservedword">stdcall</span><span class="pas1-symbol">;
+      </span><span class="pas1-reservedword">function</span><span class="pas1-space"> GetIncome2(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> aNetto: Currency): Currency; </span><span class="pas1-reservedword">stdcall</span><span class="pas1-symbol">;
+      </span><span class="pas1-reservedword">function</span><span class="pas1-space"> GetRate: Extended;
+      </span><span class="pas1-reservedword">function</span><span class="pas1-space"> queryDLLInterface(</span><span class="pas1-reservedword">var</span><span class="pas1-space"> queryList: TStringList): TStringList;
+              </span><span class="pas1-reservedword">stdcall</span><span class="pas1-symbol">;
+      </span><span class="pas1-reservedword">function</span><span class="pas1-space"> queryDLLInterfaceTwo(</span><span class="pas1-reservedword">var</span><span class="pas1-space"> queryList: TStringList): TStringList;
+              </span><span class="pas1-reservedword">stdcall</span><span class="pas1-symbol">;
+      </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> SetRate(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> aPercent, aYear: integer); </span><span class="pas1-reservedword">stdcall</span><span class="pas1-symbol">;
+      </span><span class="pas1-comment">//property Rate: Double read GetRate;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+    
+    
+  
+ </span><span class="pas1-reservedword">unit</span><span class="pas1-space"> ShellZipTool;
+
+</span><span class="pas1-reservedword">interface
+
+type
+</span><span class="pas1-space">  TShellZip = </span><span class="pas1-reservedword">class</span><span class="pas1-symbol">(TObject)
+  </span><span class="pas1-reservedword">private
+</span><span class="pas1-space">    FFilter: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+    FZipfile: WideString;
+    shellobj: Olevariant;
+
+    </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> CreateEmptyZip;
+    </span><span class="pas1-reservedword">function</span><span class="pas1-space"> GetNameSpaceObj(x:OleVariant):OleVariant;
+    </span><span class="pas1-reservedword">function</span><span class="pas1-space"> GetNameSpaceObj_zipfile:OleVariant;
+
+  </span><span class="pas1-reservedword">public
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> ZipFolder(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> sourcefolder:WideString);
+     </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> Unzip(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> targetfolder: WideString);
+
+     </span><span class="pas1-reservedword">property</span><span class="pas1-space"> Zipfile:WideString </span><span class="pas1-reservedword">read</span><span class="pas1-space"> FZipfile </span><span class="pas1-reservedword">write</span><span class="pas1-space"> FZipfile;
+     </span><span class="pas1-reservedword">property</span><span class="pas1-space"> Filter:</span><span class="pas1-reservedword">string</span><span class="pas1-space"> </span><span class="pas1-reservedword">read</span><span class="pas1-space"> FFilter </span><span class="pas1-reservedword">write</span><span class="pas1-space"> FFilter;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> NumProcessThreads: integer;
+
+
+
+</span><span class="pas1-reservedword">implementation
+
+uses</span><span class="pas1-space"> Classes, Comobj, Windows, Tlhelp32, SysUtils, Variants;
+
+</span><span class="pas1-reservedword">const
+</span><span class="pas1-space">  SHCONTCH_NOPROGRESSBOX = </span><span class="pas1-number">4</span><span class="pas1-symbol">;
+  SHCONTCH_AUTORENAME = </span><span class="pas1-number">8</span><span class="pas1-symbol">;
+  SHCONTCH_RESPONDYESTOALL = </span><span class="pas1-number">16</span><span class="pas1-symbol">;
+  SHCONTF_INCLUDEHIDDEN = </span><span class="pas1-number">128</span><span class="pas1-symbol">;
+  SHCONTF_FOLDERS = </span><span class="pas1-number">32</span><span class="pas1-symbol">;
+  SHCONTF_NONFOLDERS = </span><span class="pas1-number">64</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> IsValidDispatch(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> v:OleVariant):Boolean;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  result := (VarType(v)=varDispatch) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> Assigned(TVarData(v).VDispatch);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> NumProcessThreads: integer;
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  hsnapshot: THandle;
+  Te32: TTHREADENTRY32;
+  proch: dword;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Result := </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+
+  proch := GetCurrentProcessID;
+
+  hSnapShot := CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, </span><span class="pas1-number">0</span><span class="pas1-symbol">);
+
+  Te32.dwSize := sizeof(TTHREADENTRY32);
+
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Thread32First(hSnapShot, Te32) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> te32.th32OwnerProcessID = proch </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">      inc(Result);
+
+    </span><span class="pas1-reservedword">while</span><span class="pas1-space"> Thread32Next(hSnapShot, Te32) </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> te32.th32OwnerProcessID = proch </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">        inc(Result);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  CloseHandle(hSnapShot);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+
+</span><span class="pas1-comment">{ TShellZip }
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TShellZip.CreateEmptyZip;
+</span><span class="pas1-reservedword">const
+</span><span class="pas1-space">  emptyzip: </span><span class="pas1-reservedword">array</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">..</span><span class="pas1-number">23</span><span class="pas1-symbol">] </span><span class="pas1-reservedword">of</span><span class="pas1-space"> byte = (</span><span class="pas1-number">80</span><span class="pas1-symbol">,</span><span class="pas1-number">75</span><span class="pas1-symbol">,</span><span class="pas1-number">5</span><span class="pas1-symbol">,</span><span class="pas1-number">6</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  ms: TMemoryStream;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">// create a new empty ZIP file
+</span><span class="pas1-space">  ms := TMemoryStream.Create;
+  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    ms.WriteBuffer(emptyzip, sizeof(emptyzip));
+    ms.SaveToFile(Zipfile);
+  </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">    ms.Free;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> TShellZip.GetNameSpaceObj(x:OleVariant): OleVariant;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">// WARNING:
+</span><span class="pas1-space">  </span><span class="pas1-comment">// the argument of .NameSpace must be a OleVariant
+</span><span class="pas1-space">  </span><span class="pas1-comment">// don't change &quot;x&quot; to string or WideString
+</span><span class="pas1-space">  Result := shellobj.NameSpace(x);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> TShellZip.GetNameSpaceObj_zipfile: OleVariant;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Result := GetNameSpaceObj(Zipfile);
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> IsValidDispatch(Result) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">raise</span><span class="pas1-space"> EInvalidOperation.CreateFmt(</span><span class="pas1-string">'&lt;%s&gt; invalid zipfile'</span><span class="pas1-symbol">, [zipfile]);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TShellZip.ZipFolder(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> sourcefolder: WideString);
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  srcfldr, destfldr: OleVariant;
+  shellfldritems: Olevariant;
+  numt: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> FileExists(zipfile) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    CreateEmptyZip;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+  numt := NumProcessThreads;
+
+  shellobj := CreateOleObject(</span><span class="pas1-string">'Shell.Application'</span><span class="pas1-symbol">);
+
+  srcfldr := GetNameSpaceObj(sourcefolder);
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> IsValidDispatch(srcfldr) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">raise</span><span class="pas1-space"> EInvalidOperation.CreateFmt(</span><span class="pas1-string">'&lt;%s&gt; invalid source'</span><span class="pas1-symbol">, [sourcefolder]);
+
+  destfldr := GetNameSpaceObj_zipfile;
+
+  shellfldritems := srcfldr.Items;
+
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (filter &lt;&gt; </span><span class="pas1-string">''</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    shellfldritems.Filter(SHCONTF_INCLUDEHIDDEN </span><span class="pas1-reservedword">or</span><span class="pas1-space"> SHCONTF_NONFOLDERS </span><span class="pas1-reservedword">or</span><span class="pas1-space"> SHCONTF_FOLDERS,filter);
+
+  destfldr.CopyHere(shellfldritems, </span><span class="pas1-number">0</span><span class="pas1-symbol">);
+
+  </span><span class="pas1-comment">// wait till all shell threads are terminated
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">while</span><span class="pas1-space"> NumProcessThreads &lt;&gt; numt </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    sleep(</span><span class="pas1-number">100</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TShellZip.Unzip(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> targetfolder: WideString);
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  srcfldr, destfldr: Olevariant;
+  shellfldritems: Olevariant;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  shellobj := CreateOleObject(</span><span class="pas1-string">'Shell.Application'</span><span class="pas1-symbol">);
+
+  srcfldr := GetNameSpaceObj_zipfile;
+
+  destfldr := GetNameSpaceObj(targetfolder);
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> IsValidDispatch(destfldr) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">raise</span><span class="pas1-space"> EInvalidOperation.CreateFmt(</span><span class="pas1-string">'&lt;%s&gt; invalid target folder'</span><span class="pas1-symbol">, [targetfolder]);
+
+  shellfldritems := srcfldr.Items;
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (filter &lt;&gt; </span><span class="pas1-string">''</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    shellfldritems.Filter(SHCONTF_INCLUDEHIDDEN </span><span class="pas1-reservedword">or</span><span class="pas1-space"> SHCONTF_NONFOLDERS </span><span class="pas1-reservedword">or</span><span class="pas1-space"> SHCONTF_FOLDERS,filter);
+
+  destfldr.CopyHere(shellfldritems, SHCONTCH_NOPROGRESSBOX </span><span class="pas1-reservedword">or</span><span class="pas1-space"> SHCONTCH_RESPONDYESTOALL);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">.
+
+
+</span><span class="pas1-comment">// to do for 3.9.8.8
+
+</span><span class="pas1-identifier">tutorial </span><span class="pas1-number">22</span><span class="pas1-space"> services programming
+Genau das ist das Problem.
+Die Funktion NameSpace() akzeptiert als Argument nur ein Variant.
+WideStrings oder Strings f&uuml;hren zu dem Fehler, dass zwar ein Ergebnis vom Typ varDispatch zur&uuml;ckgeliefert wird, aber der Zeiger = </span><span class="pas1-reservedword">nil</span><span class="pas1-space"> ist.
+Leichte Schlamperei von Microsoft!
+
+Wichtig ist &uuml;brigens, dass die Zipdatei mit absolutem Pfad angegeben wird.
+zusammenfalten &middot; markieren
+Delphi-Quellcode:
+
+Code:
+add createfmt
+EInvalidOperation.CreateFmt(</span><span class="pas1-string">'&lt;%s&gt; invalid zipfile'</span><span class="pas1-symbol">, [zipfile]); 
+add TvarData
+Assigned(TVarData(v).VDispatch);
+add writebuffer </span><span class="pas1-reservedword">with</span><span class="pas1-space"> </span><span class="pas1-reservedword">array</span><span class="pas1-space"> </span><span class="pas1-reservedword">of</span><span class="pas1-space"> byte
+    ms.WriteBuffer(emptyzip, sizeof(emptyzip));
+add </span><span class="pas1-reservedword">unit</span><span class="pas1-space"> dir </span><span class="pas1-reservedword">in</span><span class="pas1-space"> distribution
+
+add getcurrentprocessid
+  proch := GetCurrentProcessID;
+alias </span><span class="pas1-reservedword">to</span><span class="pas1-space"> currentprocessid </span><span class="pas1-comment">//indy ?
+</span><span class="pas1-identifier">add </span><span class="pas1-reservedword">unit</span><span class="pas1-space"> 
+JclCompression.pas 
+</span><span class="pas1-reservedword">or</span><span class="pas1-space"> ShellZipTool from application.shell;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> LetPDFGen;
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-identifier">lPdf   : TPdfDocument;
+lPage  : TPdfPage;
+  </span><span class="pas1-comment">//s2: string;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//lPdf := TPdfDocument.Create(true, 400, true ,NIL);
+</span><span class="pas1-space">  lPdf:= TPdfDocument.Create1;
+  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    lPdf.Info.Author        := </span><span class="pas1-string">'Tester'</span><span class="pas1-symbol">;
+    lPdf.Info.CreationDate  := Now;
+    lPdf.Info.Creator       := </span><span class="pas1-string">'Tester'</span><span class="pas1-symbol">;
+    lPdf.DefaultPaperSize   := psA4;
+    lPage := lPDF.AddPage;
+    </span><span class="pas1-comment">//lPDF.Canvas.SetFont1('Helvetica',10.0,[]);
+</span><span class="pas1-space">    lPDF.Canvas.SetLeading(lPDF.Canvas.Page.FontSize);
+    lPDF.Canvas.SetLineWidth(</span><span class="pas1-float">0.1</span><span class="pas1-symbol">);
+    lPdf.Canvas.BeginText;
+    lPdf.Canvas.TextOut( </span><span class="pas1-number">300</span><span class="pas1-symbol">, </span><span class="pas1-number">700</span><span class="pas1-symbol">,  </span><span class="pas1-string">'This is some text as pdf.'</span><span class="pas1-symbol">);
+    lPdf.Canvas.EndText;
+    lPdf.SaveToFile(Exepath+</span><span class="pas1-string">'examples\myfirsttest.pdf'</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">finally</span><span class="pas1-space"> 
+    lPdf.Free;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-comment">//RegCreateKey(
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;    
+
+
+Ja genau, der Projektantrag steht jeweils am Kick-Off Meeting im Vordergrund.
+Der Projektantrag hat dieselbe Struktur wie bei der Eingabe, nur wird das Vorgehensmodell und entsprechend der Abstrakt mit dem L&ouml;sungsansatz noch nach Absprache und der Abstimmung mit dem Kickoff erg&auml;nzt.
+Die Idee ist dass sich nach Eingabe des Projektantrags und des definitiven Uploads noch Anpassungen oder sogar die Wahl eines anderen Vorgehensmodell (Prozess) ergeben kann.
+
+Internet </span><span class="pas1-reservedword">of</span><span class="pas1-space"> Things
+F&uuml;r das Internet der Dinge entwickeln
+
+Max Kleiner, Inhaber, kleiner kommunikation
+
+Viele sehen im Internet </span><span class="pas1-reservedword">of</span><span class="pas1-space"> Things vor allem eines: ein gigantisches Potenzial f&uuml;r neue Gesch&auml;ftsmodelle. Bald wird die ganze Welt programmierbar sein. Jedes EBike, jede Waschmaschine, Kaffeemaschine, jeder Blutdruckmesser oder jede Armbanduhr wird irgendwie vernetzt sein. Ger&auml;te werden untereinander als Physical Computing kommunizieren, sich aufeinander abstimmen. Man geht also nicht mehr ins Internet, sondern das Internet ist Teil von uns, Sensoren messen meinen Blutzucker und berechnen so die n&auml;chste Krankenkassenpr&auml;mie. Es kann auch sein, dass intelligente Geb&auml;ude so st&ouml;ranf&auml;llig werden, dass der Fahrstuhl des Grauens Wirklichkeit wird. Nette Spielereien oder der Anfang einer neuen solargetriebenen Manufakturindustrie inklusive </span><span class="pas1-number">3</span><span class="pas1-identifier">D-Drucker und Roboter </span><span class="pas1-reservedword">in</span><span class="pas1-space"> der Altersbetreuung
+
+Max Kleiner bespricht, wie mit Android ein Arduino Board gesteuert wird:
+
+    REST als Command Protocol
+    Web </span><span class="pas1-reservedword">to</span><span class="pas1-space"> Serial Applications
+    Microcontrollers
+    Aktoren und Sensoren
+    RFIDs sind &uuml;berall
+    
+
+Extern: Settings-User
+Extern: Konfiguration-Admin
+Intern: Literals-Developer
+
+Identifizierung
+• Konfigurationselemente wie Pfad oder </span><span class="pas1-reservedword">Default</span><span class="pas1-symbol">-Werte
+• Doppelte Elemente (</span><span class="pas1-reservedword">String</span><span class="pas1-space"> oder numerische Literals)
+• Beziehungen der Konfigurationselemente
+• Software Version innerhalb der Config Einstellung
+• Baseline und zentrale Elemente
+• Aufnahme von Konfigurationselementen
+• Bibliotheken / Komponenten / Frameworks etc.    
+</span></code></pre><!--EndFragment--></body>
+</html>

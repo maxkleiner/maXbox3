@@ -1,0 +1,66 @@
+program oop_batch;
+
+//example with objects and file-manipulation _06, locs=65
+//TASK: put the 'copy' before the extension
+
+function GetWinners: TStringList;
+var
+  i, bet: Integer;
+  betS: string;
+begin
+  Result:= TStringList.Create;
+  try
+    randomize;
+    for i:= 1 to 15 do begin
+      bet:= random((1000)+100);
+      if bet < 1000 then begin
+        bet:= bet+1000;
+        betS:= intTostr(bet);
+        betS[1]:= '0';
+      end else
+        betS:=intToStr(bet);
+      result.add(betS);
+    end;
+    result.add('---modern winnnerlist---')
+    result.Sort;
+  except
+    Result.Free;
+    //raise;
+  end;
+end;
+
+function executeFileList: TStrings;
+begin
+Result:= TStringList.Create;
+  with result do begin
+    Clear;
+    add('..\maxbox3\examples\001_pas_lottogen.txt')
+    add('..\maxbox3\examples\002_pas_russianroulette.txt')
+    add('..\maxbox3\examples\003_pas_motion.txt')
+  end;
+end;
+
+//main
+var 
+  myFilestr: TStrings;
+  filecont, winlist: TStringlist;
+  i: byte;
+begin
+  myFilestr:= TStrings.create;
+  filecont:= TStringlist.create;
+  myFilestr:= executeFileList;
+  for i:= 0 to myFilestr.count -1 do begin
+    //writeln(myfilestr.strings[i]);  
+    filecont.loadfromFile(myfilestr.strings[i]); 
+    filecont.SaveToFile(myfilestr.strings[i]+'copy')
+  end;
+  //put winnerlist into a file
+  winlist:= TStringlist.create;
+  winlist:= getWinners;
+  filecont.text:= winlist.text;
+  filecont.saveToFile(ExePath+'winnerlist.txt');
+  myFilestr.free;
+  filecont.free;
+  winlist.free;
+end.
+

@@ -1,0 +1,328 @@
+{****************************************************************
+ *
+ * Project  : maXbase SeriesSystem Information Series
+ * App Name : 231_DBGrid_XMLaccess.txt, loc's = 177
+ * Purpose  : DB Access via ClientDataSet
+ * History  : system for mX3.6, need: country.xml file db in /examples
+ ****************************************************************}
+program DB_XML_ACCESS_GRID;
+
+function  MyMessageBeep(para: integer): byte;
+     external 'MessageBeep@user32.dll stdcall';  
+
+function MyGetTickCount: Longint;
+  external 'GetTickCount@kernel32.dll stdcall';
+  
+var
+  myTimeStamp: TDateTime;
+  ws: TWideStrings;
+  dCom: TADOCommand;
+  adoquery: TAdoDataSet;
+  dataset1: TDataSet;
+  adoquery1: TADOQuery;
+  dbGrid: TDBGrid;
+  dbForm: TForm;
+  
+Procedure ConnectTest;
+var
+  dconnect: TADOConnection;
+begin
+  dconnect:= TADOConnection.Create(self);
+  try
+    dconnect.Provider:= 'Microsoft.Jet.OLEDB.4.0'
+    dconnect.ConnectionString:= 'Provider=SQLOLEDB;DataSource=MyServer;Integrated Security//=SSPI;Initial Catalog=pubs;';
+  //or for MS Jet (MS Access):
+    dconnect.ConnectionString:= 'Provider=Microsoft.Jet.OLEDB.4.0;'+
+                                  'DataSource=c:\db.mdb;';
+    dconnect.Connected:= true;
+    dconnect.LoginPrompt := False
+    dconnect.open('Admin','');
+    //dconnect.Active:= true;
+  finally
+    dconnect.Free;
+  end;
+end;     
+
+
+procedure CreateDBGridForm(aSet: TClientDataSet);
+//diaform:= CreateMessageDialog('my fast form perform',mtconfirmation, []);
+var tmpDataSource: TDataSource;
+    myset: TDataSet;
+
+begin
+   dbform:= CreateMessageDialog('FastForm DB Perform - FFP',mtwarning,
+                                                        [mball,mbhelp,mbok]);
+   dbform.caption:= 'FFP XML DBGrid Demo';
+   dbform.setBounds(50,50,800,500)
+   dbform.formstyle:= fsstayontop;
+   dbform.color:= 123;
+   dbform.show; 
+   dbgrid:= TDBGrid.Create(self)
+   with dbGrid do begin
+     Parent:= dbform;
+     left:= 70;
+     top:= 100;
+     width:= 700;
+     height:= 350;
+     //dataSource:= NIL;
+     //dataSource.Dataset:=
+     tabstop:= true;
+     ReadOnly:= True;
+     //Options:=DBGrid.Options + [dgEditing];  
+     tmpDataSource:= TDatasource.Create(Self);
+     with tmpDataSource do begin
+       dataset:= TDataSet(aSet);
+       IsLinkedto(TDataSet(aSet))
+       Enabled;
+       //DataSet:= adoQuery; //Set dataset to the created table
+     end;
+    //MyGrid.DataSource:= FData.DataSource1;
+    //DataSource is now linked to a DataSet (a XMLMemory table).
+     dataSource:= tmpDataSource;
+     //if DataSource.DataSet is TClientDataSet then
+                            //writeln((fields[2].asString));
+     BeginLayout; //!!
+     writeln('fcount of datasource '+intToStr(fieldcount))
+     writeln('fname of datasource '+(aSet.filename));
+   end;
+   //tmpDataSource.Free; 
+   //dbGrid.Free;
+   //dbform.Free;
+end;
+
+Procedure NewDataSet;
+var 
+  cDataSet1: TClientDataset; 
+begin
+  cDataSet1:= TClientDataSet.Create(nil);
+ //with ads1.Create(self) do begin
+  with cdataset1 do begin
+    //CreateDataSet;
+    LoadFromFile(ExePath+'examples\country.xml');
+    Open;
+    Writeln('Size of DataSet '+inttostr(datasize))
+    //writeln('fcount of xml'+inttostr(indexfieldcount))
+    //CreateDataSet;
+    CreateDBGridForm(cdataset1); 
+      //SetDataSet(clientdataset1) 
+    Close;
+    Free;
+    //ShowMessage(fieldbyname('Value').asstring);
+  end;
+end;  
+
+
+Procedure SetADOSETAccess2;
+var 
+  //adoquery: TAdoDataSet;
+  i, z: integer;
+begin  
+  adoquery:= TAdoDataSet.Create(self);
+  with adoquery do begin
+    cachesize:= 500;
+    //commandtext:= 'select count(*)'    //DSN=mx3base
+    //commandtext:= 'INSERT INTO Table1 (FirstName, LastName, Phone)'+
+                        //'VALUES (''Max77'', ''Box545'', ''031-333 77 88'')';
+    commandText:= 'SELECT * FROM Clients';
+    connectionString:= 'Provider=MSDASQL;DSN=mxdbdemos;Uid=sa;Pwd=admin';
+    Open;
+  for i:= 0 to Recordcount - 1 do begin
+    for z:= 0 to Fieldcount - 1 do 
+      Write((Fields[z].asString)+'  ');
+    Writeln(#13#10)
+    Next;
+  end;
+    Close;
+    Free;        
+  end;
+end;
+
+{Versuche ein TClientdataset mit einer Advantage Tabelle zu benutzen. Verbunden über TAdsConnection - TAdsQuery - TDatasetProvider - TClientDataset - TDataSource -TDBGrid.
+Die Connection funktioniert, Daten lassen sich in einem Grid anzeigen.}
+
+
+begin
+  //SetAdoQuery;
+  //SetAdoSet;
+  maxform1.ShellStyle1Click(self);
+  ProcessMessagesON;
+  NewDataSet;
+  
+  SetADOSETAccess2;
+  //CreateDBGridForm(NIL);
+  //SetDataSet;
+  Writeln('Data Link Dir is: '+ DataLinkDir);
+  writeln('machine name is: '+getHostName)
+  writeln('user name is: '+getUserName)
+  mytimestamp:= GetFileCreationTime(exepath+'maxbox3.exe')
+  writeln(datetimetoStr(mytimestamp)+' Creation Date of maXbox3')
+  writeln('tick count from func ' +IntToStr(GetTickCount));
+  //DLL Test
+  MyMessageBeep(60);
+  Writeln('Host is: '+getHostbyName('www.softwareschule.ch'))
+  //CreateFileFromString(ExePath+'mycopy.txt',memo2.text);
+  //WriteLog(ExePath+'mylog.txt',memo2.text)
+  {ws:= TWideStringList.create;
+  getProviderNames(ws)
+  for i:= 1 to ws.count -1 do 
+    writeln(inttostr(i) +' '+ws.strings[i])
+  ws.free;}  
+  //setDataSet;
+end.   
+
+
+*******************************************************
+There is no place like 127.0.0.1 
+
+Exception: Access violation at address 4DE2F83C in module 'msado15.dll'. Read of address 78742E67 at 0.1057
+
+
+[Microsoft][ODBC Driver Manager] Data source name not found and no default driver specified at 35.440
+
+[Microsoft][ODBC Microsoft Access Driver] Query is too complex at 35.607
+
+
+[Microsoft][ODBC Microsoft Access Driver] The Microsoft Jet database engine cannot find the input table or query 'Table1d'.  Make sure it exists and that its name is spelled correctly at 35.556
+
+[Microsoft][ODBC Microsoft Access Driver] Syntax error (missing operator) in query expression '031-333 77 88' at 41.356
+
+[Microsoft][ODBC Microsoft Access Driver] Too few parameters. Expected 2 at 41.354
+
+
+The syntax for the INSERT statement is:
+
+    INSERT INTO table
+    (column-1, column-2, ... column-n)
+    VALUES
+    (value-1, value-2, ... value-n);
+    
+dbs.Execute " INSERT INTO Employees " _
+        & "(FirstName,LastName, Title) VALUES " _
+        & "('Harry', 'Washington', 'Trainee');"
+        
+        
+ADOConnection1.Open;
+ADOQuery1.Close;
+ADOQuery1.SQL.Text := 'SELECT * FROM database1 WHERE
+value1=1 AND value2= ' + inttostr(array[3]);
+        
+QuotedStr rather than ''''    
+
+CommandText does not return a result set at 41.360
+
+ADOQuery1.SQL.Clear;
+ADOQuery1.SQL.Add('Insert into Score ([Score],[Round],[FighterID],[FightID])
+Values('+quotedstr(cbrf1.text)+','+QuotedStr(inttostr(countround))+', )');
+ADOQuery1. ExecSQL;
+ADOQuery1.SQL.Clear;
+
+
+mdbviewer
+dns-entry
+
+
+
+n my program, I instansiate a TDataModule at RunTime and put it in a
+variable named FData.
+I then want to assign one of the TDataSources found in FData to a DBGrid's
+DataSource property. So I do this :
+MyGrid.DataSource := FData.DataSource1;
+Of cource, the DataSource is linked to a DataSet (actualy, a Memory table).
+Each time I call FData.DataSet1.Append() I receive a List out of bound
+(0).
+I traced the program and found out that the error is raised in
+TDataSet.DataEvent(Event: TDataEvent; Info: Longint);
+the code is
+for I := 0 to FDataSources.Count - 1 do
+TDataSource(FDataSources[I]).DataEvent(Event, Info);
+I don't know why it raises this error.
+Anyone have any idea ?
+Thanks in advance.
+
+
+The following code won't work (naming part)
+:
+: for i := 0 to (Listbox1.Items.Count-1) do
+: with PageControl1 do
+: begin
+: //addind tabsheet for table
+: with TTabSheet.Create(Self) do
+: begin
+: PageControl := PageControl1;
+: Pages[Page].TabVisible := true;
+: Caption := Listbox1.Items[i];
+: end;
+: //adding table
+: with TADOTable.Create(Self) do
+: begin
+: Active:= False;
+: ConnectionString:= ADOConnection1.ConnectionString;
+: Name:= 'ADOTbl'+IntToStr(i);
+: TableName:= Listbox1.Items[i];
+: end;
+: with TDatasource.Create(Self) do
+: begin
+: Name:= 'DS'+ IntToStr(i);
+: // DataSet:= 'ADOTbl'+IntToStr(i);
+: end;
+: with TDBGrid.Create(Self) do
+: begin
+: // Name:= 'DBGrid'+IntToStr(i);
+: Align:= AlTop;
+: // DataSource:= 'DS'+ IntToStr(i);
+: end;
+:
+: end;//with PageControl1.Pages do
+
+
+procedure TForm1.DBGrid1TitleClick(Column: TColumn);
+//{$J+}
+ const PreviousColumnIndex : integer = -0;
+//{$J-}
+begin
+  if DBGrid1.DataSource.DataSet is TCustomADODataSet then
+  with TCustomADODataSet(DBGrid1.DataSource.DataSet) do
+  begin
+    try
+      DBGrid1.Columns[PreviousColumnIndex].title.Font.Style :=
+      DBGrid1.Columns[PreviousColumnIndex].title.Font.Style - [fsBold];
+    except
+    end;
+
+    Column.title.Font.Style :=
+    Column.title.Font.Style + [fsBold];
+    PreviousColumnIndex := Column.Index;
+
+    if (Pos(Column.Field.FieldName, Sort) = 1) and (Pos(' DESC', Sort)= 0) then
+      Sort := Column.Field.FieldName + ' DESC'
+    else
+      Sort := Column.Field.FieldName + ' ASC';
+  end;
+end; 
+
+
+You don't need to create the file, CDS will do this.
+
+1.    Drop a tclientdataset on a fresh apps form.
+2.    Set fielddefs (eg Name and Value, type string, SIZE 250)
+3.    Put this for the "write" button:
+
+  with ClientDataSet1 do begin
+    CreateDataSet;
+    Open;
+    Append;
+    FieldByName('Name').AsString := 'MyName';
+    FieldByName('Value').AsString := 'Paul Rigby';
+    Append;
+    FieldByName('Name').AsString := 'MyAddress';
+    FieldByName('Value').AsString := '5 Woodman Villas'#13#10'Oxford';
+    Post;
+  end;
+
+4.    Do this to save: ClientDataSet1.SaveToFile('c:\test.xml', dfXML);
+5.    To load: ClientDataSet1.LoadFromFile('c:\test.xml');
+6.    To get a value:
+  ClientDataSet1.Locate('Name', 'MyAddress', [loCaseInsensitive]);
+ ShowMessage(ClientDataSet1.fieldbyname('Value').asstring);
+
+That's it. you can drop a dbgrid and datasource and link up dbgrid.datasource and datasrc.dataset and edit it live if you like.

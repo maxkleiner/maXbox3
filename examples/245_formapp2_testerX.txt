@@ -1,0 +1,1321 @@
+//Example of Outline and Memocomponent load and save capabilities of the VCL
+//Task: Outsource the business logic procedure ShowEntry in a include file
+//Get the text struct and set a new outline!, locs=236 
+//Dedicated to tutorial 11: starter programming forms
+
+Program Outline_Form_App_Tutorial_tester;
+
+Const LEFTBASE = 20;
+      TOPBASE = 30; 
+      TEXTPATH = 'examples\outline3.txt';
+      AVIPATH = 'examples\cool.avi';
+      BITMAP = 'examples\citymax.bmp';
+
+var 
+  myMemo: TMemo;
+  inFrm: TForm;  
+  stat: TStatusbar;
+  mOutln: TOutline;
+  mx: TJVChart;
+  selectFile: string;
+  
+Procedure UpdateOutline(self: TObject); forward;
+
+
+//*******************Event Handlers - Closure***********************************
+Procedure GetMediaData(self: TObject);
+begin
+  if PromptForFileName(selectFile, 'Text files (*.txt)|*.txt', '',
+                       'Select your outline file',
+                       ExePath, False) //False = not Save dialog !
+   then begin
+     ShowMessage('Selected file = '+selectFile);
+     Stat.simpletext:= selectFile;
+     myMemo.lines.LoadFromFile(selectFile);
+     UpdateOutline(self)
+     //Split full file/path value into its constituent parts
+   end;
+end;  
+  
+Procedure BtnSaveClick(self: TObject);
+begin
+  if selectFile <> '' then begin
+    mymemo.lines.SaveToFile(selectFile) 
+    UpdateOutline(self)
+    Stat.simpletext:= selectFile+ ' has been saved and updated' ;
+  end;
+end; 
+
+Procedure UpdateOutline(self: TObject);
+begin
+  with mOutln do begin
+    //Update Tree!
+    LoadFromFile(selectFile);
+    FullExpand;
+    //ibeta
+    //binomial
+    //cholesky
+  end  
+end; 
+
+(*procedure
+var
+begin
+if 0 then 360
+if then
+if then
+if 0 then begin
+22
+end else begin
+end
+if 0 then
+if 0 then
+if 0 then
+if 0 then
+end
+. ;
+, , , , , , , , : ;
+< := + ;
+< := ;
+> := ;
+:= ( );
+:= * ( );
+:= * ( );
+:= + ;
+:= - ;
+:= * / ;
+:= ( / );
+=
+:= / ;
+:= / ;
+:= ( ( / ));
+:= ( ( / ));
+;
+:= - ( + ); < := - ;
+:= - ; < := + ;
+:= * ( ); < := - ;
+:= * ( ); < := - ;
+:= + ;
+:= + ;
+;
+TForm1 ConvCylToImg
+Hdis Vdis A1 A3 A4 A5 A6 Ia Ib double
+Pa Pa Pa
+Pa PaMin Pa PaMin
+Pa PaMax Pa PaMax
+Par DegToRad Pa
+Cx R sin Par
+Cy R cos Par
+Hdis Ed Cy
+Vdis Eh Pv
+Ihor Ed Pv Vdis
+A1 ArcTan Cx Hdis
+Cx
+A3 Pi
+A4 Pi
+A3 Abs ArcTan Cy Cx
+A4 Abs ArcTan Hdis Cx
+A5 Pi A4 A3 A1 A5 A5
+A6 A5 A3 A1 A6 A3 A5
+Ihx Ihor Cos A6 A1 Ihx Ihx
+Ihy Ihor Sin A6 A1 Ihy Ihy
+Ix Ihx Cx
+Iy Ihy Cy
+{convert cylinder coordinates to image coordinates on paper}
+
+*)
+
+
+procedure DoVariantTest;
+var
+  V: Variant;
+  DT: TDateTime;
+begin
+  V := Null;
+  DT := V;
+  WriteLn('Done variant test');
+end;
+ 
+{begin
+  try
+    //NullStrictConvert := False; //emulate D2-D5 behaviour
+    DoTest;
+    //NullStrictConvert := True; //this is the D6+ default
+    DoTest;
+  except
+    //WriteLn(ExceptObject.ClassName, ': ', ExceptObject.ToString);
+  end;
+  ReadLn('');
+end;}
+
+
+Procedure showEntry(self: TObject);
+var idx: integer;
+begin
+  idx:= mOutln.selecteditem  //itemindex
+  writeln(mOutln.items[idx].text+' is marked')
+  Stat.simpletext:= mOutln.items[idx].text+' is marked';
+  //IncludeTrailingPathDelimiter
+
+end; 
+
+procedure FormCloseClick(Sender: TObject; var Action: TCloseAction);
+begin
+  //myImage.Free;
+  Writeln('Outline Form Closed at: '+ TimeToStr(Time));
+  //inFrm.Free;
+  Action:= caFree;
+end;
+
+procedure ButtonCloseClick(Sender: TObject);
+begin
+  inFrm.Close;
+end;
+
+
+procedure TIdPOP3_Connect(const ATimeout: Integer);
+var
+  S: String;
+  i: Integer;
+  my3: TIdPOP3;
+  FAPOP: boolean;
+  id128: TIdHash128;
+  idsha1: TIdHashSHA1;
+  ll: longword;
+begin
+  //inherited Connect(ATimeout); // ds 2001-AUG-31
+  try
+    my3.GetResponse([wsOk]);
+    if FAPOP then begin //APR
+        S:= my3.LastCmdResult.Text[0]; //read response
+        i:=Pos('<',S);    {Do not Localize}
+        if i>0 then begin
+           S:=Copy(S,i,MaxInt); //?: System.Delete(S,1,i-1);
+           i:=Pos('>',S);    {Do not Localize}
+           if i>0 then begin
+             S:=Copy(S,1,i)
+           end
+           else begin
+             S:='';    {Do not Localize}
+           end;
+        end//if
+        else begin
+          S:=''; //no time-stamp    {Do not Localize}
+        end;
+
+        if Length(S) > 0 then begin
+          with TIdHashMessageDigest5.Create do
+          try
+            //S:=LowerCase(TIdHash128.AsHex(HashValue(S+Password)));
+            //id128.ashex(HashValue(S+'Password'));
+           S:= LowerCase(id128.ashex(HashValue(S+'Password')));
+             //idsha1.ashex(
+            finally
+            Free;
+          end;//try
+          my3.SendCmd('APOP '+Username+' '+S, wsOk);    {Do not Localize}
+        end
+        else begin
+          raise EIdException.Create('RSPOP3ServerDoNotSupportAPOP');
+        end;
+    end
+    else begin //classic method
+      my3.SendCmd('USER ' + 'Username', wsOk);    {Do not Localize}
+      my3.SendCmd('PASS ' + 'Password', wsOk);    {Do not Localize}
+    end;//if APOP
+  except
+    my3.Disconnect;
+    raise;
+  end;
+end;
+
+function TIdPOP3_RetrieveMailBoxSize: integer;
+var
+  CurrentLine: string;
+    my3: TIdPOP3;
+    //IdFetchDelimDefault
+
+begin
+  // Returns the size of the mailbox. Issues a LIST command and then
+  // sums up each message size. The message sizes are returned in the format
+  // 1 1400 2 405 3 100 etc....
+  // With this routine, we prevent the user having to call REtrieveSize for
+  // each message to get the mailbox size
+  Result := 0;
+  try
+    my3.SendCmd('LIST', wsOk);    {Do not Localize}
+    CurrentLine := ReadLn('');
+    while (CurrentLine <> '.') and (CurrentLine <> '') do begin   {Do not Localize}
+      // RL - ignore the message number, grab just the octets,
+      // and ignore everything else that may be present
+      CFetch(CurrentLine,IdFetchDelimDefault);
+      Result:= Result + StrToIntDef(CFetch(CurrentLine,''), 0);
+      CurrentLine := ReadLn('');
+    end;
+  except
+    Result:= -1;
+  end;
+end;
+
+function TIdPOP3_GetResponse(const AAllowedResponses: array of SmallInt): SmallInt;
+ var  my3: TIdPOP3;
+
+begin
+  //default_port
+      //DEFAULT_PORT = 0;
+  //DEFAULT_TIMEOUT = 30000;
+  //DEFAULT_RECEIVE_TIMEOUT = 30000;
+  //NULL_IP = '0.0.0.0';  {do not localize}
+  //DEFAULT_CONN_LIMIT = 1;
+  //DEFAULT_RECONNECT_DELAY = 15000;
+  //DEFAULT_COMM_MODE = cmUnknown;
+  //DEFAULT_IS_LISTENER = True;
+  //MILLISECOND_LENGTH = (1 / (24 * 60 * 60 * 1000));
+
+  my3.GetInternalResponse;
+  if AnsiSameText(my3.LastCmdResult.TextCode, '+OK') then begin    {Do not Localize}
+    my3.LastCmdResult.NumericCode := wsOK;
+  end else if AnsiSameText(my3.LastCmdResult.TextCode, '-ERR') then begin    {Do not Localize}
+    my3.LastCmdResult.NumericCode := wsErr;
+    result:= wsErr;
+  end else begin
+    raise EIDException.Create(Format('RSPOP3UnrecognizedPOP3ResponseHeader %s',
+                                                     [my3.LastCmdResult.Text.text]));
+    //my3.LastCmdResult.Text.Text
+  end;
+  Result:= my3.CheckResponse(my3.LastCmdResult.NumericCode, AAllowedResponses);
+end;
+
+
+function Indy_SHA1Hash(apath: string): string;
+var  
+  idsha1: TIdHashSHA1;  //shaback: T5x4LongWordRecord;
+  shaStream: TMemoryStream;
+begin
+   idsha1:= TIDHashsha1.Create;
+   shaStream:= TMemoryStream.Create;
+   try
+     shaStream.Position:= 0;
+     shaStream.LoadFromFile(apath);
+     //writeln('Indy SHA1 Proof: '+idsha1.asHEX(shaback)); debug
+     result:= idsha1.AsHEX(idsha1.HashValue(shaStream));
+   finally  
+     idsha1.free;
+     shaStream.Free;
+   end;
+end;   
+
+
+//philippe.seewer@bfh.ch 
+//philippe.seewer@bfh.ch
+
+
+procedure TestCopy;
+var i: integer;
+    s: string;
+begin
+   S:='<this command >';
+   i:=Pos('<',S);    {Do not Localize}
+        if i>0 then begin
+           S:=Copy(S,i,MaxInt); //?: System.Delete(S,1,i-1);
+           writeln(S);
+           i:=Pos('>',S);    {Do not Localize}
+           if i>0 then begin
+             S:=Copy(S,1,i)
+             writeln(s);
+           end else begin
+             S:='';    {Do not Localize}
+           end;
+        end//if
+        else begin
+          S:=''; //no time-stamp    {Do not Localize}
+        end;
+     //CopyFile(const FileName, DestName: string);
+     //MoveFile(const FileName, DestName: string);
+     //GetFileSize(const FileName: string): LongInt;
+    //FileDateTime(const FileName: string): TDateTime;
+   //HasAttr(const FileName: string; Attr: Word): Boolean;
+ //ExecuteFile(const FileName, Params, DefaultDir: string;
+  //ShowCmd: Integer): THandle;   
+        
+end;
+
+const
+  H_BORDER = 100;     //Horizontal border
+  V_BORDER = 100;     //Vertical border
+  WIDTH = 160;
+  HEIGHT = 160;
+  PRINT_WIDTH = 4000;
+  PRINT_HEIGHT = 4000;
+
+var  
+   MaxX, aMaxY, Col1, Col2, Col3, Row1, Row2, Row3,
+  X, Y, HB, VB : integer;
+  PentagonPoints : array[1..6] of TPoint;
+  TrianglePoints : array[1..4] of TPoint;
+  
+procedure DrawRow3(Canvas : TCanvas);
+begin
+  with Canvas do
+    begin
+      //Three quarters of lime ellipse
+      pen.Color := clLime;
+      brush.Color := clLime;
+      pie(HB, Row2 + VB, Col1-HB, Row3 - VB, HB + Row1 div 2, Row2 + VB,
+         Row2 + VB + Row1 div 2, Row2 + VB + Row1 div 2);
+      //Dark grey rounded rectangle
+      pen.Color := clDkGray;
+      brush.Color := clDkGray;
+      roundRect(Col1 + 2 * HB, Row2 + VB, Col2 - 2 * HB, Row3 - VB, 20, 20);
+      //Fuchsia  pentagon
+      pen.color := clFuchsia;
+      PentagonPoints[1] := Point((Col3 + Col2) DIV 2,Row2 + VB);
+      PentagonPoints[2] := Point(Col3 - HB,(Row2 + Row3) DIV 2);
+      PentagonPoints[3] := Point(Col3 - (Col1 DIV 3), Row3 - VB);
+      PentagonPoints[4] := Point(Col2 + (Col1 DIV 3), Row3 - VB);
+      PentagonPoints[5] := Point(Col2 +  HB,(Row2 + Row3) DIV 2);
+      PentagonPoints[6] := PentagonPoints[1];
+      polyline(PentagonPoints);
+      //Red filled triangle
+      pen.Color := clRed;
+      brush.Color := clRed;
+      TrianglePoints[1] := Point((Col3 + MaxX) DIV 2, Row2 + VB);
+      TrianglePoints[2] := Point(MaxX - HB, Row3 - VB);
+      TrianglePoints[3] := Point(Col3 + HB, Row3 - VB);
+      TrianglePoints[4] := TrianglePoints[1];
+      polygon(TrianglePoints );
+  end;
+end;
+  
+ 
+
+procedure DrawRow4(Canvas : TCanvas);
+var
+  Count : integer;
+begin
+   HB := H_BORDER;
+  VB := V_BORDER;
+  with Canvas do begin
+      //Navy arc of ellipse
+      pen.Color := clNavy;
+      arc(HB, Row3 + VB, Col1-HB, aMaxY-VB,
+        HB + Row1 div 2, Row3 + VB, HB, Row3 + VB + Row1 div 2);
+      //Blue text
+      font.Color := clBlue;
+      font.Size := 10;
+      TextOut(col1 + HB, (Row3 + aMaxY) DIV 2, 'max pp4s.co.uk');
+      //Maroon curve
+      pen.Color := clMaroon;
+      brush.Color := clMaroon;
+      Count := 0;
+      X := Col2 + HB;
+      Y := Row3 + VB;
+      while (X <= Col3) and (Y <= aMaxY) do begin
+          Rectangle(X-1, Y-1, X+1, Y+1); 
+          inc(Count);
+          X := Col2 + HB + (Count * MaxX ) DIV 40;
+          Y := Row3 + VB + (Count * Count * aMaxY) DIV 150;
+        end;
+      pen.Color := clNavy;
+      brush.Color := clSilver;
+      Chord(HB + Col3, VB + Row3, MaxX - HB, aMaxY-VB,
+            HB + Col3, VB + Row3, MaxX-HB, aMaxY-VB);
+    end;
+end;
+
+
+//--------------------------------Form Build---------------------------------//
+//****************************************************************************
+Procedure SetForm;
+var
+  mt: TMainMenu;
+  mi, mi1, mi2: TMenuItem;
+  mPanel: TPanel;
+  bmp: TBitmap;
+  img: TImage;
+  //uint: TInt32;
+  aws: widechar;
+  ans: ansichar;
+
+begin
+  inFrm:= TForm.Create(self);
+  stat:= TStatusbar.Create(inFrm);
+  mPanel:= TPanel.Create(inFrm);
+  myMemo:= TMemo.Create(inFrm);
+  mOutln:= TOutline.Create(inFrm);
+
+  with inFrm do begin
+    caption:='*****OutlineMedia3*****';  
+    height:= 610;
+    width:= 980;
+    Position:= poScreenCenter;
+    onClose:= @FormCloseClick;  //uncomment for debug
+    Show;
+  end;
+  with mPanel do begin
+    caption:= '***Outline***';  
+    Parent:= inFrm;  
+    SetBounds(LEFTBASE,TOPBASE+40,340,400)
+    color:= clsilver;
+    font.color:= clyellow;
+    font.size:= 30;
+  end; 
+  with myMemo do begin
+    Parent:= inFrm;
+    SetBounds(LEFTBASE+570,TOPBASE+40,340,400)
+    font.size:= 14;
+    color:= clYellow;
+    scrollbars:= ssVertical;
+    lines.LoadFromFile(selectFile);
+    Stat.simpletext:= selectFile;
+  end;
+  with mOutln do begin
+    //AddChild
+    Parent:= inFrm; 
+    LoadFromFile(selectFile);
+    FullExpand;
+    width:= 280; height:= 340;
+    top:= TOPBASE+60;
+    left:= LEFTBASE+30;
+    onclick:= @showEntry;
+  end; 
+  with Stat do begin
+    Parent:= inFrm;
+    stat.SimplePanel:= true;
+  end;
+ 
+  img:= TImage.create(inFrm);
+   img.parent:= inFrm;
+   img.Setbounds(375,270,200,200);
+ 
+  with img.canvas do begin
+   brush.style:= bssolid;
+   //brush.color:= clwhite;
+   //Fillrect
+   //cliprect
+   //getCanvasrect
+   end;
+   DrawRow4(img.canvas); 
+   //DrawRow3(img.canvas); 
+  
+
+//********************************Bit Buttons*********************************
+  with TBitBtn.Create(inFrm) do begin
+    Parent:= inFrm;
+    setBounds(LEFTBASE+760,TOPBASE+460,150,40);
+    caption:= 'Open Text';
+    font.size:= 12;
+    glyph.LoadFromResourceName(HINSTANCE,'OPENFOLDER'); 
+    //event handler
+    onclick:= @GetMediaData;
+  end;
+  with TBitBtn.Create(inFrm) do begin
+    Parent:= inFrm;
+    setBounds(LEFTBASE+600,TOPBASE+460,150,40);
+    caption:= 'Save Text';
+    font.size:= 12;
+    glyph.LoadFromResourceName(HINSTANCE,'CL_MPNEXT'); 
+    onclick:= @BtnSaveClick;
+  end;
+  with TBitBtn.Create(inFrm) do begin
+    Parent:= inFrm;
+    setBounds(LEFTBASE+440,TOPBASE+460,150,40);
+    caption:= 'Update';
+    font.size:= 12;
+    glyph.LoadFromResourceName(HINSTANCE,'CL_MPPLAY'); 
+    onclick:= @UpdateOutline;
+  end;
+  with TBitBtn.Create(inFrm) do begin
+    Parent:= inFrm;
+    setBounds(LEFTBASE+280,TOPBASE+460,150,40);
+    caption:= 'Close';
+    font.size:= 12;
+    glyph.LoadFromResourceName(HINSTANCE,'CL_MPSTOP'); 
+    onclick:= @ButtonCloseClick;
+  end;
+//--------------------------Animation, Picture, Labels-------------------------
+  with TAnimate.Create(inFrm) do begin
+    Parent:= inFrm;
+    //Transparent := True;
+    SetBounds(LEFTBASE+400,TOPBASE+55,0,0) //315,-5
+    FileName:= ExePath + AVIPATH;
+    Active:= True;
+    //Hide;
+  end;
+  bmp:= TBitmap.Create;
+  try
+    bmp.LoadFromFile(Exepath+BITMAP);
+    inFrm.Canvas.Draw(370,70,Bmp);
+  finally
+    bmp.Free;
+  end;
+  with TLabel.Create(inFrm) do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+10,TOPBASE-15,180,20);
+    font.size:= 30;
+    font.color:= clred;
+    //font.style:= [fsunderline]
+    caption:= 'Outline FormApp';
+  end;  
+  with TLabel.Create(inFrm) do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+575,TOPBASE,180,20);
+    font.size:= 20;
+    font.color:= clred;
+    caption:= 'Outline Tree';
+  end;  
+
+//********************************Menu Controls*******************************
+  mt:= TMainMenu.Create(infrm)
+  mi:= TMenuItem.Create(mt)
+  mi1:= TMenuItem.Create(mt)
+  mi2:= TMenuItem.Create(mt)
+  with mi do begin
+    Caption:= 'Play Outline';
+    Name:='ITEM';
+    mt.Items.Add(mi);   
+    OnClick:= @GetMediaData;
+  end;
+  with mi1 do begin
+    Caption:= 'Show Outline';
+    Name:='ITEM2';
+    mt.Items.Add(mi1) ;
+  end;
+  with mi2 do begin
+    Caption:= 'Open Outline';
+    Name:='ITEM3';
+    mt.Items.Add(mi2);
+  end;
+end; 
+
+procedure DoIt(a: Integer; Arr: Array of Integer);
+begin
+writeln(inttostr(a)+''+inttostr(Arr[0]));
+a:= 0;
+Arr[0]:= 0;
+end;
+
+function Addiere(Zahlen: Array of Variant): Integer;
+var
+  i, Sum: Integer;
+begin
+  Sum:= 0;
+  for i:= 0 to High(Zahlen) do Sum:= Sum + Zahlen[i];
+  result:= Sum;
+end;
+
+procedure ustringtest;
+begin
+  //LTrim( S : String) : String');
+  //RTrim( S : String) : String');
+  //uTrim( S : String) : String');
+  //StrChar( N : Byte; C : Char) : String');
+  //RFill( S : String; L : Byte) : String');
+  //LFill( S : String; L : Byte) : String');
+  //CFill( S : String; L : Byte) : String');
+  //Replace( S : String; C1, C2 : Char) : String');
+  //Extract( S : String; var Index : Byte; Delim : Char) : String');
+ //Parse( S : String; Delim : Char; Field : TStrVector; var N : Byte)');
+  //SetFormat( NumLength, MaxDec : Integer; FloatPoint, NSZero : Boolean)');
+  //FloatStr( X : Float) : String');
+  //IntStr( N : LongInt) : String');
+  //CompStr( Z : Complex) : String');
+end;
+
+
+procedure TForm1_btnCompressClick(Sender: TObject);
+var
+  LInput, LOutput: TFileStream;
+  //LZip: TZCompressionStream;
+  LZip: TMemoryStream;
+ 
+begin
+  { Create the Input, Output, and Compressed streams. }
+  LInput := TFileStream.Create(Exepath+'myfilestream.txt',fmOpenRead+fmShareExclusive);
+  //LOutput := TFileStream.Create(Edit2.Text + '.zip', fmCreate);
+  //LZip := TZCompressionStream.Create(LOutput, zcDefault);
+   //AssignStream
+  { Compress data. }
+  LZip.CopyFrom(LInput, LInput.Size);
+ 
+  { Free the streams. }
+  LZip.Free;
+  LInput.Free;
+  LOutput.Free;
+end;
+
+
+
+  const ErrorA = 'You need a newer system file. %s is version %d.%d.%d.';
+        ErrorB = ' It should be version %s.'#13#13'Get an update to this file from ' +
+                 'http://support.microsoft.com/download/support/mslfiles/vrdrupd.exe';
+        Error1 = ErrorA + ErrorB;
+        Error2 = ErrorA + '%d.' + ErrorB;
+
+  procedure CheckFile(const FileName, Vn: String; Hi, Lo: Cardinal);
+  var Ver: TVersionNo;
+  begin
+    Ver := GetFileVersionNumber(FileName);
+    if (Ver.MS < Hi) or ((Ver.MS = Hi) and (Ver.LS < Lo)) then
+      //If the high word of the low DWord of the version info is 0,
+      //the 0 is never written in MS version info strings
+      if HiWord(Ver.LS) = 0
+      then ShowMessage(Format(Error1,[FileName,HiWord(Ver.MS),LoWord(Ver.MS),LoWord(Ver.LS),Vn]))
+      else ShowMessage(Format(Error2,[FileName,HiWord(Ver.MS),LoWord(Ver.MS),HiWord(Ver.LS), LoWord(Ver.LS), Vn]))
+  end;
+
+
+
+
+
+  var bigtime: int64;
+      idsha1: TIdHashSHA1;
+      //mtcpst: TIdTCPStream; 
+      //my7: TIdHL7;
+       //T5x4LongWordRecord','array [0..4] of LongWord;');
+       idlw5, shaback: T5x4LongWordRecord;
+       //T4x4LongWordRecord = array [0..3] of LongWord;
+       idlw4: T4x4LongWordRecord;
+       shaStream: TMemoryStream;
+       aw: widechar;
+       ast: ansichar;
+       z: integer;
+       zArr: Array[0..1] of Integer;
+       KleinbuchstabenMenge: Set of char;
+       {type FreiZahl = record
+          Case Integer Of
+           0: (i: Integer);
+           1: (d: Double);
+           2: (s: PChar);
+        end;}
+        var v1, v2, v3: Variant;
+        KurzText: Array[0..99] of Char;
+        PKurzText: PChar; // Zeiger
+        i, j, k, l: Integer;
+        sstring : shortstring;
+        astring: ansistring;
+        xstring: string;
+        mlist: TStringlist;
+        var Dir: array[0..255] of Char;
+        aDir: string;
+        adir2: PChar;
+
+
+
+//Main Form App  
+Begin
+  //default outline struct
+  selectFile:= ExePath+TEXTPATH;   
+  SetForm;
+  //SearchAndOpenDoc(ExePath+MEDIAPATH)
+  maxform1.color:= clWebBlue;  //or clsilver
+  //writeln(GetASCCI)
+  Writeln(Application.Mainform.Name);
+  Writeln(IntToStr(Application.Handle));
+  //Get the Screen Resolution!
+  Writeln(IntToStr(Screen.Width) + ' '+intToStr(Screen.Height));
+  
+  //maxform1.coolbar1.hide
+  //maxform1.mntoolbar1click(self);
+  //maxform1.mncoolbar2click(self);
+  //maxform1.mnstatusbar2click(self);
+  bigtime:= round(power(2,64) / (60*60*24*365));
+  writeln(inttostr64(bigtime));
+    writeln(Formatbigint(inttostr64(bigtime)));   //maxcalcF('2^64 /(60*60*24*365)'));
+
+     writeln(Formatbigint(powerbig(2,64)));   //maxcalcF('2^64 /(60*60*24*365)'));
+     
+     maxcalcF('2^64 /(60*60*24*365)');
+     
+     //writeln(getbigpi);
+     //TIdRawBase
+      // TIdSocketHandle
+      
+      testcopy;
+      //idlw5[1]:=9;
+      //idlw5[2]:=45;
+      
+      idsha1:= TIDHashsha1.create;
+      //writeln(idsha1.ashex(idlw5));
+      
+      shaStream:= TMemoryStream.create;
+      shaStream.Position:= 0;
+      shaStream.LoadFromFile(ExePath+'maxbox3.exe');
+    //   RegisterMethod('Function HashValue( AStream : TStream) : T5x4LongWordRecord;');
+  
+      shaback:= idsha1.HashValue(shaStream);
+      writeln('this is Indy SHA1 Proof: '+idsha1.ashex(shaback));
+      
+      writeln(inttostr(shaback[1]));
+      
+      idsha1.free;
+ 
+      shaStream.Free;
+      
+      Writeln('Indy  SHA1: '+Indy_SHA1Hash(ExePath+'maxbox3.exe'));
+      
+      writeln('turbopower: '+SHA1(ExePath+'maxbox3.exe'));
+      //internal lib
+      Writeln('Indy  SHA1: '+IdSHA1Hash(ExePath+'maxbox3.exe'));
+     
+      //FDBD968F03B416712E4151A2E720CD24950D7A5A
+      //idsha1.hashvalue(
+      aw:= 'z';
+      ast:= 'z';
+      writeln('wide char size '+inttostr(sizeof(aw)));
+      writeln(inttostr(sizeof(ast)));
+      //widechartostring(ast);
+      //stringtowidechar
+      //str
+      //val(aw);
+      z:= 2;
+      zArr[0]:= 2;
+     //writeln(itoa(z)+''+itoa(zArr[0]));
+     DoIt(z, zArr);
+     writeln(itoa(z)+''+itoa(zArr[0]));
+     PrintF('gcd %d * lcm %d = %d ',[gcd(4,6), lcm(4,6), 4*6]);
+     KleinbuchstabenMenge:= ['b', 'm', 'l'];
+    // jetzt wird 'm' aus der Menge entfernt
+     KleinbuchstabenMenge:= KleinbuchstabenMenge - ['m'];
+     // die entstandene Menge ist ['b', 'l']
+     KleinbuchstabenMenge:= []; //leere Menge
+     v1:= 23.3; v2:= 3;  v3:= '5';
+     //writeln(VarType(v1));
+     writeln((v1 * v2)+v3);
+     
+     //writeln(intToStr(Addiere([2, 8.00, ' 5,00 DM'])));
+     writeln('must 15--> '+ intToStr(Addiere([2, 8.00, ' 5.00'])));
+  
+    //StrCopy(pchar(KurzText), pchar('Hallo Welt'));
+    //writeln(pchar(KurzText));
+//PKurzText:= KurzText;
+//PKurzText:= PKurzText + 3;
+//writeln(PKurzText);
+//PKurzText^:= 'b';
+//inc(PKurzText);
+//PKurzText^:= 'e';
+//writeln(KurzText);
+//KurzText[8]:= #0;
+//writeln(PKurzText-1);
+    {for i:= 1 to 4 do j:= i;
+    for k:= 8 to 10 do j:= k;
+    for l:= 12 to 16 do j:= l;
+    writeln('Variable i = '+itoa(i));
+    writeln('Variable k = '+itoa(k));
+    writeln('Variable l = '+itoa(k));
+    writeln('Variable j = '+itoa(j));}
+    // nullrect
+    //cosh
+    //sinh
+      //tanh
+        //cosh
+        //coth
+          //sech
+          //csch
+            //tjclrational
+            //Crc32PolynomIEEE
+              //isnan
+              //  maxfloat
+                //tnantag
+                  //domaincheck
+                    //MakeSignalingNaN
+                    //TDynByteArray
+                    //  swapfloats
+                      //crc32
+              // rand
+              //srand 
+              initgen(23456);      
+        //tjclflatset              
+          //ceil            
+           // floor          
+             //gamma         
+               //correl       
+                 //flname
+                 //tparseitem
+                   //rdtsc
+             //arctanh      
+               //sinhcosh    
+            writeln('milliseconds per day '+floattoStr(MILLISECOND_Length))   
+            writeln('milliseconds per day test: '+floattoStr(60*60*1000*24*MILLISECOND_Length))   
+       
+            //tpositions   
+            
+       with TStrings.create do begin
+         //loadfromfile('');
+         //assign
+         free;
+       end;    
+       
+        with TIdHashMessageDigest5.Create do
+          try
+            //S:=LowerCase(TIdHash128.AsHex(HashValue(S+Password)));
+            //id128.ashex(HashValue(S+'Password'));
+            with TIdHash128.create do begin //Exception: Abstract Error at 0.3563
+              //writeln('hash 128 '+LowerCase(ashex(HashValue('Password'))));
+              Free;
+             end;
+             //idsha1.ashex(
+          finally
+            Free;
+          end;//try
+          //my3.SendCmd('APOP '+Username+' '+S, wsOk);    {Do not Localize}
+       // end   
+       
+           with TIdHash160.create do begin //Exception: Abstract Error at 0.3563
+              //writeln('hash 160 '+LowerCase(ashex(HashValue('Password'))));
+              Free;
+             end;
+             
+         {with TCustomDrawForm.create(self) do begin
+           showmodal;
+           image1.height:= 600;
+           free;
+         end;}      
+         with TGraphWinForm.create(self) do begin
+           showmodal;
+           //image.height:= 300;
+           free;
+         end;      
+    
+    //dovarianttest;
+    
+    writeln('readers'#39' digest');
+    sstring:= 'this';
+    //astring:= StrChar(1255,'*');
+    //astring:= loadfileasstring(Exepath+'firstdemo.txt');
+
+    //writeln(sstring);
+    //writeln(inttostr(length(astring)));
+   
+    //writeln((sstring));
+    with TSimpleDataset.create(self) do begin
+      connection
+      dataset
+      filter
+      filename
+      //eof:= true;
+      active;
+      //datasource
+      //constraints
+      //state
+      free;
+      end;
+     
+      writeln(CRLF+'func block'+CRLF);
+      
+      mlist:= TStringlist.create;
+      //getfilelist(mlist, Exepath+'*.txt')
+      for i:= 1 to getfilelist(mlist, Exepath+'*.txt').count-1 do  //func block
+        writeln(getfilelist(mlist, Exepath+'*.txt').strings[i]);
+     
+        writeln(CRLF+'func return'+#13#10);
+      
+      mlist:= getfilelist(mlist, Exepath+'*.txt')   //func return
+      for i:= 1 to mlist.count-1 do 
+        writeln(mlist.strings[i]);
+   
+      writeln(CRLF+'procedure return'+#13#10);
+      
+      letfilelist(mlist, Exepath+'*.txt')  //procedure
+      for i:= 1 to mlist.count-1 do 
+        writeln(mlist.strings[i]);
+        
+        
+  GetSystemDirectory(aDir, SizeOf(aDir));
+  GetSystemDirectoryW(aDir2, SizeOf(aDir2));
+
+  writeln('sys dir: '+adir2)
+  CheckFile((aDir) + '\VREDIR.VXD', '4.0.1116', $40000, 1116);
+  CheckFile((aDir) + '\VNETSUP.VXD', '4.0.1112', $40000, 1112);
+ 
+   //htmltextout   
+    with TEditForm.create(self) do begin
+      caption:= 'Templ Form';
+      show; //showmodal;
+      //free;
+    end; 
+    
+    {with TAdoDbtest.create(self) do begin
+      caption:= 'Templ Form';
+      showmodal;
+      free;
+    end;} 
+    
+    if IsTCPPortOpen(8080,'127.0.0.1') then
+       writeln('TCP Server Started') else writeln(' port not open');
+         
+
+End.
+
+
+Delphi erzeugt dabei (bei eingeschalteter Optimierung) für die Schleife folgenden Assembler- Code:
+:D5D mov ebx,00000001 // for i:= 1 to 4 do
+:D62 mov esi,ebx // j:= i;
+:D64 inc ebx // entspricht i:= i + 1
+:D65 cmp ebx,00000005 // prüfen ist i = 5 ?
+:D68 jne (D62) // wenn nicht gleich, dann
+// springe zu Adresse (:D62)
+:D6A mov edx,DDC // writeln('Variable i = ', i);
+:D6F mov eax,1FC
+:D74 call @Write0LString
+:D79 mov edx,ebx
+:D7B call @Write0Long
+:D80 call @WriteLn
+:D8A mov edx,DF4 // writeln('Variable j = ', j);
+:D8F mov eax,1FC
+:D74 call @Write0LString
+:D79 mov edx,ebx
+:D7B call @Write0Long
+:D80 call @WriteLn
+Man erkennt hier, daß Delphi für die Laufvariable i zur Optimierung des Laufzeitverhaltens Register verwendet (hier Register ebx). Falls nach der
+Schleife zwischenzeitlich zufällig Register ebx überschrieben worden wäre, dann würde writeln(i) einen "falschen" Wert ausgeben. Genau das
+Verhalten kann man beobachten, wenn man folgenden Code ausführt:
+var
+i, j, k, l: Integer;
+begin
+for i:= 1 to 4 do j:= i;
+for k:= 8 to 10 do j:= k;
+for l:= 12 to 16 do j:= l;
+writeln('Variable i = ', i);
+writeln('Variable k = ', k);
+writeln('Variable l = ', k);
+writeln('Variable j = ', j);
+readln;
+end;
+Vergleich von Delphi und Visual C++ - Kapitel 2B
+http://ourworld.compuserve.com/homepages/praxisservice/kapit2b.htm (36 of 52) [19.05.2000 15:30:09]
+Ausgabe:
+Variable i = 5
+Variable k = 11
+Variable l = 11
+Variable j = 16
+Anders als man erwarten könnte ist Variable l nun nicht 17 sondern 11.
+
+http://www.delphi-treff.de/news/news-details/article/671/
+
+//-----------------------------CodeSnippets--------------------
+procedure TControlParentR(Self: TControl; var T:TWinControl); begin T:= Self.Parent; end;
+procedure TControlParentW(Self: TControl; T: TWinControl); begin Self.Parent:= T; end;
+    RegisterPropertyHelper(@TControlParentR, @TControlParentW, 'PARENT');
+    RegisterProperty('Parent', 'TWinControl', iptRW);
+
+procedure TTXPTool.LVPFFDblClick(Sender: TObject);
+var
+  tmpList: TListItem;
+  fn: string;
+  ft: integer;
+  fs: integer;
+begin
+  tmpList:= LVPFF.Selected;
+  if tmplist <> NIL then begin
+    fn:= tmpList.Caption
+    ft:= tmpList.SubItems.Strings[1];
+    fs:= tmpList.SubItems.Strings[3];
+    if pos('Wave', ft)>0 then
+      PlayThisOne1Click(NIL);
+    if pos('Jpg', ft)>0 then
+      ShowJpg1Click(NIL);
+    if pos('PNG', ft)>0 then
+      ShowTga1Click(NIL);
+    if pos('PCX', ft)>0 then
+      ShowPcx1Click(NIL);
+    if pos('Mission Sound Collection', ft)>0 then
+      ShowPwf1Click(NIL);
+  end;
+end;
+
+Veni. Vidi. Vici. Qnamic makes unmistakable impact at the InnoTrans 2010.
+
+The Swiss software company once again demonstrated their unique approach to the sector: Expert knowledge of the railway business, passion for quality software products and of course a bit of fun in the process. The stand, representative of Qnamic
+
+From day one of the show until the very end, the Qnamic booth (113, hall 2.1) was constantly filled with visitors from train operating companies wanting to get a glimpse of the new RailOpt products live and in action; and Qnamic employees were pr
+
+Presentations held on Wednesday, Thursday and Friday by customers and partners attracted high-ranking deciders of leading railway companies, who remained seated after the shows to discuss the details of Qnamic products and interact. Especially th
+
+
+  function  MyGetTickCount: Longint;
+     external 'GetTickCount@kernel32.dll stdcall';
+  
+  
+  function  MyGetTickCount: Longint;
+     external 'GetTickCount@kernel32.dll stdcall';
+  
+  
+  
+  This is not always a possible solution. If you've called an
+external function (such as “copy file”) – then you can't
+“interrupt it from time to time” to perform message pumping.
+“Heavy work” may be performed by a DLL, which has no
+idea whether it's a console application which called it or
+whether it's a GUI application (which needs to pump messages).
+If you call Application.ProcessMessages, when there
+are no pending messages to process – you're wasting time.
+If you call Application.ProcessMessages too often
+(unnecessarily) you'll slow down your program, since you'll
+frequently spend time doing nothing. In the worst case you
+may put more effort into keeping the UI responsive than in
+doing actual work!
+If you call Application.ProcessMessages too rarely
+then your application won't work smoothly. It will appear
+“jagged”.
+Note that you can't reliably pick the optimum frequency of
+calls to Application.ProcessMessages. Say you're
+copying a file from one hard disk to another. You might set
+the call frequency to one call per megabyte of file data copied.
+However, if the user runs your application and copies the file
+over a network – your estimates will fail. For a slow network
+it's more appropriate to set the call frequency, say, to one call
+every for every 10 Kb of copied data. However, if you
+implement this slower estimate in your application, then you'll
+waste time when copying files between local hard disks.
+Calling too often is bad, as is calling too rarely. And what's
+worse – it changes while you're running. What's just as bad is
+that you can't really assess how well your estimate fits until
+your users try the application out in their various situations!
+Inappropriate calling of Application.ProcessMessages
+may introduce recursive cycles and re-entrancy problems
+(for example, a user may click a button more than once while your
+application is still busy with that button's task – which will lead to
+running a second task inside the first one. That's probably not what
+you're wanting!).
+Personally, I believe
+
+
+Android 
+
+
+An Android client for a DataSnap Server – Part 2
+Introducing Android development
+As Google says…
+“Android is a software stack for mobile devices that includes an
+operating system, middleware and key applications. The Android
+SDK provides the tools and APIs necessary to begin developing
+applications on the Android platform using the Java
+programming language.” (
+)
+A lot has been written on the web about the pros and cons of
+Android, so we will not repeat that here. Android is a great
+operating system and development platform. To get an
+introduction to Android and the motivations that led the way for
+Google to undertake the development of Android, you can
+consult Wikipedia at the following URL
+Before starting to develop for Android, you must set up the
+development environment. Although it is not mandatory to use
+a specific development environment, Google has written a very
+useful plug-in for Eclipse called ADT (Android Development
+Tools), and later in this article we will use Eclipse with ADT.
+Google provides an excellent guide on how to configure
+everything you need to develop on Android. In Throughout this
+article I'll assume that your development environment is
+configured as recommended in this guide
+( l)
+and that you have successfully tried the HelloWorld tutorial
+(
+). I am referring to various key components
+of Android's architecture. To understand what I'm talking about,
+and avoiding a lengthy and boring copy-paste, I suggest you
+refer to Application Components. You can Help that you find
+more on this topic here:
+http://developer.android.com/
+guide/basics/what-is-android.html
+http://en.wikipedia.org/wiki/
+Android_%28operating_system%29.
+http://developer.android.com/sdk/installing.htm
+http://developer.android.com/resources/tutorials/he
+llo-world.html
+http://developer.android.com/guide/topics/fundamenta
+ls.html#appcomp
+Layout
+View and Event Handling
+The commonest way to define the appearance of an activity is
+using an XML layout file. The structure of the XML used by
+Android for layout it is a reminiscent of an HTML web page.
+Each element within the XML can be either a View or a
+ViewGroup (or one of their descendants). The name of the
+XML elements of the layout file correspond to the JAVA class
+that represents them. So a <Button/> element creates an
+instance of the Button within the GUI and a
+<LinearLayout/> element creates an instance of the
+LinearLayout ViewGroup. When loading resources,
+Android initialises the objects defined in the XML file layout,
+creating concrete functional objects. So you can imagine the
+layout xml file as a text representation of a complex object tree.
+For a Delphi or Lazarus programmer, what comes the closest in
+concept to an Android layout file is the DFM or the LFM file.
+The activities are your application's screens. An activity is the
+Android counterpart to the Delphi/Lazarus Form. So,
+whatever the user can see, is necessarily contained by an
+Activity. Every visible element within Android is called a View
+and is drawn on an activity.
+Specifically, the graphical controls are called widgets and are
+defined in the package android.widget. Some of these
+widgets (buttons, edits and so on) will be used on the app that
+we'll create.
+One difference for a Delphi developer is the event handling
+mechanism is different from that to which a Delphi developer is
+used to, but it is very similar to that of the graphics libraries
+available on Java SE, so a Java developer should not have
+problems in understanding the mechanism.
+The application we are going to build will allow us to
+understand how the listener mechanism works, and how to
+parse a string in JSON format.
+I have not structured this article as a step-by-step tutorial.
+Rather I will focus on the specific issues involved while
+interfacing Android with DataSnap. If you need a step-by-step
+tutorial on Android development, you can browse the amazing
+Google documentation, or a white paper that I wrote for
+Embarcadero some months ago. You can download the
+whitepaper for free at
+The white paper talks about a PHP
+REST service and Android. However the Android part is almost
+the same. This is the code for the main activity.
+http://www.embarcadero.com/rad-inaction/
+php-android.
+In this second article we'll create an Android client
+application that talks to the previously built DataSnap
+server. Basic knowledge of Java syntax is assumed in
+what follows.
+public class MainActivity extends Activity
+implements OnItemClickListener {
+private
+private
+public void
+super
+this
+protected void
+super
+private void
+new this
+new
+this
+public void
+int long
+new this class
+public void
+new this class
+ListView ;
+List<ToDo> ;
+private final int = 1001;
+private final int = 1002;
+private final int = 1003;
+@Override
+onCreate(Bundle ) {
+.onCreate(savedInstanceState);
+setContentView(R.layout. );
+setTitle(R.string. );
+= (ListView) findViewById(R.id. );
+.setOnItemClickListener( );
+}
+@Override
+onResume() {
+.onResume();
+refresh_data();
+}
+refresh_data() {
+= RESTProxy( ).getToDos();
+.setAdapter( ToDoListAdapter
+( , ));
+}
+@Override
+onItemClick(AdapterView<?> ,
+View , , ) {
+Intent = Intent( , EditToDoActivity. );
+ToDo = .get(position);
+i.putExtra( , todo.getId());
+i.putExtra( , todo.getCompleted());
+i.putExtra( , todo.getDescription());
+// start the other activity
+startActivity(i);
+}
+newTodoClick(View ) {
+Intent = Intent( , EditToDoActivity. );
+// start the other activity
+startActivity(i);
+}
+}
+lv
+todo_list
+MENU_REFRESH
+MENU_CONFIG
+MENU_ABOUT
+main
+app_title
+lv lv_todo
+lv
+todo_list
+lv
+todo_list
+todo_list
+/** Called when the activity is first created. */
+// the selected item
+// fill the intent extra data.
+//Will be readed by the EditToDoActivity.
+//Menu management
+
+ This is strange. When I want to use Paradox table through ADOTable it works fine in design mode, but starting it through runtime raises an exception (EVariantTypeCastError):
+
+
+"Could not convert variant of type (Null) into type (String)"
+
+
+The only line under OnCreate opens the table, so there are no interactions with opened database.
+
+Connection string works fine in design mode:
+
+
+Provider=MSDASQL.1;Password=test;Persist Security Info=True;Extended Properties="CollatingSequence=ASCII;DefaultDir=H:\ Source\DB4;Driver={Microsoft Paradox Driver (*.db )};DriverId=538;FIL=Paradox 5.X;FILEDSN=H:\Source\DB4\DB_CFG.dsn;MaxBufferSize =2048;MaxScanRows=8;PageTimeout=5;ParadoxNetPath=C :\WINDOWS\System32;ParadoxNetStyle=4.x;ParadoxUser Name=admin;SafeTransactions=0;Threads=3;UID=admin; UserCommitSync=Yes;"
+
+
+What could be causing this exception ?
+
+thnx in forward.
+Reply With Quote
+
+
+var
+String
+begin
+try
+1024
+try
+while not do
+begin
+end
+finally
+end
+finally
+end
+end
+StreamText
+TForm1 Button2Click Sender TObject
+Stream TFileStream
+F TextFile
+S
+Memo1 Lines Clear
+Stream TFileStream Create
+fmOpenRead fmShareExclusive
+AssignStream F Stream
+fmInput
+EOF F
+ReadLn F S
+Memo1 Lines Add S
+CloseFile F
+FreeAndNil Stream
+;
+. ( : );
+: ;
+: ;
+: ;
+. . ;
+: = . ( ,
+, );
+( , ,
+, );
+( )
+( , );
+. . ( );
+;
+( );
+;
+( );
+----Simple Browser started----

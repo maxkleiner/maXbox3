@@ -1,0 +1,516 @@
+//Example of the UML Script in Analysis&Design of Components
+
+
+program UMLRunner_Components;
+
+const LEFTBASE = 20;
+      TOPBASE = 25; 
+      MEDIAPATH =  'examples\mymemomemoire.txt';
+
+var 
+  mymemo: TMemo;
+  myradio: TRadioGroup;
+  myheader: THEADER;
+  mypage: TPage;
+  mynote: TNoteBook;
+  mylistview: TFormListView;
+  mycomb: TComboBox;
+  mydgrid: TDBGrid;
+  mynav: TDBNavigator;
+  mnavlink: TNavDataLink;
+  mydbim: TDBImage;
+  mysource: TDataSource;
+//tbar: TToolbar;
+//cbar: TCoolbar;
+  tbtn: TToolbutton;
+  cal: TCalendar;
+  mydir: TDirectoryListBox ;
+  moutline: TOutline;
+  bmp: TBitmap;
+  mpanel: TPanel;
+  mPlayer: TMediaPlayer;
+  inFrm: TForm;  
+  mbtn3: TBitBtn;
+  Lstbox: TListbox;
+  stat: TStatusbar;
+  selectFile: string;
+  STATchoice: boolean;
+  
+
+//Event Handler - Closure
+Procedure BtnSaveClick(self: TObject);
+begin
+  if selectFile <> '' then
+    mymemo.lines.SaveToFile(selectFile); 
+  Stat.simpletext:= selectFile+ ' has been saved' ;
+end; 
+
+
+//Event Handler - Closure  
+Procedure GetMediaData(self: TObject);
+begin
+  if PromptForFileName(selectFile,
+                       'Text files (*.txt)|*.txt', '',
+                       'Select your outline file',
+                       ExePath, False) //False = not a Save dialog !
+   then begin
+     ShowMessage('Selected file = '+selectFile);
+     Stat.simpletext:= selectFile;
+     mymemo.lines.LoadFromFile(selectFile);
+     // Split this full file/path value into its constituent parts
+   end;
+end;  
+
+procedure SetForm;
+var
+  mbtn, mbtn2: TBitBtn;
+  mi, mi1, mi2, mi3: TMenuItem;
+  mt: TMainMenu;
+  mlbl, mlbl1: TLabel; 
+begin
+  STATChoice:= false;
+  inFrm:= TForm.Create(self);
+  mLbl:= TLabel.create(inFrm);
+  mLbl1:= TLabel.Create(inFrm);
+  mPanel:= TPanel.Create(inFrm);
+  stat:= TStatusbar.Create(inFrm);
+  Lstbox:= TListbox.create(inFrm);
+  mymemo:= TMemo.create(inFrm);
+
+  with inFrm do begin
+     caption:= '********ComponentMonster************';  
+     height:= 610;
+     width:= 980;
+     //color:= clred;
+     Position:= poScreenCenter;
+     //onClose:= @CloseClick;
+     Show;
+   end;
+   with mPanel do begin
+     caption:= '*****maXboxTV*****';  
+     parent:= inFrm;  
+     SetBounds(LEFTBASE+10,TOPBASE+40,460,400)
+     color:= clsilver;
+     font.color:= clyellow;
+     font.size:= 30;
+     Show;
+     //Free;
+   end; 
+  //StartFileFinder(mp3list);
+  {with Lstbox do begin
+    parent:= inFrm;
+    SetBounds(LEFTBASE+490, TOPBASE+40, 420, 400)
+    font.size:= 10;
+    color:= clYellow;
+    for i:= 0 to mp3list.count - 1 do 
+      items.add(mp3List[i])
+    //onClick:= @ChangeSong;  
+  end;}
+  
+  with mymemo do begin
+    parent:= inFrm;
+    SetBounds(LEFTBASE+490, TOPBASE+40, 420, 400)
+    font.size:= 20;
+    color:= clYellow;
+    wordwrap:= true;
+    scrollbars:= ssVertical;
+    lines.loadfromfile(selectFile);
+    Stat.simpletext:= selectFile+ ' has been loaded' ;
+    //Free;
+  end;
+  
+ 
+  mBtn:= TBitBtn.Create(inFrm)
+  with mBtn do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 590, TOPBASE+ 460,150, 40);
+    caption:= 'Open Media';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'OPENFOLDER'); 
+    //event handler
+    onclick:= @GetMediaData;
+  end;
+  mBtn2:= TBitBtn.Create(inFrm)
+  with mBtn2 do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 430, TOPBASE+460,150, 40);
+    caption:= 'Open Video';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'PREVIEWGLYPH'); 
+    //event handler
+    //onclick:= @GetVideoData;
+  end;
+  mBtn3:= TBitBtn.Create(inFrm)
+  with mBtn3 do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 750, TOPBASE+460,150, 40);
+    caption:= 'Save Memo';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'FLOPPY'); 
+    //event handler
+    onclick:= @BtnSaveClick;
+  end;
+
+  cal:= TCalendar.Create(self);
+  with cal do begin
+    enabled:= true;
+    updateCalendar
+    parent:= inFrm;
+    top:= 70;
+    left:= 100;
+    CalendarDate:= Now;
+    //SetUseCurrentDate(Now)
+    //Free;
+  end;
+
+  with mlbl do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+15,TOPBASE-15,180,20);
+    font.size:= 28;
+    font.color:= clred;
+    //font.style:= [fsunderline]
+    caption:= 'ComponentMonsterApp';
+  end;  
+  with mlbl1 do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+495,TOPBASE-1,180,20);
+    font.size:= 20;
+    font.color:= clred;
+    caption:= 'Media List:';
+  end;  
+  mt:= TMainMenu.Create(infrm)
+  with mt do begin
+   //parent:= frmMon;
+  end;  
+  mi:= TMenuItem.Create(mt)
+  mi1:= TMenuItem.Create(mt)
+  mi2:= TMenuItem.Create(mt)
+  mi3:= TMenuItem.Create(mi)
+  with mi do begin
+    //parent:= frmMon;
+    Caption:='Play Media';
+    Name:='ITEM';
+    mt.Items.Add(mi);   
+    //OnClick:= @GetMediaData;
+  end;
+  with mi1 do begin
+    //parent:= frmMon;
+    Caption:='Show Video';
+    Name:='ITEM2';
+    mt.Items.Add(mi1) ;
+    //OnClick:= @GetVideoData
+  end;
+  with mi2 do begin
+    //parent:= frmMon;
+    Caption:='Open CD Player';
+    Name:='ITEM3';
+    mt.Items.Add(mi2);
+    //OnClick:= @OPenCD;
+  end;
+  with mi3 do begin
+    //parent:= frmMon;
+    Caption:='Open maXbook';
+    Name:='ITEM4';
+    //mi.Items[0].add(mi3);
+  end;
+  with Stat do begin
+    parent:= inFrm;
+    stat.SimplePanel:= true;
+  end;
+  MPlayer:= TMediaPlayer.create(self);
+  with MPlayer do begin
+    parent:= inFrm; 
+    height:= 38;
+    top:= TOPBASE + 460;
+    left:= LEFTBASE+ 10;
+    Display:= mPanel;   //for video show
+    //Free;
+  end;
+  
+  {mynav:= TDBNavigator.create(self);
+  mnavlink:= TNavDataLink.Create(mynav)
+  //mynav.source
+  with mynav do begin
+    parent:= inFrm; 
+    //datasource:= mysource;
+    //btnclick(2);
+    //visibleButtons
+    height:= 38;
+    top:= TOPBASE + 460;
+    left:= LEFTBASE+ 30;
+    //show
+    //Display:= mPanel;   //for video show
+  end;}
+   
+  {mydbim:= TDBImage.create(self);
+  //mynav.source
+  with mydbim do begin
+    parent:= inFrm;
+    //center:= true;
+    //datafield:=  'myfield';
+    //datasource:= NIL;
+    //btnclick(2);
+    //visibleButtons
+    height:= 38;
+    top:= TOPBASE + 460;
+    left:= LEFTBASE+ 30;
+    //show
+    //Display:= mPanel;   //for video show
+  end;} 
+  
+   mydir:= TDirectoryListBox.create(self);
+  //mynav.source
+  with mydir do begin
+    parent:= inFrm; 
+    width:= 200;
+    height:= 238;
+    top:= TOPBASE + 180;
+    left:= LEFTBASE+ 30;
+    //free;
+  end; 
+
+    moutline:= TOutline.create(self);
+  //mynav.source
+  with moutline do begin
+    //AddChild
+    parent:= inFrm; 
+    LoadFromFile(Exepath+'examples\outline.txt');
+    FullExpand;
+    width:= 200;
+    height:= 238;
+    top:= TOPBASE + 180;
+    left:= LEFTBASE+ 255;
+    //free;
+    //Display:= mPanel;   //for video show
+  end; 
+
+ {mydgrid:= TDBGrid.create(self)
+ //mydgrid.free;
+ with mydgrid do begin
+    parent:= inFrm;
+    datasource:= mysource;
+    fieldcount; 
+  //LoadBitMap;
+ end;} 
+end;
+
+
+function teststring(vstring: string): integer;
+var a, b, i: integer;
+begin
+ for i:= 1 to length(vstring) do begin 
+   a:= strtoint(vstring[i])
+   b:= b + a; 
+ end;
+ result:= b
+end;
+
+function runString(Vshow: string): string;
+var i: byte;
+  Rword, tmpStr: string;
+  cntr, nCount: integer;
+begin
+cntr:= 1; nCount:= 0;
+Rword:= ''; //initialize
+tmpStr:= Vshow; // input last result
+for i:= 1 to length(tmpStr) do begin
+  if i= length(tmpstr) then begin
+     if (tmpStr[i-1]=tmpStr[i]) then
+     cntr:= cntr +1;
+     if cntr = 1 then    
+     nCount:= cntr;
+     Rword:= Rword + intToStr(ncount) + tmpStr[i]
+  end else
+   if (tmpStr[i]=tmpStr[i+1]) then begin
+      cntr:= cntr +1;
+      nCount:= cntr;
+   end else begin
+     if cntr = 1 then cntr:= 1 else cntr:= 1; //reinit counter!
+     Rword:= Rword + intToStr(ncount) + tmpStr[i] //+ last char(tmpStr)
+     //test memo2.lines.add(inttostr(i))
+   end;
+end; //end for loop
+result:= Rword;
+end;
+
+const 
+  rstr = '11222277888889991';
+var  
+      testrtn: integer;
+      mf, mf2: float;
+      outputform: TDebugoutput;
+      mc, curr: currency;
+      randstr: string;
+      getback: byte;
+      //formout: debugout;
+ 
+begin
+  memo2.font.size:= 16;
+  memo2.lines.add(rstr);
+  memo2.lines.add(runstring(rstr))
+  testrtn:= teststring(runstring(rstr))  
+  if testrtn = 45 then 
+  memo2.lines.add('OK') else
+  memo2.lines.add('not OK');
+  //memo2.font.size:= 12;
+  //----------------------------
+  selectFile:= ExePath+MEDIAPATH;    
+  SetForm;
+   
+  mf2:= 200000899;
+  //mf:= logN(2,20);
+  mf:= logN(2,mf2);
+  printf('this is %2.4f ',[mf])
+ { with debugout.output do begin
+     clear;
+     color:= clyellow;
+     font.size:= 25;
+   for i:= 1 to 1000 do begin
+     lines.add(format('# %d of 2^%d is %f',[i,i,power(2,i)]))
+     lines.add(floattostr(power(2,i)))
+   end
+     lines.add('expo '+floattoStr(mf2))
+     lines.add('log2 '+floattostr(mf));
+     lines.add('prectest: '+floattostr(power(2,mf)))
+     lines.add('floater: '+floattostr(power(23.5,2.4)))
+     debugout.show;
+  end;}
+  writeln('prec test: '+floattoStr(power(2,mf)))
+  printf('this is %2.4f ',[mf])
+  Writeln(floattoStr(logN(2,20)))
+  {debugout.caption:= 'thie is may superstition in demonstation'
+  debugout.output.font.size:= 24;
+  debugout.output.lines.text:= getASCII;
+  debugout.show;}
+  //debugout.free;
+  {with TDebugoutput.create(self) do begin
+       caption:= 'self construct randomiser';
+       output.font.size:= 24;
+       output.wordwrap:= true;
+       output.readonly:= false;
+       //width:= 100;
+       for i:= 1 to 200 do begin
+       getback:=  random(58)+65
+        if (getback <91) or (getback >96) then
+        randstr:= randstr + chr(getback)
+        end;
+       //output.lines.loadfromfile('firstdemo.txt')
+       //output.wordwrap:= true;
+       output.lines.text:= randstr;
+       showmodal;
+       free
+    end;}   
+  //mylistview:= TFormListView.Create(self);
+  //exit;
+  writeln(stringofchar('A',1))
+  Fpower10
+  //if EOF then writeln('eof')
+  Writeln(floattostr(sqrt(100)))
+  //Halt;
+  Writeln(intToStr(ioresult))
+  //writeln(getASCII)
+  {mylistview:= TFormListView.create(self);
+  with mylistview do begin
+    show
+  end;}  
+  //writeln(languages)
+  writeln('rand ' +inttostr(random(100)))
+  //writeln('randf ' +floattostr(randomF))
+  writeln('randf ' +floattostr(random2(0)))
+  writeln('randff ' +floattostr(randomF))
+  writeln('randfe ' +floattostr(randomE))
+  mf:= strtofloat('345565.56');
+  writeln(floattostr(mf));
+  curr:= 3678.4567;
+  //CurrToStr(curr)
+  //StrToCurr('3.465778');
+  //mc:= FloatToCurr(46.567);
+   //Writeln('FloatToCurr_15: '+CurrToStr(FloatToCurr(Power(2,23))))
+   writeln(SHA1(Exepath+'maxbox3.exe'))
+   maxform1.color:= clsilver;
+end.
+-------------------------------------------------
+//-----------------------------CodeSnippets--------------------
+
+procedure TfMerit.SourceLVStartDrag(Sender: TObject; var DragObject: TDragObject);
+var TargetLV:TListView;
+begin
+// TargetLV:=nejak urcit dle potreby
+  TargetLV.BeginDrag(True)
+end;
+
+procedure TfMerit.SourceLVMouseDown(Sender: TObject;
+                      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  MouseIsDown:= True;
+end;
+
+procedure TfMerit.SourceLVMouseUp(Sender: TObject; Button: TMouseButton;
+                                         Shift: TShiftState; X, Y: Integer);
+begin
+MouseIsDown:= False;
+if (Sender as TListView).Dragging then
+  (Sender as TListView).EndDrag(False);
+end;
+
+procedure TfMerit.SourceLVMouseMove(Sender: TObject; Shift: TShiftState;
+                                                     X, Y: Integer);
+begin
+if (Sender.ClassNameIs('TListView')) then begin
+  if MouseIsDown and ((Sender as TListView).SelCount>0) then
+    (Sender as TListView).BeginDrag(True);
+  end;
+end;
+
+
+procedure TfMerit.TargetLVDragOver(Sender, Source: TObject; X,
+                             Y: Integer; State: TDragState; var Accept: Boolean);
+var T: TListView;
+begin
+  T:= Sender as TListView;
+  Accept:= Assigned(T.GetItemAt(X,Y));
+end;
+
+
+procedure TfMerit.TargetLVDragDrop(Sender, Source: TObject; X,Y: Integer);
+var It: TListItem;
+  LV1,LV2: TListView;
+begin
+  LV1:= Source as TListView;
+  LV2:= Sender as TListview;
+  It:= LV2.GetItemAt(X,Y);
+  if Assigned(It) then begin
+  // zpracuj polozku ze zdrojoveho listview
+  end;
+end;
+
+
+procedure TControlParentR(Self: TControl; var T:TWinControl); begin T:= Self.Parent; end;
+procedure TControlParentW(Self: TControl; T: TWinControl); begin Self.Parent:= T; end;
+    RegisterPropertyHelper(@TControlParentR, @TControlParentW, 'PARENT');
+    RegisterProperty('Parent', 'TWinControl', iptRW);
+
+procedure TTXPTool.LVPFFDblClick(Sender: TObject);
+var
+  tmpList: TListItem;
+  fn: string;
+  ft: integer;
+  fs: integer;
+begin
+  tmpList:= LVPFF.Selected;
+  if tmplist <> NIL then begin
+    fn:= tmpList.Caption
+    ft:= tmpList.SubItems.Strings[1];
+    fs:= tmpList.SubItems.Strings[3];
+    if pos('Wave', ft)>0 then
+      PlayThisOne1Click(NIL);
+    if pos('Jpg', ft)>0 then
+      ShowJpg1Click(NIL);
+    if pos('PNG', ft)>0 then
+      ShowTga1Click(NIL);
+    if pos('PCX', ft)>0 then
+      ShowPcx1Click(NIL);
+    if pos('Mission Sound Collection', ft)>0 then
+      ShowPwf1Click(NIL);
+  end;
+end;

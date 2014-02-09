@@ -1,0 +1,518 @@
+//****************TimeTester**************************
+program MessageTimeOut_SQLQuery;
+
+// this is in conjunction with example _28_pas_dataset.txt locs=130
+// in V3.2 you find DBX, SQLExpress for Interbase, Firebird, Oracle 
+
+//GetShortPathName(PChar(LongName), ShortName, Max_Path);
+  
+
+function GetShortPathName(lname, sname: pchar; mpath: longint): bool;
+  external 'GetShortPathNameW@kernel32.dll stdcall';
+
+function MessageBoxTimeOut(hWnd: HWND; lpText: PChar; lpCaption: PChar; uType: UINT;
+ wLanguageId: WORD; dwMilliseconds: DWORD): Integer; external 'MessageBoxTimeoutA@user32.dll stdcall';
+
+
+Const SCHOLZALIAS = 'SAS';
+
+//const SQLQuery = 'select * from customer where company like "%SCUBA%"''';    
+//const SQLQuery = 'select * from kasse';    
+//const SQLQuery = 'select suchbegriff from ZeitP';    
+//const SQLQuery = 'select suchbegriff from ZeitP';    
+//const SQLQuery = 'Select Fertig, AuftragsNr, LeistungsNr from ZeitBTmp'; 
+//const SQLQuery = 'Select Fertig, BeginnDatum, AuftragsNr, LeistungsNr from ZeitBtmp where '+
+  //                  ' AuftragsNr > 200000'; 
+
+const SQLQuery = 'Select PersonalNr, KommDatum from ZeitA where PersonalNr = 1'; 
+                    
+//const SQLQuery = 'select count(*) from ZeitA';                     
+//const SQLQuery = 'Select Fertig, AuftragsNr, LeistungsNr from ZeitB'; 
+//const SQLQuery = 'select count(*) from ZeitB'; 
+//const SQLQuery = 'select count(*) from ZeitB where LeistungsNr > ''150'''; 
+   
+var
+   dbMain: TDatabase;   //@global
+
+function TFormMain_GetTime:TDateTime;
+begin
+  result:= StrToTime(FormatDateTime('h:n',time)); // Sekunden abschneiden
+end;
+
+
+var 
+  mylst: TStringlist;
+     i: integer;
+     textout: boolean;
+     myregxs: RegExprString;
+     iResult, iFlags: Integer;   
+       
+begin
+
+ // maxform1.ShellStyle1click(self)
+    maxform1.Console1Click(self)
+    //maxform1.Decompile1Click(self)
+    textout:= false;
+
+  //MakeDataBase;
+  //Define_Let_OpenDB;
+  //queryperformancefrequency
+  //Function GetAliasPath( const AliasName : string) : string');
+  //addstandardalias
+  mylst:= TStringlist.create;
+  with TSession.Create(NIL) do try
+      SessionName:= 'Mars3'
+      getAliasNames(mylst);
+      Writeln('BDE / DB Alias List:  ******************************');
+      for i:= 1 to mylst.count-1 do
+        write(mylst[i]+' ');
+    finally
+      Free;
+      mylst.Free; 
+    end;      
+ 
+  Writeln('BDE/DB Parameters: ******************************');
+  Writeln('BDE Directory '+GetBdeDirectory);
+  writeln('DB Alias Path '+GetAliasPath(SCHOLZALIAS));
+  writeln('Temp File Path'+getTempDir)
+  Writeln('*************************************************');
+
+  //GetAliasDriverName('SAS')
+  writeln(timetoStr(TFormMain_GetTime))
+  writeln(timeToStr(time))
+  gettickcount
+  //queryperformancecounter
+  writeln(inttoStr(max_path))
+  //saveln
+  writeln('thiis is newline'+CR+LF+'a second line');
+  //gettemppath
+  //CollectionsEqual
+  
+  with TThread.Create(true) do begin
+      //afterconstruction
+         resume;
+         //synchronize(
+         writeln('thread id '+inttoStr(threadid))
+         writeln('thread handle '+inttoStr(handle))
+      free;
+  end;
+  
+//  function ExecRegExpr (const ARegExpr, AInputStr : RegExprString) : boolean;
+// true if string AInputString match regular expression ARegExpr
+// ! will raise exeption if syntax errors in ARegExpr
+  
+   Writeln(ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+                          'BLOCK( test1)', 'def "$1" value "$2"', True))
+
+//  will return:  def 'BLOCK' value 'test1'
+//  ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+//   'BLOCK( test1)', 'def "$1" value "$2"')
+//   will return:  def "$1" value "$2"
+
+   myregxs:= ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+                  'BLOCK( test1)', 'def "$1" value "$2"', false);
+     Writeln(myregxs)             
+//   will return:  def "$1" value "$2"
+   //or $00001000
+
+  iFlags := MB_YESNO or MB_ICONINFORMATION;
+
+  //iFlags:= $0 or $00010000 or $00000040;
+     iResult:= MessageBoxTimeout(Application.Handle,
+         'Test a timeout of 2 seconds.','MessageBoxTimeout Test',iFlags,0,2000);
+  
+  iFlags:= $0 or $00010000 or $00000040;
+     iResult:= MessageBoxTimeout(Application.Handle,
+         'Test a timeout of 2 seconds.','MessageBoxTimeout Test',iFlags,0,2000);
+ 
+ 
+  //SynRegExpr
+end.
+
+
+function ReplaceRegExpr (const ARegExpr, AInputStr, AReplaceStr : RegExprString;
+      AUseSubstitution : boolean{$IFDEF D4_}= False{$ENDIF}) : RegExprString; //###0.947
+// Returns AInputStr with r.e. occurencies replaced by AReplaceStr
+// If AUseSubstitution is true, then AReplaceStr will be used
+// as template for Substitution methods.
+// For example:
+//  ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+//   'BLOCK( test1)', 'def "$1" value "$2"', True)
+//  will return:  def 'BLOCK' value 'test1'
+//  ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+//   'BLOCK( test1)', 'def "$1" value "$2"')
+//   will return:  def "$1" value "$2"
+
+
+Exception: An error occurred while attempting to initialize the Borland Database Engine (error $2A04) at 0.569
+
+$2A04 (10756) = Operation not applicable.
+DBIO will not start: BDE Error $2A04
+
+
+Full error:
+  CRITICAL (Work) An error occurred while attempting 
+  to initialize the Borland Database Engine (error $2A04)
+
+Issue:
+This error indicates a core problem with BDE configuration.
+
+
+Resolution:
+
+1) Close ALL application software, stop all OmniRush modules including
+   Launcher
+
+2) Open the BDE Administrator
+
+3) Go to the Configuration | System | INIT area
+
+4) Check the Default Driver setting. The recommended setting
+   (for ALL systems) is DBASE
+
+5) Go to the Configuration | Drivers | Native | Paradox area
+
+6) Check the NET DIR setting. This should be set to a LOCAL
+   drive and a simple directory that exists. For example, check
+   if you have a C:\TEMP\ directory. If not, create one and grant
+   all users full access to it.
+   Then set NET DIR to c:\temp\
+
+7) We advise that the PC now be rebooted.
+
+8) Check for proper operation.
+
+
+
+Re:Getting ERROR: "to initialize the Borland Database Engine (error $210D)"
+The errors are "shared memory conflict" and "insufficient memory to
+complete this operation" respectively.
+I assume that "several Delphi 7's running" means several programs
+created with Delphi7 not several instances of the Delphi 7 IDE. You
+need to change the SharedMemLocation and SharedMemSize in the BDE
+Administrator. Try 0x5BDE and 4096. If that does not work try some of
+the other locations suggested in the on-line help.
+--
+
+  
+  
+TABLE 16.1. PRIMARY TDataSet PROPERTIES.
+
+Property 	Description
+Active 	Opens the dataset when set to True and closes it when set to False.
+AutoCalcFields 	Determines when calculated fields are calculated.
+Bof 	Returns True if the cursor is on the first record in the dataset and False if it isn't.
+CachedUpdates 	When True, updates are held in a cache on the client machine until an entire transaction is complete. When False, all changes to the database are made on a record-by-record basis.
+CanModify 	Determines whether the user can edit the data in the dataset.
+DataSource 	The DataSource component associated with this dataset.
+DatabaseName 	The name of the database that is currently being used.
+Eof Returns True if the cursor is at the end of the file and False if it isn't.
+FieldCount 	The number of fields in the dataset. Because a dataset might be dynamic (the results of a query, for example), the number of fields can vary from one dataset request to the next.
+Fields 	An array of TFields objects that contains information about the fields in the dataset.
+FieldValues 	Returns the value of the specified field for the current record. The value is represented as a Variant.
+Filter 	An expression that determines which records a dataset contains.
+Filtered When True, the dataset is filtered based on either the Filter property or the OnFilterRecord event. When False, the entire dataset is returned.
+FilterOptions 	Determines how filters are applied.
+Found 	Indicates whether a find operation is successful.
+Handle 	A BDE cursor handle to the dataset. This is used only when making direct calls to the BDE.
+Modified Indicates whether the current record has been modified.
+RecNo 	The current record number in the dataset.
+RecordCount 	Returns the number of records in the dataset.
+State 	Returns the current state of the dataset (dsEdit, dsBrowse, dsInsert, and so on).
+UpdateObject 	Specifies the TUpdateObject component to use for cached updates.
+UpdatesPending 	When True, the cached update buffer contains edits not yet applied to the dataset.
+
+
+TABLE 16.2. PRIMARY TDataSet METHODS.
+
+Method 	Description
+Append 	Creates an empty record and adds it to the end of the dataset.
+AppendRecord 	Appends a record to the end of the dataset with the given field data and posts the edit.
+ApplyUpdates 	Instructs the database to apply any pending cached updates. Updates are not actually written until the CommitUpdates method is called.
+Cancel 	Cancels any edits to the current record if the edits have not yet been posted.
+CancelUpdates 	Cancels any pending cached updates.
+ClearFields 	Clears the contents of all fields in the current record.
+CommitUpdates 	Instructs the database to apply updates and clear the cached updates buffer.
+Close 	Closes the dataset.
+Delete 	Deletes the current record.
+DisableControls 	Disables input for all data controls associated with the dataset.
+Edit 	Enables editing of the current record.
+EnableControls 	Enables input for all data controls associated with the dataset.
+FetchAll 	Gets all records from the cursor to the end of the dataset and stores them locally.
+FieldByName 	Returns the TField pointer for a field name.
+
+FindFirst
+
+check:
+procedure SIRegisterTDATASET(CL: TPSPascalCompiler);
+procedure TDATASETFIELDS_R(Self: TDATASET; var T: TFIELDS);
+begin T := Self.FIELDS; end;
+
+//{$IFNDEF FPC}
+
+procedure TDATASETFIELDLIST_R(Self: TDATASET; var T: TFIELDLIST);
+begin T := Self.FIELDLIST; end;
+
+_QSQ14.DB  ??
+
+
+http://mailer.newsabo.net/link.php?M=4355886&N=30&L=5&F=H
+
+Kritische Java-Lücke wird im großen Stil ausgenutzt Update
+
+Kriminelle nutzen derzeit zunehmend eine kritische Lücke in der Java-Laufzeitumgebung aus, um Rechner beim Besuch speziell präparierter Webseiten mit Schadcode zu infizieren. Laut dem renommierten Security-Blogger Brian Krebs ist das darauf zurückzuführen, dass das Arsenal des weit verbreiteten Exploit-Kits BlackHole um einen passenden Exploit ausgebaut wurde.
+
+Durch die Lücke, die Oracle Mitte Februar gepatcht hat, kann Schadcode aus der Java-Sandbox ausbrechen und sich dauerhaft auf dem System verankern. Welche Art von Schadcode dabei injiziert wird, ist variabel. Unter anderem soll die Lücke zur Verbreitung des ZeuS-Trojaners genutzt werden.
+
+Laut einer Analyse von Microsoft ist der Dropper in zwei Java-Klassen aufgeteilt. Die erste Klasse nutzt die Schwachstelle bei der Verarbeitung von Arrays aus, um an höhere Rechte zu gelangen und führt anschließend die Loader-Klasse aus, sich um das Herunterladen und das Installieren der Payload kümmert.
+
+
+Mit der aktuellen Java-Version ist man vor dem Exploit geschützt. Vergrößern Schützen kann man sich, indem man eine der derzeit aktuellen Java-Versionen 6 Update 31 oder 7 Update 3 installiert. Ob und welche Version des Browser-Plugins installiert ist, erfährt man auf dieser Testseite.
+
+Allzu sicher sollte man sich jedoch selbst mit der aktuellsten Java-Version nicht fühlen: Brian Krebs berichtet von Gerüchten in Untergrundforen über einen neuen Exploit, der eine ungepatchte kritische Java-Lücke ausnutzt.
+
+Wer auf Nummer sicher gehen will, kann Java auch komplett deinstallieren oder zumindest das Browser-Plugin deaktivieren. Letzteres dürfte sich aufgrund der stetig abnehmenden Verbreitung von Java auf die meisten Webseiten nicht auswirken. 
+
+// Beim Kopieren immer AsVariant benutzen!!!
+// Leere, nicht initialisierte Integer-, Float- und DateTime-Felder liefern mit AsInteger oder value
+// den Wert 0 und nicht NULL.
+// Wenn das Feld eine Nachschlagetabelle benutzt, und das Nachschlagefeld mit Min/Max begrenzt ist,
+// gibt es bei Locate und Lookup eine Exception!!!
+var a:array[0..60] of Variant;
+
+
+
+// Funktion: HexDump
+// Gibt 1. Parameter als HexDump aus.
+// Als 2. Parameter muß die Größe angegeben werden.
+function HexDump(const y; size: Integer): string;
+type
+  TBytes = array[0..MaxInt - 1] of Byte;
+var
+  i, j: Integer;
+  s: string;
+begin
+// // Das würde reichen. Der Rest ist nur Optik ;-)
+// for i := 0 to size - 1 do
+// begin
+// j := TBytes(y)[i];
+// Result := Result + IntToHex(j, 2) + ' ';
+// end;
+
+  Result := 'Größe: ' + IntToStr(size) + ' Bytes' + sLineBreak;
+  for i := 0 to size - 1 do
+  begin
+    if (i mod 16) = 0 then Result := Result + IntToHex(i, 4) + ' : ';
+    // Das i. Byte von y ermitteln
+    j := TBytes(y)[i];
+    // Hex Zahl ausgeben
+    Result := Result + IntToHex(j, 2) + ' ';
+    // lesbaren Bereich rechts ausgeben
+    if j > 31 then s := s + Chr(j)
+              else s := s + '.';
+    // nach 8 Bytes Leerzeichen und
+    // nach 16 Byte lesbaren Text sowie Zeilenumbruch ausgeben
+    if (i mod 16) = 15 then
+    begin
+      Result := Result + ': ' + s + sLineBreak;
+      s := '';
+    end
+    else if (i mod 8) = 7 then
+    begin
+      Result := Result + ' ';
+      s := s + ' ';
+    end;
+  end;
+  // Letzte Zeile kann weniger als 16 Byte haben -> mit Leerzeichen auffüllen
+  if ((size-1) mod 16) < 15 then
+  begin
+    for i := ((size-1) mod 16) to 14 do Result := Result + ' ';
+    if ((size-1) mod 16) < 7 then Result := Result + ' ';
+    Result := Result + ': ' + s + sLineBreak;
+  end;
+end;
+
+procedure TForm1.Button2Click(Sender: TObject);
+var
+  s1: string;
+  s2: shortstring;
+  a: array[0..2] of record x,y: Integer end;
+begin
+  // Test von HexDump
+  s1 := 'Hallo, das ist ein Test.';
+  s2 := 'Hallo, das ist ein Test.';
+  a[0].x := 0;
+  a[0].y := 1;
+  a[1].x := 2;
+  a[1].y := 3;
+  a[2].x := 4;
+  a[2].y := 5;
+  // Courier sieht beim Dump schöner aus ;-)
+  Memo1.Font.Name := 'Courier New';
+  // Huch, es werden nur 4 Byte ausgegeben -> Ein String ist also ein Pointer
+  Memo1.Lines.add(HexDump(s1, SizeOf(s1)));
+  // Hier ist der Text ;-)
+  // (Length + 1 ist immer 0, da es intern ein nullterminierter String ist.)
+  Memo1.Lines.add(HexDump(Pointer(s1)^, Length(s1)+1));
+  // Aha, wie früher in Turbo Pascal -> String ist 256 Byte groß und
+  // 1. Byte beinhaltet die Größe (Länge) des Strings
+  Memo1.Lines.add(HexDump(s2, SizeOf(s2)));
+  // Das Array ist 25 Byte größ 3 x 2 Integer á 4 Byte
+  Memo1.Lines.add(HexDump(a, SizeOf(a)));
+
+  // Ausgabe letzter HexDump(a):
+  // Größe: 24 Bytes
+  // 0000 : 00 00 00 00 01 00 00 00 02 00 00 00 03 00 00 00 : ........ ........
+  // 0010 : 04 00 00 00 05 00 00 00 : ........
+end; 
+
+moog synthi picture
+<div id="moog"><div id="moog-tooltip-canvas"><a href="/search?q=Robert+Moog&amp;oi=ddle&amp;ct=moog12-hp" hidefocus="" id="moog-tooltip" tabindex="-1">78. Geburtstag von Robert Moog</a></div><div id="knobs"><div id="mastervol" class="knob"></div><div id="moog-volume1" class="knob"></div><div id="moog-volume2" class="knob"></div><div id="moog-volume3" class="knob"></div><div id="attacktime" class="knob"></div><div id="contouramount" class="knob"></div><div id="cutoff" class="knob"></div><div id="decaytime" class="knob"></div><div id="moog-glide" class="knob"></div><div id="sustainlevel" class="knob"></div><div id="moog-osc2-pb" class="knob"></div><div id="moog-osc3-pb" class="knob"></div><div id="moog-osc1-rg" class="knob"></div><div id="moog-osc2-rg" class="knob"></div><div id="moog-osc3-rg" class="knob"></div><div id="moog-osc1-wf" class="knob"></div><div id="moog-osc2-wf" class="knob"></div><div id="moog-osc3-wf" class="knob"></div><div id="moog-loudness-attack" class="knob"></div><div id="moog-loudness-decay" class="knob"></div><div id="moog-loudness-sustain" class="knob"></div></div><div id="moog-mod-wheel"></div><div id="moog-mod-wheel-bg"></div><div id="moog-mod-wheel-ind"></div><div id="moog-keyboard"><img id="moog-map" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///////yH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" usemap="#keymap" alt="" height="223" width="400"><w id="moogk0"></w><s id="moogk1"></s><w id="moogk2"></w><s id="moogk3"></s><w id="moogk4"></w><s id="moogk5"></s><w id="moogk6"></w><w id="moogk7"></w><s id="moogk8"></s><w id="moogk9"></w><s id="moogk10"></s><w id="moogk11"></w><w id="moogk12"></w><s id="moogk13"></s><w id="moogk14"></w><s id="moogk15"></s><w id="moogk16"></w><s id="moogk17"></s><w id="moogk18"></w><w id="moogk19"></w><s id="moogk20"></s><w id="moogk21"></w><s id="moogk22"></s><w id="moogk23"></w><map name="keymap" id="keymap"><area shape="circle" coords="57,24,16" href="javascript:;" id="moog-knob-master" alt=""><area shape="circle" coords="108,22,12" href="javascript:;" id="moog-knob-1" alt=""><area shape="circle" coords="108,50,12" href="javascript:;" id="moog-knob-0" alt=""><area shape="circle" coords="108,79,12" href="javascript:;" id="moog-knob-2" alt=""><area shape="circle" coords="228,23,13" href="javascript:;" id="moog-knob-3" alt=""><area shape="circle" coords="228,50,13" href="javascript:;" id="moog-knob-4" alt=""><area shape="circle" coords="228,79,13" href="javascript:;" id="moog-knob-5" alt=""><area shape="circle" coords="281,23,13" href="javascript:;" id="moog-knob-6" alt=""><area shape="circle" coords="281,50,13" href="javascript:;" id="moog-knob-7" alt=""><area shape="circle" coords="281,79,13" href="javascript:;" id="moog-knob-8" alt=""><area shape="circle" coords="313,22,12" href="javascript:;" id="moog-knob-9" alt=""><area shape="circle" coords="313,50,12" href="javascript:;" id="moog-knob-10" alt=""><area shape="circle" coords="313,79,12" href="javascript:;" id="moog-knob-11" alt=""><area shape="circle" coords="168,23,16" href="javascript:;" id="moog-knob-osc2-pb" alt=""><area shape="circle" coords="168,77,16" href="javascript:;" id="moog-knob-osc3-pb" alt=""><area shape="circle" coords="142,22,12" href="javascript:;" id="moog-knob-osc2-rg" alt=""><area shape="circle" coords="142,50,12" href="javascript:;" id="moog-knob-osc1-rg" alt=""><area shape="circle" coords="142,79,12" href="javascript:;" id="moog-knob-osc3-rg" alt=""><area shape="circle" coords="197,23,14" href="javascript:;" id="moog-knob-osc2-wf" alt=""><area shape="circle" coords="197,50,14" href="javascript:;" id="moog-knob-osc1-wf" alt=""><area shape="circle" coords="197,79,14" href="javascript:;" id="moog-knob-osc3-wf" alt=""><area shape="rect" coords="25,135,55,181" href="javascript:;" id="moog-mod-wheel-area" alt=""><area shape="poly" coords="52,184,51,192,74,192,80,161,72,162,80,127,67,127,52,184" href="javascript:;" class="moog-key-0" alt=""><area shape="poly" coords="90,121,81,121,72,160,87,162,94,127,90,121" href="javascript:;" class="moog-key-1" alt=""><area shape="poly" coords="93,126,86,161,81,161,75,184,75,192,99,192,104,161,96,161,104,126,93,126" href="javascript:;" class="moog-key-2" alt=""><area shape="poly" coords="105,121,97,154,96,161,111,161,117,125,112,121,105,121" href="javascript:;" class="moog-key-3" alt=""><area shape="poly" coords="117,125,111,161,105,161,101,184,101,193,124,193,128,161,122,161,127,125,117,125" href="javascript:;" class="moog-key-4" alt=""><area shape="poly" coords="129,121,126,126,122,161,136,161,141,126,136,121,129,121" href="javascript:;" class="moog-key-5" alt=""><area shape="poly" coords="141,126,156,126,149,186,150,192,124,192,125,184,128,161,135,161,141,126" href="javascript:;" class="moog-key-6" alt=""><area shape="poly" coords="173,192,174,160,167,160,170,127,156,127,151,192,173,192" href="javascript:;" class="moog-key-7" alt=""><area shape="poly" coords="180,121,172,120,170,125,167,160,181,160,183,126,180,121" href="javascript:;" class="moog-key-8" alt=""><area shape="poly" coords="183,126,193,126,193,160,197,160,196,193,174,193,176,160,181,160,183,126" href="javascript:;" class="moog-key-9" alt=""><area shape="poly" coords="204,121,196,121,191,126,192,161,207,161,207,126,204,121" href="javascript:;" class="moog-key-10" alt=""><area shape="poly" coords="207,126,220,126,222,193,199,193,199,161,206,160,207,126" href="javascript:;" class="moog-key-11" alt=""><area shape="poly" coords="237,126,239,161,244,161,246,193,223,192,221,126,237,126" href="javascript:;" class="moog-key-12" alt=""><area shape="poly" coords="247,121,239,121,235,127,238,161,253,161,250,126,247,121" href="javascript:;" class="moog-key-13" alt=""><area shape="poly" coords="250,126,253,161,247,161,248,192,273,193,270,161,266,161,261,126,250,126" href="javascript:;" class="moog-key-14" alt=""><area shape="poly" coords="273,121,265,121,261,126,265,161,280,161,273,121" href="javascript:;" class="moog-key-15" alt=""><area shape="poly" coords="271,161,273,193,296,192,295,184,292,161,289,161,285,126,274,126,279,161,271,161" href="javascript:;" class="moog-key-16" alt=""><area shape="poly" coords="296,121,289,121,284,126,290,161,304,161,296,121" href="javascript:;" class="moog-key-17" alt=""><area shape="poly" coords="297,126,304,160,294,161,297,192,320,192,320,184,308,126,297,126" href="javascript:;" class="moog-key-18" alt=""><area shape="poly" coords="310,126,320,185,321,192,344,192,344,183,338,161,333,161,325,126,310,126" href="javascript:;" class="moog-key-19" alt=""><area shape="poly" coords="335,121,327,120,324,126,333,162,347,160,335,121" href="javascript:;" class="moog-key-20" alt=""><area shape="poly" coords="339,161,346,192,369,192,369,184,361,161,358,161,347,125,337,126,347,161,339,161" href="javascript:;" class="moog-key-21" alt=""><area shape="poly" coords="359,121,350,121,346,127,358,161,372,161,359,121" href="javascript:;" class="moog-key-22" alt=""><area shape="poly" coords="364,161,370,184,370,192,393,192,393,184,373,126,360,126,372,160,364,161" href="javascript:;" class="moog-key-23" alt=""></map></div><div id="moog-switch" class="moog-switch-off"></div><div id="moog-bubble" style="display: none;"><div id="moog-bubble-text" dir="ltr"></div><div id="moog-wf" class="moog-wf-0" style="display: none;"></div></div><div id="moog-led" style="display: none;"></div><div id="moog-4-track"></div><div id="moog-4-track-knobs"></div><div id="moog-g-plus-inactive" style="display: none;"></div><div id="moog-g-plus-up" style="display: none;"></div><div id="moog-g-plus-active" style="display: none;"></div><div id="moog-g-plus" style="display: none;"></div><div id="moog-link-inactive"></div><div id="moog-link-up" style="display: none;"></div><div id="moog-link-active" style="display: none;"></div><div id="moog-link"></div><div id="moog-play-inactive"></div><div id="moog-stop" style="display: none;"></div><div id="moog-stop-up" style="display: none;"></div><div id="moog-play-up" style="display: none;"></div><div id="moog-play"></div><div id="moog-record-inactive"></div><div id="moog-record-up" style="display: none;"></div><div id="moog-record-active" style="display: none;"></div><div id="moog-record"></div><div id="moog-reel-tape-left"></div><div id="moog-reel-tape-right"></div><div id="moog-reel-left" class="moog-reel-1"></div><div id="moog-reel-right" class="moog-reel-1"></div><div id="moog-reel-over-left"></div><div id="moog-reel-over-right"></div><div id="moog-meter-1" class="moog-meter-active"></div><div id="moog-meter-needle-1" class="moog-meter-needle"></div><div id="moog-meter-target-1"></div><div id="moog-meter-2" class="moog-meter-inactive"></div><div id="moog-meter-needle-2" class="moog-meter-needle"></div><div id="moog-meter-target-2"></div><div id="moog-meter-3" class="moog-meter-inactive"></div><div id="moog-meter-needle-3" class="moog-meter-needle"></div><div id="moog-meter-target-3"></div><div id="moog-meter-4" class="moog-meter-inactive"></div><div id="moog-meter-needle-4" class="moog-meter-needle"></div><div id="moog-meter-target-4"></div><div id="moog-link-tab" style="display: none;"><input id="moog-link-text" value="" autocomplete="off" dir="ltr" onclick="this.focus();this.select();" readonly="readonly" style="display: none;" type="text"></div><div id="moog-discovery"></div></div>
+
+  
+  5.6.2012 11.30-14.00 , Falcone Konferenzsaal, Birmensdorferstrasse 150, Zürich
+
+Closures und funktionale Sprachen
+Max Kleiner, Kleiner Kommunikation
+
+Ein Closure ist ein funktionales Objekt, das sich Werte unabhängig seines Geltungsbereichs (Scope) merkt und zurückgibt. Andere meinen auch, es sei schlicht ein anonymer Code Block mit Widerverwendung. Wenn Sie jemals eine Funktion gebaut haben, die eine andere Funktionzurückgibt, haben Sie bereits mit der Closure oder Delegate Idee Kontakt geschlossen. Diese Session soll mit kleinen konkreten Beispiiel Licht in die Welt der Closures bringen und so ganz nebenbeieinige Tatsachen zur funktionalen Programmierung liefern (Back to the Function).
+Der Benefit von Closures sind granulare Wiederverwendbarkeit (Reuse), ausführbare Methoden sowie Vermeiden von Redundanz und Wiederholung. Max bespricht:
+ 
+
+    Ein Closure als Code Block
+    Long History - Smalltalk with Blocks, von Lisp bis Ruby
+    Functional Programming - eine Renaissance
+    Dynamic Languages - Fluch oder Segen?
+    Objektorientiert versus Blockorientiert
+    Case Study- Design eines digitalen Lügendetektors mit Closures!
+
+
+
+    There are lots of neat little things that are in many of the DLLs that Microsoft has installed in Windows. Most of them are documented in the Win32 API. However, there are a lot of them that are undocumented. This article shows how to use one of the undocumented functions available in user32.dll, MessageBoxTimeOut.
+
+This type of functionality for a MessageBox has been requested on the Delphi newsgroups many times and there have been several solutions written. After being introduced in XP, this functionality is now available to developers using this undocumented API.
+
+Since this function is not documented, it is not found in Windows.pas, so it has to be defined. It is identical to the MessageBox API definition except it has two more parameters, wLanguageID and dmMilliseconds.
+
+function MessageBoxTimeOut(
+hWnd: HWND; lpText: PChar; lpCaption: PChar;
+uType: UINT; wLanguageId: WORD; dwMilliseconds: DWORD): Integer; stdcall;
+
+function MessageBoxTimeOutA(
+hWnd: HWND; lpText: PChar; lpCaption: PChar;
+uType: UINT; wLanguageId: WORD; dwMilliseconds: DWORD): Integer; stdcall;
+
+function MessageBoxTimeOutW(
+hWnd: HWND; lpText: PWideChar; lpCaption: PWideChar;
+uType: UINT; wLanguageId: WORD; dwMilliseconds: DWORD): Integer; stdcall;
+
+
+implementation
+
+// this const is not defined in Windows.pas
+const
+MB_TIMEDOUT = 32000;
+
+function MessageBoxTimeOut; externaluser32 name 'MessageBoxTimeoutA';
+function MessageBoxTimeOutA; external user32 name 'MessageBoxTimeoutA';
+function MessageBoxTimeOutW; external user32 name 'MessageBoxTimeoutW';
+
+
+Now, to call the function, it is as easy as setting the flags and making the call. There may be other results returned that I am not aware of besides the standard IDxxx return values and the MB_TIMEDOUT result defined above.
+
+var
+iResult: Integer;
+iFlags: Integer;
+
+begin
+// Define a MessagBox with an OK button and a timeout of 2 seconds
+iFlags := MB_OK or MB_SETFOREGROUND or MB_SYSTEMMODAL or MB_ICONINFORMATION;
+iResult := MessageBoxTimeout(
+Application.Handle,
+'Test a timeout of 2 seconds.',
+'MessageBoxTimeout Test', iFlags, 0, 2000);
+
+// iResult will = 1 (IDOK)
+
+ShowMessage(IntToStr(iRet));
+
+// Define a MessageBox with a Yes and No button and a timeout of 5 seconds
+
+iFlags := MB_YESNO or MB_SETFOREGROUND or MB_SYSTEMMODAL or MB_ICONINFORMATION;
+
+iResult := MessageBoxTimeout(
+Application.Handle,
+'Test a timeout of 5 seconds.',
+'MessageBoxTimeout Test', iFlags, 0, 5000);
+
+// iResult = MB_TIMEDOUT if no buttons clicked, otherwise
+// iResult will return the value of the button clicked
+
+case iResult of
+IDYES: // Pressed Yes button
+ShowMessage('Yes');
+IDNO: // Pressed the No button
+ShowMessage('No');
+MB_TIMEDOUT: // MessageBox timed out
+ShowMessage('TimedOut');
+end;
+end;
+
+I presume Borland will not put this into Windows.pas until Microsoft documents it but developers can get a head start on them by using the code above. It is unlikely that Microsoft will depricate this function for quite some time because all of the standard MessageBox API calls actually call MessageBoxTimeOutA or MessageBoxTimeoutW and pass $FFFFFFFF as the timeout period meaning the dialog will wait a very long time, approx 49 days!
+Posted by BladeMaster at 11:46 AM
+Labels: message box, timeout, undocumented api 
+
+
+procedure TForm1.Button1Click(Sender: TObject) ;
+var
+  iRet: Integer;
+  iFlags: Integer;
+begin
+   iFlags := MB_OK or MB_SETFOREGROUND or MB_SYSTEMMODAL or MB_ICONINFORMATION;
+   MessageBoxTimeout(Application.Handle, 'Test a timeout of 2 seconds.', 'MessageBoxTimeout Test', iFlags, 0, 2000) ;
+   iFlags := MB_YESNO or MB_SETFOREGROUND or MB_SYSTEMMODAL or MB_ICONINFORMATION;
+   iRet := MessageBoxTimeout(Application.Handle, 'Test a timeout of 5 seconds.', 'MessageBoxTimeout Test', iFlags, 0, 5000) ;
+   case iRet of
+     IDYES:
+       ShowMessage('Yes') ;
+     IDNO:
+       ShowMessage('No') ;
+     MB_TIMEDOUT:
+       ShowMessage('TimedOut') ;
+   end;
+end;
+
+ CL.AddConstantN('MB_OK','LongWord').SetUInt( $00000000);
+ CL.AddConstantN('MB_OKCANCEL','LongWord').SetUInt( $00000001);
+ CL.AddConstantN('MB_ABORTRETRYIGNORE','LongWord').SetUInt( $00000002);
+ CL.AddConstantN('MB_YESNOCANCEL','LongWord').SetUInt( $00000003);
+ CL.AddConstantN('MB_YESNO','LongWord').SetUInt( $00000004);
+ CL.AddConstantN('MB_RETRYCANCEL','LongWord').SetUInt( $00000005);
+ CL.AddConstantN('MB_ICONHAND','LongWord').SetUInt( $00000010);
+ CL.AddConstantN('MB_ICONQUESTION','LongWord').SetUInt( $00000020);
+ CL.AddConstantN('MB_ICONEXCLAMATION','LongWord').SetUInt( $00000030);
+ CL.AddConstantN('MB_ICONASTERISK','LongWord').SetUInt( $00000040);
+ CL.AddConstantN('MB_USERICON','LongWord').SetUInt( $00000080);
+ CL.AddConstantN('MB_ICONWARNING','').SetString( MB_ICONEXCLAMATION);
+ CL.AddConstantN('MB_ICONERROR','').SetString( MB_ICONHAND);
+ CL.AddConstantN('MB_ICONINFORMATION','').SetString( MB_ICONASTERISK);
+ CL.AddConstantN('MB_ICONSTOP','').SetString( MB_ICONHAND);
+
+
+
+ Sommer, Sonne, Ökostrom
+Meldung vorlesen und MP3-Download
+
+Nach einer Meldung des in Münster ansässigen Internationalen Wirtschaftsforums Regenerative Energie haben die in Deutschland installierten Photovoltaikanlagen am vorgestrigen Freitag Mittag einen Weltrekord bei der Gewinnung von Solarenergie aufgestellt. Im Vergleich zum Vorjahreswert stellen die erzeugten 22 Gigawatt eine Steigerung um mehr als die Hälfte dar und ersetzten zumindest vorübergehend die Energieausbeute von 15 bis 20 Kernkraftwerken.
+
+Trotz der Tatsache, dass Deutschland geografisch gesehen gar nicht die optimal für Gewinnung von Solarenergie liegt, konnte Forumsdirektor Norbert Allnoch verkünden: "Es gibt derzeit kein anderes Land auf der Erde, in dem Solaranlagen mit einer Leistung von über 20 000 MW Strom produzieren können." Wie Allnoch gegenüber Reuters erklärte, deckt diese Leistung rund ein Drittel des landesweiten Energiebedarfs an einem Werktag, am Wochenende, wenn Industrieanlagen und Büros ruhen, sogar beinahe die Hälfte.
+
+
+Hausneubau voller Solarmodule Vergrößern
+Bild: thetimchanell, cc-by-2.0 Ergänzend erklärt das IWR, der Strom aus Photovoltaik-Anlagen werde nicht nur überwiegend dezentral und sehr nahe am Ort der Verbraucher erzeugt und entlaste damit die Stromnetze, sondern da er vorwiegend zur Mittagszeit anfalle, eigne er sich besonders gut zur Abdeckung der ebenfalls mittäglichen Spitzenlasten. Deshalb kämen teuer produzierende Spitzenlastkraftwerke immer seltener oder gar nicht mehr zum Einsatz.
+
+Fest codiert in der Erden
+Steht die App, aus Bits gebrannt.
+Heute muß die Software werden,
+Frisch, Entwickler! seid zur Hand.
+maXbox

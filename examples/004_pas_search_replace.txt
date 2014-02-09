@@ -1,0 +1,84 @@
+program search_replace_FILE;
+
+// forth interpreter of runmax _04 
+// shows stringlist manipulations of a file with replace, loc's=45 
+
+
+procedure SearchAndReplace(aStrList: TStrings; aSearchStr, aNewStr: string);
+var i, TT1: integer;
+    s1: string;
+begin
+  // old string can't be part of new string!, eg.: max --> climax
+  if pos(aSearchStr, aNewStr) > 0 then begin
+    write('old string cant be part of new string');
+    exit;
+  end;
+  for i:= 0 to aStrList.Count -1 do begin
+    s1:= aStrList[i];
+    repeat
+      TT1:= pos(aSearchStr, s1);
+      if TT1 > 0 then begin
+        Delete(s1, TT1, Length(aSearchStr));
+        Insert(aNewStr, s1, TT1);
+        aStrList[i]:= s1;
+      end;
+    until TT1 = 0;
+  end; 
+end;
+
+var 
+  myfile: TStringList;
+  mystr: string; 
+//main app
+begin
+  myfile:= TStringList.create;
+  myfile.loadFromFile('sysutils_interfaces.txt')
+  //memo2.text:= myfile.text;
+  SearchAndReplace(myfile, 'WideString', 'String');
+  myFile.savetoFile('sysutils_interfaces_2.txt')
+  myfile.Free;
+  
+  //mystr:= 'this is the first line' +#13#10+ 'this is a second line one'
+  //if pos(#13#10, mystr) > 0 then showmessage(' CRLF found')
+  //Assign2(mystr,'assign_file_test_2.txt'); 
+  //if (pos(#$D#$A, memo2.lines[2]) > 0) then showmessage(' HEX CRLFfound')
+end.
+
+
+-------------------------------------------------------------------------------
+// SOME REMARKS OF CR AND LF
+# On Mac,  the newline is the CR character (# 13)
+# sous Windows , il se fait par le caractère CR+LF (#13+#10), Win it is the character CR + LF (# 13 + # 10)
+# et sous UNIX , par le caractère LF (#10). , and on Unix, the LF (# 10). 
+
+
+
+http://www.swissdelphicenter.ch/de/showcode.php?id=2283
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Search for a substring positioned between 2 markers.
+Call:
+  filterSubStr([Fullstring],[first mark],[second mark],[repeated searching])
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
+
+
+function filterSubStr(tmp, von, bis: string; a: Integer): string;
+var
+  SubStr, bck: string;
+  Pos1, Pos2, i: Integer;
+begin
+  i := 0;
+  while i < a do
+  begin
+    Pos1   := Pos(von, tmp);
+    Pos2   := Pos(bis, tmp);
+    SubStr := Copy(tmp, Pos1 + Length(von), Pos2 - Pos1 - Length(von));
+    Delete(tmp, Pos1, Pos2 - Pos1 + Length(bis));
+    if SubStr = '' then {nothing} 
+    else if bck = '' then
+      bck := SubStr
+    else
+      bck := bck + #13#10 + SubStr;
+    i := i + 1;
+  end;
+  Result := bck;
+end;

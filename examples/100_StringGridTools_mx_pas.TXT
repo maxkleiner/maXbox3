@@ -1,0 +1,133 @@
+(******************************************************************************)
+(*                                                                            *)
+(*   StringGrid-Tools                                                         *)
+(*                                                                            *)
+(*   (c) 2006 Rainer Reusch & Toolbox Verlag                                  *)
+(*                                                                            *)
+(*   Borland Delphi   , maXbox                                                *)
+(*                                                                            *)
+(******************************************************************************)
+
+{
+Es genügt, die Prozedur StringGridAssign aufzurufen, damit das angegebene
+StringGrid die neuen Features annimmt. Die folgenden Eigenschaften werden
+im angegebenen StringGrid verändert:
+- OnDrawCell
+- DefaultDrawing
+- Options.goDrawFocusSelected
+}
+
+unit StringGridTools;
+
+interface
+
+//uses
+  //Windows, Graphics, Grids;
+
+type
+  TStringGridExt = TStringGrid;
+  //public
+    procedure _StringGridDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
+  //end;
+
+function Darker(AColor : TColor) : TColor;
+// dunklere Farbe
+
+function Lighter(AColor : TColor) : TColor;
+// hellere Farbe
+
+procedure StringGridAssign(AStringGrid : TStringGrid);
+// Durchführung notwendiger Initialisierungen
+
+var
+  StringGridExt : TStringGridExt;
+
+implementation
+
+function Darker(AColor : TColor) : TColor;
+// dunklere Farbe
+var
+  r, g, b : TColor;
+begin
+  if cardinal(AColor)>$7FFFFFFF then
+    AColor:=GetSysColor(AColor and $00FFFFFF);
+  r:=(AColor and $FF) div 2;
+  g:=((AColor shr 8) and $FF) div 2;
+  b:=((AColor shr 16) and $FF) div 2;
+  Result:=(b shl 16) or (g shl 8) or r;
+end;
+
+function Lighter(AColor : TColor) : TColor;
+// hellere Farbe
+var
+  r, g, b : TColor;
+begin
+  if cardinal(AColor)>$7FFFFFFF then
+    AColor:=GetSysColor(AColor and $00FFFFFF);
+  r:=$FF-(($FF-(AColor and $FF)) div 2);
+  g:=$FF-(($FF-((AColor shr 8) and $FF)) div 2);
+  b:=$FF-(($FF-((AColor shr 16) and $FF)) div 2);
+  Result:=(b shl 16) or (g shl 8) or r;
+end;
+
+procedure StringGridAssign(AStringGrid : TStringGrid);
+// Durchführung notwendiger Initialisierungen
+begin
+  with AStringGrid do begin
+    AStringGrid.OnDrawCell:= @_StringGridDrawCell;
+    DefaultDrawing:= false;
+    Options:= Options-[goDrawFocusSelected];
+  end;
+end;
+
+procedure _StringGridDrawCell(Sender: TObject; ACol, ARow: Integer;
+  Rect: TRect; State: TGridDrawState);
+// Behandlung für das Ereignis OnDrawCell
+var
+  c : TColor;
+begin
+  if State=[gdFixed] then c:=TStringGrid(Sender).FixedColor
+                     else c:=TStringGrid(Sender).Color;
+  with TStringGrid(Sender).Canvas do begin
+    // Hintergrund
+    Pen.Color:=c;
+    Pen.Style:=psSolid;
+    Brush.Color:=c;
+    Brush.Style:=bsSolid;
+    Rectangle(rect.left, rect.top, rect.right, rect.bottom);
+    if State=[gdFixed] then begin  // 3D-Effekt für feste Zellen
+      Pen.Color:=clWhite;
+      MoveTo(Rect.Left,Rect.Bottom-1);
+      LineTo(Rect.Left,Rect.Top);
+      LineTo(Rect.Right,Rect.Top);
+      Pen.Color:=Lighter(c);
+      MoveTo(Rect.Left+1,Rect.Bottom-2);
+      LineTo(Rect.Left+1,Rect.Top+1);
+      LineTo(Rect.Right-1,Rect.Top+1);
+      Pen.Color:=Darker(c);
+      MoveTo(Rect.Left+1,Rect.Bottom-1);
+      LineTo(Rect.Right-1,Rect.Bottom-1);
+      LineTo(Rect.Right-1,Rect.Top+1);
+    end;
+    // Ausgabe des Inhalts
+    Font.Assign(TStringGrid(Sender).Font);
+    TextOut(Rect.Left+2,Rect.Top+(Rect.Bottom-Rect.Top-TextHeight('Äg')) div 2,
+      TStringGrid(Sender).Cells[ACol,ARow]);
+  end;
+end;
+
+initialization
+  StringGridExt:=TStringGridExt.Create(self);
+
+finalization
+  StringGridExt.Free;
+  
+begin
+  writeln('Extended 3D StringGrid'); 
+  //StringGridAssign(StringGridExt);
+  //StringGridExt.add('extended init tester');
+  //StringGridExt.Free; 
+end;
+
+end.

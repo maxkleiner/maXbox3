@@ -1,0 +1,1374 @@
+program Bitmap_Pulsar_BITMAX_JpegTester_Resizer;
+
+//Loads a bitmap with an aggregation from TPicture Class an does manipulations
+//A function stretches/rotates also a bitmap with specified number of pixels
+// in horizontal, vertical dimension, locs=1311 ;task: onclose event with images Free
+
+const MAXP = 100;
+      FIRSTCOLOR = clTeal;           //clPurple;
+      KB = 'abcdefghijklmnopqrstuvwxyz';
+
+
+type
+ TMMatrix = Array[1..MAXP] of TPoint;
+
+var
+    Exc2: Exception;
+    Image1, Image2, image3, image4: TImage;
+    frmMon, frmMon2, frmMon3: TForm;
+    udLinie: TUpDown;
+    UD: TUpDown;
+    SB: TScrollBar;
+    TB: TTrackBar;
+    panUD: TPanel;
+    panTB: TPanel;
+    panSB: TPanel;
+    GroupBox1: TGroupBox;
+    Label1: TLabel;
+    tbR, tbG, tbB: TTrackBar;
+    panWr, panWg, panwb: TPanel;
+    panCP, panCP22: TPanel;
+    panCP2: TLabel;
+    // char word counter
+    edText: TEdit;
+    sgStat: TStringGrid;
+    panB: TPanel;
+    chk: TCheckbox;
+
+
+function DirUpa(p: String): String;
+//gibt den Pfad eine Verzeichnisebene oberhalb zurück
+var
+  i,j: integer;
+begin
+  If RightStr(p,1)='\' Then p:=LeftStr(p, Length(p)- 1);
+  j:=Length(p);
+  for i:=1 to Length(p) do
+    if MidStr(p,i,1)='\' then j:=i;
+  result:=LeftStr(p,j);
+end;
+
+procedure manipImage;
+var i,j: smallint;
+  colorref: integer;
+begin
+  for i:= 1 to image1.width do
+    for j:= 1 to image1.height do begin
+      writeln(colortoString(image1.Picture.Bitmap.Canvas.pixels[i,j]));
+      colorref:= image1.Picture.Bitmap.Canvas.pixels[i,j];
+      image1.Picture.Bitmap.Canvas.pixels[i,j]:= clyellow;
+      image1.Picture.Bitmap.Canvas.pixels[i-1,j-1]:= colorref;
+    end;
+end;    
+
+
+procedure SaveImageJpeg(img: TImage; fname, fext: string);
+var
+jpeg, jpeg2: tjpegimage;
+  f: string;
+begin
+ if (fext='jpg') then begin
+  jpeg := TJpegImage.create();
+  //Image1.Picture.BitMap.LoadFromFile(ExePath+'examples\citymax.bmp');
+  //jpeg.loadfromfile(ExePath+'examples\faszination_tee.jpg');
+  //jpeg2.loadfromfile(ExePath+'examples\maxbox_logo2.jpg');
+  //jpeg2.savetofile(ExePath+'examples\tee6358_3.jpg');
+  //SearchandopenDoc(ExePath+'examples\tee6358_3.jpg');
+  //image1.parent:= NIL;
+  //image2.parent:= NIL;
+  jpeg.Assign(img.picture.bitmap);
+  jpeg.compressionQuality:= 85;
+  jpeg.compress();
+  f:= changeFileExt(fname,'.jpg');
+  jpeg.SaveToFile(ExePath+'examples\'+f);
+  //image2.picture.assign(jpeg2);
+  jpeg.Free;
+  //Image1.Picture.LoadFromFile(ExePath+'examples\faszination_tee.jpg');
+  //Image1.Picture.LoadFromFile(ExePath+'examples\citymax.bmp');
+  end else begin
+    writeln(dirupa(ExePath+'examples\'))
+    writeln(dirupa(ExePath))
+    f:= changeFileExt(fname,'.bmp');
+    img.Picture.SaveToFile(f);
+  end;  
+end; 
+
+  
+procedure RotateBitmap(var htmpBitmapDC: TBitmap; var lWidth : Longint;
+                            var lHeight : Longint; lRadians : real; origmap: TBitmap);
+var
+         I : Longint;               // loop counter
+         J : Longint;               // loop counter
+         //hNewBitmapDC : Longint;    // DC of the new bitmap
+         //hNewBitmap : TBitmap;      // handle to the new bitmap
+         lSine : extended;          // sine used in rotation
+         lCosine : extended;        // cosine used in rotation
+         X1 : Longint;              // used in calculating new
+                                    //   bitmap dimensions
+         X2 : Longint;              // used in calculating new
+                                    //     bitmap dimensions
+         X3 : Longint;              // used in calculating new
+                                    //     bitmap dimensions
+         Y1 : Longint;              // used in calculating new
+                                    // bitmap dimensions
+         Y2 : Longint;              // used in calculating new
+                                    // bitmap dimensions
+         Y3 : Longint;              // used in calculating new
+                                    // bitmap dimensions
+         lMinX : Longint;           // used in calculating new
+                                    // bitmap dimensions
+         lMaxX : Longint;           // used in calculating new
+                                    // bitmap dimensions
+         lMinY : Longint;           // used in calculating new
+                                    // bitmap dimensions
+         lMaxY : Longint;           // used in calculating new
+                                    // bitmap dimensions
+         lNewWidth : Longint;       // width of new bitmap
+         lNewHeight : Longint;      // height of new bitmap
+         lSourceX : Longint;        // x pixel coord we are blitting
+                                    // from the source  image
+         lSourceY : Longint;        // y pixel coord we are blitting
+                                    // from the source image
+
+begin
+   // create a compatible DC from the one just brought
+   // into this function
+   //hNewBitmapDC := CreateCompatibleDC(hBitmapDC);
+   //hNewBitmapDC:= hBitmapDC;
+   // compute the sine/cosinse of the radians used to // rotate this image
+    //tbmpDC:= tbmp.handle;
+   lSine := Sin(lRadians);
+   lCosine := Cos(lRadians);
+   // compute the size of the new bitmap being created
+   X1 := Round(-lHeight * lSine);
+   Y1 := Round(lHeight * lCosine);
+   X2 := Round(lWidth * lCosine - lHeight * lSine);
+   Y2 := Round(lHeight * lCosine + lWidth * lSine);
+   X3 := Round(lWidth * lCosine);
+   Y3 := Round(lWidth * lSine);
+   // figure out the max/min size of the new bitmap
+   lMinX := Min(0, Min(X1, Min(X2, X3)));
+   lMinY := Min(0, Min(Y1, Min(Y2, Y3)));
+   lMaxX := Max(X1, Max(X2, X3));
+   lMaxY := Max(Y1, Max(Y2, Y3));
+   // set the new bitmap width/height
+   lNewWidth := lMaxX - lMinX;
+   lNewHeight := lMaxY - lMinY;
+   // create a new bitmap based upon the new width/height of the // rotated bitmap
+   //hNewBitmap := CreateCompatibleBitmap(hBitmapDC, lNewWidth, lNewHeight);
+   htmpBitmapDC.height:= lNewHeight;
+   htmpBitmapDC.width:= lNewWidth;
+   //attach the new bitmap to the new device context created
+   //above before constructing the rotated bitmap
+   //SelectObject(hNewBitmapDC, hNewBitmap);
+         // loop through and translate each pixel to its new location.
+         // this is using a standard rotation algorithm
+   For I:= 0 To lNewHeight-5 do begin
+     For J:= 0 To lNewWidth-5 do begin
+       lSourceX:= Round((J + lMinX) * lCosine + (I + lMinY) * lSine);
+       lSourceY:= Round((I + lMinY) * lCosine - (J + lMinX) * lSine);
+       If (lSourceX >= 0) And (lSourceX <= lWidth) And
+          (lSourceY >= 0) And (lSourceY <= lHeight) Then begin
+        //BitBlt(hBitmapDC, J,I,1,1, hnewBitmap.handle, lSourceX, lSourceY, SRCCOPY);
+         BitBlt(htmpBitmapDC.canvas.handle,J,I,lnewheight,lnewwidth,origmap.canvas.handle,
+                                  lSourceX,lSourceY, SRCCOPY);
+         //Image1.Picture.BitMap:= htmpBitmapDC.canvas.handle;
+   //BitBlt(origmap.canvas.Handle,J,I, lsourceX,lsourceY,htmpBitmapDC.canvas.handle,100,100, SRCCopy);
+        //Image1.Refresh; 
+        end;
+       //Image1.Picture.BitMap:= htmpBitmapDC;
+       //Image1.Refresh; 
+     end;
+  end;
+  //Image1.Refresh; 
+  // reset the new bitmap width and height
+  lWidth := htmpBitmapDC.width;
+  lHeight := htmpBitmapDC.height;
+  //htmpBitmapDC.Free;
+  // return the DC to the new bitmap
+  //htmpBitmapDC:= htmpBitmapDC.handle;      
+  // destroy the bitmap created
+  //DeleteObject(hNewBitmap);
+End;
+
+//The following is an example of how the RotateBitmap function might be called: 
+
+procedure TForm1_RotateTest(Sender: TObject);
+var
+ lRadians : real;
+ DC  : longint;
+ H, W : integer;
+ Degrees : integer;
+begin
+  Degrees := 45;
+  lRadians := PI * Degrees / 180;
+  DC:= Image1.Picture.Bitmap.Canvas.Handle;
+  H := Image1.Picture.Bitmap.Height;
+  W := Image1.Picture.Bitmap.Width;
+  //RotateBitmap(DC, W, H, lRadians);
+  Image1.Width := W;
+  Image1.Height := H;
+  Image1.Picture.Bitmap.Width := W;
+  Image1.Picture.Bitmap.Height := H;
+  BitBlt(Image1.Picture.Bitmap.Canvas.Handle, 0,0, W, H, DC, 0,0, SRCCopy);
+  Image1.Refresh; 
+end;
+
+procedure TForm1_RotateTest2(Sender: TObject);
+var
+ lRadians : real;
+ tbmpDC, H,W, Degrees, j: longint;
+ tbmp, mybitmap : TBitmap;
+begin
+  mybitmap:= TBitmap.create;
+  mybitmap.loadfromfile(exepath+'examples\citymax.bmp')
+    image1.width:= 250;
+    image1.height:= 250;
+    //Image1.Picture.BitMap.PixelFormat:= pf24bit; 
+    //mybitmap.PixelFormat:= pf24bit; 
+  Image1.Picture.BitMap:= mybitmap;
+  mybitmap.Free;
+  Degrees := 45;
+  lRadians := PI * Degrees / 180;
+  tbmp:= TBitmap.Create;
+  //tbmpDC:= tbmp.handle;
+  W:= Image1.Picture.Bitmap.Width;
+  H:= Image1.Picture.Bitmap.Height;
+  //DC:= Image1.Picture.Bitmap.Canvas.Handle;
+  RotateBitmap(tbmp, W, H, lRadians, Image1.Picture.Bitmap);
+  Image1.Width := W;
+  Image1.Height := H;
+  Image1.Picture.Bitmap.Width := W;
+  Image1.Picture.Bitmap.Height := H;
+  BitBlt(Image1.Picture.Bitmap.Canvas.Handle, 0,0, W, H, tbmp.canvas.handle, 0,0, SRCCopy);
+  for j:= 1 to image1.height do
+    image1.Picture.Bitmap.Canvas.pixels[j,j]:= clred;
+  Image1.Refresh; 
+  tbmp.Free;
+end;
+
+
+procedure ResizeBMP2(b: TBitmap; NewWidth, NewHeight: integer);
+var
+tbmp : TBitmap;
+begin
+// Not the best Bitmap resizer
+// Got to EFG site and download a Bitmap 'resampler' code
+// for better resized image
+  tbmp:= TBitmap.Create;
+  tbmp.Width:= b.Width;
+  tbmp.Height:= b.Height;
+  BitBlt(tbmp.Canvas.Handle,0,0,tbmp.Width,tbmp.Height,
+                                  b.Canvas.Handle,0,0,SRCCOPY);
+  b.Width:= NewWidth;
+  b.Height:= NewHeight;
+  StretchBlt(b.Canvas.Handle,0,0,b.Width,b.Height,tbmp.Canvas.Handle,
+                                  0,0,tbmp.Width,tbmp.Height,SRCCOPY);
+  tbmp.Free;
+end;
+// Example code
+
+procedure callResizeAgain(bmp: TBitmap; NewsizeW, NewsizeH: integer);
+var
+ Jpg: TJPEGImage;
+ //Bmp: TBitmap;    
+ //newsizeW,newsizeh: longint;
+begin
+  Jpg:= TJPEGImage.Create;
+  //Bmp:= TBitmap.Create;  //local
+  Jpg.LoadFromFile(ExePath+'examples\faszination_tee.jpg');
+// Copy JPEG to bitmap:
+ Bmp.Width:= Jpg.Width;
+ Bmp.Height:= Jpg.Height;
+ Bmp.Canvas.Draw(0,0,Jpg);
+// Resize Bitmap
+ ResizeBMP2(Bmp,newsizeW,newsizeh);
+ Image1.Picture.BitMap:= bmp;
+// Copy BMP back to JPG
+ Jpg.Assign(Bmp);
+ Jpg.SaveToFile(ExePath+'examples\faszination_tee_resize.jpg');
+ Jpg.Free;
+ //Bmp.Free; //local
+end;
+
+
+Function RGB2(R,G,B: Byte): TColor;
+Begin
+  Result:= B Shl 16 Or G Shl 8 Or R;
+End;
+
+
+function ResizeBmp(abitmap: TBitmap; wid, hei: Integer): Boolean;
+var 
+  TmpBmp: TBitmap;
+  ARect: TRect;
+begin
+  Result:= False;
+  try
+    //TmpBmp:= TBitmap.Create;
+    try
+      abitmap.Width:= wid;
+      abitmap.Height:= hei;
+      //abitmap.size
+      ARect:= Rect(10,10, wid, hei);
+      //TmpBmp.loadfromfile('examples\citymax.bmp')
+      //msg('bitmax');
+      //frmMon.Canvas.FillRect(Rect(130,150,350,10));
+      //abitmap.LoadFromResourceName(hinstance, 'cdrom');
+      abitmap.LoadFromResourceName(hinstance, 'plus');
+      frmMon.Canvas.StretchDraw(ARect, abitmap);
+      writeln(inttoStr(BytesPerScanline(20,20,10)))
+      //frmMon.Canvas.Brush.Bitmap:= aBitmap;
+      //abitmap.canvas.copyrect(Rect(0,0,140,140)) 
+      //frmMon.Canvas.picture:=Assign(abitmap);
+    finally
+      //TmpBmp.Free;
+       frmmon.Canvas.Brush.Bitmap:= NIL;
+       aBitmap.Free;
+    end;
+    Result:= True;
+  except
+    Result:= False;
+  end;
+end;
+
+procedure LoadBitMap;
+var mybitmap: Tbitmap;
+     mycanvas: TCanvas;
+begin
+  mybitmap:= TBitmap.create;
+  mybitmap.loadfromfile(exepath+'examples\citymax.bmp')
+   //mycanvas:= TCanvas.create;
+   //if ResizeBmp(mybitmap, 443, 330) then
+   // showmessage('picture almost resized');
+    ResizeBMP2(mybitmap, 550,350);
+    //CallResizeAgain(mybitmap, 550,350); //Fusion
+    image1.width:= 550;
+    image1.height:= 350;
+    //Image1.Picture.BitMap.PixelFormat:= pf24bit; 
+    //mybitmap.PixelFormat:= pf24bit; 
+    Image1.Picture.BitMap:= mybitmap;
+    mybitmap.Free;
+ 
+  //Image1.LoadFromFile(ExtractFilePath(Application.Exename) + 'Bild.bmp');
+ //mycanvas.Free;
+end;
+
+procedure loadImage;
+var
+jpeg, jpeg2: tjpegimage;
+begin
+  jpeg := TJpegImage.create();
+  jpeg2:= TJpegImage.create();
+  {@to save from bmp to jpg }
+  Image1.Picture.BitMap.LoadFromFile(ExePath+'examples\citymax.bmp');
+  jpeg.loadfromfile(ExePath+'examples\faszination_tee.jpg');
+  jpeg2.loadfromfile(ExePath+'examples\maxbox_logo2.jpg');
+  //jpeg2.savetofile(ExePath+'examples\tee6358_3.jpg');
+  //SearchandopenDoc(ExePath+'examples\tee6358_3.jpg');
+  //image1.parent:= NIL;
+  //image2.parent:= NIL;
+  //image1.picture.assign(jpeg);
+  image2.picture.assign(jpeg2);
+  //Image1.Picture.LoadFromFile(ExePath+'examples\faszination_tee.jpg');
+  //Image1.Picture.LoadFromFile(ExePath+'examples\citymax.bmp');
+  writeln(dirupa(ExePath+'examples\'))
+  writeln(dirupa(ExePath))
+  Sleep(2000)
+  ResizeBMP2(image1.picture.bitmap, 550,350);
+  jpeg.Free;
+  jpeg2.Free;
+end; 
+
+procedure Image1MouseDown(Sender: TObject; Button: TMouseButton;
+Shift: TShiftState; X, Y: Integer);
+var i: byte;
+begin
+//test refresh
+  //loadimage;
+  Image1.Picture.BitMap.LoadFromFile(ExePath+'examples\citymax.bmp');
+  ResizeBMP2(image1.picture.bitmap, 550,350);
+  try
+  Image1.Canvas.MoveTo(X,Y);
+  image1.canvas.pen.color:= clyellow;
+  //image1.canvas.floodfill() 
+  for i:= 1 to 30 do
+    //Image1.Canvas.LineTo(X+random(140),Y+random(140));
+    Image1.Picture.Bitmap.Canvas.LineTo(X+random(140),Y+random(140));
+  except
+     writeln('you cant write on an jpeg') 
+  end;
+end;  
+
+
+procedure DrawRosette2;
+var
+  m,p: TPoint;
+  rho,phi: real;
+  i,br,r,n: integer;
+begin
+   n:=StrToInt('18');
+   br:=1;
+   with frmmon.Canvas do begin
+     Pen.Width:= br;
+     Pen.Color:= clyellow;
+     Brush.Color:= clblue;
+     Brush.Style:= bsClear;
+     //Mittelpunkte berechnen und Kreise zeichnen
+     m.x:=225; m.y:=225; r:=175;
+     rho:=360/n;
+     for i:=1 to n do begin
+       phi:=i*rho*pi/180;
+       p.x:=m.x+round(r*cos(phi));
+       p.y:=m.y+round(r*sin(phi));
+       Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+       Ellipse(p.x-3,p.y-3,p.x+3,p.y+3);
+     end;
+  end;
+end;
+
+procedure DrawRosette;
+//Zeichnen des Kreismusters
+//const pi=3.1415926;
+var
+  m,p: TPoint;
+  rho,phi: real;
+  i,br,r,n: integer;
+begin
+   n:=StrToInt('18');
+   br:=1;
+   with frmmon.Canvas do begin
+     //Programmeinstellungen auslesen
+     Pen.Width:=br;
+     Pen.Color:= clred;
+     Brush.Color:=clblue;
+     Brush.Style:=bsClear;
+     //Mittelpunkte berechnen und Kreise zeichnen
+     m.x:=225; m.y:=225; r:=100;
+     rho:=360/n;
+     for i:=1 to n do begin
+       phi:=i*rho*pi/180;
+       p.x:=m.x+round(r*cos(phi));
+       p.y:=m.y+round(r*sin(phi));
+       Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+       //if frmmon.chb1.checked=true then //Mittelpunkte zeichnen
+         Ellipse(p.x-3,p.y-3,p.x+3,p.y+3);
+     end;
+  end;
+end;
+
+procedure DrawPowerCircle(n: integer);
+//const pi=3.1415926;
+var
+  p: TMMatrix; m: TPoint;
+  r,rho,phi: real;
+  i,j,x,y,br: integer;
+begin
+  //with Form1.img1.Canvas do begin
+    with frmMon.Canvas do begin
+    br:= 1;
+    Pen.Width:=br;
+    Pen.Color:= clblue;
+    Brush.Color:=  clred;
+    //Kreisdefinition
+    m.x:=225; m.y:=225; r:=175;
+    rho:=360/n;
+    //Stützpunkte berechnen
+    for i:=1 to n do begin
+      phi:=i*rho*pi/180;
+      p[i].x:=m.x+round(r*(cos(phi)));
+      p[i].y:=m.y+round(r*sin(phi));
+    end;
+    //Rahmen zeichnen
+    //if Form1.chb1.checked=true then
+      Ellipse(50,50,400,400);
+    for i:=1 to n-1 do
+      for j:=i to n do begin
+        MoveTo(p[i].x,p[i].y);
+        LineTo(p[j].x,p[j].y);
+      end;
+    //if Form1.chb2.checked=true then begin
+      for i:=1 to n do begin
+        x:=p[i].x; y:=p[i].y;
+        Ellipse(x-3,y-3,x+3,y+3);
+      end;
+    //end;
+  end;
+end;
+
+procedure SetColors;
+//Umrechnung und Anzeige der Farbangaben
+var
+  r,g,b: byte; //Farbwerte
+begin
+  with frmmon2 do begin
+    //Farbwerte
+    r:=tbR.Position; g:=tbG.Position; b:=tbB.Position;
+    //Farbe einstellen
+    panCP2.Color:=RGB(r,g,b);
+    //RGB-Farbwert
+    writeln('edRgb.Text '+IntToStr(r)+','+IntToStr(g)+','+IntToStr(b)+'  ');
+    //Hex-Farbwert
+    writeln('edHex.Text '+'$00'+IntToHex(panCP2.Color,6)+'  ');
+    //HTML-Farbwert
+    writeln('edHtml.Text '+'#'+IntToHex(r,2)+IntToHex(g,2)+IntToHex(b,2));
+    //writeln(' ')
+  end;
+end;
+
+
+procedure HideGridCursor(g: TStringGrid);
+//Cursor aus dem StringGrid verbannen
+var gr: TGridRect;
+begin
+  with gr do begin
+    Top:=-1; Left:=-1; Right:=-1; Bottom:=-1
+  end;
+  g.Selection:=gr;
+end;
+
+procedure btnCalcCharsClick(Sender: TObject);
+//Auswertung der Buchstabenverteilung
+var
+  i,z,s,x,anzB: integer;
+  t: string;
+  b: array[0..25] of integer; //Array Buchstabenzähler
+begin
+  //Ausgangsbelegung
+  anzB:=0;
+  for i:=0 to 25 do b[i]:=0; //Buchstabenzähler löschen
+
+  //Auswertung
+  if chk.checked then
+    t:=edText.Text //aktuelle Zeile
+    else
+    t:= LoadfileasString(exepath+'firstdemo.txt');
+  t:=LowerCase(t); //Umwandlung in Kleinbuchstaben
+  for s:=1 to length(t) do begin
+    if pos(t[s],kb)>0 then begin //Zeichen ist Kleinbuchstabe
+      x:=ord(t[s])-97; //Buchstabennummer
+      b[x]:=b[x]+1;    //Buchstabenzähler aktualisieren
+      inc(anzB);       //Anzahl der Buchstaben anpassen
+    end;
+  end;
+  edText.Text:=t; //angepasste Zeile zurückschreiben
+  //Ausgabe
+  for i:=0 to 25 do sgStat.Cells[i,1]:=''; //Tabelle löschen
+  for i:=0 to 25 do
+    if b[i]>0 then //nur Werte größer als 0 ausgeben
+      sgStat.Cells[i,1]:=IntToStr(b[i]);
+  panB.Caption:=IntToStr(anzB);
+  HideGridCursor(sgStat);
+end;
+
+procedure btnNewClick(Sender: TObject);
+//Zurücksetzen der Formulareinstellungen
+var i: integer;
+begin
+  edText.Text:=''; panB.Caption:='';
+  for i:=0 to 25 do sgStat.Cells[i,1]:='';
+  edText.SetFocus;
+  HideGridCursor(sgStat);
+end;
+
+procedure CCFormCreate(Sender: TObject);
+//Einrichten des Stringgrids
+var i: integer;
+begin
+  for i:= 0 to 25 do //Tabellenkopf mit Buchstaben beschriften
+    sgStat.Cells[i,0]:= chr(97+i);
+  HideGridCursor(sgStat);
+end;
+
+
+procedure UDClick(Sender: TObject; Button: TUDBtnType);
+begin
+  //panUD.Caption:=IntToStr(UD.Position);
+end;
+
+procedure SBChange(Sender: TObject);
+begin
+  panSB.Caption:=IntToStr(SB.Position);
+end;
+
+procedure TBChange(Sender: TObject);
+begin
+  panTB.Caption:=IntToStr(TB.Position);
+end;
+
+procedure tbRChange(Sender: TObject);
+//Farbeinstellung rot
+begin
+  //Anzeige des Farbwertes
+  panWr.Caption:=IntToStr(tbR.Position);
+  //Darstellung der aktualisierten Farbe im Panel
+  panCP2.Color:= RGB(tbR.Position,tbG.Position,tbB.Position);
+  SetColors;
+end;
+
+procedure tbGChange(Sender: TObject);
+//Farbeinstellung grün
+begin
+  panWg.Caption:=IntToStr(tbG.Position);
+  panCP2.Color:=RGB(tbR.Position,tbG.Position,tbB.Position);
+  SetColors;
+end;
+
+procedure tbBChange(Sender: TObject);
+//Farbeinstellung blau
+begin
+  panWb.Caption:=IntToStr(tbB.Position);
+  panCP2.Color:=RGB(tbR.Position,tbG.Position,tbB.Position);
+  SetColors;
+end;
+
+
+procedure InitForms;
+begin
+ frmMon:= TForm.create(self);
+ with frmMon do begin
+   //FormStyle := fsStayOnTop;
+   Position := poScreenCenter;
+   caption:='Pulsar Universe BitmaX';
+   color:= clblack;
+   width:= 850;
+   height:= 700;
+   Show;
+   onMousedown:= @Image1MouseDown;
+ end;
+ Image1:= TImage.create(frmMon);
+ with Image1 do begin
+   parent:= frmMon;
+   setbounds(10,15, 200,150);
+   onMousedown:= @Image1MouseDown;
+   show;
+   //onMouseup:= @Image1MouseUp
+ end;
+ Image2:= TImage.create(frmMon);
+ with Image2 do begin
+   parent:= frmMon;
+   setbounds(265,400,560,250);
+   onMousedown:= @Image1MouseDown;
+   show;
+   //onMouseup:= @Image1MouseUp
+ end;
+end;
+
+
+
+procedure InitForms2;
+var panel2, panel3: TPanel;
+  fcolor: integer;
+  rc,gc,bc: TColor32;
+    
+begin
+ frmMon2:= TForm.create(self);
+ with frmMon2 do begin
+  Left:= 499
+  Top:= 359
+  BorderIcons:= [biSystemMenu, biMinimize]
+  BorderStyle:= bsSingle
+  Caption:= 'ColorPicker'
+  ClientHeight:= 263
+  ClientWidth:= 338
+  //Color:= RGB(255,255,0);
+  Font.Charset:= DEFAULT_CHARSET
+  Font.Color:= clWindowText
+  Font.Height:= -11
+  Font.Name:= 'MS Sans Serif'
+  Font.Style:= [];
+  //OldCreateOrder = False
+  Position:= poDesktopCenter;
+  PixelsPerInch:= 96;
+  //TextHeight(13);
+  //Icon:= { }
+   //FormStyle := fsStayOnTop;
+   Show;
+   onMousedown:= @Image1MouseDown;
+ end;
+ 
+ panCP:= TPanel.create(frmMon2);
+ with panCP do begin
+    parent:= frmMon2;
+    SetBounds(8,8,321,121)
+    BevelOuter:= bvLowered
+    //transparent
+    parentcolor:= false;
+    color:= clblue;
+    //TabOrder:= 1
+    end;
+    panCP2:= TLabel.create(frmMon2)
+    with panCP2 do begin
+      parent:= panCP;
+      SetBounds(8,8,305,105)
+      //caption:= 'color panel';
+      parentcolor:= false;
+      transparent:= false;
+      panCP2.Color:= FIRSTCOLOR;
+    end;
+    panel2:= TPanel.create(frmmon2);
+    with panel2 do begin
+      parent:= frmMon2;
+      SetBounds(8,136,321,113)
+      BevelOuter:= bvLowered
+      //TabOrder = 0
+      with TPanel.Create(frmmon2) do begin
+        parent:= panel2;
+        SetBounds(8,8,38,29);
+        //BevelOuter:= bvLowered;
+        //TabOrder:= 3
+    panel3:= TPanel.Create(frmmon2);
+    with panel3 do begin
+        parent:= panel2;
+        BevelOuter:= bvLowered
+        SetBounds(13,13,28,19)
+        Color:= clRed;
+        caption:= 'R';
+        //TabOrder = 0
+    end;
+      with TPanel.Create(frmmon2) do begin
+        parent:= panel2;
+        SetBounds(13,45,28,19)
+        Color:= clblue;
+      end
+    end;
+      with TPanel.Create(frmmon2) do begin
+        parent:= panel2;
+        SetBounds(8,40,38,29)
+        Color:= clgreen;
+        caption:= 'G';
+      end;
+    with TPanel.Create(frmmon2) do begin //panG
+        parent:= panel2;
+        SetBounds(8,72,38,29)
+        Color:= clblue;
+        caption:= 'B';
+        //TabOrder = 0
+      end;
+    end;
+   panWR:= TPanel.create(frmmon2);
+   with panWR do begin
+      parent:= panel2;
+      setBounds(280,8,33,19)
+      BevelOuter:= bvLowered
+      Caption:= '0'
+      Color:= clWhite
+      Font.Charset:= DEFAULT_CHARSET
+      Font.Color:= clBlack
+      Font.Name:= 'MS Sans Serif'
+      Font.Style:= [fsBold]
+      ParentFont:= False
+      //TabOrder = 8
+    end;
+  panWG:= TPanel.create(frmmon2);
+   with panWG do begin
+      parent:= panel2;
+      setBounds(280,40,33,19)
+      BevelOuter:= bvLowered
+      Font.Style:= [fsBold]
+      Caption:= '0'
+      Color:= clWhite
+    end;
+  panWB:= TPanel.create(frmmon2);
+   with panWB do begin
+      parent:= panel2;
+      setBounds(280,72,33,19)
+      Font.Style:= [fsBold]
+      BevelOuter:= bvLowered
+      Caption:= '0'
+      Color:= clWhite
+    end;
+    rc:= RedComponent(FIRSTCOLOR)
+    gc:= GreenComponent(FIRSTCOLOR)
+    bc:= BlueComponent(FIRSTCOLOR)
+    panWR.Caption:= inttoStr(rc);
+    panWG.Caption:= inttoStr(gc);
+    panWB.Caption:= inttoStr(bc);
+    tbR:= TTrackBar.create(frmmon2);
+    tbG:= TTrackBar.create(frmmon2);
+    tbB:= TTrackBar.create(frmmon2);
+    fColor:= ColorToRGB(FIRSTCOLOR);
+    //msg(inttostr(firstcolor))
+    writeln(inttostr(ColorToRGB(FIRSTCOLOR)));
+    //writeln(floattostr(intpower(2,24)))
+  
+    with tbR do begin
+      parent:= panel2;
+      setBounds(48,8,230,25);
+      Max:= 255
+      Frequency:= 10
+      Position:= rc;
+      ThumbLength:= 20
+      OnChange:= @tbRChange;
+    end;
+     with tbG do begin
+      parent:= panel2;
+      setBounds(48,40,230,25);
+      Max:= 255
+      Frequency:= 10
+      Position:= gc;
+      ThumbLength:= 20
+      OnChange:= @tbGChange;
+    end;
+     with tbB do begin
+      parent:= panel2;
+      setBounds(48,72,230,25);
+      Max:= 255
+      Frequency:= 10
+      Position:= bc;
+      ThumbLength:= 20
+      OnChange:= @tbBChange;
+    end;
+ 
+ {Image1:= TImage.create(frmMon);
+ with Image1 do begin
+   parent:= frmMon2;
+   setbounds(10,15, 200,180);
+   onMousedown:= @Image1MouseDown;
+   show;
+   //onMouseup:= @Image1MouseUp
+ end;}
+ {Image2:= TImage.create(frmMon);
+ with Image2 do begin
+   parent:= frmMon2;
+   setbounds(265,465,560,250);
+   onMousedown:= @Image1MouseDown;
+   show;
+   //onMouseup:= @Image1MouseUp
+ end;}
+
+end;
+
+
+procedure InitForms3;
+var panel2, panel3: TPanel;
+  fcolor, i: integer;
+  //rc,gc,bc: TColor32;
+    
+begin
+ frmMon3:= TForm.create(self);
+ with frmMon3 do begin
+  Left:= 1200
+  Top:= 303
+  BorderIcons:= [biSystemMenu, biMinimize]
+  BorderStyle:= bsSingle
+  Caption:= 'WordCharacterCounter'
+  ClientHeight:= 224
+  ClientWidth:= 693
+  //Color:= RGB(255,255,0);
+  Font.Charset:= DEFAULT_CHARSET
+  Font.Color:= clWindowText
+  Font.Height:= -11
+  Font.Name:= 'MS Sans Serif'
+  Font.Style:= [];
+  //OldCreateOrder = False
+  Position:= poDesktopCenter;
+  PixelsPerInch:= 96;
+  //TextHeight(13);
+  //Icon:= { }
+   //FormStyle := fsStayOnTop;
+   Show;
+   onMousedown:= @Image1MouseDown;
+   //onCreate:= @CCFormCreate;
+ end;
+ with TLabel.Create(frmmon3) do begin
+    parent:= frmmon3;
+    setbounds(8,8,62,13)
+    Caption:= 'Texteingabe:'
+  end;
+  with TLabel.Create(frmmon3) do begin
+    parent:= frmmon3;
+    setbounds(8,64,95,13)
+    Caption:= 'Buchstabenstatistik:'
+  end;
+  with TLabel.Create(frmmon3) do begin
+    parent:= frmmon3;
+    setbounds(8,150,116,13)
+    Caption:= 'Character Count:';
+  end;
+    with TLabel.Create(frmmon3) do begin
+    parent:= frmmon3;
+    setbounds(180,150,116,13)
+    Caption:= 'Text or File:';
+  end;
+  sgStat:= TStringGrid.Create(frmmon3);
+  with sgStat do begin
+    parent:= frmmon3;
+    Left:= 8
+    Top:= 88
+    Width:= 610
+    Height:= 41
+    //setBounds(8,88,473,41)
+    TabStop:= False
+    ColCount:= 26
+    DefaultColWidth:= 23
+    DefaultRowHeight:= 18
+    FixedCols:= 0
+    RowCount:= 2 
+    //Font.Name:= 'Wingdings';     //J is smile
+    //TabOrder:= 2
+  end;
+    for i:= 0 to 26-1 do 
+       sgStat.ColWidths[i]:= 22;
+    CCFormCreate(self);
+       
+    with TButton.Create(frmmon3) do begin
+      parent:= frmmon3;
+      SetBounds(32,180,121,25)
+      Caption:= 'Calculation'
+      //TabOrder = 0
+      OnClick:= @btnCalcCharsClick
+    end;
+    with TButton.Create(frmmon3) do begin
+      parent:= frmmon3;
+      SetBounds(176,180,121,25)
+      Caption:= 'Reset'
+      //TabOrder = 0
+      OnClick:= @btnNewClick
+    end;
+   panB:= TPanel.Create(frmmon3)
+   with panB do begin
+     parent:= frmmon3;
+     setBounds(100,144,49,18);
+     BevelOuter:= bvLowered;
+    Color:= clWhite
+    //TabOrder = 3
+  end;
+  edText:= TEdit.Create(frmmon3);
+   with edText do begin
+    parent:= frmmon3;
+    Setbounds(8,32,573,22);
+    //CharCase:= ecUpperCase;
+    //passwordChar:= '*';
+    Text:= 'the quick brown fox jumps over the lazy dog'
+   end;
+   chk:= TCheckbox.Create(self);
+   with chk do begin
+     parent:= frmmon3
+     setbounds(250,141,50,30);
+     checked:= true;
+   end;  
+end;
+
+
+procedure AnimatePowerCircle;
+var i: smallint;
+begin 
+  for i:= 1 to 25 do begin
+    DrawPowerCircle(i);    // try 30 or 35
+    //sleep(100)
+  end;  
+end;    
+
+procedure SaveBitmapToStream(aBitmap: TBitmap; aStream: TStream);
+var
+  ms: TMemoryStream;
+  asize: Integer;
+  content: string;
+begin
+  Assert(Assigned(aBitmap),'not assigned'); //or Assert2
+  Assert(Assigned(aStream),'not assigned');
+  ms:= TMemoryStream.Create;
+  try
+    aBitmap.SaveToStream(ms);
+    ms.position:= 0;
+    asize:= ms.Size;
+    writeln('size of bitmap stream '+inttostr(asize))
+    //aStream.WriteBuffer(content, Sizeof(asize));
+    aStream.CopyFrom(ms, asize);
+  finally
+    ms.free
+  end;
+end;
+
+procedure LoadBitmapFromStream(aBitmap: TBitmap; aStream: TStream);
+var
+  ms: TMemoryStream;
+  size: Integer;
+  content: string;
+begin
+  Assert(Assigned(aBitmap),'not assigned');
+  Assert(Assigned(aStream),'not assigned');
+  ms:= TMemoryStream.Create;
+  try
+    //aStream.ReadBuffer(content, Sizeof(size));
+    ms.CopyFrom(aStream, size);
+    ms.position := 0;
+    aBitmap.LoadfromStream(ms);
+  finally
+    ms.free
+  end;
+end;
+
+procedure TForm1_Button1ClickSaveStream(Sender: TObject);
+var
+  FS: TFileStream;
+begin
+  // Save Image1 and Image2 to single file
+  FS:= TFileStream.Create(ExePath+'examples/cFileNamebitmapstream.bmp', fmCreate);
+  try
+    SaveBitmapToStream(Image1.Picture.Bitmap, FS);
+    //SaveBitmapToStream(Image2.Picture.Bitmap, FS);
+  finally
+    FS.Free;
+  end;
+end;
+
+procedure TForm1_Button2ClickLoadStream(Sender: TObject);
+var
+  FS: TFileStream;
+begin
+  // Load file, split up bitmaps and load into Image3 and Image4
+  FS:= TFileStream.Create(ExePath+'examples/cFileNamebitmapstream.bmp',
+                              fmOpenRead or fmShareDenyNone);
+  try
+    //LoadBitmapFromStream(Image3.Picture.Bitmap, FS);
+    LoadBitmapFromStream(Image2.Picture.Bitmap, FS);
+  finally
+    FS.Free;
+  end;
+end;
+
+
+procedure allDialogsTest;
+begin
+  with TOpenDialog.create(self) do begin
+    execute;
+    Free;
+  end;
+    with TSaveDialog.create(self) do begin
+    execute;
+    Free;
+  end;
+    with TOpenPictureDialog.create(self) do begin
+    //show
+    //execute('');
+    Free;
+  end;
+    with TSavePictureDialog.create(self) do begin
+    //execute;
+    Free;
+  end;
+    with TFontDialog.create(self) do begin
+    execute;
+    Free;
+  end;
+    with TColorDialog.create(self) do begin
+    execute;
+    Free;
+  end;
+  {with TPrinterDialog.create(self) do begin
+    execute;
+    Free;
+  end;}
+    with TPrinterSetupDialog.create(self) do begin
+    execute;
+    Free;
+  end;
+    //with TFindDialog.create(self) do begin
+    //execute;
+    //showmodal
+    //Free;
+  //end;
+   with TReplaceDialog.create(self) do begin
+    execute;
+    //Free;
+  end;
+  with TEdit.Create(self) do begin
+    selectAll;
+     copytoclipboard
+     //borderstyle
+     //unselect;
+     //undo
+     //hasselection
+     //bevelkind
+     maxlength
+     charcase
+     ctl3d
+     passwordchar:= #0;
+    Free;
+  end;
+  
+  with TMemo.create(self) do begin
+    parent:= frmmon2;
+    alignment:= alleft;
+    wantreturns:= true;
+    //ateof
+    //bevelkind
+    //append
+    clear;
+    //copytoclipboard
+    //selectall
+    //redo;
+    //onChange
+    //insert
+    //gettextbuf
+     //gettextlen
+    //hasselection
+      //search
+      //undo
+      //unselect
+        clearselection
+        Free;
+  end;  
+  with TCanvas.create do begin
+    //arc
+    //chord
+    // brushcopy
+     //copyrect
+    // drawfocusrect
+     // framerect
+      brush
+      canvasorientation
+      cliprect
+      copymode
+      font
+      handle
+      lockcount
+      pen
+      penpos
+      //polygon
+      pixels[10,25]:= clRed;
+      textflags
+      Free;
+    
+  end;  
+  with TStrings.create do begin
+       //getobject
+       gettext
+       //gettextstr
+       //indexof
+        // indexofname
+        //indexofobject
+         // insert
+         //insertobject
+         //  loadfromfile
+          // loadfromstream
+           // move
+             //put
+         //  putobject
+           // savetofile   
+          //   savetostream  
+        //setcapacity   
+    end
+end;   
+
+function ExceptionTester: boolean;
+var S1, S2, S3: Single;
+  //Exc2: Exception;
+begin
+  result:= false;
+  Exc2:= Exception.Create('intern division zero');
+  try
+    S1 := 1.0;
+    S2 := 0.0;
+    S3 := S1/S2;
+    result:= true;
+  except
+    //on E: Exception do
+      //Writeln('Exc.ClassName '+ Exc2.message);
+      Exc2.message;    //raise
+      //exit;
+      RaiseLastException;
+  end;
+  //result:= true;
+  //Exc2.Free;
+end;  
+ 
+procedure TestFloatingPoints_Unit;
+var
+  S, S1, S2, S3: Single;
+  E: Extended;
+  E1, E2, E3: Extended;
+  exc: Exception;
+begin
+  exc:= Exception.Create('division zero fault');
+  E:= 0.1;
+  //Writeln(E:20:18);
+  //0.100000000000000000
+  //0.100000001490116120 converting
+  PrintF('this is a fpoint before %.18f ',[E]);
+  S:= E;
+  E:= S;
+  //Writeln(E:20:18);
+  PrintF('this is a fpoint after %.18f ',[E]);
+  //Readln;
+ //Rounding
+  {The output is
+  0.100000001490116120
+  0.010000000707805160
+  0.009999999776482580 }
+  S1 := 0.1;
+  //Writeln(S1:20:18);
+  PrintF('this is a fpoint before %.18f ',[S1]);
+  S1 := S1 * S1;
+  S2 := 0.01;
+  PrintF('this is a fpoint after %.18f ',[S1]);
+  PrintF('this is a fpoint after %.18f ',[S2]);
+  //Writeln(S1:20:18);
+  //Writeln(S2:20:18);
+  //Readln;
+  //Compare Literals
+  S1 := 0.3;
+  S2 := 0.1;
+  S2 := S2 / 10.0;      // should be 0.01  
+  writeln(floattoStr((s2)))  
+  S2 := S2 * 10.0;      // should be 0.1 again
+  writeln(floattoStr(s2))  
+  S2 := S2 + S2 + S2;   // should be 0.3
+  writeln(floattoStr(s2))  
+  //floattodecimal
+  if S1 = S2 then
+    Writeln('True')
+  else
+    Writeln('False');
+  if SameValue2(S1, S2, 0) then  //single
+    Writeln('True')
+  else
+    Writeln('False');
+  //The output is  False True  
+  //Readln;
+  E1 := 16.000000000000000001;
+  E2 := 16.000000000000000000;
+  E3 := E1 - E2;
+  //Writeln(E1:22:18, E2:22:18, E3);
+   PrintF('this is FPoint subtract E1: %.18f E2: %.18f E3: %.18f',[E1,E2, E3]);
+  E1 := 1000000000000000000000000.0;
+  E2 := 0.1;
+  E3 := E1;
+  //Writeln(E1 + E2 - E3:10:10);
+  PrintF('this is a fpoint after %.10f ',[E1+E2-E3]);
+  //Writeln(S1 - S3 + S2:10:10);
+  PrintF('this is a fpoint after %.10f ',[E1-E3+E2]);
+  PrintF('Sin(Pi) returns %.18f ',[Sin(PI)]);
+  //Delphi returns -5.42101086242752 × 10-20 , instead of the expected 0.
+  //Sin(Pi),
+   writeln(floatToStr(maxCalc('-5.4*10^-2')))
+   writeln(floatToStr(maxCalc('5.4*(10^-4)')))
+   writeln('sin pi of maxcalc '+floatToStr(maxCalc('Sin(PI)')))
+   writeln('sin pi of convert '+floatToStr(Sin(PI)))
+  //SetExceptionMask(GetExceptionMask + [exZeroDivide]); // default is: unmasked
+  try
+    S1 := 1.0;
+    S2 := 0.0;
+    S3 := S1/S2;
+  except
+    //on E: Exception do
+      Writeln('Exc.ClassName '+ Exc.message);
+      Exc.message;
+  end;
+  //Writeln(S3);
+    //The number 0.1 is stored as $3DCCCCCD or (ordering the bits already)
+     writeln(hextobin2('3DCCCCCD'))
+     //0   0111 1011   100 1100 1100 1100 1100 1101
+     //0 – 0111 1011 (123)-127=-4 – 100 1100 1100 1100 1100 1101,
+     writeln(inttoStr(bintoint('110011001100110011001101')))  
+     writeln(floattoStr(maxCalc('(13421773*(2^-4))/(2^23)'))) //scale by 2^23
+     writeln(floattoStr(maxCalc('(13421773*(2^-4))*(2^-23)'))) //scale by 2^23
+     //0.10000000149011612,
+     writeln(floattoStr(maxCalc('2^-4')))
+     writeln('this is E '+floattoStr(E))
+end;  //fpointunit
+
+ var md: TDynCardinalArray;
+   i: smallint;
+   cc: comp;  //it is an Int64 which is supported and calculated by the FPU.
+
+begin
+  ProcessMessagesON;
+  InitStdConvs;
+  memo2.color:= clwhite;
+  memo2.font.color:= clblack;
+  InitForms;
+  //InitForms2;
+  //InitForms3;
+  Screen.Cursor:= crHourGlass;
+  DrawRosette;
+  DrawRosette2;
+  //Pulsar
+  //DrawPowerCircle(25);    // try 30 or 35
+  AnimatePowerCircle;
+  //LoadBitMap; //test
+  loadImage;
+  //SaveImageJpeg(image1,'newteejpg','jpg');
+  cc:= round(power(2,30))
+  writeln('cc type: '+inttostr64(cc))
+  //allDialogsTest;
+  //writeln(booltostrj(IsPrimeFactor(7,1)))
+  md:= PrimeFactors(51) 
+  for i:= 0 to length(md)-1  do
+    write(inttostr(md[i])+ ' ');
+    //WideFormat
+    TestFloatingPoints_Unit;
+  try
+      if ExceptionTester then 
+        writeln('no exception');
+        //writeln(exc2.message);
+    except
+      writeln('got last exception '+Exception(exc2).message);
+    end
+   // ManipImage;
+  TForm1_Button1ClickSaveStream(self);
+  TForm1_Button2ClickLoadStream(self);
+  TForm1_RotateTest2(Self);
+  DrawRosette2;
+  Screen.Cursor:= crDefault;
+End.  
+
+
+Add jpeg in your uses section.
+
+Saving a jpeg to table :
+
+table1.append;
+table1Image.LoadFromFile('c:\bob.jpg');
+table1.post;
+// where table1image is a tblobfield linked to the image field of table1
+
+loading the image from the table :
+var
+jpeg: tjpegimage;
+buf: tmemorystream;
+begin
+jpeg := tjpegimage.create();
+buf := tmemorystream.create();
+table1Image.savetostream(buf);
+buf.seek(0, soFromBeginning);
+jpeg.loadfromstream(buf);
+image1.picture.assign(jpeg);
+buf.free;
+jpeg.free;
+end;
+
+Internals
+
+So how does this look internally? In the following example I use a Single, since Singles have an overviewable mantissa and exponent. Let me show you how a number like 0.1 is stored in a Single.
+
+The number 0.1 is stored as $3DCCCCCD or (ordering the bits already)
+0 – 0111 1011 – 100 1100 1100 1100 1100 1101,
+which means the sign bit is 0, the exponent is 123-127 = -4 and the mantissa is (after putting the hidden bit in front) 1100 1100 1100 1100 1100 1101 or $CCCCCD or 13421773.
+
+If we multiply 13421773 with 2-4 (0.0625), we get 838860,8125. Now we only have to scale that by 223 = 8388608, and we get 0.10000000149011612, which is indeed pretty close to 0.1.
+
+procedure TControl.SetColor(Value: TColor);
+begin
+  if FColor <> Value then
+  begin
+    FColor := Value;
+    FParentColor := False;
+    if (csDesigning in ComponentState) and not (csReading in ComponentState) and (Self is TWinControl) then
+      TWinControl(Self).ParentBackground := False;
+    Perform(CM_COLORCHANGED, 0, 0);
+  end;
+end;
+
+You can exchange two integers without using a third temporary variable as follows, assuming A and B are integers with values assigned:
+
+A:= A + B;
+B:= A - B;
+A:= A - B;
+
+To demonstrate this, drop two TEdit controls and one TButton on a form in a new Delphi VCL forms project and create an OnClick event handler for the button as follows:
+
+
+   

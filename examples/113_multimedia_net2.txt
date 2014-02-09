@@ -1,0 +1,138 @@
+program HTTP_Image_Show_Exhibition;
+// Composition DEMO for mX3  maXbox3 !! _113, locs=133;
+// this is some welcome kind of a internet exhibition
+
+var 
+  myImage, myImage2, myImage3: TImage;
+  inFrm: TForm;
+  myURL1, myURL2, myURL3: string;
+
+
+procedure FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  myImage.Free;
+  myImage2.Free;
+  myImage3.Free;
+  inFrm.Free;
+end;
+  
+procedure buildImageForm;
+begin
+  inFrm:= TForm.create(self)
+  with inFrm do begin
+    position:= poScreenCenter;
+    FormStyle:= fsStayOnTop;
+    color:= clblue;
+    borderStyle:= bsDialog;
+    caption:= 'mX3 StreamDreamCream'
+    width:= 990; height:= 450;
+    OnClose:= @FormClose;
+    Show;
+  end;
+  myImage:= TImage.Create(inFrm);
+  with myImage do begin
+    Parent:= inFrm;
+    width:= inFrm.width; 
+    height:= inFrm.height;
+    Left:= 10;
+    Top:= 10;
+  end;
+  myImage2:= TImage.Create(inFrm);
+  with myImage2 do begin
+    Parent:= inFrm;
+    width:= inFrm.width; 
+    height:= inFrm.height;
+    Left:= 220;
+    Top:= 90;
+  end;
+  myImage3:= TImage.Create(inFrm);
+  with myImage3 do begin
+    Parent:= inFrm;
+    width:= inFrm.width; 
+    height:= inFrm.height;
+    Left:= 680;
+    Top:= 210;
+  end;
+
+end;  
+
+procedure getHTTP_PNG(vimage, vimage2, vimage3: TImage); 
+var
+  idHTTP: TIDHTTP;
+  pngStream, pngStream2, pngStream3: TMemoryStream;
+begin
+  myURL1:= 'http://www.kleiner.ch/kleiner/images/hohenzollern_maxland.jpg';
+  myURL2:= 'http://www.kleiner.ch/kleiner/images/max_mainz.jpg';
+  myURL3:= 'http://max.kleiner.com/images/gottardo_stamp_small.jpg';
+  //myURL3:= 'http://www.kleiner.ch/kleiner/images/gottardo_klein.jpg';
+
+  with TLinearBitmap.Create do
+  try
+    idHTTP:= TIdHTTP.Create(NIL)
+    pngStream:= TMemoryStream.create;
+    //OptimizeMem
+    idHTTP.Get1(myURL1, pngStream)
+    //idHTTP.Get1(myURL2, pngStream)
+    pngStream.Position:= 0;
+    LoadFromStream2(pngstream,'JPG');
+    vimage.Picture:= NIL;
+    AssignTo(vimage.Picture.Bitmap);
+ 
+    pngStream2:= TMemoryStream.create;
+    idHTTP.Get1(myURL2, pngStream2)
+      pngStream2.Position:= 0;
+    LoadFromStream2(pngstream2,'JPG');
+    AssignTo(vimage2.Picture.Bitmap);
+
+    pngStream3:= TMemoryStream.create;
+    idHTTP.Get1(myURL3, pngStream3)
+      pngStream3.Position:= 0;
+    LoadFromStream2(pngstream3,'JPG');
+    AssignTo(vimage3.Picture.Bitmap);
+     //SaveToFile(ExePath+'mX3GUI.jpg');
+  finally
+    Dispose;
+    Free;
+    idHTTP.Free
+    pngStream.Free;
+    pngStream2.Free;
+    pngStream3.Free;
+  end; 
+end;  
+
+Procedure GetSongAndPlay;
+var 
+  mp3Stream: TFileStream;
+  idHTTP: TIDHTTP;
+  myURL, mp3song: string;
+begin
+  mp3song:= 'airmaxloop3.mp3';
+  myURL:= 'http://www.softwareschule.ch/download/airmaxloop3.mp3';
+  if not FileExists(ExePath+mp3song) then begin
+    mp3Stream:= TFileStream.create(ExePath+mp3song, fmCreate)
+    idHTTP:= TIdHTTP.create(NIL)
+    try
+      idhttp.get1(myURL, mp3Stream)
+    finally
+      idHTTP.Free
+      mp3Stream.Free;
+      maxform1.color:= clRed;
+    end;
+  end;      
+  closeMP3;
+  //showmessage(mSecToTime(lengthMP3(mXpath+mp3song)));
+  playMP3(ExePath+mp3song);
+end;
+
+begin
+  buildImageForm;
+  GetSongAndPlay;
+  getHTTP_PNG(myImage, myImage2, myImage3);
+  Speak('WeLoveEntertainment come to the maXphone Skynet Dome, you''re not alone!')
+  //searchAndOpenDoc(ExePath+'mX3GUI.jpg')
+end.
+
+//**************************************************program HTTP_PNG_Streamer;
+//**************************************************
+
+----code_cleared_checked----

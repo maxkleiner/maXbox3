@@ -1,0 +1,1431 @@
+program  JEDI_Function_Utils_Tester_Total;
+
+//*********************************************************************
+// logic led wall example with objects & size, loc's=1169, example 69ff  
+// first you define a size und pattern (word) and alter the pattern with
+// the function letShowVerify(); 
+// task: write the sentence in sequence: 'the world of code color!'
+//*********************************************************************
+
+Const PATTERNPAUSE = 350;
+      RUNPAUSE = 180;
+      COL = 5;
+      ROW = 7;
+      SIGNS = 36; //(37_[0..36]: Space, A..Z, 0..9)
+      LEFTBASE = 20;
+      TOPBASE = 30; 
+      TEXTPATH = 'examples\outline3.txt';
+      AVIPATH = 'examples\cool.avi';
+      BITMAP = 'examples\citymax.bmp';
+      MAXINT64 = $7FFFFFFFFFFFFFFF;
+
+
+
+var
+  ppForm: TForm;
+  mylabel: TLabel;
+  pattern1, wow: string;
+  labelList: TStringList;
+  psize: integer;
+  pattar: array[0..SIGNS] of shortstring;
+  mbitmap: TBitmap;
+  s1, c1: extended;
+  mobjl: TObjectList;
+
+  
+procedure pauseLED(vpatt: shortstring); forward;
+  
+
+procedure LetShowRunVerify(apatt: string);
+var
+  i,x: integer;
+  o: TLabel;
+begin
+  for x:= 0 to COL do begin
+    for i:= 1 to psize do begin
+      o:= TLabel(labelList.objects[i-1]);
+      if apatt[i] = '1' then o.color:= clblack
+        else o.color:= (clyellow);
+    end;  
+    for i:= 1 to psize do begin   //XCopy
+      apatt[i]:= apatt[i+1];
+      if (i mod COL = 0) then     //!!
+        apatt[i]:= '0'
+    end;  
+    Sleep(RUNPAUSE) 
+    //if x= 4 then Break;  //optimise if run
+  end;
+  //Application.Processmessages; //debug
+end;
+
+procedure LetShowRunVerify2(vpattern: string); //draft
+var
+  i,x: integer;
+  o: TLabel;
+  pattern2: shortstring;
+begin
+   for i:= 1 to 40 do
+      pattern2:= pattern2 + '0';  //Empty Space;
+  for i:= 1 to psize+1 do begin   //recopy   XCopy
+      if vpattern[i] = '1' then begin
+         pattern2[i+1]:= '1';
+        end; 
+       end;
+  for x:= 0 to COL -1 do begin
+   for i:= 1 to psize  do begin
+      //set next line of labels
+      o:= TLabel(labelList.objects[i-1]);
+        if pattern2[i] = '1' then o.color:= clblack
+          else o.color:= (clyellow);
+    end;  
+      for i:= 1 to psize do begin   //recopy
+      pattern2[i]:= pattern2[i+1];
+      if (i mod COL = 0) then     //!!
+        pattern2[i]:= '0'
+    end;
+    //old
+     sleep(RUNPAUSE) 
+    if x= 4 then break; 
+  end;
+  //application.processmessages;
+end;
+  
+
+procedure letShowVerify(vpattern: string);
+var
+  i: integer;
+  o: TLabel;
+begin
+  for i:= 1 to psize  do begin
+    o:= TLabel(labelList.objects[i-1]);
+    //o.caption:= inttostr(i);
+    if i <= length(vpattern) then 
+      if vpattern[i] = '1' then o.color:= clblack
+      else o.color:= clyellow;
+  end;
+  //Runchar(vpattern)
+  //application.ProcessMessages;
+end;
+
+
+procedure SetLEDConsole(vpattern: string);
+var i: byte;
+begin
+  //pattern1:= '';
+  for i:= 1 to 2  do
+  //pattern1:= pattern1 + chr(random(2)+48);
+  //test string on memo
+      Writeln(vpattern)
+end;  
+
+
+procedure Label1Click_EditPattern(Sender: TObject);
+var o: TLabel;
+    sx: byte;
+begin
+  //70 in begin sound
+   //showMessage(intToStr(TLabel(sender).tag))
+   sx:= TLabel(sender).tag;
+   o:= TLabel(labelList.objects[sx-1]);
+   //o.caption:= inttostr(i);
+   if o.color = clBlack then o.color:= clyellow
+       else o.color:= clblack;
+end;
+
+
+procedure pauseLED(vpatt: shortstring);
+begin
+  sleep(PATTERNPAUSE);
+  letShowVerify(vpatt);
+end;
+
+
+procedure Label1DClick_WritePattern(Sender: TObject);
+var i: byte;
+   st: shortstring;
+    o: TLabel;
+begin
+  //70 in begin sound
+  st:= pattar[0];
+   for i:= 1 to psize do begin
+     o:= TLabel(labelList.objects[i-1]);
+     //o.caption:= inttostr(i);
+     if o.color = clBlack then st[i]:= '1'
+       else st[i]:= '0';
+   end;
+  SetLEDConsole(st)
+   //writeln(st)
+end;
+
+
+
+procedure ShowLED_TestSeq;
+var
+   pt0, pt11: shortstring;
+   il: integer;
+   tmpstr: shortstring;
+begin
+   pt0:=  '00000000000000000000000000000000000';
+   pt11:= '00100010101001111111011100111111100'; //hex store test 32+3=35
+   tmpstr:= pt11;
+   delete(tmpstr,4,32)
+   writeln('cut test '+tmpstr)
+   writeln(bintohex2(tmpstr)); //00000001
+   writeln(bintohex2(pt11));   //153FB9FC
+   writeln(tmpstr+hextobin2(bintohex2(pt11)));  //test to store pattern as HEX
+   writeln(pt11)
+   pattern1:= '';
+   for il:= 0 to SIGNS do begin
+     letShowVerify(pattar[il]);
+     //writeln('pt'+inttostr(il))
+     pauseLED(pt0)
+   end;  
+end;
+
+
+Procedure WriteLED_Set(sentence: string; arun: boolean);    //draft
+var il,a: byte;
+begin
+   sentence:= Uppercase(sentence)
+   for il:= 1 to length(sentence) do begin
+     a:= Ord(sentence[il])-47;   //ASCII 0=48 9=57  
+     writeln(inttostr(a))   //debug
+    if (a>0) and (a<16) then begin
+       if arun then  
+          letShowRunVerify(pattar[a])
+          else letShowVerify(pattar[a]);
+     end;
+     if (a>17) and (a<42) then begin   //ASCII A=65 Z=90
+       if arun then
+         letShowRunVerify(pattar[a-7])
+         else  letShowVerify(pattar[a-7]);
+     end;
+     if a>220 then begin
+     //if not arun then
+         pauseLED(pattar[0]);
+     end;    
+     write(sentence[il])  //test to console
+   end; 
+end;  
+
+procedure FormKeyPress(Sender: TObject; var Key: Char);
+begin
+ if Key =  #13 
+   then WriteLED_Set(pattern1, true);
+ if Key = #27 then ppForm.close;
+end;
+
+procedure CloseForm(Sender: TObject; var action: TCloseAction);
+var i: integer;
+begin 
+   for i:= 1 to psize do              
+     TLabel(labelList.objects[i-1]).Free;
+   action:= caFree;  
+   writeln('free it label objects')     //debug
+end; 
+ 
+
+procedure loadPForm(vx, vy: integer);
+begin
+  psize:= vx*vy
+  //constructor
+  ppform:= TForm.Create(self);
+  with ppform do begin
+    caption:= 'LEDBOX, click to edit, dblclick write out pattern'+
+                 ' Press <Return> to run the Sentence';  
+    width:= (vx*psize)+ 10 + 300;
+    height:= (vy*psize)+ 30;
+    BorderStyle:= bsDialog;
+    Position:= poScreenCenter;
+    onKeyPress:= @FormKeyPress
+    //OnClick:= @Label1Click;
+    OnClose:= @closeForm;
+    Show;
+  end  
+end;
+
+
+procedure InitPuzzle(vx: byte);
+var
+  i,x,y: integer;
+begin
+  labelList:= TStringList.Create;
+  x:= 1;
+  y:= 1;
+  for i:= 1 to psize do begin
+    mylabel:= TLabel.Create(ppform);
+    with mylabel do begin
+      Parent:= ppForm;
+      color:= clyellow;
+      transparent:= false;
+      AutoSize:= false;
+      layout:= tlcenter;
+      alignment:= tacenter;
+      font.Size:= (psize div vx) + 12;
+      //font.Style:= [fsbold];
+      font.Color:= clyellow;
+      width:= psize; //+1 without raster
+      height:= psize;
+      Left:= (x-1)*(psize + 1);
+      Top:= (y-1)*(psize + 1);
+      //event handler to click!  
+      OnClick:= @Label1Click_EditPattern;
+      OnDblClick:= @Label1DClick_WritePattern;
+      tag:= i; //save the position
+    end;
+    //set next line of labels
+    if (i mod vx = 0) then begin
+      x:= 1; 
+      inc(y);
+    end else
+      inc(x);
+    //add labels to the list
+    labellist.instancesize
+    labelList.addObject(inttostr(i), mylabel);
+  end;
+end;
+
+
+procedure LetBitmap;
+begin
+ mbitmap:= TBitmap.Create;
+  try
+    mbitmap.LoadFromFile(Exepath+BITMAP);
+    //ppForm.Canvas.Draw(370,70, mbitmap);
+  finally
+    //ppForm.Free;
+  end;
+end;  
+
+
+procedure JVUtilsTester;    //some functions end with J like CopyFileJ
+var mcinfo: TJvComputerInfo;
+    mcmem:  TJvMemoryInfos;
+    mstr: string;
+    mstra: ansistring;
+    mstrs: shortstring;
+    moblist: TObjectList;
+begin
+   mcinfo:= TJvComputerInfo.Create(self);
+   with mcinfo do begin
+     writeln(Company);
+     writeln(WorkGroup);
+     writeln(ProductName);
+     writeln(ProductID);
+     //Free;
+   end;  
+   mcmem:= TJvMemoryInfos.Create(self);
+   with mcmem do begin
+     writeln('TotMem '+TotalMemory);
+     writeln('FreeMem '+FreeMemory);
+     writeln('Load '+MemoryLoad);
+     writeln('Pages '+NumberOfPages);
+     //Free;
+   end; 
+   moblist:= TObjectList.create;
+   with moblist do begin
+     add(mcinfo)
+     add(mcmem)
+     //insert()
+     //findinstanceof()
+     //items
+     items[0].Free;
+     items[1].Free;
+     //Free;
+   end;  
+   
+   //s1:= 0.3;
+   SinCosJ(1, s1, c1);
+   writeln('sin of sinj '+floattoStr(s1)+ '  '+floattostr(c1))
+    
+   
+   { property Comment: string read GetComment write SetComment;
+    property WorkGroup: string read GetWorkGroup write SetWorkGroup;
+    property ProductID: string read GetProductID write SetProductID;
+    property ProductKey: string read GetProductKey write SetProductKey;
+    property ProductName: string read GetProductName write SetProductName;
+    property DVDRegion: Integer read GetDVDRegion write SetDVDRegion;
+    property VersionNumber: string read GetVersionNumber write SetVersionNumber;
+    property Version: string read GetVersion write SetVersion;
+    property TimeRunning: TTime read GetTime write FTimeRunning;
+    property DayRunning: Integer read GetDay write FDayRunning;
+      property ComputerName: string read GetComputerName write SetComputerName;
+    property Username: string read GetUsername write SetUsername;
+    property Company: string read GetCompany write SetCompany;
+  }
+
+     
+ //GetWordOnPos returns Word from string, S, on the cursor position, P}
+//function GetWordOnPos(const S: string; const P: Integer): string;
+{ GetWordOnPosEx working like GetWordOnPos function, but
+  also returns Word position in iBeg, iEnd variables }
+  //GetWordOnPosEx(const S: string; const P: Integer; var iBeg, iEnd: Integer): string;
+{ SubStr returns substring from string, S, separated with Separator string}
+  //SubStr(const S: string; const Index: Integer; const Separator: string): string;
+{ SubStrEnd same to previous function but Index numerated from the end of string }
+ //SubStrEnd(const S: string; const Index: Integer; const Separator: string): string;
+{ SubWord returns next Word from string, P, and offsets Pointer to the end of Word, P2 }
+ //SubWord(P: PChar; var P2: PChar): string;
+{ NumberByWord returns the text representation of
+  the number, N, in normal russian language. Was typed from Monitor magazine }
+ //NumberByWord(const N: Longint): string;
+//  function CurrencyByWord(Value : Currency) : string;
+   writeln('number by word: ' +NumberByWord(123459987))
+{ GetLineByPos returns the Line number, there
+  the symbol Pos is pointed. Lines separated with #13 symbol }
+ //GetLineByPos(const S: string; const Pos: Integer): Integer;
+{ GetXYByPos is same to previous function, but returns X position in line too}
+ //GetXYByPos(const S: string; const Pos: Integer; var X, Y: Integer);
+{ ReplaceString searches for all substrings, OldPattern,
+  in a string, S, and replaces them with NewPattern }
+ //ReplaceString(S: string; const OldPattern, NewPattern: string): string;
+{ ConcatSep concatenate S and S2 strings with Separator.
+  if S = '', separator don't included }
+ //ConcatSep(const S, S2, Separator: string): string;
+{ ConcatLeftSep is same to previous function, but
+  strings concatenate right to left }
+ //ConcatLeftSep(const S, S2, Separator: string): string;
+{ MinimizeString trunactes long string, S, and appends
+  '...' symbols, if Length of S is more than MaxLen }
+ //MinimizeString(const S: string; const MaxLen: Integer): string;
+{ Next 4 function for russian chars transliterating.
+  This functions are needed because Oem2Ansi and Ansi2Oem functions
+  sometimes works sucks }
+  //Dos2Win(var S: string);
+ //Win2Dos(var S: string);
+ mstra:= 'this is jedi base library in portentously';
+ Win2Dos(mstra);
+ writeln('ansistring ' +mstra);
+ //Dos2WinRes(const S: string): string;
+ //Win2DosRes(const S: string): string;
+  //Win2Koi(const S: string): string;
+{ Spaces returns string consists on N space chars }
+ //Spaces(const N: Integer): string;
+{ AddSpaces add spaces to string, S, if it Length is smaller than N }
+ //AddSpaces(const S: string; const N: Integer): string;
+{ function LastDate for russian users only }
+//  { returns date relative to current date: '‰‚‡ ‰Ìˇ Ì‡Á‡‰' }
+ //LastDate(const Dat: TDateTime): string;
+  Writeln('lastdate '+LastDate(date));
+{ CurrencyToStr format currency, Cur, using ffCurrency float format}
+ //CurrencyToStr(const Cur: currency): string;
+{ Cmp compares two strings and returns True if they
+  are equal. Case-insensitive.}
+ //Cmp(const S1, S2: string): Boolean;
+{ StringCat add S2 string to S1 and returns this string }
+ //StringCat(var S1: string; S2: string): string;
+{ HasChar returns True, if Char, Ch, contains in string, S }
+ //HasChar(const Ch: Char; const S: string): Boolean;
+ //HasAnyChar(const Chars: string; const S: string): Boolean;
+ //CharInSet(const Ch: Char; const SetOfChar: TSetOfChar): Boolean;
+ //CountOfChar(const Ch: Char; const S: string): Integer;
+   Writeln('count of char ' +inttoStr(CountofChar('i',mstr)))
+ //DefStr(const S: string; Default: string): string;
+
+{**** files routines}
+
+{ GetWinDir returns Windows folder name }
+ //GetWinDir: TFileName;
+{ GetTempDir returns Windows temporary folder name }
+ //GetTempDir: string;
+ writeln(getTempDir);
+{ GenTempFileName returns temporary file name on
+  drive, there FileName is placed }
+ //GenTempFileName(FileName: string): string;
+{ GenTempFileNameExt same to previous function, but
+  returning filename has given extension, FileExt }
+ //GenTempFileNameExt(FileName: string; const FileExt: string): string;
+{ ClearDir clears folder Dir }
+ //ClearDir(const Dir: string): Boolean;
+{ DeleteDir clears and than delete folder Dir }
+ //DeleteDir(const Dir: string): Boolean;
+{ FileEquMask returns True if file, FileName,
+  is compatible with given dos file mask, Mask }
+ //FileEquMask(FileName, Mask: TFileName): Boolean;
+{ FileEquMasks returns True if file, FileName,
+  is compatible with given Masks.
+  Masks must be separated with comma (';') }
+ //FileEquMasks(FileName, Masks: TFileName): Boolean;
+ //DeleteFiles(const Folder: TFileName; const Masks: string);
+{ LZFileExpand expand file, FileSource,
+  into FileDest. Given file must be compressed, using MS Compress program }
+ //LZFileExpand(const FileSource, FileDest: string): Boolean;
+{ FileGetInfo fills SearchRec record for specified file attributes}
+ //FileGetInfo(FileName: TFileName; var SearchRec: TSearchRec): Boolean;
+{ HasSubFolder returns True, if folder APath contains other folders }
+ //HasSubFolder(APath: TFileName): Boolean;
+ if HasSubfolder(ExePath) then writeln('exe path has subfolders ');
+{ IsEmptyFolder returns True, if there are no files or
+  folders in given folder, APath}
+ //IsEmptyFolder(APath: TFileName): Boolean;
+{ AddSlash add slash Char to Dir parameter, if needed }
+ //AddSlash(var Dir: TFileName);
+{ AddSlash returns string with added slash Char to Dir parameter, if needed }
+ //AddSlash2(const Dir: TFileName): string;
+{ AddPath returns FileName with Path, if FileName not contain any path }
+ //AddPath(const FileName, Path: TFileName): TFileName;
+ //AddPaths(const PathList, Path: string): string;
+ //ParentPath(const Path: TFileName): TFileName;
+ //FindInPath(const FileName, PathList: string): TFileName;
+{$IFNDEF BCB1}
+{ BrowseForFolder displays Browse For Folder dialog }
+//function BrowseForFolder(const Handle: HWND; const Title: string; var Folder: string): Boolean;
+{$ENDIF BCB1}
+{ DeleteReadOnlyFile clears R/O file attribute and delete file }
+ //DeleteReadOnlyFile(const FileName: TFileName): Boolean;
+{ HasParam returns True, if program running with specified parameter, Param }
+ //HasParam(const Param: string): Boolean;
+ //HasSwitch(const Param: string): Boolean;
+ //Switch(const Param: string): string;
+{ ExePath returns ExtractFilePath(ParamStr(0)) }
+ //ExePath: TFileName;
+ //CopyDir(const SourceDir, DestDir: TFileName): Boolean;
+ //FileTimeToDateTime(const FT: TFileTime): TDateTime;
+ //MakeValidFileName(const FileName: TFileName; const ReplaceBadChar: Char): TFileName;
+
+{**** Graphic routines }
+
+{ TTFontSelected returns True, if True Type font
+  is selected in specified device context }
+ //TTFontSelected(const DC: HDC): Boolean;
+{ TrueInflateRect inflates rect in other method, than InflateRect API function }
+ //TrueInflateRect(const R: TRect; const I: Integer): TRect;
+
+{**** Windows routines }
+
+{ SetWindowTop put window to top without recreating window }
+ //SetWindowTop(const Handle: HWND; const Top: Boolean);
+
+{**** other routines }
+
+{ KeyPressed returns True, if Key VK is now pressed }
+ //KeyPressed(VK: Integer): Boolean;
+ //SwapInt(var Int1, Int2: Integer);
+ //IntPower(Base, Exponent: Integer): Integer;
+ //ChangeTopException(E: TObject): TObject;
+ //StrToBool(const S: string): Boolean;
+
+{$IFNDEF COMPILER3_UP}
+{ AnsiStrLIComp compares S1 to S2, without case-sensitivity, up to a maximum
+  Length of MaxLen bytes. The compare operation is controlled by the
+  current Windows locale. The return value is the same as for CompareStr. }
+//function AnsiStrLIComp(S1, S2: PChar; MaxLen: Cardinal): Integer;
+//function AnsiStrIComp(S1, S2: PChar): Integer;
+{$ENDIF}
+ //Var2Type(V: Variant; const VarType: Integer): Variant;
+ //VarToInt(V: Variant): Integer;
+  Writeln(IntToStr(VarToInt(2349.6987)))
+ //VarToFloat(V: Variant): Double;
+{ following functions are not documented
+  because they are don't work properly sometimes, so don't use them }
+ //ReplaceSokr1(S: string; const Word, Frase: string): string;
+{ ReplaceSokr1 is full equal to ReplaceString function
+  - only for compatibility - don't use }
+{ GetSubStr is full equal to SubStr function
+  - only for compatibility - don't use }
+ //GetSubStr(const S: string; const Index: Integer; const Separator: Char): string;
+ //GetParameter: string;
+ //GetLongFileName(FileName: string): string;
+{* from unit FileCtrl}
+ //DirectoryExists(const Name: string): Boolean;
+ //ForceDirectories(Dir: string);
+{# from unit FileCtrl}
+ //FileNewExt(const FileName, NewExt: TFileName): TFileName;
+ //GetComputerID: string;
+ //GetComputerName: string;
+
+{**** string routines }
+
+{ ReplaceAllSokr searches for all substrings, Words,
+  in a string, S, and replaces them with Frases with the same Index.
+  Also see RAUtilsW.ReplaceSokr1 function }
+//function ReplaceAllSokr(S: string; Words, Frases: TStrings): string;
+{ ReplaceSokr searches the Word in a string, S, on PosBeg position,
+  in the list, Words, and if founds, replaces this Word
+  with string from another list, Frases, with the same Index,
+  and then update NewSelStart variable }
+//function ReplaceSokr(S: string; PosBeg, Len: Integer; Words, Frases: TStrings; var NewSelStart: Integer): string;
+{ CountOfLines calculates the lines count in a string, S,
+  each line must be separated from another with CrLf sequence }
+ //CountOfLines(const S: string): Integer;
+{ DeleteEmptyLines deletes all empty lines from strings, Ss.
+  Lines contained only spaces also deletes. }
+ //DeleteEmptyLines(Ss: TStrings);
+{ SQLAddWhere addes or modifies existing where-statement, where,
+  to the strings, SQL.
+  Note: If strings SQL allready contains where-statement,
+  it must be started on the begining of any line }
+ //SQLAddWhere(SQL: TStrings; const Where: string);
+
+{**** files routines - }
+
+{ ResSaveToFile save resource named as Name with Typ type into file FileName.
+  Resource can be compressed using MS Compress program}
+ //ResSaveToFile(const Typ, Name: string; const Compressed: Boolean; const FileName: string): Boolean;
+ //ResSaveToFileEx(Instance: HINST; Typ, Name: PChar;
+  //const Compressed: Boolean; const FileName: string): Boolean;
+ //ResSaveToString(Instance: HINST; const Typ, Name: string;
+  //var S: string): Boolean;
+{ Execute executes other program and waiting for it
+  terminating, then return its Exit Code }
+ //Execute(const CommandLine, WorkingDirectory: string): Integer;
+{ IniReadSection read section, Section, from ini-file,
+  IniFileName, into strings, Ss.
+  This function reads ALL strings from specified section.
+  Note: TIninFile.ReadSection function reads only strings with '=' symbol.}
+ //IniReadSection(const IniFileName: TFileName; const Section: string; Ss: TStrings): Boolean;
+{ LoadTextFile load text file, FileName, into string }
+ //LoadTextFile(const FileName: TFileName): string;
+ //SaveTextFile(const FileName: TFileName; const Source: string);
+{ ReadFolder reads files list from disk folder, Folder,
+  that are equal to mask, Mask, into strings, FileList}
+ //ReadFolder(const Folder, Mask: TFileName; FileList: TStrings): Integer;
+ //ReadFolders(const Folder: TFileName; FolderList: TStrings): Integer;
+
+{$IFDEF COMPILER3_UP}
+{ TargetFileName - if FileName is ShortCut returns filename ShortCut linked to }
+ TargetFileName(const FileName: TFileName): TFileName;
+{ return filename ShortCut linked to }
+ ResolveLink(const hWnd: HWND; const LinkFile: TFileName;
+  var FileName: TFileName): HRESULT;
+{$ENDIF COMPILER3_UP}
+
+{**** Graphic routines - }
+
+{ LoadIcoToImage loads two icons from resource named NameRes,
+  into two image lists ALarge and ASmall}
+ //LoadIcoToImage(ALarge, ASmall: TImageList; const NameRes: string);
+{ RATextOut same with TCanvas.TextOut procedure, but
+  can clipping drawing with rectangle, RClip. }
+ //RATextOut(Canvas: TCanvas; const R, RClip: TRect; const S: string);
+{ RATextOutEx same with RATextOut function, but
+  can calculate needed height for correct output }
+ //RATextOutEx(Canvas: TCanvas; const R, RClip: TRect; const S: string; const CalcHeight: Boolean): Integer;
+{ RATextCalcHeight calculate needed height for
+  correct output, using RATextOut or RATextOutEx functions }
+ //RATextCalcHeight(Canvas: TCanvas; const R: TRect; const S: string): Integer;
+{ Cinema draws some visual effect }
+ //Cinema(Canvas: TCanvas; rS {Source}, rD {Dest}: TRect);
+   Cinema(ppForm.canvas, rect(0,0,50,50), rect(0,0,400,400));
+{ Roughed fills rect with special 3D pattern }
+ //Roughed(ACanvas: TCanvas; const ARect: TRect; const AVert: Boolean);
+{ BitmapFromBitmap creates new small bitmap from part
+  of source bitmap, SrcBitmap, with specified width and height,
+  AWidth, AHeight and placed on a specified Index, Index in the
+  source bitmap }
+ //BitmapFromBitmap(SrcBitmap: TBitmap; const AWidth, AHeight, Index: Integer): TBitmap;
+{ TextWidth calculate text with for writing using standard desktop font }
+ //TextWidth(AStr: string): Integer;
+{ DefineCursor load cursor from resource, and return
+  available cursor number, assigned to it }
+ //DefineCursor(Identifer: PChar): TCursor;
+
+{**** other routines - }
+{ FindFormByClass returns first form with specified
+  class, FormClass, owned by Application global variable }
+ //FindFormByClass(FormClass: TFormClass): TForm;
+ //FindFormByClassName(FormClassName: string): TForm;
+{ FindByTag returns the control with specified class,
+  ComponentClass, from WinContol.Controls property,
+  having Tag property value, equaled to Tag parameter }
+ //FindByTag(WinControl: TWinControl; ComponentClass: TComponentClass; const Tag: Integer): TComponent;
+{ ControlAtPos2 equal to TWinControl.ControlAtPos function,
+  but works better }
+ //ControlAtPos2(Parent: TWinControl; X, Y: Integer): TControl;
+{ RBTag searches WinControl.Controls for checked
+  RadioButton and returns its Tag property value }
+ //RBTag(Parent: TWinControl): Integer;
+{ AppMinimized returns True, if Application is minimized }
+ //AppMinimized: Boolean;
+{ MessageBox is Application.MessageBox with string (not PChar) parameters.
+  if Caption parameter = '', it replaced with Application.Title }
+ //MessageBoxJ(const Msg: string; Caption: string;
+  //const Flags: Integer): Integer;
+ //MsgDlg2(const Msg, ACaption: string; DlgType: TMsgDlgType;
+  //Buttons: TMsgDlgButtons; HelpContext: Integer; Control: TWinControl): Integer;
+ //MsgDlgDef(const Msg, ACaption: string; DlgType: TMsgDlgType;
+  //Buttons: TMsgDlgButtons; DefButton: TMsgDlgBtn; HelpContext: Integer;
+  //Control: TWinControl): Integer;
+{ Delay stop program execution to MSec msec }
+ //Delay(MSec: Longword);
+ //CenterHor(Parent: TControl; MinLeft: Integer; Controls: array of TControl);
+ //EnableControls(Control: TWinControl; const Enable: Boolean);
+ //EnableMenuItems(MenuItem: TMenuItem; const Tag: Integer; const Enable: Boolean);
+ //ExpandWidth(Parent: TControl; MinWidth: Integer; Controls: array of TControl);
+ //PanelBorder(Panel: TCustomPanel): Integer;
+ //Pixels(Control: TControl; APixels: Integer): Integer;
+ //SetChildPropOrd(Owner: TComponent; PropName: string; Value: Longint);
+ //Error(const Msg: string);
+  //ErrorJ('this is SAD system admin devil');
+ {ItemHtDrawEx(Canvas: TCanvas; Rect: TRect;
+  const State: TOwnerDrawState; const Text: string;
+  const HideSelColor: Boolean; var PlainItem: string;
+  var Width: Integer; CalcWidth: Boolean);}
+  { example for Text parameter :
+    'Item 1 <b>bold</b> <i>italic ITALIC <c:Red>red <c:Green>green <c:blue>blue </i>' }
+ {ItemHtDraw(Canvas: TCanvas; Rect: TRect;
+  const State: TOwnerDrawState; const Text: string;
+  const HideSelColor: Boolean): string;}
+ {ItemHtWidth(Canvas: TCanvas; Rect: TRect;
+  const State: TOwnerDrawState; const Text: string;
+  const HideSelColor: Boolean): Integer;}
+ //ItemHtPlain(const Text: string): string;
+{ ClearList - clears list of TObject }
+ //ClearList(List: TList);
+
+ //MemStreamToClipBoard(MemStream: TMemoryStream; const Format: Word);
+ //ClipBoardToMemStream(MemStream: TMemoryStream; const Format: Word);
+
+{ RTTI support }
+{function GetPropType(Obj: TObject; const PropName: string): TTypeKind;
+function GetPropStr(Obj: TObject; const PropName: string): string;
+function GetPropOrd(Obj: TObject; const PropName: string): Integer;
+function GetPropMethod(Obj: TObject; const PropName: string): TMethod;}
+
+ //PrepareIniSection(SS: TStrings);
+{ following functions are not documented because
+  they are don't work properly, so don't use them }
+{$IFDEF COMPILER2}
+//function CompareMem(P1, P2: Pointer; Length: Integer): Boolean; assembler;
+{$ENDIF}
+
+
+{ ** Common string handling routines ** }
+  //unit uPSI_JvStrUtils;
+ //StrToOem(const AnsiStr: string): string;
+{ StrToOem translates a string from the Windows character set into the
+  OEM character set. }
+ //OemToAnsiStr(const OemStr: string): string;
+{ OemToAnsiStr translates a string from the OEM character set into the
+  Windows character set. }
+ //IsEmptyStr(const S: string; const EmptyChars: TCharSet): Boolean;
+{ EmptyStr returns true if the given string contains only character
+  from the EmptyChars. }
+ //ReplaceStr(const S, Srch, Replace: string): string;
+{ Returns string with every occurrence of Srch string replaced with
+  Replace string. }
+ //DelSpace(const S: string): string;
+{ DelSpace return a string with all white spaces removed. }
+ //DelChars(const S: string; Chr: Char): string;
+{ DelChars return a string with all Chr characters removed. }
+ //DelBSpace(const S: string): string;
+{ DelBSpace trims leading spaces from the given string. }
+//function DelESpace(const S: string): string;
+{ DelESpace trims trailing spaces from the given string. }
+//function DelRSpace(const S: string): string;
+{ DelRSpace trims leading and trailing spaces from the given string. }
+//function DelSpace1(const S: string): string;
+{ DelSpace1 return a string with all non-single white spaces removed. }
+//function Tab2Space(const S: string; Numb: Byte): string;
+{ Tab2Space converts any tabulation character in the given string to the
+  Numb spaces characters. }
+ //NPos(const C: string; S: string; N: Integer): Integer;
+{ NPos searches for a N-th position of substring C in a given string. }
+ //MakeStr(C: Char; N: Integer): string;
+ //MS(C: Char; N: Integer): string;
+{ MakeStr return a string of length N filled with character C. }
+ //AddChar(C: Char; const S: string; N: Integer): string;
+{ AddChar return a string left-padded to length N with characters C. }
+ //AddCharR(C: Char; const S: string; N: Integer): string;
+{ AddCharR return a string right-padded to length N with characters C. }
+ //LeftStr(const S: string; N: Integer): string;
+{ LeftStr return a string right-padded to length N with blanks. }
+ //RightStr(const S: string; N: Integer): string;
+{ RightStr return a string left-padded to length N with blanks. }
+ //CenterStr(const S: string; Len: Integer): string;
+{ CenterStr centers the characters in the string based upon the
+  Len specified. }
+ //CompStr(const S1, S2: string): Integer;
+{ CompStr compares S1 to S2, with case-sensitivity. The return value is
+  -1 if S1 < S2, 0 if S1 = S2, or 1 if S1 > S2. }
+ //CompText(const S1, S2: string): Integer;
+{ CompText compares S1 to S2, without case-sensitivity. The return value
+  is the same as for CompStr. }
+//function Copy2Symb(const S: string; Symb: Char): string;
+{ Copy2Symb returns a substring of a string S from begining to first
+  character Symb. }
+//function Copy2SymbDel(var S: string; Symb: Char): string;
+{ Copy2SymbDel returns a substring of a string S from begining to first
+  character Symb and removes this substring from S. }
+ //Copy2Space(const S: string): string;
+{ Copy2Symb returns a substring of a string S from begining to first
+  white space. }
+//function Copy2SpaceDel(var S: string): string;
+{ Copy2SpaceDel returns a substring of a string S from begining to first
+  white space and removes this substring from S. }
+ //AnsiProperCase(const S: string; const WordDelims: TCharSet): string;
+{ Returns string, with the first letter of each word in uppercase,
+  all other letters in lowercase. Words are delimited by WordDelims. }
+ //WordCount(const S: string; const WordDelims: TCharSet): Integer;
+{ WordCount given a set of word delimiters, returns number of words in S. }
+ //WordPosition(const N: Integer; const S: string;
+  //const WordDelims: TCharSet): Integer;
+{ Given a set of word delimiters, returns start position of N'th word in S. }
+{function ExtractWord(N: Integer; const S: string;
+  const WordDelims: TCharSet): string;
+function ExtractWordPos(N: Integer; const S: string;
+  const WordDelims: TCharSet; var Pos: Integer): string;
+function ExtractDelimited(N: Integer; const S: string;
+  const Delims: TCharSet): string;}
+{ ExtractWord, ExtractWordPos and ExtractDelimited given a set of word
+  delimiters, return the N'th word in S. }
+ //ExtractSubstr(const S: string; var Pos: Integer;
+  //const Delims: TCharSet): string;
+{ ExtractSubstr given a set of word delimiters, returns the substring from S,
+  that started from position Pos. }
+ //IsWordPresent(const W, S: string; const WordDelims: TCharSet): Boolean;
+{ IsWordPresent given a set of word delimiters, returns True if word W is
+  present in string S. }
+ //QuotedString(const S: string; Quote: Char): string;
+{ QuotedString returns the given string as a quoted string, using the
+  provided Quote character. }
+ //ExtractQuotedString(const S: string; Quote: Char): string;
+{ ExtractQuotedString removes the Quote characters from the beginning and
+  end of a quoted string, and reduces pairs of Quote characters within
+  the quoted string to a single character. }
+ //FindPart(const HelpWilds, InputStr: string): Integer;
+{ FindPart compares a string with '?' and another, returns the position of
+  HelpWilds in InputStr. }
+ //IsWild(InputStr, Wilds: string; IgnoreCase: Boolean): Boolean;
+{ IsWild compares InputString with WildCard string and returns True
+  if corresponds. }
+{function XorString(const Key, Src: ShortString): ShortString;
+function XorEncode(const Key, Source: string): string;
+function XorDecode(const Key, Source: string): string;}
+
+{ ** Command line routines ** }
+
+{$IFNDEF COMPILER4_UP}
+ //FindCmdLineSwitch(const Switch: string; SwitchChars: TCharSet;
+  //IgnoreCase: Boolean): Boolean;
+{$ENDIF}
+ //GetCmdLineArg(const Switch: string; SwitchChars: TCharSet): string;
+
+{ ** Numeric string handling routines ** }
+
+ //Numb2USA(const S: string): string;
+{ Numb2USA converts numeric string S to USA-format. }
+ //Dec2Hex(N: Longint; A: Byte): string;
+ Writeln('dec to HEX '+Dec2Hex(190000, 8));
+ //D2H(N: Longint; A: Byte): string;
+{ Dec2Hex converts the given value to a hexadecimal string representation
+  with the minimum number of digits (A) specified. }
+ //Hex2Dec(const S: string): Longint;
+ //H2D(const S: string): Longint;
+{ Hex2Dec converts the given hexadecimal string to the corresponding integer
+  value. }
+ //Dec2Numb(N: Longint; A, B: Byte): string;
+{ Dec2Numb converts the given value to a string representation with the
+  base equal to B and with the minimum number of digits (A) specified. }
+ //Numb2Dec(S: string; B: Byte): Longint;
+{ Numb2Dec converts the given B-based numeric string to the corresponding
+  integer value. }
+ //IntToBin(Value: Longint; Digits, Spaces: Integer): string;
+{ IntToBin converts the given value to a binary string representation
+  with the minimum number of digits specified. }
+ Writeln('IntToRoman '+IntToRoman(2012));
+{ IntToRoman converts the given value to a roman numeric string
+  representation. }
+//function RomanToInt(const S: string): Longint;
+ Writeln('RomanToInt '+IntToStr(RomanToInt(IntToRoman(2012))));
+
+{ RomanToInt converts the given string to an integer value. If the string
+  doesn't contain a valid roman numeric value, the 0 value is returned. }
+//unit STrUtils
+ //FindNotBlankCharPos(const S: string): Integer;
+ //AnsiChangeCase(const S: string): string;
+ //GetWordOnPos(const S: string; const P: Integer): string;
+ //GetWordOnPosEx(const S: string; const P: Integer; var iBeg, iEnd: Integer): string;
+ //Cmp(const S1, S2: string): Boolean;
+{ Spaces returns string consists on N space chars }
+ //Spaces(const N: Integer): string;
+{ HasChar returns True, if char, Ch, contains in string, S }
+ //HasChar(const Ch: Char; const S: string): Boolean;
+ //HasAnyChar(const Chars: string; const S: string): Boolean;
+{ SubStr returns substring from string, S,
+  separated with Separator string}
+ //SubStr(const S: string; const Index: Integer; const Separator: string): string;
+{ SubStrEnd same to previous function but Index numerated
+  from the end of string }
+ //SubStrEnd(const S: string; const Index: Integer; const Separator: string): string;
+{ ReplaceString searches for all substrings, OldPattern,
+  in a string, S, and replaces them with NewPattern }
+ //ReplaceString(S: string; const OldPattern, NewPattern: string): string;
+ //CharInSet(const Ch: Char; const SetOfChar: TSetOfChar): Boolean;
+{ GetXYByPos is same to previous function, but
+  returns X position in line too}
+ //GetXYByPos(const S: string; const Pos: Integer; var X, Y: Integer);
+{ AddSlash returns string with added slash char to Dir parameter, if needed }
+ //AddSlash2(const Dir: TFileName): string;
+{ AddPath returns FileName with Path, if FileName not contain any path }
+ //AddPath(const FileName, Path: TFileName): TFileName;
+{ ExePath returns ExtractFilePath(ParamStr(0)) }
+//function ExePath: TFileName;
+ //LoadTextFile(const FileName: TFileName): string;
+//procedure SaveTextFile(const FileName: TFileName; const Source: string);
+{ ConcatSep concatenate S and S2 strings with Separator.
+  if S = '', separator don't included }
+ //ConcatSep(const S, S2, Separator: string): string;
+{ FileEquMask returns True if file, FileName,
+  is compatible with given dos file mask, Mask }
+ //FileEquMask(FileName, Mask: TFileName): Boolean;
+{ FileEquMasks returns True if file, FileName,
+  is compatible with given Masks.
+  Masks must be separated with comma (';') }
+ //FileEquMasks(FileName, Masks: TFileName): Boolean;
+ //StringEndsWith(const Str, SubStr: string): Boolean;
+ //ExtractFilePath2(const FileName: string): string;
+{$IFNDEF COMPILER3_UP}
+//function AnsiStrIComp(S1, S2: PChar): Integer;
+//function AnsiStrLIComp(S1, S2: PChar; MaxLen: Cardinal): Integer;
+{$ENDIF COMPILER3_UP}
+ //CopyFile(const FileName, DestName: string; ProgressControl: TControl);
+//procedure CopyFileEx(const FileName, DestName: string;
+  //OverwriteReadOnly, ShellDialog: Boolean; ProgressControl: TControl);
+//procedure MoveFile(const FileName, DestName: TFileName);
+//procedure MoveFileEx(const FileName, DestName: TFileName; ShellDialog: Boolean);
+//{$IFDEF COMPILER4_UP}
+ Writeln(IntToStr(GetFileSizeJ(ExePath+'maxbox3.exe')));
+//{$ELSE}
+//function GetFileSize(const FileName: string): Longint;
+//{$ENDIF}
+ //FileDateTime(const FileName: string): TDateTime;
+ //HasAttr(const FileName: string; Attr: Integer): Boolean;
+ //DeleteFiles(const FileMask: string): Boolean;
+ //DeleteFilesEx(const FileMasks: array of string): Boolean;
+ //ClearDir(const Path: string; Delete: Boolean): Boolean;
+ //NormalDir(const DirName: string): string;
+ //RemoveBackSlash(const DirName: string): string;
+ //ValidFileName(const FileName: string): Boolean;
+ //DirExists(Name: string): Boolean;
+ //ForceDirectories(Dir: string);
+
+ //FileLock(Handle: Integer; Offset, LockSize: Longint): Integer;
+  {$IFDEF COMPILER4_UP} overload; {$ENDIF}
+{$IFDEF COMPILER4_UP}
+//function FileLock(Handle: Integer; Offset, LockSize: Int64): Integer; overload;
+{$ENDIF}
+//function FileUnlock(Handle: Integer; Offset, LockSize: Longint): Integer;
+  {$IFDEF COMPILER4_UP} overload; {$ENDIF}
+{$IFDEF COMPILER4_UP}
+//function FileUnlock(Handle: Integer; Offset, LockSize: Int64): Integer; overload;
+{$ENDIF}
+
+ //GetTempDir: string;
+ //GetWindowsDir: string;
+ //GetSystemDir: string;
+
+//function BrowseDirectory(var AFolderName: string; const DlgText: string;
+  //AHelpContext: THelpContext): Boolean;
+
+//{$IFDEF WIN32}
+ //BrowseComputer(var ComputerName: string; const DlgText: string;
+  //AHelpContext: THelpContext): Boolean;
+ //ShortToLongFileName(const ShortName: string): string;
+ //ShortToLongPath(const ShortName: string): string;
+ //LongToShortFileName(const LongName: string): string;
+ //LongToShortPath(const LongName: string): string;
+ //CreateFileLink(const FileName, DisplayName: string; Folder: Integer);
+ //DeleteFileLink(const DisplayName: string; Folder: Integer);
+//{$ENDIF WIN32}
+
+{$IFNDEF COMPILER3_UP}
+ //IsPathDelimiter(const S: string; Index: Integer): Boolean;
+{$ENDIF}
+
+end;  
+
+
+
+procedure VCLtester_VCLUtils;
+var mr: TRect;
+    micon: TICon;
+    _mp: ___Pointer;
+begin
+  LetBitmap;
+  //writeln(inttostr(ppform.width))
+ 
+  mr.left:= 10; //ppForm.left;
+  mr.top:= 20; //ppForm.top;
+  writeln(inttostr(mr.left))
+  //ldexp
+  //leadbytes
+  DrawBitmapTransparent(ppForm.canvas, 200, 10, mbitmap, clyellow);
+  DrawBitmapRectTransparent(ppForm.canvas,200, 50, mr, mbitmap, clyellow);
+  //StretchBitmapRectTransparent(Dest: TCanvas; DstX, DstY, DstW,
+  //DstH: Integer; SrcRect: TRect; Bitmap: TBitmap; TransparentColor: TColor);
+  mbitmap:= MakeBitmap('BBALL');
+  DrawBitmapRectTransparent(ppForm.canvas,200, 50, mr, mbitmap, clyellow);
+  //MakeBitmapID(ResID: Word): TBitmap;
+  //MakeModuleBitmap(Module: THandle; ResID: PChar): TBitmap;
+  mbitmap:= CreateTwoColorsBrushPattern(clgreen, clred);
+  DrawBitmapRectTransparent(ppForm.canvas,200, 50, mr, mbitmap, clyellow);
+  //CreateDisabledBitmapEx(FOriginal: TBitmap; OutlineColor, BackColor,
+  //HighlightColor, ShadowColor: TColor; DrawHighlight: Boolean): TBitmap;
+ //CreateDisabledBitmap(FOriginal: TBitmap; OutlineColor: TColor): TBitmap;
+  //ChangeBitmapColor(Bitmap: TBitmap; Color, NewColor: TColor): TBitmap;
+  mbitmap:= ChangeBitmapColor(mbitmap, clyellow, clblue);
+  DrawBitmapTransparent(ppForm.canvas,200, 50, mbitmap, clyellow);
+
+ //AssignBitmapCell(Source: TGraphic; Dest: TBitmap; Cols, Rows,
+  //Index: Integer);
+ //ImageListDrawDisabled(Images: TImageList; Canvas: TCanvas;
+  //X, Y, Index: Integer; HighlightColor, GrayColor: TColor; DrawHighlight: Boolean);
+
+  mIcon:= MakeIcon('BBALL');
+  
+  //MakeIconID(ResID: Word): TIcon;
+ //MakeModuleIcon(Module: THandle; ResID: PChar): TIcon;
+ //CreateBitmapFromIcon(Icon: TIcon; BackColor: TColor): TBitmap;
+ //CreateIconFromBitmap(Bitmap: TBitmap; TransparentColor: TColor): TIcon;
+
+{ Service routines }
+
+   //NotImplemented;
+   //ResourceNotFound('BBBBALL');
+ //PointInRect(const P: TPoint; const R: TRect): Boolean;
+ //PointInPolyRgn(const P: TPoint; const Points: array of TPoint): Boolean;
+ //PaletteColor(Color: TColor): Longint;
+ //HeightOf(R: TRect): Integer;
+
+   //writeln(inttostr(mr.left))
+   Writeln(intToStr(WidthOf(mr)));
+   Writeln(intToStr(HeightOf(mr)));
+
+ //PaintInverseRect(const RectOrg, RectEnd: TPoint);
+ //DrawInvertFrame(ScreenRect: TRect; Width: Integer);
+ //CopyParentImage(Control: TControl; Dest: TCanvas);
+ //Delay(MSecs: Longint);
+ //CenterControl(Control: TControl);
+ //ShowMDIClientEdge(ClientHandle: THandle; ShowEdge: Boolean);
+ //MakeVariant(const Values: array of Variant): Variant;
+// CreateRotatedFont(Font: TFont; Angle: Integer): HFont;
+ //MsgBox(const Caption, Text: string; Flags: Integer): Integer;
+ //MsgDlg(const Msg: string; AType: TMsgDlgType;
+  //AButtons: TMsgDlgButtons; HelpCtx: Longint): Word;
+ //FindPrevInstance(const MainFormClass: ShortString;
+  //const ATitle: string): HWnd;
+ //ActivatePrevInstance(const MainFormClass: ShortString;
+  //const ATitle: string): Boolean;
+ //FindPrevInstance(const MainFormClass, ATitle: string): HWnd;
+ //ActivatePrevInstance(const MainFormClass, ATitle: string): Boolean;
+ //IsForegroundTask: Boolean;
+ //MergeForm(AControl: TWinControl; AForm: TForm; Align: TAlign;
+  //Show: Boolean);
+ //GetAveCharSize(Canvas: TCanvas): TPoint;
+ //MinimizeText(const Text: string; Canvas: TCanvas;
+  //MaxWidth: Integer): string;
+ //FreeUnusedOle;
+ //Beep;
+ //GetWindowsVersion: string;
+ //LoadDLL(const LibName: string): THandle;
+ //RegisterServer(const ModuleName: string): Boolean;
+ //IsLibrary: Boolean;
+  // killmessage
+  Writeln(GetWindowsVersionJ)
+{ Gradient filling routine }
+
+  //GradientFillRect(Canvas: TCanvas; ARect: TRect; StartColor,
+  //EndColor: TColor; Direction: TFillDirection; Colors: Byte);
+  GradientFillRect(ppForm.canvas, mr, clgreen, clred, fdLeftToRight, 200);
+
+{ String routines }
+ //GetEnvVar(const VarName: string): string;
+ //AnsiUpperFirstChar(const S: string): string;
+ //StringToPChar(var S: string): PChar;
+ //StrPAlloc(const S: string): PChar;
+ //SplitCommandLine(const CmdLine: string; var ExeName,
+  //Params: string);
+ //DropT(const S: string): string;
+  writeln(DropT('const S: string'));
+  //function microsecondsToCentimeters(mseconds: longint): longint;
+  Writeln(intToStr(microsecondsToCentimeters(2000)));  //340m/s speed of sound
+{ Memory routines }
+  //New(_mp);
+  //_mp:= AllocMemo(3000);
+ //ReallocMemo(fpBlock: Pointer; Size: Longint): Pointer;
+ //FreeMemo(var fpBlock: Pointer);
+ //GetMemoSize(fpBlock: Pointer): Longint;
+ //CompareMem(fpBlock1, fpBlock2: Pointer; Size: Cardinal): Boolean;
+// FreeAndNil(var Obj);
+
+{ Manipulate huge pointers routines }
+
+ //HugeInc(var HugePtr: Pointer; Amount: Longint);
+ //HugeDec(var HugePtr: Pointer; Amount: Longint);
+ //HugeOffset(HugePtr: Pointer; Amount: Longint): Pointer;
+ //HugeMove(Base: Pointer; Dst, Src, Size: Longint);
+ //HMemCpy(DstPtr, SrcPtr: Pointer; Amount: Longint);
+ //ZeroMemory(Ptr: Pointer; Length: Longint);
+ //FillMemory(Ptr: Pointer; Length: Longint; Fill: Byte);
+end;
+
+function CharInSet(const C: Char; const testSet: TSysCharSet): boolean;
+begin
+  Result:= C in testSet;
+end;
+
+function CharIsDigit(const C: Char): Boolean;
+begin
+  Result:= CharInSet(C, ['0','1','2','3','4','5','6','7','8','9']);
+end;
+
+
+procedure JVGUtils_Tester;
+var i1, i2: integer;
+   teststring: string;
+   currChar: char;
+   testset2: TsysCharSet;
+   acanvas: TCanvas;
+   afont: TFont;
+   filetype: TglFileType;
+   
+begin
+//function IsEven(I: Integer): Boolean;
+//function InchesToPixels(DC: HDC; Value: Single; IsHorizontal: Boolean): Integer;
+//function CentimetersToPixels(DC: HDC; Value: Single; IsHorizontal: Boolean): Integer;
+
+i1:= 20; i2:= 50;
+  SwapInt2(I1, I2);
+  Writeln(Format('this is 1 %d + 2 %d',[I1,I2]));
+  teststring:= 'play box boy';
+//function Spaces(Count: Integer): string;
+  teststring:= Spaces(3);
+  writeln(teststring);
+  currChar:= '£';
+  testSet2:=  ['k','-','5','£'];
+
+  //testSet2:=  [];
+ 
+   CharInSet(CurrChar, testset2);
+   if CharInSet(currChar,testset2) then msg(currChar +' is in testSet');
+   if not CharInSet(CurrChar, ['£','0','9', ',', '.', '-', '+', '/', '*', '(', ')']) 
+   then msg('not in set');
+ 
+//function DupStr(const Str: string; Count: Integer): string;
+//function DupChar(C: Char; Count: Integer): string;
+//procedure Msg(const AMsg: string);
+  Msg('this is a play boy box');
+//function RectW(R: TRect): Integer;
+     writeln('RectW of Form is: '+inttoStr(RectW(ppForm.Canvas.ClipRect)))
+
+ DrawTextInRect(hinstance, ppForm.Canvas.ClipRect,'living box',fstRaised, NIL,1);
+
+(*function RectH(R: TRect): Integer;
+function IncColor(AColor: Longint; AOffset: Byte): Longint;
+function DecColor(AColor: Longint; AOffset: Byte): Longint;
+function IsItAFilledBitmap(Bmp: TBitmap): Boolean;
+procedure DrawTextInRectWithAlign(DC: HDC; R: TRect; const Text: string;
+  HAlign: TglHorAlign; VAlign: TglVertAlign;
+  Style: TglTextStyle; Fnt: TFont; Flags: UINT);
+
+procedure DrawTextInRect(DC: HDC; R: TRect; const Text: string;
+  Style: TglTextStyle; Fnt: TFont; Flags: UINT);
+
+procedure ExtTextOutExt(DC: HDC; X, Y: Integer; R: TRect; const Text: string;
+  Style: TglTextStyle; ADelineated, ASupress3D: Boolean;
+  FontColor, DelinColor, HighlightColor, ShadowColor: TColor;
+  Illumination: TJvgIllumination; Gradient: TJvgGradient; Font: TFont);
+
+procedure DrawBox(DC: HDC; var R: TRect; Style: TglBoxStyle;
+  BackgrColor: Longint; ATransparent: Boolean);
+
+function DrawBoxEx(DC: HDC; ARect: TRect; Borders: TglSides;
+  BevelInner, BevelOuter: TPanelBevel; Bold: Boolean; BackgrColor: Longint;
+  ATransparent: Boolean): TRect;
+
+procedure GradientBox(DC: HDC; R: TRect; Gradient: TJvgGradient;
+  PenStyle, PenWidth: Integer);
+
+procedure ChangeBitmapColor(Bitmap: TBitmap; FromColor, ToColor: TColor);
+procedure DrawBitmapExt(DC: HDC; { DC - background & result}
+  SourceBitmap: TBitmap; R: TRect;
+  X, Y: Integer; //...X,Y _in_ rect!
+  BitmapOption: TglWallpaperOption; DrawState: TglDrawState;
+  ATransparent: Boolean; TransparentColor: TColor; DisabledMaskColor: TColor);
+procedure CreateBitmapExt(DC: HDC; { DC - background & result}
+  SourceBitmap: TBitmap; R: TRect;
+  X, Y: Integer; //...X,Y _in_ rect!
+  BitmapOption: TglWallpaperOption; DrawState: TglDrawState;
+  ATransparent: Boolean; TransparentColor: TColor; DisabledMaskColor: TColor);
+
+procedure BringParentWindowToTop(Wnd: TWinControl);
+function GetParentForm(Control: TControl): TForm;
+procedure GetWindowImageFrom(Control: TWinControl; X, Y: Integer; ADrawSelf, ADrawChildWindows: Boolean; DC: HDC);
+procedure GetWindowImage(Control: TWinControl; ADrawSelf, ADrawChildWindows: Boolean; DC: HDC);
+procedure GetParentImageRect(Control: TControl; Rect: TRect; DC: HDC);
+function CreateRotatedFont(F: TFont; Escapement: Integer): HFONT;
+function FindMainWindow(const AWndClass, AWndTitle: string): THandle;
+procedure CalcShadowAndHighlightColors(BaseColor: TColor; Colors: TJvgLabelColors);
+function CalcMathString(AExpression: string): Single;
+
+function IIF(AExpression: Boolean; IfTrue, IfFalse: Variant): Variant; overload;
+function IIF(AExpression: Boolean; const IfTrue, IfFalse: string): string; overload;
+
+function GetTransparentColor(Bitmap: TBitmap; AutoTrColor: TglAutoTransparentColor): TColor;
+procedure TypeStringOnKeyboard(const S: string);
+//function NextStringGridCell( Grid: TStringGrid ): Boolean;
+procedure DrawTextExtAligned(Canvas: TCanvas; const Text: string; R: TRect; Alignment: TglAlignment; WordWrap: Boolean);
+procedure LoadComponentFromTextFile(Component: TComponent; const FileName: string);
+procedure SaveComponentToTextFile(Component: TComponent; const FileName: string); *)
+//function ComponentToString(Component: TComponent): string;
+//procedure StringToComponent(Component: TComponent; const Value: string);
+//function PlayWaveResource(const ResName: string): Boolean;
+//function UserName: string;
+Writeln('user name '+username);
+//function ComputerName: string;
+Writeln('comp name '+computername);
+
+//function CreateIniFileName: string;
+//function ExpandString(const Str: string; Len: Integer): string;
+  writeln('ExpandString '+ExpandString(computername, 40));
+
+//function Transliterate(const Str: string; RusToLat: Boolean): string;
+  writeln('transliterate '+Transliterate(computername, true));
+
+//function IsSmallFonts: Boolean;
+//function SystemColorDepth: Integer;
+//function GetFileType(const FileName: string): TglFileType;
+   //CL.AddTypeS('TglFileType', '( fftUndefined, fftGif, fftJpeg, fftBmp )');
+   filetype:= GetFileTypeJ(Exepath+'maxbox3.exe');
+   if filetype = fftundefined then writeln('exe is undefined');
+   filetype:= GetFileTypeJ(Exepath+BITMAP);
+   if filetype = fftBmp then writeln('bitmap is defined')
+
+   //writeln(inttoStr(filetype))
+//function FindControlAtPt(Control: TWinControl; Pt: TPoint; MinClass: TClass): TControl;
+//function StrPosExt(const Str1, Str2: PChar; Str2Len: DWORD): PChar;)}
+end;
+
+
+
+procedure CopyRecord2(DataSet: TDataSet);
+var
+  I: Integer;
+begin
+  with DataSet, TStringList.Create do
+  try
+    //dseditmode:=
+    for I := 0 to FieldCount - 1 do
+      Add(Fields[I].AsString);
+    DataSet.Append;
+    for I := 0 to FieldCount - 1 do
+      if Fields[I].IsNull then
+        Fields[I].AsString := Strings[I];
+  finally
+    Free;
+  end
+end;
+
+
+  var
+    myf: extended;
+
+//main of LED HEX BOX
+Begin
+//**************************** OOP in maXbox *******************************
+//sizex, sizey as paras()
+  //pattern1:= '7';
+  //pattern1:= '0123456789';
+  pattern1:= 'Pascal';
+  //pattern1:= 'THIS IS MAXLAND';
+
+  loadPForm(COL,ROW);
+  initPuzzle(COL); 
+  //InitLED_SignPatterns;
+  VCLtester_VCLUtils
+
+  
+  //ShowLED_TestSeq;
+  //WriteLed_Set('PASCAL')
+  //WriteLed_Set(pattern1)
+  //WriteLed_Set('MAXBOX', true)
+  // WriteLed_Set(pattern1, true)  //true with animation
+  //Writeln(GetASCII)
+  
+   
+  writeln(floattostr(power(2,64)))
+  
+  writeln('Formula Direct: '+floattoSTr(getFormulaValue('3*45+ln(34)-sqrt(16)')));
+  writeln('Formula Direct: '+floattoSTr(maxCalc('3*45+ln(34)-sqrt(16)')));
+  //writeln('Formula Direct: '+floattoSTr(maxCalc('20 mod 4')));  syntax error
+  
+  //DomainCheck  error
+  myf:= 123.059;
+  writeln('Formula ArcCos: '+floattoSTr(arccos(0.05998)));
+  writeln('Formula ArcSinH: '+floattoSTr(arcSinH(myf)));
+  writeln('Formula Direct : '+floattoSTr(maxCalc('Ln(123.059+sqrt((123.059*123.059)+1))')));
+ 
+  //Result := Ln(X + Sqrt((X * X) + 1));
+
+  SinCos(0, s1, c1); // 0 test
+  writeln('Formula SinCos:  '+floattoSTr(s1)+ ' '+floattoSTr(c1));
+
+  //SinCosJ(1, s1, c1); // 0 test
+
+  s1:= 0.3; c1:= 0.5;
+  SinCos(1.0, s1, c1);
+
+  writeln('Formula SinCos:  '+floattoSTr(s1)+ ' '+floattoSTr(c1));
+
+  s1:= 0.3; c1:= 0.5;
+ 
+  SinCos(1.0, s1, c1);
+  //SinCosJ(1.0, s1, c1);
+
+  writeln('Formula SinCosJ: '+floattoSTr(s1)+ ' '+floattoSTr(c1));
+
+  
+  //Ln((Sqrt(1 - X * X) + 1) / X)
+  
+  writeln(floattostr(latitude2WGS84(200)))
+  writeln(floattoStr(RadToDeg(latitude2WGS84(200))));
+  writeln(floatToStr(GetAngle(12, 144)));
+ 
+  writeln('PI is: '+floatToStr(PI));  //3.14159265358979
+ 
+  writeln('Formula Gauss first, s=3, z=0.0014: '+#13#10+
+     floattoSTr(maxCalc('1/sqrt(2*PI*3^2)')));
+  writeln('Formula Gauss second: '+
+     floattoSTr(maxCalc('exp((-0.0014^2)/(2*3^2))')));
+  // 8.68956546144783
+  writeln('Formula Gauss : '+
+     floattoSTr(maxCalc('1/SQRT(2*PI*3^2)*EXP((-0.0014^2)/(2*3^2))')));
+ 
+   writeln('Formula Gauss of LIB: '+
+     floattoSTr(Gauss(0.0014,3)));
+  
+   writeln('Formula Gauss of LIB: '+
+     floattoSTr(Gauss(0.99999998,3)));
+    Writeln(floattostr(power(2,PI)));
+    Writeln(floattostr(powerJ(2,PI)));
+    Writeln(floattostr(CSC(PI/2)));
+    Writeln(floattostr(CSCJ(PI/2)));
+
+  
+  JVUtilsTester;
+  
+  //s1:= 0.3; c1:= 0.5;
+  //SinCosJ(1, s1, c1);
+ 
+  
+  JVGUtils_Tester;  
+
+  with CreateCalculatorForm(self,0) do 
+    show;
+    
+  {with CreatePopupCalculator(self,bdlefttoright) do begin
+    //parent:= cFrm;
+    show;
+  end;}  
+  if iswin64 then writeln('win 64'); 
+  if iswow64string(wow) 
+    then writeln('win 64'); 
+   writeln(wow)
+   //mylabel.tag:= 4;
+   //Label1Click_EditPattern(TObject(mylabel.tag));
+
+  s1:= 0.3; c1:= 0.5;
+   //SinCos(1.0, s1, c1);
+  SinCosJ(1.0, s1, c1);
+   writeln('Formula SinCosJ: '+floattoSTr(s1)+ ' '+floattoSTr(c1));
+    Writeln(floattostr(Floor(PI)));
+    Writeln(floattostr(FloorJ(PI)));
+    Writeln(floattostr(power(2,PI)));
+    Writeln(floattostr(powerJ(2,PI)));
+    Writeln(floattostr(CSC(PI)));
+    Writeln(floattostr(CSCJ(PI)));
+
+    Writeln(inttoStr(sign(+0.006)));  
+   Writeln(floattoStr(pythagoras(10.45,10.32)));    //error by 4.66726071656878E-62
+    s1:= 0.3; c1:= 0.5;
+ 
+    Writeln('Sin of 10 in DEG '+floattoStr(Sin(10.0 / 180 * PI)));
+    Writeln(floattoStr(RadToDeg(Sin(10.0))));
+    PrintF('RadToDeg = Rad * 180 / PI = %.4f',[maxCalc('Sin(10)* 180 /PI')])
+    Writeln(floattoStr(SinJ(10.0)));
+    
+    //degtorad Radians = Degrees * PI / 180
+    //function RadToDeg(Rad: Extended): Extended;
+
+    //Use RadToDeg to convert angles measured in radians to degrees. RadToDeg uses the formula:
+     //degrees = Rad * 180 / PI
+     writeln('Formula Sin * Cos second: '+floattoSTr(maxCalc('sin(10)*cos(10)')));
+  
+
+  //Win32BackupFile   
+    //GetModulePath(hmodule);
+  //BuildFileList
+  //maxform1.SerialRS2321Click(self)
+  //Application.onmessage
+  //Application.onException
+    //PathIsUNC
+    //PathIsAbsolute
+    //loadtextfile
+      //delay
+      //findbytag
+      //cmp
+      //concatsep
+      //substrend
+     // replacestring
+     //spaces
+     //execute
+     //msgdlg2
+     //wordcount
+     //copyfile
+     //movefile
+     //getfilesize
+     //swapint
+     //switch
+     //copydir
+     //countoflines
+  //closeMP3;
+  //playMP3(ExePath+'examples\maxbox.mp3');
+  //200 in begin sound
+  //label1click_EditPattern(self)
+  //DisplayStream
+  //SwapLong(swap_endian_u32)
+//  AESSymetricExecute(exepath+'examples\aestest.txt', exepath+'examples\aestest_encrypt.txt','000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');
+//  AESSymetricExecute(exepath+'examples\aestest.txt', exepath+'examples\aestest_encrypt/.txt','0001020304');
+
+End.
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |
+        |____/  |___| |____| |_|     |_| |_| |_| 
+        
+        
+                                          
+        Weiterf¸hrung der Scholz Software Systems 3S
+        
+The Jedi project provides the following solution in JclMath:
+
+procedure SinCos(X: Float; var Sin, Cos: Float);
+
+  {$IFDEF CPU386}
+  procedure FSinCos(X: Float; var Sin, Cos: Float); assembler;
+  asm
+          FLD     X
+          FSINCOS
+          FSTP    Float PTR [EDX]
+          FSTP    Float PTR [EAX]
+          FWAIT
+  end;
+  {$ENDIF CPU386}
+
+begin
+  DomainCheck(Abs(X) > MaxAngle);
+  {$IFDEF CLR}
+  Sin := System.Math.Sin(X);
+  Cos := System.Math.Cos(X);
+  {$ELSE}
+  FSinCos(X, Sin, Cos);
+  {$ENDIF CLR}
+end;
+
+The domain check raises a exception in case of argument out of +2^63.        
+        
+        
+tobjectlist

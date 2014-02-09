@@ -1,0 +1,690 @@
+{***************************************************************
+ * Project  : System Function Overview
+ * App Name: 290_bestofbox, loc's = 508 
+ * Purpose  : Demonstrates best functions and Internals
+ * Date  : 07/29/2012  -  17:07
+ * History  : convert to maXbox Nov 2010
+ *          : system demo for mX3 beta, finished yet!!
+            : regression, dbscript and threads
+ ****************************************************************}
+Program BestofBoxDemo;
+{BOOL WINAPI MessageBeep(
+  __in  UINT uType
+);}
+//TThreadFunction = function(P: Pointer): Longint; stdcall;
+//Procedure ExecuteThread(afunc: TThreadFunction; var thrOK: boolean);
+
+function  MessageBeep(para: integer): byte;
+  external 'MessageBeep@user32.dll stdcall'; 
+  
+type
+  TByteArr = array of byte;
+  
+  (*TStLinEst = record
+    B0, B1     : Double;   {model coefficients}
+    seB0, seB1 : Double;   {standard error of model coefficients}
+    R2         : Double;   {coefficient of determination}
+    sigma      : Double;   {standard error of regression}
+    SSr, SSe   : Double;   {elements for ANOVA table}
+    F0         : Double;   {F-statistic to test B1=0}
+    df         : Integer;  {denominator degrees of freedom for F-statistic}
+  end;*)
+   
+var
+  except_state, execute_state: string;
+  mytimestamp: TDateTime;
+  osType: TIdWin32Type;
+  //diskTotal, amtFree: int64;
+  //ptr: ___Pointer;
+  thresult: boolean;
+  //thfct: TThreadFunction;   //procedure type
+  //mybase: TThread;
+  //mySort: TSortThread;
+  mybox: TPaintBox;
+  mythreadArray: TSortArray;
+  frmMon: TForm;
+  Image1: TImage;
+
+  //my bestofbox functions
+  procedure getMaxBoxIni; forward;        //1
+  procedure getDriveTypesF; forward;      //2
+  procedure ThreadDemoForm; forward;      //3
+  procedure RegExTest; forward;           //4
+  procedure newDBTableScript; forward;    //5
+  procedure RotateBitmap(var htmpBitmapDC: TBitmap; var lWidth : Longint;
+                           var lHeight : Longint; lRadians : real; origmap: TBitmap); forward;//6
+  procedure VariantTests; forward;                         //7
+  procedure CallTicker(msecs: integer); forward;           //8
+  procedure StatisticPackage; forward;                     //9
+  Procedure PrimeTimeFactors(afactor: integer); forward;   //10
+
+  
+procedure getMaxBoxIni;
+var
+  Ini: TIniFile;   
+begin
+  Ini:= TIniFile.Create(ExePath+'maxboxdef.ini');
+  try
+    except_state:= Ini.ReadString('Form', 'EXCEPTIONLOG','');
+    execute_state:= Ini.ReadString('Form', 'EXECUTESHELL','');
+  finally
+    writeln('inifile sysdata test: '+(except_state)+ ' '+(execute_state))
+    ini.Free;
+  end;
+end;
+
+//------------------------------------------thread func
+Function myThread(p: integer): Longint; //stdcall;
+var x: Integer;
+begin
+  inc(x)
+end;
+
+Procedure signal_Sounds;
+var sound: integer;
+begin
+for sound:= 1 to 100 do
+  if sound mod 10 = 0 then begin
+    MessageBeep(sound)
+    sleep(1500)
+  end  
+end;
+//---------------------------------------------------------
+
+procedure getDriveTypesF;
+var
+  Drive: byte;
+  DriveLetter: String;
+begin
+  for Drive:= ord('A') to ord('Z') do begin
+    DriveLetter:= chr(Drive) + ':\';
+    case GetDriveType(PChar(chr(Drive) + ':\')) of
+      0: //DRIVE_UNKNOWN
+      Memo2.Lines.Add(DriveLetter + ' Unknown Drive');
+      {1: //DRIVE_NO_ROOT_DIR
+      Memo2.Lines.Add(DriveLetter + ' No Root Dir or mount Point');}
+      2: //DRIVE_REMOVABLE:
+      Memo2.Lines.Add(DriveLetter + ' Removable or Floppy Drive');
+      3: //DRIVE_FIXED:
+      Memo2.Lines.Add(DriveLetter + ' Fixed Drive');
+      4: //DRIVE_REMOTE:
+      Memo2.Lines.Add(DriveLetter + ' Network Drive');
+      5: //DRIVE_CDROM:
+      Memo2.Lines.Add(DriveLetter + ' CD-ROM Drive');
+      6: //DRIVE_RAMDISK:
+      Memo2.Lines.Add(DriveLetter + ' RAM Disk');
+    end;
+  end;
+end;
+
+procedure ThreadDemoForm;
+begin
+    with TSortThread.Create(mybox, mythreadarray) do begin
+      bolTHslowmotion:= true;
+      slowmotion:= 2;
+    end;  
+    with TQuickSort.Create(mybox, mythreadarray) do begin
+      bolTHslowmotion:= true;
+      slowmotion:= 4;
+    end;  
+    with TThreadSortForm.Create(self) do begin
+      caption:= 'IBZDemo';
+      label1.caption:= 'Bubble Sort down up';
+      //bolTHslowmotion:= true;
+      slowmotionfirst:= 1;   //to begin
+      slowmotion:= 3;        // for each thread
+      show;
+      //StartBtn.caption:= 'go parallel';
+      //StartBtnClick(self);
+    end;  
+end;  
+
+procedure InitBitmapForm;
+begin
+ frmMon:= TForm.create(self);
+ with frmMon do begin
+   //FormStyle := fsStayOnTop;
+   Position := poScreenCenter;
+   caption:='Pulsar Universe BitmaX';
+   color:= clblack;
+   width:= 400;
+   height:= 400;
+   Show;
+ end;
+ Image1:= TImage.create(frmMon);
+ with Image1 do begin
+   parent:= frmMon;
+   //picture.bitmap.color:= 
+   setbounds(10,15, 200,150);
+   //onMousedown:= @Image1MouseDown;
+   show;
+   //onMouseup:= @Image1MouseUp
+ end;
+end; 
+ 
+procedure RegExTest;
+var regexres: TStrings;
+begin
+// Function ExecRegExpr( const ARegExpr, AInputStr : RegExprString) : boolean');
+    ///regex1 [12][09]\d{2}-\d{2}-\d{2}T12:[23]\d:\d{2}/
+    //regex2 result group = /((19)|(20))(\d{2}-\d{2}-\d{2}T)(12:[23]\d:\d{2})/
+  if ExecRegExpr('((19)|(20))\d{2}-\d{2}-\d{2}T12:[23]\d:\d{2}',
+    '1925-04-01T12:23:29') then writeln('regex true') else writeln('regex false');
+ //4464: Function RegExprSubExpressions( const ARegExpr : string; ASubExprs : TStrings; AExtendedSyntax : boolean) :
+   regexres:= TStringlist.Create;
+   regexres.Clear;
+   RegExprSubExpressions('((19)|(20))(\d{2}-\d{2}-\d{2}T)(12:[23]\d:\d{2})', regexres, true);
+   writeln('regex extract: '+regexres[4]);
+   regexres.Free;
+end;  
+
+procedure newDBTableScript;
+begin
+  with TTable.Create(self) do begin
+    Active:= false;
+    databasename:= 'DBDEMOS';
+    //databasename:= 'knabe';
+    tablename:= 'maxtable3';
+    tabletype:= ttparadox;
+    with fielddefs do begin
+      Clear;
+      add('field1',ftinteger,0,false)
+      add('field2',ftinteger,0,false)
+      add('field3',ftfloat,0,false)
+    end;
+    CreateTable; 
+    active:= true;
+    Insert;
+    FieldbyName('field1').value:= 44;
+    FieldbyName('field2').value:= 55;
+    FieldbyName('field3').value:= 3.1415;
+    Post;
+    Close;  
+  end;
+end;  
+
+procedure RotateBitmap(var htmpBitmapDC: TBitmap; var lWidth : Longint;
+                            var lHeight : Longint; lRadians : real; origmap: TBitmap);
+var
+         I,J : Longint;               // loop counter
+         //htmpBitmapDC : Longint;    // DC of the new bitmap
+         lSine,lCosine : extended;          // sine,cosine used in rotation
+         X1,X2,X3,Y1,Y2,Y3 : Longint;     // used in calculating new bitmap dimensions
+         lMinX,lMaxX,lMinY,lMaxY: Longint;  
+         lNewWidth,lNewHeight : Longint;  // width of new bitmap
+         lSrcX,lSrcY  : Longint;   // x,y pixel coord we are blitting from the source image
+         myrect: TRect;
+begin
+   // create a compatible DC from the one just brought
+   // compute the sine/cosinse of the radians used to // rotate this image
+    //tbmpDC:= tbmp.handle;
+   lSine := Sin(lRadians);
+   lCosine := Cos(lRadians);
+   // compute the size of the new bitmap being created
+   X1 := Round(-lHeight * lSine);
+   Y1 := Round(lHeight * lCosine);
+   X2 := Round(lWidth * lCosine - lHeight * lSine);
+   Y2 := Round(lHeight * lCosine + lWidth * lSine);
+   X3 := Round(lWidth * lCosine);
+   Y3 := Round(lWidth * lSine);
+   // figure out the max/min size of the new bitmap
+   lMinX := Min(0, Min(X1, Min(X2, X3)));
+   lMinY := Min(0, Min(Y1, Min(Y2, Y3)));
+   lMaxX := Max(X1, Max(X2, X3));
+   lMaxY := Max(Y1, Max(Y2, Y3));
+   // set the new bitmap width/height
+   lNewWidth:= lMaxX - lMinX;
+   lNewHeight:= lMaxY - lMinY;
+   // create a new bitmap based upon the new width/height of the // rotated bitmap
+   //hNewBitmap := CreateCompatibleBitmap(hBitmapDC, lNewWidth, lNewHeight);
+   htmpBitmapDC.height:= lNewHeight;
+   htmpBitmapDC.width:= lNewWidth;
+   //myRect:= Rect(0,0,lwidth,lheight); 
+   //frmmon.Canvas.BrushCopy(MyRect, Image1.Picture.Bitmap, MyRect, clred);
+   For I:= 0 To lNewWidth do begin
+     For J:= 0 To lNewHeight do begin
+       lSrcX:= Round((J + lMinX) * lCosine + (I + lMinY) * lSine);
+       lSrcY:= Round((I + lMinY) * lCosine - (J + lMinX) * lSine);
+       If (lSrcX >= 0) And (lSrcX <= lWidth) And
+          (lSrcY >= 0) And (lSrcY <= lHeight) Then begin
+         BitBlt(htmpBitmapDC.canvas.handle,J,I,lnewheight,lnewwidth,origmap.canvas.handle,
+                                 lSrcX,lSrcY, SRCCOPY);
+        end;
+     end;
+  end;
+  //Image1.Refresh; 
+  lWidth:= htmpBitmapDC.width;
+  lHeight:= htmpBitmapDC.height;
+End;
+      
+procedure TForm1_RotateTest2(Sender: TObject);
+var
+ lRadians: real;
+ tbmpDC, H,W, Degrees: longint;
+ mybitmap: TBitmap;
+ MyRect: TRect;
+begin
+  mybitmap:= TBitmap.create;
+  mybitmap.loadfromfile(exepath+'examples\citymax.bmp')
+  image1.width:= mybitmap.width;
+  image1.height:= mybitmap.height;
+  //Image1.Picture.BitMap.PixelFormat:= pf24bit; 
+  Image1.Picture.BitMap:= mybitmap;
+  //mybitmap.Free;
+  Degrees:= 45;
+  lRadians:= PI * Degrees / 180;
+  W:= Image1.Picture.Width;
+  H:= Image1.Picture.Height;
+  //W:= Image1.Width;
+  //H:= Image1.Height;
+  mybitmap:= TBitmap.create;
+  RotateBitmap(mybitmap, W, H, lRadians, Image1.Picture.Bitmap);
+  myRect:= Rect(0,0,W,H); 
+  //frmmon.Canvas.CopyRect(MyOther,mybitmap.Canvas,MyRect);
+  Image1.Width:= W;
+  Image1.Height:= H;
+  Image1.Picture.Bitmap.Width:= W;
+  Image1.Picture.Bitmap.Height:= H;
+  //Image1.Picture.bitmap:= mybitmap;
+  BitBlt(Image1.Picture.Bitmap.Canvas.Handle,0,0,W,H,mybitmap.canvas.handle,0,0,SRCCopy);
+  //frmmon.Canvas.BrushCopy(MyRect, Image1.Picture.Bitmap, MyRect, clRed);
+  //for j:= 1 to image1.height do
+    //image1.Picture.Bitmap.Canvas.pixels[j,j]:= clred; //test line
+  mybitmap.Free;
+  Image1.Refresh; 
+end;
+
+
+function vsomme(a,b: variant): variant;
+begin
+  result:= a+b;
+end;  
+
+procedure VariantTests;
+begin
+  writeln('variant 5+6: '+inttostr(vsomme(5,6)));
+  writeln('variant 5.8+6.0: '+floattostr(vsomme(5.8,6.0)));
+  writeln('variant str(5)+str(6): '+(vsomme('5','6')));
+  writeln('variant '+(vsomme('bonjour','monsieur')));
+  vsomme(date,7);
+  writeln('variant plus 7 days: '+datetostr(vsomme(date,7)));
+end;
+
+
+procedure Delay2StopWatch(msecs: integer);
+ var FirstTickCount: longint;
+begin
+ FirstTickCount:= GetTickCount;
+ repeat
+   Application.ProcessMessages; {allowing access to other controls, widgets, etc.}
+ until ((GetTickCount-FirstTickCount) >= Longint(msecs));
+end;
+//Test it with:
+procedure CallTicker(msecs: integer);
+begin
+ with TStopWatch.create do begin
+   start
+     Delay2StopWatch(msecs)
+   stop
+   writeln('Stop Watch CPU Tester: '+getValueStr)
+ end;    
+end;
+
+function StrToArrOfByte(AStr: String): TByteArr;
+var
+  j: smallint;
+begin
+   SetLength(Result, Length(AStr)) ;
+   for j:= 0 to Length(AStr)-1 do
+   Result[j]:= ord(AStr[j + 1])-48;
+end;
+
+{4565: Function AveDev( const Data : array of Double) : Double');
+4566: Function AveDev16( const Data, NData : Integer) : Double');
+4567: Function Confidence( Alpha, StandardDev : Double; Size : LongInt) : Double');
+4568: Function Correlation( const Data1, Data2 : array of Double) : Double');
+4569: Function Correlation16( const Data1, Data2, NData : Integer) : Double');
+4570: Function Covariance( const Data1, Data2 : array of Double) : Double');
+4571: Function Covariance16( const Data1, Data2, NData : Integer) : Double');
+4572: Function DevSq( const Data : array of Double) : Double');
+4573: Function DevSq16( const Data, NData : Integer) : Double');}
+{X Values	Y Values
+60	3.1
+61	3.6
+62	3.8
+63	4
+65	4.1  }
+
+procedure StatisticPackage; //see also ex. 289 regression
+var adx, ady, adrand, adregx, adregy: array of double;
+    aaSum, aaSumOfSquares: extended;
+    i: integer;
+    linregress: TStLinEst;
+//http://www.koders.com/delphi/fid01C6FC01AA74690692B71DC9F63FEB4B86AE43DB.aspx?s=crc    
+begin
+  SetLength(adx,5)
+  SetLength(ady,5)
+  adx[0]:= 60;
+  adx[1]:= 61;
+  adx[2]:= 62;
+  adx[3]:= 63;
+  adx[4]:= 65;
+  ady[0]:= 3.1;
+  ady[1]:= 3.6;
+  ady[2]:= 3.8;
+  ady[3]:= 4.0;
+  ady[4]:= 4.1;
+  PrintF('Correlation of x and y %.4f',[Correlation(ady,adx)]);
+  PrintF('Covariance of x and y %.4f',[Covariance(ady,adx)]);
+//  4604: Function Forecast( X : Double; const KnownY : array of Double; const KnownX : array of Double) : Double');
+  PrintF('Forecast of x is %.4f',[Forecast(7,ady,adx)]);
+  //4606: Function Intercept( const KnownY : array of Double; const KnownX : array of Double) : Double');
+  PrintF('Intercept of y and x %.4f',[Intercept(ady,adx)]);
+  //5832: Procedure SumsAndSquares( const Data : array of Double; var Sum, SumOfSquares : Extended)
+  SumsAndSquares(adx, aaSum, aaSumOfSquares);
+  PrintF('SumsAndSquares of X: %.2f  %.2f', [aaSum, aaSumOfSquares]);
+  //4574: Procedure Frequency( const Data : array of Double; const Bins : array of Double; var Counts : array of LongInt)');
+  //4609: Function StandardErrorY( const KnownY : array of Double; const KnownX : array of Double) : Double');
+  PrintF('Standard Error of y %.4f',[StandardErrorY(ady,adx)]);
+  PrintF('Slope of both %.4f',[Slope(ady,adx)]);
+  PrintF('R Squared of both %.4f',[RSquared(ady,adx)]);
+  // SetLength(adrand,1000)
+  //for i:= 1 to 1000-1 do adrand[i]:= randomF;
+  //for i:= 1 to 1000-1 do writeln(floattostr(adrand[i]));
+  {abytearr:= StrtoArrofByte(memo2.text)
+  for i:= 0 to length(abytearr)-1 do write((chr(abytearr[i]+48)));
+  writeln('');}
+//Trick 1_6: 1, 2, 4, 5, 7, 8
+  PrintF('choose a number %f',[maXcalc('7*9*111*1001/7')]);
+{Step1: Choose a number from 1 to 6.
+ Step2: Multiply the number with 9.
+ Step3: Multiply the result with 111.
+ Step4: Multiply the result by 1001.
+ Step5: Divide the answer by 7.
+ Answer: All the above numbers will be present.}
+//type
+//http://people.sc.fsu.edu/~jburkardt/datasets/regression/regression.html
+  {full statistics for a linear regression}
+  (*TStLinEst = record
+    B0, B1     : Double;   {model coefficients}
+    seB0, seB1 : Double;   {standard error of model coefficients}
+    R2         : Double;   {coefficient of determination}
+    sigma      : Double;   {standard error of regression}
+    SSr, SSe   : Double;   {elements for ANOVA table}
+    F0         : Double;   {F-statistic to test B1=0}
+    df         : Integer;  {denominator degrees of freedom for F-statistic}
+  end;
+{LINEST}
+procedure LinEst(const KnownY : array of Double;
+  const KnownX : array of Double; var LF : TStLinEst; ErrorStats : Boolean);
+  {-Performs linear fit to data and returns coefficients and error
+    statistics.
+      KnownY is the dependent array of known data points.
+      KnownX is the independent array of known data points.
+      NData must be greater than 2.
+      If ErrorStats is FALSE, only B0 and B1 are computed; the other fields
+        of TStLinEst are set to 0.0.
+      See declaration of TStLinEst for returned data.
+  } *)
+ // adx[0]:= 60.0;
+ { adx[1]:= 61.0;
+  adx[2]:= 62.0;
+  adx[3]:= 63.0;
+  adx[4]:= 65.0;}
+  //ady[0]:= 30.1;
+ { ady[1]:= 30.6;
+  ady[2]:= 30.8;
+  ady[3]:= 40.0;
+  ady[4]:= 40.1;}
+
+   SetArrayLength(adregx,3)
+   SetArrayLength(adregy,3)              
+   adregx[0]:= 234;
+   adregx[1]:= 254;
+   adregx[2]:= 264;
+   adregy[0]:= 250;
+   adregy[1]:= 250;
+   adregy[2]:= 264;
+  //LinEst(adregx,adregy, linregress, true) 
+end;
+
+Procedure PrimeTimeFactors(afactor: integer);
+var md: TDynCardinalArray;
+    i: integer;
+begin
+  md:= PrimeFactors(afactor) 
+  write('Prime factors of '+intToStr(afactor)+': ');
+  for i:= 0 to length(md)-1  do
+    write(inttostr(md[i])+ '  ');
+end;
+
+
+begin   //main of bestofbox
+   //InifileRead;
+   getMaxBoxIni;
+   thresult:= false;
+   //thfct:= @myThread;
+   CurrentThreadID
+   writeln('Thread ID :'+intToStr(CurrentThreadID))
+   CurrentProcessId
+   writeln('Process ID :'+intToStr(CurrentProcessID))
+   //ExecuteThread(thfct, thresult)
+   //if thresult = true then
+   writeln('machine name is: '+getHostName)
+   writeln('user name is: '+getUserName)
+   osType:= Win32Type;
+   writeln('OS Type is: '+intToStr(ord(osType)));
+   mytimestamp:= GetFileCreationTime(exepath+'maxbox3.exe')
+   writeln(DateTimeToStr(mytimestamp)+' for maXbox3 file')
+   //SearchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter2.pdf')
+   //signal_Sounds;
+   //ExecuteCommand('cmd','/k dir *.*')
+   getDriveTypesF;
+    with TJvCustomLED.Create(self) do begin
+      SetBounds(10,10,50,50);
+      visible:= true;
+      //interval
+      show;
+      Free;
+    end;
+   ThreadDemoForm;  
+   RegExTest;
+   //newDBTableScript;
+   InitBitmapForm;
+   TForm1_RotateTest2(Self);
+   VariantTests;
+   CallTicker(500);
+   with TStString.Create do begin
+     AppendString(memo2.text)
+     Writeln('this word count of StString '+IntToStr(WordCount));
+     Writeln('ASCII count of output '+inttoStr(ASCIICount));
+     Writeln('Alloc Length of output '+inttoStr(allocLength));
+     //atIndex
+     Free;
+   end;
+   Writeln('************************Stat Pac*****************************');  
+   StatisticPackage;  
+   PrimeTimeFactors(23457);
+End.   
+
+------------------------------------------------
+Windows crashed again. I am the Blue Screen of Death. No one hears your screams.
+Three things are certain: Death, taxes, and lost data. Guess which has occurred.
+There is no place like 127.0.0.1 
+
+
+type
+  //PThreadSortArray = ^TThreadSortArray;
+  //TThreadSortArray = array[0..MaxInt div SizeOf(Integer) - 1] of Integer;
+  TSortArray =  array[1..ARRSIZE] of Integer;
+
+
+  TSortThread = class(TThread)
+  strict private
+    FBox: TPaintBox;
+    //FSortArray: PThreadSortArray;
+    FSortArray: TSortArray;
+    FSize: Integer;
+    FA, FB, FI, FJ: Integer;
+    Fbolthslowmotion: boolean;
+    procedure DoVisualSwap;
+    procedure Setbolthslowmotion(const Value: boolean);
+  protected
+    procedure Execute; override;
+    procedure VisualSwap(A, B, I, J: Integer);
+    procedure Sort(var A: array of Integer); virtual; abstract;
+  public
+    constructor Create(Box: TPaintBox; var SortArray: TSortArray);
+    property  bolTHslowmotion: boolean read Fbolthslowmotion write Setbolthslowmotion;
+
+  end;
+
+
+procedure SIRegister_TThreadSortForm(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TForm', 'TThreadSortForm') do
+  with CL.AddClassN(CL.FindClass('TForm'),'TThreadSortForm') do
+  begin
+    RegisterProperty('BubbleSortBox', 'TPaintBox', iptrw);
+    RegisterProperty('SelectionSortBox', 'TPaintBox', iptrw);
+    RegisterProperty('QuickSortBox', 'TPaintBox', iptrw);
+    RegisterProperty('Bevel1', 'TBevel', iptrw);
+    RegisterProperty('Bevel2', 'TBevel', iptrw);
+    RegisterProperty('Bevel3', 'TBevel', iptrw);
+    RegisterProperty('StartBtn', 'TButton', iptrw);
+    RegisterProperty('Label1', 'TLabel', iptrw);
+    RegisterProperty('Label2', 'TLabel', iptrw);
+    RegisterProperty('Label3', 'TLabel', iptrw);
+    RegisterProperty('BitBtn1slowmotion', 'TBitBtn', iptrw);
+    RegisterMethod('Procedure StartBtnClick( Sender : TObject)');
+    RegisterMethod('Procedure BubbleSortBoxPaint( Sender : TObject)');
+    RegisterMethod('Procedure SelectionSortBoxPaint( Sender : TObject)');
+    RegisterMethod('Procedure QuickSortBoxPaint( Sender : TObject)');
+    RegisterMethod('Procedure FormCreate( Sender : TObject)');
+    RegisterMethod('Procedure FormDestroy( Sender : TObject)');
+    RegisterMethod('Procedure FormKeyPress( Sender : TObject; var Key : Char)');
+    RegisterMethod('Procedure BitBtn1slowmotionClick( Sender : TObject)');
+    RegisterMethod('Procedure ThreadDone( Sender : TObject)');
+    RegisterProperty('mouse', 'boolean', iptrw);
+  end;
+end;
+
+
+
+//----------------------------------------------
+ DiskSize returns -1 if the drive number is invalid. Drive parameter can be 
+ set to: 0 = Current drive, 1 = A, 2 = B, 3 = C and so on. 
+
+
+DRIVE_UNKNOWN
+0 The drive type cannot be determined.
+ 
+DRIVE_NO_ROOT_DIR
+1 The root path is invalid; for example, there is no volume mounted at the specified path.
+ 
+DRIVE_REMOVABLE
+2 The drive has removable media; for example, a floppy drive, thumb drive, or flash card reader.
+ 
+DRIVE_FIXED
+3 The drive has fixed media; for example, a hard drive or flash drive.
+ 
+DRIVE_REMOTE
+4 The drive is a remote (network) drive.
+ 
+DRIVE_CDROM
+5 The drive is a CD-ROM drive.
+ 
+DRIVE_RAMDISK
+6 The drive is a RAM disk.
+
+***********************************Thread Class *****************************
+  TThread = class
+  private
+{$IFDEF MSWINDOWS}
+    FHandle: THandle;
+    FThreadID: THandle;
+{$ENDIF}
+{$IFDEF LINUX}
+    // ** FThreadID is not THandle in Linux **
+    FThreadID: Cardinal;
+    FCreateSuspendedSem: TSemaphore;
+    FInitialSuspendDone: Boolean;
+{$ENDIF}
+    FCreateSuspended: Boolean;
+    FTerminated: Boolean;
+    FSuspended: Boolean;
+    FFreeOnTerminate: Boolean;
+    FFinished: Boolean;
+    FReturnValue: Integer;
+    FOnTerminate: TNotifyEvent;
+    FSynchronize: TSynchronizeRecord;
+    FFatalException: TObject;
+    procedure CallOnTerminate;
+    class procedure Synchronize(ASyncRec: PSynchronizeRecord; QueueEvent: Boolean = False); overload;
+{$IFDEF MSWINDOWS}
+    function GetPriority: TThreadPriority;
+    procedure SetPriority(Value: TThreadPriority);
+{$ENDIF}
+{$IFDEF LINUX}
+    // ** Priority is an Integer value in Linux
+    function GetPriority: Integer;
+    procedure SetPriority(Value: Integer);
+    function GetPolicy: Integer;
+    procedure SetPolicy(Value: Integer);
+{$ENDIF}
+    procedure SetSuspended(Value: Boolean);
+  protected
+    procedure CheckThreadError(ErrCode: Integer); overload;
+    procedure CheckThreadError(Success: Boolean); overload;
+    procedure DoTerminate; virtual;
+    procedure Execute; virtual; abstract;
+    procedure Queue(AMethod: TThreadMethod); overload;
+    procedure Synchronize(AMethod: TThreadMethod); overload;
+    property ReturnValue: Integer read FReturnValue write FReturnValue;
+    property Terminated: Boolean read FTerminated;
+  public
+    constructor Create(CreateSuspended: Boolean);
+    destructor Destroy; override;
+    procedure AfterConstruction; override;
+    procedure Resume;
+    procedure Suspend;
+    procedure Terminate;
+    function WaitFor: LongWord;
+    class procedure Queue(AThread: TThread; AMethod: TThreadMethod); overload;
+    class procedure RemoveQueuedEvents(AThread: TThread; AMethod: TThreadMethod);
+    class procedure StaticQueue(AThread: TThread; AMethod: TThreadMethod);
+    class procedure Synchronize(AThread: TThread; AMethod: TThreadMethod); overload;
+    class procedure StaticSynchronize(AThread: TThread; AMethod: TThreadMethod);
+    property FatalException: TObject read FFatalException;
+    property FreeOnTerminate: Boolean read FFreeOnTerminate write FFreeOnTerminate;
+{$IFDEF MSWINDOWS}
+    property Handle: THandle read FHandle;
+    property Priority: TThreadPriority read GetPriority write SetPriority;
+{$ENDIF}
+{$IFDEF LINUX}
+    // ** Priority is an Integer **
+    property Priority: Integer read GetPriority write SetPriority;
+    property Policy: Integer read GetPolicy write SetPolicy;
+{$ENDIF}
+    property Suspended: Boolean read FSuspended write SetSuspended;
+{$IFDEF MSWINDOWS}
+    property ThreadID: THandle read FThreadID;
+{$ENDIF}
+{$IFDEF LINUX}
+    // ** ThreadId is Cardinal **
+    property ThreadID: Cardinal read FThreadID;
+{$ENDIF}
+    property OnTerminate: TNotifyEvent read FOnTerminate write FOnTerminate;
+  end;
+  
+  
+  Trick 6: 1, 2, 4, 5, 7, 8
+Step1: Choose a number from 1 to 6.
+Step2: Multiply the number with 9.
+Step3: Multiply the result with 111.
+Step4: Multiply the result by 1001.
+Step5: Divide the answer by 7.
+Answer: All the above numbers will be present.
+
+ 
+

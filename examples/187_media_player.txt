@@ -1,0 +1,319 @@
+//demo for media player component
+//loads a file, bitmap , mp3, video and so on
+//{$R+}{$D-,L-,O+,Q-,R-,Y-,S-} loc's=222, App_187
+
+program MediaPlayer3;
+
+type TWeekDays = (Monday, Tuesday, Wednesday,
+                 Thursday, Friday, Saturday, Sunday);
+
+var 
+  //ms: TStringGrid;
+  //mg: TDrawGrid;
+  selectedFile: string;
+  //mm: TMenu;
+  handle: THandle;
+  //mynote: TNoteBook;
+  bmp: TBitmap;
+  mpanel: TPanel;
+  mPlayer: TMediaPlayer;
+  
+
+function GetTextFromFile(const AFile: String; var ReturnString: string): boolean;
+var
+  fileStream: TFileStream;
+begin
+  result:= false;
+  if not fileExists(AFile) then exit;
+  FileStream:= TFileStream.Create(AFile, fmOpenRead);
+    writeln(inttostr(filestream.size));
+  try
+    if FileStream.Size > 0 then begin
+      SetLength(ReturnString, FileStream.Size);
+      fileStream.Seek(0, soBeginning);
+      writeln(inttostr(filestream.size));
+      FileStream.Read(ReturnString, FileStream.Size); 
+      result:= true;
+    end;
+  finally
+    FileStream.Free;
+  end; //try
+end;
+
+procedure openFileSystem;
+var s: string;
+begin
+  if GetTextFromFile('c:\rocklist.txt',s) then
+    ShowMessage(s);
+     //Memo2.text:= s;
+     //writeln('this is');   
+     Writeln(inttoStr(SW_Show)) 
+  end;
+
+function LoadBitMap: TBitmap;
+begin
+  Bmp:= TBitmap.Create;
+  try
+    Bmp.LoadFromFile(ExePath+'examples\citymax.bmp');
+    //vFrm.Canvas.Brush.Bitmap:= Bitmap;
+    //vFrm.Canvas.FillRect(Rect(10,10,180,150));
+  finally
+    //vFrm.Canvas.Brush.Bitmap:= NIL;
+    //vFrm.Free;
+    result:= bmp;
+  end;
+end; 
+
+procedure CloseClick(Sender: TObject; var action: TCloseAction);
+begin
+  //Form1.Close;  free 308 kByte
+  if MessageDlg('Wanna Leave?',mtConfirmation,[mbYes, mbNo],0) = mrYes then begin
+     //form1.Free;
+    MPlayer.Close;
+    MPlayer.Free;
+    //bmp.Free;
+    action:= caFree;
+    //ShowMessage('Now you see the hits of mX3');
+    //ExecuteCommand('http://www.softwareschule.ch/maxboxshow.htm','')
+ end else
+    Action:= caNone;
+end;
+
+procedure GetMediaData(self: TObject);
+begin
+ if PromptForFileName(selectedFile,
+                      'Media files (*.mp3)|*.mp3|*.mpg)|*.mpg', //and others
+                      '', 'Select your mX3 media file',
+                      'D:\kleiner2005\download', False) //false: not Save dialog!
+   then begin
+     // Display this full file/path value
+      mPanel.caption:= 'Selected file: '+ExtractFileName(selectedFile);     
+      MPlayer.AutoEnable:= false;
+      //MPlayer.EnabledButtons := [];
+      MPlayer.EnabledButtons:= [btPause, btStop, btPlay];
+      //MPlayer.Refresh;
+      MPlayer.filename:= selectedFile;
+      //ExePath+'examples\airmaxloop3.mp3';
+      //VIDEO... MPlayer.filename:= ExePath+'examples\*.mpeg';
+      MPlayer.Close;
+      MPlayer.Wait:= true;
+      MPlayer.Open;
+      MPlayer.Play;
+   end;
+end;
+
+procedure SetForm;
+var
+  inFrm: TForm;
+  mbutton: TBitBtn;
+begin
+   inFrm:= TForm.Create(self);
+   with inFrm do begin
+      caption:= '********MediaMax3************';  
+      height:= 610;
+      width:= 610;
+      //color:= clred;
+      Position:= poScreenCenter;
+      onClose:= @CloseClick;
+      show;
+   end;
+   mPanel:= TPanel.Create(inFrm);
+   with mPanel do begin
+     caption:= '********maXboxTV********';  
+     parent:= inFrm;  
+     SetBounds(80,80,410,410)
+     color:= clred;
+     show;
+   end; 
+  mButton:= TBitBtn.Create(inFrm)
+  with mButton do begin
+    Parent:= inFrm;
+    setbounds(420,510,150, 45);
+    caption:= 'Open Media';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'OPENFOLDER'); 
+    //event handler
+    onclick:= @GetMediaData;
+  end;
+  MPlayer:= TMediaPlayer.create(self);
+  MPlayer.parent:= inFrm;
+  MPlayer.top:= 20;
+  MPlayer.left:= 10;
+  Mplayer.Display:= mPanel;   //for video
+  MPlayer.AutoEnable:= false;
+  //mplayer.next;
+  MPlayer.EnabledButtons:= [btPause,btStop];
+  
+  // TMPBtnType = (btPlay, btPause, btStop, btNext, btPrev, btStep, btBack, btRecord, btEject);
+  //TButtonSet = set of TMPBtnType;
+   {property EnabledButtons: TButtonSet read FEnabledButtons write SetEnabledButtons
+      default [btPlay, btPause, btStop, btNext, btPrev, btStep, btBack,
+               btRecord, btEject];}
+ // CL.AddTypeS('TMPBtnType','(btPlay,btPause,btStop,btNext,btPrev,btStep,btBack,btRecord, btEject)');
+  //CL.AddTypeS('TButtonSet', 'set of TMPBtnType');
+             
+   
+  //MPlayer.open;
+  //LoadBitMap;
+end;
+
+function DisplayElements(sopt: TSelectDirOpts): string;
+ var
+   element : TSelectDirOpt;
+ begin
+   //for element in sopt do
+   if element in sopt then
+     //result:= result + IntToStr(element) + ' | ';
+ end;
+ 
+
+var cdinfo: TJclCdMediaInfo;
+    mdir: string;
+    a,b: boolean;
+    sopts: TSelectDirOpts;
+    SomeDay: TWeekDays;
+    vmsgbtn: tMsgDlgBtn;
+    
+
+begin
+  //openFileSystem
+  //loadbitmap;
+  SetForm;
+  //writeln(gethostbyname('www.kleiner.ch'))
+   writeln('Instance: '+intToStr(getHinstance))
+   writeln('Procid: '+intToStr(getProcessid))
+   writeln('Processors: '+inttostr(GetNumberOfProcessors)) 
+  {Handle:= FindWindow('TMaxForm1','');
+  if Handle <> 0 then 
+    Showmessage('maXbox is alive')}
+   // type   TJclCdMediaInfo = (miProduct, miIdentity, miUPC);
+    //  CL.AddTypeS('TJclCdMediaInfo', '( miProduct, miIdentity, miUPC )');
+    cdinfo:= miproduct;  
+   { if IsMediaPresentInDrive('F') then begin
+      writeln('CD in drive');
+      writeln(GetCdInfo(miproduct, 'F'));
+    end;}  
+      mdir:= ExePath;
+   // CL.AddTypeS('TSelectDirOpt', '( sdAllowCreate, sdPerformCreate, sdPrompt )');
+   //CL.AddTypeS('TSelectDirOpts', 'set of TSelectDirOpt');
+
+     sopts:= sopts + [sdprompt, sdallowcreate];
+     sopts:= sopts - [sdallowcreate];
+     //sopts:= sopts + [sdallowcreate];
+     
+     if sdAllowcreate in sopts then writeln('included');
+     //writeln(inttoStr(sdprompt));
+     //if SelectDirectory(mdir, [sdprompt, sdallowcreate], 1) then
+       //writeln(' set of select dir true: '+mdir);
+       
+        //ExecuteCommand('cmd','/k dir *.*')
+    writeln(booltostr(false and true,true));
+    a:= false; b:= true;
+    writeln(booleantoString((a and b) = b));
+    //for SomeDay:= Monday to Sunday do
+      //if succ(monday) = Tuesday then
+      //ShowMessage('Tuesday is after monday!');
+      Writeln(StringReplace('this is Max','max', 'box',[rfReplaceAll, rfIgnoreCase]));
+    vmsgbtn:= mbyes;  
+    if MessageDlg('Learning about Sets!', mtInformation, [mbYes, mbOk, mbCancel], 0)
+         = mrOk then writeln('this is in set... ');  
+           //in [mrYes, mrOK] then writeln('this is in set... ');  
+  
+End.
+
+
+///////////////////Code Snippets
+
+
+{function TranslateSLLVerifyToInternal(Mode: Integer): TIdSSLVerifyModeSet;
+begin
+  Result := [];
+  if LogicalAnd(Mode, OPENSSL_SSL_VERIFY_PEER) then Result := Result + [sslvrfPeer];
+  if LogicalAnd(Mode, OPENSSL_SSL_VERIFY_FAIL_IF_NO_PEER_CERT) then Result := Result + [sslvrfFailIfNoPeerCert];
+  if LogicalAnd(Mode, OPENSSL_SSL_VERIFY_CLIENT_ONCE) then Result := Result + [sslvrfClientOnce];
+end;}
+
+function LogicalAnd(A, B: Integer): Boolean;
+begin
+  Result := (A and B) = B;
+end;
+
+
+//---------------------------------------------------------
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  MediaPlayer1.Close;
+  MediaPlayer1.FileName := 'c:\music\test.mp3';
+  MediaPlayer1.Open;
+end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  MediaPlayer1.Close;
+  MediaPlayer1.FileName := 'c:\music\test.mp3';
+  MediaPlayer1.Open; 
+  MediaPlayer1.Play;
+end;
+
+procedure TForm2.btOpenClick(Sender: TObject);
+var
+  OpenMediaDialog : TOpenDialog;
+begin
+  OpenMediaDialog := TOpenDialog.Create(Self);
+  OpenMediaDialog.Filter := 'All Video Files (*.avi)|*.avi';
+  // There are avi files in
+  // C:\Documents and Settings\All Users\Documents\RAD Studio\6.0\Demos\DelphiWin32\VCLWin32\CoolStuff.
+  if OpenMediaDialog.Execute() then begin
+    { Assign a file to the media player. }
+    MediaPlayer1.FileName := OpenMediaDialog.FileName;
+ 
+    { Check if the file exists and is not a directory. }
+    if (FileExists(OpenMediaDialog.FileName)) and
+       (not DirectoryExists(OpenMediaDialog.FileName)) then begin
+      { Open the files. }
+      MediaPlayer1.Wait := true;
+      MediaPlayer1.Open;
+      MediaPlayer1.Play;
+ 
+      { Override automatic button controlling. }
+      MediaPlayer1.EnabledButtons :=
+        [TMPBtnType.btPause, TMPBtnType.btStop, TMPBtnType.btPlay];
+ 
+      { Enable the Stop button. }
+      btStop.Enabled := true;
+      btOpen.Enabled := false;
+    end;
+  end;
+ 
+  OpenMediaDialog.Free;
+end;
+ 
+procedure TForm2.btStopClick(Sender: TObject);
+begin
+  { Stop and close the media. }
+  MediaPlayer1.Stop;
+  MediaPlayer1.Close;
+ 
+  MediaPlayer1.EnabledButtons := [];
+ 
+  { Enable Open button again. }
+  btOpen.Enabled := true;
+end;
+ 
+procedure TForm2.FormCreate(Sender: TObject);
+begin
+  { Disable all buttons. }
+  MediaPlayer1.AutoEnable := false;
+  MediaPlayer1.EnabledButtons := [];
+end;
+ 
+procedure TForm2.MediaPlayer1PostClick(Sender: TObject;
+  Button: TMPBtnType);
+begin
+  if Button = TMPBtnType.btStop then
+     btStop.Click;
+end;
+
+
+------------------------------------------------------
+Programmers never die, they just GOSUB without RETURN 

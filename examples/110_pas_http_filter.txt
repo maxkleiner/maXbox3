@@ -1,0 +1,94 @@
+//************************************************************
+program motion_HTTP_Filter;
+
+// get content in a specific selection in 2 ways!, loc's = 90 , _110
+// shows internet subroutines in new section 101 - 120 http/ftp examples
+// design your own content of different sites!
+
+{type
+  TIdFTPTransferType = (ftASCII, ftBinary);
+const
+  Id_TIdFTP_TransferType = ftBinary; Id_TIdFTP_Passive = False;}
+
+const contentURL = 'http://www.delphi3000.com/articles/article_4697.asp?SK=';
+
+var contentLst: TStringList;
+
+procedure filterRange(tmplst: TStringList; vfrom, vto: string; 
+                                            var vstart, vend: Integer);
+var i: integer;
+begin
+  for i:= 1 to tmplst.count do
+    if pos(vfrom, tmplst[i]) <> 0 then begin
+      vstart:= i;
+      break
+    end;
+  for i:= 1 to tmplst.count do
+    if pos(vto, tmplst[i]) <> 0 then begin
+      vend:= i;
+      break
+    end
+end;
+
+function filterSubStr(tmp, von, bis: string; a: Integer): string;
+var
+  SubStr, bck: string;
+  Pos1, Pos2, i: Integer;
+begin
+  i:= 0;
+  while i < a do begin
+    Pos1  := Pos(von, tmp);
+    Pos2  := Pos(bis, tmp);
+    SubStr:= Copy(tmp, Pos1 + Length(von), Pos2 - Pos1 - Length(von));
+    Delete(tmp, Pos1, Pos2 - Pos1 + Length(bis));
+    if SubStr = '' then {nothing} 
+    else if bck = '' then
+      bck:= SubStr
+    else
+      bck:= bck + #13#10 + SubStr;
+    i:= i + 1;
+  end;
+  result:= bck;
+end;
+
+procedure ShowContent(vconLst: TStringList);
+var
+  i, startidx, endidx: integer;
+begin
+  showmessage(filterSubStr(vconLst.text,': yourApplication.exe','end;',1))
+  //filterRange with index back;
+  filterRange(vconLst,': yourApplication.exe','end;', startidx, endidx);
+  for i:= startidx to endidx do 
+       memo2.lines.add(inttostr(i)+' :'+vconLst[i])
+end;
+
+procedure LetHTTPConnect(vcontentURL: string);
+var idHTTP: TIdHTTP;
+begin
+  idHTTP:= TIdHTTP.Create(self)
+  try
+    //test bed: memo2.lines.text:= idhttp.get2('http://127.0.0.1')
+    contentLst.text:= 
+        idhttp.get2(vcontentURL);
+  finally
+    idHTTP.Free
+    maxform1.color:= clred; 
+  end;    
+end;
+
+//main killerapp  
+begin
+  //initialization
+  contentLst:= TStringList.create;
+  try
+    LetHTTPConnect(contentURL);
+    ShowContent(contentLst);
+  finally  
+    contentLst.Free;
+    memo2.height:= 330;
+  end;  
+end.
+
+//source:
+//http://www.delphi3000.com/articles/article_4697.asp?SK=
+//http://www.swissdelphicenter.com/en/showarticle.php?id=3

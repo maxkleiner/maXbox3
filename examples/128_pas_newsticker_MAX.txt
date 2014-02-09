@@ -1,0 +1,153 @@
+//**************************************************************************
+program FastFTP_HTTP_NewsTicker_MAX;
+// file read & write and FTP PUT / GET function , loc's = 132
+// shows subroutines of assign and strean news line direct to a FTP Upload!
+
+const 
+   //MY_FTP_FILE = 'maxboxnews.htm';
+   HTM_FILE = 'maxboxnewsticker.htm';
+   CONTENT_URL = 'http://www.softwareschule.ch/download/'+HTM_FILE;
+   NEWSLINE = 'Just got the IdHTTP.Request.CacheControl test with success ID:8';
+
+
+var contentLst: TStringList;
+    webSubStr: string;
+
+procedure LetHTTPConnect(vcontentURL: string; vcontList: TStringList);
+var idHTTP: TIdHTTP;
+    idCustom: TIDCustomHTTP;
+begin
+  idHTTP:= TIdHTTP.Create(self)
+  try
+    {IdHTTP.ProxyParams.ProxyServer:='127.0.0.1';
+    IdHTTP.ProxyParams.ProxyPort:=4480;}
+    idHTTP.Request.Pragma:= 'no-cache';
+    IdHTTP.Request.CacheControl:= 'no-cache';
+    vcontList.text:= idHTTP.Get2(vcontentURL);
+  finally
+    idHTTP.Free
+    maxform1.color:= clred; 
+  end;    
+end;
+
+
+function filterSubStr(tmp, von, bis: string; a: Integer): string;
+var
+  SubStr, bck: string;
+  Pos1, Pos2, i: Integer;
+begin
+  i:= 0;
+  while i < a do begin
+    Pos1  := Pos(von, tmp);
+    Pos2  := Pos(bis, tmp);
+    SubStr:= Copy(tmp, Pos1 + Length(von), Pos2 - Pos1 - Length(von));
+    Delete(tmp, Pos1, Pos2 - Pos1 + Length(bis));
+    if SubStr = '' then {nothing} 
+    else if bck = '' then
+      bck:= SubStr
+    else
+      bck:= bck + #13#10 + SubStr;
+    i:= i + 1;
+  end;
+  result:= bck;
+end;
+
+procedure SearchAndReplace(aStrList: TStrings; aSearchStr, aNewStr: string);
+var i, TT1: integer;
+    s1: string;
+begin
+  //old string can't be part of new string!, eg.: max --> climax
+  if pos(aSearchStr, aNewStr) > 0 then begin
+    write('old string cant be part of new string');
+    exit;
+  end;
+  for i:= 0 to aStrList.Count -1 do begin
+    s1:= aStrList[i];
+    repeat
+      TT1:= pos(aSearchStr, s1);
+      if TT1 > 0 then begin
+        Delete(s1, TT1, Length(aSearchStr));
+        Insert(aNewStr, s1, TT1);
+        aStrList[i]:= s1;
+      end;
+    until TT1 = 0;
+  end; 
+end;
+
+
+procedure FTP_UploadStream(mysource, myFile: string);
+var 
+  ftpUpStream: TMemoryStream;
+  myftp: TIdFTP;
+begin
+  //TFileStream.Create(afilename, fmOpenRead or fmShareCompat)
+  ftpUpStream:= TMemoryStream.create;
+  myftp:= TIdFTP.create(self);
+  try
+    with myftp do begin
+      Host:= 'www.softwareschule.ch'
+      Username:= '';
+      Password:= '';
+    end;
+    with ftpUpStream do begin
+      Seek(0,0);
+      Write(mysource, length(mysource))
+      SetLength(mysource, ftpupstream.Size);
+      //saveToFile(ExePath+'docs/'+myFile);
+    end; 
+    //Connect FTP server and Use PASV mode
+    myftp.Connect(true, 1200)
+    myftp.Passive:= true;
+    //Change directory and Upload
+    myftp.ChangeDir('httpdocs/download')
+    myftp.Put1(ftpUpStream, myFile, false);
+    writeln('Upload Size :'+inttoStr(myftp.size(myfile)))
+  finally
+    ftpUpStream.Free;
+    //Disconnect to Quit();
+    myftp.Quit;
+    myftp.Free;
+    //test finally
+    maxForm1.color:= clBlue;
+  end;
+end;
+
+//main: of news ticker
+begin
+   //initialization
+  contentLst:= TStringList.create;
+  try
+    LetHTTPConnect(CONTENT_URL, contentLst);
+    webSubStr:= filterSubStr(contentLst.text,'<NB1>','<NB2>',1)
+    ShowMessage('before: '+websubstr)
+    SearchAndReplace(contentLst, websubstr, NEWSLINE) 
+    //SearchAndReplace(contentLst, '<B>Todo</B>', '<P><B>Todo News</B>') 
+    writeln(contentlst.text)
+    FTP_UploadStream(contentlst.text, HTM_FILE)
+  finally  
+    contentLst.Free;
+    memo2.height:= 300;
+  end;  
+  //myftp.Get2(MY_FTP_FILE, getFileStr, true, false);
+end.
+
+
+{RegisterMethod('Procedure Put1( const ASource : TStream; const ADestFile:
+               string; const AAppend : boolean);');}
+ftp.Host = "www.yourftpserveraddress.ch"
+ftp.Username = "YourFtpUsername"
+ftp.Password = "YourFtpPassword"
+
+http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html
+
+IdHTTP.Request.UserAgent := 'Mozilla/3.0';
+IdHTTP.Request.Pragma := 'no-cache';
+IdHTTP.Request.CacheControl := 'no-cache';
+IdHTTP.ProxyParams.ProxyServer := FProxy;
+IdHTTP.ProxyParams.ProxyPort := FProxyPort;
+IdHTTP.ConnectTimeout := 10000;
+IdHTTP.ReadTimeout := 10000;
+WebContent := IdHTTP.Get('http://' + FHostname + FSite);
+
+
+  

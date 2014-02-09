@@ -1,0 +1,881 @@
+//****************ReportTimeDATATester**************************
+program DataBase_SQLQuery_ScholzSoft_Excel3_Updater;
+
+// this is in conjunction with example _28_pas_dataset.txt - 25.11.2012
+// in V3.2 you find DBX, SQLExpress for Interbase, Firebird, Oracle 
+ //GetShortPathName(PChar(LongName), ShortName, Max_Path);, #locs=620
+ //#head:.txt max: APSN21: 22.12.2013 11:50:44 E:\maxbox\maxbox3\examples\321_SQL_SAS_updater.txt ile.txt 
+ //http://www.thedbcommunity.com/index.php?option=com_content&task=view&id=138&Itemid=46
+
+function GetShortPathName(lname, sname: pchar; mpath: longint):  bool;
+  external 'GetShortPathNameW@kernel32.dll stdcall';
+
+//***********************Configuration Direct*********************************//
+
+Const SCHOLZALIAS =  'SAS'; //'HELLBECK'; //'SAS1';  //'mX3base';
+      TEXTOUTPUT  = true;
+      EXCELOUT = false; 
+      
+      //SQLEXEC = false; 
+      //((SQLEXEC = true; 
+  
+      //SQLQueryExec ='';
+      SQLQuery ='';
+    
+      USEHEADER = false;
+      AFILENAME  = 'datasetdata31.txt';
+      FILEHEADER  = 'Rec'+#9+'Int'+#9+'FirstName'+#9+'LastName'+#9+'Phone'+#9#9+
+                    'Termin'+#9#9+'ProgNr';
+      
+      Fakturiert = 90;
+      Erledigt   = 50;
+      Unerledigt = 10;
+    
+      ABAUFTRAG = '10000';   //SQL Filter
+      ASTATUS = '10';        //Status siehe oben
+     // const
+//  BinXmlSignatureSize = Length('< binary-xml >');
+
+
+//***********************Configuration Direct*********************************//
+      
+
+Const //SQLQuery = 
+        // 'Select Int, FirstName, LastName, Phone from Table1';
+
+    {SQLQuery =
+    'Select AuftragsNr, KundenNr, Suchbegriff, Status, Termin, Menge, VKTotal, ProgNr '+
+    'from Auftrag, AufAtb, Kunde where '+
+    'Auftrag.AuftragsNr = AufAtb.AuftragsNr AND AufAtb.KundenNr = Kunde.KundenNr '+
+    'AND Status = '+ASTATUS+' AND AuftragsNr > '+ABAUFTRAG+' ORDER BY KundenNr, Termin, Menge';}    
+     //SQLQuery = 'select * from Kasse.DB';
+    
+    //SQLQuery = 'select * from AB.DB where Gedruckt=false';
+    
+    //gutschrift --> Rechnungskorrektur
+   
+    //SQLQuery = 'select * from Text1.DB where Bezeichnung= ''Gutschrift''';
+    
+    //SQLQuery = 'select * from ReAus.DB where ReKzNr=''3''';
+   /// UPDATE Text1.DB SET Bezeichnung = 'Rechnungskorrektur' WHERE Bezeichnung='Gutschrift'
+ 
+    //SQLQueryExec = 'UPDATE Text1.DB SET Bezeichnung = ''Rechnungskorrektur'' WHERE Bezeichnung=''Gutschrift''';
+    //SQLQuery = 'select * from Text1.DB where Bezeichnung= ''Rechnungskorrektur''';
+   
+    
+    //SQLQuery = 'select * from ID2013.DB';
+ 
+    //SQLQuery = 'select * from ID.DB';
+    
+    //SQLQuery = 'select * from Passwort_.DB';
+ 
+    //SQLQuery = 'select * from Kunde.DB';
+    
+        //SQLQueryExec = 'INSERT INTO PrParams (AngTextbreite) '+ 
+          //           'VALUES (''5'')';
+          
+         
+      //  SQLQueryExec = 'ALTER TABLE PrParams ADD AngTextbreite Integer';
+      
+      //  SQLQueryExec = 'ALTER TABLE PrParams ADD AbTextbreite Integer';
+      //  SQLQueryExec = 'ALTER TABLE PrParams ADD AufTextbreite Integer';
+        //SQLQueryExec = 'ALTER TABLE PrParams ADD ReTextbreite Integer';
+  
+        
+       //  ALTER TABLE TOSCAK.SHOPSITZUNG ADD (xxx VARCHAR2(15 BYTE));
+   
+
+    
+    //SQLQuery = 'select count(*) from Auftrag.DB';
+    //SQLQuery = 'select * from maschine';
+   
+    //INSERT INTO mytable (id,label) VALUES (%s,"%s");',
+  
+    //SQLQueryExec = 'UPDATE ID2013 SET Stationen = 13';
+    //SQLQuery = 'select * from ID2013';
+
+     //MieteAblauf: 
+    SQLQueryExec = 'UPDATE ID.DB SET MieteAblauf = ''31.12.2014'' WHERE Kunde=''GRAEFEN''';
+    
+    //SQLQueryExec = 'UPDATE Maschine SET Einheit = ''min22'' WHERE Nr=''505''';
+    
+    //SQLQueryExec = 'DELETE FROM maschine WHERE Nr=''651''';
+    
+    //SQLQueryExec = 'INSERT INTO Maschine (Nr,DL,Einheit,EK) '+ 
+      //                'VALUES (''652'',''maxmachine2'',''min'',''120.44'')';
+    
+     
+    //SQLQuery = 'select * from maschine';
+
+    
+    {'Select AuftragsNr, KundenNr, Suchbegriff, Status, Termin, Menge, VKTotal, ProgNr '+
+    'from Auftrag, AufAtb, Kunde where '+
+    'Auftrag.AuftragsNr = AufAtb.AuftragsNr AND AufAtb.KundenNr = Kunde.KundenNr '+
+    'AND Status = '+ASTATUS+' AND AuftragsNr > '+ABAUFTRAG+' ORDER BY KundenNr, Termin, Menge';} 
+
+{const SQLQuery = 'Select AuftragsNr, Termin, ReNr, KundenNr, ProgNr, Text1, Text2 FROM Auftrag, Aufpos where '+
+                  'Auftrag.AuftragsNr = Aufpos.AuftragsNr AND AuftragsNr > 42543 '+
+                  'ORDER BY Termin,AuftragsNr';} 
+///const SQLQuery = 'Select AuftragsNr, ReNr, Text1, Text2 FROM Auftrag, Aufpos where '+
+   //               'Auftrag.AuftragsNr = Aufpos.AuftragsNr AND AuftragsNr > 42543'; 
+//const SQLQuery = 'Select count(*) from Auftrag'; 
+//const SQLQuery = 'Select AuftragsNr, ReNr, Text1, Text2 FROM Auftrag, Aufpos where '+
+  //                'Auftrag.AuftragsNr = Aufpos.AuftragsNr AND AuftragsNr > 212000'; 
+//const SQLQuery = 'select * from customer where company like "%SCUBA%"''';    
+//const SQLQuery = 'Select Fertig, AuftragsNr, LeistungsNr from ZeitBTmp'; 
+//const SQLQuery = 'Select Fertig, BeginnDatum, AuftragsNr, LeistungsNr from ZeitBtmp where AuftragsNr > 200000'; 
+
+(*with SqlSearchAB do begin
+       Close;
+       Sql.Clear;
+       Sql.Add('Select AbNr, ATBNr, Produkt, Menge, Einheit, EP, Vk, Rabatt, Rabattbetrag, VkTotal, Termin from AbATB');
+       Sql.Add(format('where AuftragsNr=%d',[aAuftragsNr]));
+       Open;
+  end;*)
+  
+
+var
+   dbMain: TDatabase;   //@global
+
+
+
+procedure DoQuery2(aDB: TDataBase; afilename: shortstring; fileout: boolean);
+var i,z: integer;
+    dQuery: TQuery;
+    reslist: TStringlist;
+    tmps, fhead: shortstring;
+begin
+   dQuery:= TQuery.create(self); 
+   reslist:= TStringList.create;
+   tmps:= '';
+   with dQuery do begin
+   DatabaseName:= aDB.DataBaseName;
+     try
+        writeln('');
+        writeln('search for DB starts: ');
+        SQL.Clear;
+        SQL.Text:= SQLQuery;
+        Open;
+        Writeln(inttostr(RecordCount)+' Records found: ')
+        if fileout then begin
+        if USEHEADER then
+          reslist.Add(FILEHEADER) else begin
+            for i:= 0 to FieldDefs.Count-1 do
+            fhead:= fhead + fieldDefs[i].name+ ': ';
+            // Field:= Table1.FieldDefs[i].CreateField(Table1,NIL,'',False);
+            reslist.Add(fhead);
+          end;     
+        reslist.Add(S_RepeatChar(120,'-'));
+        for i:= 0 to Recordcount - 1 do begin
+          for z:= 0 to Fieldcount - 1 do begin 
+              if z= 1 then tmps:= tmps +
+                 //format('%.s ',[Fields[z].asString]) else
+                 format('%-52.52s  ',[Fields[z].asString]) else 
+                 tmps:= tmps + Fields[z].asString+#9;
+               end;
+          reslist.Add(inttoStr(i+1)+':'+#9+tmps);
+          tmps:='';
+          Next;
+        end 
+        end else
+        for i:= 0 to Recordcount - 1 do begin   //add tab
+          write(inttoStr(i)+' ')
+          for z:= 0 to Fieldcount - 1 do 
+            Write((Fields[z].asString)+' ');
+            //if z= 3 then Write((Fields[z].asString)+'jkjkjjk ');
+          writeln('');
+          Next;  
+        end;
+        writeln('');
+        reslist.SaveToFile(afilename);
+       //ExecSQL;
+       finally
+         reslist.Free;
+         Close;
+         Free;
+         //CloseDataBase(aDB)
+       end;
+    end   
+end; 
+
+
+procedure BDEDataBaseConnectQuery(aAlias: shortstring;
+                                     afilen: shortstring; atextout: boolean);
+  var aParams, aTblNames: TStringList;
+      aSession: TSession;
+      //dbMain: TDatabase;
+      BDEAlias: string;
+      i: integer;
+begin 
+  //create alias params list 
+  AParams:= TStringList.Create;  
+  aTblNames:= TStringList.Create; 
+  //BDEAlias:= 'DBDEMOS';
+  BDEAlias:= aAlias; 
+  //create a session to get alias parameters  
+  ASession:= TSession.Create(NIL);  
+  ASession.SessionName:= 'Session8'; 
+  //ASession.PrivateDir := 'c:\xxxtmp'; 
+  //ASession.NetFileDir:= getnetpath;
+  //ASession.SaveConfigFile;
+  //dbMain:= TDatabase.Create(NIL);  
+  try  //except
+    ASession.GetAliasParams(BDEAlias, AParams);
+  try  
+    Writeln('***********DB Parameters************')
+    for i:= 0 to aparams.count -1 do 
+      writeln(aParams[i]);
+      //connect to database 
+    with dbMain do begin  
+      Params.Assign(AParams);  
+      dbMain:= ASession.OpenDatabase(BDEAlias);
+      Writeln('Database is: '+dbMain.DataBaseName)
+      KeepConnection:= True;
+      GetTableNames(aTblNames, true)
+      {for i:= 0 to atblNames.count -1 do 
+        Writeln(atblnames[i]);}
+       doQuery2(dbMain, afilen, atextout);    //true to fileout //change switch
+    
+      //doExecQuery2(dbmain);
+    end;
+  finally  
+    DBMain.Free;
+    ASession.Free;  
+    AParams.Free;
+    aTblNames.Free;
+  end;
+  except
+    writeln('BDE connect or execute exception');
+    msgBig('BDE connect or execute exception');
+    raiselastexception;
+    writeln('');
+    //ee.raise;
+  end;  
+end;
+
+//------------------------------------- updater
+
+  var  Query1: TQuery;
+    LabelFortschritt: TLabel;
+    SpeedButton2: TSpeedButton;
+    Memo12: TMemo;
+    //procedure SpeedButton1Click(Sender: TObject);
+    fStep:integer;
+
+
+  procedure Info;
+  begin
+    inc(fStep);
+    LabelFortschritt.Caption:=format('Fortschritt: Schritt %d von 89',[fStep]);
+    Application.ProcessMessages;
+  end;
+  
+  function GetBool(aField:string):string;
+  var s:string;
+      b:Boolean;
+  begin
+     Info;
+     result:='0';
+     s:=format('Select %s from PrParams',[aField]);
+     with query1 do begin
+          Sql.Clear;
+          Sql.Add(s);
+          b:=false;
+          try
+             Open;
+             b:=Fields[0].AsBoolean;
+          except
+          end;
+          if b then result:='1';
+          Close;
+     end;
+  end;
+
+  procedure SetField(aField,aValue:string);
+  var s:string;
+  begin
+     Info;
+     s:=format('Update PrParams Set %s="%s"',[aField,aValue]);
+     with query1 do begin
+          Sql.Clear;
+          Sql.Add(s);
+          try ExecSql; except end;
+     end;
+  end;
+
+  procedure DeleteFields;
+  var s:string;
+  begin
+    Info;
+    s:='Alter Table "PrParams.Db" Drop BstPrintAdresskopf, Drop BstPrintAdresskopf2, Drop BstPrintAdresskopfFax,'+
+    'Drop BstPrintAdresskopfMail, Drop BstPrintLogo, Drop BstPrintLogo2, Drop BstPrintLogoMail';
+    with query1 do begin
+         Sql.Clear;
+         Sql.Add(s);
+         try ExecSql; except end;
+    end;
+    s:='Alter Table "PrParams.Db"'+
+       ' Add BstPrintLayout CHAR(50), Add AngPrintLayout CHAR(50), Add AbPrintLayout CHAR(50),'+
+       ' Add LsPrintLayout CHAR(50), Add RePrintLayout CHAR(50), Add MaPrintLayout CHAR(50)';
+    with query1 do begin
+         Sql.Clear;
+         Sql.Add(s);
+         try ExecSql; except end;
+    end;
+  end;
+
+  procedure UpdateAuftrag;
+  begin
+    with query1 do begin
+         Info;
+         Sql.Clear;
+         Sql.Add('Alter Table "Auftrag.Db" Add Gedruckt Boolean');
+         try ExecSql;
+             Info;
+             Sql.Clear;
+             Sql.Add('Update Auftrag.Db Set Gedruckt=true');
+             ExecSql;
+         except
+         end;
+    end;
+  end;
+
+  procedure UpdateAngebot;
+  begin
+    with query1 do begin
+         Info;
+         Sql.Clear;
+         Sql.Add('Alter Table "Angebot.Db" Add Gedruckt Boolean');
+         try ExecSql;
+             Info;
+             Sql.Clear;
+             Sql.Add('Update Angebot.Db Set Gedruckt=true');
+             ExecSql;
+         except
+         end;
+    end;
+  end;
+  
+  procedure updaterMain;
+  var z:string;
+    fFehler:Boolean;
+
+  begin
+
+  Application.ProcessMessages;
+  fFehler:=true;
+  fStep:=0;
+
+  LabelFortschritt.Visible:=true;
+  try
+  Screen.Cursor:=crHourGlass;
+  z:='000';
+  z:=z+GetBool('BstPrintAdresskopf');
+  z:=z+GetBool('BstPrintAdresskopf2');
+  z:=z+GetBool('BstPrintAdresskopfFax');
+  z:=z+'0';
+  z:=z+GetBool('BstPrintAdresskopfMail');
+  z:=z+'0';
+  z:=z+GetBool('BstPrintLogo');
+  z:=z+GetBool('BstPrintLogo2');
+  z:=z+GetBool('BstPrintLogoFax');
+  z:=z+'0';
+  z:=z+GetBool('BstPrintLogoMail');
+  z:=z+'0';
+  z:=z+GetBool('BstPrintAbsenderzeile');
+  z:=z+GetBool('BstPrintAbsenderzeile2');
+  z:=z+GetBool('BstPrintAbsenderzeileFax');
+  z:=z+'0';
+  z:=z+GetBool('BstPrintAbsenderzeileMail');
+  z:=z+'0';
+  z:=z+GetBool('BstPrintAdresseFolgeseite');
+  z:=z+GetBool('BstPrintFaxNr');
+  z:=z+GetBool('BstPrintNrLinks');
+
+  DeleteFields;
+  SetField('BstPrintLayout',z);
+
+  z:='000';
+  z:=z+GetBool('AngPrintAdresskopf');
+  z:=z+GetBool('AngPrintAdresskopf2');
+  z:=z+GetBool('AngPrintAdresskopfFax');
+  z:=z+'0';
+  z:=z+GetBool('AngPrintAdresskopfMail');
+  z:=z+'0';
+  z:=z+GetBool('AngPrintLogo');
+  z:=z+GetBool('AngPrintLogo2');
+  z:=z+GetBool('AngPrintLogoFax');
+  z:=z+'0';
+  z:=z+GetBool('AngPrintLogoMail');
+  z:=z+'0';
+  z:=z+GetBool('AngPrintAbsenderzeile');
+  z:=z+GetBool('AngPrintAbsenderzeile2');
+  z:=z+GetBool('AngPrintAbsenderzeileFax');
+  z:=z+'0';
+  z:=z+GetBool('AngPrintAbsenderzeileMail');
+  z:=z+'0';
+  z:=z+GetBool('AngPrintAdresseFolgeseite');
+  z:=z+GetBool('AngPrintFaxNr');
+  z:=z+GetBool('AngPrintNrLinks');
+  SetField('AngPrintLayout',z);
+
+  z:='000';
+  z:=z+GetBool('ABPrintAdresskopf');
+  z:=z+GetBool('ABPrintAdresskopf2');
+  z:=z+GetBool('ABPrintAdresskopfFax');
+  z:=z+'0';
+  z:=z+GetBool('ABPrintAdresskopfMail');
+  z:=z+'0';
+  z:=z+GetBool('ABPrintLogo');
+  z:=z+GetBool('ABPrintLogo2');
+  z:=z+GetBool('ABPrintLogoFax');
+  z:=z+'0';
+  z:=z+GetBool('ABPrintLogoMail');
+  z:=z+'0';
+  z:=z+GetBool('ABPrintAbsenderzeile');
+  z:=z+GetBool('ABPrintAbsenderzeile2');
+  z:=z+GetBool('ABPrintAbsenderzeileFax');
+  z:=z+'0';
+  z:=z+GetBool('ABPrintAbsenderzeileMail');
+  z:=z+'0';
+  z:=z+GetBool('ABPrintAdresseFolgeseite');
+  z:=z+GetBool('ABPrintFaxNr');
+  z:=z+GetBool('ABPrintNrLinks');
+  SetField('AbPrintLayout',z);
+
+  z:='000';
+  z:=z+GetBool('RePrintAdresskopf');
+  z:=z+GetBool('RePrintAdresskopf2');
+  z:=z+'0';
+  z:=z+'0';
+  z:=z+GetBool('RePrintAdresskopfMail');
+  z:=z+'0';
+  z:=z+GetBool('RePrintLogo');
+  z:=z+GetBool('RePrintLogo2');
+  z:=z+'0';
+  z:=z+'0';
+  z:=z+GetBool('RePrintLogoMail');
+  z:=z+'0';
+  z:=z+GetBool('RePrintAbsenderzeile');
+  z:=z+GetBool('RePrintAbsenderzeile2');
+  z:=z+'0';
+  z:=z+'0';
+  z:=z+GetBool('RePrintAbsenderzeileMail');
+  z:=z+'0';
+  z:=z+GetBool('RePrintAdresseFolgeseite');
+  z:=z+'0';
+  z:=z+GetBool('RePrintNrLinks');
+  SetField('RePrintLayout',z);
+
+  z:='000';
+  z:=z+GetBool('LsPrintAdresskopf');
+  z:=z+GetBool('LsPrintAdresskopf2');
+  z:=z+'0';
+  z:=z+'0';
+  z:=z+'0';
+  z:=z+'0';
+  z:=z+GetBool('LsPrintLogo');
+  z:=z+GetBool('LsPrintLogo2');
+  z:=z+'0';
+  z:=z+'0';
+  z:=z+'0';
+  z:=z+'0';
+  z:=z+GetBool('LsPrintAbsenderzeile');
+  z:=z+GetBool('LsPrintAbsenderzeile2');
+  z:=z+'0';
+  z:=z+'0';
+  z:=z+'0';
+  z:=z+'0';
+  z:=z+GetBool('LsPrintAdresseFolgeseite');
+  z:=z+'0';
+  z:=z+GetBool('LsPrintNrLinks');
+  SetField('LsPrintLayout',z);
+
+  z:='000';
+  z:=z+GetBool('MaPrintAdresskopf');
+  z:=z+GetBool('MaPrintAdresskopf2');
+  z:=z+GetBool('MaPrintAdresskopfFax');
+  z:=z+'0';
+  z:=z+GetBool('MaPrintAdresskopfMail');
+  z:=z+'0';
+  z:=z+GetBool('MaPrintLogo');
+  z:=z+GetBool('MaPrintLogo2');
+  z:=z+GetBool('MaPrintLogoFax');
+  z:=z+'0';
+  z:=z+GetBool('MaPrintLogoMail');
+  z:=z+'0';
+  z:=z+GetBool('MaPrintAbsenderzeile');
+  z:=z+GetBool('MaPrintAbsenderzeile2');
+  z:=z+GetBool('MaPrintAbsenderzeileFax');
+  z:=z+'0';
+  z:=z+GetBool('MaPrintAbsenderzeileMail');
+  z:=z+'0';
+  z:=z+GetBool('MaPrintAdresseFolgeseite');
+  z:=z+GetBool('MaPrintFaxNr');
+  z:=z+'0';
+  SetField('MaPrintLayout',z);
+
+  UpdateAuftrag;
+  UpdateAngebot;
+
+  fFehler:=false;
+  finally
+     Application.ProcessMessages;
+     Screen.Cursor:=crDefault;
+     if fFehler
+     then MessageDlg('Das Zusatz-Update konnte nicht vollständig durchgeführt werden!'#13#13'Wenden Sie sich bitte an die Hotline.',mtError,[mbOk],0)
+     else MessageDlg('Zusatz-Update erfolgreich ausgeführt!',mtInformation,[mbOk],0);
+     //Close;
+  end;
+end;
+
+  
+
+function BinToInt(Value: string): Integer;
+var
+  i, iValueSize: Integer;
+begin
+  Result:= 0;
+  iValueSize := Length(Value);
+  for i:= iValueSize downto 1 do
+    if Value[i] = '1' then Result := Result + (1 shl (iValueSize - i));
+end; 
+
+   
+   
+
+
+var 
+   mylst: TStringlist;
+   i: integer;
+   myregxs: RegExprString;
+       
+begin
+  //maxform1.ShellStyle1click(self)
+  //  maxform1.Console1Click(self)
+  //maxform1.Decompile1Click(self)
+ try
+  dbMain:= TDatabase.Create(self);  
+  BDEDataBaseConnectQuery(SCHOLZALIAS, ExePath+AFILENAME, textoutput); //alias to db, text out
+  //DBMain.Free;
+  //CloseDataBase(aDB)
+ except
+   writeln('BDE Error')
+   msgBig('BDE Error in query');
+ end;  
+ 
+  //dbMain.Close;
+  
+  if TEXTOUTPUT then
+  SearchandOpenFile(ExePath+AFILENAME);
+  mylst:= TStringlist.create;
+  with TSession.Create(NIL) do try
+    SessionName:= 'Mars3'
+    getAliasNames(mylst);
+    Writeln('BDE / DB Alias List:  ******************************');
+    for i:= 1 to mylst.count-1 do
+      write(mylst[i]+' ');
+    finally
+      Free;
+      mylst.Free; 
+    end;      
+  Writeln(' ');
+  Writeln('BDE/DB Parameters: ******************************');
+  Writeln('BDE Directory '+GetBdeDirectory);
+  writeln('DB Alias Path '+GetAliasPath(SCHOLZALIAS));
+  writeln('Temp File Path'+getTempDir)
+  Writeln('*************************************************');
+  //getSystemInformation;
+  //GetAliasDriverName('SAS')
+  
+    //ExecuteShell('cmd','/c  systeminfo > systeminfo_scholz.txt')
+    //SearchAndOpenFile('systeminfo_scholz.txt')
+
+  writeln(timeToStr(time))
+  
+//  function ExecRegExpr (const ARegExpr, AInputStr : RegExprString) : boolean;
+// true if string AInputString match regular expression ARegExpr
+// ! will raise exeption if syntax errors in ARegExpr
+   Writeln(ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+                          'BLOCK( test1)', 'def "$1" value "$2"', True))
+                          
+     for i:= 1 to 10 do 
+      PrintFW(' nr %d*%d = %d', [i,i, i*i]);
+      
+  //GetEnvironmentInfo; 
+   //writeln(GetEnvironmentString);   
+   //SaveString(ExePath+'\Examples\envinfo.txt',GetEnvironmentString);   
+   //OpenFile(ExePath+'\Examples\envinfo.txt');
+    //SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, @Result, 0);
+    //if copydirTree(exepath+'\exercices', exepath+'examples\copydir',[cffCreateDestDirectory]) then msgbig('got the dir');
+   
+    //TAsBarcode
+      //CheckSumModulo10
+      //dnativeint
+      //PlayWaveResource
+      //createmessagedialog
+      
+      OpenFile('D:\AVERP\SAS2\mars.exe');
+    
+End.
+
+//WW  EER
+//ï»¿{ <- Illegal Characters? Simply remove! It is the UTF-8 Byte Order Mark.
+     Open with UTF-8 enabled Editor if you want to read the Cyrillic Text}
+
+//ï»¿{}
+
+function ReplaceRegExpr (const ARegExpr, AInputStr, AReplaceStr : RegExprString;
+      AUseSubstitution : boolean{$IFDEF D4_}= False{$ENDIF}) : RegExprString; //###0.947
+// Returns AInputStr with r.e. occurencies replaced by AReplaceStr
+// If AUseSubstitution is true, then AReplaceStr will be used
+// as template for Substitution methods.
+// For example:
+//  ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+//   'BLOCK( test1)', 'def "$1" value "$2"', True)
+//  will return:  def 'BLOCK' value 'test1'
+//  ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+//   'BLOCK( test1)', 'def "$1" value "$2"')
+//   will return:  def "$1" value "$2"
+
+beleg.rtm ist hauptvorlage
+
+Exception: An error occurred while attempting to initialize the Borland Database Engine (error $2A04) at 0.569
+
+$2A04 (10756) = Operation not applicable.
+DBIO will not start: BDE Error $2A04
+
+
+Full error:
+  CRITICAL (Work) An error occurred while attempting 
+  to initialize the Borland Database Engine (error $2A04)
+
+Issue:
+This error indicates a core problem with BDE configuration.
+
+
+Resolution:
+
+1) Close ALL application software, stop all OmniRush modules including
+   Launcher
+2) Open the BDE Administrator
+3) Go to the Configuration | System | INIT area
+4) Check the Default Driver setting. The recommended setting
+   (for ALL systems) is DBASE
+5) Go to the Configuration | Drivers | Native | Paradox area
+6) Check the NET DIR setting. This should be set to a LOCAL
+   drive and a simple directory that exists. For example, check
+   if you have a C:\TEMP\ directory. If not, create one and grant
+   all users full access to it.
+   Then set NET DIR to c:\temp\
+7) We advise that the PC now be rebooted.
+8) Check for proper operation.
+
+
+
+Re:Getting ERROR: "to initialize the Borland Database Engine (error $210D)"
+The errors are "shared memory conflict" and "insufficient memory to
+complete this operation" respectively.
+I assume that "several Delphi 7's running" means several programs
+created with Delphi7 not several instances of the Delphi 7 IDE. You
+need to change the SharedMemLocation and SharedMemSize in the BDE
+Administrator. Try 0x5BDE and 4096. If that does not work try some of
+the other locations suggested in the on-line help.
+--
+
+  
+  
+
+procedure TFormMain.FormKeyPress(Sender: TObject; var Key: Char);
+var i,n:integer;
+begin
+  if key=#13
+  then begin c2:=c1; c1:=''; end // Barcode ist vollständig eingegeben
+  else begin c1:=concat(c1,key); c2:=''; end; // Barcode wird eingelesen
+  key:=#0;
+
+  if c2<>'' then begin
+     LabelInfo.Caption:='';
+
+     // eventuelle vorherige Tatstauranschläge löschen
+     i:=pos('KOMMT',c2); if (i>1) then c2:=copy(c2,i,5);
+     i:=pos('GEHT',c2);  if (i>1) then c2:=copy(c2,i,4);
+     i:=pos('F01',c2);  if (i>1) then c2:=copy(c2,i,3);
+     i:=pos('F12',c2);  if (i>1) then c2:=copy(c2,i,3);
+     i:=pos('PERS',c2);  if (i>1) then c2:=copy(c2,i,12); // Personalkarte hat nur 12 Stellen
+//     if length(c2)>13 then c2:=copy(c2,length(c2)-13+1,13);
+     if length(c2)>14 then c2:=copy(c2,length(c2)-14+1,14);
+
+     n:=length(c2);
+     if      c2='KOMMT' then CodeTyp:=cKommt
+     else if c2='GEHT' then CodeTyp:=cGeht
+     else if c2='F01' then CodeTyp:=cF1
+     else if c2='F12' then CodeTyp:=cF12
+     else if pos('PERS',c2)=1 then CodeTyp:=cPersonalNr
+//     else if pos('  OK',c2)=10 then CodeTyp:=cAtbOk
+     else if pos('  OK',c2)=n-3 then CodeTyp:=cAtbOk
+//     else if length(c2)=13 then CodeTyp:=cAuftrag
+     else if (n=13) or (n=14) then CodeTyp:=cAuftrag
+     else SetError(zErrorReadScan);
+     CheckCode;
+  end;
+end;
+
+F12
+F01
+201206301L999
+201206301L010
+201206 301M804
+201206301M801
+201206301M802
+201206301M803
+
+SMS Error - Directory is controlled by other .NET file.
+Error Message
+Directory is controlled by other .NET file.
+Directory: \\ComputerName\CYRIOUS$\SMS\
+File: \\Computername\CYRIOUS$\SMS\DATA\PDOXUSRS.LCK
+
+Explanation of Error
+The BDE (Borland Database Engine) utilizes the PDOXUSRS.NET, PARADOX.LCK, and PDOXUSRS.LCK files to lock the database tables for reading and writing. In order to maintain file integrity, the path in which the database tables are accessed must be 
+
+This error can also keep you from accessing certain SMS Utilities such as DBRebuild, DBBrowser, GenImp, IDRepair, ProdExp, and ProdImp.
+
+Severity
+High. Normally new users can't login to SMS until this resolved.
+
+Possible Root Cause(s)
+
+    Power fluctuation. If the BDE is not properly shut down, it may not clear these locks.
+    Network connection loss. If the remote client is not properly shut down, it may not clear these locks or may only clear one of them.
+    BDE Configuration. The BDE LOCALSHARE setting must be set to TRUE or it will not attempt to maintain lock integrity.
+    
+    
+procedure AlterTable(NewLocaleID: Integer=LOCALE_ANSI_STD;
+       NewUserMajorVersion: Word=1; NewUserMinorVersion: Word=0;
+       NewEncrypted: Boolean=False; const NewPassword: String='';
+       const NewDescription: String='';
+       NewIndexPageSize: Integer=DEFAULT_PAGE_SIZE;
+       NewBlobBlockSize: Integer=DEFAULT_BLOCK_SIZE;
+       NewLastAutoIncValue: Integer=-1;
+       const NewTextIndexFields: String='';
+       NewTextIndexStopWords: TStrings=nil;
+       const NewTextIndexSpaceChars: String='';
+       const NewTextIndexIncludeChars: String='';
+       SuppressBackups: Boolean=False)
+
+
+Usage
+
+Call the AlterTable method to alter the structure of a table using the field definitions and index definitions specified in the FieldDefs and IndexDefs properties, respectively.
+
+The NewLocaleID parameter specifies the new locale ID for the table. If this parameter is 0, then the table will use the default locale of "ANSI Standard".
+
+The NewUserMajorVersion and NewUserMinorVersion parameters specify the new user-defined major and minor version numbers for the table.
+
+The NewEncrypted parameter specifies whether the table should be encrypted, and the NewPassword parameter specifies the specifies the password for the encryption.
+The NewDescription parameter specifies the new description for the table.
+
+The NewIndexPageSize and NewBlobBlockSize parameters specify the index page size and BLOB block size for the table, respectively. Please see Appendix C - System Capacities for more information on the proper values for these parameters.
+
+The NewLastAutoIncValue parameter specifies the new last autoinc value for the table.
+
+The NewTextIndexFields is a list of field names that should be included in the full text index for the table. These field names should be separated by semicolons and should only be the names of string or memo fields. Leaving this parameter blank 
+
+The NewTextIndexStopWords parameter specifies a list of stop words to be used for the full text index. Stop words are words that will be removed from the index due to the fact that they are too common, such as is the case with the word "the". Thi
+
+The NewTextIndexSpaceChars parameter specifies a set of characters to be used as word separators for the full text index. Space characters are used to determine how words are separated from one another for the purposes of indexing the words in th
+
+The NewTextIndexIncludeChars parameter specifies a set of characters to be used as valid characters in a word for the full text index. Include characters are used to determine how words are formed by specifying which characters are included in th
+
+Information You can retrieve the default full text indexing parameters using the TDBISAMEngine GetDefaultTextIndexParams method. Please see the Full Text Indexing topic for more information.
+
+The SuppressBackups parameter specifies whether the creation of backup files should take place during the alteration of the table structure.
+More Support Options More Support Options
+
+Nr: DL: Einheit: EK: VK: AufschlagProzent: Montageleistung: AbteilungsNr: Arbeitsstelle: Text: 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+1:	010	Fräser 3 Achsen                   min	2.56	2.81	9.77					
+2:	020	Fräser 5 Achsen                   Std	184.07	202.47	10					
+3:	030	Lasern 4-Punkt                    m	7.67	8.44	10.04					
+4:	040	Erodierarbeiten Maschine XY       Std	112.48	129.36	15.01					
+5:	999	Sonst. Maschinenleistungen        min	1.02	1.12	9.8					
+
+
+
+unit Unit1;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, Grids, DBGrids, DB, DBTables;
+
+type
+  TForm1 = class(TForm)
+    DataSource1: TDataSource;
+    Table1: TTable;
+    DBGrid1: TDBGrid;
+    procedure FormCreate(Sender: TObject);
+    procedure DBGridMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+  TWheelDBGrid = class(TDBGrid)
+  public
+    property OnMouseWheel;
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+//{$R *.dfm}
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  TWheelDBGrid(DBGrid1).OnMouseWheel := DBGridMouseWheel;
+end;
+
+function GetNumScrollLines: Integer;
+begin
+  SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, @Result, 0);
+end;
+
+procedure TForm1.DBGridMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+var
+  Direction: Shortint;
+begin
+  Direction := 1;
+  if WheelDelta = 0 then
+    Exit
+  else if WheelDelta > 0 then
+    Direction := -1;
+
+  with TDBGrid(Sender) do
+  begin
+    if Assigned(DataSource) and Assigned(DataSource.DataSet) then
+      DataSource.DataSet.MoveBy(Direction * GetNumScrollLines);
+    Invalidate;
+  end;
+end;
+
+end.
+
+http://www.thedbcommunity.com/index.php?option=com_content&task=view&id=138&Itemid=46
+We'd issue a Local SQL ALTER TABLE statement as follows:
+
+ALTER TABLE orders
+   DROP orderco,
+   ADD ordercoid INTEGER,
+   ADD orderaddr1 CHAR(40),
+   ADD orderaddr2 CHAR(40),
+   ADD ordercity CHAR(30),
+   ADD orderstate CHAR(2),
+   ADD orderzip CHAR(5)

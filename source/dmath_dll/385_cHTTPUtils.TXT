@@ -1,0 +1,555 @@
+PROGRAM cHTTPUtils_Demo;
+// dont 
+//#sign max: APSN21: 26.09.2013 07:47:26 
+//#path:E:\maxbox\maxbox3\examples\
+//from E:\maxbox\maxbox3\examples\ 372stackibz2_memoryalloc.TXT
+                               
+//uses
+  //System.SysUtils, // FreeAndNil
+  //System.Win.Registry, // TRegistry
+  //Winapi.Windows; // HKEY_LOCAL_MACHINE
+
+const
+  //change to your OS
+  REG_KEY_TEAMVIEWER8 = '\SOFTWARE\Wow6432Node\TeamViewer\Version8';
+  REG_VAL_CLIENTID = 'ClientID';
+  
+//const
+  // HTTP/1.1
+  TestReq1 =
+      'GET / HTTP/1.1'#13#10 +
+      'Host: www.example.com'#13#10 +
+      'Date: Mon 1 Jan 2010 12:23:34 GMT'#13#10 +
+      'Connection: close'#13#10 +
+      'Cookie: id=123'#13#10 +
+      #13#10;
+
+  // HTTP/1.0; Empty field values; Unknown field values; LWS
+  TestReq2 =
+      'GET / HTTP/1.0'#13#10 +
+      'Host: abc'#13#10 +
+      'Date: '#13#10 +
+      'Connection: '#13#10' invalid'#13#10 +
+      'Cookie: invalid'#13#10 +
+      #13#10;
+
+  // Pre-HTTP/1.0 response; Incomplete request
+  TestReq3 =
+      'GET /'#13#10 +
+      'Host: abc'#13#10 +
+      'X:';
+
+  // HTTP/1.1
+  TestResp1 =
+      'HTTP/1.1 200 OK'#13#10 +
+      'Server: Fundamentals'#13#10 +
+      'Date: Monday, 2 Jan 2010 12:23:34 GMT'#13#10 +
+      'Last-Modified: Monday, 2 Jan 2010 12:23:30 GMT'#13#10 +
+      'Content-Type: text/html; charset=iso123'#13#10 +
+      'Content-Length: 1'#13#10 +
+      'Content-Encoding: gzip'#13#10 +
+      'Age: 15'#13#10 +
+      'Connection: Keep-Alive'#13#10 +
+      'Set-Cookie: Domain=www.example.com; id=123'#13#10 +
+      'Set-Cookie: Domain=www.example.com; id=222'#13#10 +
+      #13#10 +
+      '1';
+
+  // HTTP/1.0; LWS; Empty field value; Custom field
+  TestResp2 =
+      'HTTP/1.0 401 Bad'#13#10 +
+      'Server: '#13#10#9'Fundamentals'#13#10 +
+      'Content-Type: text/abc;'#13#10' charset=iso123'#13#10 +
+      'Content-Length: 1'#13#10 +
+      'Connection: '#13#10 +
+      'My-Field: abc'#13#10 +
+      #13#10 +
+      '1';
+
+  // HTTP/1.0; Incomplete response; Incorrect date value
+  TestResp3 =
+      'HTTP/1.0 200 OK'#13#10 +
+      'Content-Length: 1'#13#10 +
+      'Date: 1 Jan 2001'#13#10 +
+      'X:';
+
+
+function getTeamViewerID: string; forward;
+
+//implementation
+
+function getTeamViewerID: string;
+var
+  Reg: TRegistry;
+  TeamViewerID: String;
+begin
+  TeamViewerID:='';
+  Reg:= TRegistry.Create;
+  try
+    Reg.RootKey:=HKEY_LOCAL_MACHINE;
+    if Reg.OpenKey(REG_KEY_TEAMVIEWER8, False) then begin
+      TeamViewerID:=Format('%d',[Reg.ReadInteger(REG_VAL_CLIENTID)]);
+    end;
+    Reg.CloseKey;
+  finally
+    Result:= TeamViewerID;
+    Reg.Free; //FreeAndNil(Reg);
+  end;
+end;
+
+procedure SelfTest_Reader;
+var //T : THTTPContentReader_TestObj;
+    T : THTTPContentReader;
+    R : THTTPContentDecoder;
+    H : THTTPCommonHeaders;
+    //idc: TIdEncoder;
+    
+begin
+  //T := THTTPContentReader_TestObj.Create;
+  //R := THTTPContentDecoder.Create(T.ReaderRead, T.ReaderContentBuf, T.ReaderContentComplete);
+  try
+    //FillChar(H, SizeOf(H), 0);
+    H.TransferEncoding.Value := hteChunked;
+
+    R.InitDecoder(H);
+    //T.SetTestStr(TestChunked1);
+    {repeat
+      R.Process;
+    until T.FComplete; }
+    //Assert(T.FBufPos >= Length(T.FBuf));
+    //Assert(T.FContent = '123451234567890123456');
+    Assert(R.ContentReceived = 21,'');
+
+    R.InitDecoder(H);
+    //T.SetTestStr(TestChunked2);
+   { repeat
+      R.Process;
+    until T.FComplete; }
+   // Assert(T.FBufPos >= Length(T.FBuf));
+   // Assert(T.FContent = '');
+    Assert(R.ContentReceived = 0,'');
+
+    R.InitDecoder(H);
+    //T.SetTestStr(TestChunked3);
+    {repeat
+      R.Process;
+    until T.FComplete; }
+    //Assert(T.FBufPos >= Length(T.FBuf));
+    //Assert(T.FContent = TestStr512 + TestStr512 + 'X');
+    Assert(R.ContentReceived = 1025,'');  
+  finally
+    R.Free;
+    //T.Free;
+  end;
+end;
+
+procedure SelfTest_Parser2;
+var P : cTHTTPParser;
+    S : AnsiString;
+    R : THTTPRequest;
+    T : cTHTTPResponse;
+    stringbuilder: TAnsiStringBuilder;
+    fixhead: THTTPFixedHeaders;
+    myenums: THTTPHeaderNameEnums;
+
+begin
+  InitHTTPRequest(R);
+  
+  InitHTTPResponse(T);
+
+  //T:= cTHTTPResponse.init;
+
+  P:= cTHTTPParser.Create;
+  try
+    myenums:= [hntHost];
+    fixhead[1]:=  [hnthost]; //THTTPHeaderNameEnums; //[hntHost];
+    //fixhead[1][]=  'abc'; //[hnthost]; //THTTPHeaderNameEnums; //[hntHost];
+  
+    S := TestReq1;
+    //SetLength(R.Header.CustomHeaders,10);
+    P.SetTextBuf(S[1], Length(S));
+    P.ParseRequest(R);
+    P.SetTextStr('test httputils');
+    //P.ParseResponse(T);
+     //Assert(T.Header.CommonHeaders.Date.TimeZoneGMT,'');
+   
+     //Assert2(R.HeaderComplete,'');
+    //Assert(R.StartLine.Method.Value = [hmGET],'');
+    //Assert(R.StartLine.URI = '/','');
+    //Assert(R.StartLine.Version.Version = hvHTTP11,'');
+    //Assert(R.Header.FixedHeaders[hntHost] = 'www.example.com');
+    //Assert(R.Header.FixedHeaders[hnthost] = 'www.example.com','');
+ 
+    //Assert(R.Header.FixedHeaders[1] = ['www.example.com'],'');
+
+    (*Assert(R.Header.CommonHeaders.Date.Value = hdParts,'');
+    Assert(R.Header.CommonHeaders.Date.DayOfWeek = 2,'');
+    Assert(Abs(R.Header.CommonHeaders.Date.DateTime - (EncodeDate(2010, 1, 1) + EncodeTime(12, 23, 34, 0))) < 1e-06,''); *)
+    //Assert(R.Header.CommonHeaders.Date.TimeZoneGMT,'');
+    //Assert(R.Header.CommonHeaders.Connection.Value = hcfClose,'');
+    //Assert(R.Header.Cookie.Custom = 'id=123',''); 
+    Assert(not R.HasContent,'');
+    Assert2(not HTTPMessageHasContent(T.Header.CommonHeaders),'this is cool');
+
+    ClearHTTPRequest(R);
+    Assert(not R.HeaderComplete,'');
+    //Assert(R.StartLine.Method.Value = hmNone,'');
+    (*Assert(R.StartLine.URI = '','');
+    Assert(R.Header.CommonHeaders.Connection.Value = hcfNone,'');
+    Assert(R.Header.CommonHeaders.ContentType.Value = hctNone,''); *)
+    
+    //Assert(R.Header.FixedHeaders[hntHost]= ''); 
+    //Assert(R.Header.FixedHeaders[4]= [hntHost],''); 
+    Assert(R.Header.FixedHeaders[4]= [],''); 
+    //R.Header.FixedHeaders[5][7]= ['abc'];
+    //Assert(R.Header.FixedHeaders[4],[]= ['abc'],''); 
+
+    P.SetTextStr(TestReq2);
+    //P.ParseRequest(R);
+    (*Assert(R.HeaderComplete,'');
+    //Assert(R.StartLine.Method.Value = THTTPMethodEnum(hmGET));
+    Assert(R.StartLine.URI = '/','');
+    Assert(R.StartLine.Version.Version = hvHTTP10,'');
+    //Assert(R.Header.FixedHeaders[hntHost] = 'abc');
+    Assert(R.Header.CommonHeaders.Date.Custom = '','');
+    Assert(R.Header.CommonHeaders.Connection.Value = hcfCustom,'');
+    Assert(R.Header.CommonHeaders.Connection.Custom = 'invalid','');
+    Assert(R.Header.Cookie.Value = hcoCustom,'');
+    Assert(R.Header.Cookie.Custom = 'invalid','');
+
+    P.SetTextStr(TestReq3);
+    P.ParseRequest(R);
+    Assert(not R.HeaderComplete,'');
+    //Assert(R.StartLine.Method.Value = hmGET,'');
+    Assert(R.StartLine.URI = '/','');
+    Assert(R.StartLine.Version.Version = hvCustom,'');
+    Assert(R.StartLine.Version.Protocol = hpCustom,'');
+    Assert(R.StartLine.Version.CustomProtocol = '','');*)
+    
+    //Assert(R.Header.FixedHeaders[hntHost] = 'abc');
+
+    S := TestResp1;
+    P.SetTextBuf(S, Length(S));
+    //P.ParseResponse(T);
+    //Assert(T.HeaderComplete,'');
+    (*Assert(T.StartLine.Version.Version = hvHTTP11,'');
+    Assert(T.StartLine.Code = 200,'');
+    Assert(T.StartLine.Msg = hslmOK,'');
+    //Assert(T.Header.FixedHeaders[hntServer] = 'Fundamentals');
+    Assert(T.Header.CommonHeaders.ContentType.Value = hctTextHtml,'');
+    Assert(Length(T.Header.CommonHeaders.ContentType.Parameters) = 1,'');
+    Assert(T.Header.CommonHeaders.Date.DayOfWeek = 2,'');
+    Assert(Abs(T.Header.CommonHeaders.Date.DateTime - (EncodeDate(2010, 1, 2) + EncodeTime(12, 23, 34, 0))) < 1e-06,'');
+    Assert(T.Header.CommonHeaders.Date.TimeZoneGMT,'');
+    Assert(T.Header.LastModified.Value = hdParts,'');
+    Assert(Abs(T.Header.LastModified.DateTime - (EncodeDate(2010, 1, 2) + EncodeTime(12, 23, 30, 0))) < 1e-06,'');
+    Assert(T.Header.CommonHeaders.ContentType.Parameters[0] = 'charset=iso123','');
+    Assert(T.Header.CommonHeaders.ContentLength.Value = hcltByteCount,'');
+    Assert(T.Header.CommonHeaders.ContentLength.ByteCount = 1,'');
+    Assert(T.Header.CommonHeaders.Connection.Value = hcfKeepAlive,'');
+    Assert(Length(T.Header.Cookies) = 2,'');
+    Assert(T.Header.Cookies[0].Domain = 'www.example.com','');
+    Assert(Length(T.Header.Cookies[0].CustomFields) = 1,'');
+    Assert(T.Header.Cookies[0].CustomFields[0].Name = 'id','');
+    Assert(T.Header.Cookies[0].CustomFields[0].Value = '123','');
+    Assert(T.Header.CommonHeaders.ContentEncoding.Value = hcefList,'');
+    Assert(Length(T.Header.CommonHeaders.ContentEncoding.List) = 1,'');
+    Assert(T.Header.CommonHeaders.ContentEncoding.List[0].Value = hceGzip,'');
+    Assert(T.Header.Age.Value = hafAge,'');
+    Assert(T.Header.Age.Age = 15,'');
+    Assert(T.HasContent,''); *)
+    //Assert(HTTPMessageHasContent(T.Header.CommonHeaders),'');
+
+    ClearHTTPResponse(T);
+    Assert(not T.HeaderComplete,'');
+   (* Assert(T.StartLine.Version.Version = hvNone,'');
+    Assert(T.StartLine.Msg = hslmNone,'');
+    //Assert(T.Header.FixedHeaders[hntServer] = '');
+    Assert(T.Header.CommonHeaders.Connection.Value = hcfNone,'');
+    Assert(T.Header.CommonHeaders.ContentType.Value = hctNone,'');*)
+
+    P.SetTextStr(TestResp2);
+    //P.ParseResponse(T);
+    (*Assert(T.HeaderComplete,'');
+    Assert(T.StartLine.Version.Version = hvHTTP10,'');
+    Assert(T.StartLine.Code = 401,'');
+    Assert(T.StartLine.CustomMsg = 'Bad','');
+    //Assert(T.Header.FixedHeaders[hntServer] = 'Fundamentals');
+    Assert(T.Header.CommonHeaders.ContentType.Value = hctTextCustom,'');
+    Assert(T.Header.CommonHeaders.ContentType.CustomMinor = 'abc','');
+    Assert(Length(T.Header.CommonHeaders.ContentType.Parameters) = 1,'');
+    Assert(T.Header.CommonHeaders.ContentType.Parameters[0] = 'charset=iso123','');
+    //Assert(T.Header.CommonHeaders.ContentLength.Value = hcltByteCount);
+    Assert(T.Header.CommonHeaders.ContentLength.ByteCount = 1,'');
+    Assert(T.Header.CommonHeaders.Connection.Value = hcfCustom,'');
+    Assert(T.Header.CommonHeaders.Connection.Custom = '','');
+    Assert(T.Header.CommonHeaders.Date.Value = hdNone,'');
+    Assert(Length(T.Header.CustomHeaders) = 1,'');
+    Assert(T.Header.CustomHeaders[0].FieldName = 'My-Field','');
+    Assert(T.Header.CustomHeaders[0].FieldValue = 'abc','');
+    Assert(T.HasContent,'');
+    Assert(HTTPMessageHasContent(T.Header.CommonHeaders),'');
+
+    ClearHTTPResponse(T);
+    Assert(Length(T.Header.CustomHeaders) = 0,'');
+
+    P.SetTextStr(TestResp3);
+    P.ParseResponse(T);
+    Assert(not T.HeaderComplete,'');
+    Assert(T.StartLine.Version.Version = hvHTTP10,'');
+    Assert(T.StartLine.Code = 200,'');
+    Assert(T.StartLine.Msg = hslmOK,'');
+    Assert(T.Header.CommonHeaders.ContentLength.Value = hcltByteCount,'');
+    Assert(T.Header.CommonHeaders.ContentLength.ByteCount = 1,'');
+    Assert(T.Header.CommonHeaders.Date.Value = hdCustom,'');
+    Assert(T.Header.CommonHeaders.Date.Custom = '1 Jan 2001','');   *)
+
+    ClearHTTPRequest(R);
+    R.StartLine.Method.Value := hmGET;
+    R.StartLine.URI := '/';
+    R.StartLine.Version.Version := hvHTTP11;
+    R.Header.CommonHeaders.Date.Value := hdDateTime;
+    R.Header.CommonHeaders.Date.DateTime := GMTTimeToLocalTime(EncodeDate(2011, 6, 12) + EncodeTime(16, 15, 56, 0));
+    //R.Header.FixedHeaders[hntHost] := 'abc';
+    R.Header.Cookie.Value := hcoCustom;
+    R.Header.Cookie.Custom := 'id=123'; 
+    (*S:= HTTPRequestToStr(R);
+    Assert(S =
+        'GET / HTTP/1.1'#$D#$A +
+        'Date: Sun, 12 Jun 2011 16:15:56 GMT'#$D#$A +
+        'Host: abc'#$D#$A +
+        'Cookie: id=123'#$D#$A +
+        #$D#$A,''); *)
+
+    ClearHTTPResponse(T);
+    T.StartLine.Version.Version := hvHTTP11;
+    T.StartLine.Code := 200;
+    T.StartLine.Msg := hslmOK;
+    T.Header.CommonHeaders.Date.Value := hdDateTime;
+    T.Header.CommonHeaders.Date.DateTime := GMTTimeToLocalTime(EncodeDate(2011, 6, 12) + EncodeTime(16, 15, 56, 0));
+    
+    //T.Header.FixedHeaders[10{hntServer}]:= []; //'abc';
+    S := HTTPResponseToStr(T);
+    {Assert(S =
+        'HTTP/1.1 200 OK'#$D#$A +
+        'Date: Sun, 12 Jun 2011 16:15:56 GMT'#$D#$A +
+        'Server: abc'#$D#$A +
+        #$D#$A,''); } 
+  finally
+    P.Free;
+  end;
+end;
+
+
+procedure indySockstester;
+var  FTPClient: TidFTP;
+    IdTCPClient1: TIdTCPClient;
+      proxylogin: bool;
+begin
+ //TConstArray', 'array of TVarRec');
+ //CopyVarRec( const Item : TVarRec) : TVarRec');
+ //CreateConstArray( const Elements : array of const) : TConstArray');
+ //FinalizeVarRec( var Item : TVarRec)');
+ //FinalizeConstArray( var Arr : TConstArray)');
+
+FTPClient := TidFTP.create(self);
+    IdTCPClient1:= TIdTCPClient.create(self);
+    //IdTCPClient1.SocksInfo.Host := [the DNS name of the proxy server or its IP address]
+
+//IdTCPClient1.SocksInfo.Protocol := [svNoSocks for no SOCKS support, svSocks4 for SOCKS 4, //svSocks4A for SOCKS 4 with protocol extension, and svSocks5 for SOCKS 5 protocol]
+
+//IdTCPClient1.SocksInfo.Authentication := [saNoAuthentication for no SOCKS authentication or saUsernamePassword for username and password authentication]
+
+  proxylogin:= true;
+
+with ftpclient.Socket.SocksInfo, FTPClient.ProxySettings do begin
+ if ProxyLogin then
+    ftpclient.Socket.SocksInfo.Authentication:=saUsernamePassword
+    else
+ ftpclient.Socket.SocksInfo.Authentication:=saNoAuthentication;
+
+//Host:=ProxyServer;
+//Password:=ProxyPassword;
+//Port:=ProxyPort;
+//UserName:=ProxyUser;
+// ftpclient.Socket.SocksInfo.Version:=TSocksVersion(ProxyType);
+end;
+{I commented out the SocksInfo because it would A/V on me. I tried to do the
+following and still had problems:
+ftpclient.Socket.SocksInfo.create(FTPClient);
+How do you decided whether to use socks or the proxy stuff? If I just set}
+end;
+
+ var  ZipCodeList: TStrings;
+     IdTCPServer1: TIdTCPServer;
+
+procedure TformMain_IdTCPServer1Connect(AThread: TIdPeerThread);
+begin
+  AThread.Connection.WriteLn('Indy Zip Code Server Ready.');
+end;
+
+procedure TformMain_IdTCPServer1Execute(AThread: TIdPeerThread);
+var
+  sCommand: string;
+begin
+  with AThread.Connection do begin
+    //sCommand:= AThread.Connection.ReadLn2;  'ReadLn';
+   //  RegisterMethod('Function ReadLn( ATerminator : string; const ATimeout : Integer; //AMaxLineLength : Integer) : string');
+   
+    sCommand:= Readln('',1000,100);
+    if SameText(sCommand, 'QUIT') then begin
+      Disconnect;
+    end else if SameText(Copy(sCommand, 1, 8), 'ZipCode ') then begin
+      WriteLn(ZipCodeList.Values[Copy(sCommand, 9, MaxInt)]);
+    end;
+  end;
+end;
+
+procedure TformMain_FormCreate(Sender: TObject);
+begin
+  ZipCodeList:= TStringList.Create;
+  ZipCodeList.LoadFromFile(ExtractFilePath(Application.EXEName) + 'ZipCodes.dat');
+  IdTCPServer1:= TIdTCPServer.create(self);
+  IdTCPServer1.defaultPort:= 6000;
+  IdTCPServer1.active:= true;
+  IdTCPServer1.onConnect:= @TformMain_IdTCPServer1Connect;
+  IdTCPServer1.OnExecute:= @TformMain_IdTCPServer1Execute;
+end;
+
+ 
+
+procedure TformMain_FormDestroy(Sender: TObject);
+begin
+  ZipCodeList.Free;
+end;
+
+
+    var Client: TIdTCPClient;
+        //IdAntiFreeze1: TIdAntiFreeze;
+
+
+procedure TformMain_Connect1Click(Sender: TObject);
+var
+  i: integer;
+  s: string;
+  lboxResults: TListBox;
+  memoInput: TMemo;
+begin
+  //butnLookup.Enabled := true;
+  client:= TIdTCPClient.create(self);
+  client.host:= '127.0.0.1';
+  client.port:= 6000;
+   
+   try
+    //lboxResults.Clear;
+    with Client do begin
+      Connect(2000); try
+        //lboxResults.Items.Add(ReadLn());
+        lboxResults.Items.Add(ReadLn('',1000,100));
+
+        for i := 0 to memoInput.Lines.Count - 1 do begin
+          WriteLn('ZipCode ' + memoInput.Lines[i]);
+              lboxResults.Items.Add(memoInput.Lines[i]);
+              //s:= ReadLn;
+            if s = '' then begin
+            s := '-- No entry found for this zip code.';
+          end;
+          lboxResults.Items.Add(s);
+         lboxResults.Items.Add('');
+        end;
+        client.WriteLn('Quit');
+     finally Disconnect; end;
+    end;
+  finally 
+    //butnLookup.Enabled := true;
+   end;
+
+end;
+
+
+begin
+  writeln('TeamViewerID: '+getTeamViewerID);
+  //SelfTestcHTTPUtils;
+  SelfTest_Parser2;
+  SelfTestcTLSUtils;
+  
+  //SelfTestcHTTPUtils;
+  //SelfTestcHTTPUtilsReader;
+  
+  //SelfTestcXMLFunction;
+  //SelfTestcXMLUtils;
+  //Application.Free;
+  //maxForm1.close1click(self);
+  //application.handleexception(NIL);
+
+  //application.terminate;
+  //asciitohex
+
+end.  
+
+
+The last slash might be optional. Right?
+
+How about something like this:
+
+$url =~ m|([^/]+)/?$|;
+my $end_of_url = $1;
+
+The $ on the end anchors the regular expression to the end of the string. The [^/] means anything that's not a slash and the + after means I want one or more things that are not slashes. Notice that this is in a capture group which are marked with parentheses.
+
+I end the regular expression with /? which means that there may or may not be a slash on the very end of the string. I've put my regular expression between m| and |, so I can use forward slashes without having to constantly escape them.
+
+The last part of the URL is now in $1 and I can set my own scalar variable to save this result.
+share|improve this answer
+
+
+http://www.swissdelphicenter.ch/en/showarticle.php?id=4
+
+
+THTTPHeaderNameEnum = (
+    hntCustom,
+    hntHost,
+    hntContentType,
+    hntContentLength,
+    hntContentTransferEncoding,
+    hntContentLocation,
+    hntContentLanguage,
+    hntContentEncoding,
+    hntTransferEncoding,
+    hntDate,
+    hntServer,
+    hntUserAgent,
+    hntLocation,
+    hntConnection,
+    hntExpires,
+    hntCacheControl,
+    hntSetCookie,
+    hntCookie,
+    hntAuthorization,
+    hntVia,
+    hntWarning,
+    hntContentRange,
+    hntXForwardedFor,
+    hntPragma,
+    hntXPoweredBy,
+    hntWWWAuthenticate,
+    hntLastModified,
+    hntETag,
+    hntProxyAuthorization,
+    hntReferer,
+    hntAge,
+    hntAcceptRanges,
+    hntAcceptEncoding,
+    hntAcceptLanguage,
+    hntAcceptCharset,
+    hntIfModifiedSince,
+    hntIfUnmodifiedSince,
+    hntRetryAfter,
+    hntUpgrade,
+    hntStatus,
+    hntProxyConnection,
+    hntOrigin,
+    hntKeepAlive);
+ 
+
+----app_template_loaded_code----

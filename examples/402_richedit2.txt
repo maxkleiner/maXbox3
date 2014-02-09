@@ -1,0 +1,438 @@
+Program Richedit2;
+
+//#sign max: APSN21: 26.01.2014 12:42:49 
+//#path:E:\maxbox\maxbox3\examples\
+//TODO: Save the QRCode to webserver_file, #locs:125
+//TODO: print the docu direct to pdf
+//http://theroadtodelphi.wordpress.com/2010/12/06/generating-qr-codes-with-delphi/
+
+//check the helpfile \docs\THotlog.chm
+{unit uPSI_HotLog;}
+
+Const
+   UrlGoogleQrCode='http://chart.apis.google.com/chart?chs=%dx%d&cht=qr&chld=%s&chl=%s';
+   AFILENAME= 'mX3QRCode3.png';
+   QDATA= 'this is maXland on a maXbox stream dream firebox';
+   ARTFFILENAME = '\docs\Readme_rus_mX2.rtf';
+
+
+procedure StartRichEdit;
+var  SendMail1: TSendMail;
+begin
+   with TEditForm.create(self) do begin
+      caption:= 'Template Form Tester';
+      FormStyle:= fsStayOnTop;
+      //FormStyle:= fsNormal;
+      with editor do begin
+        Lines.LoadFromFile(Exepath+ARTFFILENAME);
+        SelStart:= 0;
+        Modified:= False;
+      end;
+      //showmodal;
+      //free;
+    end; 
+end; 
+  
+
+procedure TFileRunTest;
+var RunAttach: TFileRun;
+begin
+  RunAttach:= TFileRun.Create(NIL);
+    try
+       RunAttach.FileName:= ExePath+ARTFFILENAME;
+       RunAttach.Operation:= 'open';
+       RunAttach.Directory:= Exepath; //txtPath.Text;
+       RunAttach.Parameters := '';
+       RunAttach.ShowCmd := scShowNormal;
+       RunAttach.Execute;
+       //runattach.hint;
+       //runattach.browsedlg;
+       //runattach.enabled;
+       //runattach.shortcut;
+    finally
+       RunAttach.Free;
+  end;  
+end;
+  
+
+procedure FmxUtilsTest;
+begin
+ // CL.AddClassN(CL.FindClass('TOBJECT'),'EInvalidDest');
+ // CL.AddClassN(CL.FindClass('TOBJECT'),'EFCantMove');
+ //Procedure fmxCopyFile( const FileName, DestName : string)');
+ //Procedure fmxMoveFile( const FileName, DestName : string)');
+ //Function fmxGetFileSize( const FileName : string) : LongInt');
+ writeln('fmxGetFileSize Bytes: '+intToStr(fmxGetFileSize(ExePath+ARTFFILENAME)));
+ //Function fmxFileDateTime( const FileName : string) : TDateTime');
+ //Function fmxHasAttr( const FileName : string; Attr : Word) : Boolean');
+ //Function fmxExecuteFile(const FileName, Params, DefaultDir : string; ShowCmd : Integer) : THandle');
+ //writeln('handle of '+inttoStr(fmxExecuteFile(ExePath+'firstdemo.txt','',Exepath, 1))) 
+ //fmxExecuteFile(ExePath+'firstdemo.txt','',exepath, 1) 
+
+end;
+
+
+procedure SetHotLogHeader;
+var mself: TStringlist;
+  hlog1: THotLog;
+begin
+  hlog1.header:= TstringList.Create;
+    With hlog1.Header Do  Begin
+        Add('{crlf}{LNumOff}{*80*}');
+        Add('>>>> Start {App_name}  v {App_ver}{80@}{now}');
+        Add('{@12}From : {App_path}');
+        Add('{@12}Prms : {App_prm-}{crlf}');
+    End;  
+    hlog1.footer := TStringList.Create;
+    With hlog1.Footer Do  Begin
+        Add('{LNumOff}');
+        Add('<<<< Stop  {App_name}{80@}{now}');
+        Add('{*80*}{crlf}');
+    End;
+    hlog1.Add(hlog1.header.text);
+    hlog1.Add(hlog1.footer.text);
+    writeln('footer count '+inttostr(hlog1.footer.count))
+    //normdist
+end;      
+
+
+ // var hlog1: THotlog;
+//TODO:#1 Returns the QR Code direct of the last modification of File
+
+begin
+  Writeln(datetimetostr(FileTimeGMT(exepath+'maxbox3.exe')));
+   
+  //GetQrCodeTest(150,150,'Q', 'this is maXland on the maXbox');
+  //call of the script
+  //GetQrCodeInet(150,150,'Q',ExePath+'mX3QRCode2.png','this is maXland on maXbox');
+  //GetQrCodeIndy(150,150,'Q',ExePath+AFILENAME, QData);
+  //call of the Lib
+  //GetQrCode2(150,150,'Q',QDATA, ExePath+AFILENAME);
+  //OpenDoc(exePath+'docs\THotlog.chm');
+  //{$Stringtest}
+   
+   maxCalcF('SQRT(PI)');
+   PrintF('gcd %d * lcm %d = %d ',[gcd(4,6), lcm(4,6), 4*6]);
+     //SetAlias(Alias, aAliasDir);
+     //SetBde('\DRIVERS\PARADOX\INIT','NET DIR',aNetDir);
+     //SetBde('\SYSTEM\INIT','LOCAL SHARE','TRUE');
+  
+   StartRichEdit;
+   TFileRunTest;
+   FmxUtilsTest;
+   //maxform1.Richedit1Click(self);
+  
+End.  
+
+   myformtemplate
+     with TCustomDrawForm.create(self) do begin
+       image1.height:= 600; //add properties
+       showmodal;           //add methods
+       free;                //free it
+     end;
+   
+
+In order to make your life easier, the unit HotLog.pas declares an instance of THotLog, and calls its constructor automatically, as soon as your programm is loaded (in fact, as soon as the HotLog unit's part of your programm is loaded).
+
+This instance is called "hLog". It is the object instance you'll use to access HotLog.pas/ThotLog properties and routines.
+
+All the following examples will allways use it. However, and as stated before, THotLog being an object, you can declare as many instances of it as you want.
+
+// and the written result will be :
+
+********************************************************************************
+>>>> Start HotLogTest.exe  v 1.0.0.4                         2004-03-09 23:38:54
+           From : C:\Program Files\Borland\Delphi9\Projects\HotLog\
+           Prms : (No params)
+
+(....)
+
+<<<< Stop  HotLogTest.exe                                    2004-03-09 23:38:55
+********************************************************************************
+
+
+
+
+
+
+http://theroadtodelphi.wordpress.com/2010/12/06/generating-qr-codes-with-delphi/
+
+Using the Google Chart Tools / Image Charts (aka Chart API) you can easily generate QR codes, this kind of images are a special type of two-dimensional barcodes. They are also known as hardlinks or physical world hyperlinks.
+
+The QR Codes store up to 4,296 alphanumeric characters of arbitrary text. QR codes can be read by an optical device with the appropriate software. Such devices range from dedicated QR code readers to mobile phones.
+
+
+Using Delphi there are several ways you can generate QR codes - to encode any text (URL, phone number, simple message). QR Codes store up to 4,296 alphanumeric characters of arbitrary text.
+
+The 2D Barcode VCL components is a set of components designed for generating and printing barcode symbols in your Delphi or C++ Builder applications. Use the components set like any other VCL components.
+
+J4L Components includes the QR-code implementation featuring: auto, byte, alpha, numeric and kanji encoding.
+
+The Google Chart Tools (Chart API) also let you generate QR-code images using an HTTP POST or 
+
+All do you need to generate a QrCode is make a get request to this URI
+
+http://chart.apis.google.com/chart?chs=200x200&cht=qr&chld=M&chl=Go+Delphi+Go
+
+uses
+ PngImage,
+ HTTPApp,
+ WinInet;
+ 
+type
+TQrImage_ErrCorrLevel=(L,M,Q,H);
+ 
+const
+UrlGoogleQrCode='http://chart.apis.google.com/chart?chs=%dx%d&cht=qr&chld=%s&chl=%s';
+QrImgCorrStr   : array [TQrImage_ErrCorrLevel] of string=('L','M','Q','H');
+ 
+procedure WinInet_HttpGet(const Url: string;Stream:TStream);
+const
+BuffSize = 1024*1024;
+var
+  hInter   : HINTERNET;
+  UrlHandle: HINTERNET;
+  BytesRead: DWORD;
+  Buffer   : Pointer;
+begin
+  hInter := InternetOpen('', INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
+  if Assigned(hInter) then
+  begin
+    Stream.Seek(0,0);
+    GetMem(Buffer,BuffSize);
+    try
+        UrlHandle := InternetOpenUrl(hInter, PChar(Url), nil, 0, INTERNET_FLAG_RELOAD, 0);
+        if Assigned(UrlHandle) then
+        begin
+          repeat
+            InternetReadFile(UrlHandle, Buffer, BuffSize, BytesRead);
+            if BytesRead>0 then
+             Stream.WriteBuffer(Buffer^,BytesRead);
+          until BytesRead = 0;
+          InternetCloseHandle(UrlHandle);
+        end;
+    finally
+      FreeMem(Buffer);
+    end;
+    InternetCloseHandle(hInter);
+  end
+end;
+ 
+//this function return a Stream (PngImage inside) with a Qr code.
+procedure GetQrCode(Width,Height:Word;Correction_Level:TQrImage_ErrCorrLevel;const Data:string;StreamImage : TMemoryStream);
+Var
+ EncodedURL  : string;
+begin
+  EncodedURL:=Format(UrlGoogleQrCode,[Width,Height,QrImgCorrStr[Correction_Level],HTTPEncode(Data)]);
+  WinInet_HttpGet(EncodedURL,StreamImage);
+end;
+
+
+http://www.delphi-central.com/callback.aspx
+
+ public
+    { Public-Deklarationen }
+    constructor Create(Owner:TComponent); override;
+    destructor Destroy; override;
+    procedure Assign(Source: TPersistent);override;
+
+    procedure DrawBarcode(Canvas:TCanvas);
+    procedure DrawText(Canvas:TCanvas);
+    property CanvasHeight :Integer read GetCanvasHeight;
+    property CanvasWidth :Integer read GetCanvasWidth;
+  published
+    { Published-Deklarationen }
+   { Height of Barcode (Pixel)}
+    property Height : integer read FHeight write SetHeight;
+    property Text   : string read FText write SetText;
+    property Top    : Integer read FTop write SetTop;
+    property Left   : Integer read FLeft write SetLeft;
+   { Width of the smallest line in a Barcode }
+    property Modul  : integer read FModul  write SetModul;
+    property Ratio  : Double read FRatio write SetRatio;
+    property Typ    : TBarcodeType read FTyp write SetTyp default bcCode_2_5_interleaved;
+   { build CheckSum ? }
+    property Checksum:boolean read FCheckSum write SetCheckSum default FALSE;
+    property CheckSumMethod:TCheckSumMethod read FCheckSumMethod write FCheckSumMethod default csmModulo10;
+
+   { 0 - 360 degree }
+    property Angle  :double read FAngle write SetAngle;
+
+    property ShowText:TBarcodeOption read FShowText write SetShowText default bcoNone;
+    property ShowTextFont: TFont read FShowTextFont write SetShowTextFont;
+    property ShowTextPosition: TShowTextPosition read FShowTextPosition write SetShowTextPosition default stpTopLeft;
+    property Width : integer read GetWidth write SetWidth stored False;
+    property Color:TColor read FColor write FColor default clWhite;
+    property ColorBar:TColor read FColorBar write FColorBar default clBlack;
+      property OnChange:TNotifyEvent read FOnChange write FOnChange;
+  end;
+
+function CheckSumModulo10(const data:string):string;
+
+function ConvertMmToPixelsX(const Value:Double):Integer;
+function ConvertMmToPixelsY(const Value:Double):Integer;
+function ConvertInchToPixelsX(const Value:Double):Integer;
+function ConvertInchToPixelsY(const Value:Double):Integer;
+
+How about something like this:
+
+$url =~ m|([^/]+)/?$|;
+my $end_of_url = $1;
+
+The $ on the end anchors the regular expression to the end of the string. The [^/] means anything that's not a slash and the + after means I want one or more things that are not slashes. Notice that this is in a capture group which are marked with parentheses.
+
+I end the regular expression with /? which means that there may or may not be a slash on the very end of the string. I've put my regular expression between m| and |, so I can use forward slashes without having to constantly escape them.
+
+The last part of the URL is now in $1 and I can set my own scalar variable to save this Result.
+share|improve this answer
+
+  
+procedure GetQrCodeImage(Width,Height: Word; Correct_Level: string;
+           const Data:string; aimage: TImage; apath: string);
+var
+  encodedURL: string;
+  idhttp: TIdHttp;// THTTPSend;
+  pngStream: TMemoryStream;
+begin
+  encodedURL:= Format(UrlGoogleQrCode,[Width,Height, Correct_Level, HTTPEncode(Data)]);
+  //WinInet_HttpGet(EncodedURL,StreamImage);
+  idHTTP:= TIdHTTP.Create(NIL)
+  pngStream:= TMemoryStream.create;
+  with TLinearBitmap.Create do try
+    idHTTP.Get1(EncodedURL, pngStream)
+    pngStream.Position:= 0;
+    LoadFromStream2(pngStream,'PNG');
+    aImage.Picture:= NIL;
+    AssignTo(aimage.picture.bitmap);
+    SaveToFile(apath);
+    //OpenDoc(apath);
+  finally
+    Dispose;
+    Free;
+    idHTTP.Free
+    pngStream.Free;
+  end;
+end;
+
+procedure GetQrCode3(Width,Height: Word; Correct_Level: string;
+           const Data:string; apath: string);
+var
+  encodedURL: string;
+  idhttp: TIdHttp;// THTTPSend;
+  png: TLinearBitmap;//TPNGObject;
+  pngStream: TMemoryStream;
+begin
+  encodedURL:= Format(UrlGoogleQrCode,[Width,Height, Correct_Level, HTTPEncode(Data)]);
+  //WinInet_HttpGet(EncodedURL,StreamImage);
+  idHTTP:= TIdHTTP.Create(NIL)
+  pngStream:= TMemoryStream.create;
+  with TLinearBitmap.Create do try
+    idHTTP.Get1(EncodedURL, pngStream)
+    pngStream.Position:= 0;
+    LoadFromStream2(pngStream,'PNG');
+    //aImage.Picture:= NIL;
+    //AssignTo(aimage.picture.bitmap);
+    SaveToFile(apath);
+    OpenDoc(apath);
+  finally
+    Dispose;
+    Free;
+    idHTTP.Free
+    pngStream.Free;
+  end;
+end;
+
+//BDE Install Test
+
+procedure TForm1.BtnSetupClick(Sender: TObject);
+var aAliasDir, aNetDir:String;
+begin
+  Application.ProcessMessages;
+  aAliasDir:=EditDataDir.Text;
+  aNetDir:=EditNetDir.Text;
+
+//  aAliasDir:='E:\SAS\Daten';
+//  aNetFileDir:='E:\';
+//  ShowMessage(ExpandUNCFileName(aAliasDir));
+
+  if trim(aAliasDir)='' then raise Exception.Create('Geben Sie bitte das Datenverzeichnis an.');
+  if trim(aNetDir)='' then raise Exception.Create('Geben Sie bitte das Netzverzeichnis an.');
+  if not DirectoryExists(aAliasDir) then raise Exception.Create('Das Datenverzeichnis konnnte nicht gefunden werden.');
+  if not DirectoryExists(aNetDir) then raise Exception.Create('Das Netzverzeichnis konnnte nicht gefunden werden.');
+
+  try
+     Screen.Cursor:=crHourGlass;
+     SetAlias(Alias, aAliasDir);
+     SetBde('\DRIVERS\PARADOX\INIT','NET DIR',aNetDir);
+     SetBde('\SYSTEM\INIT','LOCAL SHARE','TRUE');
+//     SetBde('\DRIVERS\PARADOX\TABLE CREATE','BLOCK SIZE','4096'); // Standard 2048 KB
+//     SetBde('\DRIVERS\PARADOX\TABLE CREATE','LEVEL','7');
+     SetBde('\DRIVERS\PARADOX\INIT','LANGDRIVER','ANSIINTL'); // ANSIINTL ist der Kurzname für Pdox ANSI Intl
+     SetBde('\SYSTEM\INIT','LANGDRIVER','ANSIINTL');
+
+     // soll angeblich die Performance verbessern
+     SetBde('\System\Init','MAXFILEHANDLES','100'); // (Standard: 48)
+     SetBde('\System\Init','MAXBUFSIZE','2048'); // Cachepuffer in KB (Standard: 2048 KB)
+     SetBde('\System\Init','MINBUFSIZE','128');
+
+     //SetBde('\System\Init','MEMSIZE','64'); // max. BDE-Speicher (Standard: 16 MB)
+     //SetBde('\System\Init','SHAREDMEMSIZE','8192'); // gemeinsam benutzter Speicher (Standard: 2048 KB)
+
+  finally
+     Screen.Cursor:=crDefault;
+  end;
+
+  MessageDlg('Ihre Einstellungen für diesen Rechner wurden gespeichert.'#13#13'Das Setup-Programm wird jetzt 
+
+beendet.',mtInformation,[mbOk],0);
+  Close;
+
+(*
+  // Versionen der redirector-files testen (nur Win 95)
+  if Win32Platform = VER_PLATFORM_WIN32_WINDOWS then CheckRedirector;
+
+  // Registry checken
+  case Win32Platform of
+    VER_PLATFORM_WIN32_WINDOWS: CheckWin95Registry;
+    VER_PLATFORM_WIN32_NT:      CheckWinNTRegistry;
+  end;
+
+  // Neustart
+  if RebootRequired then RestartDialog(0, nil, ew_RestartWindows);
+*)
+end;
+
+procedure CheckWinNTRegistry;
+var Reg: TRegistry;
+begin
+  Reg:=TRegistry.Create;
+  try
+      Reg.RootKey:=HKey_Local_Machine;
+      // für NT-Server (siehe Microsoft Knowledge Base Artikel 129202, 126026, 219022)
+      //Disable opportunistic locking & caching
+      CheckRegistryEntry(Reg, Services + 'LanmanServer\Parameters', 'EnableOpLocks', 1, 0, 0);
+      CheckRegistryEntry(Reg, Services + 'LanmanServer\Parameters', 'CachedOpenLimit', 1, 0, 0);
+
+      // für Windows 2000/2003-Server und XP Professionial (siehe Microsoft Knowledge Base Artikel 296264)
+      CheckRegistryEntry(Reg, Services + 'MRXSmb\Parameters', 'OplocksDisabled', 0, 1, 0);
+
+      // NT-Workstation
+      //Disable opportunistic locking & caching
+      CheckRegistryEntry(Reg, Services + 'LanmanWorkStation\Parameters', 'UseOpportunisticLocking', 1, 0, 0);
+//      CheckRegistryEntry(Reg, Services + 'LanmanWorkStation\Parameters', 'UtilizeNtCaching', 1, 0, 0);
+      //Make sure NetWare popups are enabled on NT-Workstation to avoid a documented issue
+//      CheckRegistryEntry(Reg, Services + 'NWCWorkstation\Parameters', 'DisablePopup', 1, 0, 0);
+  finally
+      Reg.Free
+  end
+end;
+
+    six spaces!
+    Findtext:= lv.Items.item[lv.ItemIndex].SubItems[1]; //'End.';
+
+
+
+
+
+  
+----app_template_loaded_code----

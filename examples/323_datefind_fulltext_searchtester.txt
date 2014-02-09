@@ -1,0 +1,155 @@
+Program DateFinder_MX_Fulltext_Search;   //from_60  locs=118, 3Intf
+//this app will search a substring in files of a certain extension in subdirectories
+//Case Sensitiv!  otherwise set UPPERCASE
+
+Const
+    //RegisterMethod('Procedure Free;');
+    //RegisterMethod(@TCustomConnection.Destroy, 'Free');
+    
+    SPATH = 'D:\kleiner2005\TestApp\maxbox2\maxbox2\source_2007\maxbox29\mx4\mx4_v38\mx4\source\';
+
+    FNAME = 'Overridesearch_result_mX4_tester.txt';
+    
+    //SMASK = 'destructor Destroy; override;';   //Found 384 assert test
+    SMASK = 'constructor Create; override;';   //Found 384 assert test
+    //SMASK = 'maxbox';   //Found 384 assert test
+
+    
+    WCARD = '*.pas';
+    
+    RECURSIVE = true;
+    
+var
+  year,year1, month,month1, day,day1, cntr: word;    //for daydate
+  time1, time2, diff: TDateTime;
+  finderactive : boolean;
+    
+    
+function SearchSubString(aStrList: TStrings; aSearchStr: string): string;
+var i, TT1: integer;
+    s1: string;
+begin
+  result:= '';
+  for i:= 0 to aStrList.Count -1 do begin
+    s1:= aStrList[i];
+    //repeat
+    TT1:= pos(uppercase(aSearchStr), uppercase(s1));
+    if TT1 > 0 then begin
+      //writeln('found what out test: '+s1);
+      //if length(aStrlist.count-1)>2 then
+      if i= 0 then begin
+        result:= result+intToStr(i)+': '+s1+#13#10;
+        result:= result+ aStrList[i+1]+#13#10;  //line after
+      end else begin
+        result:= result+ aStrList[i-1]+#13#10;  //line before
+        result:= result+intToStr(i)+': '+s1+#13#10;
+        result:= result+ aStrList[i+1]+#13#10;  //line after
+      end;
+      if i= astrlist.count-1 then
+        result:= result+intToStr(i)+': '+s1+#13#10;
+      //writeln('result out test: '+result);
+    end;
+    //until TT1 = 0;
+  end;
+end;
+    
+   
+procedure FindAllFiles(FilesList, sublist: TStringList; StartDir,FileMask: string);
+var //SR: TSearchRec;
+  DirList: TStringList;
+  IsFound: Boolean;
+  resStr: string;
+  i: integer;
+  myDosdate: TDateTime;
+begin
+  if StartDir[length(StartDir)] <> '\' then
+                       StartDir:= StartDir + '\';
+  { Build a list of the files in directory StartDir!}
+  IsFound:= FindFirst(StartDir+FileMask, faAnyFile-faDirectory) = 0;
+  while IsFound do begin
+    myDosdate:= fileDatetoDateTime(searchrectime)
+    decodeDate(mydosdate, year, month, day)
+    //if (day = day1) and (month = month1) and (year = year1) then 
+     sublist.loadFromFile(StartDir + searchrecName)
+     //FilesList.Add(StartDir + searchrecName);//+ DateTimetoStr(mydosdate));
+     //showmessage('which file '+startdir +':'+ searchrecname);
+     try
+     resstr:= SearchSubstring(sublist,SMASK);
+     except
+       Writeln('Not finished Exception ' + startdir +':'+ searchrecname)
+       //resstr:= '';
+     end;
+    if length(resStr) > 0 then begin
+        cntr:= cntr+1;
+        FilesList.Add('File '+intToStr(cntr)+': '+StartDir+ searchrecName+#13#10+resStr);
+     end;  
+    IsFound:= FindNext = 0;
+  end;
+  FindClose;
+  //Build a list of subdirectories
+  if RECURSIVE then begin
+  DirList:= TStringList.Create;
+    IsFound:= FindFirst(StartDir+'*.*', faAnyFile) = 0;
+    while IsFound do begin
+      if ((searchrecAttr and faDirectory) <> 0) and
+         (searchrecName[1] <> '.') then
+           DirList.Add(StartDir + searchrecName);
+      IsFound:= FindNext = 0;
+    end;
+    FindClose;
+  //Scan the list of subdirectories recursive!
+  for i:= 0 to DirList.Count- 1 do
+    FindAllFiles(FilesList, sublist, DirList[i], FileMask);
+  DirList.Free;
+
+  end;  
+end;
+
+procedure StartFileFinder;
+var
+  FilesList,sublist: TStringList;
+begin
+  FilesList:= TStringList.Create;
+  sublist:= TStringList.Create;
+  cntr:= 0;
+  try
+    //FindAllFiles(FilesList, 'C:\', '*.*'); pattern
+    FindAllFiles(FilesList, sublist, SPATH, WCARD);
+    fileslist.add(formatdatetime('"Found '+inttoStr(cntr)+' Datfinder files of:" dd:mm:yyyy',date))
+    fileslist.saveToFile(ExePath+'Examples\'+FNAME);
+    SearchAndOpenDoc(ExePath+'Examples\'+FNAME);
+  finally 
+    FilesList.Free;
+    sublist.Free;
+  end;
+end;
+
+//main script
+begin
+  //the date from now to compare with file date
+  decodeDate(date, year1, month1, day1) //decodeDate(time, hour, min, sec)
+  time1:= time;
+  writeln(formatdatetime('"start is:" hh:mm:ss:zzz', time)) 
+  
+  StartFileFinder;
+  
+  time2:= time;
+  writeln(formatdatetime('"stop is:" hh:mm:ss:zzz', time)) 
+  Diff:= time2 - time1; 
+  writeln(IntToStr(Trunc(Diff*24)) + 
+                      FormatDateTime('" run time:" nn:ss:zzz',Diff));
+  Beep;
+  //CompareMemoryStreams
+  //Int128Compare
+  //minfloat
+  //graphicfilter
+  //savecanvas
+  //getip
+  //inttoextended
+End.
+ 
+ 
+     //SMASK ='RegisterMethod(''Procedure Free;'')'; //in built  39   RegisterMethod('Procedure Free;');
+     //RegisterMethod(@TSQLQuery.Destroy, 'Free');
+    //SMASK ='.Destroy, ''Free'');'; //in built 38
+

@@ -1,0 +1,108 @@
+//calculates a cipher suite from string
+//key substitution during encryption, loc's =54 
+
+program simple_Cipher;
+
+type
+  TColors = (RED,BLUE,GREEN);
+  TKey_256 = array[0..7] of longword;
+
+const
+  //something to enlarge the entropy like an s-box
+  C1 = 52845;
+  C2 = 22719;
+
+var mycipher, cipherback: string;
+    mykey: word;
+    i, x: integer;
+    mc: set of TColors;
+    filestr, cryptostr: TStrings;
+    inStream, outStream: TFileStream; 
+
+function Encrypt(const S: String; Key: word): String;
+var
+  I, myint: word;
+begin
+  SetLength(Result,length(s));
+  //cipher in order of ord ;)
+  for I:= 1 to Length(S) do begin
+    myint:= ord(S[I]) xor (Key shr 8)
+    Result[i]:= chr(myint);
+    Key:= (ord(Result[I]) + Key) * C1 + C2;
+  end;
+end;
+
+function Decrypt(const S: String; Key: Word): String;
+var
+  I, myint: word;
+begin
+  //Result[0]:= S[0]
+  SetLength(Result,length(s));
+  for I:= 1 to Length(S) do begin
+    myint:= ord(S[I]) xor (Key shr 8)
+    Result[I] := chr(myint);
+    Key:= (ord(S[I]) + Key) * C1 + C2;
+  end;
+end;
+
+procedure stringtofile(acontent, afilename:string);
+var fls: TFileStream;
+begin
+ fls:= TFileStream.Create(afilename, fmOpenWrite or fmCreate);
+ try
+   // no no niet acontent[1]
+   fls.Write(acontent,length(acontent));
+ finally
+   fls.Free;
+ end  
+end;
+
+function filetostring(afilename: string): string;
+var fls: TFileStream;
+begin
+ fls:= TFileStream.Create(afilename,fmOpenRead or fmShareCompat);
+ try 
+   SetLength(result,fls.Size);
+   fls.Read(result,fls.Size);
+ finally 
+   fls.Free;
+ end
+end;
+
+
+begin
+  //clrscr;
+   //mS:= 'BLUE has an ordinal value of ' + IntToStr(Ord(mc) + #13#10;
+   //myword:= 'too many SecretS'
+   //mS:= mS + 'The ASCII code for ' +myword[1]+ ' is '
+   //                               + IntToStr(Ord(myword[1])) + ' decimal';
+   //ShowMessage(ms);
+   mykey:= 12365498
+   filestr:= TStringlist.create;
+   cryptostr:= TStringlist.create;
+   //inStream:= TFileStream.create('readmefirst_maxbox.txt',fmopenRead);
+   try
+     filestr.loadfromfile(ExePath+'examples\readmefirst_maxbox.txt');
+     {setLength(buf, inStream.size)
+     inStream.Seek(0, soFromBeginning);
+     i:= inStream.read(buf, inStream.size);
+     outStream:= TFileStream.create('readmefirst_maxbox4.txt',fmCreate);
+     try
+       x:= outStream.copyFrom(inStream, inStream.size);
+       if i <> x then showmessage('not the same number of bytes')
+     finally
+       outStream.free;
+     end;}    
+     mycipher:= encrypt(filestr.text, mykey)
+     writeln('test 1:' +inttostr(length(mycipher)))
+     stringToFile(mycipher, 'cryptofiles2.txt');
+     cipherback:= filetostring('cryptofiles2.txt');
+     writeln('test 4:' +inttostr(length(cipherback)))
+     writeln (decrypt(cipherback, mykey))
+     //writeln(decrypt(mycipher, mykey))
+   finally
+     //inStream.free;   
+     filestr.free;
+   end  
+end.
+

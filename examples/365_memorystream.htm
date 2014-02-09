@@ -1,0 +1,179 @@
+Version:0.9
+StartHTML:0000000105
+EndHTML:0000012764
+StartFragment:0000001037
+EndFragment:0000012748
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>mXScriptasHTML</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="generator" content="SynEdit HTML exporter" />
+<style type="text/css">
+<!--
+body { color: #000000; background-color: #FFFFFF; }
+.pas1-assembler { }
+.pas1-character { text-decoration: underline; }
+.pas1-comment { color: #000080; font-style: italic; }
+.pas1-float { color: #800080; }
+.pas1-hexadecimal { color: #FF00FF; }
+.pas1-identifier { }
+.pas1-number { color: #FF0000; }
+.pas1-preprocessor { font-style: italic; }
+.pas1-reservedword { color: #000000; font-weight: bold; }
+.pas1-space { }
+.pas1-string { color: #008080; }
+.pas1-symbol { color: #000000; }
+-->
+</style>
+</head>
+<body>
+<!--StartFragment--><pre><code><span class="pas1-reservedword">program</span><span class="pas1-space"> CompressServices2;
+
+</span><span class="pas1-comment">//Purpose: stores a zip file header with a memory stream, locs= 84
+//preparation of compress/decompress folders and entropy theory 
+
+
+</span><span class="pas1-reservedword">Const
+</span><span class="pas1-space">  AZIPFILE = </span><span class="pas1-string">'maxzip2memory.zip'</span><span class="pas1-symbol">;
+   
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> CreateEmptyZipFile;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i: integer;
+  zipfile: wideString;
+  </span><span class="pas1-comment">//ezip: TByteArray; =(80,75,5,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+</span><span class="pas1-space">  ezip: TByteDynArray;
+  ms: TMemoryStream;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  SetLength(ezip, </span><span class="pas1-number">25</span><span class="pas1-symbol">);   </span><span class="pas1-comment">//for ZIP Header
+</span><span class="pas1-space">    ezip[</span><span class="pas1-number">0</span><span class="pas1-symbol">]:=</span><span class="pas1-number">80</span><span class="pas1-symbol">; ezip[</span><span class="pas1-number">1</span><span class="pas1-symbol">]:=</span><span class="pas1-number">75</span><span class="pas1-symbol">; ezip[</span><span class="pas1-number">2</span><span class="pas1-symbol">]:=</span><span class="pas1-number">5</span><span class="pas1-symbol">; ezip[</span><span class="pas1-number">3</span><span class="pas1-symbol">]:=</span><span class="pas1-number">6</span><span class="pas1-symbol">; 
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">4</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">23</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> ezip[i]:= </span><span class="pas1-number">0</span><span class="pas1-symbol">; 
+
+  zipfile:= exepath+</span><span class="pas1-string">'examples\'</span><span class="pas1-symbol">+AZIPFILE;
+  </span><span class="pas1-comment">// create a new empty ZIP file
+</span><span class="pas1-space">  ms:= TMemoryStream.Create;
+  writeln(ObjectToStr(ms));  </span><span class="pas1-comment">//debug pointer
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    </span><span class="pas1-comment">//ms.WriteBuffer array of byte of dynamic size;
+</span><span class="pas1-space">    ms.WriteBufferABD(ezip, length(ezip));
+    ms.SaveToFile(Zipfile);
+  </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">    ms.Free;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+
+</span><span class="pas1-comment">//***************************Services Provider**********************************
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> XCompress(azipfolder, azipfile: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TShellZip.Create </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    zipfile:= azipfile;
+    ZipFolder(azipfolder);
+    Free;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+ </span><span class="pas1-comment">//compress
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> XDeCompress(azipfolder, azipfile: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TShellZip.Create </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    zipfile:= azipfile;
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> DirectoryExists(azipfolder)= false </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">         CreateDir(azipfolder);
+    UnZip(azipfolder);
+    Free;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+ </span><span class="pas1-comment">//decompress
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  inlist: TStringlist;
+  i: integer;
+</span><span class="pas1-reservedword">begin
+
+</span><span class="pas1-space">   CreateEmptyZipFile;
+   
+   </span><span class="pas1-comment">//Compress(exepath+'examples\earthplay2', exepath+'examples\maxboxziptest2.zip');
+</span><span class="pas1-space">   Writeln(</span><span class="pas1-string">'Threads count: '</span><span class="pas1-symbol">+inttoStr(NumProcessThreads));
+   </span><span class="pas1-comment">//DeCompress(exepath+'examples\Decompress2', exepath+'examples\maxboxziptest2.zip');
+</span><span class="pas1-space">   
+   writeln(inttoStr64(minint64));
+   writeln(inttoStr64(maxint64));
+   writeln(inttoStr64(mincardinal));
+   writeln(inttoStr64(maxcardinal));
+   writeln(inttoStr(minnativeint));
+   writeln(inttoStr(maxnativeint));
+   
+   </span><span class="pas1-comment">{inlist:= TStringlist.create;
+   JCLLocalesInfoList(inlist, 2);
+   for i:= 1 to inlist.count-1 do 
+     writeln(inlist[i]);
+   inlist.Free;}</span><span class="pas1-space">  
+   
+</span><span class="pas1-reservedword">End</span><span class="pas1-symbol">.
+
+-------------------------------------------------
+
+
+
+   </span><span class="pas1-comment">{if QueryInterface(IIncomeInt, incomeIntRef) = S_OK
+      then begin //_addRef; test
+        SetRate(strToInt(edtZins.text),
+                       strToInt(edtJahre.text));
+        cIncome:=strTofloat(edtBetrag.text);
+        cIncome:= GetIncome(cIncome);
+      end;}
+
+</span><span class="pas1-space">   IInterface  = </span><span class="pas1-reservedword">interface
+</span><span class="pas1-space">     [</span><span class="pas1-string">'{00000000-0000-0000-C000-000000000046}'</span><span class="pas1-symbol">]
+     </span><span class="pas1-reservedword">function</span><span class="pas1-space"> QueryInterface(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> IID: TGUID; </span><span class="pas1-reservedword">out</span><span class="pas1-space"> Obj): HResult; </span><span class="pas1-reservedword">stdcall</span><span class="pas1-symbol">;
+     </span><span class="pas1-reservedword">function</span><span class="pas1-space"> _AddRef: Integer; </span><span class="pas1-reservedword">stdcall</span><span class="pas1-symbol">;
+     </span><span class="pas1-reservedword">function</span><span class="pas1-space"> _Release: Integer; </span><span class="pas1-reservedword">stdcall</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+ 
+    IIncomeInt  = </span><span class="pas1-reservedword">interface</span><span class="pas1-space"> (IUnknown)
+      [</span><span class="pas1-string">'{DBB42A04-E60F-41EC-870A-314D68B6913C}'</span><span class="pas1-symbol">]
+      </span><span class="pas1-reservedword">function</span><span class="pas1-space"> GetIncome(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> aNetto: Extended): Extended; </span><span class="pas1-reservedword">stdcall</span><span class="pas1-symbol">;
+      </span><span class="pas1-reservedword">function</span><span class="pas1-space"> GetIncome2(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> aNetto: Currency): Currency; </span><span class="pas1-reservedword">stdcall</span><span class="pas1-symbol">;
+      </span><span class="pas1-reservedword">function</span><span class="pas1-space"> GetRate: Extended;
+      </span><span class="pas1-reservedword">function</span><span class="pas1-space"> queryDLLInterface(</span><span class="pas1-reservedword">var</span><span class="pas1-space"> queryList: TStringList): TStringList;
+              </span><span class="pas1-reservedword">stdcall</span><span class="pas1-symbol">;
+      </span><span class="pas1-reservedword">function</span><span class="pas1-space"> queryDLLInterfaceTwo(</span><span class="pas1-reservedword">var</span><span class="pas1-space"> queryList: TStringList): TStringList;
+              </span><span class="pas1-reservedword">stdcall</span><span class="pas1-symbol">;
+      </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> SetRate(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> aPercent, aYear: integer); </span><span class="pas1-reservedword">stdcall</span><span class="pas1-symbol">;
+      </span><span class="pas1-comment">//property Rate: Double read GetRate;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+    
+    
+  
+
+Internet </span><span class="pas1-reservedword">of</span><span class="pas1-space"> Things
+F&uuml;r das Internet der Dinge entwickeln
+
+Viele sehen im Internet </span><span class="pas1-reservedword">of</span><span class="pas1-space"> Things vor allem eines: ein gigantisches Potenzial f&uuml;r neue Gesch&auml;ftsmodelle. Bald wird die ganze Welt programmierbar sein. Jedes EBike, jede Waschmaschine, Kaffeemaschine, jeder Blutdruckmesser oder jede Armbanduhr wird irgendwie vernetzt sein. Ger&auml;te werden untereinander als Physical Computing kommunizieren, sich aufeinander abstimmen. Man geht also nicht mehr ins Internet, sondern das Internet ist Teil von uns, Sensoren messen meinen Blutzucker und berechnen so die n&auml;chste Krankenkassenpr&auml;mie. Es kann auch sein, dass intelligente Geb&auml;ude so st&ouml;ranf&auml;llig werden, dass der Fahrstuhl des Grauens Wirklichkeit wird. Nette Spielereien oder der Anfang einer neuen solargetriebenen Manufakturindustrie inklusive </span><span class="pas1-number">3</span><span class="pas1-identifier">D-Drucker und Roboter </span><span class="pas1-reservedword">in</span><span class="pas1-space"> der Altersbetreuung
+
+Max Kleiner bespricht, wie mit Android ein Arduino Board gesteuert wird:
+
+    REST als Command Protocol
+    Web </span><span class="pas1-reservedword">to</span><span class="pas1-space"> Serial Applications
+    Microcontrollers
+    Aktoren und Sensoren
+    RFIDs sind &uuml;berall
+    
+
+Extern: Settings-User
+Extern: Konfiguration-Admin
+Intern: Literals-Developer
+
+Identifizierung
+• Konfigurationselemente wie Pfad oder </span><span class="pas1-reservedword">Default</span><span class="pas1-symbol">-Werte
+• Doppelte Elemente (</span><span class="pas1-reservedword">String</span><span class="pas1-space"> oder numerische Literals)
+• Beziehungen der Konfigurationselemente
+• Software Version innerhalb der Config Einstellung
+• Baseline und zentrale Elemente
+• Aufnahme von Konfigurationselementen
+• Bibliotheken / Komponenten / Frameworks etc.    
+</span></code></pre><!--EndFragment--></body>
+</html>

@@ -1,0 +1,194 @@
+PROGRAM BigIntExplain;
+// see below end. loc's=74
+
+VAR 
+//<Variable declarations>
+  //i: integer;
+    div_dbl, quadrat, square: double;
+    i, x: integer;
+    bigstring: string;
+    flable: shortstring;
+//<FUNCTION>
+//<PROCEDURE> 
+
+function GetBigIntFact(aval: byte): string;
+//call of unit mybigint
+var mbRes: TMyBigInt;
+    i: integer;
+begin
+  mbRes:= TMyBigInt.Create(1);
+  try
+    //multiplication of factor
+    for i:= 1  to aval do 
+      mbRes.Multiply1(mbres, i);
+    Result:= mbRes.ToString;
+  finally 
+    //FreeAndNil(mbResult);
+    mbRes.Free;
+  end;
+end;
+
+
+function GetBigIntPower(aval: integer): string;
+  //unit mybigint
+var mbResult: TMyBigInt;
+     i: integer;
+begin
+  mbResult:= TMyBigInt.Create(1);
+  try
+    for i:= 1 to aval do 
+      //mbResult.Multiply(mbresult, mbresult);
+      mbResult.Multiply1(mbresult, 2);
+    Result:= mbResult.ToString;
+  finally 
+    //FreeAndNil(mbResult);
+    mbResult.Free;
+  end;
+end;
+
+
+BEGIN  //Main
+//<Executable statements>
+  x:= 100;
+  quadrat:= power(x,2); 
+  writeln(format('%f', [quadrat]))
+  square:= sqrt(quadrat)
+  writeln(format('%f', [square]))
+  div_dbl:= 5.0 / 2.1; // 2.500000
+  writeln(format('%0.8f', [div_dbl]))
+  // whole ASCII Table
+   {for i:= 0 to 255 do
+     writeln(format('wert %d %s',[i, Chr(i)]))}
+   // fact 70 = 1.1978571669969891796072783721689e+100
+   Writeln('big int fact full 70: '+getBigIntFact(70))
+   Writeln('big int fact float 70: '+FloatToStr(Fact(70)))
+   PrintF('big int fact format 70:  %.18f',[Fact(70)])
+//2^100=
+//1267650600228229401496703205376
+   Writeln('big int power 100: '+getBigIntPower(100))
+   flable:= 'big int power now';
+   Writeln(flable)
+   i:= 1009;
+   bigString:= getBigIntPower(i);
+   Writeln('Signs : '+intToStr(length(bigstring))) 
+   Writeln(FormatBigInt(getBigIntPower(i)))
+END. 
+
+
+--------------------------------------------------------------------
+  Dealing with Big Numbers (Integers)
+  -----------------------------------
+  
+  As you may know there's no simple solution to print or store big numbers,
+   for example you want to compute fact(70), your calculator shows:
+  fact(70) = 1.1978571669969891796072783721689e+100
+  
+  but the maximum range on Delphi depends on your operating system types, means nowadays an int64 range is the big int.
+  Now that the "signed" Words are finally up-to-par with the unsigned integer types, Delphi 4 introduces a new 64-bits integer type, called Int64, with a whopping range of -2^63..2^63 - 1  
+
+ Another way is to use the type extended, but the limitation is precision like
+   
+        Writeln(FloatToStr(Fact(70)))
+ 
+    it only shows 
+    1.2E+0100
+
+With a BigInt Library (bigintlib) you'll see the full range of Fact(70):
+
+11978571669969891796072783721689098736458938142546425857555362864628009582789845319680000000000000000
+    
+The call respectively the calculation goes like this:
+
+function GetBigIntFact(aval: byte): string;
+//call of unit mybigint
+var mbRes: TMyBigInt;
+    i: integer;
+begin
+  mbRes:= TMyBigInt.Create(1);
+  try
+    //multiplication of factor
+    for i:= 1  to aval do 
+      mbRes.Multiply1(mbRes, i);
+    Result:= mbRes.ToString;
+  finally 
+    //FreeAndNil(mbResult);
+    mbRes.Free;
+  end;
+end;
+    
+Or you want the power of 100        
+2^100=
+1267650600228229401496703205376
+  
+The definition of the function could be the following:
+
+function GetBigIntPower(aval: integer): string;
+var mbResult: TMyBigInt;
+     i: integer;
+begin
+  mbResult:= TMyBigInt.Create(1);
+  try
+    for i:= 1 to aval do 
+      mbResult.Multiply1(mbresult, 2);
+    Result:= mbResult.ToString;
+  finally 
+    mbResult.Free;
+  end;
+end;
+  
+  
+At least one really big, it's 2^1000
+
+10715086071862673209484250490600018105614048117055336074437503883703510511249361224931983788156958581275946729175531468251871452856923140435984577574698574803934567774824230985421074605062371141877954182153046474983581941267398767559165543946077062914571196477686542167660429831652624386837205668069376
+
+
+the class of the unit mybigint from swiss delphi center:
+
+  TMyBigInt = class
+  private
+    Len: Integer;
+    Value: AnsiString;
+    procedure Trim;
+    procedure Shift(k: Integer);
+    procedure MultiplyAtom(Multiplier1: TMyBigInt; Multiplier2: Integer);
+  public
+    constructor Create(iValue: Integer = 0);
+    procedure Add(Addend1, Addend2: TMyBigInt);
+    procedure Multiply(Multiplier1, Multiplier2: TMyBigInt); overload;
+    procedure Multiply(Multiplier1: TMyBigInt; Multiplier2: Integer); overload;
+    function ToString: string;
+    procedure CopyFrom(mbCopy: TMyBigInt);
+  end;
+
+----------------------------------------------------
+  an operand contains operator and 
+  - name
+  - type
+  - scope 
+  - lifetime
+  - value
+      -type checks the valid operator
+            memory need
+            range checking
+-------------------------------------------------------
+
+
+       (A<>B) not --> A=B
+        0 0 0 1       0 0
+        0 1 1 0
+        1 0 1 0
+        1 1 0 1       1 1
+        
+        
+  XOR App      
+  0110 0001
+^ 1101 1111
+-----------
+  1011 1110
+        
+  00000000000000000000000100101100 XOR
+  00000000000000000000000100101100
+                         000000000
+
+
+    

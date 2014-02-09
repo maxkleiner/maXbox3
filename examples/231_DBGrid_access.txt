@@ -1,0 +1,731 @@
+{****************************************************************
+ *
+ * Project  : OLE DB maXbase SeriesSystem Information Series
+ * App Name : 321_DBGrid_access.txt, loc's = 177
+ * Purpose  : DB Access via OLE DB with Access
+ * History  : system for mX3.6  , need: Database3.mdb in /examples
+ ****************************************************************}
+program DB_ACCESS;
+
+function  MyMessageBeep(para: integer): byte;
+     external 'MessageBeep@user32.dll stdcall';  
+
+function MyGetTickCount: Longint;
+  external 'GetTickCount@kernel32.dll stdcall';
+  
+function getDataset: TDataSet; forward;
+  
+ 
+var
+  myTimeStamp: TDateTime;
+  ws: TWideStrings;
+  dCom: TADOCommand;
+  adoquery: TAdoDataSet;
+  dataset1: TDataSet;
+  adoquery1: TADOQuery;
+  dbGrid: TDBGrid;
+  dbForm: TForm;
+  i: integer;
+  
+  ji: TDBGridColumns;
+
+  
+procedure DBShow(Sender: TObject);
+var ADODataSet1: TADODataSet;
+var
+  i:integer;
+begin
+  i:= 1;
+  adoDataSet1.connectionString
+  while i <= ADODataSet1.RecordCount do begin
+    Writeln(ADODataSet1.Fieldbyname('name').AsString);
+    ADODataSet1.Next;
+    i:= i+1;
+  end;
+end; 
+
+
+Procedure SetADOQuery;
+var i: integer;
+  adoquery: TAdoQuery;
+begin  
+  adoquery:= TAdoQuery.create(self);
+  with adoquery do begin
+    cachesize:= 500;
+ //ConnectionString:= 'Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\SecureCenter\Dec 15 2010mx3\images.MDB;Persist Security Info=False';
+  //adoquery.ParamCheck := True;
+    SQL.Add('Select * from patient');
+    //SQL.Add('Select * from patient where id = :id ');
+    with Parameters.Parambyname('id') do begin
+      DataType:= ftInteger;
+      Value:= '123';
+    end; 
+    Open;
+    while i <= RecordCount do  begin
+      Writeln(Fieldbyname('name').AsString);
+      Next;
+      i:= i+1;
+    end;
+    Close;
+    Free; 
+  end;
+end;
+
+
+Procedure ConnectTest;
+var
+  dconnect: TADOConnection;
+begin
+  dconnect:= TADOConnection.Create(self);
+  try
+    dconnect.Provider:= 'Microsoft.Jet.OLEDB.4.0'
+    dconnect.ConnectionString:= 'Provider=SQLOLEDB;DataSource=MyServer;Integrated Security//=SSPI;Initial Catalog=pubs;';
+  //or for MS Jet (MS Access):
+    dconnect.ConnectionString:= 'Provider=Microsoft.Jet.OLEDB.4.0;'+
+                                  'DataSource=c:\db.mdb;';
+    dconnect.Connected:= true;
+    dconnect.LoginPrompt := False
+    dconnect.open('Admin','');
+    //dconnect.Active:= true;
+  finally
+    dconnect.Free;
+  end;
+end;     
+
+
+Procedure SetADOSETAccess;
+var 
+  adoquery: TAdoDataSet;
+  adocon: TADOConnection;
+  xlsfile: string;
+  i, z: integer;
+begin  
+  adoquery:= TAdoDataSet.Create(self);
+  adocon:= TADOConnection.Create(self);
+  with adoquery do begin
+    cachesize:= 500;
+{ ConnectionString:= 'Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\SecureCenter\Dec 15 2010mx3\images.MDB;Persist Security Info=False';
+  adoquery.ParamCheck := True;}
+   xlsfile:= ExePath+'database3.mdb'; 
+  //ADOCon.ConnectionString := 'Provider=Microsoft.Jet.OLEDB.4.0;DataSource=xlsfile;';   
+  ADOCon.ConnectionString:= 'Provider=MSDASQL;DSN=mx3base;Uid=sa;Pwd=admin';
+  //commandtext:= 'select count(*)'
+  commandtext:= 'select * from Table1'
+  adocon.LoginPrompt:= false;
+  adocon.Connected:= true;
+  //if (adocon.ConnectionState == csStateOpen)
+  //connectionString:= AdoCon.ConnectionString;
+  connectionString:= 'Provider=MSDASQL;DSN=mx3base;Uid=sa;Pwd=admin';
+  Open; 
+  //Writeln(intToStr(Recordcount)+' records found')
+  for i:= 0 to Recordcount - 1 do begin
+    for z:= 0 to Fieldcount - 1 do 
+      Write((Fields[z].asString)+'  ');
+    Writeln(#13#10)
+    Next;
+  end;
+  adocon.close;
+  adocon.free;         
+   Close;
+   Free;        
+  end;
+end;
+
+procedure SetDataSet(atable: TClientDataSet);
+var i: integer;
+
+   dsrc: TDatasource;
+begin
+
+   //writeln('index' +inttostr(atable.datasize))
+  with TClientDataSet.create(self) do begin
+    filename:= '';
+    providername:= '';
+    //commandtext
+    //CreateDataSet;
+    //datasource:= adoquery.datasource;
+    //close;
+    free;
+  end;  
+  dsrc:= TDatasource.Create(Self);
+     with dsrc do begin
+      dataset:= TDataSet(aTable);
+      islinkedto(TDataSet(atable))
+      enabled;
+      //active
+      //open
+    // Set properties of the source
+    //DataSet := adoQuery; // Set the data set to the created table
+    //DataSet:= TempTable; // Set the data set to the created table
+  //free;
+     end;
+
+    with TDBCtrlGrid.create(self) do begin
+    parent:= dbform;
+    //filename:= '';
+    //providername:= '';
+    //datasource.dataset:= TDataSet(atable);
+    datasource:= dsrc;
+
+    //free;
+
+  end;  
+
+
+  dataSet1:= TDataSet.create(self);
+  with dataSet1 do begin
+    //Open;
+    FieldDefs.Clear;
+    FieldDefs.Add('ID', ftInteger, 0, True);
+    //FieldDefs.Add('TimeStamp', ftDateTime);
+    FieldDefs.Add('Status', ftInteger, 0, True);
+    FieldDefs.Add('Created', ftDateTime,0, true);
+    FieldDefs.Add('Volume', ftFloat, 0, True);
+    //Edit;
+    //Post;
+    //Close;
+    //dataSet1.createDataSet;
+     for i := 1 to 10 do begin
+       //open;
+       //Append;
+    with dataSet1 do begin
+      {FieldByName('ID').AsInteger := i;
+      FieldByName('Status').AsString := 'Code'+IntToStr(i);
+      FieldByName('Created').AsDateTime := Date();
+      FieldByName('Volume').AsFloat := Random(10000);
+      Post;}
+    end  
+    end;
+    //CreateDataSet;
+    //Post;
+    for i := 1 to 10 do begin
+    //dataSet1.open
+    //writeln(inttoStr(dataSet1.FieldByName('ID').asInteger))
+  end;  
+    //Close;
+    //myDataSource.dataSet:= dataSet1;
+    //Open;
+    //FieldDefs.Add('Folder', ftBoolean, 1, True);
+  end;
+end;  
+
+
+procedure CreateDBGridForm(atable: TClientDataSet);
+ //diaform:= CreateMessageDialog('my fast form perform',mtconfirmation, []);
+var TempDataSource: TDataSource;
+    TempTable: TADOTable;
+    adoQry: TAdoQuery;
+    myset: TDataSet;
+    DlgType1: TMsgDlgType;
+ 
+begin
+   dbform:= CreateMessageDialog('My Fast Form Perform - FFP',mtwarning,
+                                        [mball,mbhelp,mbok]);
+   dbform.caption:= 'FFP Demo';
+   dbform.setBounds(50,50,800,500)
+   dbform.formstyle:= fsstayontop;
+   dbform.color:= 123;
+   //diaform.text
+   
+   dbform.show; 
+   
+   TempTable:= TADOTable.Create(Self);
+  with TempTable do begin
+    //dataset
+    connectionString:= 'Provider=MSDASQL;DSN=mx3base;Uid=sa;Pwd=admin';
+    //commandText:= 'SELECT * FROM Table1';
+    tablename:= 'Table1';
+    open;
+    // Set properties of the table 
+    //close;
+  end;
+  
+  (*adoQry:= TAdoQuery.Create(self);
+  with adoQry do begin
+    cacheSize:= 500;
+    connectionString:= 'Provider=MSDASQL;DSN=mx3base;Uid=sa;Pwd=admin';
+    {commandText:= 'INSERT INTO Table1 (FirstName, LastName, Phone)'+
+                        'VALUES (''Max99'', ''Box5459'', ''031-333 77 88'')';}
+    commandText:= 'SELECT * FROM Table1';
+    Open;
+    {Writeln(intToStr(Recordcount)+' records found: ')
+    for i:= 0 to Recordcount - 1 do begin
+      for z:= 0 to Fieldcount - 1 do 
+        Write((Fields[z].asString)+'  ');
+      Writeln(#13#10)
+      Next;
+    end;}
+    //CreateDBGridForm(adoQry); 
+    Close;
+    Free; 
+    end;*)       
+
+   
+   dbgrid:= TDBGrid.Create(self)
+   with dbGrid do begin
+     Parent:= dbform;
+     //dbgrid.setBounds(60,60,100,400)
+     left:= 70;
+     top:= 120;
+     width:= 700;
+     height:= 400;
+     //datalink
+     //columns:= ij;
+     //dataSource:= NIL;
+     //datasource.dataset
+     tabstop:= true;
+     Options:=DBGrid.Options + [dgEditing];
+     //width:= 300;
+     
+     TempDataSource:= TDatasource.Create(Self);
+     with TempDataSource do begin
+      //dataset:= TDataSet(aTable);
+      dataset:= TDataSet(tempTable);
+    
+      islinkedto(TDataSet(atable))
+      enabled;
+      //open
+      //recordcount
+      //count
+    // Set properties of the source
+    //DataSet := adoQuery; // Set the data set to the created table
+    //DataSet:= TempTable; // Set the data set to the created table
+  //free;
+     end;
+    //MyGrid.DataSource := FData.DataSource1;
+//Of cource, the DataSource is linked to a DataSet (actualy, a Memory table).
+//Each time I call FData.DataSet1.Append() I receive a List out of bound 
+     //DataSource.DataSet:= getDataSet;
+     //DataSource.DataSet.enableControls; 
+     //dataSource:= adoQuery.DataSource;
+     //if DataSource.DataSet is TClientDataSet then
+     dataSource:= TempDataSource;
+     //BeginLayout;
+     
+     Show;
+     //DataSource.DataSet.State 
+     //dataset
+     //writeln((fields[2].asString));
+     writeln('fcount of datasource '+inttostr(fieldcount))
+     writeln('fname of datasource '+(atable.filename));
+     writeln('provider of datasource '+(atable.providername));
+  
+     //selectedrows
+     //enabled
+     //titlefont
+     //show;
+     //oncolexit
+   end;  
+   //TempDataSource.Free;
+   //diaform.free;
+   //adoQuery.Close;
+   //adoQuery.Free;
+end;
+
+Procedure newdataset;
+var ads1, clientdataset1: TClientDataset; 
+begin
+
+ ClientDataSet1 := TClientDataSet.Create(nil);
+ //with ads1.Create(self) do begin
+ with clientdataset1 do begin
+
+    //CreateDataSet;
+    //Open;
+    LoadFromFile(ExePath+'crypt\clients.xml');
+    open;
+    writeln('size '+inttostr(datasize))
+    //writeln('fcount of xml'+inttostr(indexfieldcount))
+ 
+    //CreateDataSet;
+      CreateDBGridForm(clientdataset1); 
+      //SetDataSet(clientdataset1) 
+   close;
+   free;
+    //ShowMessage(fieldbyname('Value').asstring);
+    //locate
+    //Append;
+    {FieldByName('Name').AsString := 'MyName';
+    FieldByName('Value').AsString := 'Paul Rigby';
+    Append;
+    FieldByName('Name').AsString := 'MyAddress';
+    FieldByName('Value').AsString := '5 Woodman Villas'#13#10'Oxford';
+    Post;}
+  end;
+end;  
+
+
+
+function getDataset: TDataSet;
+	var
+	   dset : TDataSet;
+	begin
+	   try
+      dset := TDataSet.Create(nil);
+	      //dset.Session:= OracleSession1;
+	      //dset.SQL.Text:= 'select count(1) from QD.FIXED_TABLE';
+	      //dset.datasource:= adoQuery1.datasource;
+              //dset.commandtext
+              //dset.fields
+              //dset.Open;
+	      //Result:= dset.Fields[0].AsInteger;
+	      result:= dset;
+           finally
+	      dset.Close;
+	      dset.Free;
+	   end;
+	end;
+
+
+
+procedure SetADOQuery1;
+var i, z: integer;
+   ws: widestring;
+begin
+  try
+    with TStrings.create do begin
+      //add('myentry');
+      //clear;
+      free;
+    end;  
+    with TQuery.create(self) do begin
+      Close;
+      //connectionString:= 'Provider=MSDASQL;DSN=mx3base;Uid=sa;Pwd=admin';
+ 
+      SQL.Clear;
+      //SQL.Add ('SELECT * FROM ' + TablesComboBox .Items [TablesComboBox .ItemIndex]);
+      
+      SQL.Add('SELECT * FROM Table1');
+      Free;
+    end;
+      with TWideStringlist.create do begin
+      //Close;
+      //connectionString:= 'Provider=MSDASQL;DSN=mx3base;Uid=sa;Pwd=admin';
+ 
+      //Clear;
+      //SQL.Add ('SELECT * FROM ' + TablesComboBox .Items [TablesComboBox .ItemIndex]);
+      Add('SELECT * FROM Table1');
+      Append('SELECT * FROM Table1');
+      Append('SELECT * FROM Table1');
+      writeln(inttostr(count))
+      Free;
+    end;
+    adoquery1:= TAdoQuery.create(self)
+ 
+    with ADOQuery1 do begin
+      Close;
+      connectionString:= 'Provider=MSDASQL;DSN=mx3base;Uid=sa;Pwd=admin';
+      ws:= 'SELECT * FROM Table1';
+      //SQL.Clear;
+      //SQL.Add ('SELECT * FROM ' + TablesComboBox .Items [TablesComboBox .ItemIndex]);
+      //SQL.Add('SELECT * FROM Table1');
+      commandtext:= 'SELECT * FROM Table1';
+      Open;
+      for i:= 0 to Recordcount - 1 do begin
+    for z:= 0 to Fieldcount - 1 do 
+      Write('qry '+(Fields[z].asString)+'  ');
+    Writeln(#13#10)
+    Next;
+  end;
+  
+    end;
+  finally
+    //
+  end;
+end;
+
+
+
+Procedure SetADOSETAccess2;
+var 
+  //adoquery: TAdoDataSet;
+  i, z: integer;
+begin  
+  adoquery:= TAdoDataSet.Create(self);
+  with adoquery do begin
+    cachesize:= 500;
+    //commandtext:= 'select count(*)'
+    //commandtext:= 'INSERT INTO Table1 (FirstName, LastName, Phone)'+
+                        //'VALUES (''Max77'', ''Box545'', ''031-333 77 88'')';
+    commandText:= 'SELECT * FROM Table1';
+    connectionString:= 'Provider=MSDASQL;DSN=mx3base;Uid=sa;Pwd=admin';
+  //try
+    //dataset
+    Open;
+    //datasource.dataset:= NIL;;
+   // datasource:= datasource;
+  //except   
+    //Writeln(intToStr(Recordcount)+' records found')
+  //end;
+  for i:= 0 to Recordcount - 1 do begin
+    for z:= 0 to Fieldcount - 1 do 
+      Write((Fields[z].asString)+'  ');
+    Writeln(#13#10)
+    Next;
+  end;
+    Close;
+    Free;        
+  end;
+end;
+
+{ich versuche ein TClientdataset mit einer Advantage Tabelle zu benutzen. Verbunden über TAdsConnection - TAdsQuery - TDatasetProvider - TClientDataset - TDataSource -TDBGrid.
+Die Connection funktioniert, Daten lassen sich in einem Grid anzeigen.}
+
+procedure dbAlias;
+  //uses
+    //Classes, SysUtils, DB, DBTables, Provider, DBClient;
+  var
+    i: Integer;
+    BDEAlias: string;
+    abase, abasepath: string;
+    aParams, TableNames: TStringList;
+    
+    Table: TTable;
+    aDataSetProvider: TDataSetProvider;
+    ClientDataSet: TClientDataSet;
+  begin
+   BDEAlias:= 'DBDEMOS';
+    TableNames := TStringList.Create;
+    AParams:= TStringList.Create; 
+    with TSession.Create(nil) do
+    try
+      //AutoSessionName := True;
+      
+      SessionName:= 'MainSession3'; 
+      GetAliasParams(BDEAlias, AParams); 
+  
+      OpenDatabase(BDEAlias); 
+      //GetTableNames(tablenames, TableNames);
+      abasepath:= aParams[0];
+      Delete(abasepath,1,7)
+      GetTableNames(abasepath,'', True, False, TableNames);
+    finally
+      Free
+    end {TSession};
+    Table := TTable.Create(nil);
+    aDataSetProvider := TDataSetProvider.Create(nil);
+    ClientDataSet := TClientDataSet.Create(nil);
+    try
+      Table.DatabaseName:=  BDEAlias; //tablenames[2];
+      //Table.Params.Assign(AParams); 
+        writeln('base '+Table.DatabaseName);
+
+      for i:=0 to Pred(TableNames.Count) do begin
+        writeln(Table.TableName);
+      
+        Table.TableName := TableNames[i];
+        writeln('tab '+table.tablename)
+        Table.Open;
+        aDataSetProvider.DataSet := Table;
+        ClientDataSet.SetProvider(TComponent(aDataSetProvider));
+        //ClientDataSet.CreateDataSet;
+        ClientDataSet.Open;
+        //ClientDataSet.CreateDataSet;
+      
+        //ClientDataSet.datasetfield:= true;
+   ClientDataSet.SaveToFile(ExePath+'crypt\'+ChangeFileExt(Table.TableName,'.xml'),dfXMLUTF8);
+        
+        
+        
+        ClientDataSet.Close;   //important
+        Table.Close
+      end;
+      //CreateDBGridForm(clientdataset);  
+    finally
+      Table.Free;
+      clientdataset.free;
+      //ASession.Free;  
+    AParams.Free;
+    tableNames.Free;
+    end;
+  end;
+
+
+begin
+  //SetAdoQuery;
+  //SetAdoSet;
+  //SetADOSETAccess;
+  
+  dbalias;
+  newdataset;
+  
+  dbAlias;
+  SetAdoQuery1;
+  SetADOSETAccess2;
+  //CreateDBGridForm(NIL);
+  //SetDataSet;
+  Writeln('Data Link Dir is: '+ DataLinkDir);
+  writeln('machine name is: '+getHostName)
+  writeln('user name is: '+getUserName)
+  mytimestamp:= GetFileCreationTime(exepath+'maxbox3.exe')
+  writeln(datetimetoStr(mytimestamp)+' Creation Date of maXbox3')
+  writeln('tick count from func ' +IntToStr(GetTickCount));
+  //DLL Test
+  MyMessageBeep(60);
+  Writeln('Host is: '+getHostbyName('www.softwareschule.ch'))
+  CreateFileFromString(ExePath+'mycopy.txt',memo2.text);
+  WriteLog(ExePath+'mylog.txt',memo2.text)
+  ws:= TWideStringList.create;
+  getProviderNames(ws)
+  for i:= 1 to ws.count -1 do 
+    writeln(inttostr(i) +' '+ws.strings[i]);
+  ws.free;  
+  //setDataSet;
+end.   
+
+
+*******************************************************
+There is no place like 127.0.0.1 
+
+Exception: Access violation at address 4DE2F83C in module 'msado15.dll'. Read of address 78742E67 at 0.1057
+
+
+[Microsoft][ODBC Driver Manager] Data source name not found and no default driver specified at 35.440
+
+[Microsoft][ODBC Microsoft Access Driver] Query is too complex at 35.607
+
+
+[Microsoft][ODBC Microsoft Access Driver] The Microsoft Jet database engine cannot find the input table or query 'Table1d'.  Make sure it exists and that its name is spelled correctly at 35.556
+
+[Microsoft][ODBC Microsoft Access Driver] Syntax error (missing operator) in query expression '031-333 77 88' at 41.356
+
+[Microsoft][ODBC Microsoft Access Driver] Too few parameters. Expected 2 at 41.354
+
+
+The syntax for the INSERT statement is:
+
+    INSERT INTO table
+    (column-1, column-2, ... column-n)
+    VALUES
+    (value-1, value-2, ... value-n);
+    
+dbs.Execute " INSERT INTO Employees " _
+        & "(FirstName,LastName, Title) VALUES " _
+        & "('Harry', 'Washington', 'Trainee');"
+        
+        
+ADOConnection1.Open;
+ADOQuery1.Close;
+ADOQuery1.SQL.Text := 'SELECT * FROM database1 WHERE
+value1=1 AND value2= ' + inttostr(array[3]);
+        
+QuotedStr rather than ''''    
+
+CommandText does not return a result set at 41.360
+
+ADOQuery1.SQL.Clear;
+ADOQuery1.SQL.Add('Insert into Score ([Score],[Round],[FighterID],[FightID])
+Values('+quotedstr(cbrf1.text)+','+QuotedStr(inttostr(countround))+', )');
+ADOQuery1. ExecSQL;
+ADOQuery1.SQL.Clear;
+
+
+mdbviewer
+dns-entry
+
+
+
+n my program, I instansiate a TDataModule at RunTime and put it in a
+variable named FData.
+I then want to assign one of the TDataSources found in FData to a DBGrid's
+DataSource property. So I do this :
+MyGrid.DataSource := FData.DataSource1;
+Of cource, the DataSource is linked to a DataSet (actualy, a Memory table).
+Each time I call FData.DataSet1.Append() I receive a List out of bound
+(0).
+I traced the program and found out that the error is raised in
+TDataSet.DataEvent(Event: TDataEvent; Info: Longint);
+the code is
+for I := 0 to FDataSources.Count - 1 do
+TDataSource(FDataSources[I]).DataEvent(Event, Info);
+I don't know why it raises this error.
+Anyone have any idea ?
+Thanks in advance.
+
+
+The following code won't work (naming part)
+:
+: for i := 0 to (Listbox1.Items.Count-1) do
+: with PageControl1 do
+: begin
+: //addind tabsheet for table
+: with TTabSheet.Create(Self) do
+: begin
+: PageControl := PageControl1;
+: Pages[Page].TabVisible := true;
+: Caption := Listbox1.Items[i];
+: end;
+: //adding table
+: with TADOTable.Create(Self) do
+: begin
+: Active:= False;
+: ConnectionString:= ADOConnection1.ConnectionString;
+: Name:= 'ADOTbl'+IntToStr(i);
+: TableName:= Listbox1.Items[i];
+: end;
+: with TDatasource.Create(Self) do
+: begin
+: Name:= 'DS'+ IntToStr(i);
+: // DataSet:= 'ADOTbl'+IntToStr(i);
+: end;
+: with TDBGrid.Create(Self) do
+: begin
+: // Name:= 'DBGrid'+IntToStr(i);
+: Align:= AlTop;
+: // DataSource:= 'DS'+ IntToStr(i);
+: end;
+:
+: end;//with PageControl1.Pages do
+
+
+procedure TForm1.DBGrid1TitleClick(Column: TColumn);
+//{$J+}
+ const PreviousColumnIndex : integer = -0;
+//{$J-}
+begin
+  if DBGrid1.DataSource.DataSet is TCustomADODataSet then
+  with TCustomADODataSet(DBGrid1.DataSource.DataSet) do
+  begin
+    try
+      DBGrid1.Columns[PreviousColumnIndex].title.Font.Style :=
+      DBGrid1.Columns[PreviousColumnIndex].title.Font.Style - [fsBold];
+    except
+    end;
+
+    Column.title.Font.Style :=
+    Column.title.Font.Style + [fsBold];
+    PreviousColumnIndex := Column.Index;
+
+    if (Pos(Column.Field.FieldName, Sort) = 1) and (Pos(' DESC', Sort)= 0) then
+      Sort := Column.Field.FieldName + ' DESC'
+    else
+      Sort := Column.Field.FieldName + ' ASC';
+  end;
+end; 
+
+
+You don't need to create the file, CDS will do this.
+
+1.    Drop a tclientdataset on a fresh apps form.
+2.    Set fielddefs (eg Name and Value, type string, SIZE 250)
+3.    Put this for the "write" button:
+
+  with ClientDataSet1 do begin
+    CreateDataSet;
+    Open;
+    Append;
+    FieldByName('Name').AsString := 'MyName';
+    FieldByName('Value').AsString := 'Paul Rigby';
+    Append;
+    FieldByName('Name').AsString := 'MyAddress';
+    FieldByName('Value').AsString := '5 Woodman Villas'#13#10'Oxford';
+    Post;
+  end;
+
+4.    Do this to save: ClientDataSet1.SaveToFile('c:\test.xml', dfXML);
+5.    To load: ClientDataSet1.LoadFromFile('c:\test.xml');
+6.    To get a value:
+  ClientDataSet1.Locate('Name', 'MyAddress', [loCaseInsensitive]);
+ ShowMessage(ClientDataSet1.fieldbyname('Value').asstring);
+
+That's it. you can drop a dbgrid and datasource and link up dbgrid.datasource and datasrc.dataset and edit it live if you like.

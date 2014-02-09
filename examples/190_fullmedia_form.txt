@@ -1,0 +1,440 @@
+//Full Form demo for media player component
+//loads a file, bitmap , mp3, video and so on
+//{$R+}{$D-,L-,O+,Q-,R-,Y-,S-} loc's=368, App_190
+
+program MediaPlayer3_FORM;
+
+const LEFTBASE = 20;
+      TOPBASE = 25; 
+      MEDIAPATH =  'D:\kleiner2005\download';
+      //SONGPATH = 'E:\mp3\byron\David Byron - Take No Prisoners   1975\';
+      SONGPATH = 'C:\Users\Public\Music\Sample Music\';
+
+var 
+  selectedFile: string;
+  handle: THandle;
+  //mynote: TNoteBook;
+  bmp: TBitmap;
+  mpanel: TPanel;
+  mPlayer: TMediaPlayer;
+  inFrm: TForm;  
+  mbtn3: TBitBtn;
+  Lstbox: TListbox;
+  stat: TStatusbar;
+  STATchoice: boolean;
+
+  
+function MSecToTime(mSec: Int64): string;
+var dt: TDateTime;
+begin
+  dt:= (mSec/1000/86400);  //SecsPerDay;
+  Result:= FormatDateTime('" song length is:" nn:ss:zzz',dt);
+end; 
+  
+procedure sinsinFunction;
+var x,y,dx: double;
+  weltnr,farbe:integer; 
+ begin
+   weltnr:= 1;
+   repeat
+     x:= 5; dx:=0.25;
+     farbe:= farbe + 10
+     repeat
+       y:= 150 * sin(x);
+       inFrm.Canvas.Pixels[round(X),round(y)+weltnr]:= farbe; 
+       x:= x+dx;
+     until x > 550;
+     inc(weltnr)
+   until weltnr = 600;
+ end;  
+  
+procedure FindAllFiles(FilesList: TStringList; StartDir, FileMask: string);
+var //SR: TSearchRec;
+  DirList: TStringList;
+  IsFound: Boolean;
+  i: integer;
+begin
+  if StartDir[length(StartDir)] <> '\' then
+                       StartDir:= StartDir + '\';
+  {Build a list of the files in dir StartDir (not the directories!)}
+  IsFound:= FindFirst(StartDir+FileMask, faAnyFile-faDirectory) = 0;
+  while IsFound do begin
+    //only file name less StartDir
+    FilesList.Add(StartDir + searchrecName);
+    IsFound:= FindNext = 0;
+  end;
+  FindClose;
+  //Build a list of subdirectories
+  DirList:= TStringList.Create;
+    IsFound:= FindFirst(StartDir+'*.*', faAnyFile) = 0;
+    while IsFound do begin
+      if ((searchrecAttr and faDirectory) <> 0) and
+         (searchrecName[1] <> '.') then
+           DirList.Add(StartDir + searchrecName);
+      IsFound:= FindNext = 0;
+    end;
+    FindClose;
+  //Scan the list of subdirectories recursive!
+  for i:= 0 to DirList.Count - 1 do
+    FindAllFiles(FilesList, DirList[i], FileMask);
+  DirList.Free;
+end;  
+
+procedure StartFileFinder(vlist: TStringList);
+begin
+  FindAllFiles(vlist, SONGPATH, '*.mp3');
+  //vlist.saveToFile('maXbox_mp3files.txt');
+end;
+
+function LoadBitMap: TBitmap;
+begin
+  Bmp:= TBitmap.Create;
+  try
+    Bmp.LoadFromFile(selectedFile);
+    //vFrm.Canvas.Brush.Bitmap:= Bitmap;
+    //vFrm.Canvas.FillRect(Rect(10,10,180,150));
+  finally
+    result:= bmp;
+  end;
+end; 
+
+procedure ChangeSong(self: TObject);
+begin
+  MPlayer.filename:= lstbox.items[lstbox.itemIndex];
+  StatChoice:= true;
+  mBtn3.Caption:= 'Play Song';
+end; 
+
+procedure CloseClick(Sender: TObject; var action: TCloseAction);
+begin
+  //Form1.Close;  free 308 kByte
+  if MessageDlg('Wanna Leave?',mtConfirmation,[mbYes, mbNo],0) = mrYes then begin
+     //form1.Free;
+    MPlayer.Close;
+    MPlayer.Free;
+    //bmp.Free;
+    action:= caFree;
+    //ShowMessage('Now you see the hits of mX3');
+    //ExecuteCommand('http://www.softwareschule.ch/maxboxshow.htm','')
+ end else
+    Action:= caNone;
+end;
+
+procedure BtnplayClick(Sender: TObject);
+var idx, i: integer;
+begin
+  MPlayer.AutoEnable:= true;
+  if STATChoice then begin
+     MPlayer.Close;
+     idx:= lstbox.itemIndex 
+     //LetLogoDraw(inFrm.Canvas, 10, 5, 5, clwhite);
+     MPlayer.filename:= lstbox.items[idx];
+     MPlayer.Open;
+     stat.SimpleText:= MPlayer.filename + MSecToTime(Mplayer.length);
+     writeln(Format('%s',[lstbox.items[idx]+MSecToTime(Mplayer.length)]));
+     MPlayer.Play;
+  end else
+   for i:= 0 to lstbox.items.count - 1 do begin
+     MPlayer.Close;
+     //LetLogoDraw(inFrm.Canvas, 10, 5, 3, clpurple);
+     MPlayer.filename:= lstbox.items[i];
+     MPlayer.Open;
+     MPlayer.Wait:= true;
+     stat.SimpleText:= MPlayer.filename + MSecToTime(Mplayer.length);
+     MPlayer.Play;
+   end;
+end;
+
+procedure OpenCD(self: TObject);
+begin
+  OpenCDDrive;
+end; 
+
+procedure GetMediaData(self: TObject);
+begin
+ if PromptForFileName(selectedFile,'Media files(*.mp3)|*.mp3|*.mpg)|*.mpg',//others
+                      '', 'Select your mX3 media file',
+                      MEDIAPATH, False) //false: not Save dialog!
+   then begin
+     // Display this full file/path value
+      mPanel.caption:= 'Selected file: '+ExtractFileName(selectedFile);     
+      stat.SimpleText:= 'Selected file: '+ExtractFileName(selectedFile);
+      MPlayer.AutoEnable:= false;
+      //MPlayer.EnabledButtons := [];
+      MPlayer.EnabledButtons:= [btPause, btStop, btPlay, btRecord, btEject];
+      //MPlayer.Refresh;
+      MPlayer.filename:= selectedFile;
+      //ExePath+'examples\airmaxloop3.mp3';
+      MPlayer.Close;
+      MPlayer.Wait:= true;
+      MPlayer.Open;
+      MPlayer.Play;
+      mPanel.hide;
+      sinSinfunction;
+      mPanel.setbounds(LEFTBASE,TOPBASE+30,750, 50);
+      mPanel.show;
+      mPanel.caption:= ExtractFileName(selectedFile); 
+   end;
+end;
+
+
+procedure GetVideoData(self: TObject);
+begin
+  if PromptForFileName(selectedFile,
+                       'Video files (*.mpg)|*.mpg|*.avi)|*.avi|*.bmp)|*.bmp',
+                       //and others
+                      '', 'Select your video media file',
+                       MEDIAPATH, False) //false: not Save dialog!
+  then begin
+    //Display this full file/path value
+    writeln(ExtractFileExt(selectedFile))
+    if ExtractFileExt(selectedFile) = '.bmp' then begin
+      mPanel.parent:= NIL;
+     inFrm.Canvas.Draw(30,80, LoadBitmap) 
+    end else begin
+      mPanel.parent:= inFrm;
+      mPanel.caption:= 'Selected file: '+ExtractFileName(selectedFile);     
+      MPlayer.AutoEnable:= false;
+      //MPlayer.EnabledButtons := [];
+      MPlayer.EnabledButtons:= [btPause, btStop, btPlay, btEject];
+      //MPlayer.Refresh;
+      MPlayer.filename:= selectedFile;
+      //VIDEO... MPlayer.filename:= ExePath+'examples\*.mpeg';
+      MPlayer.Close;
+      MPlayer.Wait:= true;
+      MPlayer.Open;
+      MPlayer.TimeFormat := tfMilliseconds;
+      Writeln('Video Size: '+IntToStr(MPlayer.Length));
+      MPlayer.DisplayRect:= Rect(1,1,0,0); {"0,0" force resolution autodetect}
+      //mPanel.Width:= MPlayer.DisplayRect.right;
+      MPlayer.Play;
+    end;
+  end; //File Name
+end;
+
+procedure SetForm;
+var
+  mbtn, mbtn2: TBitBtn;
+  mi, mi1, mi2, mi3: TMenuItem;
+  mt: TMainMenu;
+  mlbl, mlbl1: TLabel; 
+  mp3list: TStringList;
+  i: integer;
+begin
+  STATChoice:= false;
+  inFrm:= TForm.Create(self);
+  mLbl:= TLabel.create(inFrm);
+  mLbl1:= TLabel.create(inFrm);
+  mPanel:= TPanel.Create(inFrm);
+  stat:= TStatusbar.Create(inFrm);
+  Lstbox:= TListbox.create(inFrm);
+
+  with inFrm do begin
+     caption:= '********MediaMonster3************';  
+     height:= 610;
+     width:= 980;
+     //color:= clred;
+     Position:= poScreenCenter;
+     onClose:= @CloseClick;
+     Show;
+   end;
+   with mPanel do begin
+     caption:= '*****maXboxTV*****';  
+     parent:= inFrm;  
+     SetBounds(LEFTBASE+10,TOPBASE+40,460,400)
+     color:= clsilver;
+     font.color:= clyellow;
+     font.size:= 30;
+     Show;
+   end; 
+  mp3list:= TStringList.Create;
+  StartFileFinder(mp3list);
+  with Lstbox do begin
+    parent:= inFrm;
+    SetBounds(LEFTBASE+490, TOPBASE+40, 420, 400)
+    font.size:= 10;
+    color:= clYellow;
+    for i:= 0 to mp3list.count - 1 do 
+      items.add(mp3List[i]);
+    onClick:= @ChangeSong;  
+  end;
+  mp3List.Free;  
+  mBtn:= TBitBtn.Create(inFrm)
+  with mBtn do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 590, TOPBASE+ 460,150, 40);
+    caption:= 'Open Media';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'OPENFOLDER'); 
+    //event handler
+    onclick:= @GetMediaData;
+  end;
+  mBtn2:= TBitBtn.Create(inFrm)
+  with mBtn2 do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 430, TOPBASE+460,150, 40);
+    caption:= 'Open Video';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'FLOPPY'); 
+    //event handler
+    onclick:= @GetVideoData;
+  end;
+  mBtn3:= TBitBtn.Create(inFrm)
+  with mBtn3 do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 750, TOPBASE+460,150, 40);
+    caption:= 'Play List';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'PREVIEWGLYPH'); 
+    //event handler
+    onclick:= @BtnplayClick;
+  end;
+  with mlbl do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+15,TOPBASE-15,180,20);
+    font.size:= 28;
+    font.color:= clred;
+    font.style:= [fsunderline]
+    caption:= 'MediaMonsterApp';
+  end;  
+  with mlbl1 do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+495,TOPBASE-1,180,20);
+    font.size:= 20;
+    font.color:= clred;
+    caption:= 'Media List:';
+  end;  
+  mt:= TMainMenu.Create(infrm)
+  with mt do begin
+   //parent:= frmMon;
+  end;  
+  mi:= TMenuItem.Create(mt)
+  mi1:= TMenuItem.Create(mt)
+  mi2:= TMenuItem.Create(mt)
+  mi3:= TMenuItem.Create(mi)
+  with mi do begin
+    //parent:= frmMon;
+    Caption:='Play Media';
+    Name:='ITEM';
+    mt.Items.Add(mi);   
+    OnClick:= @GetMediaData;
+  end;
+  with mi1 do begin
+    //parent:= frmMon;
+    Caption:='Show Video';
+    Name:='ITEM2';
+    mt.Items.Add(mi1) ;
+    OnClick:= @GetVideoData
+  end;
+  with mi2 do begin
+    //parent:= frmMon;
+    Caption:='Open CD Player';
+    Name:='ITEM3';
+    mt.Items.Add(mi2);
+    OnClick:= @OPenCD;
+  end;
+  with mi3 do begin
+    //parent:= frmMon;
+    Caption:='Open maXbook';
+    Name:='ITEM4';
+    //mi.Items[0].add(mi3);
+  end;
+  with Stat do begin
+    parent:= inFrm;
+    stat.SimplePanel:= true;
+  end;
+  MPlayer:= TMediaPlayer.create(self);
+  with MPlayer do begin
+    parent:= inFrm; 
+    height:= 38;
+    top:= TOPBASE + 460;
+    left:= LEFTBASE+ 10;
+    Display:= mPanel;   //for video show
+  end;  
+  //LoadBitMap;
+end;
+
+begin
+  //loadbitmap;
+  SetForm;
+  //writeln(gethostbyname('www.kleiner.ch'))
+   writeln('Instance: '+intToStr(getHinstance))
+   writeln('Procid: '+intToStr(getProcessid))
+   writeln('Processors: '+inttostr(GetNumberOfProcessors)) 
+  {Handle:= FindWindow('TMaxForm1','');
+  if Handle <> 0 then 
+    Showmessage('maXbox is alive')}  
+End.
+
+//---------------------------------------------------------
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  MediaPlayer1.Close;
+  MediaPlayer1.FileName := 'c:\music\test.mp3';
+  MediaPlayer1.Open; 
+  MediaPlayer1.Play;
+end;
+
+procedure TForm2.btOpenClick(Sender: TObject);
+var
+  OpenMediaDialog : TOpenDialog;
+begin
+  OpenMediaDialog := TOpenDialog.Create(Self);
+  OpenMediaDialog.Filter := 'All Video Files (*.avi)|*.avi';
+  // There are avi files in
+  // C:\Documents and Settings\All Users\Documents\RAD Studio\6.0\Demos\DelphiWin32\VCLWin32\CoolStuff.
+  if OpenMediaDialog.Execute() then begin
+    { Assign a file to the media player. }
+    MediaPlayer1.FileName := OpenMediaDialog.FileName;
+ 
+    { Check if the file exists and is not a directory. }
+    if (FileExists(OpenMediaDialog.FileName)) and
+       (not DirectoryExists(OpenMediaDialog.FileName)) then begin
+      { Open the files. }
+      MediaPlayer1.Wait := true;
+      MediaPlayer1.Open;
+      MediaPlayer1.Play;
+ 
+      { Override automatic button controlling. }
+      MediaPlayer1.EnabledButtons :=
+        [TMPBtnType.btPause, TMPBtnType.btStop, TMPBtnType.btPlay];
+ 
+      { Enable the Stop button. }
+      btStop.Enabled := true;
+      btOpen.Enabled := false;
+    end;
+  end;
+ 
+  OpenMediaDialog.Free;
+end;
+ 
+procedure TForm2.btStopClick(Sender: TObject);
+begin
+  { Stop and close the media. }
+  MediaPlayer1.Stop;
+  MediaPlayer1.Close;
+ 
+  MediaPlayer1.EnabledButtons := [];
+ 
+  { Enable Open button again. }
+  btOpen.Enabled := true;
+end;
+ 
+procedure TForm2.FormCreate(Sender: TObject);
+begin
+  { Disable all buttons. }
+  MediaPlayer1.AutoEnable := false;
+  MediaPlayer1.EnabledButtons := [];
+end;
+ 
+procedure TForm2.MediaPlayer1PostClick(Sender: TObject;
+  Button: TMPBtnType);
+begin
+  if Button = TMPBtnType.btStop then
+     btStop.Click;
+end;
+
+
+------------------------------------------------------
+Programmers never die, they just GOSUB without RETURN 

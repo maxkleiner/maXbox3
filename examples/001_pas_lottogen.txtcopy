@@ -1,0 +1,100 @@
+program LottoGeneratorTest;
+
+// first interpreter of runmax , loc's = 99
+// lotto generator and recursion test
+// profile based, TASK: replace putnumbers with shuffle!
+
+const lotnumb = 6;
+      lotrange = 45;
+type 
+  TLottolist = array[1..lotnumb] of byte;
+  TLottStat = array[1..45] of integer;
+  
+var i,c,irange: byte;
+    ik, runners: integer;
+    larray: TLottolist; 
+    lstat: TLottStat;
+    //lstlot: TList;
+
+function fac(numb: integer): longint;
+begin
+  if numb = 0 then
+    result:= 1 else
+  result:= numb * fac(numb-1)
+end; 
+
+function initarray: boolean;
+var t: byte;
+begin
+ if max(4,6) > 3 then //test
+ for t:= 1 to lotnumb do 
+   larray[t]:= 0;
+ result:= true
+end;
+
+function initStatarray: boolean;
+var g: byte;
+begin
+ for g:= 1 to lotrange do 
+   lstat[g]:= 0;
+ result:= true
+end;
+
+
+procedure putnumbers(vrange: byte);
+var ti, z, myrand: byte;
+     dup: boolean;
+begin
+  ti:= 1;
+  //randomize
+  //if vrange < lotnumb then vrange:= 6; 
+  repeat
+    myrand:= random(vrange)+1;     
+    dup:= false;
+    for z:= 1 to lotnumb do 
+      if (larray[z] = myrand) then dup:= true;
+    if (not dup) then begin
+      larray[ti]:= myrand;
+      lstat[myrand]:= lstat[myrand] + 1;
+      ti:= ti + 1;
+    end;
+  until ti = lotnumb + 1
+end;  
+
+procedure viewnumbers;
+begin
+ for i:= 1 to lotnumb do
+   writeln(inttostr(i) +': '+inttostr(larray[i]))
+end;
+
+procedure viewlottstat(vrun: integer);
+var whole, averages: integer;
+      tt: byte;
+begin
+ whole:= 0;
+ averages:= (vrun * lotnumb) div lotrange; 
+ for tt:= 1 to lotrange do begin
+   writeln(inttostr(tt) +':  '+inttostr(lstat[tt] - averages))
+   whole:= whole + lstat[tt];
+ end;
+   writeln(inttostr(whole));
+end;
+
+
+// main script
+begin
+  //irange:= strtoint(readln('how great is the range ?'));
+  irange:= lotrange;  
+  runners:= 1;
+  if initStatarray then begin
+     randomize;   
+     for ik:= 1 to runners do begin
+       initarray 
+       putnumbers(irange)
+       viewnumbers;
+     end;
+     //viewlottstat(runners);
+  end;
+  writeln('fractal of 5: '+inttostr(fac(5)))
+end.
+

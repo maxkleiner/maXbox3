@@ -1,0 +1,204 @@
+program DTD_String_Functions;
+
+//Purpose: extract from the unit DTDSchema; ex. 206
+//DTD Translator for XML Schema.
+ 
+
+type
+   TImplementIntf = TIncomeRealIntf;
+
+var
+   year, percent: integer;
+   amount: double;
+   fv: extended;
+   Path: TStrings;
+   Pathname: string;
+   FileName: WideString;
+   
+
+{ Utility Functions }
+
+function LoadFile(const aName: string): string;
+begin
+  with TStringList.Create do
+  try
+    LoadFromFile(aName);
+    Result:= Text;
+  finally
+    Free;
+  end;
+end;
+
+function Join(List: TStrings; Str: string): string;
+var
+  I: Integer;
+begin
+  if List.Count = 0 then
+    Result:= Str
+  else
+    Result:= List[0];
+  for I:= 1 to List.Count - 1 do
+     Result:= Result + Str + List[I];
+end;
+
+procedure Split(Str: string;  SubStr: string; List: TStrings);
+var
+  I: Integer;
+  S, Tmp: string;
+begin
+  List.Clear;
+  S:= Str;
+  while Length(S) > 0 do begin
+    I:= Pos(SubStr, S);
+    if I = 0 then begin
+      List.Add(S);
+      S:= '';
+    end
+    else begin
+      if I = 1 then begin
+        List.Add('');
+        Delete(S, 1, Length(SubStr));
+      end
+      else begin
+        Tmp:= S;
+        Delete(Tmp, I, Length(Tmp));
+        List.Add(Tmp);
+        Delete(S, 1, I + Length(SubStr) - 1);
+        if Length(S) = 0 then
+          List.Add('');
+      end;
+    end;
+  end;
+end;
+
+function Head(Str: string; SubStr: string; var TailStr: string): string;
+var
+  I: Integer;
+begin
+  I:= Pos(SubStr, Str);
+  if I = 0 then begin
+    Result:= Str;
+    TailStr:= '';
+  end
+  else begin
+    TailStr:= Str;
+    Delete(TailStr, 1, I + Length(SubStr) - 1);
+    Delete(Str, I, Length(Str));
+    Result:= Str;
+  end;
+end;
+
+function Tail(Str: string; SubStr: string): string;
+var
+  I: Integer;
+begin
+  I:= Pos(SubStr, Str);
+  if I = 0 then
+    Result:= ''
+  else begin
+    Delete(Str, 1, I + Length(SubStr) - 1);
+    Result:= Str;
+  end;
+end;
+
+function Trim(Str: string): string;
+var
+  Tokens: TStrings;
+begin
+  if Length(Str) > 0 then begin
+    Tokens:= TStringList.Create;
+    try
+      // Replace end-of-line chars
+      Split(Str, #13, Tokens);
+      Str:= Join(Tokens, ' ');
+      Split(Str, #10, Tokens);
+      Str:= Join(Tokens, ' ');
+      Split(Str, #9, Tokens);
+      Str:= Join(Tokens, ' ');
+    finally
+      Tokens.Free;
+    end;
+    while (Length(Str) > 0) and (Str[1] = ' ') do
+      Str:= Tail(Str, ' '); //remove leading spaces
+    while (Length(Str) > 0) and (Str[Length(Str)]=' ') do
+      SetLength(Str, Length(Str) - 1);
+    while (Length(Str) > 0) and (Str[Length(Str)] = #0) do
+      SetLength(Str, Length(Str) - 1);
+    Result:= Str;
+  end
+  else
+    Result:= '';
+end;
+
+function ReadName(Str: string; var TailStr: string): string;
+var
+  I: Integer;
+  Ch: Char;
+begin
+  Str := Trim(Str);
+  Ch := ' ';
+  for I := 1 to Length(Str) do begin
+    {if Str[I] in ['(','#',' '] then begin
+      Ch := Str[I];
+      Break;
+    end}
+  end;
+  Str := Head(Str, Ch, TailStr);
+  if Ch <> ' ' then
+    TailStr := Ch + TailStr;
+  TailStr := Trim(TailStr);
+  Result := Trim(Str);
+end;
+
+function Replace(Str: string; FindStr: string; ReplaceStr: string): string;
+begin
+  Result:= '';
+  while Pos(FindStr, Str) > 0 do
+    Result:= Result + Head(Str, FindStr, Str) + ReplaceStr;
+  Result:= Result+ Str;
+end;
+
+//function UnQuote(Str: string; const QuoteChar: string = '"'): string;
+function UnQuote(Str: string; const QuoteChar: string): string;
+begin
+  Str:= Tail(Str, QuoteChar);
+  Result:= Head(Str, QuoteChar, Str);
+end;
+
+var i: integer;
+
+begin
+   //TIncomeRealIntf = class(TInterfacedObject, IIncomeInt)
+   percent:= 5; year:= 8;  // rate, nperiods
+   amount:= 405.2          // present value
+   
+   Writeln('Function Test ---------------------------------------')
+   Writeln(FloatToStr(Abs(FutureValue((percent/100), year, 0, amount, ptEndofPeriod))))
+   fv:= FutureValue(0, 12, 2, 100, ptStartOfPeriod);
+   Showmessage(FloatToStr(fv))
+   
+   Filename:= ExePath+'maxboxerrorlog.txt'
+   Path := TStringList.Create;
+   try
+     Split(Filename, '\', Path);
+     Path[Path.count-1]:= '';
+     PathName:= Join(Path, '\');
+     Writeln(pathname)
+     for i:= 1 to path.count -1 do
+       writeln(path[i]);
+   finally
+     Path.Free;
+   end;
+   
+   writeln(loadfile(exepath+'firstdemo.txt'));
+  
+end.
+
+//-------------------------------------------------
+
+
+ 
+ 
+    
+  
+  

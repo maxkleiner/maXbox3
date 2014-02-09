@@ -1,0 +1,406 @@
+ PROGRAM Extract_Functions_of_EXE_2;
+
+//depends on the debug, map and symbol options of the compiler
+//don't stripe the symbols if you wanna see it!
+//shows functions and procedures and constructors out of the EXE , #locs=226
+//#head:Administrator: PC08: 07/02/2014 10:42:46 AM E:\maxbox3\mXGit39988\maxbox3\examples\256_findfunctions2_of_EXE.txt 
+
+CONST 
+//<Constant declarations> (loc's=42)
+  AEXENAME = 'maxbox3.exe';
+  FUNCTIONLIST = 'maxbox_extract_funclist399_.txt';
+  ONE_SUGAR_MASS = 3;                              
+
+{TYPE 
+<Type declarations> 
+<Variable declarations>}
+//<PROCEDURE> 
+//http://4coder.org/delphi-source-code/?72
+
+var 
+  listbox1, listbox2: TListBox;
+  funclist, proclist, constrlist: integer;
+
+Function EinsteinEnergyCube: extended;
+// one sugar cube of 3 gram(m): E=mc^2 example
+begin
+ //result:= 0.003 * Power(300000000, 2);
+ Result:= ONE_SUGAR_MASS/1000 * Power(MetersPerLightSecond, 2);
+ //writelegend
+end; 
+
+function FileToString(afilename: string): string;
+begin
+ with TFileStream.Create(afilename, fmOpenRead or fmShareCompat) do begin
+   try 
+     SetLength(result, Size);
+     Read(result, Size);
+   finally 
+     Free;
+   end  
+ end
+end;
+
+procedure StringToFile(acontent, afilename:string);
+begin
+ with TFileStream.Create(afilename, fmOpenWrite or fmCreate) do begin
+   try
+     Write(acontent, length(acontent));
+   finally
+     Free;
+   end
+ end  
+end;
+
+function SearchAndGet(aStrList: TStrings; aSearchStr: string): string;
+var i, TT1, TT2: integer;
+    s1, tmps, tmps2: string;
+begin
+  for i:= 0 to aStrList.Count -1 do begin
+    s1:= aStrList[i];
+      TT1:= pos(uppercase(aSearchStr), uppercase(s1));
+      TT2:= pos(';',s1);
+      if (TT1 > 0) and (TT2 > 0) then begin
+        tmps:= Copy(s1, TT1, TT2-TT1+1);
+        tmps2:= tmps2 + tmps +#13#10;
+      end;
+  end; 
+  result:= tmps2;
+end;
+
+
+function SearchAndGet3(s1: string; aSearchStr: string): TStringlist;
+var i, T1, T2, T3, T4: integer;
+    tmps: string;
+begin
+  result:= TStringlist.create;
+  result.Sorted:= true;   //before dup!
+  result.duplicates:= dupIgnore;
+  Delete(s1,0,30)   //skip header
+  for i:= 0 to length(s1) do begin
+    T1:= Pos(uppercase(aSearchStr), uppercase(s1));
+    if (T1 > 0) then begin
+      Delete(s1,1,T1-1)    //delete before
+      T2:= Pos('(',s1);   // with params
+      T3:= Pos(':',s1);   // no params
+      if (T2 > 0) or (T3 > 0) then begin
+        if T3 > 0 then
+          t4:= Pos(')',s1);
+        if t4 > 0 then 
+          tmps:= Copy(s1, 0, t3+ t4+2);
+        result.add(tmps) 
+        if (T3 > 0) and (T4 > 0) then   
+          //Delete(s1,1,T3+ t4+2);
+          Delete(s1,1,T3+ 2);  //delete found after
+      end; 
+    end else Break;
+  end;
+  result.sort; 
+end;
+
+function SelectLine(Memo: TMemo; Zeile,Pos: integer): integer;
+Var j: integer;
+begin
+ Result:= 0;
+ If Zeile > 0 then
+    For j:= 0 To Zeile-1 do Result:= Result + Length(Memo.Lines[j])+ 2;
+ Result:= Result +  Pos;
+end;
+
+procedure MergeStrings(Dest, Source: TStrings);
+var
+  I, DI: Integer;
+  begin
+  for I := 0 to Source.Count - 1 do begin
+    if Pos ('=', Source[I]) > 1 then begin
+      DI := Dest.IndexOfName(Source.Names[I]);
+      if DI > -1 then Dest[DI] := Source[I];
+    end;
+  end;
+end;
+ 
+procedure TForm1_Button1Click(Sender: TObject);
+begin
+  MergeStrings(ListBox1.Items, ListBox2.Items);
+end;
+ 
+procedure TForm1_FormCreate(Sender: TObject);
+begin
+  ListBox1.Items.Add('Plants = 10');
+  ListBox1.Items.Add('Animals = 20');
+  ListBox1.Items.Add('Minerals = 15');
+  ListBox2.Items.Add('Animals = 4');
+  ListBox2.Items.Add('Plants = 3');
+  ListBox2.Items.Add('Minerals = 778');
+end;
+
+var 
+  myfile, listback: TStringList;
+  strback: string; 
+  //mi: IStreamLoader;
+  //mm: TMemoryStream;
+  insize,i: integer;
+
+BEGIN  //Main
+//<Executable statements>
+//************* maXbox compiler series**************************************
+  //maxForm1.ShellStyle1Click(self);
+ { Memo2.SetFocus;
+  Memo2.Selstart:= SelectLine(Memo2,5,2);
+  Memo2.Sellength:= 50;}
+  // myfile.loadFromFile(ExePath+'upsi_allfunctionslist.txt')
+  // mi:= GetDefaultStreamLoader;
+  // mm:= TMemoryStream.Create;
+  // mi.Load(defWSDL, mm);
+  // mi.Load(ExePath+'maxbox3.exe', mm);
+  // mm.Seek(0,0);
+  // SetLength(strback, mm.Size); 
+  // insize:= mm.read(strback, length(strback));
+  // writeln(inttostr(insize))
+   //myfile:= TStringList.create;
+   //myfile.loadFromFile(Exepath+'maxcopy45.txt');
+   //Writeln(SearchAndGet(myfile, 'function'));
+   //strback:= SearchAndGet(myfile, 'function');
+   memo2.clear;
+   strback:= FileToString(Exepath+EXENAME);
+   //strback:= FileToString(Exepath+'maxbox3clx');
+   writeln('Extraxt of EXE Functions of '+EXENAME)
+   writeln('Size of EXE: '+intToStr(Length(strback)))
+   Screen.Cursor:= crHourGlass;
+   writeln('*************Now the Funclist************* ')
+   listback:= SearchAndGet3(strback, 'function');
+   funclist:= listback.count;
+   writeln('Funclist Size is: '+inttostr(listback.count))
+   //listback.Assign(SearchAndGet3(strback, 'procedure'));
+   for i:= 0 to listback.count-1 do begin
+     writeln(listback[i])
+   end;
+   listback.clear;
+   writeln('*************Now the Proclist************* ')
+   listback:= SearchAndGet3(strback, 'procedure');
+   proclist:= listback.count;
+   writeln('Proclist Size is: '+inttostr(listback.count))
+   for i:= 0 to listback.count-1 do begin
+     writeln(listback[i])
+   end;
+   listback.clear;
+   writeln('*************Now Constructors************* ')
+   listback:= SearchAndGet3(strback, 'constructor');
+   constrlist:= listback.count;
+   writeln('Constructor Size is: '+inttostr(listback.count))
+   for i:= 0 to listback.count-1 do begin
+     writeln(listback[i])
+   end;
+   //All the Output to a file
+   StringToFile(memo2.text, Exepath+FUNCTIONLIST);
+   Screen.Cursor:= crDefault;
+   listback.Free; 
+  //myfile.free;
+  Writeln('Amount of Functions: '+inttoStr(funclist))
+  Writeln('Amount of Procedures: '+inttoStr(proclist))
+  Writeln('Amount of Constructors: '+inttoStr(constrlist))
+  Writeln('Totals of Calls: '+inttostr(funclist+proclist+constrlist));
+  Writeln('SHA1: of '+mbVersion+' '+SHA1(exepath+EXENAME));
+   
+  {Writeln('E=mc^2 example: '+FloatToStr(EinsteinEnergyCube)) 
+  Writeln('One Sugar Cube has Energy in Joule: '+FloatToStr(EinsteinEnergyCube)) 
+  PrintF('One Sugar Cube has Energy in Joule: %0.2E',[EinsteinEnergyCube]) 
+  PrintF('E=mc^2 example: 2 Days Power for Hamburg: %0.2E',[EinsteinEnergyCube]);
+  PrintF('E=mc^2 example: Joule to kWh: %f',[EinsteinEnergyCube/3600000]); 
+  PrintF('E=mc^2 example: Joule to kWh: %0.2E kWh',[EinsteinEnergyCube/3600000]);
+  PrintF('Conclusion: One Sugar has %0.1f Millions kWh Energy!',
+                                       [EinsteinEnergyCube/3600000000000]);} 
+
+  {Writeln('');
+  Writeln('test '+floattostr(pij)) 
+  Writeln('test '+floattostr(pi)) 
+  Writeln(Format('format of PI %0.18f',[PI])) 
+  PrintF('PrintF of PI  %0.18f',[PI]) 
+  Writeln('test '+floattostr(EULER)) 
+  Writeln('test '+floattostr(exp(1)))} 
+  //println
+  //currencybyword
+  //getcommandline
+  //GetEnvironmentVariable( lpName : PChar; lpBuffer : PChar; nSize : DWORD) : DWORD;');
+
+END. 
+
+//code snippet
+
+procedure ListDLLFunctions(DLLName: String; List: TStrings);
+type
+  chararr = array [0..$FFFFFF] of Char;
+  var
+  H: THandle;
+  I,
+  fc: integer;
+  st: string;
+  arr: Pointer;
+  ImageDebugInformation: PImageDebugInformation;
+begin
+  List.Clear;
+  DLLName := ExpandFileName(DLLName);
+  if FileExists(DLLName) then
+  begin
+    H := CreateFile(PChar(DLLName), GENERIC_READ, FILE_SHARE_READ or
+      FILE_SHARE_WRITE, nil, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+    if H<>INVALID_HANDLE_VALUE then
+      try
+        ImageDebugInformation := MapDebugInformation(H, PChar(DLLName), nil, 0);
+        if ImageDebugInformation<>nil then
+          try
+            arr := ImageDebugInformation^.ExportedNames;
+            fc := 0;
+            for I := 0 to ImageDebugInformation^.ExportedNamesSize - 1 do
+              if chararr(arr^)[I]=#0 then
+              begin
+                st := PChar(@chararr(arr^)[fc]);
+                if Length(st)>0 then
+                  List.Add(st);
+                if (I>0) and (chararr(arr^)[I-1]=#0) then
+                  Break;
+                fc := I + 1
+              end
+          finally
+            UnmapDebugInformation(ImageDebugInformation)
+          end
+      finally
+        CloseHandle(H)
+      end
+  end
+end;
+
+// the following is an example how to use the procedure
+var
+  List: TStrings;
+  I: integer;
+  S: String;
+
+begin
+  List := TStringList.Create;
+  ListDLLFunctions('c:\winnt\system32\mfc42.dll', List);
+  S := 'List of functions';
+  for I := 0 to List.Count - 1 do
+    S := S + #13#10 + List[I];
+  ShowMessage(S);
+  List.Free
+  Writeln(SHA1(exepath+'maxbox3.exe'));
+end.
+
+
+
+
+Das Buch oder eher der Bildband besticht durch wirklich exotisches Bildmaterial, in dem Sinne, dass die Aufnahmen und Plakate selten publiziert wurden und deshalb von besonderem Wert sind.
+Der Band zeigt schon in den ersten Seiten ein Parsifal-Plakat, das in seiner dynamischen Kunst-Art einmalig ist. Der Autor verarbeitet ausschliesslich eigenes Bildmaterial mit optimaler Optik und reizvoller Perspektive. Zu erwähnen sind die stimmungsvollen Fernaufnahmen auf S.16 auf der Gotthard-Strecke oder die des Catalan-Talgo auf S.42. Sogar seltene Farbaufnahmen aus den Anfängen der TEE-Ära (S.24) haben Eingang gefunden. Auch die damalige TEEM als übergreifender Güterverkehr kommt zum Zuge und das perspektivische Material wird auch so präzise wie möglich datiert und bezeichnet wie der TEE Capitole du Matin auf S.67. sich eben vom TEE Capitole du Soir unterscheidet.
+ Eine TEE Übersicht auf S.82 runden den Band ab, der auch mit interessanten Details überzeugt, z.B. S.97 zeigt ein imposantes Beispiel von Industriedesign der EuroFima, die einiges an TEE Rollmaterial lieferte.
+Ein profundes Buch zum 2012 Jubiläum der 55 Jahre TEE Geschichte. 
+
+
+
+http://max.kleiner.com/TEE.html
+
+
+
+
+----app_template_loaded----
+
+
+Amount of Functions: 6363
+Amount of Procedures: 3720
+Amount of Constructors: 622
+Totals of Calls: 10705
+B6E9C32EAEC7DE302DD1E008F2ADD364C18C46D1
+
+Amount of Functions: 6363
+Amount of Procedures: 3720
+Amount of Constructors: 622
+Totals of Calls: 10705
+CD9BAB3E6B6E25827AE237CC4F8E4FEF658058A8
+
+Amount of Functions: 8428
+Amount of Procedures: 5210
+Amount of Constructors: 855
+Totals of Calls: 14493
+5CA25A08C2E066BFFFBB1F662B9ADD97D541E1CE
+ mX3 executed: 18.10.2013 15:46:35  Runtime: 0:12:23.187  Memoryload: 51% use
+
+
+Amount of Functions: 8619
+Amount of Procedures: 5329
+Amount of Constructors: 886
+Totals of Calls: 14834
+F30F9AA19D362565786A77E2B1E24F2A4F4118A4
+ mX3 executed: 09.11.2013 13:13:55  Runtime: 0:20:50.734  Memoryload: 71% use
+ 
+ Amount of Functions: 8622
+Amount of Procedures: 5343
+Amount of Constructors: 885
+Totals of Calls: 14850
+ADEB3B3F764F75D98F6CBD51642320BED4C6B7E2
+
+
+
+Amount of Functions: 8996
+Amount of Procedures: 5614
+Amount of Constructors: 949
+Totals of Calls: 15559
+BDC15C26A9B43F11110DCA0D3E1F7A5DC302E3D7
+ mX3 executed: 14.12.2013 12:51:33  Runtime: 0:19:46.234  Memoryload: 43% use
+ 
+ Amount of Functions: 9123
+Amount of Procedures: 5654
+Amount of Constructors: 953
+Totals of Calls: 15730
+SHA1: A8D32978AD68F73EE3B7D688EFD3915E69FBAD77
+
+Amount of Functions: 9446
+Amount of Procedures: 5868
+Amount of Constructors: 996
+Totals of Calls: 16310
+SHA1: FB2031DDE59CF91DD489687647A9F70F2AA640FD
+ mX3 executed: 03.01.2014 00:33:39  Runtime: 0:21:12.360  Memoryload: 43% use
+ Amount of Functions: 9484
+Amount of Procedures: 5882
+Amount of Constructors: 995
+Totals of Calls: 16361
+SHA1: of 3.9.9.84 5AABC925B989B7778F175855373CC4BA9419B422
+ mX3 executed: 04.01.2014 10:07:30  Runtime: 0:15:45.359  Memoryload: 43% use
+ 
+ Amount of Functions: 9562
+Amount of Procedures: 5971
+Amount of Constructors: 1015
+Totals of Calls: 16548
+SHA1: of 3.9.9.84 11201DA30F7A9151AD40F0052E102FC2897E95C5
+ mX3 executed: 04.01.2014 19:59:40  Runtime: 0:22:40.32  Memoryload: 66% use
+
+
+    Amount of Functions: 9908
+Amount of Procedures: 6310
+Amount of Constructors: 1052
+Totals of Calls: 17270
+SHA1: of 3.9.9.85 00095A1C1454FFE78D1BDC76DD943EAADDAA4447
+
+Amount of Functions: 10272
+Amount of Procedures: 6525
+Amount of Constructors: 1080
+Totals of Calls: 17877
+SHA1: of 3.9.9.85 DA5AA145CDBDCE9776DFC6E1D893BC924DB4E2DD
+
+Amount of Functions: 10334
+Amount of Procedures: 6549
+Amount of Constructors: 1083
+Totals of Calls: 17966
+SHA1: of 3.9.9.86 A9ADFBBDFF888FE04D66D4D16BC82BCADA3F5159
+ mX3 executed: 22.01.2014 15:18:33  Runtime: 0:24:16.500  Memoryload: 47% use
+ 
+ Amount of Functions: 10752
+Amount of Procedures: 6785
+Amount of Constructors: 1112
+Totals of Calls: 18649
+SHA1: of 3.9.9.86 A24E9ED51CCD3ED008E8909ACCB8D195CB45DE96
+
+
+
+    http://www.delphibasics.co.uk/
+    
+    http://www.youtube.com/watch?v=av89HAbqAsI

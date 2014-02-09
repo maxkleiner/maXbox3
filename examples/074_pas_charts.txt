@@ -1,0 +1,169 @@
+program chartGenerator;
+
+//*********************************************************************
+// chart example for analyzing random walk & graphic patterns loc's=160  
+// you have to set the iteration var i (in main) for density
+// experiment with random(clblue) and (random(15) for effects _74
+//*********************************************************************
+
+(*
+ RRRRR    EEEEEE   AAAA   DDDDD    MM     MM   EEEEEE 
+ RR  RR   EE       AA AA  DD  DD   MMMM MMMM   EE    
+ RRRRR    EEEE    AAAAAA  DD   DD  MM MMM MM   EEEE
+ RR  RR   EE      AA   AA DD   DD  MM  M  MM   EE
+ RR   RR  EEEEEE AA    AA DDDDD    MM  M  MM   EEEEEE
+*)
+
+const
+//values for generator
+  DAT = 1200;
+  CHDAT = 450;          
+
+type
+  TMemor= array[1..DAT] of double;
+
+var
+  cFrm: TForm;
+  chartData: TMemor;
+  //scaleX1, scaleX2, scaleY1, scaleY2: double;
+
+{procedure scaleResults(const X, Y :double; 
+         var intX, intY: integer; width, height: integer);
+var 
+  scaledX, scaledY: double; 
+  begin
+   scaledX:= (X-scaleX1)/(scaleX2-scaleX1);
+    scaledY:= (Y-scaleY2)/(scaleY1-scaleY2);
+     intX:= round(scaledX * width);
+      intY:= round(scaledY * height);
+  end;} 
+
+procedure Bifurcation_process(var X, Y: double);
+var 
+  j,k,i: integer;
+  r: double;
+begin 
+  for i:=0 to 630 do begin 
+  //i and r depends on overflow
+    r:=2.95+1.643192e-03*i; 
+    X:=0.02;
+    for j:=1 to 350 do X:=r*X*(1-X);
+    //accuracy filter
+    for k:=1 to 220 do begin
+    {$IFDEF LINUX}
+      cFrm.Canvas.DrawPoint(i,round(390*(1.0-X)));
+    {$ELSE}
+      cFrm.Canvas.Pixels[i,round(390*(1.0-X))]:= clBlue;
+    {$ENDIF}
+      X:=r*X*(1-X); 
+    end;
+  end;
+end; 
+ 
+procedure Bifurcationsetup(vForm: TForm);
+var X, Y: double;
+begin
+  X:=1; Y:=1; 
+  cFrm:= vForm;
+  cFrm.Canvas.pen.Color:=clblue;
+  bifurcation_process(X,Y);
+   //direct mode without scaling
+end;  
+ 
+procedure preInitArray;
+var i: Integer;
+begin
+   for i:= 1 to DAT-1 do chartdata[i]:= 0;
+end;
+
+function ChartGenerator(HBase, count: integer; var vdata: TMemor): Boolean;
+var
+  i, y2: Integer;
+  startvalue: Extended;
+begin
+  randomize;
+  y2:= HBase;
+  startvalue:= 0.5;
+  try
+    result:= false;
+    for i:= 1 to count do begin
+      y2:= y2 + (random(15) - random(15));
+      if y2 > 0 then
+      vdata[i]:= abs(round(y2))
+      else vdata[i]:= 1;
+    end;
+   result:= true;
+  finally
+   //randomize;
+  end;
+end;
+
+procedure drawChart(vForm: TForm);
+var
+  i, hsize: integer;
+begin
+  with vForm.canvas do begin
+    hsize:= vForm.Height - 1 div 2;
+    Pen.Color:= random(clblue);
+    //setZoomFact(high(chartdata), fileNameChart);
+    moveto(0, hsize -(round(chartData[1])));
+    for i:= 1 to CHDAT do
+      LineTo(i, hsize -(round(chartData[i])));
+    {MovingAverage(chartData, maData2, CHDAT, MA_LONG)
+      for i:= 1 to CHDAT do
+      Pixels[i, hsize-(round(maData2[i]))]:= clsilver;}
+  end;
+end;
+
+procedure drawChart2(vForm: TForm);
+var i: integer;
+begin
+  with vForm.canvas do begin
+    randomize;
+    for i:= 1 to 2000 do begin
+      MoveTo(random(vform.clientwidth), random(vform.clientheight) +150);
+      LineTo(random(vform.clientwidth), random(vform.clientheight) +150);
+      Pen.Color:= random(2147483647);
+    end;
+  end;
+end;
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  with cFrm do begin
+    caption:= 'chart art II';  
+    BorderStyle:= bsDialog;
+    height:= 440;
+    width:= 450;
+    color:= clblack;
+    show;
+  end  
+end;
+
+//main loop
+var 
+  i: integer;
+begin
+//************* maXbox graphics serie***************************************
+  loadForm;
+  drawChart2(cFrm);
+  sleep(3000)
+  preInitArray;
+  for i:= 1 to 65 do begin
+    if chartGenerator(cFrm.height div 2, CHDAT, chartData) then
+      drawChart(cfrm);
+    if chartGenerator(cFrm.height div 2, CHDAT, chartData) then
+      drawChart(cfrm);
+  end
+  //Bifurcationsetup(cFrm);
+end.
+
+just inside maxbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+                                     

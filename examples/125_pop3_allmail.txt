@@ -1,0 +1,74 @@
+{***************************************************************
+ * Project  : maXCom Series NetInformation
+ * Unit Name: 125_pop3_mail_info /mailmax
+ * Purpose  : Demonstrates the functions of Indy POP3 and maXbox
+ * Date  : 25/09/2010  -  23:38:56 , loc's=72
+ * History  : retrieve with ini file and StringList
+ ****************************************************************}
+program GetMaIL;
+
+const EMAILLIST= 'emaillist.txt';
+
+var
+  IdPOP3: TIdPOP3;
+  IdMessage1: TIdMessage;
+  mailist: TStringList;
+  lastMail: byte;
+
+procedure PrepareGetMail;
+begin
+  IdPOP3:= TIdPOP3.create(self);
+  mailist:= TStringList.create;
+  IdPOP3.Host:= 'pop.kleiner.ch';
+  IdPOP3.Username:= '';
+  IdPOP3.Password:= '';
+  IdPOP3.Port:= 110;
+  lastMail:= 3;
+end;    
+
+procedure GetMailHeaderOrAll;
+var
+  i,z,l: Integer;
+begin
+  IdMessage1:= TIdMessage.create(self);
+  try
+    IdPOP3.Connect(2000);
+    z:= IdPOP3.CheckMessages;
+    if IdPOP3.connected then begin
+      writeln('Size of your MaXbox: '+inttostr(IdPOP3.RetrieveMailBoxSize))
+      writeln('Number of Mails: '+inttostr(IdPOP3.CheckMessages))
+    end;
+    //last new messages
+    l:= z - lastMail;
+    for i:= l to z do begin
+      IdMessage1.clear;                                          
+      try
+        IdPOP3.RetrieveHeader(i, IdMessage1);
+        mailist.add('-'+IntToStr(i)+'----------------------------------------');
+        mailist.add('From: '+IdMessage1.From.Text);
+        mailist.add('To: '+IdMessage1.Recipients.EMailAddresses);
+        mailist.add('Subject: '+IdMessage1.Subject);
+        mailist.add('Date: '+DateToStr(IdMessage1.Date));
+        mailist.add('Size of: '+ IntToStr(IdPOP3.RetrieveMsgSize(i)));
+        //IdPOP3.retrieveRaw(i, idMessage1.body)
+        //mailist.add(idMessage1.body.text)
+      except
+        //silent exception cause of invalid spamsubject!
+      end;
+    end; //for
+    mailist.SaveToFile(EMAILLIST)
+  finally
+    mailist.Free;
+    IdPOP3.Disconnect;
+    IdMessage1.Free;
+    IdPOP3.Free;
+  end;
+end;
+
+begin
+  PrepareGetMail;
+  GetMailHeaderOrAll;
+  SearchAndOpenFile(EMAILLIST)
+end.
+
+

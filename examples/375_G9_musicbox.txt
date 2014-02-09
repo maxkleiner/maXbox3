@@ -1,0 +1,196 @@
+program motion_HTTPDownload_MP3_G9;
+
+//HTTP/FTP Series 101 - 120,375 mX3 directory change 
+//shows download with IndySockets on maXbox webbox ex. 109, #locs=50
+//G9 was the band of the Neukühl Epoch!
+//#sign>max: APSN21: 18.06.2013 09:47:57 
+
+const mp3song = 'G9_vision.mp3';  //Default
+
+var myURL, mXpath: string;
+    idHTTP: TIDHTTP;
+    idHTTP2: TIDHTTPRequest;
+    zipStream: TFileStream;
+    mp3song1: string;
+
+function MSecToTime(mSec: Int64): string;
+var dt: TDateTime;
+begin
+  dt:= (mSec/1000/86400);  //SecsPerDay;
+  Result:= FormatDateTime('" song length is:" nn:ss:zzz',dt) ;
+end; 
+  
+begin
+  mXpath:= extractfilepath(application.exename)
+  //myURL:= 'http://www.softwareschule.ch/download/maxbox_examples.zip';
+  //myURL:= 'http://www.kleiner.ch/kleiner/download/G9_vision.mp3';
+  myURL:= 'http://www.kleiner.ch/kleiner/download/G9_japan.mp3';
+  //myURL:= 'http://www.kleiner.ch/kleiner/download/G9_lordofdarkness.mp3';
+  //myURL:= 'http://www.kleiner.ch/kleiner/download/G9_zeitraum.mp3';
+
+  mp3song1:= ExtractWord(5,myurl,['/']);
+  zipStream:= TFileStream.create(mxpath+mp3song1, fmCreate)
+  // 510:   Name:= Copy(ExtractFileName(ftp_file), 1, sLength);
+ 
+  idHTTP:= TIdHTTP.create(NIL)
+  try
+    idhttp.get1(myURL, zipStream)
+    //idhttp.get2('http://www.softwareschule.ch/maxbox.htm')
+  finally
+    idHTTP.Free
+    zipStream.Free;
+    maxform1.color:= clpurple;
+  end;    
+  //initialization
+  //finalization 
+  closeMP3;
+  showmessage('Download of '+mp3song1+':   '+mSecToTime(lengthMP3(mXpath+mp3song1)));
+  playMP3(mXpath+mp3song1); 
+  //playMP3(mXpath+'examples\'+mp3song);
+end.
+
+more G9 songs:
+
+'http://max.kleiner.com/download/olemosbruja.mp3'
+'http://www.kleiner.ch/kleiner/download/G9_whitemagic.mp3'
+'http://www.kleiner.ch/kleiner/download/G9_japan.mp3'
+'http://www.kleiner.ch/kleiner/download/G9_lordofdarkness.mp3';
+'http://www.kleiner.ch/kleiner/download/G9_nowage.mp3';
+'http://www.kleiner.ch/kleiner/download/G9_olemosbruja.mp3';
+'http://www.kleiner.ch/kleiner/download/G9_playchess.mp3';
+'http://www.kleiner.ch/kleiner/download/G9_vision.mp3';
+'http://www.kleiner.ch/kleiner/download/G9_zeitraum.mp3';
+
+
+---code_cleared_checked---
+
+BEGIN
+ Randomize; 
+ REPEAT
+  TextAttr:=Random(256);
+  Write('Hilfe')
+ UNTIL KEYPRESSED
+END.
+
+Hallo,
+Post by Hilmar Bunjes
+Hallo,
+ich bin gerade am programmieren (Java, dürfte hierfür aber egal sein)
+und brauche einen Algorithmus für einen Zufallszahlengenerator, der
+reproduzierbare Zufallszahlen erzeugt. Also ich brauche eine vernünftige
+Verteilung der Zufallszahlen, muss aber die Möglichkeit haben, bei
+gleichem Startwert auch immer die gleich Folge an Zufallszahlen zu
+bekommen. Der Startwert sollte sich verändern lassen.
+von Steve Schafer, TeamB (Borland)
+
+var RandSeed: longint;
+function Random: double;
+begin
+RandSeed := 134775813 * RandSeed + 1;
+result := (RandSeed xor $80000000) / 4294967296.0;
+if Result < 0 then
+Result := Result + 1;
+end;
+
+Grüße,
+Joachim
+
+
+http://www.pup.ethz.ch/et3.html
+
+Zufallszahlen
+
+Um in Pascal Zufallszahlen erzeugen zu können, steht die Funktion Random (von engl. random = zufällig) zur Verfügung. Damit Zufallszahlen erzeugt werden können, behilft sich Random der aktuellen Uhrzeit, die sich ja laufend ändert. Weiter existiert die Prozedur Randomize, die den Zufallsgenerator initialisiert. Diese muss vor der Verwendung von Random einmal aufgerufen werden. Die Initalisierung des Zufallsgenerators erfolgt durch einfachen Aufruf der Prozedur Randomize (ohne Parameter).
+
+Randomize;   (* Zufallszahlengenerator initialisieren *)
+
+Zufall, Ungewiheit, Gluck, Pech { sind das nicht ziemlich diuse Begrie? Eher
+aus dem Bereich der Wahrsager als dem der Wissenschaftler? Eine wissenschaftliche Untersuchung
+des Zufalls ist moglich, und sie begann mit der Analyse von Glucksspielen
+durch B. Pascal, C. Huygens, Jakob Bernoulli und P. Fermat4. Diese Analyse hat den
+Wahrscheinlichkeitskalkul hervorgebracht, der lange fur einen unbedeutenden Zweig der
+Mathematik gehalten wurde. Einen ersten Erfolg erzielte der Kalkul in der statistischen
+Mechanik durch Untersuchungen von L. Boltzmann und J.W. Gibbs5: Die  }
+"
+Menge von
+Zufall\, die in einem Liter Luft ist, wird durch den Begri der Entropie gemessen. Der
+nachste groe Erfolg ist mit der Entwicklung der Quantentheorie verknupft. Heutzutage
+ist der Zufall in wissenschaftlichen Theorien fast uberall prasent: Rauschen in der
+Signalubertragung, Ausbreitung von Epidemien, Entwicklung von Borsenkursen, chaotisches
+Verhalten von nichtlinearen Systemen, Spieltheorie, Wetterprognosen, : : : .
+
+
+Die Zufallszahlen, die ein Computersystem erstellen kann, sind natürlich keine echten Zufallszahlen.Sie werden aus der Systemzeit berechnet.Der Zufallsgenerator sollte beim Programmstart initialisiert werden:
+
+procedure TForm1.CreateForm(Sender: TObject);
+begin
+  Randomize;
+end;
+ 
+procedure TForm1.Button1Click(Sender: TObject);
+const
+  ZufallBereich = 5;
+begin
+  Caption:=IntToStr(Random(Zufallsbereich));
+end;
+ 
+http://www.math.uni-frankfurt.de/~numerik/lehre/Vorlesungen/pros-12/Zufallszahlen%20und%20Benford/ran-shell.pdf
+
+http://home.comcast.net/~JamesMClark5/Pascal/Random.htm
+
+
+Guten Tag Heini
+Ja richtig, die Funktion hat einen pseudo Zufalls Term, wobei die Initialisierung mit Randomize massgebend ist.
+Damit Zufallszahlen erzeugt werden können, behilft sich Random der aktuellen Uhrzeit in msec, die sich ja laufend ändert. Weiter existiert die Prozedur Randomize, die den Zufallsgenerator initialisiert. Diese muss vor der Verwendung von Random einmal aufgerufen werden. Die Initalisierung des Zufallsgenerators erfolgt durch einfachen Aufruf der Prozedur Randomize (ohne Parameter).
+Die Zufallszahlen, die ein Computersystem erstellen kann, sind natürlich keine echten Zufallszahlen. Sie lassen sich aus der Systemzeit berechnen. Der Zufallsgenerator sollte beim Programmstart eben initialisiert werden.
+Das ist wirklich ein spannendes Thema, wir haben bei den Kryptologen immer wieder über Rausch- oder eben Zufallsgeneratoren gesprochen.
+Heutzutage ist der Zufall in wissenschaftlichen Theorien fast überall präsent: Rauschen in der
+Signaluebertragung, Ausbreitung von Epidemien, Entwicklung von Börsenkursen, chaotisches
+Verhalten von nichtlinearen Systemen, Spieltheorie, Wetterprognosen und eben Kryptologie.
+Ich versuche noch den Source Code rauszufinden, leider ist er im System Unit nicht einsehbar, da er im Kernel steckt.
+Aber so ungefähr könnte er so aussehen:
+var RandSeed: longint;
+function Random: double;
+begin
+RandSeed := 134775813 * RandSeed + 1;
+result := (RandSeed xor $80000000) / 4294967296.0;
+if Result < 0 then
+Result := Result + 1;
+end;
+Mehr über den Zufall findest du auf
+http://www.math.uni-frankfurt.de/~numerik/lehre/Vorlesungen/pros-12/Zufallszahlen%20und%20Benford/ran-shell.pdf
+es grüsst dich, Max
+
+Hello Arduino-Friends,
+
+as byproduct of a resuch project I have made a little driver for the arduino motorshield  modified from Stepper.cpp of Tom Igoe.
+Half and full step modus, endless run and a run for n steps both with the possebility of a hardware interrupt is possible,  driving DC motors, too.
+
+The methodes are:
+  
+initialisation:
+//DC-motors
+Motorshield myMotorshield(PWM_PIN_A,PWM_PIN_B,BRAKE_PIN_A,BRAKE_PIN_B,DIR_PIN_A,DIR_PIN_B,DC-Delay<0..2^16>ms,AD-Resolution (2^<x>));
+DC-Delay prevents short circuit bey changing dc-motor direction
+//stepper-motors
+Motorshield myMotorshield(stepsPerRevolution,PWM_PIN_A,PWM_PIN_B,BRAKE_PIN_A,BRAKE_PIN_B,DIR_PIN_A,DIR_PIN_B,MODUS <HALF><FULL>,AD-Resolution (2^<x>));
+
+setup:
+
+DC:
+  myMotorshield.setDC(MOTOR <MOTA><MOTB>,PWM<0..1023>); //sing of PWM codes direction
+
+stop/run:
+myMotorshield.setDCbrake(MOTOR <MOTA><MOTB>,<STOP><GOON>);
+
+Stepper:
+void myMotorshield.setSpeed(Speed in 1/s)
+
+void myMotorshield.step(Steps <+-><1..1023><0> 0 codes endless run, Interrupt pin ) setting interrupt pin to LOW for more than 1 step movement stops
+
+Examples for each mode are included.
+
+Best regards from Germany
+
+Tobi
+ 

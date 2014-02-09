@@ -1,0 +1,191 @@
+//maXbox is a scripter tool with an inbuild delphi engine in one exe!
+//designed for teaching and analyzing methods
+//Demo shows the call of bitmaps, loc's = 144
+//*************************************************************************
+
+program PolyBitMaps;
+
+type TXYVector = array of TPoint;   
+
+const LOGO = 'Welcome to BitBox locks!';
+
+var
+  inFrm: TForm;
+  image1, image2: TImage;
+  mybitmap: TBitmap;
+  E: Exception;
+
+procedure drawPolygon(vCanvas: TCanvas; vPoints: TXYVector);
+var
+  i, hsize: integer;
+begin
+  with inFrm.canvas do begin
+    hsize:= inFrm.Height - 1 div 2;
+    Pen.Color:= (clpurple);
+    Pen.Width:= 70;
+    //setZoomFact(high(chartdata), fileNameChart);
+    //moveto(0, hsize -((vPoints[0].y)));
+    inFrm.Canvas.MoveTo(vpoints[1].X, vpoints[1].Y);
+    for i:= 0 to high(vPoints) do
+      LineTo(vPoints[i].x, vPoints[i].y);
+  end;
+end;  
+ 
+procedure LoadBitMap2(vFrm: TForm);
+var
+  Bitmap: TBitmap;
+begin
+  Bitmap:= TBitmap.Create;
+  try
+    Bitmap.LoadFromFile(ExePath+'examples\citymax.bmp');
+    vFrm.Canvas.Brush.Bitmap:= Bitmap;
+    vFrm.Canvas.FillRect(Rect(10,10,180,150));
+  finally
+    vFrm.Canvas.Brush.Bitmap:= NIL;
+    Bitmap.Free;
+  end;
+end; 
+
+procedure getHTTP_PNG(vimage: TImage); 
+var
+  myURL: string;
+  idHTTP: TIDHTTP;
+  pngStream: TMemoryStream;
+begin
+  //myURL:= 'http://www.softwareschule.ch/images/oposlogo.gif';
+  myURL:= 'http://www.softwareschule.ch/images/maxlindau2.png';
+  with TLinearBitmap.Create do
+  try
+    idHTTP:= TIdHTTP.Create(NIL)
+    pngStream:= TMemoryStream.create;
+    //OptimizeMem
+    try
+      idHTTP.Get1(myURL, pngStream)
+    except
+      showmessage(E.message)
+    end  
+    pngStream.Position:= 0;
+    LoadFromStream2(pngstream,'PNG');
+    vimage.Picture:= NIL;
+    AssignTo(vimage.picture);
+    //SaveToFile(ExePath+'mX3_open.png');
+  finally
+    Dispose;
+    Free;
+    idHTTP.Free
+    pngStream.Free;
+  end; 
+end;  
+
+function AlterBmp(bitmap: TBitmap; wid, hei: Integer): Boolean;
+var 
+  tmpBmp: TBitmap;
+  ARect: TRect;
+begin
+  Result:= False;
+  try
+    tmpBmp:= TBitmap.Create;
+    try
+      tmpBmp.Width:= wid;
+      tmpBmp.Height:= hei;
+      ARect:= Rect(0,0, wid, hei);
+      tmpBmp.Canvas.StretchDraw(ARect, Bitmap);
+      tmpBmp.LoadFromFile(ExePath+'examples\maxboxlogo.bmp')
+      bitmap.Assign(TmpBmp);
+      image1.Canvas.draw(115,130, bitmap)
+      //image1.picture.bitmap
+      inFrm.canvas.draw(250,30, bitmap)
+    finally
+      tmpBmp.Free;
+    end;
+    Result:= True;
+  except
+    Result:= False;
+  end;
+end;
+
+procedure loadForm;
+begin
+  with inFrm do begin
+    position:= poScreenCenter;
+    color:= clred;
+    setbounds(10,25, 450,370);
+    caption:= LOGO;
+    show;
+  end; 
+  image1:= TImage.create(inFrm);
+  with image1 do begin
+    parent:= infrm;
+    setBounds(100,100, 250,200);
+    //onMousedown:= @Image1MouseDown;
+    //autosize:= true; stretch:= true;
+  end;
+  image2:= TImage.create(inFrm);
+  with image2 do begin
+    parent:= infrm;
+    setBounds(100,100, 150,200);
+    show;
+  end;
+end; 
+
+begin
+  ProcessMessagesON;
+  inFrm:= TForm.create(self)
+  mybitmap:= TBitmap.create; 
+  E:= Exception.create('any internet connect problem'); 
+  loadForm;
+  if AlterBmp(mybitmap, 50, 50) then writeln('biTTop');
+  loadBitmap2(inFrm);
+  getHTTP_PNG(image2); 
+  mybitmap.FreeImage;
+  mybitmap.Free;
+  //image1.free;
+  writeln(inttostr(factint(12)))
+  writeln(floattoStr(fact(12)))
+end.
+
+Pictures from:
+
+http://www.softwareschule.ch/images/maxboxlogo.bmp
+http://www.softwareschule.ch/images/maxlindau2.png
+http://www.softwareschule.ch/images/citymax.bmp
+http://www.softwareschule.ch/images/oposlogo.gif
+
+---------------------------------------------------------------------
+code of version mX3.0 from http://www.softwareschule.ch/maxbox.htm
+code of version mX3.0 
+case  of
+  : ;
+  : ;
+end;
+//Load examples pas_*.txt from directory examples and press F9!
+//please read the readmefirst...
+//or start with the tutorial in /help
+//memo1 is script editor
+//memo2 is output space
+  new version and examples from
+     http://www.softwareschule.ch/maxbox.htm }
+
+
+just inside maXbox
+
+        ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_|  
+        
+
+Latest News of Free Pascal
+
+November 12th, 2010 A new release 2.4.2 is available from our sites. 2.4.2 is the first fixes release from the 2.4 series. Improvements, amongst others:
+
+    * Delphi 2006 like for..in support
+    * Support for sealed and abstract class modifiers,
+    * new targets
+          o 64-bit FreeBSD (x86_64)
+    * Many improvements and fixes to the XML, database and CHM packages
+    * Long term bug in OS/2 implementation of unit Video finally fixed which among others allows inclusion of the text-mode IDE (without debugger) for this platform as part of the distribution again.
+    * Many compiler bugfixes and more than a year of library updates(since 2.4.0)
+                                         

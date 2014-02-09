@@ -1,0 +1,110 @@
+//MaxBox is a scripter tool with an inbuild delphi engine in one exe!
+//designed for teaching and analyzing methods
+//runs under Win, Mac and Linux (CLX) to build Delphi in a Box, loc's=40
+//*************************************************************************
+
+program ASYNC_Timer_API;
+
+function PlaySound(sres: pchar; hmod: HMODULE; syncflag_: dword): Bool;
+  external 'PlaySound@winmm.dll stdcall';
+
+function QueryPerformanceFrequency(ms: longint): Boolean;
+  external 'QueryPerformanceFrequency@kernel32.dll stdcall';
+
+function QueryPerformanceCounter(ms: int64): int64;
+  external 'QueryPerformanceCounter@kernel32.dll stdcall';
+
+
+Const MYS = 'CODESIGN sound!';
+      MP3SONG = 'maxbox.mp3';
+      
+var i: smallint;
+    mp3path: string;
+     inFrm: TForm;
+
+
+function Customtimegettime: int64;
+var
+  Frequenz: int64;
+  Zeit: int64;
+begin
+  if QueryPerformanceFrequency(Frequenz) = true then{ist die Funktion verfügbar}
+  begin
+    //Exception: Privileged instruction at 4.42
+    QueryPerformanceCounter(Zeit);
+    result:= Zeit div (Frequenz div 1000); {umrechnen auf 1/1000 Sekunde}
+  end
+  else begin
+   result:= timegettime; {Wenn QueryPerformanceFrequency(Frequenz) nicht geht}
+  end;
+end;
+
+begin  //main
+  //Writeln(inttostr64(Customtimegettime))     //draft beta
+  Writeln(inttostr64(timeGetTime))     
+  mp3path:= ExePath+'examples\'+MP3SONG;
+  inFrm:= TForm.Create(self)
+  with inFrm do begin
+    position:= poScreenCenter;
+    color:= clred;
+    caption:= 'Delphi in a Box'
+    show;
+  end;  
+  ShowMessage('the boX rocks ' + MYS)
+  PlaySound(pchar(ExePath+'examples\maxbox.wav'),0,0);  //Sync
+  Sleep(20)
+  PlaySound(pchar(ExePath+'examples\maxbox.wav'),0,1);  //Async
+  //Parallel
+  //sleep(20)
+  closeMP3;
+  playMP3(mp3path);                                     //Parallel
+  for i:= 1 to 2300 do
+    writeln(intToStr(i) + ' Aloha from ObjectPascal Bit');
+  sleep(1250)
+  inFrm.color:= clblue;
+  //inFrm.close;
+  //DialogUnitsToPixelsY
+  //ScreenWorkArea
+end.
+
+
+Load examples pas_*.txt from directory and press F9!
+memo1 is script editor
+memo2 is output space
+check the demo: 38_pas_box_demonstrator.txt
+  new version and examples from
+     http://www.softwareschule.ch/maxbox.htm
+     
+     
+ lpszName points to a registry entry
+' Do not use SND_RESOURSE or SND_FILENAME
+Private Const SND_ALIAS& = &H10000
+' Playsound returns immediately
+' Do not use SND_SYNC
+Private Const SND_ASYNC& = &H1
+' The name of a wave file.
+' Do not use with SND_RESOURCE or SND_ALIAS
+Private Const SND_FILENAME& = &H20000
+' Unless used, the default beep will
+' play if the specified resource is missing
+Private Const SND_NODEFAULT& = &H2
+' Fail the call & do not wait for
+' a sound device if it is otherwise unavailable
+Private Const SND_NOWAIT& = &H2000
+' Use a resource file as the source.
+' Do not use with SND_ALIAS or SND_FILENAME
+Private Const SND_RESOURCE& = &H40004
+' Playsound will not return until the
+' specified sound has played.  Do not
+' use with SND_ASYNC
+Private Const SND_SYNC& = &H0     
+     
+
+just inside maXbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_|                                   
+

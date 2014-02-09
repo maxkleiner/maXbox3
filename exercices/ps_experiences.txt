@@ -1,0 +1,351 @@
+The Tool by Carlo Kok is  a real sensation, we improve it for more power
+
+Greetings
+
+I made a test component and it crash when i try to execute this script.
+
+program Test;
+var Test : TTestComponent;
+begin
+Test := TTestComponent.Create(nil);
+Test.test._test := '';
+end.
+
+I import the component using this method.
+
+procedure TForm1.PSScriptCompImport(Sender: TObject;
+  x: TIFPSPascalcompiler);
+begin
+  SIRegister_Std(x);
+  SIRegister_Classes(x, true);
+  SIRegister_Graphics(x, true);
+  SIRegister_Controls(x);
+  SIRegister_stdctrls(x);
+  RegisterDateTimeLibrary_C(x);
+  SIRegister_Forms(x);
+  SIRegister_TTestComponent(x);
+  SIRegister_TestComponent(x);
+end;
+
+procedure TForm1.PSScriptExecImport(Sender: TObject; Exec: TIFPSExec;
+  x: TIFPSRuntimeClassImporter);
+begin
+  RIRegister_Std(x);
+  RIRegister_Classes(x, True);
+  RIRegister_Graphics(x, True);
+  RIRegister_Controls(x);
+  RIRegister_stdctrls(x);
+  RIRegister_Forms(x);
+  RIRegister_TTestComponent(x);
+  RIRegister_TestComponent(x);
+end;
+
+Thanks a lot.
+Regards
+Joseph Leung
+
+jurek wrote:
+>>>> It seems other record type used does cause crash as well, could that
+>>>> be anything wrong for my syntax?
+>>>
+>>>
+>>> You need to add packed to your definition in the DELPHI source, not the
+>>> script.
+> 
+> 
+> Joseph, you must declare ALL records as packed - it isn't known, if you 
+> have made so ...
+> 
+> greetings,
+> 
+> Jurek.
+
+
+Hi Joseph,
+
+> I made a test component and it crash when i try to execute this script.
+> 
+> program Test;
+> var Test : TTestComponent;
+> begin
+> Test := TTestComponent.Create(nil);
+> Test.test._test := '';
+> end.
+> 
+Try:
+
+var
+    TestComponent: TTestComponent;
+    TestType: TTestType; // <-- Helper variable
+    v: Variant; // datetime to string
+begin
+//...
+   TestComponent := TTestComponent.Create(nil);
+   try
+     TestType := TestComponent.Test; // GET property !
+     v := TestType._testd;
+     Writeln('get =====================')
+     Writeln(' TestType._test='+TestType._test);
+     Writeln(' TestType._testd='+v);
+
+     TestType._test := 'this is test';
+     TestType._testd := Now() + 1;
+     v := TestType._testd;
+     Writeln('set =====================')
+     Writeln(' TestType._test='+TestType._test);
+     Writeln(' TestType._testd='+v);
+
+     TestComponent.Test := TestType; // SET property !
+     TestType := TestComponent.Test; // GET again for test
+     v := TestType._testd;
+     Writeln('get =====================')
+     Writeln(' TestType._test='+TestType._test);
+     Writeln(' TestType._testd='+v);
+   finally
+     TestComponent.Free;
+   end;
+//...
+
+You can run your example with a little "trick" only ;)
+Using of helper variable "TestType" enables indirect operations on Test 
+property. Variant variable "v" is for easy datetime to string conversion 
+only.
+
+Perhaps, there will be a little help for you ;)
+
+greetings,
+
+Jurek.
+
+Type
+  TAdpQuery = Class (TComponent)
+  Private
+     FQuery : TSQLQuery ;
+  Published
+    Procedure RunQuery (Const S : String) ;
+    Procedure Next ;
+    Function EOF : Boolean ;
+  End ;
+
+
+Which is an adapter (wrapper) to TSQLQuery. What do I have to do so I can
+use it in my script?
+
+
+DB testing
+---------------------------------------------------------
+I want to use DBGrid and test script
+block
+
+  while Form.Visible  do
+  begin
+    Application.ProcessMessages;
+//    Application.HandleMessage;
+  end;
+do not complete proccessed WM_MOUSEWHEEL messages
+grid lost cursor position and apear full sh..
+same if I start this code from button in delphi
+if I remove block from  - while ... end;  all ok.:)
+Who can help me? Help!!!
+
+
+FDB: TpFIBDataBase;
+FTR: TpFIBTransaction;
+FDS : TpFIBDataSet;
+TDS: TDataSource;
+GRID: TDBGrid;
+Form: TForm;
+
+begin
+Form := TForm.Create(self);
+Form.Width := 800;
+Form.Height := 300;
+
+Form.Caption := 'Name';
+Form.Position := poScreenCenter;
+Form.Visible:=True;
+
+FTR:=TpFIBTransaction.Create(Form);
+FDB:=TpFIBDataBase.Create(Form);
+FDS:= TpFIBDataSet.Create(Form);
+
+FDB.DefaultTransaction:=FTR;
+FDB.DBName:='nmpz:/usr/interbase/base/lenses.gdb';
+file://FDB.DBName:='D:\LENSES\DEVELOPER\LENSESDEMO.GDB ';
+FDB.DBParams.Add('lc_ctype=WIN1251');
+FDB.DBParams.Add('user_name=SYSDBA');
+FDB.DBParams.Add('password=riti31');
+FDB.Open;
+
+FDS.DataBase:=FDB;
+FDS.Transaction:=FTR;
+FDS.UpdateTransaction:=FTR;
+
+FDB.Connected;
+FTR.StartTransaction;
+
+FDS.SelectSQL.Text:='SELECT * FROM PATIENTS WHERE UPPER(FNAME) STARTING WITH
+:PRM ORDER BY FNAME';
+FDS.OpenWP(['?'])
+
+TDS:=TDataSource.Create(Form);
+TDS.DataSet:=FDS;
+
+  GRID:= TDBGrid.Create(Form);
+  GRID.Parent:=Form;
+  GRID.Align:=alClient;
+  GRID.Visible:=True;
+  GRID.DataSource:=TDS;
+  GRID.SetFocus;
+
+
+  while Form.Visible  do
+  begin
+    Application.ProcessMessages;
+//    Application.HandleMessage;
+  end;
+
+FDS.Close;
+FTR.Commit;
+FDB.Close;
+FDS.Free;
+FDB.free;
+FTR.free;
+GRID.free;
+TDS.free;
+end.
+
+
+
+
+"fox" <foxaunt@hotmail.com> wrote in message
+news:c7s9a4$22s$1@linux.local...
+> my code:
+> ---------------------
+> type
+>   TMyClass = class
+>   public
+>     i : Integer;
+>   end;
+>
+> var
+>   MyObject : TMyClass
+> ....
+>
+
+Put MyObject unit in seperate unit and use the PSUnitImporter.exe to
+generate proper wrapper. In the
+ExecImport event of your TPsScript
+
+procedure TEditor.ceExecImport(Sender: TObject; se: TPSExec;
+  x: TPSRuntimeClassImporter);
+begin
+  RIRegister_TMyClass(x);
+End ;
+
+And in the CompImport write
+
+procedure TEditor.ceCompImport(Sender: TObject; x: TPSPascalCompiler);
+begin
+  SIRegister_TMyClass(X);
+end;
+
+
+
+Add those two events in your code (in OnCompile and in OnExceute)
+
+Procedure TForm1.YourScriptObject_oncompile (Sender: TPSScript);
+begin
+   Sender.AddRegisteredVariable('Obj', 'TMyObject');
+End ;
+
+
+Procedure TForm1.YourScriptObject_OnExecute (Sender: TPSScript)
+begin
+  YourScriptObject.SetVarToInstance('Obj', MyObjectInstance);
+end ;
+
+Make sure you created the MyObjectInstance, and then go on with your script
+
+> My Script
+> -------------------------
+> procedure Inc_i(Obj : TMyclass);
+> begin
+>    Obj.i := Obj.i + 1;
+> end;
+>
+
+HTH
+Ofer
+
+Here's a bit of script I'm using as part of an Inno Setup:
+
+WebSite := IIS.GetObject('IIsWebService', 'localhost/w3svc');
+WebServer := WebSite.GetObject('IIsWebServer', 1);
+WebRoot := WebServer.GetObject('IIsWebVirtualDir', 'Root');
+VDir := WebRoot.Create('IIsWebVirtualDir', 'test');
+VDir.Path := 'C:\inetpub\wwwroot\test';
+VDir.SetInfo();
+
+play and game design
+
+James Hunter wrote:
+
+> The idea is that the mission object creates a thread that contains the
+> script connected to the current mission. This script has no 'main
+> loop' really as the mission object will call into it based on
+> 'standard' events that occur (such as "AI died", "AI reached
+> destination", "Player died", etc.)
+> 
+> Your saying that the only way to call 'into' the script to execute
+> these functions is from the thread  not the mission object that
+> spawned that object (ie. standard thread behavour), thus I could
+> create some sort of thread-safe communication between the mission
+> object and its thread..
+> 
+
+What I mean is that there just can not be two threads accessing the
+script engine (instance) at once. One simple way to fix it is to use
+multiple runtimes (TPSRuntime) or to put a Critical section around the
+code that calls into the script engine.
+
+
+-- 
+Carlo Kok
+RemObjects Software
+
+James Hunter wrote:
+
+> Is it possible to save a 'compiled' script instead of having to
+> compile it each time?
+
+Yes with the:
+procedure GetCompiled(var data: string);
+procedure SetCompiled(const Data: string);
+
+methods of TPSScript.
+
+-- 
+Carlo Kok
+RemObjects Software
+
+
+uPS in IDE (component version with debug options): 1 KpS (Kilopixel per
+Second)
+uPS in Standalone Exe (no debug version, no source, just PS Executer): 4 KpS
+(looks like the debug version uses some ressources)
+VC .NET: 400 KpS
+VB 6: 300 KpS
+Dark Basic: too slow to wait for finishing - maybe a few hundred Pixel per
+Second
+Additional info: the very same program, without any changes, when compiled
+with dcc32  (I'm working on an option to compile BaseGraph Pascal programs
+out of the IDE with dcc32 if Delphi 4 to 7 is installed, if one doesn't want
+to use the PS exe stub) achieves 400 KpS.
+greets
+ - Martin
+
+
+
+
+

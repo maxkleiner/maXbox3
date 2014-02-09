@@ -1,0 +1,545 @@
+//Example of the memo load and save capabilities of the VCL
+//Task: Make the 3rd algo too!
+//Get the text and write your memo memories, locs=218 
+
+program Sorting_Form_Demo;
+
+const LEFTBASE = 20;
+      TOPBASE = 25; 
+      VARRSIZE = 200;
+
+
+type
+  //TThreadSortArray = array[0..MaxInt div SizeOf(Integer) - 1] of Integer;
+  TmSortArray =  array[0..VARRSIZE] of Integer;
+
+var 
+  mymemo: TMemo;
+  mpaint, mpaint2: TPaintBox;
+  BubbleSortBox, SelectionSortBox, QuickSortBox: TPaintBox;
+ 
+  inFrm: TForm;  
+  mbtn3: TBitBtn;
+  Lstbox: TListbox;
+  stat: TStatusbar;
+  selectedFile: string;
+  BubbleSortArray: TSortArray;
+  SelectionSortArray: TSortArray;
+  QuickSortArray: TSortArray;
+  ArraysRandom: Boolean;
+  FA, FB, FI, FJ: Integer;
+    ThreadsRunning: byte;
+
+
+procedure PaintLine(Canvas: TCanvas; I, Len: Integer); forward;
+
+
+procedure RandomizeArrays;
+var
+  I: Integer;
+begin
+   //I:= 0;
+   //if b then dialogs.showmessage('this is')
+   assert2(high(BubbleSortArray) <= 180, 'array to big');
+  //Check(high(BubbleSortArray) <= 170, 'array to big');
+  if not ArraysRandom then begin
+    Randomize;
+    writeln(inttostr(arrsize))
+    for I:= 1 to ARRSIZE - 1 do
+     //SelectionSortarray[i]:= random(165);
+    //writeln(inttostr(i));
+    BubbleSortArray[I]:= Random(170);
+    SelectionSortArray:= BubbleSortArray;
+    QuickSortArray:= BubbleSortArray;
+    writeln('just random done')
+  end;
+end;  
+
+procedure PaintRandomArray;
+var I: integer;
+begin
+  mPaint2.Canvas.Pen.Color:= clblue;
+  for I:= Low(SelectionSortArray) to High(SelectionSortArray) do
+    PaintLine(mpaint2.Canvas, I, SelectionSortArray[I]);
+  mPaint.Canvas.Pen.Color:= clgreen;
+  for I:= Low(BubbleSortArray) to High(BubbleSortArray) do
+    PaintLine(mpaint.Canvas, I, BubbleSortArray[I])
+end;
+
+
+procedure PaintLine(Canvas: TCanvas; I, Len: Integer);
+begin
+  canvas.moveTo(0, I * 2 + 1)
+  canvas.LineTo(Len, I * 2 + 1)
+  //Canvas.PolyLine([Point(0, I * 2 + 1), Point(Len, I * 2 + 1)]);
+end;
+
+procedure DoVisualSwap2;
+begin
+  with mpaint2 do begin
+    //invalidate;
+    Canvas.Pen.Color:= clBtnFace;
+    //Canvas.Pen.Color:= clBlue;
+    PaintLine(Canvas, FI, FA);
+    PaintLine(Canvas, FJ, FB);
+    Canvas.Pen.Color:= clRed;
+    PaintLine(Canvas, FI, FB);
+    PaintLine(Canvas, FJ, FA);
+  end;
+end;
+
+procedure DoVisualSwap;
+begin
+  with mpaint do begin
+    //invalidate;
+    Canvas.Pen.Color:= clBtnFace;
+    //Canvas.Pen.Color:= clBlue;
+    PaintLine(Canvas, FI, FA);
+    PaintLine(Canvas, FJ, FB);
+    Canvas.Pen.Color:= clRed;
+    PaintLine(Canvas, FI, FB);
+    PaintLine(Canvas, FJ, FA);
+  end;
+end;
+
+
+procedure VisualSwap2(A, B, I, J: Integer);
+begin
+  //symbol rename
+  FA:= A; FB:= B;
+  FI:= I; FJ:= J;
+  //DoVisualSwap;
+  DoVisualSwap2;
+end;
+
+procedure VisualSwap(A, B, I, J: Integer);
+begin
+  //symbol rename
+  FA:= A;
+  FB:= B;
+  FI:= I;
+  FJ:= J;
+  //if bolTHslowmotion then
+    //        sysutils.sleep(5);
+  DoVisualSwap;
+  //DoVisualSwap2;
+end;
+  
+procedure TmSelectionSort(var A: TmSortArray);
+// syncedit
+var
+ indx, J, T: Integer;
+begin
+  for indx := Low(A) to High(A) - 1 do
+    for J := High(A) downto indx + 1 do
+      if A[indx] > A[J] then begin
+        VisualSwap(A[indx], A[J], indx, J);
+        //write('debug')
+        T:= A[indx];
+        A[indx] := A[J];
+        A[J] := T;
+        //if Terminated then Exit;
+      end;
+end; 
+
+{ TBubbleSort }
+procedure TmBubbleSort(var A: TmSortArray);
+var
+  I, J, T: Integer;
+begin
+  for I := High(A) downto Low(A) do
+    for J := Low(A) to High(A) - 1 do
+      if A[J] > A[J + 1] then begin
+        VisualSwap2(A[J], A[J + 1], J, J + 1);
+        T := A[J];
+        A[J] := A[J + 1];
+        A[J + 1] := T;
+     end;
+end; 
+
+
+
+procedure QuickSort(var A: TmSortArray; iLo, iHi: Integer);
+  var
+    Lo, Hi, Mid, T: Integer;
+  begin
+    Lo := iLo;
+    Hi := iHi;
+    // inline variable
+    Mid:= A[(Lo + Hi) div 2];
+    repeat
+      while A[Lo] < Mid
+                    do Inc(Lo);
+      while A[Hi] > Mid
+                    do Dec(Hi);
+      if Lo <= Hi then begin
+        VisualSwap(A[Lo], A[Hi], Lo, Hi);
+        T:= A[Lo];
+        A[Lo]:= A[Hi];
+        A[Hi]:= T;
+        Inc(Lo);
+        Dec(Hi);
+      end;
+    until Lo > Hi;
+    if Hi > iLo then QuickSort(A, iLo, Hi);
+    if Lo < iHi then QuickSort(A, Lo, iHi);
+    //if Terminated then Exit;
+  end;
+
+procedure TmQuickSort(var A: TmSortArray);
+begin
+  QuickSort(A, Low(A), High(A));
+end;
+
+  
+Function getRandomText: string;
+var i, getback: integer;
+begin
+  for i:= 1 to 1400 do begin
+    getback:=  random(58)+65
+    if (getback < 91) OR (getback > 96) then
+      result:= result + Chr(getback) +Chr(32)
+  end;
+end;  
+  
+//Event Handler - Closure  
+Procedure GetMediaData(self: TObject);
+begin
+  if PromptForFileName(selectedFile,
+                       'Text files (*.txt)|*.txt','',
+                       'Select your mX3 test file',
+                       ExePath+'examples\', False)  // Means not a Save dialog !
+   then begin
+     // Display this full file/path value
+     ShowMessage('Selected file = '+selectedFile);
+     Stat.simpletext:= selectedFile;
+     mymemo.lines.LoadFromFile(selectedFile);
+     // Split this full file/path value into its constituent parts
+     //writeln('PromptForFileName_28: Res of processpath '+tmp)
+   end;
+end; 
+
+
+procedure ThreadDone(Sender: TObject);
+begin
+  Dec(ThreadsRunning);
+  if ThreadsRunning = 0 then begin
+    //StartBtn.Enabled:= True;
+    //randArray.ArraysRandom:= False;
+  end;
+end;
+
+var msort: TSortThread; 
+  marr: TRandomArray;
+
+  //BubbleSortArray: TSortArray;
+  //SelectionSortArray: TSortArray;
+  //QuickSortArray: TSortArray;
+  
+//Event Handler - Closure
+procedure BtnStartClick(self: TObject);
+begin
+  //mymemo.lines.savetofile(ExePath+'\examples\mymemomemoire.txt');
+  mymemo.lines.text:= getRandomText;
+  mPaint.invalidate;
+  mPaint2.invalidate;
+
+  RandomizeArrays;
+  //PaintRandomArray;
+ { with TSortThread.Create(mPaint, bubblesortarray) do begin
+    slowmotion:= 200;
+   end;}
+   //marr:= TRandomArray.create;
+   //marr.RandomizeArrays(inFrm, false)
+    //marr.PaintArray(mPaint) 
+    //bubblesortbox
+    ThreadsRunning:= 2;
+    with TBubbleSort.Create(mpaint, BubbleSortArray) do begin
+    bolTHslowmotion:= true;
+    slowmotion:= 1;
+    //sort
+    OnTerminate:= @ThreadDone;
+  end;
+  //selectionsortbox
+    with TSelectionSort.Create(mpaint2, SelectionSortArray) do begin
+    bolTHslowmotion:= true;
+    slowmotion:= 7;
+    //sort
+    OnTerminate:= @ThreadDone;
+  end;
+  //marr.Free;
+
+  //msort:= TSortThread.Create(mPaint,sortarray)
+  
+  //TmSelectionSort(selectionSortArray)
+  //TmBubbleSort(bubbleSortArray)
+
+  //mymemo.lines.SaveToFile(selectedFile);
+  Stat.simpletext:= ' start has been sorted' ;
+end; 
+
+procedure GetRandom(self: TObject);
+begin
+  //mymemo.lines.savetofile(ExePath+'\examples\mymemomemoire.txt');
+  mymemo.lines.text:= getRandomText;
+  mPaint.invalidate;
+  mPaint2.invalidate;
+  RandomizeArrays;
+  PaintRandomArray;
+end; 
+
+
+procedure BtnSortClick(self: TObject);
+begin
+  //mymemo.lines.savetofile(ExePath+'\examples\mymemomemoire.txt');
+  //RandomizeArrays(inFrm);
+  //PaintRandomArray;
+  mPaint.invalidate;
+  mPaint2.invalidate;
+
+  //TmSelectionSort(selectionSortArray)
+  //TmBubbleSort(bubbleSortArray)
+  //mymemo.lines.SaveToFile(selectedFile);
+  //Stat.simpletext:= selectedFile+ ' has been saved' ;
+end; 
+
+procedure SetForm;
+var
+  mbtn, mbtn2: TBitBtn;
+  mi, mi1, mi2, mi3: TMenuItem;
+  mt: TMainMenu;
+  mlbl, mlbl1: TLabel; 
+
+begin
+  inFrm:= TForm.Create(self);
+  mLbl:= TLabel.create(inFrm);
+  mLbl1:= TLabel.create(inFrm);
+  mPaint:= TPaintBox.Create(inFrm);
+  mPaint2:= TPaintBox.Create(inFrm);
+  stat:= TStatusbar.Create(inFrm);
+  Lstbox:= TListbox.create(inFrm);
+  mymemo:= TMemo.create(inFrm);
+
+  with inFrm do begin
+    caption:= '********SortMonster3************';  
+    height:= 610;
+    width:= 980;
+    //color:= clred;
+    Position:= poScreenCenter;
+    //onClose:= @CloseClick;
+    Show;
+  end;
+  with mPaint do begin
+     Parent:= inFrm;  
+     SetBounds(LEFTBASE+10,TOPBASE+40,200,400)
+     color:= clsilver;
+     Show;
+     //onpaint:= @closeclick;
+  end; 
+  with mPaint2 do begin
+     Parent:= inFrm;  
+     SetBounds(LEFTBASE+210,TOPBASE+40,200,400)
+     color:= clsilver;
+     Show;
+     //onpaint:= @closeclick;
+  end; 
+  
+  with mymemo do begin
+    Parent:= inFrm;
+    SetBounds(LEFTBASE+520, TOPBASE+40, 400, 400)
+    font.size:= 14;
+    color:= clYellow;
+    wordwrap:= true;
+    scrollbars:= ssvertical;
+  end;
+  
+  mBtn:= TBitBtn.Create(inFrm)
+  with mBtn do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 590, TOPBASE+ 460,150, 40);
+    caption:= 'Random';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPAUSE'); 
+    //event handler
+    onclick:= @GetRandom;
+  end;
+  mBtn2:= TBitBtn.Create(inFrm)
+  with mBtn2 do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 430, TOPBASE+460,150, 40);
+    caption:= 'Sort';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPEJECT'); 
+    //event handler
+    onclick:= @BtnSortClick;
+  end;
+  mBtn3:= TBitBtn.Create(inFrm)
+  with mBtn3 do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 750, TOPBASE+460,150, 40);
+    caption:= 'Start Sort';
+    font.size:= 12;
+    //glyph.LoadFromResourceName(getHINSTANCE,'PREVIEWGLYPH'); 
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTEP'); 
+     //event handler
+    onclick:= @BtnStartClick;
+  end;
+  with mlbl do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+15,TOPBASE-15,180,20);
+    font.size:= 28;
+    font.color:= clred;
+    //font.style:= [fsunderline]
+    caption:= 'SortMemoApp Draft';
+  end;  
+  with mlbl1 do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+495,TOPBASE-1,180,20);
+    font.size:= 20;
+    font.color:= clred;
+    caption:= 'Text File:';
+  end;  
+  mt:= TMainMenu.Create(infrm)
+  with mt do begin
+   //parent:= frmMon;
+  end;  
+  mi:= TMenuItem.Create(mt)
+  mi1:= TMenuItem.Create(mt)
+  mi2:= TMenuItem.Create(mt)
+  mi3:= TMenuItem.Create(mi)
+  with mi do begin
+    //parent:= frmMon;
+    Caption:='Play Media';
+    Name:='ITEM';
+    mt.Items.Add(mi);   
+    //OnClick:= @GetMediaData;
+  end;
+  with mi1 do begin
+    //parent:= frmMon;
+    Caption:='Show Video';
+    Name:='ITEM2';
+    mt.Items.Add(mi1) ;
+    //OnClick:= @GetVideoData
+  end;
+  with mi2 do begin
+    //parent:= frmMon;
+    Caption:='Open CD Player';
+    Name:='ITEM3';
+    mt.Items.Add(mi2);
+    //OnClick:= @OPenCD;
+  end;
+  with mi3 do begin
+    Caption:='Open maXbook';
+    Name:='ITEM4';
+    //mi.Items[0].add(mi3);
+  end;
+  with Stat do begin
+    parent:= inFrm;
+    stat.SimplePanel:= true;
+  end;
+end; 
+  
+ 
+begin
+  memo2.font.size:= 14;
+  SetForm;
+  mymemo.lines.text:= getRandomText;
+  //SearchAndOpenDoc(ExePath+MEDIAPATH)
+  //mylistview:= TFormListView.Create(self);
+  //exit;
+  maxform1.color:= clsilver;
+End.
+
+//-------------------------------------------------
+
+source is tlistview
+target is tform
+
+procedure TfMerit.SourceLVStartDrag(Sender: TObject;
+var DragObject: TDragObject);
+var TargetLV:TListView;
+begin
+// TargetLV:=nejak urcit dle potreby
+  TargetLV.BeginDrag(True)
+end;
+
+procedure TfMerit.SourceLVMouseDown(Sender: TObject;
+Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+MouseIsDown:=True;
+end;
+
+procedure TfMerit.SourceLVMouseUp(Sender: TObject; Button: TMouseButton;
+Shift: TShiftState; X, Y: Integer);
+begin
+MouseIsDown:=False;
+if (Sender as TListView).Dragging then
+(Sender as TListView).EndDrag(False);
+end;
+
+procedure TfMerit.SourceLVMouseMove(Sender: TObject; Shift: TShiftState;
+X, Y: Integer);
+begin
+if (Sender.ClassNameIs('TListView')) then
+begin
+if MouseIsDown and ((Sender as TListView).SelCount>0) then
+(Sender as TListView).BeginDrag(True);
+end;
+end;
+
+
+procedure TfMerit.TargetLVDragOver(Sender, Source: TObject; X,
+Y: Integer; State: TDragState; var Accept: Boolean);
+var T:TListView;
+begin
+T:=Sender as TListView;
+Accept:=Assigned(T.GetItemAt(X,Y));
+end;
+
+
+procedure TfMerit.TargetLVDragDrop(Sender, Source: TObject; X,
+Y: Integer);
+var It:TListItem;
+LV1,LV2:TListView;
+begin
+LV1:=Source as TListView;
+LV2:=Sender as TListview;
+
+It:=LV2.GetItemAt(X,Y);
+if Assigned(It) then
+begin
+// zpracuj polozku ze zdrojoveho listview
+end;
+end;
+
+
+procedure TControlParentR(Self: TControl; var T:TWinControl); begin T:= Self.Parent; end;
+procedure TControlParentW(Self: TControl; T: TWinControl); begin Self.Parent:= T; end;
+    RegisterPropertyHelper(@TControlParentR, @TControlParentW, 'PARENT');
+    RegisterProperty('Parent', 'TWinControl', iptRW);
+
+procedure TTXPTool.LVPFFDblClick(Sender: TObject);
+var
+tmpList : TListItem;
+fn ; string;
+ft : integer;
+fs : integer;
+begin
+tmpList := LVPFF.Selected;
+if tmplist<>nil then
+begin
+  fn := tmpList.Caption
+  ft := tmpList.SubItems.Strings[1];
+  fs := tmpList.SubItems.Strings[3];
+  if pos('Wave', ft)>0 then
+    PlayThisOne1Click(nil);
+  if pos('Jpg', ft)>0 then
+    ShowJpg1Click(nil);
+  if pos('Targa', ft)>0 then
+    ShowTga1Click(nil);
+  if pos('Pcx', ft)>0 then
+    ShowPcx1Click(nil);
+  if pos('Mission Sound Collection', ft)>0 then
+    ShowPwf1Click(nil);
+end;
+end;

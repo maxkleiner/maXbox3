@@ -1,0 +1,2 @@
+Im Verzeichnis Steuerung befinden sich die Sketches für das Beispiel einer Interrupt-gestezerten Lichtanlage in c't Hadrware Hacks Ausgabe 4/2013, Seite 152.
+Viel Spaß beim Ausprobieren wünscht die Redaktion (tig@ct.de).

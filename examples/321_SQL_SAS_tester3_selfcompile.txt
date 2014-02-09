@@ -1,0 +1,906 @@
+
+//****************ReportTimeDATATester**************************
+program DataBase_SQLQuery_ScholzSoft_Excel3;
+
+// this is in conjunction with example _28_pas_dataset.txt - 25.11.2012
+// in V3.2 you find DBX, SQLExpress for Interbase, Firebird, Oracle 
+ //GetShortPathName(PChar(LongName), ShortName, Max_Path);, #locs=645
+ //#head: max: APSN21: 24.01.2014 00:38:03 E:\maxbox\maxbox3\examples\321_SQL_SAS_tester3_selfcompile.txt 
+ //with exec and query at same time
+ //http://www.thedbcommunity.com/index.php?option=com_content&task=view&id=138&Itemid=46
+
+function GetShortPathName(lname, sname: pchar; mpath: longint):  bool;
+  external 'GetShortPathNameW@kernel32.dll stdcall';
+
+//***********************Configuration Direct*********************************//
+
+Const SCHOLZALIAS =  'SAS'; //'HELLBECK'; //'SAS';  //'mX3base';
+      TEXTOUTPUT  = true;
+      EXCELOUT = false; 
+   
+      SQLEXEC = true; 
+      //SQLEXEC = false; 
+
+      //SQLQueryExec ='';
+      //SQLQuery ='';
+    
+      USEHEADER = false;
+      AFILENAME  = 'datasetdata31.txt';
+      FILEHEADER  = 'Rec'+#9+'Int'+#9+'FirstName'+#9+'LastName'+#9+'Phone'+#9#9+
+                    'Termin'+#9#9+'ProgNr';
+      
+      Fakturiert = 90;
+      Erledigt   = 50;
+      Unerledigt = 10;
+    
+      ABAUFTRAG = '10000';   //SQL Filter
+      ASTATUS = '10';        //Status siehe oben
+     // const
+//  BinXmlSignatureSize = Length('< binary-xml >');
+
+
+//***********************Configuration Direct*********************************//
+      
+
+Const //SQLQuery = 
+        // 'Select Int, FirstName, LastName, Phone from Table1';
+
+    {SQLQuery =
+    'Select AuftragsNr, KundenNr, Suchbegriff, Status, Termin, Menge, VKTotal, ProgNr '+
+    'from Auftrag, AufAtb, Kunde where '+
+    'Auftrag.AuftragsNr = AufAtb.AuftragsNr AND AufAtb.KundenNr = Kunde.KundenNr '+
+    'AND Status = '+ASTATUS+' AND AuftragsNr > '+ABAUFTRAG+' ORDER BY KundenNr, Termin, Menge';}    
+     //SQLQuery = 'select * from Kasse.DB';
+    
+    //SQLQuery = 'select * from AB.DB where Gedruckt=false';
+    
+    //SQLQuery = 'select * from ID2013.DB';
+ 
+    //SQLQuery = 'select * from ID.DB';
+    //SQLQuery = 'select * from Passwort_.DB';
+ 
+    //SQLQuery = 'select * from Kunde.DB';
+    
+        //SQLQueryExec = 'INSERT INTO PrParams (AngTextbreite) '+ 
+          //           'VALUES (''5'')';
+          
+         
+      //  SQLQueryExec = 'ALTER TABLE PrParams ADD AngTextbreite Integer';
+      
+      //  SQLQueryExec = 'ALTER TABLE PrParams ADD AbTextbreite Integer';
+      //  SQLQueryExec = 'ALTER TABLE PrParams ADD AufTextbreite Integer';
+        //SQLQueryExec = 'ALTER TABLE PrParams ADD ReTextbreite Integer';
+  
+        
+       //  ALTER TABLE TOSCAK.SHOPSITZUNG ADD (xxx VARCHAR2(15 BYTE));
+   
+
+    
+    //SQLQuery = 'select count(*) from Auftrag.DB';
+    //SQLQuery = 'select * from maschine';
+   
+    //INSERT INTO mytable (id,label) VALUES (%s,"%s");',
+  
+    //SQLQueryExec = 'UPDATE ID2013 SET Stationen = 13';
+    //SQLQuery = 'select * from ID2013';
+    
+     //Miete
+     SQLQueryExec = 'UPDATE ID2014.DB SET MieteAblauf = ''31.12.2015'' WHERE Kunde=''GRAEFEN''';
+     SQLQuery = 'select * from ID2014.DB';
+  
+
+    
+    //SQLQueryExec = 'UPDATE Maschine SET Einheit = ''min22'' WHERE Nr=''505''';
+    
+    //SQLQueryExec = 'DELETE FROM maschine WHERE Nr=''651''';
+    
+    //SQLQueryExec = 'INSERT INTO Maschine (Nr,DL,Einheit,EK) '+ 
+      //                'VALUES (''652'',''maxmachine2'',''min'',''120.44'')';
+    
+     
+    //SQLQuery = 'select * from maschine';
+
+    
+    {'Select AuftragsNr, KundenNr, Suchbegriff, Status, Termin, Menge, VKTotal, ProgNr '+
+    'from Auftrag, AufAtb, Kunde where '+
+    'Auftrag.AuftragsNr = AufAtb.AuftragsNr AND AufAtb.KundenNr = Kunde.KundenNr '+
+    'AND Status = '+ASTATUS+' AND AuftragsNr > '+ABAUFTRAG+' ORDER BY KundenNr, Termin, Menge';} 
+
+{const SQLQuery = 'Select AuftragsNr, Termin, ReNr, KundenNr, ProgNr, Text1, Text2 FROM Auftrag, Aufpos where '+
+                  'Auftrag.AuftragsNr = Aufpos.AuftragsNr AND AuftragsNr > 42543 '+
+                  'ORDER BY Termin,AuftragsNr';} 
+///const SQLQuery = 'Select AuftragsNr, ReNr, Text1, Text2 FROM Auftrag, Aufpos where '+
+   //               'Auftrag.AuftragsNr = Aufpos.AuftragsNr AND AuftragsNr > 42543'; 
+//const SQLQuery = 'Select count(*) from Auftrag'; 
+//const SQLQuery = 'Select AuftragsNr, ReNr, Text1, Text2 FROM Auftrag, Aufpos where '+
+  //                'Auftrag.AuftragsNr = Aufpos.AuftragsNr AND AuftragsNr > 212000'; 
+//const SQLQuery = 'select * from customer where company like "%SCUBA%"''';    
+//const SQLQuery = 'Select Fertig, AuftragsNr, LeistungsNr from ZeitBTmp'; 
+//const SQLQuery = 'Select Fertig, BeginnDatum, AuftragsNr, LeistungsNr from ZeitBtmp where AuftragsNr > 200000'; 
+
+(*with SqlSearchAB do begin
+       Close;
+       Sql.Clear;
+       Sql.Add('Select AbNr, ATBNr, Produkt, Menge, Einheit, EP, Vk, Rabatt, Rabattbetrag, VkTotal, Termin from AbATB');
+       Sql.Add(format('where AuftragsNr=%d',[aAuftragsNr]));
+       Open;
+  end;*)
+  
+
+var
+   dbMain: TDatabase;   //@global
+
+
+function TFormMain_GetTime:TDateTime;
+begin
+  result:= StrToTime(FormatDateTime('h:n',time)); // Sekunden abschneiden
+end;
+
+procedure TfrmMain_AddField(UpdTable, FieldName, FieldType: string);
+var qryUpdate: TQuery;
+begin
+ with qryUpdate do begin
+  Close;
+  ParamByName('UPDTABLE').AsString := UpdTable;
+  ParamByName('FLDNAME').AsString  := FieldName;
+  ParamByName('FLDTYPE').AsString  := FieldType;
+  ExecSQL;
+  Open;
+ end;
+end;
+
+
+
+function GetQuery(SQLCommand: string; aQuery: TQuery): TFields;
+begin
+  aQuery.SQL.Text:= SQLCommand;
+  //aQuery.CommandType
+  aQuery.Open;
+  aQuery.Active:= true;
+  result:= aQuery.Fields;
+end; 
+
+
+procedure DoExecQuery2(aDB: TDataBase);
+var dQuery: TQuery;
+begin
+   dQuery:= TQuery.create(self); 
+   with dQuery do begin
+   DatabaseName:= aDB.DataBaseName;
+     try
+       try
+        writeln('');
+        writeln('exec the query for DB starts: ');
+        SQL.Clear;
+        SQL.Text:= SQLQueryExec;
+        writeln('exec sql ready to run: ');
+        ExecSQL;
+        //Writeln(inttostr(RecordCount)+' Records found: ')
+        except
+         //raiselastexception;
+         showmessagebig('E: exec query 2 raiselastexception');
+         writeln('E: exec query 2 raiselastexception');
+        end
+       finally
+         //raiselastexception;
+         Close;
+         Free;
+         showmessagebig('Exec query 2 success!');
+      
+         //CloseDataBase(aDB)
+       end;
+    end   
+end; 
+
+
+procedure DoQuery2(aDB: TDataBase; afilename: shortstring; fileout: boolean);
+var i,z: integer;
+    dQuery: TQuery;
+    reslist: TStringlist;
+    tmps, fhead: shortstring;
+begin
+   dQuery:= TQuery.create(self); 
+   reslist:= TStringList.create;
+   tmps:= '';
+   with dQuery do begin
+   DatabaseName:= aDB.DataBaseName;
+     try
+        writeln('');
+        writeln('search for DB starts: ');
+        SQL.Clear;
+        SQL.Text:= SQLQuery;
+        Open;
+        Writeln(inttostr(RecordCount)+' Records found: ')
+        if fileout then begin
+        if USEHEADER then
+          reslist.Add(FILEHEADER) else begin
+            for i:= 0 to FieldDefs.Count-1 do
+            fhead:= fhead + fieldDefs[i].name+ ': ';
+            // Field:= Table1.FieldDefs[i].CreateField(Table1,NIL,'',False);
+            reslist.Add(fhead);
+          end;     
+        reslist.Add(S_RepeatChar(120,'-'));
+        for i:= 0 to Recordcount - 1 do begin
+          for z:= 0 to Fieldcount - 1 do begin 
+              if z= 1 then tmps:= tmps +
+                 //format('%.s ',[Fields[z].asString]) else
+                 format('%-52.52s  ',[Fields[z].asString]) else 
+
+              tmps:= tmps + Fields[z].asString+#9;
+          
+            end;
+          reslist.Add(inttoStr(i+1)+':'+#9+tmps);
+          tmps:='';
+          Next;
+        end 
+        end else
+        for i:= 0 to Recordcount - 1 do begin   //add tab
+          write(inttoStr(i)+' ')
+          for z:= 0 to Fieldcount - 1 do 
+            Write((Fields[z].asString)+' ');
+            //if z= 3 then Write((Fields[z].asString)+'jkjkjjk ');
+          writeln('');
+          Next;  
+        end;
+        writeln('');
+        reslist.SaveToFile(afilename);
+       //ExecSQL;
+       finally
+         reslist.Free;
+         Close;
+         Free;
+         //CloseDataBase(aDB)
+       end;
+    end   
+end; 
+
+
+procedure DoQuery2Excel(aDB: TDataBase; afilename: shortstring; fileout: boolean);
+var i,z: integer;
+    dQuery: TQuery;
+    reslist: TStringlist;
+    tmps: shortstring;
+    mySt: TStringGrid;
+begin
+   dQuery:= TQuery.create(self); 
+   reslist:= TStringList.create;
+   tmps:= '';
+   mySt:= TStringGrid.Create(self)
+   afilename:= ChangeFileExt(extractFileName(afilename), '.xls');
+   with dQuery do begin
+     DatabaseName:= aDB.DataBaseName;
+     try
+       writeln('');
+       writeln('search for excel DB starts: ');
+       SQL.Clear;
+       SQL.Text:= SQLQuery;
+       Open;
+       Writeln(inttostr(RecordCount)+' Records found: ')
+       with mySt do begin
+         rowcount:= Recordcount+2;
+         colcount:= FieldCount;
+        //DefaultColWidth:= 20;
+       end;
+       //dataset
+       //ExportDataSetToExcel(dquery, NIL)
+       if fileout then begin
+        //reslist.Add(FILEHEADER); to do in excel
+        //reslist.Add(S_RepeatChar(160,'-'));
+         for i:= 0 to Recordcount - 1 do begin
+           for z:= 0 to Fieldcount - 1 do 
+             mySt.Cells[z,i]:= Fields[z].asString;
+           Next;
+         end 
+       end else
+         for i:= 0 to Recordcount - 1 do begin   //add tab
+           write(inttoStr(i)+' ')
+           for z:= 0 to Fieldcount - 1 do 
+             Write((Fields[z].asString)+' ');
+           writeln('');
+           Next;  
+         end;
+         writeln('');
+         myst.Cells[0,17]:= '=SUMME(A1:A16)'; 
+       if SaveAsExcelFile(mySt, 'maxcel_map',Exepath+ afilename,true)
+          then Msg('maXcel export success');
+       SearchAndOpenDoc(ExePath+afilename)
+       //ExecSQL;
+     ExportDataSetToExcel(dquery, NIL)
+     
+     finally
+       reslist.Free;
+       myst.Free;
+       Close;
+       Free;
+       //CloseDataBase(aDB)
+     end;
+   end   
+end; 
+
+
+procedure BDEDataBaseConnectQuery(aAlias: shortstring;
+                                     afilen: shortstring; atextout: boolean);
+  var aParams, aTblNames: TStringList;
+      aSession: TSession;
+      //dbMain: TDatabase;
+      BDEAlias: string;
+      i: integer;
+begin 
+  //create alias params list 
+  AParams:= TStringList.Create;  
+  aTblNames:= TStringList.Create; 
+  //BDEAlias:= 'DBDEMOS';
+  BDEAlias:= aAlias; 
+  //create a session to get alias parameters  
+  ASession:= TSession.Create(NIL);  
+  ASession.SessionName:= 'Session8'; 
+  //ASession.PrivateDir := 'c:\xxxtmp'; 
+  //ASession.NetFileDir:= getnetpath;
+  //ASession.SaveConfigFile;
+  //dbMain:= TDatabase.Create(NIL);  
+  try  //except
+    ASession.GetAliasParams(BDEAlias, AParams);
+  try  
+    Writeln('***********DB Parameters************')
+    for i:= 0 to aparams.count -1 do 
+      writeln(aParams[i]);
+      //connect to database 
+    with dbMain do begin  
+      Params.Assign(AParams);  
+      dbMain:= ASession.OpenDatabase(BDEAlias);
+      Writeln('Database is: '+dbMain.DataBaseName)
+      KeepConnection:= True;
+      GetTableNames(aTblNames, true)
+      {for i:= 0 to atblNames.count -1 do 
+        Writeln(atblnames[i]);}
+      if SQLEXEC then begin  //for insert or update
+        doExecQuery2(dbMain) 
+        doQuery2(dbMain, afilen, atextout);
+      
+      end else    
+    
+      doQuery2(dbMain, afilen, atextout);    //true to fileout //change switch
+      
+      
+      if EXCELOUT then 
+        DoQuery2Excel(dbMain, afilen, atextout);
+      //doExecQuery2(dbmain);
+    end;
+  finally  
+    DBMain.Free;
+    ASession.Free;  
+    AParams.Free;
+    aTblNames.Free;
+  end;
+  except
+    writeln('BDE connect or execute exception');
+    msgBig('BDE connect or execute exception');
+    raiselastexception;
+    writeln('');
+    //ee.raise;
+  end;  
+end;
+  
+
+function BinToInt(Value: string): Integer;
+var
+  i, iValueSize: Integer;
+begin
+  Result:= 0;
+  iValueSize := Length(Value);
+  for i:= iValueSize downto 1 do
+    if Value[i] = '1' then Result := Result + (1 shl (iValueSize - i));
+end; 
+
+procedure TFormMain_ppDesigner1CloseQuery(Sender: TObject; var CanClose: Boolean);
+var i:integer;
+begin
+//  if RepListe.Modified then RepListe.Template.ShowFileSaveDialog;
+  if {RepListe.Modified} true then begin
+  i:=MessageDlg('Datei wurde change.'#13'Änderungen speichern?',mtConfirmation,
+                        [mbYes,mbNo,mbCancel],0);
+     if i=mrYes then showmessage('RepListe.Template.ShowFileSaveDialog')
+     else if i=mrCancel then CanClose:=false;
+  end;
+end;
+
+
+
+procedure getSystemInformation;
+begin
+   Writeln('maXbox Version: '+MBVER);
+   Writeln('maXbox Version: '+Version);
+   //from unit uPSI_JclSysInfo;
+   Writeln('Function GetCommonFilesFolder :'+GetCommonFilesFolder);
+   Writeln('Function GetCurrentFolder :'+GetCurrentFolder);
+   Writeln('Function GetProgramFilesFolder :'+GetProgramFilesFolder);
+   Writeln('Function GetWindowsFolder :'+GetWindowsFolder);
+   Writeln('Function GetWindowsSystemFolder :'+GetWindowsSystemFolder);
+   Writeln('Function GetWindowsTempFolder :'+GetWindowsTempFolder);
+   Writeln('Function GetDesktopFolder :'+GetDesktopFolder);
+   Writeln('Function GetProgramsFolder :'+GetProgramsFolder);
+   Writeln('Function GetPersonalFolder :'+GetPersonalFolder);
+   Writeln('Function GetFavoritesFolder :'+GetFavoritesFolder);
+   Writeln('Function GetStartupFolder :'+GetStartupFolder);
+   Writeln('Function GetRecentFolder :'+GetRecentFolder);
+   Writeln('Function GetSendToFolder :'+GetSendToFolder);
+   Writeln('Function GetStartmenuFolder :'+GetStartmenuFolder);
+   Writeln('Function GetDesktopDirectoryFolder :'+GetDesktopDirectoryFolder);
+   Writeln('Function GetNethoodFolder :'+GetNethoodFolder);
+   Writeln('Function GetFontsFolder :'+GetFontsFolder);
+   Writeln('Function GetCommonStartmenuFolder :'+GetCommonStartmenuFolder);
+   Writeln('Function GetCommonProgramsFolder :'+GetCommonProgramsFolder);
+   Writeln('Function GetCommonStartupFolder :'+GetCommonStartupFolder);
+   Writeln('Function GetCommonDesktopdirectoryFolder:'+GetCommonDesktopdirectoryFolder);
+   Writeln('Function GetCommonAppdataFolder :'+GetCommonAppdataFolder);
+   Writeln('Function GetAppdataFolder :'+GetAppdataFolder);                                   
+   Writeln('Function GetPrinthoodFolder :'+GetPrinthoodFolder);
+   Writeln('Function GetCommonFavoritesFolder :'+GetCommonFavoritesFolder);
+   Writeln('Function GetTemplatesFolder :'+GetTemplatesFolder);
+   Writeln('Function GetInternetCacheFolder :'+GetInternetCacheFolder);
+   Writeln('Function GetCookiesFolder :'+GetCookiesFolder);
+   Writeln('Function GetHistoryFolder :'+GetHistoryFolder);
+   //Writeln('Function GetAPMLineStatus : TAPMLineStatus;
+   Writeln('Function GetAPMBatteryLifePercent :'+InttoStr(GetAPMBatteryLifePercent));
+   Writeln('Function GetVolumeName(const Drive : string) : '+GetVolumeName('C'));
+   Writeln('Function GetVolumeSerialNumber :'+GetVolumeSerialNumber('C'));
+   Writeln('Function GetVolumeFileSystem  :'+GetVolumeFileSystem('C'));
+   //Function GetIPAddress( const HostName : string) : string;
+   Writeln('Function GetLocalComputerName :'+GetLocalComputerName);
+   Writeln('Function GetLocalUserName :'+GetLocalUserName);
+   //Function GetUserDomainName( const CurUser : string) : string;
+   Writeln('Function GetDomainName :'+GetDomainName);
+   Writeln('Function GetRegisteredCompany :'+GetRegisteredCompany);
+   Writeln('Function GetRegisteredOwner :'+GetRegisteredOwner);
+   Writeln('Function GetBIOSName :'+GetBIOSName);
+   Writeln('Function GetBIOSCopyright :'+GetBIOSCopyright);
+   Writeln('Function GetBIOSExtendedInfo :'+GetBIOSExtendedInfo);
+   Writeln('Function GetMaxAppAddress :'+IntToStr(GetMaxAppAddress));
+   Writeln('Function GetMinAppAddress :'+IntToStr(GetMinAppAddress));
+   Writeln('Function GetMemoryLoad :'+IntToStr(GetMemoryLoad));
+   Writeln('Function GetSwapFileSize :'+IntToStr(GetSwapFileSize));
+   Writeln('Function GetSwapFileUsage :'+InttoStr(GetSwapFileUsage));
+   Writeln('Function GetTotalPhysicalMemory :'+IntToStr(GetTotalPhysicalMemory));
+   Writeln('Function GetFreePhysicalMemory :'+IntToStr(GetFreePhysicalMemory));
+   Writeln('Function GetTotalPageFileMemory :'+IntToStr(GetTotalPageFileMemory));
+   Writeln('Function GetFreePageFileMemory :'+InttoStr(GetFreePageFileMemory));
+   Writeln('Function GetTotalVirtualMemory :'+InttoStr(GetTotalVirtualMemory));
+   Writeln('Function GetFreeVirtualMemory :'+InttoStr(GetFreeVirtualMemory));
+   Writeln('Function GetShellProcessName :'+GetShellProcessName);
+   //Function GetShellProcessHandle : THandle;
+   //Function GetWindowsVersion : TWindowsVersion;
+   //Function NtProductType : TNtProductType;
+   Writeln('Function GetWindowsVersionString :'+GetWindowsVersionString);
+   Writeln('Function NtProductTypeString :'+NtProductTypeString);
+   Writeln('Function IsAdministrator :'+BoolToStr(IsAdministrator, True));
+   
+   //type
+  //ta_8u= array [0..65530] of byte;
+  //t_encoding=(uuencode,base64,mime);
+
+(* The date in RFC 822 conform string format *)
+ //internet_date(date: TDateTime):string;
+
+(* Hostname (or IP-String) -> ip-address (in network order) *)
+ //lookup_hostname(const hostname:string):longint;
+
+(* Name of the local computer *)
+  //my_hostname:string;
+
+(* (Main) IP address of the local computer (network order *)
+ //my_ip_address:longint;
+
+(* IP-Address (network order) -> ###.###.###.### *)
+ //ip2string(ip_address:longint):string;
+
+(* IP-Address (network order) -> (Main) hostname *)
+ //resolve_hostname(ip: longint):string;
+
+(* Parse the n'th email address out of a string *)
+ //address_from(const s:string; count: integer):string;
+
+(* Binary stream -> Base64 (MIME) encoded strings and back *)
+ //encodebase64(data: TStream):TStringList;
+ //decodebase64(data: TStream):TStringList;
+ 
+ //encode_base64(data: TStream):TStringList;
+ //decode_base64(source:TStringList):TMemoryStream;
+
+(* Find n'th occurence of a substring, from left or from right *)
+ //posn(const s,t:string; count:integer):integer;
+
+(* Find the n'th char unequal from left or from right *)
+ //poscn(c:char; const s:string; n: integer):integer;
+
+(* Parse the filename out of a DOS/UNC file and path name *)
+ //filename_of(const s:string):string;
+
+(* Delphi 1 didn't know these, but they are useful/necessary for D2/D3 *)
+(*$ifdef ver80 *)
+// setlength(var s:string; l: byte);
+(*$endif *)
+
+(* The offset to UTC/GMT in minutes of the local time zone *)
+ //TimeZoneBias:longint;
+
+(* Convert 8bit to 7bit and back *)
+ //eight2seven_quoteprint(const s:string):string;
+ //eight2seven_german(const s:string):string;
+ //seven2eight_quoteprint(const s:string):string;
+(*@\\\0000000401*)
+(*@/// implementation *)
+//implementation
+
+(*@/// Some string utility s *)
+(*@///  posn(const s,t:string; count:integer):integer; *)
+ //posn(const s,t:string; count:integer):integer;
+   //tbarcodetype
+
+   
+   
+end;
+
+
+var 
+   mylst: TStringlist;
+   i: integer;
+   myregxs: RegExprString;
+   cclose: boolean;
+       
+begin
+  //maxform1.ShellStyle1click(self)
+  //  maxform1.Console1Click(self)
+  //maxform1.Decompile1Click(self)
+ try
+  dbMain:= TDatabase.Create(self);  
+  BDEDataBaseConnectQuery(SCHOLZALIAS, ExePath+AFILENAME, textoutput); //alias to db, text out
+  //DBMain.Free;
+  //CloseDataBase(aDB)
+ except
+   writeln('BDE Error')
+   msgBig('BDE Error in query');
+ end;  
+ 
+  //dbMain.Close;
+  
+  if TEXTOUTPUT then
+  SearchandOpenFile(ExePath+AFILENAME);
+  mylst:= TStringlist.create;
+  with TSession.Create(NIL) do try
+    SessionName:= 'Mars3'
+    getAliasNames(mylst);
+    Writeln('BDE / DB Alias List:  ******************************');
+    for i:= 1 to mylst.count-1 do
+      write(mylst[i]+' ');
+    finally
+      Free;
+      mylst.Free; 
+    end;      
+  Writeln(' ');
+  Writeln('BDE/DB Parameters: ******************************');
+  Writeln('BDE Directory '+GetBdeDirectory);
+  writeln('DB Alias Path '+GetAliasPath(SCHOLZALIAS));
+  writeln('Temp File Path'+getTempDir)
+  Writeln('*************************************************');
+  //getSystemInformation;
+  //GetAliasDriverName('SAS')
+  
+    //ExecuteShell('cmd','/c  systeminfo > systeminfo_scholz.txt')
+    //SearchAndOpenFile('systeminfo_scholz.txt')
+
+  writeln(timetoStr(TFormMain_GetTime))
+  writeln(timeToStr(time))
+  
+//  function ExecRegExpr (const ARegExpr, AInputStr : RegExprString) : boolean;
+// true if string AInputString match regular expression ARegExpr
+// ! will raise exeption if syntax errors in ARegExpr
+   Writeln(ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+                          'BLOCK( test1)', 'def "$1" value "$2"', True))
+                          
+     {  with TColorDialog.create(self) do begin
+         Execute;
+         Color:= RGB(150,150,0);
+         writeln(inttoStr(color));
+         //writeln(objecttostr(TColorDialog(self)));
+         Free;
+         onclick;  //Destroy;
+       end; }
+        
+       {repeat 
+       memo1.setfocus; 
+       maxform1.compile1click(self)
+       until iskeypressed;}
+     for i:= 1 to 10 do 
+      PrintFW(' nr %d*%d = %d', [i,i, i*i]);
+      
+  //GetEnvironmentInfo; 
+   //writeln(GetEnvironmentString);   
+   //SaveString(ExePath+'\Examples\envinfo.txt',GetEnvironmentString);   
+   //OpenFile(ExePath+'\Examples\envinfo.txt');
+    //SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, @Result, 0);
+    //if copydirTree(exepath+'\exercices', exepath+'examples\copydir',[cffCreateDestDirectory]) then msgbig('got the dir');
+   { function ConvertMmToPixelsX(const Value:Double):Integer;
+   function ConvertMmToPixelsY(const Value:Double):Integer;
+   function ConvertInchToPixelsX(const Value:Double):Integer;
+   function ConvertInchToPixelsY(const Value:Double):Integer;}
+   
+    //ConvertMmToPixelsX(const Value:Double):Integer;
+   //ConvertMmToPixelsY(const Value:Double):Integer;
+   //ConvertInchToPixelsX(const Value:Double):Integer;
+    //ConvertInchToPixelsY(const Value:Double):Integer;
+    //mmperinch
+    
+    //tbarcodetype
+    //TAsBarcode
+      //CheckSumModulo10
+      //dnativeint
+        //TXmlNodeType
+          //BinToBase64
+          //pchar
+          
+          OpenFile('D:\AVERP\SAS2\mars.exe');
+          TFormMain_ppDesigner1CloseQuery(NIL,cclose);
+     writeln(sha1('E:\maxbox\maxbox3.zip')); 
+    
+End.
+
+//WW  EER
+//ï»¿{ <- Illegal Characters? Simply remove! It is the UTF-8 Byte Order Mark.
+     Open with UTF-8 enabled Editor if you want to read the Cyrillic Text}
+
+//ï»¿{}
+
+function ReplaceRegExpr (const ARegExpr, AInputStr, AReplaceStr : RegExprString;
+      AUseSubstitution : boolean{$IFDEF D4_}= False{$ENDIF}) : RegExprString; //###0.947
+// Returns AInputStr with r.e. occurencies replaced by AReplaceStr
+// If AUseSubstitution is true, then AReplaceStr will be used
+// as template for Substitution methods.
+// For example:
+//  ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+//   'BLOCK( test1)', 'def "$1" value "$2"', True)
+//  will return:  def 'BLOCK' value 'test1'
+//  ReplaceRegExpr ('({-i}block|var)\s*\(\s*([^ ]*)\s*\)\s*',
+//   'BLOCK( test1)', 'def "$1" value "$2"')
+//   will return:  def "$1" value "$2"
+
+beleg.rtm ist hauptvorlage
+
+Exception: An error occurred while attempting to initialize the Borland Database Engine (error $2A04) at 0.569
+
+$2A04 (10756) = Operation not applicable.
+DBIO will not start: BDE Error $2A04
+
+
+Full error:
+  CRITICAL (Work) An error occurred while attempting 
+  to initialize the Borland Database Engine (error $2A04)
+
+Issue:
+This error indicates a core problem with BDE configuration.
+
+
+Resolution:
+
+1) Close ALL application software, stop all OmniRush modules including
+   Launcher
+2) Open the BDE Administrator
+3) Go to the Configuration | System | INIT area
+4) Check the Default Driver setting. The recommended setting
+   (for ALL systems) is DBASE
+5) Go to the Configuration | Drivers | Native | Paradox area
+6) Check the NET DIR setting. This should be set to a LOCAL
+   drive and a simple directory that exists. For example, check
+   if you have a C:\TEMP\ directory. If not, create one and grant
+   all users full access to it.
+   Then set NET DIR to c:\temp\
+7) We advise that the PC now be rebooted.
+8) Check for proper operation.
+
+
+
+Re:Getting ERROR: "to initialize the Borland Database Engine (error $210D)"
+The errors are "shared memory conflict" and "insufficient memory to
+complete this operation" respectively.
+I assume that "several Delphi 7's running" means several programs
+created with Delphi7 not several instances of the Delphi 7 IDE. You
+need to change the SharedMemLocation and SharedMemSize in the BDE
+Administrator. Try 0x5BDE and 4096. If that does not work try some of
+the other locations suggested in the on-line help.
+--
+
+  
+  
+
+procedure TFormMain.FormKeyPress(Sender: TObject; var Key: Char);
+var i,n:integer;
+begin
+  if key=#13
+  then begin c2:=c1; c1:=''; end // Barcode ist vollständig eingegeben
+  else begin c1:=concat(c1,key); c2:=''; end; // Barcode wird eingelesen
+  key:=#0;
+
+  if c2<>'' then begin
+     LabelInfo.Caption:='';
+
+     // eventuelle vorherige Tatstauranschläge löschen
+     i:=pos('KOMMT',c2); if (i>1) then c2:=copy(c2,i,5);
+     i:=pos('GEHT',c2);  if (i>1) then c2:=copy(c2,i,4);
+     i:=pos('F01',c2);  if (i>1) then c2:=copy(c2,i,3);
+     i:=pos('F12',c2);  if (i>1) then c2:=copy(c2,i,3);
+     i:=pos('PERS',c2);  if (i>1) then c2:=copy(c2,i,12); // Personalkarte hat nur 12 Stellen
+//     if length(c2)>13 then c2:=copy(c2,length(c2)-13+1,13);
+     if length(c2)>14 then c2:=copy(c2,length(c2)-14+1,14);
+
+     n:=length(c2);
+     if      c2='KOMMT' then CodeTyp:=cKommt
+     else if c2='GEHT' then CodeTyp:=cGeht
+     else if c2='F01' then CodeTyp:=cF1
+     else if c2='F12' then CodeTyp:=cF12
+     else if pos('PERS',c2)=1 then CodeTyp:=cPersonalNr
+//     else if pos('  OK',c2)=10 then CodeTyp:=cAtbOk
+     else if pos('  OK',c2)=n-3 then CodeTyp:=cAtbOk
+//     else if length(c2)=13 then CodeTyp:=cAuftrag
+     else if (n=13) or (n=14) then CodeTyp:=cAuftrag
+     else SetError(zErrorReadScan);
+     CheckCode;
+  end;
+end;
+
+F12
+F01
+201206301L999
+201206301L010
+201206 301M804
+201206301M801
+201206301M802
+201206301M803
+
+SMS Error - Directory is controlled by other .NET file.
+Error Message
+Directory is controlled by other .NET file.
+Directory: \\ComputerName\CYRIOUS$\SMS\
+File: \\Computername\CYRIOUS$\SMS\DATA\PDOXUSRS.LCK
+
+Explanation of Error
+The BDE (Borland Database Engine) utilizes the PDOXUSRS.NET, PARADOX.LCK, and PDOXUSRS.LCK files to lock the database tables for reading and writing. In order to maintain file integrity, the path in which the database tables are accessed must be 
+
+This error can also keep you from accessing certain SMS Utilities such as DBRebuild, DBBrowser, GenImp, IDRepair, ProdExp, and ProdImp.
+
+Severity
+High. Normally new users can't login to SMS until this resolved.
+
+Possible Root Cause(s)
+
+    Power fluctuation. If the BDE is not properly shut down, it may not clear these locks.
+    Network connection loss. If the remote client is not properly shut down, it may not clear these locks or may only clear one of them.
+    BDE Configuration. The BDE LOCALSHARE setting must be set to TRUE or it will not attempt to maintain lock integrity.
+    
+    
+procedure AlterTable(NewLocaleID: Integer=LOCALE_ANSI_STD;
+       NewUserMajorVersion: Word=1; NewUserMinorVersion: Word=0;
+       NewEncrypted: Boolean=False; const NewPassword: String='';
+       const NewDescription: String='';
+       NewIndexPageSize: Integer=DEFAULT_PAGE_SIZE;
+       NewBlobBlockSize: Integer=DEFAULT_BLOCK_SIZE;
+       NewLastAutoIncValue: Integer=-1;
+       const NewTextIndexFields: String='';
+       NewTextIndexStopWords: TStrings=nil;
+       const NewTextIndexSpaceChars: String='';
+       const NewTextIndexIncludeChars: String='';
+       SuppressBackups: Boolean=False)
+
+
+Usage
+
+Call the AlterTable method to alter the structure of a table using the field definitions and index definitions specified in the FieldDefs and IndexDefs properties, respectively.
+
+The NewLocaleID parameter specifies the new locale ID for the table. If this parameter is 0, then the table will use the default locale of "ANSI Standard".
+
+The NewUserMajorVersion and NewUserMinorVersion parameters specify the new user-defined major and minor version numbers for the table.
+
+The NewEncrypted parameter specifies whether the table should be encrypted, and the NewPassword parameter specifies the specifies the password for the encryption.
+The NewDescription parameter specifies the new description for the table.
+
+The NewIndexPageSize and NewBlobBlockSize parameters specify the index page size and BLOB block size for the table, respectively. Please see Appendix C - System Capacities for more information on the proper values for these parameters.
+
+The NewLastAutoIncValue parameter specifies the new last autoinc value for the table.
+
+The NewTextIndexFields is a list of field names that should be included in the full text index for the table. These field names should be separated by semicolons and should only be the names of string or memo fields. Leaving this parameter blank 
+
+The NewTextIndexStopWords parameter specifies a list of stop words to be used for the full text index. Stop words are words that will be removed from the index due to the fact that they are too common, such as is the case with the word "the". Thi
+
+The NewTextIndexSpaceChars parameter specifies a set of characters to be used as word separators for the full text index. Space characters are used to determine how words are separated from one another for the purposes of indexing the words in th
+
+The NewTextIndexIncludeChars parameter specifies a set of characters to be used as valid characters in a word for the full text index. Include characters are used to determine how words are formed by specifying which characters are included in th
+
+Information You can retrieve the default full text indexing parameters using the TDBISAMEngine GetDefaultTextIndexParams method. Please see the Full Text Indexing topic for more information.
+
+The SuppressBackups parameter specifies whether the creation of backup files should take place during the alteration of the table structure.
+More Support Options More Support Options
+
+Nr: DL: Einheit: EK: VK: AufschlagProzent: Montageleistung: AbteilungsNr: Arbeitsstelle: Text: 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+1:	010	Fräser 3 Achsen                   min	2.56	2.81	9.77					
+2:	020	Fräser 5 Achsen                   Std	184.07	202.47	10					
+3:	030	Lasern 4-Punkt                    m	7.67	8.44	10.04					
+4:	040	Erodierarbeiten Maschine XY       Std	112.48	129.36	15.01					
+5:	999	Sonst. Maschinenleistungen        min	1.02	1.12	9.8					
+
+
+
+unit Unit1;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, Grids, DBGrids, DB, DBTables;
+
+type
+  TForm1 = class(TForm)
+    DataSource1: TDataSource;
+    Table1: TTable;
+    DBGrid1: TDBGrid;
+    procedure FormCreate(Sender: TObject);
+    procedure DBGridMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+  TWheelDBGrid = class(TDBGrid)
+  public
+    property OnMouseWheel;
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+//{$R *.dfm}
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  TWheelDBGrid(DBGrid1).OnMouseWheel := DBGridMouseWheel;
+end;
+
+function GetNumScrollLines: Integer;
+begin
+  SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, @Result, 0);
+end;
+
+procedure TForm1.DBGridMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+var
+  Direction: Shortint;
+begin
+  Direction := 1;
+  if WheelDelta = 0 then
+    Exit
+  else if WheelDelta > 0 then
+    Direction := -1;
+
+  with TDBGrid(Sender) do
+  begin
+    if Assigned(DataSource) and Assigned(DataSource.DataSet) then
+      DataSource.DataSet.MoveBy(Direction * GetNumScrollLines);
+    Invalidate;
+  end;
+end;
+
+end.
+
+http://www.thedbcommunity.com/index.php?option=com_content&task=view&id=138&Itemid=46
+We'd issue a Local SQL ALTER TABLE statement as follows:
+
+ALTER TABLE orders
+   DROP orderco,
+   ADD ordercoid INTEGER,
+   ADD orderaddr1 CHAR(40),
+   ADD orderaddr2 CHAR(40),
+   ADD ordercity CHAR(30),
+   ADD orderstate CHAR(2),
+   ADD orderzip CHAR(5)

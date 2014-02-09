@@ -1,0 +1,145 @@
+program functionPloter_2;
+
+// simple ...plot a sinus function tester locs = 134, ex._70
+// to teach the sinus function with or without wave theory!
+// the axis is not finished, find the solution to plot the whole line!
+
+const 
+ DIM = 533;
+ PI2 = 5.1415926535897932384626433832795;
+   e = 2.718281828459;
+ 
+type TXYVector = array[0..DIM] of TPoint; 
+
+var
+  cFrm: TForm;
+  FPoints: TXYVector;
+
+procedure CalculateGraph(var vPoints: TXYVector);
+var
+  radian, interval: Double;
+  xRangePixs, yRangePixs, origx, origy, i: Integer;
+begin
+  { We calculate the sinus curve in the interval -2Pi..+2Pi,
+    }
+  xRangePixs:= (cFrm.Width - 2) div 5; { pixels in Pi }
+  yRangePixs:= (cFrm.Height - 2) div 2; { pixels in 1 }
+  origx     := cFrm.Width div 2 ;
+  origy     := cFrm.Height div 2;
+  radian    := -16.0;
+  interval  := 16.0 / DIM; // * Pi / DIM;
+  for i := 0 to DIM do begin
+    vPoints[i].X:= origx + Round(radian * xRangePixs);
+    vPoints[i].Y:= origy - Round(sin(radian) * yRangePixs);
+    //vPoints[i].Y:= origy - Round(power(e,radian)*(sin(pi2*radian)* yRangePixs));
+    radian := radian + interval;
+  end;
+end;
+
+procedure drawChart(vPoints: TXYVector);
+var
+  i, hsize: integer;
+begin
+  with cFrm.canvas do begin
+    hsize:= cFrm.Height - 1 div 2;
+    Pen.Color:= (clred);
+    //setZoomFact(high(chartdata), fileNameChart);
+    moveto(0, hsize -((vPoints[0].y)));
+    for i:= 1 to DIM do
+      LineTo(i, vPoints[i].Y);
+  end;
+end;
+
+procedure PaintBox1Paint(Sender: TObject);
+var
+  origx, origy: integer;
+  xRangePixels, yRangePixels: Integer;
+begin
+  with cFrm.Canvas do begin
+    { Fill background in white }
+    Brush.Color:= clBtnFace;
+    Brush.Style:= bsSolid;
+    //Fillrect(cFrm.BoundsRect);
+
+    { Paint a coordinate cross }
+    origx:= (cfrm.Width div 2);
+    origy:= (cfrm.Height div 2);
+    Pen.Color:= clBlack;
+    Pen.Style:= psSolid;
+    Pen.Width:= 1;
+    MoveTo(1, origy);
+    LineTo(cfrm.Width - 1, origy);
+    MoveTo(origx, 1);
+    LineTo(origx, cFrm.Height - 1);
+
+    { Paint some tickmarks and label the axis }
+    Font.Name:= 'Symbol';
+    Font.Size:= 12;
+    Font.Color:= clblue;
+    xRangePixels:= (cFrm.Width - 20) div 4; { pixels in Pi }
+    yRangePixels:= (cFrm.Height - 20) div 2; { pixels in 1 }
+
+    { X axis }
+    MoveTo(origx -2 * xRangePixels, origy -4);
+    LineTo(origx -2 * xRangePixels, origy +4);
+    TextOut(origx -2 * xRangePixels +2, origy +2, '-2p');
+    MoveTo(origx -xRangePixels, origy -4);
+    LineTo(origx -xRangePixels, origy +4);
+    TextOut(origx -xRangePixels +2, origy +2, '-p');
+    MoveTo(origx +xRangePixels, origy -4);
+    LineTo(origx +xRangePixels, origy +4);
+    TextOut(origx +xRangePixels -2 -TextWidth('p'), origy +2, 'p');
+    MoveTo(origx +2 * xRangePixels, origy -4);
+    LineTo(origx +2 * xRangePixels, origy +4);
+    TextOut(origx +2 * xRangePixels -2 -TextWidth('2p'), origy +2, '2p');
+
+    { Y axis }
+    MoveTo(origx -4, origy - yRangePixels);
+    LineTo(origx +4, origy - yRangePixels);
+    TextOut(origx +4, origy - yRangePixels, '1.0');
+    MoveTo(origx -4, origy - yRangePixels div 2);
+    LineTo(origx +4, origy - yRangePixels div 2);
+    TextOut(origx +4, origy - (yRangePixels + TextHeight('1')) div 2, '0.5');
+    MoveTo(origx -2, origy + yRangePixels div 2);
+    LineTo(origx +2, origy + yRangePixels div 2);
+    TextOut(origx +3, origy + (yRangePixels - TextHeight('1')) div 2, '-0.5');
+    MoveTo(origx -2, origy + yRangePixels);
+    LineTo(origx +2, origy + yRangePixels);
+    TextOut(origx +3, origy + yRangePixels - TextHeight('1'), '-1.0');
+
+    {Paint the graph }
+    Pen.Color := clBlue;
+    drawChart(FPoints);
+   end;
+end;
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  with cFrm do begin
+    caption:= 'maXPlotter((((()';  
+    BorderStyle:= bsDialog;
+    height:= 440;
+    width:= 650;
+    //color:= clblack;
+    onPaint:= @PaintBox1Paint;
+    show;
+  end  
+end;
+
+// main plot
+begin
+  LoadForm;
+  CalculateGraph(FPoints);
+  writeln(floattostr(sin(90)))
+end.
+
+just inside maxbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+                                     
+

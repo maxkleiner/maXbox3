@@ -1,0 +1,165 @@
+program Symmetrics_Graphics_Draw;
+
+//*********************************************************************
+// ...draw a symetri spray effect and paint with mouse, loc's=124, example 71
+// Font.Height = -Font.Size * Font.PixelsPerInch/72  
+//   it also mirrors the line in all 4 quadrants
+//   draws as position (x,y) (a,b) (c,d) and (e,f)}
+//*********************************************************************
+(*
+ RRRRR    EEEEEE   AAAA   DDDDD    MM     MM   EEEEEE 
+ RR  RR   EE       AA AA  DD  DD   MMMM MMMM   EE    
+ RRRRR    EEEE    AAAAAA  DD   DD  MM MMM MM   EEEE
+ RR  RR   EE      AA   AA DD   DD  MM  M  MM   EE
+ RR   RR  EEEEEE AA    AA DDDDD    MM  M  MM   EEEEEE
+*)
+
+  
+type TXYVector = array[0..2] of TPoint;   
+
+var
+  cFrm: TForm;
+  //PaintBox1: TPaintBox;
+
+//gibt den Winkel im Gradmaﬂ an
+function GetDEG(Winkel: Extended): Extended;
+  begin
+    Result:= (Winkel * 2 * Pi) / 360;
+  end;
+  
+//gibt den Winkel im Winkelmaﬂ an
+function GetRAD(Winkel: Extended): Extended;
+  begin
+    Result := (Winkel * 360) / (2 * Pi);
+  end;
+  
+  
+procedure SaveCanvas(vCanvas: TCanvas; FileName: string);
+var
+  Bmp: TBitmap;
+  bmp1: TLinearBitmap;
+  MyRect: TRect;
+begin
+  Bmp:= TBitmap.Create;
+  bmp1:= TLinearBitmap.create;
+  try
+    MyRect := vCanvas.ClipRect;
+    Bmp.Width := MyRect.Right - MyRect.Left;
+    Bmp.Height := MyRect.Bottom - MyRect.Top;
+    Bmp.Canvas.CopyRect(MyRect, vCanvas, MyRect);
+    bmp1.Assign(Bmp)
+    Bmp1.SaveToFile(FileName);
+  finally
+    Bmp.Free;
+    bmp1.Free;
+  end;
+end; 
+  
+  
+  
+procedure drawPolygon(vPoints: TXYVector);
+var
+  i, hsize: integer;
+begin
+  with cFrm.canvas do begin
+    hsize:= cFrm.Height - 1 div 2;
+    Pen.Color:= (clred);
+    //setZoomFact(high(chartdata), fileNameChart);
+    //moveto(0, hsize -((vPoints[0].y)));
+    cFrm.Canvas.MoveTo(vpoints[1].X, vpoints[1].Y);
+    for i:= 0 to 2 do
+      LineTo(vPoints[i].x, vPoints[i].y);
+  end;
+end;  
+
+procedure Spray(Canvas: TCanvas; x,y,r: Integer; Color: TColor);
+var
+  rad, a: Single;
+  i: Integer;
+begin
+  //canvas.pen.width:= 100;
+  for i:= 0 to 120 do begin
+    a:= Random(20) * 10 * pi;
+    rad:= Random(10) * r;
+    Canvas.Pixels[x + Round(rad*Cos(a)), y + Round(rad*Sin(a))]:= Color;
+  end;
+end;
+
+procedure Image1MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+  var
+    a,b,c,d,e,f:integer;
+begin
+  if ssLeft in Shift then Spray(cfrm.Canvas, x, y, 4, clRed);
+  {when the mouse move with the Left mouse button pressed this draws
+   a line which follows the mouse
+   it also mirrors the line in all 4 quadrants
+   draws as position (x,y) (a,b) (c,d) and (e,f)}
+  cFrm.Canvas.Pen.color:= random(clwhite);
+  with cfrm.canvas do begin
+    MoveTo(X,Y);
+    if (shift=[ssLeft] ) then begin
+      LineTo(x+1,y+1);    //original line
+      {mirror in y-axis }
+      c:=x;
+      d:=Y+2*((cfrm.height div 2) - Y);
+      moveto(c,d);
+      lineto(c-1,d-1);
+      {mirror in x-axis}
+      b:=y;
+      a:=x+2*(cfrm.width div 2 - x);
+      moveto(a,b);
+      lineto(a-1,b+1);
+      {mirrors (a,b) in y-axis}
+      e:=a;f:=d;
+      moveto(e,f);
+      lineto(e+1,f-1);
+    end;
+  end;
+end;
+
+procedure Image1MouseDown(Sender: TObject; Button: TMouseButton;
+                                         Shift: TShiftState; X, Y: Integer);
+begin
+  if ssLeft in Shift then Spray(cfrm.Canvas, x, y, 5, clRed);
+end;
+
+procedure ImageDblClick(Sender: TObject);
+begin
+  SaveCanvas(cfrm.canvas, ExePath+'sysimage.png')
+  showmessage('picture saved at '+ ExePath+'sysimage.png');
+end;
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  with cFrm do begin
+    height:= 540;
+    width:= 580;
+    Position:= poScreenCenter;
+    onMouseMove:= @Image1MouseMove;
+    onMouseDown:= @Image1MouseDown
+    onDblClick:= @ImageDblClick;
+    caption:= 'this is sym 4 drawing - press mouse & move, save with dblclick!'; 
+    color:= clblack; 
+    show;
+    Canvas.Pen.width:= 10;
+    Canvas.Pen.color:= clyellow;
+  end  
+end;
+
+
+//main sym drawing
+begin
+//*****************maXbox graphics series**********************************
+  ProcessMessagesOFF;
+  loadForm();
+end.
+
+just inside maxbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+                                     

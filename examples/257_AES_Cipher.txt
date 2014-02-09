@@ -1,0 +1,355 @@
+program AES_Cipher;
+
+// Crypto Routines of Turbo Power Lockbox3
+// ...plot a the bio of 3 periods 23,28,33   loc's= 225  ex.:_257
+// task: sign the days on the x-axis
+
+const 
+  DIM = 660;
+  PI2 = 6.28318530717958647692528676655901;
+  E = 2.718281828459;
+  BODY = 23;
+  EMOTION = 28;
+  SPIRIT = 33;
+ 
+type TBIOVector = array[0..DIM] of TPoint; 
+
+var
+  cFrm: TForm;
+  bodyPts, emoPts, spiritPts: TBIOVector;
+  mybirthDay, date2: TDateTime;
+
+procedure CalculateGraph(var bPts, ePts, sPts: TBIOVector);
+var
+  dayinterval, radian: Double;
+  periodrange, ageindays: integer;
+  xRgePixs, yRgePixs, origx, origy, i: Integer;
+begin
+  {calculate the biosinus curve in the interval -2Pi..+2Pi}
+  xRgePixs:= (cFrm.Width - 2); { pixels in Pi }
+  yRgePixs:= (cFrm.Height - 2) div 6; { pixels amplitude}
+  origx:= cFrm.Width div 2 ;
+  origy:= cFrm.Height div 2;
+  periodrange:= 33;
+  date2:= date;
+  //intervaltest  := 33.0 / (pi2 * 338);
+  //radian are number of days since birth
+  //xPoints[i].Y:= Round(sin(PI2 * (radian mod 23/5)/23)* yRangePixs);
+  ageInDays:= trunc(date2) - trunc(mybirthDay);
+  dayInterval:= 0.1;
+  radian:= ageInDays - periodRange;
+  for i:= 0 to DIM do begin
+    bPts[i].Y:= origy - Round(sin(PI2*(round(radian)
+                                           mod BODY)/BODY)* yRgePixs);
+    radian:= radian + dayinterval;
+  end;
+  radian:= ageInDays - periodRange;
+  for i:= 0 to DIM do begin
+    ePts[i].Y:= origy - Round(sin(PI2*(round(radian)
+                                           mod EMOTION)/EMOTION)* yRgePixs);
+    radian:= radian + dayinterval;
+  end;
+  radian:= ageInDays - periodRange;
+  for i:= 0 to DIM do begin
+    sPts[i].Y:= origy - Round(sin(PI2*(round(radian) 
+                                           mod SPIRIT)/SPIRIT)* yRgePixs);
+    radian:= radian + dayinterval;
+  end;
+end;
+
+procedure DrawChart(bPts, ePts, sPts: TBIOVector);
+var
+  i: integer;
+begin
+  with cFrm.canvas do begin
+    Pen.Color:= clBlue;
+       moveto(1, (bPts[0].y));
+    for i:= 1 to DIM do
+      LineTo(i , bPts[i].Y);  
+    Pen.Color:= clred;
+    moveto(1, (ePts[0].y));
+    for i:= 1 to DIM do
+      LineTo(i , ePts[i].Y);  
+    Pen.Color:= cllime;
+    moveto(1, (sPts[0].y));
+    for i:= 1 to DIM do
+      LineTo(i , sPts[i].Y);  
+  end;
+end;
+
+procedure PaintBox1Paint(Sender: TObject);
+var
+  origx, origy, xRngPixs, yRngPixs: Integer;
+begin
+  with cFrm.Canvas do begin
+    { Fill background in white }
+    Brush.Color:= clBtnFace;
+    Brush.Style:= bsSolid;
+ 
+    { Paint a coordinate cross }
+    origx:= (cfrm.Width div 2);
+    origy:= (cfrm.Height div 2);
+    Pen.Color:= clBlack;
+    Pen.Style:= psSolid;
+    Pen.Width:= 1;
+    MoveTo(1, origy);
+    LineTo(cfrm.Width - 1, origy);
+    MoveTo(origx, 1);
+    LineTo(origx, cFrm.Height - 1);
+
+    { Paint some tickmarks and label the axis }
+    Font.Name:= 'Symbol';
+    Font.Size:= 22;
+    Font.Color:= clblue;
+    xRngPixs:= (cFrm.Width - 20) div 4; { pixels in Pi }
+    yRngPixs:= (cFrm.Height - 20) div 2; { pixels in 1 }
+    TextOut(origx -2 * xRngPixs +2, origy -210, 'biorhythmus');
+    font.Size:= 12;
+    { X axis }
+    MoveTo(origx -2 * xRngPixs, origy -4);
+    LineTo(origx -2 * xRngPixs, origy +4);
+    TextOut(origx -2 * xRngPixs +2, origy +6, '-2p');
+    MoveTo(origx -xRngPixs, origy -0);
+    LineTo(origx -xRngPixs, origy +170);
+    TextOut(origx -xRngPixs +2 -TextWidth('pppp'),
+                                  origy +170, datetoStr(date-16));
+    MoveTo(origx +xRngPixs, origy -0);
+    LineTo(origx +xRngPixs, origy +170);
+    TextOut(origx +xRngPixs -2 -TextWidth('ppp'),
+                                  origy +170, datetoStr(date+16));
+    //TextOut(origx +xRngPixs -10 -TextWidth('datep'), origy +40, now);
+    
+    MoveTo(origx +2 * xRngPixs, origy -4);
+    LineTo(origx +2 * xRngPixs, origy +4);
+    TextOut(origx +2 * xRngPixs -2 -TextWidth('2p'), origy +6, '2p');
+
+    { Y axis }
+    MoveTo(origx -4, origy - yRngPixs);
+    LineTo(origx +4, origy - yRngPixs);
+    TextOut(origx +4, origy - yRngPixs, '1.0');
+    MoveTo(origx -4, origy - yRngPixs div 2);
+    LineTo(origx +4, origy - yRngPixs div 2);
+    TextOut(origx +6, origy - (yRngPixs + TextHeight('1')) div 2, '0.5');
+    MoveTo(origx -4, origy + yRngPixs div 2);
+    LineTo(origx +4, origy + yRngPixs div 2);
+    TextOut(origx +4, origy + (yRngPixs - TextHeight('1')) div 2, '-0.5');
+    MoveTo(origx -4, origy + yRngPixs);
+    LineTo(origx +4, origy + yRngPixs);
+    TextOut(origx +3, origy + yRngPixs - TextHeight('1'), '-1.0');
+    TextOut(origx +3, origy + (yRngPixs) -40, dateToStr(date));
+
+    Font.Name:= 'Arial';
+    Font.Color:= clBlue;
+        TextOut(origx -2 * xRngPixs +2, origy +110, 'body');
+    Font.Color:= clred;
+        TextOut(origx -2 * xRngPixs +2, origy +130, 'emotion');
+    Font.Color:= clLime;
+        TextOut(origx -2 * xRngPixs +2, origy +150, 'spirit');
+    {rePaint the graph }
+    Pen.Color:= clBlue;
+    DrawChart(bodyPts, emoPts, spiritPts);
+  end;
+end;
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  with cFrm do begin
+    caption:= 'BIORHYTHMUS() for birthday of maXbox: ' + datetoStr(mybirthDay);
+    BorderStyle:= bsDialog;
+    height:= 440;
+    width:= 660;
+    onPaint:= @PaintBox1Paint;
+    show;
+  end  
+end;
+
+//main BIO date plot and Cipher Routines
+var cc, cc2, cc3, passw: string;
+     bigi: longword;
+     fdate: TDateTime;
+begin
+  //ageinDays:= strtoint(readln('how old are you in days ?'));
+  fdate:= GetFileCreationTime(exepath+'maxbox3.exe')
+  writeln('Exe Date: '+datetimetostr(fdate))
+  //mybirthDay:= encodeDate(1959, 06, 20);
+  mybirthDay:= fdate;
+ 
+  LoadForm;
+  CalculateGraph(bodyPts, emoPts, spiritPts);
+  DrawChart(bodyPts, emoPts, spiritPts);
+  Writeln(SHA1(exepath+'maxbox3.exe'))
+  //AESSymetricExecute(exepath+'maxboxdef.ini','password',exepath+'maxboxdefcc.ini');
+  //AESencrypt(exepath+'maxboxdef.ini','password',exepath+'maxboxdefcc.ini');
+
+  //AES File Cipher
+  passw:='password1';
+  Writeln('Hash of '+SHA256(exepath+'examples\citymax.bmp','F'));
+  AESEncryptFile(exepath+'examples\citymax.bmp',exepath+'examples\citymax.bmp_encrypted',passw);
+  AESDecryptFile(exepath+'examples\citymax2.bmp',exepath+'examples\citymax.bmp_encrypted','password1');
+  Writeln('Hash of '+SHA256(exepath+'examples\citymax2.bmp','F'));
+
+  //test to compate
+  SymetricCompareFiles(exepath+'examples\citymax.bmp',exepath+'examples\citymax2.bmp');
+  if CompareFiles(exepath+'examples\citymax.bmp',exepath+'examples\citymax2.bmp',NIL,NIL) then
+        writeln('bitmap comp OK') else writeln('comp NOK');
+
+  
+  //AES String Cipher
+  Writeln(' ');
+  passw:='password123';
+  cc:= 'too many secrets in the hex box';
+  AESEncryptString(cc, cc2,passw);
+  writeln(cc2)
+  AESDecryptString(cc, cc2,passw);
+  writeln('result of crypto back: '+cc)
+   
+  {AESEncryptFile(exepath+'maxbox3_8_2.exe',exepath+'maxbox3_8.exe.enc','password123');
+  AESDecryptFile(exepath+'maxbox3_8_3.exe',exepath+'maxbox3_8.exe.enc','password123');
+  SymetricCompareFiles(exepath+'maxbox3_8_2.exe',exepath+'maxbox3_8_3.exe');}
+
+
+  //SHA256 Routines
+  Writeln(' ');
+  //F for File, S for String
+  Writeln('SHA of EXE back: ' +computeSHA256(exepath+'maxbox3.exe','F'));
+  Writeln('Hash of '+computeSHA256(cc,'S'));
+  Writeln('Hash of '+computeSHA256('too many secrets in the hex box','S'));
+  
+   
+    //Test Delete(Source, 3, 4);  
+    cc3:= '082_pas_biorythmus_solution_3_cipher.txt_encrypt_decrypt';
+    cc3:= 'maxbox3.exe_encrypt_decrypt';
+    Delete(cc3, length(cc3)-15, 8);
+    writeln(cc3) 
+end.
+
+just maXbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+        
+        
+// Dokus, Testklassen zu Algorithmen
+
+
+• Vorabversionen und Updates
+• Gibt es eine Installationanweisung
+, Support, Hotline der Firma bekannt
+• Volle Verfügbarkeit über den Sourcecode
+• Compilationsfähigkeit erstellt ($D, $L, tdb32info)
+• Benchmarks und Memoryleaks geprüft
+• Tools und Review Kriterien vorhanden
+• Sprache und Form bei Dokumenten festlegen
+• Referenzarchitektur und Patterns bekannt
+QS Review Checklist
+1. Standards - are the Pascal software standards for
+name conventions being followed?
+2. Bugs - Are the changes generally correct?
+3. Are the Requirements Well Understood (Multilang)?
+4. Are all program headers completed?
+5. Are code changes commented appropriately?
+6. Does documentation use Correct Grammar?
+7. Are release notes Clear? Complete?
+8. Installation Issues, Licenses, Certs. Are there any?
+9. Version Control, Are output products clear?
+10.Test Instructions - Are they any? Complete?
+
+Nichtfunktionale anforderungen
+• Modularisierung
+• Erweiterbarkeit, Flexibilität
+• Wartbarkeit, Wiederverwendung
+• Testbarkeit, Software-Qualität, Sicherheit (Datenschutz) und Stabilität       
+                                    
+Fragen
+• Gibt es eine Installationsanweisung oder CD? 
+• Zufrieden mit Support und Hotline?
+• Braucht die Software weitere Tools (Schnittstellen zu Office, CAD oder Reporting)?
+• Gibt es ein Benutzerhandbuch der Funktionen oder ein Help?
+• Stehen Daten unter Datenschutz?
+• Wie wird geschult (Ausbildung)?
+• Sind Bugs oder Fehler bekannt?
+• Welche Version hat die Software?
+• Gibt es neue Anforderungen?
+
+
+
+Big-endian and little-endian formated integers
+Question:
+
+How can I create big-endian and little-endian formated integers?
+Answer:
+
+The big-endian and little-endian format simply swaps the HiByte and LoBytes and HiWords and LoWords of a given integer or word value. The following demonstrates swapping the values of a given word or longint. Calling the Endian functions a second time reverts the values back to their original format.
+
+function EndianWord(w : word) : word;
+
+begin
+
+  result := swap(w);
+
+end;
+
+ 
+
+function EndianInt(i : integer) : integer;
+
+begin
+
+  result := swap(i);
+
+end;
+
+ 
+
+function EndianLong(L : longint) : longint;
+
+begin
+  result := swap(L shr 16) or
+  (longint(swap(L and $ffff)) shl 16);
+end;
+
+ 
+
+procedure TForm1.Button1Click(Sender: TObject);
+
+var
+
+  w : word;
+
+  i : integer;
+
+  l : LongInt;
+
+begin
+
+  w := 10;
+
+  i := -10;
+
+  l := 1024;
+
+  w := EndianWord(w);
+
+  i := EndianInt(i);
+
+  l := EndianLong(l);
+
+ {again!}
+
+  w := EndianWord(w);
+
+  i := EndianInt(i);
+
+  l := EndianLong(l);
+
+  Memo1.Lines.Add(IntToStr(w));
+
+  Memo1.Lines.Add(IntToStr(i));
+
+  Memo1.Lines.Add(IntToStr(l));
+
+end; 

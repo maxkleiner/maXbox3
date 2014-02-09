@@ -1,0 +1,433 @@
+program DataBaseDemo_SQLQuery;
+
+// this is in conjunction with example _28_pas_dataset.txt
+// in V3.2 you find DBX, SQLExpress for Interbase, Firebird 
+
+//const SQLQuery = 'select * from customer where company like "%SCUBA%"''';    
+//Const SQLQuery = 'select * from Kunde where name1 like "%Berlin%"''';    
+//Const SQLQuery = 'select * from Kunde where name1 like "%Lenze%"''';    
+                             
+Const SQLQuery = 'select * from rbField where Upper(fieldname) like Upper("%Text%")''';    
+
+//Const SQLQuery = 'select * from rbField where fieldname like "%Text%"''';    
+
+
+{type
+  TFormGrafikKapazitaet = class(TForm)
+    Chart1: TChart;
+    Series1: THorizBarSeries;
+    Series2: THorizBarSeries;
+    procedure FormCreate(Sender: TObject);
+  private
+  public
+  end;}
+  
+function FileTimeGMT2 (FileName: STRING): TDateTime;
+         // Returns the Date and Time of the last modification of the given File
+         // The Result is zero if the file could not be found
+         // The Result is given in UTC (GMT) time zone
+VAR
+  Handle         : THandle;
+  FindData       : TWin32FindData;
+  SystemFileTime : TSystemTime;
+  mf: TFileTime;
+begin
+  Result := 0.0;
+  Handle := FindFirstFile (PChar (FileName), FindData);
+  IF Handle <> INVALID_HANDLE_VALUE THEN BEGIN
+    WFindClose (Handle);
+    IF (FindData.dwFileAttributes AND FILE_ATTRIBUTE_DIRECTORY) = 0 THEN
+      // FileTimeToSystemTime(FindData.ftLastWriteTime, SystemFileTime); 
+      IF FileTimeToSystemTime(FindData.ftLastWriteTime, SystemFileTime) THEN BEGIN
+        with SystemFileTime do begin
+          if messagebeep(4) then 
+            Result:= EncodeDate (wYear, wMonth, wDay) +
+          EncodeTime (wHour, wMinute, wSecond, wMilliseconds);
+        end;
+      END;
+    END;
+END;
+
+
+procedure OpenIEURL(aURL:string);
+var sz: string;
+begin
+  Application.ProcessMessages;
+  aURL:= trim(aURL);
+  if aURL='' then Exit;
+  with TRegistry.Create do try
+     rootkey:= HKey_Classes_Root;
+     OpenKey('\htmlfile\shell\open\command',false);
+     try 
+       sz:= ReadString('');
+       writeln('test of IE readkey '+sz) 
+     except
+       sz:= ''; 
+     end;
+     CloseKey;
+  finally
+      Free;
+  end;
+  if sz='' then Exit;
+  sz:= copy(sz, pos('"',sz)+1, length(sz));
+  sz:= copy(sz, 1, pos('"',sz)-1);
+  if pos('http://',aURL)<>1 then aURL:='http://'+aURL;
+  //ShellExecute(0,'open',PChar(z), PChar(aURL), nil, sw_ShowNormal); 
+  //ShellExecute(0,'open', PChar(aURL), nil, nil, sw_Show);
+end;
+
+
+  
+const olFolderContacts=$0000000A;
+  
+procedure TFormOutlookExport_FormCreate(Sender: TObject);
+var aProgID:string;
+    aClassID:TGUID;
+    fBookmarkList:TBookmarkList;
+    fOutlookInstalled:Boolean;
+    fAbort,fExporting, gefunden:Boolean;
+    fMaske:integer;
+    outlook,
+    NameSpace,
+    Contacts,
+    aContactItem: OleVariant;
+    fCount, j: integer;
+ 
+begin
+  fExporting:=false;
+
+  aProgID:='Outlook.Application';
+  try
+    aClassID:=ProgIDToClassID(aProgID);
+    fOutlookInstalled:=true;
+  except
+    fOutlookInstalled:=false;
+  end;
+  if fOutlookInstalled then begin
+     outlook:= CreateOleObject('Outlook.Application');
+     NameSpace:= outlook.GetNameSpace('MAPI');
+     writeln('is outlook installed ');
+     NameSpace.Logon;
+     Contacts:= NameSpace.GetDefaultFolder(olFolderContacts);
+  end;
+      fCount:=Contacts.Items.Count;
+      gefunden:=false;
+      for j:= 1 to fCount -1 do begin
+           Application.ProcessMessages;
+           aContactItem:=Contacts.Items(j);
+           try
+           writeln(trim(aContactItem.LastName))
+           except
+           end
+           {if (AnsiUpperCase(aContactItem.FirstName)=z1) and
+              (AnsiUpperCase(aContactItem.LastName)=z2) then begin
+              gefunden:=true;
+              break;
+           end;}
+       end;
+      Outlook:= UnAssigned;
+end;
+
+
+function GetQuery(SQLCommand: string; aQuery: TQuery): TFields;
+var Chart1: TChart;
+    //Series1: THorizBarSeries;
+    //Series2: THorizBarSeries;
+    b: TBookmarkStr;
+
+begin
+  aQuery.SQL.Text:= SQLCommand;
+  aQuery.Open;
+  aQuery.Active:= true;
+  result:= aQuery.Fields;
+end; 
+
+
+procedure DoQuery(aDB: TDataBase);
+var i: integer;
+    dQuery: TQuery;
+
+begin
+   dQuery:= TQuery.create(self); 
+   with dQuery do begin
+   DatabaseName:= aDB.DataBaseName;
+     try
+        //copypalette
+        //openDataBase; or Close;
+        //GetQuery(SQLQuery, dQuery)
+        SQL.Clear;
+        //SQL.Text:= 'select * from customer';
+        SQL.Text:= SQLQuery;
+        //sql.add
+        Open;
+        Writeln(inttostr(RecordCount)+' Records found: ')
+        for i:= 0 to RecordCount - 1 do begin
+          //Writeln(intToStr(i)+' '+fieldbyname('Name1').asString)
+          //Writeln(intToStr(i)+' '+fieldbyname('fieldname').asString)
+          Writeln(intToStr(i)+' '+fields[1].asString)
+          Next;
+        end;  
+        //ExecSQL;
+       finally
+         Close;
+         Free;
+         CloseDataBase(aDB)
+       end;
+    end   
+end; 
+
+
+procedure BDEDataBaseConnect;
+  var aParams, aTblNames: TStringList;
+      aSession: TSession;
+      dbMain: TDatabase;
+      BDEAlias: string;
+      i: integer;
+begin 
+  //create alias params list 
+  AParams:= TStringList.Create;  
+  aTblNames:= TStringList.Create; 
+  BDEAlias:= 'DBPrint'; //IBLocal; //'SAS'; //'DBDEMOS'; //BDEAlias:= 'dBase Files';
+  //create a session to get alias parameters  
+  ASession:= TSession.Create(NIL);  
+  ASession.SessionName:= 'MainSession4';  
+  dbMain:= TDatabase.Create(NIL);  
+  try  
+    ASession.GetAliasParams(BDEAlias, AParams);
+    for i:= 0 to aparams.count -1 do 
+      writeln(aParams[i]);
+      //connect to database 
+    with dbMain do begin  
+      Params.Assign(AParams);  
+      dbMain:= ASession.OpenDatabase(BDEAlias);
+      Writeln('Database is: '+dbMain.DataBaseName)
+      KeepConnection:= True;
+      GetTableNames(aTblNames, false)
+      //for i:= 0 to atblNames.count -1 do 
+        //Writeln(atblnames[i])
+      doQuery(dbMain);
+    end;
+  finally  
+    DBMain.Free;
+    ASession.Free;  
+    AParams.Free;
+    aTblNames.Free;
+  end;  
+end;
+  
+
+procedure MakeDataBase;
+begin
+  with TTable.Create(NIL) do begin
+    DatabaseName  := 'c:\temp';  (* alias *)
+    //TableName     := 'test.dbf';
+    TableType     := ttDBase;
+    with FieldDefs do begin
+      Add('F_NAME', ftString,20,false);
+      Add('L_NAME', ftString,30,false);
+    end;
+    CreateTable;
+    { create a calculated index }
+    with IndexDefs do begin
+      Clear;
+      { don't forget ixExpression in calculated indexes! }
+      //AddIndex('name','Upper(L_NAME)+Upper(F_NAME)',[ixExpression],'descript');
+    end;
+  end;
+end;
+
+{What you have to do is declare a TTable variable, create an instance, then with the TTable's FieldDefs property, add field definitions. Finally, you'll make a call to CreateTable, and your table will be created. Here's some example code:
+ }
+{ "Add" is the operative function here.
+  Add(const Name: string; DataType: TFieldType; Size: Word; Required: Boolean);
+}
+
+
+procedure CreateATable(DBName,           //Alias or path
+                       TblName : String); //Table Name to Create
+var
+  tbl : TTable;
+begin
+  tbl := TTable.Create(Application);
+  with tbl do begin
+    Active := False;
+    DatabaseName := DBName;
+    //TableName := TblName;
+    TableType := ttParadox;
+    with FieldDefs do begin
+      Clear;
+      Add('LastName', ftString, 30, False);
+      Add('FirstName', ftString, 30, False);
+      Add('Address1', ftString, 40, False);
+      Add('Address2', ftString, 40, False);
+      Add('City', ftString, 30, False);
+      Add('ST', ftString, 2, False);
+      Add('Zip', ftString, 10, False);
+    end;
+    {Add a Primary Key to the table}
+   // with IndexDefs do begin
+     // Clear;
+      //Add('Field1Index', 'LastName;FirstName', [ixPrimary, ixUnique]);
+    //end;
+    CreateTable; {Make the table}
+  end;
+end;
+
+function GetTextWidth(aFont:TFont; aText:String):double;
+var afFont:TFont;
+    atText:string;
+    aWidth:integer;
+begin
+  //GetParamValue(0,aFont);
+  //GetParamValue(1,aText);
+  //aWidth:=ppGetSpTextWidth(aFont,aText);
+  //SetParamValue(2,aWidth);
+end;
+
+
+procedure SetTabStopPositions(aMemo: TMemo);
+var tsp:TStrings;
+    wMM:Double;
+    ftabchars: byte;
+begin
+  if fTabChars<>8 then begin
+     wMM:=Round(fTabChars * GetTextWidth(aMemo.Font, 'x'));
+     tsp:=TStringList.Create;
+     tsp.Add(floatToStr(wMM));
+     //aMemo.TabStopPositions:=tsp;
+     tsp.Free;
+  end;
+end;
+
+//const WM_QUIT = $0012;
+
+procedure CloseDialer;
+var h:Hwnd;
+    aTitle:String;
+    sp, sp1: string;
+begin
+  try
+      //aTitle:='Wählhilfe';
+      atitle:= 'Tmaxform';
+      sp1:= '';//atitle;
+      sp:= 'TMaxform1';
+      h:= FindWindow(sp, sp1);
+      writeln(inttostr(h));
+    //  ShowMessage(IntToStr(h));
+      if h>0 then PostMessage(h,WM_QUIT,0,0);
+  except
+  end;
+end;
+
+
+
+
+begin
+  BDEDataBaseConnect;
+  
+  //MakeDataBase;
+  //Define_Let_OpenDB;
+  
+  //Procedure SetAlias( aAlias, aDirectory : String)');
+  //D:\AVERP\graefen\Daten                                //Berlin
+  //SetAlias('SAS','D:\AVERP\graefen\Daten');   //Lenze
+  
+  //SetAlias('SAS','D:\AVERP\Hellbeck\Hellbeck\Daten');   //Lenze
+  
+  TFormOutlookExport_FormCreate(Self);
+  openIEURL('www.kleiner.ch');
+  writeln(DateTimeToStr(FileTimeGMT2(exepath+'maxbox3.exe')));
+  //CloseDialer;
+  
+end.
+
+
+  
+  
+TABLE 16.1. PRIMARY TDataSet PROPERTIES.
+
+Property 	Description
+Active 	Opens the dataset when set to True and closes it when set to False.
+AutoCalcFields 	Determines when calculated fields are calculated.
+Bof 	Returns True if the cursor is on the first record in the dataset and False if it isn't.
+CachedUpdates 	When True, updates are held in a cache on the client machine until an entire transaction is complete. When False, all changes to the database are made on a record-by-record basis.
+CanModify 	Determines whether the user can edit the data in the dataset.
+DataSource 	The DataSource component associated with this dataset.
+DatabaseName 	The name of the database that is currently being used.
+Eof Returns True if the cursor is at the end of the file and False if it isn't.
+FieldCount 	The number of fields in the dataset. Because a dataset might be dynamic (the results of a query, for example), the number of fields can vary from one dataset request to the next.
+Fields 	An array of TFields objects that contains information about the fields in the dataset.
+FieldValues 	Returns the value of the specified field for the current record. The value is represented as a Variant.
+Filter 	An expression that determines which records a dataset contains.
+Filtered When True, the dataset is filtered based on either the Filter property or the OnFilterRecord event. When False, the entire dataset is returned.
+FilterOptions 	Determines how filters are applied.
+Found 	Indicates whether a find operation is successful.
+Handle 	A BDE cursor handle to the dataset. This is used only when making direct calls to the BDE.
+Modified Indicates whether the current record has been modified.
+RecNo 	The current record number in the dataset.
+RecordCount 	Returns the number of records in the dataset.
+State 	Returns the current state of the dataset (dsEdit, dsBrowse, dsInsert, and so on).
+UpdateObject 	Specifies the TUpdateObject component to use for cached updates.
+UpdatesPending 	When True, the cached update buffer contains edits not yet applied to the dataset.
+
+
+TABLE 16.2. PRIMARY TDataSet METHODS.
+
+Method 	Description
+Append 	Creates an empty record and adds it to the end of the dataset.
+AppendRecord 	Appends a record to the end of the dataset with the given field data and posts the edit.
+ApplyUpdates 	Instructs the database to apply any pending cached updates. Updates are not actually written until the CommitUpdates method is called.
+Cancel 	Cancels any edits to the current record if the edits have not yet been posted.
+CancelUpdates 	Cancels any pending cached updates.
+ClearFields 	Clears the contents of all fields in the current record.
+CommitUpdates 	Instructs the database to apply updates and clear the cached updates buffer.
+Close 	Closes the dataset.
+Delete 	Deletes the current record.
+DisableControls 	Disables input for all data controls associated with the dataset.
+Edit 	Enables editing of the current record.
+EnableControls 	Enables input for all data controls associated with the dataset.
+FetchAll 	Gets all records from the cursor to the end of the dataset and stores them locally.
+FieldByName 	Returns the TField pointer for a field name.
+
+FindFirst
+
+	
+
+
+check:
+procedure SIRegisterTDATASET(CL: TPSPascalCompiler);
+procedure TDATASETFIELDS_R(Self: TDATASET; var T: TFIELDS);
+begin T := Self.FIELDS; end;
+
+//{$IFNDEF FPC}
+
+procedure TDATASETFIELDLIST_R(Self: TDATASET; var T: TFIELDLIST);
+begin T := Self.FIELDLIST; end;
+
+
+       aContactItem.Categories:='Kunde'; // neu
+       aContactItem.FirstName:=KundeName1.AsString;
+       aContactItem.LastName:=KundeName2.AsString;
+       aContactItem.FileAs:=KundeSuchbegriff.AsString;
+       aContactItem.CompanyName:=KundeSuchbegriff.AsString;
+       aContactItem.CustomerID:=KundeKundenNr.AsString;
+       aContactItem.Account:=KundeFibuNr.AsString; // neu
+       aContactItem.Body:=KundeAnsprechpartner.AsString;
+       aContactItem.BusinessAddressStreet:=KundeStrasse.AsString;
+       aContactItem.BusinessAddressPostalCode:=KundePLZ.AsString;
+       aContactItem.BusinessAddressPostOfficeBox:=KundePostfach.AsString;
+       aContactItem.BusinessAddressCity:=KundeOrt.AsString;
+//         aContactItem.BusinessAddressCountry:=KundeLand.AsString; // neu
+       aContactItem.OrganizationalIDNumber:=KundeUStIdNr.AsString; // neu
+//         aContactItem.GovernmentIDNumber:=''
+       aContactItem.BusinessTelephoneNumber:=KundeTelefon1.AsString;
+       aContactItem.BusinessFaxNumber:=KundeFax.AsString;
+       aContactItem.MobileTelephoneNumber:=KundeTelefon2.AsString;
+       aContactItem.Email1Address:=KundeEMail.AsString;
+       aContactItem.WebPage:=KundeHomepage.AsString;
+       aContactItem.Save;
+  end;
+
+  http://i1-win.softpedia-static.com/screenshots/maXbox_5.png?1381322021
+  
+  

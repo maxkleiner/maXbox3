@@ -1,0 +1,341 @@
+PROGRAM Logic_Simulation;
+//////////////////////////////////////////////////////////////////////////
+
+{ * The mixer has following structure (as it is in this component) :
+ *
+ * Destinations (destinations should be for example: Playback, Recording and Voice commands)
+ *   |
+ *   |--Destination[0]  (if you want to get volume call GeVolume (<ThisDestinationNum>,-1,...))
+ *   |    |                                                         (=0)           ----
+ *   |    |--Data:TMixerLine
+ *   |    |--Controls         (controls of the line, ex: Master volume, master mute)
+ *   |    |    |
+ *   |    |    |--Control[0]
+ *   |    |    |--Control[1]
+ *   |    |    |--Control[..]
+ *   |    |
+ *   |    |--Connections      (ex: Wave, MIDI, CD Audio, Line-In,...)
+ *   |         |
+ *   |         |--Connection[0]   (GetVolume (<ThisDestinationNum>,<ThisConnectionNum>,...))
+ *   |         |    |                               (=0)                 (=0)
+ *   |         |    |--Data:TMixerLine
+ *   |         |    |--Controls   (here can be volume and mute)
+ *   |         |         |
+ *   |         |         |--Control[0]
+ *   |         |         |--Control[1]
+ *   |         |         |--Control[..]
+ *   |         |
+ *   |         |--Connection[1]
+ *   |         |--Connection[..]
+ *   |
+ *   |--Destination[1]
+ *   |--Destination[..]
+ *
+ * }
+
+//Procedure RleCompress2(Stream : TStream); forward;
+//Procedure RleDecompress2(Stream : TStream); forward;
+
+// TPSImport_JvSimLogic;
+
+{TYPE 
+<Type declarations>} 
+
+VAR 
+//<Variable declarations>
+    div_dbl: double;
+    i, bin1, bin2, bin3: integer;
+    wd: word;
+    st: String;
+    fileStream: TFileStream;
+    midilist: TStringList;
+    aFrm: TForm;
+//<FUNCTION>
+//<PROCEDURE> 
+
+procedure SoundControlDemo;
+var msound: TJvSoundValue;
+begin
+  msound:= TJvSoundValue.Create;
+  msound.volume:= 80;
+  with TJvSoundControl.Create(self) do begin
+    wave:= msound;
+  end;
+end;
+
+
+function GetTextFromFile(const AFile: String; var RetStr: string): boolean;
+//var
+  //fileStream: TFileStream;
+begin
+  result:= false;
+  if not fileExists(AFile) then exit;
+  FileStream:= TFileStream.Create(AFile, fmOpenRead);
+    writeln('file size '+inttostr(filestream.size));
+  try
+    if FileStream.Size > 0 then begin
+      SetLength(RetStr, FileStream.Size);
+      fileStream.Seek(0, soBeginning)
+      FileStream.Read(RetStr, FileStream.Size); 
+      result:= true;
+    end;
+  finally
+    //FileStream.Free;
+  end; //try
+end;
+
+Procedure AllBooleanPattern(aX, aY: integer);
+begin
+    Writeln(#13#10+'************** All Booolean Functions **************');
+    PrintF('%-36s 01 False',[inttobin(0)])
+    PrintF('%-36s 02 AND',[inttobin(aX AND aY)])
+    PrintF('%-36s 03 Inhibit',[inttobin(aX AND NOT aY)])
+    PrintF('%-36s 04 Prepend',[inttobin(aX)])
+    PrintF('%-36s 05 Praesect',[inttobin(NOT aX AND aY)])
+    PrintF('%-36s 06 Postpend',[inttobin(aY)])
+    PrintF('%-36s 07 XOR',[inttobin(aX XOR aY)])
+    PrintF('%-36s 08 OR',[inttobin(aX OR aY)])
+    PrintF('%-36s 09 NOR',[inttobin(NOT(aX OR aY))])
+    PrintF('%-36s 10 Aequival',[inttobin((NOT aX OR aY)AND(NOT aY OR aX))])
+    PrintF('%-36s 11 NegY',[inttobin(NOT aY)])
+    PrintF('%-36s 12 ImplicatY',[inttobin(aX OR NOT aY)])
+    PrintF('%-36s 13 NegX',[inttobin(NOT aX)])
+    PrintF('%-36s 14 ImplicatX',[inttobin(NOT aX OR aY)])
+    PrintF('%-36s 15 NAND',[inttobin(NOT(aX AND aY))])
+    PrintF('%-36s 16 True',[inttobin(NOT 0)])
+end;
+
+BEGIN  //Main
+//<Executable statement
+ SoundControlDemo;
+
+  //RleDecompress( Stream : TStream)');
+  // wholee ASCII Table
+   { writeln(Chr(67))
+   for i:= 0 to 255 do
+     writeln(format('wert %d %s',[i, Chr(i)]))}
+    
+    bin1:= 97;
+    bin2:= 223;
+    bin3:= bin1 XOR bin2;
+    writeln(Format('%s',[IntToBin(bin3)]))
+    writeln(' ');
+    wd:= 150;
+    writeln('first     '+IntToBin(wd))
+    writeln(IntToStr(wd))
+    
+    //double the value
+    wd:= wd SHL 1
+    writeln('double '+IntToBin(wd))
+    writeln(IntToStr(wd))
+    //half the value
+    wd:= wd SHR 1
+    writeln('half     '+IntToBin(wd))
+    writeln(IntToStr(wd))
+    //init the value
+    writeln('init      '+IntToBin(wd))
+    writeln('          '+IntToBin(wd XOR wd))
+
+    AllBooleanPattern(10,12);
+ 
+   aFrm:= TForm.create(self)
+   with aFrm do begin
+     Caption:= '********** SimLogic Box ***********';  
+     height:= 510;
+     width:= 750;
+     Position:= poScreenCenter;
+     //Color:= clBlack;
+     //onClose:= @TFrm1_closeForm;
+     //onPaint:= @TFrm1_FormPaint;
+     Canvas.Pen.color:= clBlue;
+     Canvas.Pen.Width:= 15;
+     Show;
+     canvas.brush.bitmap:= getBitmapObject(Exepath+'examples\images\bmp47.bmp');
+     Canvas.FillRect(Rect(600,200,300,400));
+  end;
+
+    with TJvSimLogicBox.create(self) do begin
+       parent:= afrm;
+       setbounds(10,10,200,300);
+       Paint;
+       //Free;
+     end;
+    with TJvSimLight.Create(self) do begin
+       parent:= afrm;
+       setbounds(300,10,20,30);
+       Paint;
+       Lit:= true;
+       coloron:= clyellow;
+       coloroff:= clblue;
+      //RegisterProperty('ColorOn', 'TColor', iptrw);
+      //RegisterProperty('ColorOff', 'TColor', iptrw);
+      //RegisterMethod('Procedure Free');
+  end;
+    with TJvSimLight.Create(self) do begin
+       parent:= afrm;
+       setbounds(370,10,20,30);
+       Paint;
+       Lit:= false;
+       coloron:= clyellow;
+       coloroff:= clpurple;
+  end;
+
+    with TJvSimBin.create(self) do begin
+       parent:= afrm;
+       setbounds(200,10,20,30);
+       Paint;
+       //Free;
+     end;
+     with TJvSimIndicator.Create(self) do begin
+       setbounds(670,20,30,440)
+       parent:= afrm;
+       value:= 70;
+       Paint;
+       //Free;
+     end;
+End. 
+
+
+
+
+//////////////template  form builder
+var 
+  aFrm: TForm;
+  mT: TTimer;
+  tB: TTrackBar;
+  statBar1: TStatusBar;
+
+//**************************Event Handlers*******************************
+procedure TFrm1_trackSpeedChange(Sender: TObject);
+begin
+  //mt.Interval:= 1000 div tB.Position;
+  writeln(intToStr(1000 div tB.Position));
+end;
+
+procedure TFrm1_closeForm(Sender: TObject; var Action: TCloseAction);
+begin
+  {if mt <> NIL then begin
+    mT.enabled:= false;
+    mT.Free;
+    mT:= NIL;
+  end;}
+  ///afrm.Free;  
+  action:= caFree;
+  afrm:= NIL;
+end;
+
+procedure TFrm1_CloseClick(Sender: TObject);
+begin
+  afrm.Close;
+end;
+
+procedure TFrm1_PauseClick(Sender: TObject);
+begin
+  {if mT <> NIL then
+    mt.enabled:= not mt.enabled; }
+end;
+
+//**************************Form Builder*******************************
+procedure loadForm;
+begin
+  aFrm:= TForm.Create(self);
+  //mT:= TTimer.Create(self);
+  //mt.onTimer:= @TFrm1_timerRedrawTimer;
+  //mt.interval:= MILLISECONDS;
+  //mt.free;  in on close            
+  with aFrm do begin
+    Caption:= '********** Form Template ***********';  
+    height:= 510;
+    width:= 700;
+    Position:= poScreenCenter;
+    //Color:= clBlack;
+    onClose:= @TFrm1_closeForm;
+    //onPaint:= @TFrm1_FormPaint;
+    Canvas.Pen.color:= clBlue;
+    Canvas.Pen.Width:= 15;
+    Show;
+    canvas.brush.bitmap:= getBitmapObject(Exepath+'examples\images\bmp47.bmp');
+    Canvas.FillRect(Rect(600,300,100,100));
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(310,390,150,55);
+    caption:= 'Pause';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPAUSE'); 
+    mXButton(05,05,width, height,12,12,handle);
+    //event handler
+    onClick:= @TFrm1_PauseClick;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(480, 390,150, 55);
+    caption:= 'Close';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP'); 
+    mXButton(05,05,width, height,12,12,handle);
+    onClick:= @TFrm1_CloseClick;
+  end;
+  tB:= TTrackBar.create(aFrm);
+  with tB do begin
+    parent:= aFrm;
+    setBounds(40,402,230,40);
+    Min:= 10; Max:= 100
+    Frequency:= 10
+    Position:= 1000 div 50;
+    linesize:= 4;
+    ThumbLength:= 30;
+    SetFocus;
+    OnChange:= @TFrm1_trackSpeedChange;
+  end;
+  statbar1:= TStatusBar.Create(aFrm);
+  with statbar1 do begin
+    parent:= aFrm;
+    showhint:= true;
+    hint:= 'this is a LED BoX';
+    Panels.add;
+      panels.items[0].width:= 200;
+      panels.items[0].text:= '200';
+    Panels.add;
+      panels.items[1].width:= 150;
+      panels.items[1].text:= '150';
+  end;
+end;  
+
+
+
+       (A<>B)  NOT --> A=B
+        0  0 0 1       0 0
+        0  1 1 0
+        1  0 1 0
+        1  1 0 1       1 1
+        
+  XOR App      
+  0110 0001
+^ 1101 1111
+-----------
+  1011 1110
+        
+        
+  00000000000000000000000100101100 XOR
+  00000000000000000000000100101100
+                         000000000
+                         
+00000000000000000000000000000000     01 False
+00000000000000000000000000001000     02 AND
+00000000000000000000000000000010     03 Inhibit
+00000000000000000000000000001010     04 Prepend
+00000000000000000000000000000100     05 Praesect
+00000000000000000000000000001100     06 Postpend
+00000000000000000000000000000110     07 XOR
+00000000000000000000000000001110     08 OR
+11111111111111111111111111110001     09 NOR
+11111111111111111111111111111001     10 Aequival
+11111111111111111111111111110011     11 NegY
+11111111111111111111111111111011     12 ImplicatY
+11111111111111111111111111110101     13 NegX
+11111111111111111111111111111101     14 ImplicatX
+11111111111111111111111111110111     15 NAND
+11111111111111111111111111111111     16 True                         
+
+----app_template_loaded----

@@ -1,0 +1,83 @@
+program HTTP_PNG_Streamer;
+// DEMO for mX3ß  maXbox3 !! _1
+// gets a PNG graphic from an URL, stored in Stream, converts to jpg and saved
+// shows new section 101 - 120 http/internet examples, loc's=79 
+
+var 
+  myImage: TImage;
+  inFrm: TForm;
+  myURL: string;
+
+function FileSizeByName2(const AFilename: string): longint;
+begin
+  with TFileStream.Create(AFilename, fmOpenRead or fmShareDenyWrite) do
+  try
+    Result:= Size;
+  finally
+    Free;
+  end;
+end;
+
+procedure FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  myImage.Free;
+  inFrm.Free;
+end;
+  
+procedure buildImageForm;
+begin
+  inFrm:= TForm.create(self)
+  with inFrm do begin
+    position:= poScreenCenter;
+    FormStyle:= fsStayOnTop;
+    color:= clblue;
+    borderStyle:= bsDialog;
+    caption:= 'mX3 StreamDream'
+    width:= 750; height:= 450;
+    OnClose:= @FormClose;
+    Show;
+  end;
+  myImage:= TImage.Create(inFrm);
+  with myImage do begin
+    Parent:= inFrm;
+    width:= inFrm.width; 
+    height:= inFrm.height;
+    Left:= 10;
+    Top:= 10;
+  end;
+end;  
+
+procedure getHTTP_PNG(vimage: TImage); 
+var
+  idHTTP: TIDHTTP;
+  pngStream: TMemoryStream;
+begin
+  myURL:= 'http://www.softwareschule.ch/images/maxboxgui29.png';
+  with TLinearBitmap.Create do
+  try
+    idHTTP:= TIdHTTP.Create(NIL)
+    pngStream:= TMemoryStream.create;
+    //OptimizeMem
+    idHTTP.Get1(myURL, pngStream)
+    pngStream.Position:= 0;
+    LoadFromStream2(pngstream,'PNG');
+    vimage.Picture:= NIL;
+    AssignTo(vimage.Picture.Bitmap);
+    SaveToFile(ExePath+'mX3GUI.jpg');
+  finally
+    Dispose;
+    Free;
+    idHTTP.Free
+    pngStream.Free;
+  end; 
+end;  
+
+begin
+  buildImageForm;
+  getHTTP_PNG(myImage);
+  searchAndOpenDoc(ExePath+'mX3GUI.jpg')
+  writeln(booleanToString(logicalAnd(1,2)));
+end.
+
+//**************************************************program HTTP_PNG_Streamer;
+//**************************************************

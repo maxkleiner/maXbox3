@@ -1,0 +1,210 @@
+//(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((()
+//calculates a cipher suite from string & generates lotto numbers
+//DEMONSTRATES maXbox with use of INCLUDE & DLL; _38, loc's =185
+//V2.1 with relative file path to /examples
+//V2.2 with 
+//(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((()
+
+
+program maXbox_Demonstrator_CODESIGN_Show;
+
+function _SayHello2: boolean;
+external '_SayHello2@income.dll stdcall';
+
+const
+  //something to enlarge the entropy like substitution-box
+  C1 = 52845;
+  C2 = 22719; 
+  MYKEY = 16549813;
+  LOTNUMB = 6;
+  LOTRANGE = 45;
+  FNAME = 'readmefirst_maxbox.txt';
+  CIPHERNAME = 'crypto_readmefirst.txt';
+
+type 
+  TLottoList = array[1..LOTNUMB] of byte;
+  T_Status =(success, failure, pending);
+  TPasStyle = (a,b,c,d,e,f);
+  TPasStyles = set of TPasStyle;
+   
+var 
+  TPas: TPasStyles;
+  //XLApp: Variant;
+  FNAME_PATH, CIPHERNAME_PATH: string;
+
+
+{$I maxdefine.inc}
+
+{$I pas_includebox.inc}
+
+
+//-------------------cryptor service---------------------//
+
+function EncryptDecrypt(const S: string; Key: word; mode: char): string;
+var
+  i, myint: word;
+begin
+  SetLength(Result, length(s));
+  //cipher in order of ord ;)
+  for i:= 1 to Length(S) do begin
+    myint:= ord(S[i]) xor (Key shr 8)
+    Result[i]:= chr(myint);
+    if mode = 'E' then
+      Key:= (ord(Result[i]) + Key) * C1 + C2;
+    if mode = 'D' then 
+      Key:= (ord(S[i]) + Key) * C1 + C2;
+  end;
+end;
+
+procedure StringToFile(acontent, afilename:string);
+begin
+ with TFileStream.Create(afilename, fmOpenWrite or fmCreate) do begin
+   try
+     Write(acontent, length(acontent));
+   finally
+     Free;
+   end
+ end  
+end;
+
+function FileToString(afilename: string):string;
+begin
+ with TFileStream.Create(afilename, fmOpenRead or fmShareCompat) do begin
+   try 
+     SetLength(result, Size);
+     Read(result, Size);
+   finally 
+     Free;
+   end  
+ end
+end;
+
+function StartLoadService: TStringList;
+begin
+  if fileExists(FNAME_PATH) then begin
+    result:= TStringList.create;
+    result.loadfromfile(FNAME_PATH);
+  end
+end;    
+
+//-------------------lotto generator---------------------//
+
+function initArray(var larray: TLottoList): boolean;
+var i: byte;
+begin
+ for i:= 1 to LOTNUMB do 
+   larray[i]:= 0;
+  result:= true
+end;
+
+procedure putNumbers(vrange: byte; var larray: TLottoList);
+var ti, z, myrand, sum: byte;
+    dup: boolean;
+begin
+  ti:= 1;
+  sum:= 0;
+  Randomize;
+  //precondition set by validation
+  if vrange < LOTNUMB then vrange:= 6; 
+  repeat
+    myrand:= Random(vrange)+ 1;     
+    dup:= false;
+    for z:= 1 to LOTNUMB do 
+      if (larray[z] = myrand) then dup:= true;
+    if (not dup) then begin
+      larray[ti]:= myrand;
+      ti:= ti + 1;
+      sum:= sum + myrand
+    end;
+  //postcondition & proof
+  until ti = LOTNUMB + 1
+  writeln('sum of numbers: ' + intToStr(sum))
+end;  
+
+procedure viewNumbers(larray: TLottoList);
+var i: byte;
+begin
+ for i:= 1 to LOTNUMB do
+   showMessage('lottonumber '+inttostr(i) +': '+inttostr(larray[i]))
+end;
+
+function startLottoService(lotrange: byte): T_Status;
+var larray: TLottoList;
+begin
+  result:= failure;  
+  if initArray(larray) then begin
+    putNumbers(LOTRANGE, larray)
+    viewNumbers(larray);
+    result:= success
+  end;
+end; 
+
+//-------------------lotto generator---------------------//
+
+
+function CheckPSAPILoaded: Boolean;
+var hPSAPI: THandle;
+begin
+  if hPSAPI = 0 then begin
+{$IFDEF MSWINDOWS}
+    hPSAPI:= LoadLibrary('PSAPI.dll');
+    //writeln('debug DLL handle '+inttostr(hPSAPI));
+    if hPSAPI > 32 then result:= true;
+    if hPSAPI < 32 then begin
+      hPSAPI:= 0;
+      Result:= False;
+      Exit;
+    end;
+ {$ENDIF}   
+  end; 
+end;
+
+
+var
+  mycipher, cipherback: string;
+  
+begin
+  FNAME_PATH:= ExePath+'examples\'+FNAME;
+  CIPHERNAME_PATH:= ExePath+'examples\'+CIPHERNAME;
+  
+  showMessage('first you have seen the two include files: '#13 #10
+               +'{$I maxdefine.inc} and {$I pas_includebox.inc}' #13 #10
+               +' then you will see 6 lotto numbers:');
+  if startLottoService(lotrange) = success then
+    writeln('lotto service get at: ' + TimeToStr(Time)) else
+    writeln('bad news from service: ' + TimeToStr(Time));
+  showMessage('now a hash from "maxland" a include function: ' 
+                                         +intToStr(hash2('maxland')));
+  //first encrypt loaded file and store it
+  showMessage('so now maXbox is to cipher the file '+FNAME_PATH);
+  try 
+    mycipher:= encryptDecrypt(StartLoadService.text, MYKEY, 'E')
+      StringToFile(mycipher, CIPHERNAME_PATH)
+    //second decrypt file and store it back
+    cipherback:= FileToString(CIPHERNAME_PATH);
+    if length(mycipher) = length(cipherback) then begin
+      writeln(encryptDecrypt(cipherback, MYKEY, 'D'))
+      StringToFile(encryptDecrypt(cipherback, MYKEY, 'D'), FNAME_PATH)
+    end;  
+  finally 
+    //fileList.free; is just missing!!
+    beep2(444, 400)
+  end
+   showMessage('then we call a C++ dll function: ')
+   //from C++ DLL
+   if _SayHello2 then
+     writeln('dll invocation realised');
+   //from include file
+   showMessage('and at last some include routines: ')
+   write(floatToStr(intToFloat(2346)));
+   write(' run forest run: ')
+   write(intToHex(111123,8))
+   //write('this one liner')  
+   writeln(AddThousandSeparator('400500210', ''''));
+   showAboutBox; 
+end.
+
+void __stdcall FreeObject() 
+  { 
+    delete this ; 
+  } 

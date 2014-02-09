@@ -1,0 +1,201 @@
+PROGRAM Datefinder_Today;
+
+//////////////////////////////////////////////////////////////////////
+//  Find all Files of today date  [getTodayFiles]                   //
+//  #sign:max: APSN21: 16.10.2013 15:18:20 
+//  Purpose: check performance and HD control                       //
+//  #path>ples\E:\maxbox\maxbox3\examples\                          //
+//  Lines of Code #locs:62
+//////////////////////////////////////////////////////////////////////
+
+//TODO: change of the browser to compare the API
+
+procedure StartYourBrowser(aURL: string);
+begin
+ with TWebMainForm.create(self) do begin
+   URLs.Text:= aURL;
+   URLsClick(self);
+ end;
+end; 
+
+
+function CheckIEStartCommand: string;
+begin
+  Application.ProcessMessages;
+  with TRegistry.Create do try
+     rootkey:= HKey_Classes_Root;
+     OpenKey('\htmlfile\shell\open\command',false);
+     try 
+       result:= ReadString('');
+     except
+       result:= ''; 
+     end;
+     CloseKey;
+  finally
+     Free;
+  end;
+end;
+
+procedure GetAllFilesofToday;
+var ml: TStringlist;
+    i: integer;
+begin
+  ml:= TStringlist.create;
+  try
+    ml:= getTodayFiles('D:\','*.log'); 
+    for i:= 1 to ml.count-1 do 
+           writeln(ml.strings[i]);
+  finally
+    ml.Free;
+  end;           
+end;  
+
+
+BEGIN  //Main
+//<Executable statements>
+  GetAllFilesofToday;
+  //StartYourBrowser('http://www.kleiner.ch');
+  //Writeln('Start Command of IE: '+CheckIEStartCommand);  
+  ///Test Drive
+  {for i:= 1 to gettodayfiles('E:\','*.*').count-1 do 
+           writeln(gettodayfiles('E:\','*.*').strings[i]);}
+END. 
+
+
+  http://i1-win.softpedia-static.com/screenshots/maXbox_5.png?1381322021
+  
+  Docu: in case of error_:
+  
+  res://C:\WINDOWS\system32\shdoclc.dll/navcancl.htm#http://www.kleiner.ch/
+  
+  
+  procedure SI_TwebMainForm(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TForm', 'TwebMainForm') do
+  with CL.AddClassN(CL.FindClass('TForm'),'TwebMainForm') do begin
+    Property('StatusBar1', 'TStatusBar', iptrw);
+    Property('MainMenu1', 'TMainMenu', iptrw);
+    Property('File1', 'TMenuItem', iptrw);
+    Property('Exit1', 'TMenuItem', iptrw);
+    Property('View1', 'TMenuItem', iptrw);
+    Property('NavigatorImages', 'TImageList', iptrw);
+    Property('NavigatorHotImages', 'TImageList', iptrw);
+    Property('LinksImages', 'TImageList', iptrw);
+    Property('LinksHotImages', 'TImageList', iptrw);
+    Property('CoolBar1', 'TCoolBar', iptrw);
+    Property('ToolBar1', 'TToolBar', iptrw);
+    Property('BackBtn', 'TToolButton', iptrw);
+    Property('ForwardBtn', 'TToolButton', iptrw);
+    Property('StopBtn', 'TToolButton', iptrw);
+    Property('RefreshBtn', 'TToolButton', iptrw);
+    Property('ToolBar2', 'TToolBar', iptrw);
+    Property('ToolButton6', 'TToolButton', iptrw);
+    Property('ToolButton5', 'TToolButton', iptrw);
+    Property('ToolButton7', 'TToolButton', iptrw);
+    Property('ToolButton8', 'TToolButton', iptrw);
+    Property('Animate1', 'TAnimate', iptrw);
+    Property('URLs', 'TComboBox', iptrw);
+    Property('Help1', 'TMenuItem', iptrw);
+    Property('About1', 'TMenuItem', iptrw);
+    Property('Toolbar3', 'TMenuItem', iptrw);
+    Property('Statusbar2', 'TMenuItem', iptrw);
+    Property('Go1', 'TMenuItem', iptrw);
+    Property('Back1', 'TMenuItem', iptrw);
+    Property('Forward1', 'TMenuItem', iptrw);
+    Property('Stop1', 'TMenuItem', iptrw);
+    Property('Refresh1', 'TMenuItem', iptrw);
+    Property('N2', 'TMenuItem', iptrw);
+    Property('ActionList1', 'TActionList', iptrw);
+    Property('BackAction', 'TAction', iptrw);
+    Property('ForwardAction', 'TAction', iptrw);
+    Property('StopAction', 'TAction', iptrw);
+    Property('RefreshAction', 'TAction', iptrw);
+    Property('WebBrowser1', 'TWebBrowser', iptrw);
+    Procedure Exit1Click( Sender : TObject)');
+    Procedure About1Click( Sender : TObject)');
+    Procedure StopClick( Sender : TObject)');
+    Procedure URLsKeyDown( Sender : TObject; var Key : Word; Shift : TShiftState)');
+    Procedure FormCreate( Sender : TObject)');
+    Procedure LinksClick( Sender : TObject)');
+    Procedure RefreshClick( Sender : TObject)');
+    Procedure BackClick( Sender : TObject)');
+    Procedure ForwardClick( Sender : TObject)');
+    Procedure FormDestroy( Sender : TObject)');
+    Procedure URLsClick( Sender : TObject)');
+    Procedure FormKeyDown( Sender : TObject; var Key : Word; Shift : TShiftState)');
+    Procedure Toolbar3Click( Sender : TObject)');
+    Procedure Statusbar2Click( Sender : TObject)');
+    Procedure BackActionUpdate( Sender : TObject)');
+    Procedure ForwardActionUpdate( Sender : TObject)');
+    Procedure WebBrowser1BeforeNavigate2( Sender : TObject; const pDisp : IDispatch; var URL, Flags, TargetFrameName, PostData, Headers : OleVariant; var Cancel : WordBool)');
+    Procedure WebBrowser1DownloadBegin( Sender : TObject)');
+    Procedure WebBrowser1DownloadComplete( Sender : TObject)');
+  end;
+end;
+
+uses
+  Winsock; //Windows Sockets API Unit
+
+    function PortTCPIsOpen(dwPort : Word; ipAddressStr:string) : boolean;
+    var
+      client : sockaddr_in;//sockaddr_in is used by Windows Sockets to specify a local or remote endpoint address
+      sock   : Integer;
+    begin
+        client.sin_family      := AF_INET;
+        client.sin_port        := htons(dwPort);//htons converts a u_short from host to TCP/IP network byte order.
+        client.sin_addr.s_addr := inet_addr(PChar(ipAddressStr)); //the inet_addr function converts a string containing an IPv4 dotted-decimal address into a proper address for the IN_ADDR structure.
+        sock  :=socket(AF_INET, SOCK_STREAM, 0);//The socket function creates a socket 
+        Result:=connect(sock,client,SizeOf(client))=0;//establishes a connection to a specified socket.
+    end;
+    
+    
+function PortTCP_IsOpen(dwPort : Word; ipAddressStr: String) : boolean;
+var
+  client : sockaddr_in;
+  sock   : Integer;
+ 
+  ret    : Integer;
+  wsdata : WSAData;
+begin
+ Result:=False;
+ ret := WSAStartup($0002, wsdata); //initiates use of the Winsock DLL
+  if ret<>0 then exit;
+  try
+    client.sin_family      := AF_INET;  //Set the protocol to use , in this case (IPv4)
+    client.sin_port        := htons(dwPort); //convert to TCP/IP network byte order (big-endian)
+    client.sin_addr.s_addr := inet_addr(PAnsiChar(ipAddressStr));  //convert to IN_ADDR  structure
+    sock  :=socket(AF_INET, SOCK_STREAM, 0);    //creates a socket
+    Result:=connect(sock,client,SizeOf(client))=0;  //establishes a connection to a specified socket
+  finally
+  WSACleanup;
+  end;
+end;  
+
+
+if PortTCP_IsOpen(3306,'127.0.0.1') then
+  DoMyStuff();
+
+var
+  ret    : Integer;
+  wsdata : WSAData;
+begin
+  Writeln('Init WinSock');
+  ret := WSAStartup($0002, wsdata);//initiates use of the Winsock
+  if ret<>0 then exit;
+  try
+    Writeln('Description : '+wsData.szDescription);
+    Writeln('Status      : '+wsData.szSystemStatus);
+
+    if PortTCPIsOpen(80,'127.0.0.1') then
+    Writeln('Open')
+    else
+    Writeln('Close');
+
+  finally
+  WSACleanup; //terminates use of the Winsock
+  end;
+
+
+
+
+----app_template_loaded_code----

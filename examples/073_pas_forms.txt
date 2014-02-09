@@ -1,0 +1,144 @@
+program Form_Primer;
+
+//*********************************************************************
+// something about forms, button and event handlers,   loc's=135  
+// you can draw on a form and design IT;)
+// you'll learn the difference between class and object _73
+//*********************************************************************
+
+(*
+ RRRRR    EEEEEE   AAAA   DDDDD    MM     MM   EEEEEE 
+ RR  RR   EE       AA AA  DD  DD   MMMM MMMM   EE    
+ RRRRR    EEEE    AAAAAA  DD   DD  MM MMM MM   EEEE
+ RR  RR   EE      AA   AA DD   DD  MM  M  MM   EE
+ RR   RR  EEEEEE AA    AA DDDDD    MM  M  MM   EEEEEE
+*)
+
+// declaration of 3 classes & 4 or more objects
+var
+  frmMon: TForm;
+  memMon: TMemo;
+  myButton, myButton2: TButton;
+  scaleX1, scaleX2, scaleY1, scaleY2: double;
+
+
+procedure scaleResults(const X, Y : double; var intX, intY : integer;
+                                        width, height: integer);
+var scaledX, scaledY: double; 
+ begin
+   scaledX:= (X-scaleX1)/(scaleX2-scaleX1);
+   scaledY:= (Y-scaleY2)/(scaleY1-scaleY2);
+   intX:= round(scaledX * width);
+   intY:= round(scaledY * height);
+ end; 
+    
+procedure Lorenz_process(var X, Y, Z: double; vForm: TForm);
+var intX, intY : integer;
+  dX, dY, dZ: double; 
+begin 
+  dY:= X * (28-Z)-Y; 
+  dX:= 10 * (Y-X); 
+  dZ:= X * Y- (8/3) * Z; 
+  scaleResults(X,Y,intX,intY, vForm.ClientWidth, vForm.ClientHeight);
+  {$IFDEF LINUX}
+    vForm.Canvas.DrawPoint(intX,intY);
+  {$ELSE}
+    vForm.Canvas.Pixels[intX, intY]:= clBlue; 
+  {$ENDIF}
+  X:= X+ 0.01 * dX;
+  Y:= Y+ 0.01 * dY; 
+  Z:= Z+ 0.01 * Dz;
+end;
+
+procedure ModelLorenzsetup(vForm: TForm);
+var
+  i: integer;
+  x, y, z: double; 
+begin
+  vForm.Canvas.pen.Color:= clred; 
+  scaleX1:=-20; scaleX2:=20;
+  scaleY1:=-25; scaleY2:=30; 
+  X:= 0.1; Y:= 0.1; Z:= 0.1; 
+  for i:= 1 to 6500 do 
+    Lorenz_process(X,Y,Z, vForm);
+end; 
+
+//************************** Event Handler Method************************
+procedure BtnClick(Sender: TObject);
+begin
+  showmessage(' this is out of my button')
+  frmMon:= TForm.create(self);
+  with frmMon do begin
+    //FormStyle := fsStayOnTop;
+    caption:='new form from button';
+    color:= clpurple;
+    width:= 450;
+    height:= 400;
+    show
+  end;
+end;
+
+procedure Btn2Click(Sender: TObject);
+begin
+  if frmMon <> NIL then
+    ModelLorenzsetup(frmMon);
+end;
+
+//main of forms
+begin
+//******************maXbox graphics series ************************************
+  
+ frmMon:= TForm.create(self);
+ with frmMon do begin
+   //FormStyle := fsStayOnTop;
+   Position := poScreenCenter;
+   caption:='call from memo';
+   color:= clred;
+   width:= 450;
+   height:= 400;
+   show
+ end;
+
+ memMon:= TMemo.create(frmMon);
+ with memMon do begin
+   parent:= frmMon;
+   color:= clyellow;
+   setbounds(10,25, 200,150);
+   font.size:= 24;
+   font.Style:= [fsbold];
+   text:='maTRIx inside from memo'
+ end;
+  
+ myButton:= TButton.create(frmMon)
+ with myButton do begin
+   parent:= frmMon;
+   setbounds(10,290,160,50);
+   caption:= 'Big Button Click';
+   font.size:= 14;
+   font.Style:= [fsbold];
+   //event handler
+   onclick:= @btnClick;
+ end;
+
+ myButton2:= TButton.create(frmMon)
+ with myButton2 do begin
+   parent:= frmMon;
+   setbounds(200,290,160,50);
+   caption:= 'Smart Button Click';
+   font.size:= 12;
+   //event handler
+   onclick:= @btn2Click;
+ end;
+    
+ ModelLorenzsetup(frmMon);
+ //application.processMessages;
+end.
+
+just inside maxbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+                                     

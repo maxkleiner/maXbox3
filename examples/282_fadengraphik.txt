@@ -1,0 +1,228 @@
+program Bitmap_Pulsar_BITMAX;
+
+//Loads a bitmap with an aggregation from TPicture Class
+//A function stretches also a bitmap with specified number of pixels
+// in horizontal, vertical dimension, #locs=228
+
+const maxp = 100;
+
+type
+ TMMatrix = Array[1..maxp] of TPoint;
+
+var
+  Image1: TImage;
+  frmMon: TForm;
+  udLinie: TUpDown;
+  
+procedure loadImage;
+begin
+  Image1.Picture.BitMap.LoadFromFile(ExePath+'examples\citymax.bmp');
+end; 
+
+procedure Image1MouseDown(Sender: TObject; Button: TMouseButton;
+Shift: TShiftState; X, Y: Integer);
+var i: byte;
+begin
+//test
+  loadimage;
+  Image1.Canvas.MoveTo(X,Y);
+  image1.canvas.pen.color:= clyellow;
+  for i:= 1 to 30 do
+    //Image1.Canvas.LineTo(X+random(140),Y+random(140));
+    Image1.Picture.Bitmap.Canvas.LineTo(X+random(140),Y+random(140));
+end;  
+
+
+Function RGB(R,G,B: Byte): TColor;
+Begin
+  Result:= B Shl 16 Or G Shl 8 Or R;
+End;
+
+
+function ResizeBmp(abitmap: TBitmap; wid, hei: Integer): Boolean;
+var 
+  TmpBmp: TBitmap;
+  ARect: TRect;
+begin
+  Result:= False;
+  try
+    //TmpBmp:= TBitmap.Create;
+    try
+      abitmap.Width:= wid;
+      abitmap.Height:= hei;
+      //abitmap.size
+      ARect:= Rect(10,10, wid, hei);
+      //TmpBmp.loadfromfile('examples\citymax.bmp')
+      //msg('bitmax');
+      //frmMon.Canvas.FillRect(Rect(130,150,350,10));
+      //abitmap.LoadFromResourceName(hinstance, 'cdrom');
+      abitmap.LoadFromResourceName(hinstance, 'plus');
+      frmMon.Canvas.StretchDraw(ARect, abitmap);
+      writeln(inttoStr(BytesPerScanline(20,20,10)))
+      //frmMon.Canvas.Brush.Bitmap:= aBitmap;
+      //abitmap.canvas.copyrect(Rect(0,0,140,140)) 
+      //frmMon.Canvas.picture:=Assign(abitmap);
+    finally
+      //TmpBmp.Free;
+       frmmon.Canvas.Brush.Bitmap:= NIL;
+       aBitmap.Free;
+    end;
+    Result:= True;
+  except
+    Result:= False;
+  end;
+end;
+
+procedure DrawRosette2;
+var
+  m,p: TPoint;
+  rho,phi: real;
+  i,br,r,n: integer;
+begin
+   n:=StrToInt('18');
+   br:=1;
+   with frmmon.Canvas do begin
+     Pen.Width:= br;
+     Pen.Color:= clyellow;
+     Brush.Color:= clblue;
+     Brush.Style:= bsClear;
+     //Mittelpunkte berechnen und Kreise zeichnen
+     m.x:=225; m.y:=225; r:=175;
+     rho:=360/n;
+     for i:=1 to n do begin
+       phi:=i*rho*pi/180;
+       p.x:=m.x+round(r*cos(phi));
+       p.y:=m.y+round(r*sin(phi));
+       Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+       Ellipse(p.x-3,p.y-3,p.x+3,p.y+3);
+     end;
+  end;
+end;
+
+procedure DrawRosette;
+//Zeichnen des Kreismusters
+//const pi=3.1415926;
+var
+  m,p: TPoint;
+  rho,phi: real;
+  i,br,r,n: integer;
+begin
+   n:=StrToInt('18');
+   br:=1;
+   with frmmon.Canvas do begin
+     //Programmeinstellungen auslesen
+     Pen.Width:=br;
+     Pen.Color:= clred;
+     Brush.Color:=clblue;
+     Brush.Style:=bsClear;
+     //Mittelpunkte berechnen und Kreise zeichnen
+     m.x:=225; m.y:=225; r:=100;
+     rho:=360/n;
+     for i:=1 to n do begin
+       phi:=i*rho*pi/180;
+       p.x:=m.x+round(r*cos(phi));
+       p.y:=m.y+round(r*sin(phi));
+       Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+       //if frmmon.chb1.checked=true then //Mittelpunkte zeichnen
+         Ellipse(p.x-3,p.y-3,p.x+3,p.y+3);
+     end;
+  end;
+end;
+
+procedure DrawPowerCircle(n: integer);
+//const pi=3.1415926;
+var
+  p: TMMatrix; m: TPoint;
+  r,rho,phi: real;
+  i,j,x,y,br: integer;
+begin
+  //with Form1.img1.Canvas do begin
+    with frmMon.Canvas do begin
+    br:= 1;
+    Pen.Width:=br;
+    Pen.Color:= clblue;
+    Brush.Color:=  clred;
+    //Kreisdefinition
+    m.x:=225; m.y:=225; r:=175;
+    rho:=360/n;
+    //Stützpunkte berechnen
+    for i:=1 to n do begin
+      phi:=i*rho*pi/180;
+      p[i].x:=m.x+round(r*(cos(phi)));
+      p[i].y:=m.y+round(r*sin(phi));
+    end;
+    //Rahmen zeichnen
+    //if Form1.chb1.checked=true then
+      Ellipse(50,50,400,400);
+    for i:=1 to n-1 do
+      for j:=i to n do begin
+        MoveTo(p[i].x,p[i].y);
+        LineTo(p[j].x,p[j].y);
+      end;
+    //if Form1.chb2.checked=true then begin
+      for i:=1 to n do begin
+        x:=p[i].x; y:=p[i].y;
+        Ellipse(x-3,y-3,x+3,y+3);
+      end;
+    //end;
+  end;
+end;
+
+
+procedure InitForms;
+begin
+ frmMon:= TForM.create(self);
+ with frmMon do begin
+   //FormStyle := fsStayOnTop;
+   Position := poScreenCenter;
+   caption:='Pulsar Universe BitmaX';
+   color:= clblack;
+   width:= 750;
+   height:= 700;
+   Show;
+   onMousedown:= @Image1MouseDown;
+ end;
+ Image1:= TImage.create(frmMon);
+ with Image1 do begin
+   parent:= frmMon;
+   setbounds(20,25, 200,150);
+   onMousedown:= @Image1MouseDown;
+   show;
+   //onMouseup:= @Image1MouseUp
+ end;
+end;
+
+procedure AnimatePowerCircle;
+var i: smallint;
+begin 
+  for i:= 1 to 25 do begin
+    DrawPowerCircle(i);    // try 30 or 35
+    sleep(100)
+  end;  
+end;    
+
+
+procedure LoadBitMap;
+var mybitmap: Tbitmap;
+     mycanvas: TCanvas;
+begin
+ mybitmap:= TBitmap.create;
+ mybitmap.loadfromfile('examples\citymax.bmp')
+ //mycanvas:= TCanvas.create;
+ if ResizeBmp(mybitmap, 443, 330) then
+    showmessage('picture almost resized');
+  //Image1.LoadFromFile(ExtractFilePath(Application.Exename) + 'Bild.bmp');
+ //mycanvas.Free;
+end;
+
+begin
+  ProcessMessagesON;
+  InitForms;
+  DrawRosette;
+  DrawRosette2;
+  //Pulsar
+  //DrawPowerCircle(25);    // try 30 or 35
+  AnimatePowerCircle;
+  //LoadBitMap; //test
+  //loadImage;
+end.  

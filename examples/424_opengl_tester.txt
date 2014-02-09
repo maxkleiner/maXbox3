@@ -1,0 +1,978 @@
+PROGRAM OpenGL_Functions_Tester;
+
+//////////////////////////////////////////////////////////////////////
+//  #sign:max: APSN21: 18.12.2013 15:18:10 
+//  Purpose: Grabs and tests opengl functions,  more items see below   //
+//  #path>ples\E:\maxbox\maxbox3\examples\                          //
+//  Lines of Code #locs:815
+//////////////////////////////////////////////////////////////////////
+
+Const TEXTOUT = 'hi world of OpenGL vector math cover age';
+
+{TYPE 
+<Type declarations>} 
+
+VAR 
+//<Variable declarations>
+  i: integer;
+  att: tidpeerthread;
+  //ati: TIterateMethod;
+  //adf: SHostFileName
+  //myselect: TSelection;
+  //asdt: tidstreamtype;
+   act: TVector;
+   act2: TMatrix;
+   //act22: TByteVector;
+   
+
+//<FUNCTION>
+//<PROCEDURE> 
+
+
+
+procedure TJvg3DLocalColors_CreateAuto3DColors(BaseColor: TColor);
+var
+  R, G, B: Byte;
+    FDkShadow: TColor;
+    FHighlight: TColor;
+    FShadow: TColor;
+    FColorShadowShift: Byte;
+    FColorHighlightShift: Byte;
+begin
+  FDkShadow := cl3DDkShadow;
+  FHighlight := clBtnHighlight;
+  FShadow := clBtnShadow;
+  FColorShadowShift := 60;
+  FColorHighlightShift := 60;
+ 
+  if (BaseColor and $80000000) <> 0 then
+    BaseColor := GetSysColor(BaseColor and $FF);
+  B := GetRValue(BaseColor);
+  G := GetGValue(BaseColor);
+  R := GetBValue(BaseColor);
+  FShadow := RGB(Max(R - FColorShadowShift, 0),
+    Max(G - FColorShadowShift, 0), Max(B - FColorShadowShift, 0));
+  FHighlight := RGB(Min(R + FColorHighlightShift, 255),
+    Min(G + FColorHighlightShift, 255), Min(B + FColorHighlightShift, 255));
+end;
+
+
+function NumProcessThreads3: integer;
+ var
+
+ hsnapshot: THandle;
+ Te32: TTHREADENTRY32;
+ proch: dWord;
+
+begin
+
+ Result:= 0;
+ proch:= GetCurrentProcessID;
+ hSnapShot:= CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+
+ Te32.dwSize:= sizeof(Te32);
+ if Thread32First(hSnapShot, Te32) then begin
+   if Te32.th32OwnerProcessID = proch then
+     inc(Result);
+   while Thread32Next(hSnapShot, Te32) do begin
+     if Te32.th32OwnerProcessID = proch then
+       inc(Result);
+   end;
+ end;
+ CloseHandle(hSnapShot);
+ writeln('WinDir '+getwindir);
+ writeln('SysDir '+getsysdir);
+ //getsystempath
+
+end; 
+
+
+procedure OpenIEURL(aURL:string);
+var sz: string;
+begin
+  Application.ProcessMessages;
+  aURL:= trim(aURL);
+  if aURL='' then Exit;
+  with TRegistry.Create do try
+     rootkey:= HKey_Classes_Root;
+     OpenKey('\htmlfile\shell\open\command',false);
+     try 
+       sz:= ReadString('');
+       writeln('test of IE readkey '+sz) 
+     except
+       sz:= ''; 
+     end;
+     CloseKey;
+     //loadfromres
+     //winExecAndWait
+     //dostep
+     //calculatedata
+     //7maxcalcF
+     //maxcalc
+     //inline
+     //array 
+     //maxcalcf 
+  finally
+      Free;
+  end;
+  if sz='' then Exit;
+  sz:= copy(sz, pos('"',sz)+1, length(sz));
+  sz:= copy(sz, 1, pos('"',sz)-1);
+  if pos('http://',aURL)<>1 then aURL:='http://'+aURL;
+  //ShellExecute(0,'open',PChar(z), PChar(aURL), nil, sw_ShowNormal); 
+  //ShellExecute(0,'open', PChar(aURL), nil, nil, sw_Show);
+  //mstodatetime
+  //decodestring
+  //getrvalue
+  //isstringtype
+  //stringreplace
+  //syngetrvalue
+end;
+
+
+function CheckIEStartCommand: string;
+begin
+  Application.ProcessMessages;
+  with TRegistry.Create do try
+     rootkey:= HKey_Classes_Root;
+     OpenKey('\htmlfile\shell\open\command',false);
+     try 
+       result:= ReadString('');
+     except
+       result:= ''; 
+     end;
+     CloseKey;
+  finally
+     Free;
+  end;
+end;
+
+procedure OpenGLTester;
+ var ar: TRectangle;
+   var mct: TColorRGB;
+      ama: TMatrixGL;
+      amv: TVectorGL;
+      affv: TAffineVector;
+begin
+  //CL.AddTypeS('PByte', '^Byte // will not work');
+  //CL.AddTypeS('PWord', '^Word // will not work');
+  //CL.AddTypeS('PInteger', '^Integer // will not work');
+  //CL.AddTypeS('PFloat', '^Single // will not work');
+  //CL.AddTypeS('PDouble', '^Double // will not work');
+  //CL.AddTypeS('PExtended', '^Extended // will not work');
+  //CL.AddTypeS('PPointer', '^Pointer // will not work');
+  //CL.AddTypeS('PByteVector', '^TByteVector // will not work');
+  //CL.AddTypeS('PByteArray', 'PByteVector');
+  //CL.AddTypeS('PWordVector', '^TWordVector // will not work');
+  //CL.AddTypeS('PWordArray', 'PWordVector');
+  //CL.AddTypeS('PIntegerVector', '^TIntegerVector // will not work');
+    //EPSILON','Extended').setExtended( 1E-100);
+ //CL.AddConstantN('EPSILON2','Extended').setExtended( 1E-50);
+ //VectorAdd( V1, V2 : TVectorGL) : TVectorGL');
+ //VectorAffineAdd( V1, V2 : TAffineVector) : TAffineVector');
+ {VectorAffineCombine( V1, V2 : TAffineVector; F1, F2 : Single) : TAffineVector');
+ VectorAffineDotProduct( V1, V2 : TAffineVector) : Single');
+ VectorAffineLerp( V1, V2 : TAffineVector; t : Single) : TAffineVector');
+ VectorAffineSubtract( V1, V2 : TAffineVector) : TAffineVector');}
+ {VectorAngle( V1, V2 : TAffineVector) : Single');
+ VectorCombine( V1, V2 : TVectorGL; F1, F2 : Single) : TVectorGL');
+ VectorCrossProduct( V1, V2 : TAffineVector) : TAffineVector');
+ VectorDotProduct( V1, V2 : TVectorGL) : Single');
+ VectorLength( V : array of Single) : Single');
+ VectorLerp( V1, V2 : TVectorGL; t : Single) : TVectorGL');
+ VectorNegate( V : array of Single)');
+ VectorNorm( V : array of Single) : Single');
+ VectorNormalize( V : array of Single) : Single');
+ VectorPerpendicular( V, N : TAffineVector) : TAffineVector');
+ VectorReflect( V, N : TAffineVector) : TAffineVector');}
+ //VectorRotate( var Vector : TVector4f; Axis : TVector3f; Angle : Single)');
+ //VectorScale( V : array of Single; Factor : Single)');
+ //VectorSubtractGL( V1, V2 : TVectorGL) : TVectorGL');
+ {CreateRotationMatrixX( Sine, Cosine : Single) : TMatrixGL');
+ CreateRotationMatrixY( Sine, Cosine : Single) : TMatrixGL');
+ CreateRotationMatrixZ( Sine, Cosine : Single) : TMatrixGL');
+ CreateScaleMatrix( V : TAffineVector) : TMatrixGL');}
+ //CreateTranslationMatrix( V : TVectorGL) : TMatrixGL');
+ //CL.AddDelphiFunction('Procedure MatrixAdjoint( var M : TMatrixGL)');
+ //MatrixAffineDeterminant( M : TAffineMatrix) : Single');
+ //CL.AddDelphiFunction('Procedure MatrixAffineTranspose( var M : TAffineMatrix)');
+ //MatrixDeterminant( M : TMatrixGL) : Single');
+ {CL.AddDelphiFunction('Procedure MatrixInvert( var M : TMatrixGL)');
+ MatrixMultiply( M1, M2 : TMatrixGL) : TMatrixGL');
+ CL.AddDelphiFunction('Procedure MatrixScale( var M : TMatrixGL; Factor : Single)');
+ CL.AddDelphiFunction('Procedure MatrixTranspose( var M : TMatrixGL)');
+ QuaternionConjugate( Q : TQuaternion) : TQuaternion');
+ QuaternionFromPoints( V1, V2 : TAffineVector) : TQuaternion');
+ QuaternionMultiply( qL, qR : TQuaternion) : TQuaternion');
+ QuaternionSlerp( QStart, QEnd : TQuaternion; Spin : Integer; t : Single) : TQuaternion');
+ QuaternionToMatrix( Q : TQuaternion) : TMatrixGL');
+ CL.AddDelphiFunction('Procedure QuaternionToPoints( Q : TQuaternion; var ArcFrom, ArcTo : TAffineVector)');
+ ConvertRotation( Angles : TAffineVector) : TVectorGL');
+ CreateRotationMatrix( Axis : TVector3f; Angle : Single) : TMatrixGL');  }
+ //MatrixDecompose( M : TMatrixGL; var Tran : TTransformations) : Boolean');
+ //VectorAffineTransform( V : TAffineVector; M : TAffineMatrix) : TAffineVector');
+ //VectorTransform( V : TVector4f; M : TMatrixGL) : TVector4f;');
+ //VectorTransform1( V : TVector3f; M : TMatrixGL) : TVector3f;');
+ //MakeAffineDblVector( V : array of Double) : TAffineDblVector');
+ //MakeDblVector( V : array of Double) : THomogeneousDblVector');
+ //MakeAffineVector( V : array of Single) : TAffineVector');
+ //MakeQuaternion( Imag : array of Single; Real : Single) : TQuaternion');
+   amv:= MakeVector([1.2,3.4,5.6,7.1]);
+   writeln(floatToStr(amv[1]));
+   writeln(floatToStr(amv[2]));
+   writeln(floatToStr(amv[3]));
+ //ConvertRotation( Angles : TAffineVector) : TVectorGL');
+   affv[0]:= 1.2;
+   affv[1]:= 3.4;
+   affv[2]:= 5.6;
+   //affv[3]:= 7.1;
+    
+   //amv:= ConvertRotation([1.2,3.4,5.6,7.1]);
+   amv:= ConvertRotation(affv);
+   writeln(floatToStr(amv[1]));
+  
+   ama[0][0]:= 1.2;
+   ama[1][1]:= 3.4;
+   affv[2]:= 5.6;
+   
+   // MatrixMultiply( M1, M2 : TMatrixGL) : TMatrixGL');
+    ama:= MatrixMultiply(ama,ama);
+    writeln(floatToStr(ama[1][1]));
+    writeln(floatToStr(ama[1][2]));
+
+ //PointInPolygonGL( xp, yp : array of Single; x, y : Single) : Boolean');
+ //VectorAffineDblToFlt( V : TAffineDblVector) : TAffineVector');
+ //VectorDblToFlt( V : THomogeneousDblVector) : THomogeneousVector');
+ //VectorAffineFltToDbl( V : TAffineVector) : TAffineDblVector');
+ //VectorFltToDbl( V : TVectorGL) : THomogeneousDblVector');
+ //Turn( Matrix : TMatrixGL; Angle : Single) : TMatrixGL;');
+ //Turn1( Matrix : TMatrixGL; MasterUp : TAffineVector; Angle : Single) : TMatrixGL;');
+ //Pitch( Matrix : TMatrixGL; Angle : Single) : TMatrixGL;');
+ //Pitch1( Matrix : TMatrixGL; MasterRight : TAffineVector; Angle : Single) : TMatrixGL;');
+ //Roll( Matrix : TMatrixGL; Angle : Single) : TMatrixGL;');
+ //Roll1( Matrix:TMatrixGL; MasterDirection : TAffineVector; Angle : Single):TMatrixGL;');
+//function StrEatWhiteSpace(const S: string): string;
+ writeln('StrEatWhiteSpace(''const S: string'': '+StrEatWhiteSpace('const  S: string'));
+
+
+end;
+
+function Round2Dec(const value:TBcd):TBcd;
+var z:string;
+ aex: TJsExcelExport;
+ dfd: TJvCreateProcess;
+ astart: TJvCPSStartupInfo;
+begin
+  z:=BcdToStr(value);
+  z:=RoundAt(z,2);
+  result:=StrToBcd(z);
+end;
+
+function CheckZeitraum(EditVon, EditBis: TDateTime{TJsDateTimeEdit}):Boolean;
+var dVon,dBis:TDateTime;
+    dMinDate, dMaxDate:TDateTime;
+begin
+  result:=true;
+  //dVon:=EditVon.Date;
+  //dBis:=EditBis.Date;
+  if (dVon<>0) and (dBis<>0) then begin
+     if dVon>dBis then begin
+        result:=false;
+        //EditVon.SetFocus;
+        MessageDlg('Ungültiger Zeitraum', mtError, [mbOk], 0);
+        exit;
+     end;
+  end;
+
+  dMinDate:=EncodeDate(1990,1,1);
+  dMaxDate:=EncodeDate(2199,12,31);
+  if dVon<>0 then begin
+     if (dVon<dMinDate) or (dVon>dMaxDate) then begin
+        result:=false;
+        //EditVon.SetFocus;
+        MessageDlg('Ungültiges Datum', mtError, [mbOk], 0);
+        exit;
+     end;
+  end;
+
+  if dBis<>0 then begin
+     if (dBis<dMinDate) or (dBis>dMaxDate) then begin
+        result:=false;
+        //EditBis.SetFocus;
+        MessageDlg('Ungültiges Datum', mtError, [mbOk], 0);
+        exit;
+     end;
+  end;
+end;
+
+procedure CompressJPG(jpg:TJPEGImage; Faktor:integer);
+// Faktor=1 bis 100.
+// 1=beste Komprimierung aber schlechteste Qualität. 100=keine Komprimierung aber beste Qualität
+begin
+  if Faktor<1 then Faktor:=1;
+  if Faktor>100 then Faktor:=100;
+  if Faktor<>100 then begin
+     jpg.DIBNeeded;
+     jpg.CompressionQuality:=Faktor;
+     jpg.Compress;
+  end;
+end;
+
+  function RoundToInt(const aValue:double):Int64;
+  begin
+    if aValue<0
+    then result:=trunc(aValue - 0.5)
+    else result:=trunc(aValue + 0.5)
+  end;
+
+
+
+// ---------------------------------------------------------------------------------------------------------------------
+// --- Bild komprimieren -----------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------
+procedure ReSizeJPG(jpg:TJPEGImage; MaxWidth,MaxHeight:integer);
+var w, h: Integer;
+    xyaspect: Double;
+    bmp:TBitmap;
+    r:TRect;
+begin
+   w := jpg.Width;
+   h := jpg.Height;
+
+   if (w > 0) and (h > 0) then begin
+      // Proportionale Skalierung berechnen
+      if (w > MaxWidth) or (h > MaxHeight) then begin
+         xyaspect := w / h;
+         if w > h then begin
+                w := MaxWidth;
+                h := RoundToInt(MaxWidth / xyaspect);
+                if h > MaxHeight then begin // zu groß
+                   h := MaxHeight;
+                   w := Trunc(MaxHeight * xyaspect);
+                end;
+         end
+         else begin
+                h := MaxHeight;
+                w := Trunc(MaxHeight * xyaspect);
+                if w > MaxWidth then begin // zu groß
+                   w := MaxWidth;
+                   h := Trunc(MaxWidth / xyaspect);
+                end;
+         end;
+      end;
+      if (w<>jpg.Width) or (h<>jpg.Height) then begin
+         bmp:= TBitmap.Create;
+         try
+            Showmessage(format('%d x %d',[w,h]));
+            r:=rect(0,0,w,h);
+            bmp.width:=w;
+            bmp.height:=h;
+            bmp.Canvas.StretchDraw(r,jpg);
+            jpg.Assign(bmp);
+         finally
+            bmp.Free;
+         end;
+      end;
+   end;
+end;
+
+// --- Extended Format Record ------------------------------------------------------------------------------------------
+procedure TJsExcelExport_WriteXFRecord(IsStyleRecord: Boolean; AFontIndex, AFormatIndex: word; ATextAlignment: TAlignment);
+// see Page 279
+
+//  procedure WriteXFRec_Biff8;
+  var buf: array [0..11] of word;
+    FBiff8:Boolean;
+    FStream:TStream;
+  begin
+    buf[0]:=$E0;
+    buf[1]:=20;
+    buf[2]:=AFontIndex;   // Index to FONT-Record
+    if IsStyleRecord then buf[3]:=0 else buf[3]:=AFormatIndex; // Index to FORMAT-Record
+    if IsStyleRecord then buf[4]:=$FFF5 else buf[4]:=$1;
+    case ATextAlignment of
+      taLeftJustify:  buf[5] := $20;
+      taCenter:       buf[5] := $20+2;
+      taRightJustify: buf[5] := $20+3;
+      else            buf[5] := $20;
+    end;
+    if IsStyleRecord then buf[6] := $F400 else buf[6] := 0; // Text-Orientation
+    buf[ 7] := 0; // Border line style
+    buf[ 8] := 0; // Border line color left+right
+    buf[ 9] := 0; // Border line top+bottom
+    buf[10] := 0;
+    buf[11] := $20C0; // Color-Index for fore-/background of the fill pattern
+    FStream.WriteBufferAB(buf, SizeOf(buf));
+  //end;
+end;
+
+function IsHoliday(const aDate:TDateTime):Boolean; forward;
+
+
+//**********************************************************************************************************************
+
+function IsSunday(const aDate:TDateTime):Boolean;
+begin
+  result:=DayOfTheWeek(aDate)=7;
+end;
+
+function IsWeekend(const aDate:TDateTime):Boolean;
+begin
+  result:=DayOfTheWeek(aDate)>5;
+end;
+
+function IsSundayOrHoliday(const aDate:TDateTime):Boolean;
+begin
+  result:=(IsSunday(aDate)) or (IsHoliday(aDate))
+end;
+
+function BerechneOstersonntag(const jahr:word):TDateTime;
+// Ostersonntag ist der erste Sonntag, der dem nächsten Vollmond nach Frühlingsanfang (21.März) folgt (d.h. 22.03. bis 25.04)
+// Karfreitag=Ostern-2
+// Ostermontag=Ostern+1
+// Himmelfahrt=Ostern+39  {Donnerstag. Achtung: das kann auch gleichzeitig der Maifeiertag sein}
+// Pfingstmontag=Ostern+50
+// Fronleichnam=Ostern+60 {Donnerstag --> nicht in allen Bundesländern ein Feiertag}
+var monat,tag:word;
+    GoldeneZahl,Jahrhundert,AusgelasseneSchaltjahre:integer;
+    MetonischerZyklus,Sonntag,Epact:integer;
+begin
+  GoldeneZahl:=(jahr mod 19)+1;
+  Jahrhundert:=(jahr div 100)+1;
+  AusgelasseneSchaltjahre:=(Jahrhundert*3 div 4)-12;
+  MetonischerZyklus:=((Jahrhundert*8+5) div 25)-5;
+  Sonntag:=(jahr*5 div 4)-AusgelasseneSchaltjahre-10;
+  Epact:=(GoldeneZahl*11+20+MetonischerZyklus-AusgelasseneSchaltjahre) mod 30;
+  if ((Epact=25) and (GoldeneZahl>11)) OR (Epact=24) then inc(Epact);
+  tag:=44-EPact;
+  if tag<21 then tag:=tag+30;
+  tag:=tag+7-((Sonntag+tag) mod 7);
+  if tag>31
+  then begin
+         monat:=4;
+         tag:=tag-31
+       end
+  else monat:=3;
+  result:=EncodeDate(jahr,monat,tag);
+end;
+
+
+type TUserLocale=record
+       CountryID:word;
+       StateID:word; // Bundesland
+     end;
+
+var UserLocale: TUserLocale;
+
+
+function IsHoliday(const aDate:TDateTime):Boolean;
+var d,m,y:word;
+    dOstersonntag, dBB:TDateTime;
+{
+ Bundesland-Konstanten:
+ 1=Baden-Württemberg
+ 2=Bayern
+ 3=Berlin
+ 4=Brandenburg
+ 5=Bremen
+ 6=Hamburg
+ 7=Hessen
+ 8=Mecklenburg-Vorpommern
+ 9=Niedersachsen
+10=NRW
+11=Rheinland-Pfalz
+12=Saarland
+13=Sachsen
+14=Sachsen-Anhalt
+15=Schleswig-Holstein
+16=Thüringen
+}
+
+begin
+  result:=false;
+
+  DecodeDate(aDate, y, m,d);
+
+  case UserLocale.CountryID of
+    1031: // Deutschland
+          result:=((m=1)  and (d=1)) OR // Neujahr
+                  ((m=1)  and (d=6)  and (UserLocale.StateID in [1,2,14])) OR
+                   // Heiligen drei Könige
+                  ((m=5)  and (d=1)) OR // Maifeiertag
+                  ((m=8)  and (d=15) and (UserLocale.StateID in [2,12])) OR 
+                  // Maria Himmelfahrt
+                  ((m=10) and (d=3)) OR  // Tag der deutschen Einheit
+                  ((m=10) and (d=31) and (UserLocale.StateID in [4,8,13,14,16])) OR 
+                  // Reformationstag
+                  ((m=11) and (d=1)  and (UserLocale.StateID in [1,2,10,11,15])) OR 
+                  // Allerheiligen
+                  ((m=12) and (d=25)) OR
+                  ((m=12) and (d=26));
+    2055, 2064, 4108: // Schweiz (deutsch, ital., franz.)
+          result:=((m=1)  and (d=1)) OR // Neujahr
+                  ((m=8)  and (d=1)) OR  // Bundesfeier
+                  ((m=12) and (d=25)) OR
+                  ((m=12) and (d=26));
+  end;
+
+  if (not result) and (m in [3,4,5,6]) then begin
+     dOstersonntag:=BerechneOstersonntag(y);
+     result:=(aDate=dOstersonntag-2) or // Karfreitag
+             (aDate=dOstersonntag+1) or // Ostermontag
+             (aDate=dOstersonntag+39) or // Himmelfahrt
+             (aDate=dOstersonntag+50) or // Pfingstmontag
+             ((aDate=dOstersonntag+60) and (UserLocale.CountryID=1031) and (UserLocale.StateID in [1,2,7,10,11,12,13])); // Fronleichnam
+  end;
+
+  if (not result) and (UserLocale.CountryID=1031) and (UserLocale.StateID=13) and (m=11) then begin
+     // Buß- und Bettag nur noch in Sachsen: der Mittwoch vor dem 23.11. (d.h. 16.11. bis 22.11.)
+     dBB:=EncodeDate(y,12,25);
+     dBB:=dBB - DayOfTheWeek(dBB) - 32; // = 4. Advent - 32 Tage
+     result:=aDate=dBB;
+  end;
+end;
+
+const SMSURL='http://sal006.salNetwork.com:83/lucin/SMSmessaging/process.xml';
+
+
+function TSMS_Box_cleanup(sText: Shortstring): ShortString;
+begin
+  while (pos(#13, sText)> 0) do
+    sText[pos(#13, sText)]:=' ';
+  while (pos(#10, sText)> 0) do
+    delete(sText, pos(#10, sText), 1);
+  result:= sText;
+end;
+
+
+procedure TSMS_Box_sendSMS;
+var
+  soapClient: OLEVariant;
+  res: Boolean;
+begin
+  soapClient:= createOleObject('MSSOAP.soapClient');
+  soapClient.MSSoapInit(SMSURL);
+  //   strLit[59]:='max@kleiner.com';
+
+  res:=soapClient.sendMessage('4471277',TSMS_Box_cleanup('testB is on the air'),
+                                   'frmTrans.strLit[59]','password');
+  if res then
+    //  strLit[31]:='SMS send successfully';
+
+    showmessage('frmTrans.strLit[31]')
+  else
+  //   strLit[32]:='SMS sending failed';
+
+    showmessage('frmTrans.strLit[32]');
+end;
+
+
+
+ 
+
+
+Const olFolderContacts=$0000000A;
+  
+procedure TOutlookExport_Spy;
+var aProgID: string;
+    aClassID: TGUID;
+    align: TAlignment;
+    fBookmarkList: TBookmarkList;
+    fOutlookInstalled, fAbort,fExporting, found:Boolean;
+    outlook,
+    NameSpace,
+    Contacts,
+    aContactItem: OleVariant;
+    fMask, fCount, j: integer;
+begin
+  fExporting:=false;
+  aProgID:= 'Outlook.Application';
+  try
+    aClassID:= ProgIDToClassID(aProgID);
+    fOutlookInstalled:= true;
+  except
+    fOutlookInstalled:= false;
+  end;
+  if fOutlookInstalled then begin
+     outlook:= CreateOleObject('Outlook.Application');
+     NameSpace:= outlook.GetNameSpace('MAPI');
+     writeln('outlook is installed! spy can work...');
+     NameSpace.Logon;
+     Contacts:= NameSpace.GetDefaultFolder(olFolderContacts);
+  end;
+    fCount:=Contacts.Items.Count;
+    found:=false;
+    for j:= 1 to fCount -1 do begin
+      Application.ProcessMessages;
+      aContactItem:= Contacts.Items(j);
+      try
+        writeln(trim(aContactItem.LastName))
+      except
+      end
+       {if (AnsiUpperCase(aContactItem.FirstName)=z1) and
+            (AnsiUpperCase(aContactItem.LastName)=z2) then begin
+            found:=true;
+          break;
+       end;}
+    end;
+  Outlook:= UnAssigned;
+end;
+
+procedure ShowSpeicher;
+var MS: TMemoryStatus;
+    z:string;
+    i:integer;
+begin
+  GlobalMemoryStatus(MS);
+  i:=MS.dwTotalPhys - MS.dwAvailPhys; // =benutzer physikalischer Speicher
+  z:=FormatFloat('#,###" MB"', i / (1024*1024));
+  z:=z+#13#10+FormatFloat('#,###" KB"', i / 1024);
+  z:=z+#13#10+FormatFloat('#,###" Bytes"', i);
+  ShowMessage(z);
+end;
+
+  function GetFileDate2(aFile:string; aWithTime:Boolean):string;
+  var i:integer;
+      aDate:TDateTime;
+  begin
+    result:='';
+    i:=FileAge(aFile);
+    if i>=0 then begin
+       aDate:=FileDateToDateTime(i);
+       if aWithTime
+       then result:=FormatDateTime('dd/mm/yyyy   hh:nn',aDate)
+       else result:=FormatDateTime('dd/mm/yyyy',aDate);
+    end;
+  end;
+  
+function CheckDataSource(ADataSource: TDataSource): boolean;
+begin
+  Result := False;
+  if ADataSource <> nil then begin
+    if ADataSource.Dataset <> nil then begin
+      Result := ADataSource.Dataset.Active;
+    end;
+  end;
+end;
+
+function GetFieldText(AField: TField): String;
+begin
+  if AField.IsBlob then begin
+    //if Assigned(AField.OnGetText) then begin
+     // result := AField.Text;
+    //end else begin
+      result := AField.AsString;
+    //end;
+  end
+  else begin
+    result := AField.Text;
+  end;
+end;
+
+function CheckDataSource2(ADataSource: TDataSource; const AFieldName: string; var VField: TField): boolean; //overload;
+begin
+  Result:= CheckDataSource(ADataSource) and (Length(AFieldName) > 0);
+  if Result then begin
+    VField:= ADataSource.Dataset.FieldByName(AFieldName);
+  end;
+  //outputxml
+end;
+
+
+
+type myenum = (ffirst, fsecond, fthird); 
+   //sbyte = -126..127;
+   var atenum: set of myenum;
+       //msb: sbyte;
+       intlimit: integer;
+       unat: nativeuint;
+       alo: dword;
+       //att1: TFieldTypes;//TFieldtypes;
+       //aft: tfontlist;
+       //mMskAlphaOpt
+       //asort: tsortfield;
+       //ahint: THintInfo;
+
+BEGIN  //Main
+//<Executable statements>
+//CL.AddDelphiFunction('Function MaskGetFldSeparator( const EditMask : string) : Integer');
+  writeln(inttostr(MaskGetFldSeparator('const EditMask : string')));
+  for i:= 1 to 3 do 
+    Writeln(TEXTOUT+CRLF);
+  //TOutlookExport_Spy;
+  Writeln('');
+  Writeln('Start Command of IE: '+CheckIEStartCommand);  
+//<Definitions>  
+  millis;
+  OpenGLTester;
+  //timecompare;
+  atenum:= [ffirst,fthird];//myenum(1);
+  //writeln(inttostr(integer[fthird]);
+  //writeln(inttostr(myenum));
+    
+    //typeof  tester
+     writeln('min int '+inttostr(mininteger))
+    intlimit:= mininteger-1; 
+     writeln('max int '+inttostr(intlimit))
+     
+     writeln('max int '+inttostr(maxinteger))
+     writeln('max int '+floattostr(power(2,31)-1));
+     writeln('max int '+inttostr(round(power(2,31)-1)));
+     writeln('max int '+floattostr(intpower(2,31)-1));
+
+     writeln('min byte '+inttostr(minbyte))
+     writeln('max byte '+inttostr(maxbyte))
+
+     writeln('max cardinal '+inttostr64(maxcardinal))
+     writeln('max nativeuint '+inttostr64(maxnativeuint))
+     //ibAddIBParamSQLForDetail
+     //ibDecomposeDatabaseName
+
+  //strhash
+  //texthash
+  //datahash
+  //issunday
+    //IsSundayOrHoliday
+   { with TWinFormP.create(self) do begin
+     try
+     showmodal;
+     except
+     free;
+     end;
+   end; } 
+   //Round2Dec
+   //VarToInt
+     //hidewindowsforseconds2(3, maxform1.handle, maxform1.handle);
+  
+    with Tprofreport.create(self) do begin
+     try
+     //hidewindow(3, handle, handle);
+     showmodal;
+     except
+     free;
+     end;
+   end;  
+   
+   { with TJvHTMLParserForm.create(self) do begin
+     try
+     showmodal;
+     except
+     free;
+     end;
+   end;}  
+
+        //getstringvalue
+        //isstringconstant
+   
+   writeln(Getfiledate2(exepath+'maxbox3.exe',true));
+   writeln(datetimetostr(filedatetime(exepath+'maxbox3.exe')));
+   writeln(datetimetostr(fmXFiledatetime(exepath+'maxbox3.exe')));
+   //getfiledate
+   ShowSpeicher;
+   ShowMemory;
+   writeln(ShowMemory2);
+   alo:= -34;
+   writeln(inttostr(alo));
+   //TSMS_Box_sendSMS;
+   
+  // if (CreateMessageDialog ('Soll die Änderung des Datensatzes wirklich verworfen werden ?', mtWarning,mbYesNoCancel).ShowModal = mryes) then
+  //ShowMEssage('Ja wurde geklickt'); 
+   
+   if (CreateMessageDialog('Soll die Änderung des Datensatzes wirklich verworfen werden ?', mtWarning, [mball, mbyes, mbno, mbok]){[mbYesNoCancel])}.ShowModal = mryes) then
+  ShowMEssage('Ja YES wurde geklickt'); 
+
+  // if (CreateMessageDialog('Soll die Änderung des Datensatzes wirklich verworfen werden ?', mtWarning, [mbyesnocancel]){[mbYesNoCancel])}.ShowModal = mryes) then
+  //ShowMEssage('Ja YES wurde geklickt'); 
+   
+ //  if (CreateMessageDialog('Soll die Änderung des Datensatzes wirklich verworfen werden ?', mtWarning, [mbYes, mbno, mbcancel]).ShowModal = mryes) then
+  //ShowMEssage('Ja YES wurde geklickt'); 
+
+   if (CreateMessageDialog2('Soll die Änderung des Datensatzes wirklich verworfen werden ?', mtWarning, mbYesNoCancel).ShowModal = mryes) then
+  ShowMEssage('Ja YES wurde geklickt'); 
+  
+   if (CreateMessageDialog2('Soll die Änderung des Datensatzes wirklich verworfen werden ?', mtWarning, mbokcancel).ShowModal = mryes) then
+  ShowMEssage('Ja YES wurde geklickt'); 
+ 
+   if (CreateMessageDialog2('Soll die Änderung des Datensatzes wirklich verworfen werden ?', mtWarning, mbnookcancel).ShowModal = mrno) then
+  ShowMEssage('Nein NO wurde geklickt'); 
+
+   if (CreateMessageDlg('Soll die Änderung des Datensatzes wirklich verworfen werden ?', mtWarning, mbYesnookcancel).ShowModal = mrcancel) then
+  ShowMEssage('Cancel NO wurde geklickt'); 
+   if (CreateMessageDlg('Soll die Änderung des Datensatzes wirklich verworfen werden ?', mtWarning, mbYesnookcancel).ShowModal = mrOK) then
+  ShowMEssage('OK wurde geklickt'); 
+
+   if (CreateMessageDlg('Soll die Änderung des Datensatzes wirklich verworfen werden ?', mtWarning, mbokcancel).ShowModal = mrOK) then
+  ShowMEssage('OK wurde geklickt'); 
+
+   if (CreateMessageDlg('Soll die Änderung des Datensatzes wirklich verworfen werden ?', mtWarning, mbAbort).ShowModal = mrAbort) then
+  ShowMEssage('Abort wurde geklickt'); 
+  
+  writeln('md5 of '+md5('E:\maxbox\maxbox3.zip'));
+  writeln(inttostr(numprocessthreads3));
+  
+  
+   
+END. 
+
+ 89,1 MByte, MD5-Hash: 0f3c9585edcd22722cf59955ff14b4ea
+hochgeladen am 18.12.13, Virenprüfung am 18.12.13, Status: Virenfund, vermutlich Fehlalarm (siehe Report), Datei ist online
+
+
+ 
+ CL.AddTypeS('TMatrixGL', 'THomogeneousFltMatrix');
+  CL.AddTypeS('TVectorGL', 'THomogeneousFltVector');
+   TAffineVector = TAffineFltVector;
+
+  
+
+ CL.AddTypeS('THomogeneousByteVector', 'array[0..3] of Byte');
+  CL.AddTypeS('THomogeneousWordVector', 'array[0..3] of Word');
+  CL.AddTypeS('THomogeneousIntVector', 'array[0..3] of Integer');
+   CL.AddTypeS('THomogeneousFltVector', 'array[0..3] of single');
+   CL.AddTypeS('THomogeneousDblVector', 'array[0..3] of double');
+   CL.AddTypeS('THomogeneousExtVector', 'array[0..3] of extended');
+   CL.AddTypeS('TAffineByteVector', 'array[0..2] of Byte');
+  CL.AddTypeS('TAffineWordVector', 'array[0..2] of Word');
+  CL.AddTypeS('TAffineIntVector', 'array[0..2] of Integer');
+   CL.AddTypeS('TAffineFltVector', 'array[0..2] of single');
+   CL.AddTypeS('TAffineDblVector', 'array[0..2] of double');
+   CL.AddTypeS('TAffineExtVector', 'array[0..2] of extended');
+
+  CL.AddTypeS('THomogeneousByteMatrix', 'array[0..3] of THomogeneousByteVector');
+  CL.AddTypeS('THomogeneousWordMatrix', 'array[0..3] of THomogeneousWordVector');
+  CL.AddTypeS('THomogeneousIntMatrix', 'array[0..3] of THomogeneousIntVector');
+  CL.AddTypeS('THomogeneousFltMatrix', 'array[0..3] of THomogeneousFltVector');
+  CL.AddTypeS('THomogeneousDblMatrix', 'array[0..3] of THomogeneousDblVector');
+  CL.AddTypeS('THomogeneousExtMatrix', 'array[0..3] of THomogeneousExtVector');
+
+  CL.AddTypeS('TAffineByteMatrix', 'array[0..2] of TAffineByteVector');
+  CL.AddTypeS('TAffineWordMatrix', 'array[0..2] of TAffineWordVector');
+  CL.AddTypeS('TAffineIntMatrix', 'array[0..2] of TAffineIntVector');
+  CL.AddTypeS('TAffineFltMatrix', 'array[0..3] of TAffineFltVector');
+  CL.AddTypeS('TAffineDblMatrix', 'array[0..3] of TAffineDblVector');
+  CL.AddTypeS('TAffineExtMatrix', 'array[0..3] of TAffineExtVector');
+
+
+
+More Items:
+
+       aContactItem.Categories:='Kunde'; // neu
+       aContactItem.FirstName:=KundeName1.AsString;
+       aContactItem.LastName:=KundeName2.AsString;
+       aContactItem.FileAs:=KundeSuchbegriff.AsString;
+       aContactItem.CompanyName:=KundeSuchbegriff.AsString;
+       aContactItem.CustomerID:=KundeKundenNr.AsString;
+       aContactItem.Account:=KundeFibuNr.AsString; // neu
+       aContactItem.Body:=KundeAnsprechpartner.AsString;
+       aContactItem.BusinessAddressStreet:=KundeStrasse.AsString;
+       aContactItem.BusinessAddressPostalCode:=KundePLZ.AsString;
+       aContactItem.BusinessAddressPostOfficeBox:=KundePostfach.AsString;
+       aContactItem.BusinessAddressCity:=KundeOrt.AsString;
+//         aContactItem.BusinessAddressCountry:=KundeLand.AsString; // neu
+       aContactItem.OrganizationalIDNumber:=KundeUStIdNr.AsString; // neu
+//         aContactItem.GovernmentIDNumber:=''
+       aContactItem.BusinessTelephoneNumber:=KundeTelefon1.AsString;
+       aContactItem.BusinessFaxNumber:=KundeFax.AsString;
+       aContactItem.MobileTelephoneNumber:=KundeTelefon2.AsString;
+       aContactItem.Email1Address:=KundeEMail.AsString;
+       aContactItem.WebPage:=KundeHomepage.AsString;
+       aContactItem.Save;
+ 
+  http://i1-win.softpedia-static.com/screenshots/maXbox_5.png?1381322021
+  
+    RegisterMethod('Constructor Create(AOwner: TComponent)');
+    RegisterConstructor(@TJvMail.Create, 'Create');
+  
+  
+   RegisterMethod('Procedure Free');
+   RegisterMethod(@TJvMail.Destroy, 'Free');
+   
+     Checked exceptions can sometimes be useful if you are writing a critical library: You
+must catch them. But in general application development the dependency costs outweigh
+the benefits.
+
+  
+http://smartmobilestudio.com/documentation/differences-between-delphi-and-smart/
+
+----app_template_loaded_code----
+----Simple Browser started----
+
+
+---------------------------
+Error
+---------------------------
+3.9.9.81 You must join use case to a use case.. occured at: 1545088pgf; mem:423752
+---------------------------
+OK   
+---------------------------
+
+
+By the way, if you want to record the text of the error
+message, simply press Ctrl+C. This copies the MessageBox
+text to the clipboard. You will hear a beep, but there is no
+need for further action. It is a feature of Windows that works
+in any dialog! You can then paste the text from the clipboard
+into Delphi (or anywhere else). This is very convenient when
+googling for a solution to an error message.
+
+
+
+    Upload frontend-uploader to the /wp-content/plugins/ directory
+    Activate the plugin through the 'Plugins' menu in WordPress
+    Tweak the plugin's settings in: Settings -> Frontend Uploader Settings
+    Use the following shortcode in post or page: [fu-upload-form]
+    Moderate uploaded files in Media -> Manage UGC menu
+    Moderate user posts in Posts -> Manage UGC
+
+
+    If the TABLE file is deleted, you can undelete it using DOS command.
+However, if you still have the TABLE file and you accidently deleted the
+records inthe TABLE, I don't think you can retrieve back.  Deleted means
+DELETED.  Always backup.
+
+jb
+-- 
+                                                   /\ /\
+                                                   o  o
+                                                (   L    )
+                                                   (~)
+                                                   
+f you deleted records using delete query, it creates a table
+called deleted.db, which will have all the records that are
+deleted, as long as you have'nt run an another delete query you
+should be able to use.
+
+Please explain if this not the case with you 
+
+Undeleting Records from Paradox Tables
+Question:
+How can I undelete a record from a Paradox table?
+
+Answer:
+You can't. Period. When you delete a record from a Paradox table, its space still exists, but its data does not. This is in contrast to dBASE tables which merely remove the reference to a record to be deleted.
+
+The only way to recover deleted records from a Paradox table is to create a cache table of sorts that will allow you to replace data.
+
+
+http://docs.codehaus.org/display/SONAR/Jenkins+Plugin
+
+Description / Features
+
+The plugin allows you to trigger SonarQube analysis from Jenkins using either a:
+
+    Build step to trigger the analysis with the SonarQube Runner
+    Post-build action to trigger the analysis with Maven
+
+Requirements
+
+SonarQube and Jenkins must be installed.                                                   
+
+Zurich (awp) - Le spécialiste des technologies d'énergie solaire Meyer Burger a remporté deux commandes pour un montant total de 18,5 mio CHF, a-t-il indiqué jeudi dans deux communiqués. Un client asiatique a commandé pour 15 mio CHF d'équipement. La deuxième commande, décrochée par la filiale Roth&Rau, porte sur 3,5 mio CHF, également pour un client asiatique.
+
+La plus grande livraison fait partie d'un programme d'élargissement de la productivité d'un client asiatique. Dans le détail, la commande porte sur des équipements de wafers (plaquette de semi-conducteurs), de cellules solaires, de modules solaires et d'inspection. Ils seront livrés au premier trimestre 2014.
+
+Cette commande conforte l'idée que le marché du photovoltaïque se rétablit et que les clients sont à nouveau prêts à des investissements, a commenté le groupe dans un communiqué.
+
+En outre, Roth&Rau, une société faisant partie du groupe, va fournir au second et troisième trimestres 2014 à un client asiatique des imprimantes à jet d'encre, destinées à imprimer des cellules solaires monocristallines. Ce processus de fabrication, en combinaison avec la galvanoplastie, permet la production en masse de cellules solaires.
+
+dg/rp

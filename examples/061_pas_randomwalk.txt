@@ -1,0 +1,308 @@
+program RandomWalk_2;
+
+//*********************************************************************
+// chart example for analyzing random walk & graphic patterns loc's=296  
+// you have to set the iteration var i (in main) for density
+// shows the difference between random and random walk _61
+//*********************************************************************
+
+(*
+ RRRRR    EEEEEE   AAAA   DDDDD    MM     MM   EEEEEE 
+ RR  RR   EE       AA AA  DD  DD   MMMM MMMM   EE    
+ RRRRR    EEEE    AAAAAA  DD   DD  MM MMM MM   EEEE
+ RR  RR   EE      AA   AA DD   DD  MM  M  MM   EE
+ RR   RR  EEEEEE AA    AA DDDDD    MM  M  MM   EEEEEE
+ more random and stat functions will be on the file RND.pas!
+*)
+
+const
+//values for generator and view
+  DAT = 1465;
+  CHDAT = 1460;  
+  CHHEIGHT = 650;
+  MA_LONG = 200;
+  OFFSET = 150; 
+         
+type
+  TRandom = array[1..DAT] of double;
+  //EOptMovingAverage = class (Exception) end;
+
+var
+  cFrm: TForm;
+  chartData1, chartData2: TRandom;
+
+//scaleX1, scaleX2, scaleY1, scaleY2: double;
+{procedure scaleResults(const X, Y :double; 
+         var intX, intY: integer; width, height: integer);
+ var 
+  scaledX, scaledY: double; 
+  begin
+   scaledX:= (X-scaleX1)/(scaleX2-scaleX1);
+    scaledY:= (Y-scaleY2)/(scaleY1-scaleY2);
+     intX:= round(scaledX * width);
+      intY:= round(scaledY * height);
+  end;} 
+
+ 
+procedure PaintBox1Paint(sender: TObject);
+var
+  ox, oy, xRngPixs, yRngPixs: Integer;
+begin
+  with cFrm.Canvas do begin
+    {Fill background}
+    Brush.Color:= clBtnFace;
+    Brush.Style:= bsSolid;
+    {Paint a coordinate cross }
+    ox:= (cfrm.Width div 2);
+    oy:= (cfrm.Height div 2);
+    Pen.Color:= clwhite;
+    Pen.Style:= psSolid;
+    Pen.Width:= 1;
+    MoveTo(1, oy);
+    LineTo(cfrm.Width - 1, oy);
+    MoveTo(ox, 1);
+    LineTo(ox, cFrm.Height - 1);
+    { Paint some tickmarks and label the axis }
+    Font.Name:= 'Times';
+    Font.Size:= 26;
+    Font.Color:= clpurple;
+    xRngPixs:= (cFrm.Width - 20) div 4; { pixels in Pi }
+    yRngPixs:= (cFrm.Height - 20) div 2; { pixels in 1 }
+    TextOut(ox -2 * xRngPixs +2, oy -310, ' ChartGenDelta ');
+    font.Size:= 12;
+    { X axis }
+    MoveTo(ox -2 * xRngPixs, oy -4);
+    LineTo(ox -2 * xRngPixs, oy +4);
+    TextOut(ox -2 * xRngPixs +2, oy +2, '2009');
+    MoveTo(ox -xRngPixs, oy -4);
+    LineTo(ox -xRngPixs, oy +4);
+    TextOut(ox -xRngPixs +2, oy +2, '2010');
+    MoveTo(ox +xRngPixs, oy -4);
+    LineTo(ox +xRngPixs, oy +4);
+    TextOut(ox +xRngPixs -2 -TextWidth('2012'), oy +2, '2012');
+    MoveTo(ox +2 * xRngPixs, oy -4);
+    LineTo(ox +2 * xRngPixs, oy +4);
+    TextOut(ox +2 * xRngPixs -2 -TextWidth('2013'), oy +2, '2013');
+    { Y axis }
+    MoveTo(ox -4, oy - yRngPixs);
+    LineTo(ox +4, oy - yRngPixs);
+    TextOut(ox +4, oy - yRngPixs, inttostr(CHHEIGHT));
+    MoveTo(ox -4, oy - yRngPixs div 2);
+    LineTo(ox +4, oy - yRngPixs div 2);
+    TextOut(ox +4, oy - (yRngPixs + TextHeight('1')) 
+                                      div 2, inttostr(CHHEIGHT div 4 *3));
+    TextOut(ox +4, oy + (yRngPixs - TextHeight('1')) 
+                                      div 50, inttostr(CHHEIGHT div 2));
+    MoveTo(ox -4, oy + yRngPixs div 2);
+    LineTo(ox +4, oy + yRngPixs div 2);
+    TextOut(ox +4, oy + (yRngPixs - TextHeight('1')) 
+                                      div 2, inttostr(CHHEIGHT div 4 *1));
+    Font.Name:= 'Arial';
+    Font.Color:= clyellow;
+      TextOut(ox-2 * xRngPixs +2, oy +30, 'Random Chart');
+    Font.Color:= clred;
+      TextOut(ox-2 * xRngPixs+2, oy-30,'Random Walk Chart');
+    Font.Color:= clblue;
+      TextOut(ox-2 * xRngPixs+750, oy-30,'Clusterpoints ');
+    Pen.Color:= clBlue;
+    //procedure drawChart(vForm: TForm);
+  end;
+end;
+ 
+ 
+procedure letPrimeStatistics(const chartData: TRandom; var mn, std: extended);
+begin
+  MeanAndStdDev(chartData, mn, std);
+end; 
+
+function KurtosisAll(const chartData: TRandom): string;
+var
+  m1, m2, m3, m4, skew, kurtosis: Extended;
+begin
+  momentSkewKurtosis(chartData, m1, m2, m3, m4, skew, kurtosis);
+  result:= Format('Totals: m1 mean: %4.3f m2 '+ 
+                  'variance: %4.3f skew: %4.3f kurtosis: %4.3f',
+                                        [m1, m2, skew, kurtosis]);
+end;
+
+ 
+procedure preInitArray;
+var i: Integer;
+begin
+  for i:= 1 to DAT-1 do chartdata1[i]:= 0;
+  for i:= 1 to DAT-1 do chartdata2[i]:= 0;
+end;
+
+function ChartGenerator2(HBase, count: integer; var vdata: TRandom): Boolean;
+var
+  i, y2, y3: Integer;
+begin
+  randomize;
+  y3:= HBase - OFFSET;
+    result:= false;
+    for i:= 1 to count do begin
+      y2:= (random(90) - random(90)) + y3;
+      vdata[i]:= round(y2)
+    end;
+    result:= true;
+   //randomize;
+end;
+
+
+
+function ChartGenerator(HBase, count: integer; var vdata: TRandom): Boolean;
+var
+  i, y2: Integer;
+  chartlist: TStringList;
+begin
+  randomize;
+  chartlist:= TStringlist.create;
+  y2:= HBase + OFFSET;
+  try
+    result:= false;
+    for i:= 1 to count do begin
+      y2:= y2 + (random(10) - random(10));
+      vdata[i]:= (round(y2))
+      chartlist.add(inttostr((round(y2))))
+    end;
+    result:= true;
+    chartlist.savetofile(ExePath+'examples\randomwalk_1.txt')
+  finally
+    chartlist.free;
+   //randomize;
+  end;
+end;
+
+
+function LoadChartList(HBase, count: integer; var vdata: TRandom): boolean;
+var
+  i: Integer;
+  chartlist: TStringList;
+begin
+  chartlist:= TStringlist.create;
+  try
+    chartlist.loadfromfile(ExePath+'examples\randomwalk_1.txt')
+    for i:= 1 to count - 1 do 
+      vdata[i]:= strtoint(chartlist.strings[i]);
+    result:= true;
+  finally
+    chartlist.free;
+  end;
+end;
+
+
+procedure drawCluster(vForm: TForm; vChart: TRandom; vset: byte);
+var
+  i, hsize: integer;
+
+begin
+  with vForm.canvas do begin
+    hsize:= vForm.Height - 1 div 2;
+    //trendline
+    Pen.Color:= clpurple;
+    lineto(0, hsize -(round(vChart[1])));
+    if vset = 1 then
+    for i:= 2 to CHDAT-730 do
+      //lineto(i, hsize -(round(vChart[i])));
+      vForm.Canvas.Pixels[2 * OFFSET + 100 + round(vChart[i]),
+                             round(vChart[i+1])- 2* OFFSET]:= clWhite;
+    if vset = 2 then
+    for i:= 2 to CHDAT-730 do
+      //lineto(i, hsize -(round(vChart[i])));
+      vForm.Canvas.Pixels[5 * OFFSET + round(vChart[i]),
+                             round(vChart[i+1])+ 2* OFFSET]:= clWhite;
+  end;  
+end;
+
+procedure drawChart(vForm: TForm; vChart: TRandom; vset: byte);
+var
+  i, hsize: integer;
+begin
+  with vForm.canvas do begin
+    hsize:= vForm.Height - 1 div 2;
+    Pen.Color:= random(clblue);
+    if Pen.Color = clblack then
+      Pen.Color:= random(clblue);
+    //setZoomFact(high(chartdata), fileNameChart);
+    moveto(0, hsize -(round(vChart[1])));
+    for i:= 1 to CHDAT -730 do
+      LineTo(i, hsize -(round(vChart[i])));
+    if vset = 1 then
+      drawCluster(vForm, vChart, 1) else
+      drawCluster(vForm, vChart, 2) 
+    {for i:= 1 to CHDAT do
+      Pixels[i, hsize-(round(maData2[i]))]:= clred;}
+  end;
+end;
+
+
+procedure FormClick(sender: TObject);
+var mn, std: extended;
+begin
+  preInitArray;
+  cFrm.repaint;
+  if chartGenerator(cFrm.height div 2, CHDAT, chartData1) then
+      drawChart(cfrm, chartData1, 1);
+  if chartGenerator2(cFrm.height div 2, CHDAT, chartData2) then
+      drawChart(cfrm, chartData2, 2);
+  letPrimeStatistics(chartData1, mn, std)
+  writeln('Mean Randomwalk: '+floattoStr(mn) + '  Std: '+floattostr(std))
+  writeln(KurtosisAll(chartData1))
+  letPrimeStatistics(chartData2, mn, std)
+  writeln('Mean Random: '+floattoStr(mn) + '  Std: '+floattostr(std))
+  writeln(KurtosisAll(chartData2))
+
+end;      
+
+procedure FormKeyPress(Sender: TObject; var Key: Char);
+begin
+ if Key =  #13 
+ then FormClick(self);
+ if Key = #27 then cFrm.close;
+end;
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  with cFrm do begin
+    caption:= 'ChartGenerator, click or press Enter ' + inttostr(width);  
+    BorderStyle:= bsDialog;
+    height:= CHHEIGHT;
+    width:= CHDAT;
+    color:= clblack;
+    onPaint:= @PaintBox1Paint;
+    onClick:= @FormClick;
+    onKeyPress:= @FormKeyPress
+    show;
+  end  
+end;
+
+//main generator loop
+var 
+  i: integer;
+begin
+//************* maXbox statistics series***************************************
+  loadForm;
+  preInitArray;
+  paintbox1paint(self);
+  for i:= 1 to 2 do begin
+    //if chartGenerator(cFrm.height div 2, CHDAT, chartData) then
+    if LoadChartList(cFrm.height div 2, CHDAT, chartData1) then
+      drawChart(cfrm, chartData1, 1);
+  end
+  {//unit test drives
+  for i:= 1 to chdat-1 do 
+   writeln(floattostr(chartdata[i]))}
+end.
+
+just inside maxbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+        
+{        In probability theory and statistics, kurtosis (from the Greek word kyrtos
+ or kurtos, meaning bulging) is a measure of the "peakedness" of the probability distribution of a real-valued random variable. Higher kurtosis means more of the variance is the result of infrequent extreme deviations, as opposed to frequent modestly sized deviations.}
+                                     

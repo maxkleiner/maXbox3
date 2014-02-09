@@ -1,0 +1,734 @@
+Version:0.9
+StartHTML:0000000105
+EndHTML:0000075719
+StartFragment:0000001037
+EndFragment:0000075703
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>mXScriptasHTML</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="generator" content="SynEdit HTML exporter" />
+<style type="text/css">
+<!--
+body { color: #000000; background-color: #FFFFFF; }
+.pas1-assembler { }
+.pas1-character { text-decoration: underline; }
+.pas1-comment { color: #000080; font-style: italic; }
+.pas1-float { color: #800080; }
+.pas1-hexadecimal { color: #FF00FF; }
+.pas1-identifier { }
+.pas1-number { color: #FF0000; }
+.pas1-preprocessor { font-style: italic; }
+.pas1-reservedword { color: #000000; font-weight: bold; }
+.pas1-space { }
+.pas1-string { color: #008080; }
+.pas1-symbol { color: #000000; }
+-->
+</style>
+</head>
+<body>
+<!--StartFragment--><pre><code><span class="pas1-reservedword">program</span><span class="pas1-space"> EventHandler_Tutorial;
+
+</span><span class="pas1-comment">//Word Counter App with a lot of events
+//Loads a bitmap with an aggregation from TPicture Class
+//A function stretches,draws also a bitmap with specified number of pixels
+// in horizontal, vertical dimension, locs=622
+
+</span><span class="pas1-reservedword">Const</span><span class="pas1-space"> MAXP = </span><span class="pas1-number">100</span><span class="pas1-symbol">;
+      KB = </span><span class="pas1-string">'abcdefghijklmnopqrstuvwxyz'</span><span class="pas1-symbol">;
+      STATTEXT = </span><span class="pas1-string">'The quick brown fox jumps over the lazy black dog'</span><span class="pas1-symbol">;
+      </span><span class="pas1-comment">//STATTEXT = KB; test bed
+
+</span><span class="pas1-reservedword">type
+</span><span class="pas1-space">  TMatrix = </span><span class="pas1-reservedword">Array</span><span class="pas1-symbol">[</span><span class="pas1-number">1</span><span class="pas1-symbol">..MAXP] </span><span class="pas1-reservedword">of</span><span class="pas1-space"> TPoint;
+
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">    Exc2: Exception;
+    Image1, Image2: TImage;
+    frmMon, frmMon2: TForm;
+    udLinie: TUpDown;
+    tbR,tbG,tbB: TTrackBar;
+    </span><span class="pas1-comment">// char word counter
+</span><span class="pas1-space">    edText: TMemo;
+    sgStat: TStringGrid;
+    panB: TPanel;
+    chk: TCheckbox;
+    SBtnLoad: boolean;  
+    stat: TStatusbar;
+
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> DirUp(p: </span><span class="pas1-reservedword">String</span><span class="pas1-symbol">): </span><span class="pas1-reservedword">String</span><span class="pas1-symbol">;
+</span><span class="pas1-comment">//returns the path one step up
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  i,j: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">If</span><span class="pas1-space"> RightStr(p,</span><span class="pas1-number">1</span><span class="pas1-symbol">)=</span><span class="pas1-string">'\'</span><span class="pas1-space"> </span><span class="pas1-reservedword">Then</span><span class="pas1-space"> p:= LeftStr(p, Length(p)- </span><span class="pas1-number">1</span><span class="pas1-symbol">);
+  j:= Length(p);
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> Length(p) </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> MidStr(p,i,</span><span class="pas1-number">1</span><span class="pas1-symbol">)=</span><span class="pas1-string">'\'</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> j:= i;
+  result:= LeftStr(p,j);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> SaveImageJpeg(img: TImage; fname, fext: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  ajpeg, jpeg2: TJpegimage;
+  f: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (fext=</span><span class="pas1-string">'jpg'</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    ajpeg:= TJpegImage.create();
+    ajpeg.Assign(img.picture.bitmap);
+    ajpeg.compressionQuality:= </span><span class="pas1-number">85</span><span class="pas1-symbol">;
+    ajpeg.compress();
+    f:= changeFileExt(fname,</span><span class="pas1-string">'.jpg'</span><span class="pas1-symbol">);
+    ajpeg.SaveToFile(ExePath+</span><span class="pas1-string">'examples\'</span><span class="pas1-symbol">+f);
+    </span><span class="pas1-comment">//image2.picture.assign(jpeg2);
+</span><span class="pas1-space">    ajpeg.Free;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    writeln(dirup(ExePath+</span><span class="pas1-string">'examples\'</span><span class="pas1-symbol">))
+    writeln(dirup(ExePath))
+    f:= changeFileExt(fname,</span><span class="pas1-string">'.bmp'</span><span class="pas1-symbol">);
+    img.Picture.SaveToFile(f);
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> loadImage;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> jpeg, jpeg2: TJpegimage;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  jpeg:= TJpegImage.create();
+  jpeg2:= TJpegImage.create();
+  </span><span class="pas1-comment">{@to save from bmp to jpg }
+</span><span class="pas1-space">  </span><span class="pas1-comment">//Image1.Picture.BitMap.LoadFromFile(ExePath+'examples\citymax.bmp');
+</span><span class="pas1-space">  </span><span class="pas1-comment">//Image1.Picture.LoadFromFile(ExePath+'examples\citymax.bmp');
+</span><span class="pas1-space">  jpeg.loadfromfile(ExePath+</span><span class="pas1-string">'examples\faszination_tee.jpg'</span><span class="pas1-symbol">);
+  jpeg2.loadfromfile(ExePath+</span><span class="pas1-string">'examples\maxbox_logo2.jpg'</span><span class="pas1-symbol">);
+  </span><span class="pas1-comment">//SearchandopenDoc(ExePath+'examples\tee6358_3.jpg');
+</span><span class="pas1-space">  </span><span class="pas1-comment">//image1.parent:= NIL; //image2.parent:= NIL;
+</span><span class="pas1-space">  image1.picture.assign(jpeg);
+  image2.picture.assign(jpeg2);
+  writeln(dirup(ExePath+</span><span class="pas1-string">'examples\'</span><span class="pas1-symbol">))  </span><span class="pas1-comment">//test
+</span><span class="pas1-space">  jpeg.Free;
+  jpeg2.Free;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+
+</span><span class="pas1-reservedword">Function</span><span class="pas1-space"> RGB2(R,G,B: Byte): TColor;
+</span><span class="pas1-reservedword">Begin
+</span><span class="pas1-space">  Result:= B </span><span class="pas1-reservedword">Shl</span><span class="pas1-space"> </span><span class="pas1-number">16</span><span class="pas1-space"> </span><span class="pas1-reservedword">Or</span><span class="pas1-space"> G </span><span class="pas1-reservedword">Shl</span><span class="pas1-space"> </span><span class="pas1-number">8</span><span class="pas1-space"> </span><span class="pas1-reservedword">Or</span><span class="pas1-space"> R;
+</span><span class="pas1-reservedword">End</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> DrawRosette2;
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  m,p: TPoint;
+  rho,phi: real;
+  i,br,r,n: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   n:= StrToInt(</span><span class="pas1-string">'18'</span><span class="pas1-symbol">);
+   br:= </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">with</span><span class="pas1-space"> frmmon.Canvas </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     Pen.Width:= br;
+     Pen.Color:= clyellow;
+     Brush.Color:= clblue;
+     Brush.Style:= bsClear;
+     </span><span class="pas1-comment">//compute middle point and draw circle
+</span><span class="pas1-space">     m.x:=</span><span class="pas1-number">225</span><span class="pas1-symbol">; m.y:=</span><span class="pas1-number">225</span><span class="pas1-symbol">; r:=</span><span class="pas1-number">175</span><span class="pas1-symbol">;
+     rho:=</span><span class="pas1-number">360</span><span class="pas1-symbol">/n;
+     </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:=</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> n </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">       phi:=i*rho*pi/</span><span class="pas1-number">180</span><span class="pas1-symbol">;
+       p.x:=m.x+round(r*cos(phi));
+       p.y:=m.y+round(r*sin(phi));
+       Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+       Ellipse(p.x-</span><span class="pas1-number">3</span><span class="pas1-symbol">,p.y-</span><span class="pas1-number">3</span><span class="pas1-symbol">,p.x+</span><span class="pas1-number">3</span><span class="pas1-symbol">,p.y+</span><span class="pas1-number">3</span><span class="pas1-symbol">);
+     </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> DrawRosette;
+</span><span class="pas1-comment">//const pi=3.1415926;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> m,p: TPoint;
+  rho,phi: real;
+  i,br,r,n: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   n:= StrToInt(</span><span class="pas1-string">'18'</span><span class="pas1-symbol">);
+   br:= </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">with</span><span class="pas1-space"> frmmon.Canvas </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     Pen.Width:=br;
+     Pen.Color:= clred;
+     Brush.Color:=clblue;
+     Brush.Style:=bsClear;
+     m.x:=</span><span class="pas1-number">225</span><span class="pas1-symbol">; m.y:=</span><span class="pas1-number">225</span><span class="pas1-symbol">; r:=</span><span class="pas1-number">100</span><span class="pas1-symbol">;
+     rho:=</span><span class="pas1-number">360</span><span class="pas1-symbol">/n;
+     </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:=</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> n </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">       phi:=i*rho*PI/</span><span class="pas1-number">180</span><span class="pas1-symbol">;
+       p.x:=m.x+round(r*cos(phi));
+       p.y:=m.y+round(r*sin(phi));
+       Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+       </span><span class="pas1-comment">//if frmmon.chb1.checked=true then //middle point
+</span><span class="pas1-space">         Ellipse(p.x-</span><span class="pas1-number">3</span><span class="pas1-symbol">,p.y-</span><span class="pas1-number">3</span><span class="pas1-symbol">,p.x+</span><span class="pas1-number">3</span><span class="pas1-symbol">,p.y+</span><span class="pas1-number">3</span><span class="pas1-symbol">);
+     </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> DrawPowerCircle(n: integer);
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  p: TMatrix; m: TPoint;
+  r,rho,phi: real;
+  i,j,x,y,br: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//with Form1.img1.Canvas do begin
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> frmMon.Canvas </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      br:= </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+      Pen.Width:=br;
+      Pen.Color:= clblue;
+      Brush.Color:=  clred;
+      </span><span class="pas1-comment">//circle definition
+</span><span class="pas1-space">      m.x:=</span><span class="pas1-number">225</span><span class="pas1-symbol">; m.y:=</span><span class="pas1-number">225</span><span class="pas1-symbol">; r:=</span><span class="pas1-number">175</span><span class="pas1-symbol">;
+      rho:=</span><span class="pas1-number">360</span><span class="pas1-symbol">/n;
+    </span><span class="pas1-comment">//compute contact points
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:=</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> n </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      phi:=i*rho*PI/</span><span class="pas1-number">180</span><span class="pas1-symbol">;
+      p[i].x:=m.x+round(r*(cos(phi)));
+      p[i].y:=m.y+round(r*sin(phi));
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    </span><span class="pas1-comment">//if Form1.chb1.checked=true then
+</span><span class="pas1-space">      Ellipse(</span><span class="pas1-number">50</span><span class="pas1-symbol">,</span><span class="pas1-number">50</span><span class="pas1-symbol">,</span><span class="pas1-number">400</span><span class="pas1-symbol">,</span><span class="pas1-number">400</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:=</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> n-</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">for</span><span class="pas1-space"> j:=i </span><span class="pas1-reservedword">to</span><span class="pas1-space"> n </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        MoveTo(p[i].x,p[i].y);
+        LineTo(p[j].x,p[j].y);
+      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+      </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:=</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> n </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        x:=p[i].x; y:=p[i].y;
+        Ellipse(x-</span><span class="pas1-number">3</span><span class="pas1-symbol">,y-</span><span class="pas1-number">3</span><span class="pas1-symbol">,x+</span><span class="pas1-number">3</span><span class="pas1-symbol">,y+</span><span class="pas1-number">3</span><span class="pas1-symbol">);
+      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> AnimatePowerCircle;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i: smallint;
+</span><span class="pas1-reservedword">begin</span><span class="pas1-space"> 
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">25</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    DrawPowerCircle(i);    </span><span class="pas1-comment">// try 30 or 35
+</span><span class="pas1-space">    </span><span class="pas1-comment">//sleep(100)
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;    
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> HideGridCursor(g: TStringGrid);
+</span><span class="pas1-comment">//ban Cursor from StringGrid
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> gr: TGridRect;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> gr </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Top:=-</span><span class="pas1-number">1</span><span class="pas1-symbol">; Left:=-</span><span class="pas1-number">1</span><span class="pas1-symbol">; Right:=-</span><span class="pas1-number">1</span><span class="pas1-symbol">; Bottom:=-</span><span class="pas1-number">1
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  g.Selection:=gr;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-comment">//***************************Event Handlers******************************//
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> btnCalcCharsClick(Sender: TObject);
+</span><span class="pas1-comment">//report char counter distribution 
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i,s,x,anzB: integer;
+  t: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+  b: </span><span class="pas1-reservedword">array</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">..</span><span class="pas1-number">25</span><span class="pas1-symbol">] </span><span class="pas1-reservedword">of</span><span class="pas1-space"> integer; </span><span class="pas1-comment">//Array char counter
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//preparation
+</span><span class="pas1-space">  anzB:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">25</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> b[i]:= </span><span class="pas1-number">0</span><span class="pas1-symbol">; 
+  </span><span class="pas1-comment">//calculation
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> chk.checked </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    t:= edText.Text 
+  </span><span class="pas1-reservedword">else
+</span><span class="pas1-space">    t:= edText.Text;
+  t:=LowerCase(t); 
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> s:=</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> length(t) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> pos(t[s],kb)&gt; </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin</span><span class="pas1-space"> </span><span class="pas1-comment">//sign of char
+</span><span class="pas1-space">      x:=ord(t[s])-</span><span class="pas1-number">97</span><span class="pas1-symbol">; </span><span class="pas1-comment">//nr of letter
+</span><span class="pas1-space">      b[x]:= b[x]+</span><span class="pas1-number">1</span><span class="pas1-symbol">;   </span><span class="pas1-comment">//update counter
+</span><span class="pas1-space">      inc(anzB);       
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  edText.Text:= t; 
+  </span><span class="pas1-comment">//output
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:=</span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">25</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> sgStat.Cells[i,</span><span class="pas1-number">1</span><span class="pas1-symbol">]:= </span><span class="pas1-string">''</span><span class="pas1-symbol">; </span><span class="pas1-comment">//table delete
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:=</span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">25</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> b[i]&gt;</span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> 
+      sgStat.Cells[i,</span><span class="pas1-number">1</span><span class="pas1-symbol">]:= IntToStr(b[i]);
+  panB.Caption:=IntToStr(anzB);
+  sgStat.font.style:= [];
+  sgStat.font.color:= clpurple;
+  HideGridCursor(sgStat);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> Image1MouseDown(Sender: TObject; Btn: TMouseButton;
+                            Shift: TShiftState; X,Y: Integer);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i: byte;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-comment">//test
+</span><span class="pas1-space">  loadimage;
+  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    frmMon.Canvas.MoveTo(X,Y);
+    frmMon.canvas.Pen.color:= clyellow;
+  </span><span class="pas1-comment">//image1.canvas.floodfill() 
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">30</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">    </span><span class="pas1-comment">//Image1.Canvas.LineTo(X+random(140),Y+random(140));
+</span><span class="pas1-space">    frmMon.Canvas.LineTo(X+random(</span><span class="pas1-number">140</span><span class="pas1-symbol">),Y+random(</span><span class="pas1-number">140</span><span class="pas1-symbol">));
+  </span><span class="pas1-reservedword">except
+</span><span class="pas1-space">     writeln(</span><span class="pas1-string">'you cant write on an jpeg'</span><span class="pas1-symbol">) 
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> btnNewClick(Sender: TObject);
+</span><span class="pas1-comment">//Reset of Calculation
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  edText.Text:= </span><span class="pas1-string">''</span><span class="pas1-symbol">; panB.Caption:= </span><span class="pas1-string">''</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:=</span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">25</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> sgStat.Cells[i,</span><span class="pas1-number">1</span><span class="pas1-symbol">]:= </span><span class="pas1-string">''</span><span class="pas1-symbol">;
+  edText.SetFocus;
+  HideGridCursor(sgStat);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> btnLoadClick(Sender: TObject);
+</span><span class="pas1-comment">//Set a new text file to count
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i: integer;
+   selectedFile: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  edText.Text:=</span><span class="pas1-string">''</span><span class="pas1-symbol">; panB.Caption:=</span><span class="pas1-string">''</span><span class="pas1-symbol">;
+  SBtnLoad:= true;
+  chk.checked:= false;
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:=</span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">25</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> sgStat.Cells[i,</span><span class="pas1-number">1</span><span class="pas1-symbol">]:=</span><span class="pas1-string">''</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> PromptForFileName(selectedFile,
+                      </span><span class="pas1-string">'Text files (*.txt)|*.txt'</span><span class="pas1-symbol">,</span><span class="pas1-string">''</span><span class="pas1-symbol">, </span><span class="pas1-string">'Select your Text file'</span><span class="pas1-symbol">,
+                       ExePath+</span><span class="pas1-string">'examples\'</span><span class="pas1-symbol">, False)  </span><span class="pas1-comment">// false: not Save dialog !
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     </span><span class="pas1-comment">// Display this full file/path value
+</span><span class="pas1-space">     ShowMessage(</span><span class="pas1-string">'Selected file = '</span><span class="pas1-symbol">+selectedFile);
+     Stat.simpletext:= selectedFile +</span><span class="pas1-string">' is loaded'</span><span class="pas1-symbol">;
+     edText.lines.LoadFromFile(selectedFile);
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  edText.SetFocus;
+  HideGridCursor(sgStat);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> CCFormCreate(Sender: TObject);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:=</span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">25</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-comment">//config of stringgrid
+</span><span class="pas1-space">    sgStat.Cells[i,</span><span class="pas1-number">0</span><span class="pas1-symbol">]:= chr(</span><span class="pas1-number">97</span><span class="pas1-symbol">+i);
+    sgStat.font.style:= [fsbold];
+  HideGridCursor(sgStat);
+  SBtnLoad:= false;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> ChkboxClick(Sender: TObject);
+</span><span class="pas1-comment">//toogle between text or filetext
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//chk.checked:= not chk.checked; 
+</span><span class="pas1-space">  SBtnLoad:= false;
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> chk.checked </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    chk.checked:= true;
+    edText.clear;
+    edText.Text:= STATTEXT;
+    Stat.simpletext:= </span><span class="pas1-string">'default text is loaded'</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    chk.checked:= false
+    edText.clear;
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> SBtnLoad </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    edText.Text:= LoadfileasString(exepath+</span><span class="pas1-string">'firstdemo.txt'</span><span class="pas1-symbol">)
+    Stat.simpletext:= </span><span class="pas1-string">'firstdemo.txt default file is loaded'</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+ </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-comment">//panB.Caption:='';
+</span><span class="pas1-space">  edText.SetFocus;
+  HideGridCursor(sgStat);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> closeFormClick(Sender: TObject; </span><span class="pas1-reservedword">var</span><span class="pas1-space"> Action: TCloseAction);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Image1.Free;
+  Image2.Free;
+  frmMon2.Free;
+  frmMon.Free;
+  frmMon:= </span><span class="pas1-reservedword">NIL</span><span class="pas1-symbol">;
+  writeln(</span><span class="pas1-string">'char counter form has been closed at '</span><span class="pas1-symbol">+ TimeToStr(Time));
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;    
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> CloseButtonClick(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  frmMon.Close;  </span><span class="pas1-comment">//calls the onClose eventhandler!
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//***************************Form Building******************************
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> InitFirstForm;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space"> frmMon:= TForm.Create(self);
+ </span><span class="pas1-reservedword">with</span><span class="pas1-space"> frmMon </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   </span><span class="pas1-comment">//FormStyle := fsStayOnTop;
+</span><span class="pas1-space">   Position := poScreenCenter;
+   caption:=</span><span class="pas1-string">'Pulsar Universe BitmaX'</span><span class="pas1-symbol">;
+   color:= clblack;
+   width:= </span><span class="pas1-number">850</span><span class="pas1-symbol">;
+   height:= </span><span class="pas1-number">700</span><span class="pas1-symbol">;
+   Show;
+   onMousedown:= @Image1MouseDown;
+   onClose:= @CloseFormClick;
+ </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+ Image1:= TImage.create(frmMon);
+ </span><span class="pas1-reservedword">with</span><span class="pas1-space"> Image1 </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   parent:= frmMon;
+   setbounds(</span><span class="pas1-number">10</span><span class="pas1-symbol">,</span><span class="pas1-number">15</span><span class="pas1-symbol">, </span><span class="pas1-number">200</span><span class="pas1-symbol">,</span><span class="pas1-number">180</span><span class="pas1-symbol">);
+   onMousedown:= @Image1MouseDown;
+   show;
+   </span><span class="pas1-comment">//onMouseup:= @Image1MouseUp
+</span><span class="pas1-space"> </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+ Image2:= TImage.create(frmMon);
+ </span><span class="pas1-reservedword">with</span><span class="pas1-space"> Image2 </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   parent:= frmMon;
+   setbounds(</span><span class="pas1-number">265</span><span class="pas1-symbol">,</span><span class="pas1-number">465</span><span class="pas1-symbol">,</span><span class="pas1-number">560</span><span class="pas1-symbol">,</span><span class="pas1-number">250</span><span class="pas1-symbol">);
+   onMousedown:= @Image1MouseDown;
+   show;
+ </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> InitSecondForm;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i: integer;
+  </span><span class="pas1-comment">//rc,gc,bc: TColor32;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  frmMon2:= TForm.create(self);
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> frmMon2 </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Left:= </span><span class="pas1-number">1200
+</span><span class="pas1-space">    Top:= </span><span class="pas1-number">303
+</span><span class="pas1-space">    BorderIcons:= [biSystemMenu, biMinimize]
+    BorderStyle:= bsSingle
+    Caption:= </span><span class="pas1-string">'Word Counter'
+</span><span class="pas1-space">    ClientHeight:= </span><span class="pas1-number">344
+</span><span class="pas1-space">    ClientWidth:= </span><span class="pas1-number">720
+</span><span class="pas1-space">    </span><span class="pas1-comment">//Color:= RGB(255,255,0);
+</span><span class="pas1-space">    Font.Charset:= DEFAULT_CHARSET
+    Font.Color:= clWindowText
+    Font.Height:= -</span><span class="pas1-number">11
+</span><span class="pas1-space">    Font.Name:= </span><span class="pas1-string">'MS Sans Serif'
+</span><span class="pas1-space">    Font.Style:= [];
+    Position:= poDesktopCenter;
+    PixelsPerInch:= </span><span class="pas1-number">96</span><span class="pas1-symbol">;
+    </span><span class="pas1-comment">//TextHeight(13);
+</span><span class="pas1-space">    </span><span class="pas1-comment">//Icon:= { }
+</span><span class="pas1-space">    </span><span class="pas1-comment">//FormStyle:= fsStayOnTop;
+</span><span class="pas1-space">    Show;   </span><span class="pas1-comment">//ShowWindow(application.handle, SW_HIDE);
+</span><span class="pas1-space">    onMousedown:= @Image1MouseDown;
+   </span><span class="pas1-comment">//onCreate:= @CCFormCreate;
+</span><span class="pas1-space"> </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TLabel.Create(frmmon2) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent:= frmMon2;
+    setBounds(</span><span class="pas1-number">9</span><span class="pas1-symbol">,</span><span class="pas1-number">10</span><span class="pas1-symbol">,</span><span class="pas1-number">62</span><span class="pas1-symbol">,</span><span class="pas1-number">13</span><span class="pas1-symbol">)
+    Caption:= </span><span class="pas1-string">'Textinput:'
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TLabel.Create(frmMon2) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent:= frmMon2;
+    setBounds(</span><span class="pas1-number">9</span><span class="pas1-symbol">,</span><span class="pas1-number">166</span><span class="pas1-symbol">,</span><span class="pas1-number">95</span><span class="pas1-symbol">,</span><span class="pas1-number">13</span><span class="pas1-symbol">)
+    Caption:= </span><span class="pas1-string">'Character Statistic:'
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TLabel.Create(frmMon2) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent:= frmMon2;
+    setBounds(</span><span class="pas1-number">9</span><span class="pas1-symbol">,</span><span class="pas1-number">250</span><span class="pas1-symbol">,</span><span class="pas1-number">116</span><span class="pas1-symbol">,</span><span class="pas1-number">13</span><span class="pas1-symbol">)
+    Caption:= </span><span class="pas1-string">'Character Count:'</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TLabel.Create(frmMon2) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent:= frmMon2;
+    setBounds(</span><span class="pas1-number">180</span><span class="pas1-symbol">,</span><span class="pas1-number">250</span><span class="pas1-symbol">,</span><span class="pas1-number">116</span><span class="pas1-symbol">,</span><span class="pas1-number">13</span><span class="pas1-symbol">)
+    Caption:= </span><span class="pas1-string">'Text or File:'</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  sgStat:= TStringGrid.Create(frmMon2);
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> sgStat </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent:= frmMon2;
+    Left:= </span><span class="pas1-number">8
+</span><span class="pas1-space">    Top:= </span><span class="pas1-number">188
+</span><span class="pas1-space">    Width:= </span><span class="pas1-number">680
+</span><span class="pas1-space">    Height:= </span><span class="pas1-number">41
+</span><span class="pas1-space">    TabStop:= False
+    ColCount:= </span><span class="pas1-number">26
+</span><span class="pas1-space">    DefaultColWidth:= </span><span class="pas1-number">22
+</span><span class="pas1-space">    DefaultRowHeight:= </span><span class="pas1-number">18
+</span><span class="pas1-space">    FixedCols:= </span><span class="pas1-number">0
+</span><span class="pas1-space">    RowCount:= </span><span class="pas1-number">2</span><span class="pas1-space"> 
+    </span><span class="pas1-comment">//Font.Name:= 'Wingdings';     //J is smile
+</span><span class="pas1-space">    </span><span class="pas1-comment">//TabOrder:= 2
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">26</span><span class="pas1-symbol">-</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> ColWidths[i]:= </span><span class="pas1-number">25</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  CCFormCreate(self);
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TBitBtn.Create(frmMon2) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      parent:= frmMon2;
+      SetBounds(</span><span class="pas1-number">297</span><span class="pas1-symbol">,</span><span class="pas1-number">290</span><span class="pas1-symbol">,</span><span class="pas1-number">121</span><span class="pas1-symbol">,</span><span class="pas1-number">30</span><span class="pas1-symbol">)
+      Caption:= </span><span class="pas1-string">'Calculation'
+</span><span class="pas1-space">      glyph.LoadFromResourceName(getHINSTANCE,</span><span class="pas1-string">'CL_MPSTEP'</span><span class="pas1-symbol">); 
+      OnClick:= @btnCalcCharsClick
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TBitBtn.Create(frmMon2) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      parent:= frmMon2;
+      SetBounds(</span><span class="pas1-number">431</span><span class="pas1-symbol">,</span><span class="pas1-number">290</span><span class="pas1-symbol">,</span><span class="pas1-number">121</span><span class="pas1-symbol">,</span><span class="pas1-number">30</span><span class="pas1-symbol">)
+      Caption:= </span><span class="pas1-string">'Reset'
+</span><span class="pas1-space">      glyph.LoadFromResourceName(getHINSTANCE,</span><span class="pas1-string">'CL_MPPAUSE'</span><span class="pas1-symbol">); 
+      OnClick:= @btnNewClick
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TBitBtn.Create(frmMon2) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      parent:= frmMon2;
+      SetBounds(</span><span class="pas1-number">565</span><span class="pas1-symbol">,</span><span class="pas1-number">290</span><span class="pas1-symbol">,</span><span class="pas1-number">121</span><span class="pas1-symbol">,</span><span class="pas1-number">30</span><span class="pas1-symbol">)
+      Caption:= </span><span class="pas1-string">'Load Text'
+</span><span class="pas1-space">      glyph.LoadFromResourceName(getHINSTANCE,</span><span class="pas1-string">'CL_MPRECORD'</span><span class="pas1-symbol">); 
+      </span><span class="pas1-comment">//TabOrder = 0
+</span><span class="pas1-space">      OnClick:= @btnLoadClick
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    panB:= TPanel.Create(frmMon2)
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> panB </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      parent:= frmMon2;
+      setBounds(</span><span class="pas1-number">110</span><span class="pas1-symbol">,</span><span class="pas1-number">244</span><span class="pas1-symbol">,</span><span class="pas1-number">49</span><span class="pas1-symbol">,</span><span class="pas1-number">18</span><span class="pas1-symbol">);
+      BevelOuter:= bvLowered;
+      font.color:= clblue;
+      Color:= clwhite;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  edText:= TMemo.Create(frmMon2);
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> edText </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent:= frmMon2;
+    Setbounds(</span><span class="pas1-number">8</span><span class="pas1-symbol">,</span><span class="pas1-number">32</span><span class="pas1-symbol">,</span><span class="pas1-number">680</span><span class="pas1-symbol">,</span><span class="pas1-number">122</span><span class="pas1-symbol">);
+    wordwrap:= true;
+    scrollbars:= ssvertical;
+    Text:= STATTEXT;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  chk:= TCheckbox.Create(frmMon2);
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> chk </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent:= frmMon2
+    setbounds(</span><span class="pas1-number">250</span><span class="pas1-symbol">,</span><span class="pas1-number">241</span><span class="pas1-symbol">,</span><span class="pas1-number">20</span><span class="pas1-symbol">,</span><span class="pas1-number">30</span><span class="pas1-symbol">);
+    checked:= true;
+    onclick:= @chkboxClick;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+   stat:= TStatusbar.Create(frmMon2);
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> Stat </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent:= frmMon2;
+    stat.SimplePanel:= true;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-comment">//***************************Form Building End******************************
+
+//Test Functions ------------------------------------
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> ExceptionTester: boolean;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> S1, S2, S3: Single;
+  </span><span class="pas1-comment">//Exc2: Exception;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  result:= false;
+  Exc2:= Exception.Create(</span><span class="pas1-string">'intern division zero'</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    S1:= </span><span class="pas1-float">1.0</span><span class="pas1-symbol">;
+    S2:= </span><span class="pas1-float">0.0</span><span class="pas1-symbol">;
+    S3:= S1/S2;
+    result:= true;
+  </span><span class="pas1-reservedword">except
+</span><span class="pas1-space">    </span><span class="pas1-comment">//on E: Exception do
+</span><span class="pas1-space">      </span><span class="pas1-comment">//Writeln('Exc.ClassName '+ Exc2.message);
+</span><span class="pas1-space">      Exc2.</span><span class="pas1-reservedword">message</span><span class="pas1-symbol">;    </span><span class="pas1-comment">//raise
+</span><span class="pas1-space">      </span><span class="pas1-comment">//exit;
+</span><span class="pas1-space">      RaiseLastException;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-comment">//Exc2.Free;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+ 
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TestFloatingPoints_Unit;
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  S, S1, S2, S3: Single;
+  E, E1, E2, E3: Extended;
+  exc: Exception;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  exc:= Exception.Create(</span><span class="pas1-string">'division zero fault'</span><span class="pas1-symbol">);
+  E:= </span><span class="pas1-float">0.1</span><span class="pas1-symbol">;
+  </span><span class="pas1-comment">//Writeln(E:20:18);
+</span><span class="pas1-space">  </span><span class="pas1-comment">//0.100000000000000000
+</span><span class="pas1-space">  </span><span class="pas1-comment">//0.100000001490116120 converting
+</span><span class="pas1-space">  PrintF(</span><span class="pas1-string">'this is a fpoint before %.18f '</span><span class="pas1-symbol">,[E]);
+  S:= E;
+  E:= S;
+  </span><span class="pas1-comment">//Writeln(E:20:18);
+</span><span class="pas1-space">  PrintF(</span><span class="pas1-string">'this is a fpoint after %.18f '</span><span class="pas1-symbol">,[E]);
+  </span><span class="pas1-comment">//Readln;
+</span><span class="pas1-space"> </span><span class="pas1-comment">//Rounding
+</span><span class="pas1-space">  </span><span class="pas1-comment">{The output is
+  0.100000001490116120
+  0.010000000707805160
+  0.009999999776482580 }
+</span><span class="pas1-space">  S1 := </span><span class="pas1-float">0.1</span><span class="pas1-symbol">;
+  </span><span class="pas1-comment">//Writeln(S1:20:18);
+</span><span class="pas1-space">  PrintF(</span><span class="pas1-string">'this is a fpoint before %.18f '</span><span class="pas1-symbol">,[S1]);
+  S1 := S1 * S1;
+  S2 := </span><span class="pas1-float">0.01</span><span class="pas1-symbol">;
+  PrintF(</span><span class="pas1-string">'this is a fpoint after %.18f '</span><span class="pas1-symbol">,[S1]);
+  PrintF(</span><span class="pas1-string">'this is a fpoint after %.18f '</span><span class="pas1-symbol">,[S2]);
+  </span><span class="pas1-comment">//Writeln(S1:20:18); //Compare Literals
+</span><span class="pas1-space">  S1 := </span><span class="pas1-float">0.3</span><span class="pas1-symbol">;
+  S2 := </span><span class="pas1-float">0.1</span><span class="pas1-symbol">;
+  S2 := S2 / </span><span class="pas1-float">10.0</span><span class="pas1-symbol">;      </span><span class="pas1-comment">// should be 0.01  
+</span><span class="pas1-space">  writeln(floattoStr((s2)))  
+  S2 := S2 * </span><span class="pas1-float">10.0</span><span class="pas1-symbol">;      </span><span class="pas1-comment">// should be 0.1 again
+</span><span class="pas1-space">  writeln(floattoStr(s2))  
+  S2 := S2 + S2 + S2;   </span><span class="pas1-comment">// should be 0.3
+</span><span class="pas1-space">  writeln(floattoStr(s2))  
+  </span><span class="pas1-comment">//floattodecimal
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> S1 = S2 </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    Writeln(</span><span class="pas1-string">'True'</span><span class="pas1-symbol">)
+  </span><span class="pas1-reservedword">else
+</span><span class="pas1-space">    Writeln(</span><span class="pas1-string">'False'</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> SameValue2(S1, S2, </span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then</span><span class="pas1-space">  </span><span class="pas1-comment">//single
+</span><span class="pas1-space">    Writeln(</span><span class="pas1-string">'True'</span><span class="pas1-symbol">)
+  </span><span class="pas1-reservedword">else
+</span><span class="pas1-space">    Writeln(</span><span class="pas1-string">'False'</span><span class="pas1-symbol">);
+  </span><span class="pas1-comment">//The output is  False True  
+</span><span class="pas1-space">  E1:= </span><span class="pas1-float">16.000000000000000001</span><span class="pas1-symbol">;
+  E2:= </span><span class="pas1-float">16.000000000000000000</span><span class="pas1-symbol">;
+  E3:= E1 - E2;
+  </span><span class="pas1-comment">//Writeln(E1:22:18, E2:22:18, E3);
+</span><span class="pas1-space">   PrintF(</span><span class="pas1-string">'this is FPoint subtract E1: %.18f E2: %.18f E3: %.18f'</span><span class="pas1-symbol">,[E1,E2, E3]);
+  E1:= </span><span class="pas1-float">1000000000000000000000000.0</span><span class="pas1-symbol">;
+  E2:= </span><span class="pas1-float">0.1</span><span class="pas1-symbol">;
+  E3:= E1;
+  </span><span class="pas1-comment">//Writeln(E1 + E2 - E3:10:10);
+</span><span class="pas1-space">  PrintF(</span><span class="pas1-string">'this is a fpoint after %.10f '</span><span class="pas1-symbol">,[E1+E2-E3]);
+  </span><span class="pas1-comment">//Writeln(S1 - S3 + S2:10:10);
+</span><span class="pas1-space">  PrintF(</span><span class="pas1-string">'this is a fpoint after %.10f '</span><span class="pas1-symbol">,[E1-E3+E2]);
+  PrintF(</span><span class="pas1-string">'Sin(Pi) returns %.18f '</span><span class="pas1-symbol">,[Sin(PI)]);
+  </span><span class="pas1-comment">//Delphi returns -5.42101086242752 &times; 10-20 , instead of the expected 0.
+</span><span class="pas1-space">   writeln(floatToStr(maxCalc(</span><span class="pas1-string">'-5.4*10^-2'</span><span class="pas1-symbol">)))
+   writeln(floatToStr(maxCalc(</span><span class="pas1-string">'5.4*(10^-4)'</span><span class="pas1-symbol">)))
+   writeln(</span><span class="pas1-string">'sin pi of maxcalc '</span><span class="pas1-symbol">+floatToStr(maxCalc(</span><span class="pas1-string">'Sin(PI)'</span><span class="pas1-symbol">)))
+   writeln(</span><span class="pas1-string">'sin pi of convert '</span><span class="pas1-symbol">+floatToStr(Sin(PI)))
+  </span><span class="pas1-comment">//SetExceptionMask(GetExceptionMask + [exZeroDivide]); //default is: unmasked
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    S1:= </span><span class="pas1-float">1.0</span><span class="pas1-symbol">;
+    S2:= </span><span class="pas1-float">0.0</span><span class="pas1-symbol">;
+    S3:= S1/S2;
+  </span><span class="pas1-reservedword">except
+</span><span class="pas1-space">    </span><span class="pas1-comment">//on E: Exception do
+</span><span class="pas1-space">      Writeln(</span><span class="pas1-string">'Exc.ClassName '</span><span class="pas1-symbol">+ Exc.</span><span class="pas1-reservedword">message</span><span class="pas1-symbol">);
+      Exc.</span><span class="pas1-reservedword">message</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    </span><span class="pas1-comment">//The number 0.1 is stored as $3DCCCCCD or (ordering the bits already)
+</span><span class="pas1-space">     writeln(hextobin2(</span><span class="pas1-string">'3DCCCCCD'</span><span class="pas1-symbol">))
+     </span><span class="pas1-comment">//0   0111 1011   100 1100 1100 1100 1100 1101
+</span><span class="pas1-space">     </span><span class="pas1-comment">//0 – 0111 1011 (123)-127=-4 – 100 1100 1100 1100 1100 1101,
+</span><span class="pas1-space">     writeln(inttoStr(bintoint(</span><span class="pas1-string">'110011001100110011001101'</span><span class="pas1-symbol">)))  
+     writeln(floattoStr(maxCalc(</span><span class="pas1-string">'(13421773*(2^-4))/(2^23)'</span><span class="pas1-symbol">))) </span><span class="pas1-comment">//scale by 2^23
+</span><span class="pas1-space">     writeln(floattoStr(maxCalc(</span><span class="pas1-string">'(13421773*(2^-4))*(2^-23)'</span><span class="pas1-symbol">))) </span><span class="pas1-comment">//scale by 2^23
+</span><span class="pas1-space">     </span><span class="pas1-comment">//0.10000000149011612,
+</span><span class="pas1-space">     writeln(floattoStr(maxCalc(</span><span class="pas1-string">'2^-4'</span><span class="pas1-symbol">)))
+     writeln(</span><span class="pas1-string">'this is E '</span><span class="pas1-symbol">+floattoStr(E))
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  </span><span class="pas1-comment">//fpointunit
+
+
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> md: TDynCardinalArray;
+    cc: comp;  </span><span class="pas1-comment">//it is an Int64 which is supported and calculated by the FPU.
+</span><span class="pas1-space">    i: integer;
+    
+</span><span class="pas1-reservedword">Begin</span><span class="pas1-space">   </span><span class="pas1-comment">//Main App
+</span><span class="pas1-space">  ProcessMessagesON;
+  InitFirstForm;
+  InitSecondForm;
+  DrawRosette;
+  DrawRosette2;
+  AnimatePowerCircle;
+  loadImage;
+  </span><span class="pas1-comment">//SaveImageJpeg(image1,'newtee3bmp','jpg');  //bmp to jpg
+</span><span class="pas1-space">  cc:= round(power(</span><span class="pas1-number">2</span><span class="pas1-symbol">,</span><span class="pas1-number">30</span><span class="pas1-symbol">))
+  writeln(</span><span class="pas1-string">'cc comp type: '</span><span class="pas1-symbol">+inttostr64(cc))
+  </span><span class="pas1-comment">//writeln(booltostrj(IsPrimeFactor(7,1)))
+</span><span class="pas1-space">  md:= PrimeFactors(</span><span class="pas1-number">5117</span><span class="pas1-symbol">) 
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> length(md)-</span><span class="pas1-number">1</span><span class="pas1-space">  </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">    write(</span><span class="pas1-string">'Prime Factor: '</span><span class="pas1-symbol">+inttostr(md[i])+ </span><span class="pas1-string">' '</span><span class="pas1-symbol">);
+  TestFloatingPoints_Unit;
+  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ExceptionTester </span><span class="pas1-reservedword">then</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'no exception'</span><span class="pas1-symbol">);
+    </span><span class="pas1-comment">//writeln(exc2.message);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">except
+</span><span class="pas1-space">    writeln(</span><span class="pas1-string">'got last exception '</span><span class="pas1-symbol">+Exception(exc2).</span><span class="pas1-reservedword">message</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">end</span><span class="pas1-space">  
+</span><span class="pas1-reservedword">End</span><span class="pas1-symbol">.  
+
+
+
+
+Add jpeg </span><span class="pas1-reservedword">in</span><span class="pas1-space"> your </span><span class="pas1-reservedword">uses</span><span class="pas1-space"> section.
+
+Saving a jpeg </span><span class="pas1-reservedword">to</span><span class="pas1-space"> table :
+
+table1.append;
+table1Image.LoadFromFile(</span><span class="pas1-string">'c:\bob.jpg'</span><span class="pas1-symbol">);
+table1.post;
+</span><span class="pas1-comment">// where table1image is a tblobfield linked to the image field of table1
+
+</span><span class="pas1-identifier">loading the image from the table :
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-identifier">jpeg: tjpegimage;
+buf: tmemorystream;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-identifier">jpeg := tjpegimage.create();
+buf := tmemorystream.create();
+table1Image.savetostream(buf);
+buf.seek(</span><span class="pas1-number">0</span><span class="pas1-symbol">, soFromBeginning);
+jpeg.loadfromstream(buf);
+image1.picture.assign(jpeg);
+buf.free;
+jpeg.free;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+Internals
+
+So how does this look internally? </span><span class="pas1-reservedword">In</span><span class="pas1-space"> the following example I use a Single, since Singles have an overviewable mantissa </span><span class="pas1-reservedword">and</span><span class="pas1-space"> exponent. Let me show you how a number like </span><span class="pas1-float">0.1</span><span class="pas1-space"> </span><span class="pas1-reservedword">is</span><span class="pas1-space"> stored </span><span class="pas1-reservedword">in</span><span class="pas1-space"> a Single.
+
+The number </span><span class="pas1-float">0.1</span><span class="pas1-space"> </span><span class="pas1-reservedword">is</span><span class="pas1-space"> stored </span><span class="pas1-reservedword">as</span><span class="pas1-space"> </span><span class="pas1-hexadecimal">$3DCCCCCD</span><span class="pas1-space"> </span><span class="pas1-reservedword">or</span><span class="pas1-space"> (ordering the bits already)
+</span><span class="pas1-number">0</span><span class="pas1-space"> – </span><span class="pas1-number">0111</span><span class="pas1-space"> </span><span class="pas1-number">1011</span><span class="pas1-space"> – </span><span class="pas1-number">100</span><span class="pas1-space"> </span><span class="pas1-number">1100</span><span class="pas1-space"> </span><span class="pas1-number">1100</span><span class="pas1-space"> </span><span class="pas1-number">1100</span><span class="pas1-space"> </span><span class="pas1-number">1100</span><span class="pas1-space"> </span><span class="pas1-number">1101</span><span class="pas1-symbol">,
+which means the sign bit </span><span class="pas1-reservedword">is</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-symbol">, the exponent </span><span class="pas1-reservedword">is</span><span class="pas1-space"> </span><span class="pas1-number">123</span><span class="pas1-symbol">-</span><span class="pas1-number">127</span><span class="pas1-space"> = -</span><span class="pas1-number">4</span><span class="pas1-space"> </span><span class="pas1-reservedword">and</span><span class="pas1-space"> the mantissa </span><span class="pas1-reservedword">is</span><span class="pas1-space"> (after putting the hidden bit </span><span class="pas1-reservedword">in</span><span class="pas1-space"> front) </span><span class="pas1-number">1100</span><span class="pas1-space"> </span><span class="pas1-number">1100</span><span class="pas1-space"> </span><span class="pas1-number">1100</span><span class="pas1-space"> </span><span class="pas1-number">1100</span><span class="pas1-space"> </span><span class="pas1-number">1100</span><span class="pas1-space"> </span><span class="pas1-number">1101</span><span class="pas1-space"> </span><span class="pas1-reservedword">or</span><span class="pas1-space"> </span><span class="pas1-hexadecimal">$CCCCCD</span><span class="pas1-space"> </span><span class="pas1-reservedword">or</span><span class="pas1-space"> </span><span class="pas1-float">13421773.
+
+</span><span class="pas1-reservedword">If</span><span class="pas1-space"> we multiply </span><span class="pas1-number">13421773</span><span class="pas1-space"> </span><span class="pas1-reservedword">with</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">-</span><span class="pas1-number">4</span><span class="pas1-space"> (</span><span class="pas1-float">0.0625</span><span class="pas1-symbol">), we get </span><span class="pas1-number">838860</span><span class="pas1-symbol">,</span><span class="pas1-float">8125.</span><span class="pas1-space"> Now we only have </span><span class="pas1-reservedword">to</span><span class="pas1-space"> scale that by </span><span class="pas1-number">223</span><span class="pas1-space"> = </span><span class="pas1-number">8388608</span><span class="pas1-symbol">, </span><span class="pas1-reservedword">and</span><span class="pas1-space"> we get </span><span class="pas1-float">0.10000000149011612</span><span class="pas1-symbol">, which </span><span class="pas1-reservedword">is</span><span class="pas1-space"> indeed pretty close </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-float">0.1.
+
+
+</span><span class="pas1-comment">//event explanation of getter and setter
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TControl.SetColor(Value: TColor);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> FColor &lt;&gt; Value </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    FColor := Value;
+    FParentColor := False;
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (csDesigning </span><span class="pas1-reservedword">in</span><span class="pas1-space"> ComponentState) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> (csReading </span><span class="pas1-reservedword">in</span><span class="pas1-space"> ComponentState) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (Self </span><span class="pas1-reservedword">is</span><span class="pas1-space"> TWinControl) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">      TWinControl(Self).ParentBackground := False;
+    Perform(CM_COLORCHANGED, </span><span class="pas1-number">0</span><span class="pas1-symbol">, </span><span class="pas1-number">0</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-comment">//-----------------------------------------------------------------------
+//http://stackoverflow.com/questions/765421/how-is-win32-event-driven-programming-implemented-under-the-hood
+</span><span class="pas1-space">    Different kinds </span><span class="pas1-reservedword">of</span><span class="pas1-space"> OS interrupt handlers must be placing messages </span><span class="pas1-reservedword">in</span><span class="pas1-space"> the said </span><span class="pas1-string">'message queue'</span><span class="pas1-symbol">, but where within the process address space does this queue reside? How </span><span class="pas1-reservedword">is</span><span class="pas1-space"> it exposed </span><span class="pas1-reservedword">to</span><span class="pas1-space"> the interrupt handler code?
+
+Windows are associated </span><span class="pas1-reservedword">with</span><span class="pas1-space"> threads. Each thread </span><span class="pas1-reservedword">with</span><span class="pas1-space"> a window has a thread queue </span><span class="pas1-reservedword">in</span><span class="pas1-space"> the process</span><span class="pas1-string">'s address space. The OS has an internal queue in its own address space for the hardware-generated events. Using details of the event and other state information (e.g., which window has the focus), the OS translates the hardware events into messages that are then placed in the appropriate thread queue.
+
+</span><span class="pas1-identifier">Messages that are posted are placed directly </span><span class="pas1-reservedword">in</span><span class="pas1-space"> the thread queue </span><span class="pas1-reservedword">for</span><span class="pas1-space"> the target window.
+
+Messages that are sent are usually processed directly (bypassing the queue).
+
+The details get hairy. </span><span class="pas1-reservedword">For</span><span class="pas1-space"> example, the thread queues are more than lists </span><span class="pas1-reservedword">of</span><span class="pas1-space"> messages--they also maintain some state information. Some messages (like WM_PAINT) aren</span><span class="pas1-string">'t really queued, but synthesized from the additional state information when you query the queue and it'</span><span class="pas1-identifier">s empty. Messages sent </span><span class="pas1-reservedword">to</span><span class="pas1-space"> windows owned by other threads are actually posted </span><span class="pas1-reservedword">to</span><span class="pas1-space"> the receiver</span><span class="pas1-string">'s queue rather than being processed directly, but the system makes it appear like a regular blocking send from the caller'</span><span class="pas1-identifier">s point </span><span class="pas1-reservedword">of</span><span class="pas1-space"> view. Hilarity ensues </span><span class="pas1-reservedword">if</span><span class="pas1-space"> this can cause deadlock (because </span><span class="pas1-reservedword">of</span><span class="pas1-space"> circular sends back </span><span class="pas1-reservedword">to</span><span class="pas1-space"> the original thread).
+
+The Jeffrey Richter books have a lot (all?) </span><span class="pas1-reservedword">of</span><span class="pas1-space"> the gory details. My edition </span><span class="pas1-reservedword">is</span><span class="pas1-space"> old (Advanced Windows). The current edition seems </span><span class="pas1-reservedword">to</span><span class="pas1-space"> be called Windows via C/C++.
+
+The OS does a LOT </span><span class="pas1-reservedword">of</span><span class="pas1-space"> work </span><span class="pas1-reservedword">to</span><span class="pas1-space"> make the </span><span class="pas1-reservedword">message</span><span class="pas1-space"> stream appear rational (</span><span class="pas1-reservedword">and</span><span class="pas1-space"> relatively simple) </span><span class="pas1-reservedword">to</span><span class="pas1-space"> the caller.
+
+    What does it mean </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-string">'translate'</span><span class="pas1-space"> the </span><span class="pas1-reservedword">message</span><span class="pas1-symbol">? What does the call </span><span class="pas1-reservedword">to</span><span class="pas1-space"> TranslateMessage() really </span><span class="pas1-reservedword">do</span><span class="pas1-symbol">?
+
+It watches </span><span class="pas1-reservedword">for</span><span class="pas1-space"> </span><span class="pas1-reservedword">virtual</span><span class="pas1-space"> key messages </span><span class="pas1-reservedword">and</span><span class="pas1-symbol">, when it recognizes a key-down/key-up combination, it adds character messages. </span><span class="pas1-reservedword">If</span><span class="pas1-space"> you don</span><span class="pas1-string">'t call TranslateMessage, you won'</span><span class="pas1-identifier">t receive character messages like WM_CHAR.
+
+I suspect it sends the character </span><span class="pas1-reservedword">message</span><span class="pas1-space"> directly before returning (</span><span class="pas1-reservedword">as</span><span class="pas1-space"> opposed </span><span class="pas1-reservedword">to</span><span class="pas1-space"> posting them). I</span><span class="pas1-string">'ve never checked, but I seem to recall that the WM_CHAR messages arrive just before the WM_KEYUP.
+
+</span><span class="pas1-space">    Once dispatched by DispatchMessage(), what all places does the </span><span class="pas1-reservedword">message</span><span class="pas1-space"> swing by before reaching my WndProc (i.e. what does the OS </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">with</span><span class="pas1-space"> it)?
+
+DispatchMessage passes the </span><span class="pas1-reservedword">message</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> the WndProc </span><span class="pas1-reservedword">for</span><span class="pas1-space"> the target window. Along the way, it some hooks may get a chance </span><span class="pas1-reservedword">to</span><span class="pas1-space"> see the </span><span class="pas1-reservedword">message</span><span class="pas1-space"> (</span><span class="pas1-reservedword">and</span><span class="pas1-space"> possibly interfere </span><span class="pas1-reservedword">with</span><span class="pas1-space"> it).
+
+</span></code></pre><!--EndFragment--></body>
+</html>

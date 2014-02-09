@@ -1,0 +1,1025 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<namespace name="SynZip">
+  <devnotes>
+     low-level access to ZLib compression (1.2.5 engine version)
+  </devnotes>
+  <const name="szcfRaw" type="TSynZipCompressorFormat">
+    <value>
+      szcfRaw
+    </value>
+  </const>
+  <const name="szcfZip" type="TSynZipCompressorFormat">
+    <value>
+      szcfZip
+    </value>
+  </const>
+  <const name="szcfGZ" type="TSynZipCompressorFormat">
+    <value>
+      szcfGZ
+    </value>
+  </const>
+  <enum name="TSynZipCompressorFormat">
+    <devnotes>
+       the format used for storing data
+    </devnotes>
+    <element name="szcfRaw" />
+    <element name="szcfZip" />
+    <element name="szcfGZ" />
+  </enum>
+  <type name="RawByteString" type="AnsiString" />
+  <pointer name="PCardinalArray" type="TCardinalArray" indircnt="1" />
+  <array name="TCardinalArray" low="0" high="536870910">
+    <element type="Cardinal" />
+  </array>
+  <object name="TZStream">
+    <devnotes>
+       the internal memory structure as expected by the ZLib library
+    </devnotes>
+    <members>
+      <field name="next_in" type="PAnsiChar" visibility="public" />
+      <field name="avail_in" type="Cardinal" visibility="public" />
+      <field name="total_in" type="Cardinal" visibility="public" />
+      <field name="next_out" type="PAnsiChar" visibility="public" />
+      <field name="avail_out" type="Cardinal" visibility="public" />
+      <field name="total_out" type="Cardinal" visibility="public" />
+      <field name="msg" type="PAnsiChar" visibility="public" />
+      <field name="state" type="Pointer" visibility="public" />
+      <field name="zalloc" type="Pointer" visibility="public" />
+      <field name="zfree" type="Pointer" visibility="public" />
+      <field name="opaque" type="Pointer" visibility="public" />
+      <field name="data_type" type="Integer" visibility="public" />
+      <field name="adler" type="Cardinal" visibility="public" />
+      <field name="reserved" type="Cardinal" visibility="public" />
+      <procedure name="Init" visibility="public">
+      </procedure>
+      <function name="DeflateInit" visibility="public">
+        <parameters>
+          <parameter name="CompressionLevel" type="Integer" />
+          <parameter name="ZipFormat" type="Boolean" />
+          <retval type="Boolean" />
+        </parameters>
+      </function>
+    </members>
+  </object>
+  <pointer name="PZStream" type="TZStream" indircnt="1" />
+  <pointer name="PFileInfo" type="TFileInfo" indircnt="1" />
+  <object name="TFileInfo">
+    <devnotes>
+       generic file information structure, as used in .zip file format
+    </devnotes>
+    <members>
+      <field name="neededVersion" type="Word" visibility="public" />
+      <field name="flags" type="Word" visibility="public" />
+      <field name="zzipMethod" type="Word" visibility="public" />
+      <field name="zlastMod" type="Integer" visibility="public" />
+      <field name="zcrc32" type="Cardinal" visibility="public" />
+      <field name="zzipSize" type="Cardinal" visibility="public" />
+      <field name="zfullSize" type="Cardinal" visibility="public" />
+      <field name="nameLen" type="Word" visibility="public" />
+      <field name="extraLen" type="Word" visibility="public" />
+      <function name="SameAs" visibility="public">
+        <parameters>
+          <parameter name="aInfo" type="PFileInfo" />
+          <retval type="Boolean" />
+        </parameters>
+      </function>
+      <function name="AlgoID" visibility="public">
+        <parameters>
+          <retval type="Integer" />
+        </parameters>
+      </function>
+      <procedure name="SetAlgoID" visibility="public">
+        <parameters>
+          <parameter name="Algorithm" type="Integer" />
+        </parameters>
+      </procedure>
+      <function name="GetUTF8FileName" visibility="public">
+        <parameters>
+          <retval type="Boolean" />
+        </parameters>
+      </function>
+      <procedure name="SetUTF8FileName" visibility="public">
+      </procedure>
+      <procedure name="UnSetUTF8FileName" visibility="public">
+      </procedure>
+    </members>
+  </object>
+  <object name="TFileHeader">
+    <devnotes>
+       directory file information structure, as used in .zip file format
+    </devnotes>
+    <members>
+      <field name="signature" type="Cardinal" visibility="public" />
+      <field name="madeBy" type="Word" visibility="public" />
+      <field name="fileInfo" type="TFileInfo" visibility="public" />
+      <field name="commentLen" type="Word" visibility="public" />
+      <field name="firstDiskNo" type="Word" visibility="public" />
+      <field name="intFileAttr" type="Word" visibility="public" />
+      <field name="extFileAttr" type="Cardinal" visibility="public" />
+      <field name="localHeadOff" type="Cardinal" visibility="public" />
+      <function name="IsFolder" visibility="public">
+        <parameters>
+          <retval type="Boolean" />
+        </parameters>
+      </function>
+      <procedure name="Init" visibility="public">
+      </procedure>
+    </members>
+  </object>
+  <pointer name="PFileHeader" type="TFileHeader" indircnt="1" />
+  <object name="TLocalFileHeader">
+    <devnotes>
+       internal file information structure, as used in .zip file format
+    </devnotes>
+    <members>
+      <field name="signature" type="Cardinal" visibility="public" />
+      <field name="fileInfo" type="TFileInfo" visibility="public" />
+      <function name="LocalData" visibility="public">
+        <parameters>
+          <retval type="PAnsiChar" />
+        </parameters>
+      </function>
+    </members>
+  </object>
+  <pointer name="PLocalFileHeader" type="TLocalFileHeader" indircnt="1" />
+  <struct name="TLastHeader" packed="true">
+    <devnotes>
+       last header structure, as used in .zip file format
+    </devnotes>
+    <field name="signature" type="Cardinal" visibility="public" />
+    <field name="thisDisk" type="Word" visibility="public" />
+    <field name="headerDisk" type="Word" visibility="public" />
+    <field name="thisFiles" type="Word" visibility="public" />
+    <field name="totalFiles" type="Word" visibility="public" />
+    <field name="headerSize" type="Cardinal" visibility="public" />
+    <field name="headerOffset" type="Cardinal" visibility="public" />
+    <field name="commentLen" type="Word" visibility="public" />
+  </struct>
+  <const name="ZLIB_VERSION" type="string">
+    <value>
+      1.2.5
+    </value>
+  </const>
+  <const name="Z_NO_FLUSH" type="Integer">
+    <value>
+      $0
+    </value>
+  </const>
+  <const name="Z_PARTIAL_FLUSH" type="Integer">
+    <value>
+      $1
+    </value>
+  </const>
+  <const name="Z_SYNC_FLUSH" type="Integer">
+    <value>
+      $2
+    </value>
+  </const>
+  <const name="Z_FULL_FLUSH" type="Integer">
+    <value>
+      $3
+    </value>
+  </const>
+  <const name="Z_FINISH" type="Integer">
+    <value>
+      $4
+    </value>
+  </const>
+  <const name="Z_OK" type="Integer">
+    <value>
+      $0
+    </value>
+  </const>
+  <const name="Z_STREAM_END" type="Integer">
+    <value>
+      $1
+    </value>
+  </const>
+  <const name="Z_MEM_ERROR" type="Integer">
+    <value>
+      $FFFFFFFC
+    </value>
+  </const>
+  <const name="Z_BUF_ERROR" type="Integer">
+    <value>
+      $FFFFFFFB
+    </value>
+  </const>
+  <const name="Z_DEFLATED" type="Integer">
+    <value>
+      $8
+    </value>
+  </const>
+  <const name="MAX_WBITS" type="Integer">
+    <value>
+      $F
+    </value>
+  </const>
+  <const name="DEF_MEM_LEVEL" type="Integer">
+    <value>
+      $8
+    </value>
+  </const>
+  <const name="Z_DEFAULT_STRATEGY" type="Integer">
+    <value>
+      $0
+    </value>
+  </const>
+  <const name="Z_HUFFMAN_ONLY" type="Integer">
+    <value>
+      $2
+    </value>
+  </const>
+  <class name="TSynZipCompressor">
+    <devnotes>
+       a simple TStream descendant for compressing data into a stream
+    </devnotes>
+    <ancestor name="TStream" namespace="Classes">
+      <methodref name="GetPosition" visibility="private">
+      </methodref>
+      <methodref name="SetPosition" visibility="private">
+      </methodref>
+      <methodref name="SetSize64" visibility="private">
+      </methodref>
+      <methodref name="GetSize" visibility="public">
+      </methodref>
+      <methodref name="SetSize" visibility="public">
+      </methodref>
+      <methodref name="SetSize" visibility="public">
+      </methodref>
+      <methodref name="Read" visibility="public">
+      </methodref>
+      <methodref name="Write" visibility="public">
+      </methodref>
+      <methodref name="Seek" visibility="public">
+      </methodref>
+      <methodref name="Seek" visibility="public">
+      </methodref>
+      <methodref name="ReadBuffer" visibility="public">
+      </methodref>
+      <methodref name="WriteBuffer" visibility="public">
+      </methodref>
+      <methodref name="CopyFrom" visibility="public">
+      </methodref>
+      <methodref name="ReadComponent" visibility="public">
+      </methodref>
+      <methodref name="ReadComponentRes" visibility="public">
+      </methodref>
+      <methodref name="WriteComponent" visibility="public">
+      </methodref>
+      <methodref name="WriteComponentRes" visibility="public">
+      </methodref>
+      <methodref name="WriteDescendent" visibility="public">
+      </methodref>
+      <methodref name="WriteDescendentRes" visibility="public">
+      </methodref>
+      <methodref name="WriteResourceHeader" visibility="public">
+      </methodref>
+      <methodref name="FixupResourceHeader" visibility="public">
+      </methodref>
+      <methodref name="ReadResHeader" visibility="public">
+      </methodref>
+      <propertyref name="Position" visibility="public">
+      </propertyref>
+      <propertyref name="Size" visibility="public">
+      </propertyref>
+      <ancestor name="TObject" namespace="System">
+        <methodref name="Create" visibility="public">
+        </methodref>
+        <methodref name="Free" visibility="public">
+        </methodref>
+        <methodref name="InitInstance" visibility="public">
+        </methodref>
+        <methodref name="CleanupInstance" visibility="public">
+        </methodref>
+        <methodref name="ClassType" visibility="public">
+        </methodref>
+        <methodref name="ClassName" visibility="public">
+        </methodref>
+        <methodref name="ClassNameIs" visibility="public">
+        </methodref>
+        <methodref name="ClassParent" visibility="public">
+        </methodref>
+        <methodref name="ClassInfo" visibility="public">
+        </methodref>
+        <methodref name="InstanceSize" visibility="public">
+        </methodref>
+        <methodref name="InheritsFrom" visibility="public">
+        </methodref>
+        <methodref name="MethodAddress" visibility="public">
+        </methodref>
+        <methodref name="MethodName" visibility="public">
+        </methodref>
+        <methodref name="FieldAddress" visibility="public">
+        </methodref>
+        <methodref name="GetInterface" visibility="public">
+        </methodref>
+        <methodref name="GetInterfaceEntry" visibility="public">
+        </methodref>
+        <methodref name="GetInterfaceTable" visibility="public">
+        </methodref>
+        <methodref name="SafeCallException" visibility="public">
+        </methodref>
+        <methodref name="AfterConstruction" visibility="public">
+        </methodref>
+        <methodref name="BeforeDestruction" visibility="public">
+        </methodref>
+        <methodref name="Dispatch" visibility="public">
+        </methodref>
+        <methodref name="DefaultHandler" visibility="public">
+        </methodref>
+        <methodref name="NewInstance" visibility="public">
+        </methodref>
+        <methodref name="FreeInstance" visibility="public">
+        </methodref>
+        <methodref name="Destroy" visibility="public">
+        </methodref>
+      </ancestor>
+    </ancestor>
+    <members>
+      <field name="fInitialized" type="Boolean" visibility="private" />
+      <field name="fDestStream" type="TStream" visibility="private" />
+      <field name="fStrm" type="TZStream" visibility="private" />
+      <field name="fCRC" type="Cardinal" visibility="private" />
+      <field name="fGZFormat" type="Boolean" visibility="private" />
+      <field name="fBufferOut" visibility="private">
+        <array name="fBufferOut" low="0" high="65535">
+          <element type="Byte" />
+        </array>
+      </field>
+      <function name="FlushBufferOut" visibility="private">
+        <parameters>
+          <retval type="Integer" />
+        </parameters>
+      </function>
+      <constructor name="Create" visibility="public">
+        <parameters>
+          <parameter name="outStream" type="TStream" />
+          <parameter name="CompressionLevel" type="Integer" />
+          <parameter name="Format" type="TSynZipCompressorFormat">
+            <value>
+              szcfRaw
+            </value>
+          </parameter>
+        </parameters>
+      </constructor>
+      <destructor name="Destroy" visibility="public">
+        <devnotes>
+           release memory
+        </devnotes>
+        <parameters>
+        </parameters>
+      </destructor>
+      <function name="Read" visibility="public" procflags="override">
+        <devnotes>
+           this method will raise an error: it's a compression-only stream
+        </devnotes>
+        <parameters>
+          <parameter name="Buffer" paramflags="var" />
+          <parameter name="Count" type="Integer" />
+          <retval type="Integer" />
+        </parameters>
+      </function>
+      <function name="Write" visibility="public" procflags="override">
+        <devnotes>
+           add some data to be compressed
+        </devnotes>
+        <parameters>
+          <parameter name="Buffer" paramflags="const" />
+          <parameter name="Count" type="Integer" />
+          <retval type="Integer" />
+        </parameters>
+      </function>
+      <function name="Seek" visibility="public" procflags="overload override">
+        <devnotes>
+           used to return the current position, i.e. the real byte written count
+        </devnotes>
+        <parameters>
+          <parameter name="Offset" type="Integer" />
+          <parameter name="Origin" type="Word" />
+          <retval type="Integer" />
+        </parameters>
+      </function>
+      <field type="Cardinal" visibility="private" />
+      <property name="SizeIn" visibility="public" type="Cardinal">
+        <devnotes>
+           the number of byte written, i.e. the current uncompressed size
+        </devnotes>
+      </property>
+      <procedure name="Flush" visibility="public">
+        <devnotes>
+           write all pending compressed data into outStream 
+        </devnotes>
+      </procedure>
+      <field type="Cardinal" visibility="private" />
+      <property name="SizeOut" visibility="public" type="Cardinal">
+        <devnotes>
+           the number of byte sent to the destination stream, i.e. the current
+        </devnotes>
+      </property>
+      <property name="CRC" visibility="public" read="fCRC" type="Cardinal">
+        <devnotes>
+           the current CRC of the written data, i.e. the uncompressed data CRC
+        </devnotes>
+      </property>
+    </members>
+  </class>
+  <struct name="TZipEntry">
+    <devnotes>
+       stores an entry of a file inside a .zip archive
+    </devnotes>
+    <field name="info" type="PFileInfo" visibility="public">
+      <devnotes>
+         the information of this file, as stored in the .zip archive
+      </devnotes>
+    </field>
+    <field name="data" type="PAnsiChar" visibility="public">
+      <devnotes>
+         points to the compressed data in the .zip archive, mapped in memory
+      </devnotes>
+    </field>
+    <field name="storedName" type="PAnsiChar" visibility="public">
+      <devnotes>
+         name of the file inside the .zip archive
+      </devnotes>
+    </field>
+    <field name="zipName" type="TFileName" visibility="public">
+      <devnotes>
+         name of the file inside the .zip archive
+      </devnotes>
+    </field>
+  </struct>
+  <class name="TZipRead">
+    <devnotes>
+       read-only access to a .zip archive file
+    </devnotes>
+    <ancestor name="TObject" namespace="System">
+      <methodref name="Create" visibility="public">
+      </methodref>
+      <methodref name="Free" visibility="public">
+      </methodref>
+      <methodref name="InitInstance" visibility="public">
+      </methodref>
+      <methodref name="CleanupInstance" visibility="public">
+      </methodref>
+      <methodref name="ClassType" visibility="public">
+      </methodref>
+      <methodref name="ClassName" visibility="public">
+      </methodref>
+      <methodref name="ClassNameIs" visibility="public">
+      </methodref>
+      <methodref name="ClassParent" visibility="public">
+      </methodref>
+      <methodref name="ClassInfo" visibility="public">
+      </methodref>
+      <methodref name="InstanceSize" visibility="public">
+      </methodref>
+      <methodref name="InheritsFrom" visibility="public">
+      </methodref>
+      <methodref name="MethodAddress" visibility="public">
+      </methodref>
+      <methodref name="MethodName" visibility="public">
+      </methodref>
+      <methodref name="FieldAddress" visibility="public">
+      </methodref>
+      <methodref name="GetInterface" visibility="public">
+      </methodref>
+      <methodref name="GetInterfaceEntry" visibility="public">
+      </methodref>
+      <methodref name="GetInterfaceTable" visibility="public">
+      </methodref>
+      <methodref name="SafeCallException" visibility="public">
+      </methodref>
+      <methodref name="AfterConstruction" visibility="public">
+      </methodref>
+      <methodref name="BeforeDestruction" visibility="public">
+      </methodref>
+      <methodref name="Dispatch" visibility="public">
+      </methodref>
+      <methodref name="DefaultHandler" visibility="public">
+      </methodref>
+      <methodref name="NewInstance" visibility="public">
+      </methodref>
+      <methodref name="FreeInstance" visibility="public">
+      </methodref>
+      <methodref name="Destroy" visibility="public">
+      </methodref>
+    </ancestor>
+    <members>
+      <field name="file_" type="Cardinal" visibility="private" />
+      <field name="map" type="Cardinal" visibility="private" />
+      <field name="buf" type="PByteArray" visibility="private" />
+      <field name="ReadOffset" type="Cardinal" visibility="private" />
+      <procedure name="UnMap" visibility="private">
+      </procedure>
+      <field name="Count" type="Integer" visibility="public">
+        <devnotes>
+           the number of files inside a .zip archive
+        </devnotes>
+      </field>
+      <field name="Entry" type=".7" visibility="public">
+        <devnotes>
+           the files inside the .zip archive
+        </devnotes>
+      </field>
+      <constructor name="Create" visibility="public">
+        <devnotes>
+           open a .zip archive file as Read Only
+        </devnotes>
+        <parameters>
+          <parameter name="aFileName" type="TFileName" paramflags="const" />
+          <parameter name="ZipStartOffset" type="Cardinal">
+            <value>
+              $0
+            </value>
+          </parameter>
+          <parameter name="Size" type="Cardinal">
+            <value>
+              $0
+            </value>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="Create" visibility="public">
+        <devnotes>
+           open a .zip archive file directly from a resource
+        </devnotes>
+        <parameters>
+          <parameter name="Instance" type="Cardinal" />
+          <parameter name="ResName" type="string" paramflags="const" />
+          <parameter name="ResType" type="PAnsiChar" />
+        </parameters>
+      </constructor>
+      <constructor name="Create" visibility="public">
+        <devnotes>
+           open a .zip archive file from its File Handle
+        </devnotes>
+        <parameters>
+          <parameter name="aFile" type="Cardinal" />
+          <parameter name="ZipStartOffset" type="Cardinal">
+            <value>
+              $0
+            </value>
+          </parameter>
+          <parameter name="Size" type="Cardinal">
+            <value>
+              $0
+            </value>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="Create" visibility="public">
+        <devnotes>
+           open a .zip archive file directly from memory
+        </devnotes>
+        <parameters>
+          <parameter name="BufZip" type="PByteArray" />
+          <parameter name="Size" type="Cardinal" />
+        </parameters>
+      </constructor>
+      <destructor name="Destroy" visibility="public">
+        <devnotes>
+           release associated memory
+        </devnotes>
+        <parameters>
+        </parameters>
+      </destructor>
+      <function name="NameToIndex" visibility="public">
+        <devnotes>
+           get the index of a file inside the .zip archive
+        </devnotes>
+        <parameters>
+          <parameter name="aName" type="TFileName" paramflags="const" />
+          <retval type="Integer" />
+        </parameters>
+      </function>
+      <function name="UnZip" visibility="public" procflags="overload">
+        <devnotes>
+           uncompress a file stored inside the .zip archive into memory
+        </devnotes>
+        <parameters>
+          <parameter name="aIndex" type="Integer" />
+          <retval type="string" />
+        </parameters>
+      </function>
+      <function name="UnZip" visibility="public" procflags="overload">
+        <devnotes>
+           uncompress a file stored inside the .zip archive into a destination directory
+        </devnotes>
+        <parameters>
+          <parameter name="aIndex" type="Integer" />
+          <parameter name="DestDir" type="TFileName" paramflags="const" />
+          <retval type="Boolean" />
+        </parameters>
+      </function>
+    </members>
+  </class>
+  <class name="TZipWrite">
+    <devnotes>
+       write-only access for creating a .zip archive file
+    </devnotes>
+    <ancestor name="TObject" namespace="System">
+      <methodref name="Create" visibility="public">
+      </methodref>
+      <methodref name="Free" visibility="public">
+      </methodref>
+      <methodref name="InitInstance" visibility="public">
+      </methodref>
+      <methodref name="CleanupInstance" visibility="public">
+      </methodref>
+      <methodref name="ClassType" visibility="public">
+      </methodref>
+      <methodref name="ClassName" visibility="public">
+      </methodref>
+      <methodref name="ClassNameIs" visibility="public">
+      </methodref>
+      <methodref name="ClassParent" visibility="public">
+      </methodref>
+      <methodref name="ClassInfo" visibility="public">
+      </methodref>
+      <methodref name="InstanceSize" visibility="public">
+      </methodref>
+      <methodref name="InheritsFrom" visibility="public">
+      </methodref>
+      <methodref name="MethodAddress" visibility="public">
+      </methodref>
+      <methodref name="MethodName" visibility="public">
+      </methodref>
+      <methodref name="FieldAddress" visibility="public">
+      </methodref>
+      <methodref name="GetInterface" visibility="public">
+      </methodref>
+      <methodref name="GetInterfaceEntry" visibility="public">
+      </methodref>
+      <methodref name="GetInterfaceTable" visibility="public">
+      </methodref>
+      <methodref name="SafeCallException" visibility="public">
+      </methodref>
+      <methodref name="AfterConstruction" visibility="public">
+      </methodref>
+      <methodref name="BeforeDestruction" visibility="public">
+      </methodref>
+      <methodref name="Dispatch" visibility="public">
+      </methodref>
+      <methodref name="DefaultHandler" visibility="public">
+      </methodref>
+      <methodref name="NewInstance" visibility="public">
+      </methodref>
+      <methodref name="FreeInstance" visibility="public">
+      </methodref>
+      <methodref name="Destroy" visibility="public">
+      </methodref>
+    </ancestor>
+    <members>
+      <field name="fAppendOffset" type="Cardinal" visibility="protected" />
+      <field name="fFileName" type="TFileName" visibility="protected" />
+      <field name="fMagic" type="Cardinal" visibility="protected" />
+      <function name="InternalAdd" visibility="protected">
+        <parameters>
+          <parameter name="zipName" type="TFileName" paramflags="const" />
+          <parameter name="Buf" type="Pointer" />
+          <parameter name="Size" type="Integer" />
+          <retval type="Cardinal" />
+        </parameters>
+      </function>
+      <field name="Handle" type="Integer" visibility="public">
+        <devnotes>
+           the associated file handle
+        </devnotes>
+      </field>
+      <field name="Count" type="Integer" visibility="public">
+        <devnotes>
+           the total number of entries
+        </devnotes>
+      </field>
+      <field name="Entry" type=".01" visibility="public">
+        <devnotes>
+           the resulting file entries, ready to be written as a .zip catalog
+        </devnotes>
+      </field>
+      <constructor name="Create" visibility="public">
+        <devnotes>
+           initialize the .zip file
+        </devnotes>
+        <parameters>
+          <parameter name="aFileName" type="TFileName" paramflags="const" />
+        </parameters>
+      </constructor>
+      <constructor name="CreateFrom" visibility="public">
+        <devnotes>
+           initialize an existing .zip file in order to add some content to it
+        </devnotes>
+        <parameters>
+          <parameter name="aFileName" type="TFileName" paramflags="const" />
+        </parameters>
+      </constructor>
+      <procedure name="AddDeflated" visibility="public" procflags="overload">
+        <devnotes>
+           compress (using the deflate method) a memory buffer, and add it to the zip file
+        </devnotes>
+        <parameters>
+          <parameter name="aZipName" type="TFileName" paramflags="const" />
+          <parameter name="Buf" type="Pointer" />
+          <parameter name="Size" type="Integer" />
+          <parameter name="CompressLevel" type="Integer">
+            <value>
+              $6
+            </value>
+          </parameter>
+          <parameter name="FileAge" type="Integer">
+            <value>
+              $3C21
+            </value>
+          </parameter>
+        </parameters>
+      </procedure>
+      <procedure name="AddDeflated" visibility="public" procflags="overload">
+        <devnotes>
+           compress (using the deflate method) a file, and add it to the zip file
+        </devnotes>
+        <parameters>
+          <parameter name="aFileName" type="TFileName" paramflags="const" />
+          <parameter name="RemovePath" type="Boolean">
+            <value>
+              True
+            </value>
+          </parameter>
+          <parameter name="CompressLevel" type="Integer">
+            <value>
+              $6
+            </value>
+          </parameter>
+        </parameters>
+      </procedure>
+      <procedure name="AddStored" visibility="public">
+        <devnotes>
+           add a memory buffer to the zip file, without compression
+        </devnotes>
+        <parameters>
+          <parameter name="aZipName" type="TFileName" paramflags="const" />
+          <parameter name="Buf" type="Pointer" />
+          <parameter name="Size" type="Integer" />
+          <parameter name="FileAge" type="Integer">
+            <value>
+              $3C21
+            </value>
+          </parameter>
+        </parameters>
+      </procedure>
+      <procedure name="AddFromZip" visibility="public">
+        <devnotes>
+           add a file from an already compressed zip entry
+        </devnotes>
+        <parameters>
+          <parameter name="ZipEntry" type="TZipEntry" paramflags="const" />
+        </parameters>
+      </procedure>
+      <procedure name="Append" visibility="public">
+        <devnotes>
+           append a file content into the destination file
+        </devnotes>
+        <parameters>
+          <parameter name="Content" type="string" paramflags="const" />
+        </parameters>
+      </procedure>
+      <destructor name="Destroy" visibility="public">
+        <devnotes>
+           release associated memory, and close destination file
+        </devnotes>
+        <parameters>
+        </parameters>
+      </destructor>
+    </members>
+  </class>
+  <function name="EventArchiveZip" visibility="public">
+    <devnotes>
+       a TSynLogArchiveEvent handler which will compress older .log files
+    </devnotes>
+    <parameters>
+      <parameter name="aOldLogFileName" type="TFileName" paramflags="const" />
+      <parameter name="aDestinationPath" type="TFileName" paramflags="const" />
+      <retval type="Boolean" />
+    </parameters>
+  </function>
+  <function name="GZRead" visibility="public">
+    <parameters>
+      <parameter name="gz" type="PAnsiChar" />
+      <parameter name="gzLen" type="Integer" />
+      <retval type="string" />
+    </parameters>
+  </function>
+  <function name="inflateInit2_" visibility="public" callconv="stdcall">
+    <parameters>
+      <parameter name="strm" type="TZStream" paramflags="var" />
+      <parameter name="windowBits" type="Integer" />
+      <parameter name="version" type="PAnsiChar" />
+      <parameter name="stream_size" type="Integer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="inflate" visibility="public" callconv="stdcall">
+    <parameters>
+      <parameter name="strm" type="TZStream" paramflags="var" />
+      <parameter name="flush" type="Integer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="inflateEnd" visibility="public" callconv="stdcall">
+    <parameters>
+      <parameter name="strm" type="TZStream" paramflags="var" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="adler32" visibility="public">
+    <parameters>
+      <parameter name="adler" type="Cardinal" />
+      <parameter name="buf" type="PAnsiChar" />
+      <parameter name="len" type="Cardinal" />
+      <retval type="Cardinal" />
+    </parameters>
+  </function>
+  <function name="crc32" visibility="public">
+    <parameters>
+      <parameter name="crc" type="Cardinal" />
+      <parameter name="buf" type="PAnsiChar" />
+      <parameter name="len" type="Cardinal" />
+      <retval type="Cardinal" />
+    </parameters>
+  </function>
+  <function name="get_crc_table" visibility="public">
+    <parameters>
+      <retval type="Pointer" />
+    </parameters>
+  </function>
+  <function name="Check" visibility="public">
+    <devnotes>
+       low-level check of the code returned by the ZLib library
+    </devnotes>
+    <parameters>
+      <parameter name="Code" type="Integer" paramflags="const" />
+      <parameter name="ValidCodes" paramflags="const">
+        <array name="ValidCodes">
+          <element type="Integer" />
+        </array>
+      </parameter>
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="CompressString" visibility="public">
+    <devnotes>
+       compress some data, with a proprietary format (including CRC)
+    </devnotes>
+    <parameters>
+      <parameter name="data" type="string" paramflags="const" />
+      <parameter name="failIfGrow" type="Boolean">
+        <value>
+          False
+        </value>
+      </parameter>
+      <parameter name="CompressionLevel" type="Integer">
+        <value>
+          $6
+        </value>
+      </parameter>
+      <retval type="string" />
+    </parameters>
+  </function>
+  <function name="UncompressString" visibility="public">
+    <devnotes>
+       uncompress some data, with a proprietary format (including CRC)
+    </devnotes>
+    <parameters>
+      <parameter name="data" type="string" paramflags="const" />
+      <retval type="string" />
+    </parameters>
+  </function>
+  <function name="CompressMem" visibility="public">
+    <parameters>
+      <parameter name="src" type="Pointer" />
+      <parameter name="dst" type="Pointer" />
+      <parameter name="srcLen" type="Integer" />
+      <parameter name="dstLen" type="Integer" />
+      <parameter name="CompressionLevel" type="Integer">
+        <value>
+          $6
+        </value>
+      </parameter>
+      <parameter name="ZipFormat" type="Boolean">
+        <value>
+          False
+        </value>
+      </parameter>
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="CompressStream" visibility="public">
+    <devnotes>
+       ZLib DEFLATE compression from memory into a stream
+    </devnotes>
+    <parameters>
+      <parameter name="src" type="Pointer" />
+      <parameter name="srcLen" type="Integer" />
+      <parameter name="aStream" type="TStream" />
+      <parameter name="CompressionLevel" type="Integer">
+        <value>
+          $6
+        </value>
+      </parameter>
+      <parameter name="ZipFormat" type="Boolean">
+        <value>
+          False
+        </value>
+      </parameter>
+      <retval type="Cardinal" />
+    </parameters>
+  </function>
+  <function name="UnCompressMem" visibility="public">
+    <devnotes>
+       in-memory ZLib INFLATE decompression
+    </devnotes>
+    <parameters>
+      <parameter name="src" type="Pointer" />
+      <parameter name="dst" type="Pointer" />
+      <parameter name="srcLen" type="Integer" />
+      <parameter name="dstLen" type="Integer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="UnCompressStream" visibility="public">
+    <devnotes>
+       ZLib INFLATE decompression from memory into a stream
+    </devnotes>
+    <parameters>
+      <parameter name="src" type="Pointer" />
+      <parameter name="srcLen" type="Integer" />
+      <parameter name="aStream" type="TStream" />
+      <parameter name="checkCRC" type="PCardinal" />
+      <retval type="Cardinal" />
+    </parameters>
+  </function>
+  <function name="CompressGZip" visibility="public">
+    <devnotes>
+       (un)compress a data content using the gzip algorithm
+    </devnotes>
+    <parameters>
+      <parameter name="Data" type="string" paramflags="var" />
+      <parameter name="Compress" type="Boolean" />
+      <retval type="string" />
+    </parameters>
+  </function>
+  <function name="CompressDeflate" visibility="public">
+    <devnotes>
+       (un)compress a data content using the Deflate algorithm
+    </devnotes>
+    <parameters>
+      <parameter name="Data" type="string" paramflags="var" />
+      <parameter name="Compress" type="Boolean" />
+      <retval type="string" />
+    </parameters>
+  </function>
+  <function name="CompressZLib" visibility="public">
+    <devnotes>
+       (un)compress a data content using the zlib algorithm
+    </devnotes>
+    <parameters>
+      <parameter name="Data" type="string" paramflags="var" />
+      <parameter name="Compress" type="Boolean" />
+      <retval type="string" />
+    </parameters>
+  </function>
+  <function name="CRC32string" visibility="public">
+    <devnotes>
+       just hash aString with CRC32 algorithm
+    </devnotes>
+    <parameters>
+      <parameter name="aString" type="string" paramflags="const" />
+      <retval type="Cardinal" />
+    </parameters>
+  </function>
+  <function name="deflateInit2_" visibility="public">
+    <parameters>
+      <parameter name="strm" type="TZStream" paramflags="var" />
+      <parameter name="level" type="Integer" />
+      <parameter name="method" type="Integer" />
+      <parameter name="windowBits" type="Integer" />
+      <parameter name="memLevel" type="Integer" />
+      <parameter name="strategy" type="Integer" />
+      <parameter name="version" type="PAnsiChar" />
+      <parameter name="stream_size" type="Integer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="deflate" visibility="public">
+    <parameters>
+      <parameter name="strm" type="TZStream" paramflags="var" />
+      <parameter name="flush" type="Integer" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+  <function name="deflateEnd" visibility="public">
+    <parameters>
+      <parameter name="strm" type="TZStream" paramflags="var" />
+      <retval type="Integer" />
+    </parameters>
+  </function>
+</namespace>

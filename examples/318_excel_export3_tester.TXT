@@ -1,0 +1,321 @@
+PROGRAM Excel_maXcel_Export3;
+
+//http://regexpstudio.com/tregexpr/help/article_mrdecorator.html
+//First contribution 2004 and then EKON 16 2012! ex. 310 of maXbox, loc's= 184
+//selftest functions of cutils alias cfundamentutils, cfileutils, cdatetime, ctimers!
+//dynamic array paras & databuilder to excel
+
+//uses ComObj;
+
+const
+  xlWBATWorksheet = -4167;
+
+var 
+  S: AnsiString;
+  sA: TDateTime;
+  
+type TMSheet = array of array of string;
+  
+function RefToCell(ARow, ACol: Integer): string;
+begin
+  Result:= Chr(Ord('A')+ ACol-1)+IntToStr(ARow);
+end;
+
+
+function SaveAsExcelFile2(AGrid: TStringGrid; aSheetName, aFileName: string): Boolean;
+var
+  XLApp, Sheet: OLEVariant;
+  aData2: array of array of string;
+  i,j, k: Integer;
+begin
+  // Prep Data in 2 dimension dyn array
+  SetArrayLength(adata2,AGrid.rowCount+2)
+  for i:= 0 to AGrid.rowCount do
+    SetArrayLength(adata2[i],AGrid.colCount+2);
+  for i:= 0 to AGrid.ColCount - 1 do   //@temp layer
+    for j:= 0 to AGrid.RowCount - 1 do 
+      aData2[i+1][j+1]:= AGrid.Cells[i,j];
+  Result:= False;
+  XLApp:= CreateOLEObject('Excel.Application');
+  try
+    // Hide or show Excel
+    XLApp.Visible:= true;
+    // Add Workbook
+    XLApp.Workbooks.Add(xlWBatWorkSheet);
+    Sheet:= XLApp.Workbooks[1].WorkSheets[1];
+    Sheet.Name:= ASheetName;
+    // Fill up the sheet
+    //for i:= 0 to AGrid.ColCount do
+      //for j:= 0 to AGrid.RowCount do 
+        //XLApp.Cells[i+1,j+1]:= aData2[i][j];
+    // Save Excel Worksheet
+    try
+      j:= 1;
+      for i:= 1 to 200 do begin
+        if i mod 10 = 0 then inc(j);
+        XLApp.Cells[j,i mod 10+1]:= i;
+         //sleep(10)
+      end;  
+      xlApp.Cells[25,2].value:= 'Formula Test';
+      xlApp.Range['B25'].Font.Color:= clNavy;
+      xlApp.Range['B25'].Font.Size:= 18;
+      xlApp.Cells[26,2].Formula:= '=SUMME(B2:B20)';             //'=AVERAGE(B2:B20)';
+      xlApp.Cells[27,2].Formula:= '=SUMME(B2:B20)';             //'=AVERAGE(B2:B20)';
+      xlApp.Cells[28,2].FormulaLocal:= '=SUMME(B2:B20)';             //'=AVERAGE(B2:B20)';
+      
+      XLApp.Workbooks[1].SaveAs(AFileName);
+      Result:= True;
+    except
+      Msg('maXcel export error'); // Error ?
+    end;
+  finally // Quit Excel
+    if not VarIsEmpty(XLApp) then begin
+      XLApp.DisplayAlerts:= False;
+      XLApp.Quit;
+      XLAPP:= Unassigned;
+      Sheet:= Unassigned;
+    end;
+  end;
+end;
+
+
+function SaveAsExcelFileDirect(AGrid: TStringGrid; aSheetName, aFileName: string): Boolean;
+var
+  XLApp, Sheet: OLEVariant;
+  i, j: Integer;
+begin
+  Result:= False;
+  XLApp:= CreateOleObject('Excel.Application');
+  try
+    XLApp.Visible:= true;
+    // Add Workbook
+    XLApp.Workbooks.Add(xlWBatWorkSheet);
+    Sheet:= XLApp.Workbooks[1].WorkSheets[1];
+    Sheet.Name:= aSheetName;
+    for i:= 0 to AGrid.ColCount -1 do
+      for j:= 0 to AGrid.RowCount -1 do 
+        XLApp.Cells[i+2,j+1]:= AGrid.cells[i,j]; //direct fill
+    try  // Save
+      XLApp.Workbooks[1].SaveAs(aFileName);
+      Result:= True;
+    except
+      Msg('maxcel export error'); // Error ?
+    end;
+  finally   // Quit Excel
+    if not VarIsEmpty(XLApp) then begin
+      XLApp.DisplayAlerts:= False;
+      XLApp.Quit;
+      XLAPP:= Unassigned;
+      Sheet:= Unassigned;
+    end;
+  end;
+end;
+
+function SaveAsWordFile(AGrid: TStringGrid; aSheetName, aFileName: string): Boolean;
+var
+  XLApp, Sheet: OLEVariant;
+  i, j: Integer;
+begin
+  Result:= False;
+  XLApp:= CreateOleObject('Word.Application');
+  try
+    XLApp.Visible:= true;
+    // Add Workbook
+    XLApp.Documents.Add;  //(aFileName); documents.open
+    Sheet:= XLApp.Selection;
+    Sheet.Font.Size:= 30;
+    Sheet.TypeText('OLE Word maXtex Export');
+    sheet.TypeParagraph;
+    //for i:= 0 to AGrid.ColCount -1 do
+      //for j:= 0 to AGrid.RowCount -1 do 
+        //XLApp.Cells[i+2,j+1]:= AGrid.cells[i,j]; //direct fill
+    try  // Save
+      //XLApp.Documents.SaveAs(aFileName);
+      Result:= True;
+    except
+      Msg('maxtex export error'); // Error ?
+    end;
+  finally   // Quit Excel
+    if not VarIsEmpty(XLApp) then begin
+      XLApp.DisplayAlerts:= False;
+      XLApp.Quit;
+      XLAPP:= Unassigned;
+      Sheet:= Unassigned;
+    end;
+  end;
+end;
+
+
+procedure setArrayDataBuilder;
+var
+  mySt: TStringGrid;
+  k,t: integer;
+begin
+  mySt:= TStringGrid.Create(self)
+  with mySt do begin
+    rowcount:= 11;
+    colcount:= 11;
+    //DefaultColWidth:= 20;
+    //ColWidths[2]:= 10;
+    for k:= 1 to 40 do begin     //frame numbers
+      Cells[k ,0]:= inttoStr(k);
+      Cells[0,(k div 2)]:= inttoStr(k+1);   
+    end;  
+    for k:= 1 to ColCount - 1 do
+      for t:= 1 to RowCount - 1 do
+        Cells[k,t]:= intToStr(t*k);    //one to one
+    //test output to console   
+    for k:= 0 to ColCount - 1 do
+      for t:= 0 to RowCount - 1 do begin
+        write(Cells[k,t]+ #9);
+        if t= RowCount-1 then
+          writeln('');
+      end;  
+ 
+    if SaveAsExcelFile2(mySt, 'maxceltestmap',Exepath+'maxceltest2.xls')
+              then Msg('maxcel export success');
+    //if SaveAsExcelFileDirect(mySt, 'maxceltestmap',Exepath+'maxceltest3.xls')
+      //        then Msg('maxcel export success');
+    Free;
+  end; 
+end; 
+
+var aG: TGUID;
+  
+BEGIN  //Main
+//<Executable statements>
+  
+  ShowMessage(ReplaceRegExpr('World','Hi, TRex maXcel Tester World!', 'Earth',true));
+  
+  setArrayDataBuilder;
+  if SaveAsWordFile(NIL, '','maxtex.doc') then
+    Msg('maxtex export success');
+ 
+  //Test Case
+  ag:= ProgIDtoClassID('Excel.Application');
+  //function GUIDToString(const GUID: TGUID): string)
+  Writeln(GUIDToString(ag));
+  writeln(ClassIDToProgID(ag));
+
+  ag:= xProgIDtoClassID('Excel.Application');
+  //function GUIDToString(const GUID: TGUID): string)
+  Writeln(GUIDToString(ag));
+  writeln(xClassIDToProgID(ag));
+ //CL.AddDelphiFunction('Function StringToClassID( const S : string) : TCLSID');
+ //CL.AddDelphiFunction('Function ClassIDToString( const ClassID : TCLSID) : string');
+  StringToClassID('Excel.Application');
+  Writeln('StringToClass_andBack: '+ClassIDToString(StringToClassID('Excel.Application')));
+ 
+ 
+  //xProgIDToClassID
+  
+  //writeln(inttostr(stringToGuid('Excel.Application')));
+  // test routines with assert or assert2
+  SelftestPEM;
+  //SelfTestCFundamentUtils;
+  SelfTestCFileUtils;
+  SelfTestCDateTime;
+  SelfTestCTimer;
+  SelfTestCRandom;
+  
+  Writeln(' 6 Units Tested with success ')
+  ShowMessageBig(' 6 Units Tested with success!');
+           
+  Assert2(FilePath('C', '..\X\Y', 'A\B', '\') = 'A\X\Y\C', 'FilePath');
+  Assert2(PathCanonical('\A\B\..\C\D\..\..\..\..\', '\') = '\', 'PathCanonical');
+  Assert2(UnixPathToWinPath('/c/d.f') = '\c\d.f', 'UnixPathToWinPath');
+  Assert2(WinPathToUnixPath('\c\d.f') = '/c/d.f', 'WinPathToUnixPath');
+  sA:= EncodeDateTime(2001, 09, 02, 12, 11, 10, 0);
+  Assert2(Month(sA) = 9, 'EncodeDateTime');
+  S:= GMTTimeToRFC1123TimeA(sA, True);
+  Assert2(S = '12:11:10 GMT','GMT');
+  S:= GMTDateTimeToRFC1123DateTimeA(sA, True);
+  Assert2(S = 'Sun, 02 Sep 2001 12:11:10 GMT', 'GMTDateTimeToRFC1123DateTime');
+  Assert2(TickDeltaW($FFFFFFF6, 0) = 10,'TrickDelta');
+  Assert2(CPUClockFrequency > 0,'RTC Prepare');
+  Assert2(Length(RandomPassword(0, 0, True, True, True)) = 0,'random passwd');
+  Assert2(Length(RandomPassword(1, 1, True, True, True)) = 1,'random passwd');
+  CompareDateTime(DateOf(Now),DateOf(Now)+1)
+  printF('sin  test in RAD %.18f',[sin((3))]); 
+  printF('sinj test in RAD %.18f',[sinj((3))]); 
+  printF('sin  test in GRAD %.18f',[sin(gradtorad(60))]); 
+  printF('sinj test in GRAD %.18f',[sinj(gradtorad(60))]); 
+  printF('sin  test in DEG %.18f',[Sin(degtorad(60))]); 
+  printF('cos  test in DEG %.18f',[Cos(degtorad(60))]); 
+  //printF('cos  test in DEG %.18f',[Cos(degtorad(60))]); 
+  //sin(60)=0.866 --> arcsin(0.866)=59,99999999 
+  printF('ARCSIN test in DEG %.18f',[radtodeg(arcsin(Sin(degtorad(60))))]); 
+  printF('ARCSIN test in DEG %.18f',[radtodeg(arcsin(Sinj(degtorad(60))))]); 
+  printF('ARCSIN test in DEG %.18f',[radtodeg(stinvSin(Sinj(degtorad(60))))]); 
+  //CL.AddDelphiFunction('Function StInvSin( Y : Double) : Double');
+  printF('ARCCOS test in DEG %.18f',[radtodeg(arccos(Cos(degtorad(60))))]); 
+  Writeln(createClassID);
+  writeln(intToStr(bytes1kb))
+//<Definitions>  
+
+
+END. 
+
+
+{--------------------------------------------------------------}
+
+  SingleCompareDelta   = 1.0E-34;
+  DoubleCompareDelta   = 1.0E-280;
+  {$IFDEF CLR}
+  ExtendedCompareDelta = DoubleCompareDelta;
+  {$ELSE}
+  ExtendedCompareDelta = 1.0E-4400;
+  {$ENDIF}   
+
+  // Default CompareDelta is set to SingleCompareDelta. This allows any type
+  // of floating-point value to be compared with any other.
+  // DefaultCompareDelta = SingleCompareDelta;
+
+
+const
+  Bytes1KB  = 1024;
+  Bytes1MB  = 1024 * Bytes1KB;
+  Bytes1GB  = 1024 * Bytes1MB;
+  Bytes64KB = 64 * Bytes1KB;
+  Bytes64MB = 64 * Bytes1MB;
+  Bytes2GB  = 2 * LongWord(Bytes1GB);
+  
+ 
+ Sachstruktur 
+  
+  Für den Kreisumfang eines Kreises gilt folgendes Gesetz: U= r^2 * PI
+  
+ Diesem Gesetz kommt sachlich folgende Bedeutung zu:
+-
+Der Zusammenhang hat den Status einer bekannten Formel die bei einem Einheitskreis von R=1 zugleich die Fläche darstellt.
+Deshalb kann man bei einem Eiheitskreis auch von einer Flächenzahl sprechen, da die Fläche des Kreises dann gleich PI ist.
+
+-
+
+-
+Das Gesetz ist die Grundlage für die Widerstandsberechnung metallischer Leiter.
+-
+Das Gesetz ist die physikalische Grundlage für elektrotechnische Anwendungen.
+-
+Das Gesetz lä
+sst sich in eine umfassende Theorie des el. Widerstandes einbetten.
+-
+Es besteht ein Zusammenhang zwischen dem spez. Widerstand und der Driftgeschwindigkeit der Elek
+t-
+ronen (
+E
+lektronengasmodell)
+Bei diesem Beispiel handelt es sich um einen sehr eingeschränkte
+n Inhaltsbereich und gleichzeitig um eine
+äußerst kompakte,
+konzentrierte Darstellung.
+In den meisten Fällen dürfte die Sachanalyse im Rahmen e
+i-
+nes Portfolios umfangreicher ausfall
+
+Unter folgendem URL finden Sie weitere Erläuterungen:
+
+
+
+
+----app_template_loaded_code----

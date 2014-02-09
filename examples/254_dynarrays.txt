@@ -1,0 +1,273 @@
+{***************************************************************
+ *
+ * Project  : Dynarray by Object Pascal 
+ * App Name : 254_dynarrays.txt loc's = 244 
+ * Purpose  : Demonstrates functions of dynarrays and runtime lib
+ * Date     : 31/08/2011  -  14:56
+ * History  : getHostbyName, HINSTANCE, TPrinter, TMediaPlayer
+ *          : TClipboard, TStatusBar, Ressources, Registry Read 
+ *          : System demo for mX3.5 and EKON 15 and Delphi Tage 2011 
+ ****************************************************************}
+
+Program DynArrays;
+{BOOL WINAPI MessageBeep(
+  __in  UINT uType
+);}
+
+// for DLL Load Demo
+function  MessageBeep(para: integer): byte;
+  external 'MessageBeep@user32.dll stdcall';  
+  
+var
+  StringGrid1: TStringGrid;
+  mytimestamp: TDateTime;
+  osType: TIdWin32Type;
+  pathstr: TStrings;
+  //UpDown3: TUpDown;
+
+
+function GetTextFromFile(AFile: String; var ReturnString: string): boolean;
+var
+  FileStream: TFileStream;
+begin
+  result:= false;
+  if not fileExists(AFile) then Exit;
+  FileStream:= TFileStream.Create(AFile, fmOpenRead);
+  try
+    if FileStream.Size > 0 then begin
+      SetLength(ReturnString, FileStream.Size);
+      FileStream.Read(ReturnString, FileStream.Size);
+      result:= true;
+    end;
+  finally
+    FileStream.Free;
+  end; //try
+end;
+
+
+function getBitMap: TBitmap;
+begin
+  result:= TBitmap.Create; 
+  result.LoadFromFile(ExePath+'examples/citymax.bmp');
+  //result.Free;
+end;  
+
+
+procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
+                                      Rect: TRect; State: TGridDrawState);
+begin
+if ARow = 1 then
+  StringGrid1.Canvas.Draw(Rect.Left,Rect.Top, getBitmap);
+  getBitmap.Free;
+end;
+
+procedure BuildFormMenu;
+var frmMon: TForm;
+    myButton: TSpeedButton;
+    mylistbox: TListbox;
+    i: integer;
+begin  
+  frmMon:= TForm.Create(self);
+  with frmMon do begin
+    //FormStyle := fsStayOnTop;
+    Position := poScreenCenter;
+    caption:='Best of Runtime Functions';
+    color:= clred;
+    width:= 650;
+    height:= 600;
+    Show
+  end;
+  
+  stringGrid1:= TStringGrid.Create(frmMon);
+  with stringGrid1 do begin
+    Parent:= frmMon;
+    defaultcolwidth:= 154;
+    defaultrowheight:= 154;
+    height:= 360;
+    width:= 360;   
+    colcount:= 2;  //buggg solved!!!
+    rowcount:= 2;
+    top:= 20;
+    GridLineWidth:= 8;
+    Scrollbars:= false;
+    onDrawCell:= @StringGrid1DrawCell;  
+  end;
+  
+  myListbox:= TListbox.create(frmMon);
+    with myListbox do begin
+      parent:= frmMon;
+      top:= 20;
+      left:= 450;
+      height:= 380;
+      font.size:= 18;
+      font.Style:= [fsbold];
+      for i:= 1 to 15 do
+        items.add(intToStr(i*i));
+      show
+    end;  
+
+  myButton:= TSpeedButton.Create(frmMon)
+  with myButton do begin
+    Parent:= frmMon;
+    setbounds(10,440,380,80);
+    caption:= 'Big Bit Button';
+    font.size:= 12;
+    font.Style:= [fsbold];
+    //glyph.loadfromfile(BITMAPPATH); 
+    //glyph.loadfromresourcename(getHINSTANCE,'HARD'); 
+    glyph.loadfromresourcename(getHINSTANCE,'OPENFOLDER'); 
+    //event handler
+    //onclick:= @btnClick;
+  end;
+end; 
+
+function d3Array: array of array of string;
+var
+  A: array of array of string;
+  I,J : Integer;
+begin
+   SetLength(A, 10);
+   for I:= Low(A) to High(A) do begin
+     SetLength(A[I], I);
+     for J:= Low(A[I]) to High(A[I]) do begin
+       A[I][J]:= IntToStr(I) + ',' + IntToStr(J) + '  ';
+       Write(A[I][J]);
+     end; 
+  end;
+  result:= A;
+end;
+
+procedure BytesToString_02;  //Indy
+var mbytes: TBytes;
+    i, byteback: integer;
+begin
+  SetLength(mbytes, 32)
+  Writeln('');
+  for i:= 1 to 31 do begin
+    mbytes[i]:= Random(2)
+    write(inttostr(mbytes[i])+' ') //debug
+  end;
+  //bytestocardinal
+  Writeln('BytesToInteger_02:  '+IntToStr((BytesToInteger(mbytes,0))))
+  byteback:= BytesToInteger(mbytes,0) 
+  //Writeln('testback ' +InttoBin(byteback))                              
+end;
+
+function GetASCII_16: string;
+var i: integer;
+begin
+  for i:= 1 to 255 do
+    result:= result +#13#10+ Format('This Number: %4d is this ASCII %2s',[i, Chr(i)])
+end;
+
+
+var 
+  i,j: longword;
+  //b: boolean;
+  mystr, filename: string;
+  mycurr: currency;
+  my3darray: array of array of string;
+
+
+begin   //main app
+   //Signal_Sounds;
+   //if GetTextFromFile(ExePath+'firstdemo3.txt',rStr) then ShowMessage(rStr);
+   //0 = Current drive
+   
+   BuildFormMenu; //calls StringGrid1DrawCell and getBitMap
+   //Apploop_Tester;
+   //Memo2.Lines.Text:= GetURLByIndy('http://www.delphi-treff.de'); 
+   //IsAppAlive;
+   //PrintMap(getBitMap,'print of mX3.1')
+   //SearchAndOpenDoc(ExePath+'examples\boxprint2.xps');
+
+   Writeln('machine name is: '+getHostName)
+   Writeln('user name is: '+getUserName)
+   Writeln('proc id is: '+inttostr(currentProcessId))
+   Writeln('path of maXbox exe is: '+ExePath)
+   Writeln('Processor Numbers: '+intToStr(GetNumberOfProcessors))
+   Writeln('Page Size: '+intToStr(GetPageSize))
+   osType:= Win32Type;
+   writeln('OS type is: '+intToStr(ord(osType)));
+   mytimestamp:= GetFileCreationTime(exepath+'maxbox3.exe')
+   writeln(DateTimeToStr(mytimestamp)+' for maXbox3 file')
+   //ExecuteCommand('cmd','/k dir *.*')
+   //ShowMessage('Examples Date: '+FormatDateTime('dddd, d. mmmm yyyy, hh:mm:ss', dt));
+   //memo2.font.name:= 'Courier New';
+   Writeln('fibo 100: '+floatToStr(Fibo(100)))
+   //Say('This is maXbox 3.5') missing in runtime
+   
+   //Dyn Arrays.......................;
+   
+   my3darray:= d3Array;    //return test back
+     //SetLength(my3darray, 10);
+     Writeln('');     
+     Writeln('test: '+my3darray[1][0]);
+     for i:= 1 to High(my3darray) do
+       for j:= Low(my3darray[I]) to High(my3darray[I]) do begin
+         Write(my3darray[i][j]);
+       end;
+
+
+//**********************Next of Runtime ****************************************
+
+   Writeln('*****************Next of Runtime ******************');
+   Writeln('Internet Test with IP Address of: '
+                     +GetHostByName('www.softwareschule.ch'));
+   Writeln('SHA1 Hash of maXbox: '+SHA1(exepath+'maxbox3.exe'))
+   Writeln('Version from Exe: '+GetVersionString(ExePath+'maxbox3.exe'))
+   Writeln('Big Power of Big Int 123^100: '+PowerBig(123,100))
+   Writeln('Lotto Combinations 6 from 45: '+inttoStr(Combinationint(45,6)));
+   //Writeln(GetASCII); 
+   // Procedure OpenCdDrive');    //Jedi
+      //OpenCdDrive; 
+  // Procedure Split(Str: string;  SubStr: string; List: TStrings); //SplitString
+   Filename:= ExePath+'maxboxerrorlog.txt'
+   PathStr:= TStringList.Create;
+   try
+     Split(Filename, '\', PathStr);
+     PathStr[PathStr.count-1]:= 'end';
+     for i:= 1 to pathStr.count -1 do
+       writeln('Split: '+pathStr[i]);
+   finally
+     PathStr.Free;
+   end;
+  // Procedure Voice(const sText: string);
+    //Voice('Welcome to Cologne at Delphi Days')
+    //Procedure GetVisibleWindows(List : Tstrings)');
+    //New in RTL FUN: GotoXY(50,i+1);
+ 
+    Writeln('Last in the Box: '+DateTimeToInternetStr(now, true))
+    //Function LoadFileAsString( const FileName : string) : string');  //File Utils
+    //Procedure CreateFileFromString( const FileName, Data : string)');
+    //name all 3letter functions for fun: inc, mod, abs, log, max!
+End.   
+
+//---------------------------------------------------------------------------
+
+const
+  RTLVersion = 18.00;
+
+
+ 01_ABNFToText is a String function used to a string containing Augmented Backus-Naur Form syntax data and rules to its representation as plain text. Augmented Backus-Naur Form is described in the following Internet Standards document: 
+
+As an example, consider this possible BNF for a U.S. postal address:
+
+ <postal-address> ::= <name-part> <street-address> <zip-part>
+       <name-part> ::= <personal-part> <last-name> <opt-jr-part> <EOL> 
+                    | <personal-part> <name-part>
+   <personal-part> ::= <first-name> | <initial> "." 
+  <street-address> ::= <house-num> <street-name> <opt-apt-num> <EOL>
+        <zip-part> ::= <town-name> "," <state-code> <ZIP-code> <EOL>
+     <opt-jr-part> ::= "Sr." | "Jr." | <roman-numeral> | ""
+
+
+02_BytesToWord
+BytesToWord is a Word function used to convert the byte values in AValue to its representation as a Word data type. 
+BytesToString is a utility function used to convert the TIdBytes value in AValue to a String data type. 
+AStartIndex indicates the initial byte position in ABytes to use for the conversion. AStartIndex is a zero-based offset into the array of bytes. 
+AMaxCount indicates the maximum number of bytes for the conversion. 
+
+
+ 
+    

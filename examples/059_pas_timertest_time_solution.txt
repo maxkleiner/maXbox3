@@ -1,0 +1,90 @@
+program TimerEvent_Time;
+
+// timerevent with time dialog synchronisation or event triggering, loc's=69
+// when messagebox is to early the break condition never arrives _59
+
+const
+  ext = 'txt';
+ 
+var mytimer: TTimer;
+    counter: byte;
+    glob_counter: integer;
+    AT: boolean;
+
+procedure mySearch;
+//var search: TSearchRec;
+var mylist: tstringlist;
+begin
+  mylist:= TStringlist.create;
+  if findfirst('*.'+ext, faAnyFile) = 0 then begin
+    repeat
+      mylist.add(searchRecName)
+    until
+       (findnext <> 0)  
+    findClose;  
+    writeln('files found')
+    writeln('first file is: '+searchrecname 
+                                     +' '+inttoStr(searchrecsize)+' Bytes');
+  end else
+    writeln('not found');
+  mylist.savetoFile('alltxt_files.txt');
+  mylist.free;
+end;
+
+procedure endless;
+begin
+  repeat 
+    inc(glob_counter)
+    application.processmessages;
+  until AT = false;
+end;  
+
+procedure timer1Click(Sender: TObject);
+begin
+  incb(counter)
+  //showmessage('this is '+inttostr(counter)+' time') //never get
+  if counter >= 5 then begin
+    mytimer.enabled:= false;
+    mytimer.Free;
+    AT:= false;
+  end;
+  showmessage('this is '+inttostr(counter)+' time: ' 
+                 +timetostr(time) + ' glob: '+inttostr(glob_counter))
+end;  
+
+//main script
+begin
+  AT:= true;
+  glob_counter:= 1;
+  mytimer:= TTimer.create(self);
+  mytimer.ontimer:= @timer1Click;
+  mytimer.interval:= 1000;
+  counter:= 0;
+  mysearch;
+  endless;
+  beep;
+  showmessage(datetostr(date))
+  //orthogonal and idempotent
+end.
+
+
+Purpose
+{Use the Timer component to trigger an event, either one time or repeatedly, after a measured interval. Write the code that you want to occur at the specified time inside the timer component's OnTimer event. 
+
+Tasks
+To specify the amount of elapsed time before the timer event is triggered, use the Interval property. 
+To discontinue a timed event, set the timer component's Enabled property to False.
+TTimer encapsulates the Windows API timer functions.
+Unit
+
+ExtCtrls
+
+Description
+
+TTimer is used to simplify calling the Windows API timer functions SetTimer and KillTimer, and to simplify processing the WM_TIMER messages. Use one timer component for each timer in the application.
+
+The execution of the timer occurs through its OnTimer event. TTimer has an Interval property that determines how often the timer’s OnTimer event occurs. Interval corresponds to the parameter for the Windows API SetTimer function.
+
+Caution:Limitations on the total number of timers system-wide are system dependent.
+}
+	

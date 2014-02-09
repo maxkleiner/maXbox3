@@ -1,0 +1,1146 @@
+Program IB_Database_Implements;
+
+//#sign max: APSN21: 16.12.2013 17:19:06 
+//#path:E:\maxbox\maxbox3\examples\
+//TODO: Save the QRCode to webserver_file, #locs:378
+//http://theroadtodelphi.wordpress.com/2010/12/06/generating-qr-codes-with-delphi/
+                               
+Const
+   
+   UrlGoogleQrCode='http://chart.apis.google.com/chart?chs=%dx%d&cht=qr&chld=%s&chl=%s';
+   AFILENAME= 'mX3ScholzCode3.png';
+   //QDATA= 'this is maXland on a maXbox stream dream firebox';
+   QDATA= 'http://scholz2000.com/ ';
+   DB_NAME = 'UMLBANK12.GDB'; //'UMLBANK4.GDB'; is empty
+  
+
+{The API requires 3 simple fields be posted to it:
+cht=qr this tells Google to create a QR code;
+chld=M the error correction level of the QR code (see here for more info);
+chs=wxh the width and height of the image to return (eg chs=250x250);
+chl=text the URL encoded text to be inserted into the barcode.}
+
+type
+  TQrImage_ErrCorrLevel=(L,M,Q,H);
+
+var ibtimer: TIBTimer;  
+  
+  //uses IBXConst, IB;
+
+function iMax(n1, n2: Integer): Integer;
+begin
+  if (n1 > n2) then
+    result := n1
+  else
+    result := n2;
+end;
+
+function iMin(n1, n2: Integer): Integer;
+begin
+  if (n1 < n2) then
+    result := n1
+  else
+    result := n2;
+end;
+
+
+function iRandomInteger(iLow, iHigh: Integer): Integer;
+begin
+  result := Random(iHigh - iLow) + iLow;
+end;
+
+function iRandomString(iLength: Integer): String;
+begin
+  result := '';
+  while Length(result) < iLength do
+    result := result + IntToStr(iRandomInteger(0, High(iLength)));
+  if Length(result) > iLength then
+    result := Copy(result, 1, iLength);
+end;
+
+
+function iStripString(st: String; CharsToStrip: String): String;
+var
+  i: Integer;
+begin
+  result := '';
+  for i := 1 to Length(st) do begin
+    if AnsiPos(st[i], CharsToStrip) = 0 then
+      result := result + st[i];
+  end;
+end;
+
+function iFormatIdentifier(Dialect: Integer; Value: String): String;
+begin
+  Value := Trim(Value);
+  if Dialect = 1 then
+    Value := AnsiUpperCase(Value)
+  else
+    if (Value <> '') and (Value[1] = '"') then
+      Value := '"' + StringReplace (TrimRight(Value), '"', '""', [rfReplaceAll]) + '"'
+    else
+      Value := AnsiUpperCase(Value);
+  Result := Value;
+end;
+
+function iFormatIdentifierValue(Dialect: Integer; Value: String): String;
+begin
+  Value := Trim(Value);
+  if Dialect = 1 then
+    Value := AnsiUpperCase(Value)  
+  else begin
+    if (Value <> '') and (Value[1] = '"') then begin
+      Delete(Value, 1, 1);
+      Delete(Value, Length(Value), 1);
+      Value := StringReplace (Value, '""', '"', [rfReplaceAll]);
+    end
+    else
+      Value:= AnsiUpperCase(Value);
+  end;
+  Result := Value;
+end;
+
+function iExtractIdentifier(Dialect: Integer; Value: String): String;
+begin
+  Value := Trim(Value);
+  if Dialect = 1 then
+    Value := AnsiUpperCase(Value)
+  else begin
+    if (Value <> '') and (Value[1] = '"') then begin
+      Delete(Value, 1, 1);
+      Delete(Value, Length(Value), 1);
+      Value := StringReplace (Value, '""', '"', [rfReplaceAll]);
+    end
+    else
+      Value := AnsiUpperCase(Value);
+  end;
+  Result := Value;
+end;
+
+function iQuoteIdentifier(Dialect: Integer; Value: String): String;
+begin
+  if Dialect = 1 then
+    Value:= AnsiUpperCase(Trim(Value))
+  else
+    Value:= '"' + StringReplace (Value, '"', '""', [rfReplaceAll]) + '"';
+  Result:= Value;
+end;
+
+const
+  iSWhere = ' where ';     { do not localize }
+  iSAnd = ' and ';         { do not localize }
+
+//function AddIBParamSQLForDetail(Params: TParams; SQL: string;
+  //                                       Native: Boolean; Dialect : Integer): string;
+
+function iGenerateParamSQL(Params: TParams; Native: Boolean; Dialect : Integer): string;   
+ var I: Integer;
+  begin
+    for I := 0 to Params.Count -1 do begin
+      if I > 0 then Result := Result + SAnd;
+      if Native then
+       Result:= Result + format('%s = ?', [iQuoteIdentifier(Dialect, Params[I].Name)])
+         {do not localize}
+      else
+       Result:= Result+ format('%0:s = :%0:s',[iQuoteIdentifier(Dialect,Params[I].Name)]); {do not localize}
+    end;
+    if pos(SWhere, LowerCase(Result)) > 0 then
+      Result := SAnd + Result
+    else
+      Result := SWhere + Result;
+  end;
+
+  function AddWhereClause(Params: TParams; Native: Boolean; Dialect : Integer;
+                                           SQL: string): string;
+  var
+    Start: PChar;
+    Rest, FName: string;
+    SQLToken, CurSection: TSQLToken;
+    aps: TSearchEvent; //TFormatOptions; Tsortdirection;//TSortstyle; TPrintmode;
+  begin
+    Start := PChar(SQL);
+    CurSection := stUnknown;
+    repeat
+      SQLToken := NextSQLToken(Start, FName, CurSection);
+      //IsMultiTableQuery
+      //GetTableNameFromSQL
+      //GetFieldInfo
+      //SQLRequiresParams
+      //compare
+    until SQLToken in [stFrom, stEnd];
+    if SQLToken = stFrom then
+      NextSQLToken(Start, FName, CurSection);
+    Rest := string(Start);
+    if Rest = '' then
+      Result := SQL + ' ' + iGenerateParamSQL(Params, native, dialect)
+    else
+      Result := Copy(SQL, 1, pos(Rest, SQL))
+                 + ' ' + iGenerateParamSQL(Params, native, dialect) + Rest;
+  end;
+  
+// Firebird
+procedure firebirdTDataModule1_DataModuleCreate(Sender: TObject);
+var
+  conexao, SQLConnection1 : TSQLConnection;
+begin
+   with SQLConnection1 do begin
+        ConnectionName := 'SKY';
+        DriverName := 'Interbase';
+        LibraryName := 'dbexpint.dll';
+        VendorLib := 'gds32.dll';
+        GetDriverFunc := 'getSQLDriverINTERBASE';
+        LoadParamsOnConnect := true;
+        LoginPrompt := False;
+        Params.Add('Database='+ExtractFilePath(Application.ExeName)+'\Banco\FLY_SKY_DESK.FDB');
+        Params.Add('User_Name=SYSDBA');
+        params.Add('Password=masterkey');
+        Params.Add('SQLDialect=3');
+        Open;
+    end;
+     SQLConnection1.Connected:=true;
+end; 
+
+
+function iAddIBParamSQLForDetail(Params: TParams; Native: Boolean;
+                                 Dialect : Integer; SQL: string): string;
+begin
+  Result := SQL;
+  if (Params.Count > 0) then
+    Result := AddWhereClause(Params, native, dialect, SQL);
+end;
+
+procedure DecomposeDatabaseName(DatabaseName : String;
+  var ServerName, Protocol, DatabasePath : String);
+var
+  Idx1, Idx2: Integer;
+  st: string;
+begin
+  if Pos('\\', DatabaseName) <> 0 then {do not localize}
+  begin
+    Protocol := 'NamedPipe';
+    st := copy(DatabaseName, 3, Length(DatabaseName));
+    Idx1 := Pos('\', st); {do not localize}
+    if Idx1 = 0 then
+      IBError(ibxeUnknownError, [])
+    else begin
+      ServerName := Copy(st, 1, Idx1 - 1);
+      DatabasePath := Copy(st, Idx1 + 1, Length(st));
+    end;
+  end
+  else begin
+    Idx1 := Pos(':', DatabaseName ); {do not localize}
+    If (Idx1 = 0) or (Idx1 = 2) then begin
+      DatabasePath := DatabaseName;
+      ServerName := '';
+      Protocol := 'Local';
+    end
+    else begin
+      Idx2 := Pos('@', DatabaseName); {do not localize}
+      if Idx2 = 0 then begin
+        Protocol := 'TCP';
+        ServerName := copy(DatabaseName, 1, Idx1 - 1);
+        DatabasePath := copy(DatabaseName, Idx1 + 1, Length(DatabaseName));
+      end
+      else begin
+        Protocol := 'SPX';
+        ServerName := copy(DatabaseName, 1, Idx2 - 1);
+        DatabasePath := copy(DatabaseName, Idx2 + 1, Length(DatabaseName));
+      end;
+    end;
+  end;
+end;
+
+
+var Database1: TIBDATABASE;
+ transact: TIBTRANSACTION;
+
+procedure TBusObj_loadMasterBase;
+//var transact: TIBTRANSACTION;
+begin
+  //with dataModule1 do begin
+//Connect 'machine1:c:\..\maXbox3\examples\UMLBank12.gdb' user:'SYSDBA' password:'masterkey' )
+  transact:= TIBTRANSACTION.create(self);
+    try
+        Database1:= TIBDATABASE.Create(self);
+      with Database1 do begin
+        Connected:= false;
+        LoginPrompt:=false;
+        //AliasName:= DB_ALIAS;
+        defaulttransaction:= transact;
+        DatabaseName:= Exepath+'\examples\'+DB_NAME;
+        //Params.Add('Database='+Exepath+'\examples\'+DB_NAME);
+        Params.Add('User_Name=SYSDBA');
+        params.Add('Password=masterkey');
+        //Params.Add('SQLDialect=2');
+        //connected:= true;
+        Open;
+        //DatabaseName:= Exepath+'\examples\'+DB_NAME;
+        //defaulttransaction:= transact;
+        //connected:= true;
+        
+        //keepConnection:= true;
+      end;
+      {tblCust.active:= true;
+      dSrcCust.dataSet:= tblCust;
+      tblAcctype.active:= true;
+      dSrcAccType.dataSet:= tblAcctype;
+      tblAccount.active:= true;
+      dSrcAccount.dataSet:= tblAccount;}
+    except
+      //on EDataBaseError do
+       //raise EDatabaseError.Create;
+       raiselastException;
+       raise EDatabaseError.Create;
+      
+       //('frmTrans.strLit[19]');
+    end;
+    //Database1.close;
+    //Database1.Free;
+    //transact.Free;
+   
+  //end;
+ end;
+ 
+ function TBusObj_getAllVermoegen(custNo: integer): double;
+ var seekStr: string;
+      q_summe: TIBQuery;
+      //atxt: TTxtFile;
+ begin
+ 
+ //SELECT AMOUNT FROM ACCOUNT WHERE CUST_NO ='1001' AND ACC_TYPE='4';
+ seekStr:='';
+ //seekStr:='SELECT SUM(amount) as TOTAL FROM ACCOUNT ' +
+   //              'WHERE CUST_NO =:NUMB ';
+ //seekStr:='SELECT AMOUNT FROM ACCOUNT ' +
+   //               'WHERE CUST_NO =:NUMB AND ACC_TYPE=''4''';
+ 
+ seekStr:= 'SELECT AMOUNT FROM ACCOUNT WHERE CUST_NO =''1001'' AND ACC_TYPE=''4''';
+ //seekStr:= 'SELECT AMOUNT FROM ACCOUNT WHERE CUST_NO=1001 AND ACC_TYPE=4';
+ //seekStr:= 'SELECT count(*) as CNT FROM ACCOUNT';
+ //seekStr:= 'SELECT count(*) AS CNT FROM ACCOUNT';
+ 
+  q_summe:= TIBQuery.create(self);
+  with q_summe do begin
+    try
+      close;
+      Database:= Database1;
+      //DataSource:= Database1.Dataset;
+      SQL.Clear;
+      SQL.Add(seekStr);
+      //paramByName('NUMB').value:= IntToStr(custNo);
+      Writeln(inttoStr(RowsAffected));
+      open;
+      Writeln(inttoStr(RowsAffected));
+    except
+     //on EDatabaseError do
+      showmessage('frmTrans.strLit[42] exception');
+    end;
+   //result:= fieldByName('TOTAL').asFloat;
+   result:= fieldByName('AMOUNT').asFloat;
+   //result:= fieldByName('CNT').asFloat;
+
+  end;
+  q_summe.Free;
+ end;
+
+
+//http://www.softwaredesign.co.uk/DelphiToInterbase.htm#SQL:Concepts
+//TODO:#1 Returns the QR Code direct of the last modification of the given File
+
+begin
+  Writeln(datetimetostr(FileTimeGMT(exepath+'maxbox3.exe')));
+   
+  //GetQrCodeTest(150,150,'Q', 'this is maXland on the maXbox');
+  //call of the script
+  //GetQrCodeInet(150,150,'Q',ExePath+'mX3QRCode2.png','this is maXland on maXbox');
+ 
+  //call of the Lib
+  //GetQrCode2(150,150,'Q',QDATA, ExePath+AFILENAME);
+  
+  maxCalcF('SQRT(4296)');
+  TBusObj_loadMasterBase;
+  writeln(floatToStr(TBusObj_getAllVermoegen(1001)));
+  transact.Free;
+  Database1.close;
+  Database1.Free;
+  
+ //RandomString( iLength : Integer) : String');
+ //RandomInt( iLow, iHigh : Integer) : Integer');
+ //StripString( st : String; CharsToStrip : String) : String');
+ //FormatIdentifier( Dialect : Integer; Value : String) : String');
+ //FormatIdentifierValue( Dialect : Integer; Value : String) : String');
+ //ExtractIdentifier( Dialect : Integer; Value : String) : String');
+ //QuoteIdentifier( Dialect : Integer; Value : String) : String');
+ //AddIBParamSQLForDetail( Params : TParams; SQL : string; Native : Boolean; Dialect : Integer) : string');
+ //DecomposeDatabaseName(DatabaseName: String; var ServerName,Protocol,DatabasePath : String)');
+
+   
+End.
+
+
+DB Design UMLBank.GDB
+--------------------------------
+/*  Table ACCOUNT  */
+CREATE TABLE ACCOUNT (
+  ACC_NO INTEGER NOT NULL,
+  CUST_NO INTEGER,
+  ACC_TYPE SMALLINT,
+  AMOUNT NUMERIC(15, 2),
+  LIMIT AMOUNT,
+  FEE AMOUNT,
+  MUTDATE TIMESTAMP
+)
+---
+
+/*  Table ACCTYPE  */
+CREATE TABLE ACCTYPE (
+  ACC_ID SMALLINT NOT NULL,
+  DESCRIPT VARCHAR(50),
+  MUTDATE TIMESTAMP
+)
+---
+
+/*  Table CUSTOMER  */
+CREATE TABLE CUSTOMER (
+  CUST_NO CUSTNO NOT NULL,
+  CUSTOMER VARCHAR(25) NOT NULL,
+  CONTACT_FIRST FIRSTNAME,
+  CONTACT_LAST LASTNAME,
+  PHONE_NO PHONENUMBER,
+  ADDRESS_LINE1 ADDRESSLINE,
+  ADDRESS_LINE2 ADDRESSLINE,
+  CITY VARCHAR(25),
+  COUNTRY VARCHAR(15),
+  POSTAL_CODE VARCHAR(12),
+  ON_HOLD CHAR(1) DEFAULT NULL,
+  MUTDATE TIMESTAMP
+)
+---
+
+/*  Table KINGS  */
+CREATE TABLE KINGS (
+  KINGS_ID INTEGER NOT NULL,
+  EMAIL VARCHAR(40),
+  FIRSTNAME VARCHAR(30),
+  LASTNAME VARCHAR(30),
+  MUTDATE VARCHAR(18)
+)
+---
+
+/*  Table TRANS  */
+CREATE TABLE TRANS (
+  TRANS_ID INTEGER NOT NULL,
+  ACC_NO INTEGER NOT NULL,
+  TRANSAMOUNT INTEGER,
+  OPENDATE TIMESTAMP,
+  OPENPERSON LASTNAME,
+  MUTDATE TIMESTAMP,
+  MUTPERSON LASTNAME
+)
+---
+
+/*  Table TRANS1  */
+CREATE TABLE TRANS1 (
+  TRANS_ID INTEGER NOT NULL,
+  ACC_NO INTEGER NOT NULL,
+  TRANSAMOUNT NUMERIC(15, 2),
+  OPENDATE TIMESTAMP,
+  OPENPERSON LASTNAME,
+  MUTDATE TIMESTAMP,
+  MUTPERSON LASTNAME
+)
+
+
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TIBDATABASE(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TCUSTOMCONNECTION', 'TIBDATABASE') do
+  with CL.AddClassN(CL.FindClass('TCUSTOMCONNECTION'),'TIBDATABASE') do begin
+    RegisterMethod('Constructor Create(AOwner: TComponent)');
+    RegisterMethod('Procedure Free');
+    RegisterMethod('Procedure ADDEVENTNOTIFIER( NOTIFIER : IIBEVENTNOTIFIER)');
+    RegisterMethod('Procedure REMOVEEVENTNOTIFIER( NOTIFIER : IIBEVENTNOTIFIER)');
+    RegisterMethod('Procedure APPLYUPDATES( const DATASETS : array of TDATASET)');
+    RegisterMethod('Procedure CLOSEDATASETS');
+    RegisterMethod('Procedure CHECKACTIVE');
+    RegisterMethod('Procedure CHECKINACTIVE');
+    RegisterMethod('Procedure CREATEDATABASE');
+    RegisterMethod('Procedure DROPDATABASE');
+    RegisterMethod('Procedure FORCECLOSE');
+    RegisterMethod('Procedure GETFIELDNAMES( const TABLENAME : STRING; LIST : TSTRINGS)');
+    RegisterMethod('Procedure GETTABLENAMES( LIST : TSTRINGS; SYSTEMTABLES : BOOLEAN)');
+    RegisterMethod('Function INDEXOFDBCONST( ST : STRING) : INTEGER');
+    RegisterMethod('Function TESTCONNECTED : BOOLEAN');
+    RegisterMethod('Procedure CHECKDATABASENAME');
+    RegisterMethod('Function CALL(ERRCODE:ISC_STATUS; RAISEERROR: BOOLEAN) : ISC_STATUS');
+    RegisterMethod('Function ADDTRANSACTION( TR : TIBTRANSACTION) : INTEGER');
+    RegisterMethod('Function FINDTRANSACTION( TR : TIBTRANSACTION) : INTEGER');
+    RegisterMethod('Function FINDDEFAULTTRANSACTION( ) : TIBTRANSACTION');
+    RegisterMethod('Procedure REMOVETRANSACTION( IDX : INTEGER)');
+    RegisterMethod('Procedure REMOVETRANSACTIONS');
+    RegisterMethod('Procedure SETHANDLE( VALUE : TISC_DB_HANDLE)');
+    RegisterMethod('procedure Open');
+    RegisterMethod('procedure Close');
+    RegisterProperty('Connected','BOOLEAN',iptrw);
+    RegisterProperty('HANDLE', 'TISC_DB_HANDLE', iptr);
+    RegisterProperty('ISREADONLY', 'BOOLEAN', iptr);
+    RegisterProperty('DBPARAMBYDPB', 'STRING INTEGER', iptrw);
+    RegisterProperty('SQLOBJECTCOUNT', 'INTEGER', iptr);
+    RegisterProperty('SQLOBJECTS', 'TIBBASE INTEGER', iptr);
+    RegisterProperty('HANDLEISSHARED', 'BOOLEAN', iptr);
+    RegisterProperty('TRANSACTIONCOUNT', 'INTEGER', iptr);
+    RegisterProperty('TRANSACTIONS', 'TIBTRANSACTION INTEGER', iptr);
+    RegisterProperty('INTERNALTRANSACTION', 'TIBTRANSACTION', iptr);
+    RegisterMethod('Function HAS_DEFAULT_VALUE( RELATION, FIELD : STRING) : BOOLEAN');
+    RegisterMethod('Function HAS_COMPUTED_BLR( RELATION, FIELD : STRING) : BOOLEAN');
+    RegisterMethod('Procedure FLUSHSCHEMA');
+    RegisterProperty('DATABASENAME', 'TIBFILENAME', iptrw);
+    RegisterProperty('PARAMS', 'TSTRINGS', iptrw);
+    RegisterProperty('DEFAULTTRANSACTION', 'TIBTRANSACTION', iptrw);
+    RegisterProperty('IDLETIMER', 'INTEGER', iptrw);
+    RegisterProperty('SQLDIALECT', 'INTEGER', iptrw);
+    RegisterProperty('DBSQLDIALECT', 'INTEGER', iptr);
+    RegisterProperty('TRACEFLAGS', 'TTRACEFLAGS', iptrw);
+    RegisterProperty('ALLOWSTREAMEDCONNECTED', 'BOOLEAN', iptrw);
+    RegisterProperty('ONLOGIN', 'TIBDATABASELOGINEVENT', iptrw);
+    RegisterProperty('ONIDLETIMER', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONDIALECTDOWNGRADEWARNING', 'TNOTIFYEVENT', iptrw);
+  end;
+end;
+
+  
+
+
+(* === compile-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TIBQuery(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TIBCustomDataSet', 'TIBQuery') do
+  with CL.AddClassN(CL.FindClass('TIBCustomDataSet'),'TIBQuery') do begin
+    RegisterMethod('Constructor Create(AOwner: TComponent)');
+    RegisterMethod('Procedure Free');
+    RegisterMethod('Procedure BatchInput( InputObject : TIBBatchInput)');
+    RegisterMethod('Procedure BatchOutput( OutputObject : TIBBatchOutput)');
+    RegisterMethod('Procedure ExecSQL');
+    RegisterMethod('Function ParamByName( const Value : string) : TParam');
+    RegisterMethod('Procedure Prepare');
+    RegisterMethod('Procedure UnPrepare');
+    RegisterProperty('Prepared', 'Boolean', iptrw);
+    RegisterProperty('ParamCount', 'Word', iptr);
+    RegisterProperty('StmtHandle', 'TISC_STMT_HANDLE', iptr);
+    RegisterProperty('Text', 'string', iptr);
+    RegisterProperty('RowsAffected', 'Integer', iptr);
+    RegisterProperty('GenerateParamNames', 'Boolean', iptrw);
+    RegisterProperty('DataSource', 'TDatasource', iptrw);
+    RegisterProperty('SQL', 'TStrings', iptrw);
+    RegisterProperty('Params', 'TParams', iptrw);
+  end;
+end;
+
+
+function TBusObj.getAllCustNo: TStringList;
+ begin
+   with dataModule1.dSrcCust do begin
+     dataSet.first;
+     while not dataSet.EOF do begin
+       custList.add(dataSet.fieldValues['CUST_NO']);
+       dataSet.next;
+     end;
+   end;
+  result:= custList;
+ end;
+
+
+function TBusObj.getAllVermoegen(custNo: integer): double;
+ begin
+ seekStr:='';
+ seekStr:='SELECT SUM(amount) as TOTAL FROM ACCOUNT ' +
+                  'WHERE CUST_NO =:NUMB ';
+  with dataModule1.q_summe do begin
+    try
+      close;
+      SQL.Clear;
+      SQL.Add(seekStr);
+      paramByName('NUMB').value:= IntToStr(custNo);
+      open;
+    except
+     on EDatabaseError do
+      showmessage(frmTrans.strLit[42]);
+    end;
+   result:= fieldByName('TOTAL').asFloat;
+  end;
+ end;
+
+
+procedure TBusObj.getSQLKonto(const custNo: longint;
+                                   const accTyp: byte);
+begin
+ seekStr:='';
+ seekStr:='SELECT * FROM CUSTOMER, ACCOUNT WHERE '+
+            'ACCOUNT.CUST_NO = CUSTOMER.CUST_NO '+
+            'AND CUSTOMER.CUST_NO = :NUMB '+
+            'AND ACCOUNT.ACC_TYPE = :ACC';
+  try
+   with dataModule1.q_data do begin
+     close;
+     SQL.Clear;
+     SQL.Add(seekStr);
+     paramByName('NUMB').value:= IntToStr(custNo);
+     paramByName('ACC').value:= IntToStr(accTyp);
+     requestLive:= false;
+     open;
+    //to get a join reqlive is false, save data reqlive is true
+     requestLive:= true;
+   end;
+  except
+    on EDatabaseError do begin
+      showmessage(frmTrans.strLit[41]);
+     end;
+    //dataModule1.q_data.free;
+  end;
+end;
+
+procedure TBusObj.setSQLKonto(const acc_No: longint);
+begin
+ seekStr:='';
+ seekStr:='SELECT * FROM ACCOUNT WHERE ACC_NO = :NUMB';
+ with dataModule1.q_data do begin
+    close;
+    SQL.Clear;
+    SQL.Add(seekStr);
+    paramByName('NUMB').value:= acc_No;
+    open;
+   end;
+ end;
+
+procedure TBusObj.setSQLTransData(betrag:double; accNo:longint);
+begin
+ with dataModule1.q_TransHist do begin
+   try
+     Close;
+     SQL.Clear;
+     SQL.Add('INSERT INTO TRANS1(TRANSAMOUNT, ACC_NO, OPENDATE)');
+     SQL.Add('VALUES (:betrag, :accNo, :date)');
+     Params[0].AsFloat:= betrag;
+     Params[1].AsInteger:= accNo;
+     Params[2].asDateTime:= NOW;
+     //no resulset
+     ExecSQL;
+   except
+      dataModule1.q_TransHist.free;
+   end;
+ end;
+end;
+
+procedure TBusObj.setSP_TransData(betrag: double; accNo: longint);
+begin
+ with dataModule1.SP_Trans do begin
+   Params[0].asfloat:= betrag;
+   Params[1].asinteger:= accNo;
+   Params[2].asDateTime:= NOW;
+   Prepare;
+   ExecProc;
+ end;
+end;
+
+
+procedure TBusObj.getSQLTransHist(custNo: longint; accTyp: byte);
+begin
+ seekStr:='';
+ seekStr:='SELECT TRANS_ID, ACC_NO, TRANSAMOUNT, OPENDATE FROM ' +
+          'TRANS1, ACCOUNT WHERE ACCOUNT.ACC_NO = TRANS1.ACC_NO '+
+          'and ACCOUNT.CUST_NO = :NUMB '+
+          'and ACCOUNT.ACC_TYPE = :ACC';
+ with dataModule1.q_transHist do begin
+   close;
+   SQL.Clear;
+   SQL.add(seekStr);
+   paramByName('NUMB').value:= custNo;
+   paramByName('ACC').value:= accTyp;
+  //ParamByName('beginDate').AsDateTime:=beginDate;
+   requestLive:=false;
+   open;
+ end;
+end;
+
+function TBusObj.getSQLUmsatz(custNo: longint; accNo: longint):
+                                                      double;
+begin
+ seekStr:='';
+ seekStr:='SELECT sum(TRANSAMOUNT) as UMSATZ from TRANS1, ACCOUNT ' +
+          'WHERE ACCOUNT.ACC_NO = TRANS1.ACC_NO '+
+          'and ACCOUNT.CUST_NO = :NUMB '+
+          'and ACCOUNT.ACC_NO = :ACC '+
+          'AND cast(cast(OPENDATE as char(11))as DATE)= ''TODAY''';
+ with dataModule1.q_transHist do begin
+   Close; SQL.Clear;
+   SQL.add(seekStr);
+   paramByName('NUMB').value:= custNo;
+   paramByName('ACC').value:= accNo;
+   Open;
+  result:= fieldByName('UMSATZ').asFloat;
+ end;
+end;
+
+
+ procedure TBusObj.dataBeforeEdit(dataSet: TDataSet);
+ begin
+  //put code here to place an optimistic lock
+ end;
+
+ procedure TBusObj.dataBeforePost(dataSet: TDataSet);
+ begin
+  //check the optimistic lock
+  //dataSet.post;
+   dataModule1.dsOpen.dataSet.edit;
+   dataModule1.dsOpen.dataSet.fieldvalues['MUTDATE']:=Now;
+ end;
+
+ procedure TBusObj.dataAfterPost(dataSet: TDataSet);
+ begin
+  //release optimistick lock
+   dataModule1.dsOpen.dataSet.post;
+ end;
+ procedure TBusObj.dataBeforeDelete(dataSet: TDataSet);
+ begin
+  //check the optimistic lock for contentions
+ end;
+
+ procedure TBusObj.dataAfterCancel(dataSet: TDataSet);
+ begin
+  //relase out optimistic locks
+ end;
+
+ procedure TBusObj.writeToFile(kList: TStringList);
+ var qf : TTxtFile;
+      i: integer;
+ begin
+ //constructor
+   qf:= TTxtFile.Create(uFILENAME);
+   qf.ReWrite;
+   try
+     if kList.count > 0 then
+       for i:= 0 to kList.count -1 do
+               qf.Writeln(kList.strings[i]);
+   finally
+     qf.Close;
+     qf.Free
+   end;
+ end;
+
+function TBusObj.readFromFile(rList: TStringList): TStringList;
+var qa: TTxtFile;
+     tmpString: String;
+ begin
+   qa:= TTxtFile.create(uFILENAME);
+   qa.ReSet;
+   try
+     while not qa.Eof do begin
+       qa.Readln(tmpString);
+       rList.add(tmpString);
+     end;
+     result:= rList;
+   finally
+    qa.Close;
+    qa.Free;
+   end
+ end;
+
+
+
+
+constructor TKonto.createKonto(cust_No: longInt;
+                                          std_Acc: byte);
+  begin
+   //if(dataModule1.q_data.active) then begin
+   // check to close the account
+   //end;
+   //legt daten in dataset
+    getSQLKonto(cust_No, std_Acc);
+  try
+    with dataModule1.dsOpen.dataSet do begin
+      FStammCode:= fieldValues['ACC_NO'];
+      FDiffKonto:=fieldValues['ACC_TYPE'];
+      FID:= fieldValues['CUST_NO'];
+      FCustName:= fieldValues['CUSTOMER'];
+      FKreditLimit:= fieldValues['LIMIT'];
+      FKontostand:= fieldValues['AMOUNT'];
+      FBasisGebuehr:= fieldValues['FEE'];
+    end;
+  except on EVariantError do begin
+      raise Exception.create(frmTrans.strLit[13]);
+    end;
+  end;
+  //for the collector
+   dataList:= TStringList.create;
+    FTransakt_Obj:= TTransaction.createTrans(self);
+  end;
+
+  constructor TStockKonto.createKonto(cust_No: longInt);
+  begin
+    inherited createKonto(cust_No, STOCK_KTO);
+    with dataModule1.dsOpen.dataSet do begin
+      FDepotGebuehr:= fieldValues['FEE'];
+    end;
+  end;
+
+  constructor TkreditKonto.createKonto(cust_No: longInt);
+  begin
+    inherited createKonto(cust_No, KRED_KTO);
+    with dataModule1.dsOpen.DataSet do begin
+      FJahresGebuehr:= fieldValues['FEE'];
+    end;
+  end;
+
+  procedure TKonto.setKreditLimit(newLimit: double);
+  begin
+    if FKreditLimit <> newLimit then begin
+      if getPassword(frmTrans.password) then begin
+         FKreditLimit:= newLimit
+      end else MessageDlg(frmTrans.strLit[2]+'  '+
+             frmTrans.strLit[3], mtWarning,[mbok],0);
+    end;
+  end;
+
+  function TKonto.getKreditLimit;
+  begin
+    result:= FKreditLimit;
+  end;
+
+  procedure TKonto.Buchen(betrag: double);
+  begin
+    FKontostand:= FKontostand + Betrag;
+    FTransakt_Obj.setTransactionHist(betrag);
+  end;
+
+ procedure TStockKonto.Buchen(betrag: double);
+  begin
+    inherited Buchen(betrag);
+    // abziehen vom sparkonto
+    ctr.KontoClass.FKontoStand:=
+               ctr.kontoClass.FKontoStand - Betrag;
+  end;
+
+ procedure TkreditKonto.Buchen(betrag: double);
+  begin
+  if betrag > 0 then
+    inherited Buchen(betrag)
+  else if Bonitaet(betrag) then
+    inherited Buchen(betrag)
+    else  MessageDlg(frmTrans.strLit[10], mtWarning,[mbok],0);
+  end;
+
+ procedure TKonto.saveData;
+ begin
+   setSQLKonto(FStammCode);
+   with dataModule1 do begin
+     if dsOpen.dataSet.active then
+       dataBeforePost(dsOpen.dataSet);
+       dsOpen.dataSet.fieldvalues['AMOUNT']:= Kontostand;
+       dsOpen.dataSet.fieldvalues['LIMIT']:= KreditLimit;
+       dsOpen.dataSet.fieldvalues['FEE']:= FBasisGebuehr;
+       dataAfterPost(dsOpen.dataSet);
+     end;
+  end;
+
+ procedure TStockKonto.saveData;
+ begin
+   inherited saveData;
+   with dataModule1 do begin
+    dataBeforePost(dsOpen.dataSet);
+    dsOpen.DataSet.fieldvalues['FEE']:= FDepotGebuehr;
+    dataAfterPost(dsOpen.dataSet);
+    end;
+ end;
+
+ procedure TKreditKonto.saveData;
+  begin
+   inherited saveData;
+   with dataModule1 do begin
+     dataBeforePost(dsOpen.dataSet);
+     dsOpen.DataSet.fieldvalues['FEE']:= FJahresGebuehr;
+     dataAfterPost(dsOpen.dataSet);
+   end;
+  end;
+
+ function TKonto.collectData: TStringList;
+  begin
+    with dataList do begin
+      clear;
+      add(''); add('KontoNr: ' + intToStr(FStammCode)
+        +'-'+(intToStr(FDiffKonto)));
+      add('Kontoinhaber: '+ FCustName);
+      add('Kunden Nr.: ' +intToStr(FID ));
+      add('Kredit Limite: ' + FloatToStr(FKreditLimit));
+      add('Kontostand: ' + FloatToStr(Kontostand));
+    end;
+   result:= dataList;
+  end;
+
+ function TStockKonto.collectData: TStringList;
+  begin
+    with dataList do begin
+      inherited collectData;
+      add('Depot Gebuehr: '+ FloattoStr(FDepotGebuehr));
+    end;
+   result:= dataList;
+  end;
+
+  function TkreditKonto.collectData: TStringList;
+  begin
+    with dataList do begin
+      inherited collectData;
+      add('Jahres Gebuehr: '+floatToStr(FJahresGebuehr));
+    end;
+   result:= dataList;
+  end;
+
+  //virtual container
+  function TKonto.getData: TStringList;
+  begin
+  //collectData is polymorphic
+    result:= collectData;
+  end;
+
+
+  function TkreditKonto.Bonitaet(betrag: double): boolean;
+  begin
+    if (KontoStand - -Betrag) >= -FKreditLimit then begin
+     //x:= KontoStand - -Betrag; debug code...
+     result:= true end else result:=false;
+  end;
+
+  procedure TkreditKonto.setJahresGebuehr(neueGebuehr: double);
+  begin
+    FJahresGebuehr:= 0;
+    FJahresGebuehr:= neueGebuehr;
+  end;
+
+  procedure TStockkonto.setDepotGebuehr(neueBasis: double);
+  begin
+    FDepotGebuehr:= 0;
+    FDepotGebuehr:= neueBasis +
+    (ctr.kontoClass.FBasisGebuehr * 4);
+  end;
+
+// TTransactionClass
+procedure TTransaction.SetTransactionHist(betrag: double);
+begin
+  if frmTrans.boolLogSave then begin
+   if frmTrans.chkBox_Stat.Checked then
+     setSP_TransData(betrag, FKonto_Obj.FStammCode) else
+     setSQLTransData(betrag, FKonto_Obj.FStammCode);
+  end;
+ inc(FPosten);
+end;
+
+function TTransaction.Umsatz: double;
+begin
+  //aggregation & friend (private!)
+  FTurnover:= getSQLUmsatz(FKonto_Obj.FID, FKonto_Obj.FStammCode);
+  try
+    FTurnoverAvg:= (FKonto_Obj.FKontostand / FPosten);
+  except
+    on EZeroDivide do begin
+      //FTurnoverAvg := 1;
+      showmessage(frmTrans.strLit[5])
+    end;
+  end;
+ result:= FTurnover;
+end;
+
+function TTransaction.getData: TStringList;
+  begin
+    with dataList do begin
+      clear;
+      add('');
+      add('Monate: '+floatToStr(FMonat));
+      add('Posten Transaktion: '+ FloattoStr(FPosten));
+      add('Tagesumsatz: '+ floatToStr(round(FTurnover)));
+      add('Umsatz Durchschnitt: '+ floatToStr(round(FTurnoverAvg)));
+    end;
+   result:= dataList;
+  end;
+
+function TTransaction.TrsaktHistory: TStringList;
+begin
+  getSQLTransHist(FKonto_Obj.FID, FKonto_Obj.FDiffKonto);
+  with dataList do begin
+    clear;
+    with dataModule1.dSrcTransHist do begin
+      while not dataSet.EOF do begin
+        add(' ');
+        add(dataSet.fieldValues['ACC_NO']);
+        add(dataSet.fieldValues['TRANSAMOUNT']);
+        add(dataSet.fieldByName('OPENDATE').asString);
+        dataSet.next;
+      end;
+    end;
+  end;
+    result:= dataList
+end;
+
+//**************garbage collection*************************
+destructor TKonto.Destroy;
+  begin
+    ctr.stockKonto.free;
+    ctr.kreditKonto.free;
+    dataList.Free;
+    Transakt_Obj.Free;
+    ctr.kontoClass:= NIL;
+    FTransakt_Obj:= NIL;
+    inherited Destroy;
+  end;
+
+destructor TStockKonto.Destroy;
+  begin
+    dataList.Free;
+    Transakt_Obj.Free;
+    ctr.stockKonto:= NIL;
+  end;
+
+destructor TKreditKonto.Destroy;
+  begin
+    dataList.Free;
+    Transakt_Obj.Free;
+    ctr.kreditKonto:= NIL;
+  end;
+
+destructor TTransaction.Destroy;
+  begin
+    dataList.free;
+    //inherited destroy;
+  end;
+
+
+
+http://theroadtodelphi.wordpress.com/2010/12/06/generating-qr-codes-with-delphi/
+
+Using the Google Chart Tools / Image Charts (aka Chart API) you can easily generate QR codes, this kind of images are a special type of two-dimensional barcodes. They are also known as hardlinks or physical world hyperlinks.
+
+The QR Codes store up to 4,296 alphanumeric characters of arbitrary text. QR codes can be read by an optical device with the appropriate software. Such devices range from dedicated QR code readers to mobile phones.
+
+
+Using Delphi there are several ways you can generate QR codes - to encode any text (URL, phone number, simple message). QR Codes store up to 4,296 alphanumeric characters of arbitrary text.
+
+The 2D Barcode VCL components is a set of components designed for generating and printing barcode symbols in your Delphi or C++ Builder applications. Use the components set like any other VCL components.
+
+J4L Components includes the QR-code implementation featuring: auto, byte, alpha, numeric and kanji encoding.
+
+The Google Chart Tools (Chart API) also let you generate QR-code images using an HTTP POST or 
+
+All do you need to generate a QrCode is make a get request to this URI
+
+http://chart.apis.google.com/chart?chs=200x200&cht=qr&chld=M&chl=Go+Delphi+Go
+
+uses
+ PngImage,
+ HTTPApp,
+ WinInet;
+ 
+type
+TQrImage_ErrCorrLevel=(L,M,Q,H);
+ 
+const
+UrlGoogleQrCode='http://chart.apis.google.com/chart?chs=%dx%d&cht=qr&chld=%s&chl=%s';
+QrImgCorrStr   : array [TQrImage_ErrCorrLevel] of string=('L','M','Q','H');
+ 
+procedure WinInet_HttpGet(const Url: string;Stream:TStream);
+const
+BuffSize = 1024*1024;
+var
+  hInter   : HINTERNET;
+  UrlHandle: HINTERNET;
+  BytesRead: DWORD;
+  Buffer   : Pointer;
+begin
+  hInter := InternetOpen('', INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
+  if Assigned(hInter) then
+  begin
+    Stream.Seek(0,0);
+    GetMem(Buffer,BuffSize);
+    try
+        UrlHandle := InternetOpenUrl(hInter, PChar(Url), nil, 0, INTERNET_FLAG_RELOAD, 0);
+        if Assigned(UrlHandle) then
+        begin
+          repeat
+            InternetReadFile(UrlHandle, Buffer, BuffSize, BytesRead);
+            if BytesRead>0 then
+             Stream.WriteBuffer(Buffer^,BytesRead);
+          until BytesRead = 0;
+          InternetCloseHandle(UrlHandle);
+        end;
+    finally
+      FreeMem(Buffer);
+    end;
+    InternetCloseHandle(hInter);
+  end
+end;
+ 
+//this function return a Stream (PngImage inside) with a Qr code.
+procedure GetQrCode(Width,Height:Word;Correction_Level:TQrImage_ErrCorrLevel;const Data:string;StreamImage : TMemoryStream);
+Var
+ EncodedURL  : string;
+begin
+  EncodedURL:=Format(UrlGoogleQrCode,[Width,Height,QrImgCorrStr[Correction_Level],HTTPEncode(Data)]);
+  WinInet_HttpGet(EncodedURL,StreamImage);
+end;
+
+
+http://www.delphi-central.com/callback.aspx
+
+
+function CheckSumModulo10(const data:string):string;
+function ConvertMmToPixelsX(const Value:Double):Integer;
+function ConvertMmToPixelsY(const Value:Double):Integer;
+function ConvertInchToPixelsX(const Value:Double):Integer;
+function ConvertInchToPixelsY(const Value:Double):Integer;
+
+TTarArchive Usage
+-----------------
+- Choose a constructor
+- Make an instance of TTarArchive                  TA := TTarArchive.Create (Filename);
+- Scan through the archive                         TA.Reset;
+                                                   WHILE TA.FindNext (DirRec) DO BEGIN
+- Evaluate the DirRec for each file                  ListBox.Items.Add (DirRec.Name);
+- Read out the current file                          TA.ReadFile (DestFilename);
+  (You can ommit this if you want to
+  read in the directory only)                        END;
+- You're done                                      TA.Free;
+
+
+TTarWriter Usage
+----------------
+- Choose a constructor
+- Make an instance of TTarWriter                   TW := TTarWriter.Create ('my.tar');
+- Add a file to the tar archive                    TW.AddFile ('foobar.txt');
+- Add a string as a file                           TW.AddString (SL.Text, 'joe.txt', Now);
+- Destroy TarWriter instance                       TW.Free;
+- Now your tar file is ready.
+
+
+
+The last slash might be optional. Right?
+
+How about something like this:
+
+$url =~ m|([^/]+)/?$|;
+my $end_of_url = $1;
+
+The $ on the end anchors the regular expression to the end of the string. The [^/] means anything that's not a slash and the + after means I want one or more things that are not slashes. Notice that this is in a capture group which are marked with parentheses.
+
+I end the regular expression with /? which means that there may or may not be a slash on the very end of the string. I've put my regular expression between m| and |, so I can use forward slashes without having to constantly escape them.
+
+The last part of the URL is now in $1 and I can set my own scalar variable to save this Result.
+share|improve this answer
+
+   { RegisterMethod('Constructor Create(AOwner: TComponent)');
+    RegisterConstructor(@TJvMail.Create, 'Create');
+     RegisterMethod('Procedure Free');
+    RegisterMethod(@TJvMail.Destroy, 'Free');}
+
+
+  
+
+  
+----app_template_loaded_code----

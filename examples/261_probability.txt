@@ -1,0 +1,407 @@
+Program Probability;
+
+//*********************************************************************
+// logic led wall example with objects & size, loc's=350, example 69ff  
+// first you define a size und pattern (word) and alter the pattern with
+// the function letShowVerify(); 
+// task: write the sentence in sequence: 'the world of code color!'
+//*********************************************************************
+
+Const PATTERNPAUSE = 350;
+      RUNPAUSE = 180;
+      COL = 5;
+      ROW = 7;
+      SIGNS = 36; //(37_[0..36]: Space, A..Z, 0..9)
+      LEFTBASE = 20;
+      TOPBASE = 30; 
+      TEXTPATH = 'examples\outline3.txt';
+      AVIPATH = 'examples\cool.avi';
+      BITMAP = 'examples\citymax.bmp';
+
+
+var
+  ppForm: TForm;
+  mylabel: TLabel;
+  pattern1: string;
+  labelList: TStringList;
+  psize: integer;
+  pattar: array[0..SIGNS] of shortstring;
+  mbitmap: TBitmap;
+  seven, eight, i, probe: integer;
+
+
+  
+procedure pauseLED(vpatt: shortstring); forward;
+  
+
+procedure LetShowRunVerify(apatt: string);
+var
+  i,x: integer;
+  o: TLabel;
+begin
+  for x:= 0 to COL do begin
+    for i:= 1 to psize do begin
+      o:= TLabel(labelList.objects[i-1]);
+      if apatt[i] = '1' then o.color:= clblack
+        else o.color:= (clyellow);
+    end;  
+    for i:= 1 to psize do begin   //XCopy
+      apatt[i]:= apatt[i+1];
+      if (i mod COL = 0) then     //!!
+        apatt[i]:= '0'
+    end;  
+    Sleep(RUNPAUSE) 
+    //if x= 4 then Break;  //optimise if run
+  end;
+  //Application.Processmessages; //debug
+end;
+
+procedure LetShowRunVerify2(vpattern: string); //draft
+var
+  i,x: integer;
+  o: TLabel;
+  pattern2: shortstring;
+begin
+   for i:= 1 to 40 do
+      pattern2:= pattern2 + '0';  //Empty Space;
+  for i:= 1 to psize+1 do begin   //recopy   XCopy
+      if vpattern[i] = '1' then begin
+         pattern2[i+1]:= '1';
+        end; 
+       end;
+  for x:= 0 to COL -1 do begin
+   for i:= 1 to psize  do begin
+      //set next line of labels
+      o:= TLabel(labelList.objects[i-1]);
+        if pattern2[i] = '1' then o.color:= clblack
+          else o.color:= (clyellow);
+    end;  
+      for i:= 1 to psize do begin   //recopy
+      pattern2[i]:= pattern2[i+1];
+      if (i mod COL = 0) then     //!!
+        pattern2[i]:= '0'
+    end;
+    //old
+     sleep(RUNPAUSE) 
+    if x= 4 then break; 
+  end;
+  //application.processmessages;
+end;
+  
+
+procedure letShowVerify(vpattern: string);
+var
+  i: integer;
+  o: TLabel;
+begin
+  for i:= 1 to psize  do begin
+    o:= TLabel(labelList.objects[i-1]);
+    //o.caption:= inttostr(i);
+    if i <= length(vpattern) then 
+      if vpattern[i] = '1' then o.color:= clblack
+      else o.color:= clyellow;
+  end;
+  //Runchar(vpattern)
+  //application.ProcessMessages;
+end;
+
+
+procedure SetLEDConsole(vpattern: string);
+var i: byte;
+begin
+  //pattern1:= '';
+  for i:= 1 to 2  do
+  //pattern1:= pattern1 + chr(random(2)+48);
+  //test string on memo
+      Writeln(vpattern)
+end;  
+
+
+procedure Label1Click_EditPattern(Sender: TObject);
+var o: TLabel;
+    sx: byte;
+begin
+  //70 in begin sound
+   //showMessage(intToStr(TLabel(sender).tag))
+   sx:= TLabel(sender).tag;
+   o:= TLabel(labelList.objects[sx-1]);
+   //o.caption:= inttostr(i);
+   if o.color = clBlack then o.color:= clyellow
+       else o.color:= clblack;
+end;
+
+
+procedure pauseLED(vpatt: shortstring);
+begin
+  sleep(PATTERNPAUSE);
+  letShowVerify(vpatt);
+end;
+
+
+procedure Label1DClick_WritePattern(Sender: TObject);
+var i: byte;
+   st: shortstring;
+    o: TLabel;
+begin
+  //70 in begin sound
+  st:= pattar[0];
+   for i:= 1 to psize do begin
+     o:= TLabel(labelList.objects[i-1]);
+     //o.caption:= inttostr(i);
+     if o.color = clBlack then st[i]:= '1'
+       else st[i]:= '0';
+   end;
+  SetLEDConsole(st)
+   //writeln(st)
+end;
+
+
+
+procedure ShowLED_TestSeq;
+var
+   pt0, pt11: shortstring;
+   il: integer;
+   tmpstr: shortstring;
+begin
+   pt0:=  '00000000000000000000000000000000000';
+   pt11:= '00100010101001111111011100111111100'; //hex store test 32+3=35
+   tmpstr:= pt11;
+   delete(tmpstr,4,32)
+   writeln('cut test '+tmpstr)
+   writeln(bintohex2(tmpstr)); //00000001
+   writeln(bintohex2(pt11));   //153FB9FC
+   writeln(tmpstr+hextobin2(bintohex2(pt11)));  //test to store pattern as HEX
+   writeln(pt11)
+   pattern1:= '';
+   for il:= 0 to SIGNS do begin
+     letShowVerify(pattar[il]);
+     //writeln('pt'+inttostr(il))
+     pauseLED(pt0)
+   end;  
+end;
+
+
+Procedure WriteLED_Set(sentence: string; arun: boolean);    //draft
+var il,a: byte;
+begin
+   sentence:= Uppercase(sentence)
+   for il:= 1 to length(sentence) do begin
+     a:= Ord(sentence[il])-47;   //ASCII 0=48 9=57  
+     writeln(inttostr(a))   //debug
+    if (a>0) and (a<16) then begin
+       if arun then  
+          letShowRunVerify(pattar[a])
+          else letShowVerify(pattar[a]);
+     end;
+     if (a>17) and (a<42) then begin   //ASCII A=65 Z=90
+       if arun then
+         letShowRunVerify(pattar[a-7])
+         else  letShowVerify(pattar[a-7]);
+     end;
+     if a>220 then begin
+     //if not arun then
+         pauseLED(pattar[0]);
+     end;    
+     write(sentence[il])  //test to console
+   end; 
+end;  
+
+procedure FormKeyPress(Sender: TObject; var Key: Char);
+begin
+ if Key =  #13 
+   then WriteLED_Set(pattern1, true);
+ if Key = #27 then ppForm.close;
+end;
+
+procedure CloseForm(Sender: TObject; var action: TCloseAction);
+var i: integer;
+begin 
+   for i:= 1 to psize do              
+     TLabel(labelList.objects[i-1]).Free;
+   action:= caFree;  
+   writeln('free it label objects')     //debug
+end; 
+ 
+
+procedure loadPForm(vx, vy: integer);
+begin
+  psize:= vx*vy
+  //constructor
+  ppform:= Tform.create(self);
+  with ppform do begin
+    caption:= 'LEDBOX, click to edit, dblclick write out pattern'+
+                 ' Press <Return> to run the Sentence';  
+    width:= (vx*psize)+ 10 + 200+100;
+    height:= (vy*psize)+ 30;
+    BorderStyle:= bsDialog;
+    Position:= poScreenCenter;
+    onKeyPress:= @FormKeyPress
+    //OnClick:= @Label1Click;
+    OnClose:= @closeForm;
+    Show;
+  end  
+end;
+
+
+procedure InitPuzzle(vx: byte);
+var
+  i,x,y: integer;
+begin
+  labelList:= TStringList.Create;
+  x:= 1;
+  y:= 1;
+  for i:= 1 to psize do begin
+    mylabel:= TLabel.Create(ppform);
+    with mylabel do begin
+      Parent:= ppForm;
+      color:= clyellow;
+      transparent:= false;
+      AutoSize:= false;
+      layout:= tlcenter;
+      alignment:= tacenter;
+      font.Size:= (psize div vx) + 12;
+      //font.Style:= [fsbold];
+      font.Color:= clyellow;
+      width:= psize; //+1 without raster
+      height:= psize;
+      Left:= (x-1)*(psize + 1);
+      Top:= (y-1)*(psize + 1);
+      //event handler to click!  
+      OnClick:= @Label1Click_EditPattern;
+      OnDblClick:= @Label1DClick_WritePattern;
+      tag:= i; //save the position
+    end;
+    //set next line of labels
+    if (i mod vx = 0) then begin
+      x:= 1; 
+      inc(y);
+    end else
+      inc(x);
+    //add labels to the list
+    labellist.instancesize
+    labelList.addObject(inttostr(i), mylabel);
+  end;
+end;
+
+
+procedure InitLED_SignPatterns;     //add with 0 at the end
+begin
+   pattar[0]:= '000000000000000000000000000000000000';  //Empty Space;
+   pattar[1]:= '001000101001010010100101001010001000'; //0
+   pattar[2]:= '001100111000010000100001000010000100'; //1
+   pattar[3]:= '011100001000010011100100001000011100'; //2
+   pattar[4]:= '011100001000010011100001000010011100'; //3
+   pattar[5]:= '001100101001010010100111100010000100'; //4
+   pattar[6]:= '011100100001100000100001000010011000'; //5
+   pattar[7]:= '001100100001000011100101001010001000'; //6
+   pattar[8]:= '011100001000010001000010000100001000'; //7
+   pattar[9]:= '011100101001010011100101001010011100'; //8
+   pattar[10]:= '011100101001010011100001000100010000'; //9
+   pattar[11]:= '001000101001010100011111110001100010';  //A;
+   pattar[12]:= '111001001010010111001001010010111000';  //B;
+   pattar[13]:= '001100100010000100001000001000001100';  //C;
+   pattar[14]:= '111001001010001100011000110010111000';  //D;
+   pattar[15]:= '111101000010000111101000010000111100';  //E;
+   pattar[16]:= '111111000010000111101000010000100000';  //F;
+   pattar[17]:= '001100100110000101111000101001001100';  //G;
+   pattar[18]:= '100011000110001111111000110001100010';  //H;
+   pattar[19]:= '001000010000100001000010000100001000';  //I;
+   pattar[20]:= '001110001000010000100001010010011000'; //J;
+   pattar[21]:= '100011001010100110001010010010100010'; //K;
+   pattar[22]:= '100001000010000100001000010000111110'; //L;
+   pattar[23]:= '110111010110101101011000110001100010'; //M;
+   pattar[24]:= '100011100110101100111000110001100010'; //N;
+   pattar[25]:= '001000101010001100011000101010001000'; //O;
+   pattar[26]:= '111001001010010100101110010000100000'; //P;
+   pattar[27]:= '011101000110001100011000101110000110'; //Q;
+   pattar[28]:= '111001001010010111001010010010100010'; //R
+   pattar[29]:= '011101000010000011000001000010111000'; //S
+   pattar[30]:= '111110010000100001000010000100001000'; //T
+   pattar[31]:= '100011000110001100011000111011011100'; //U
+   pattar[32]:= '100011000110001010100101000100001000'; //V
+   pattar[33]:= '100011000110101101011010110101010100'; //W
+   pattar[34]:= '100011000101010001000101010001100010'; //X
+   pattar[35]:= '100011101101010001000010000100001000'; //Y
+   pattar[36]:= '111110000100010001000100010000111110'; //Z
+end;
+
+procedure LetBitmap;
+begin
+ mbitmap:= TBitmap.Create;
+  try
+    mbitmap.LoadFromFile(Exepath+BITMAP);
+    //ppForm.Canvas.Draw(370,70, mbitmap);
+  finally
+    //ppForm.Free;
+  end;
+end;  
+
+Function cubeTest: integer;    //checks combination of 2 dice
+//var mc: array[1..8] of 
+var c1: byte;
+ c2: byte;
+ res: integer;
+begin
+  c1:= random(6)+1;
+  c2:= random(6)+1;
+  result:= c1+c2;
+  //write(' '+inttostr(c1)+' '+inttostr(c2))
+  if result = 7 then inc(seven);
+  if result = 8 then inc(eight);
+end;   
+
+
+var mr: TRect;
+
+
+//main of LED HEX BOX
+Begin
+//**************************** OOP in maXbox *******************************
+//sizex, sizey as paras()
+  //pattern1:= '7';
+  //pattern1:= '0123456789';
+  probe:= 100000;
+  pattern1:= 'Pascal';
+  //pattern1:= 'THIS IS MAXLAND';
+
+  loadPForm(COL,ROW);
+  initPuzzle(COL); 
+  InitLED_SignPatterns;
+  mr.left:= ppForm.left;
+  mr.top:= ppForm.top;
+  LetBitmap;
+  DrawBitmapRectTransparent(ppForm.canvas,200, 50, mr, mbitmap, clyellow);
+  
+  //ShowLED_TestSeq;
+  //WriteLed_Set('PASCAL')
+  //WriteLed_Set(pattern1)
+  //WriteLed_Set('MAXBOX')
+  //WriteLed_Set(pattern1, true)  //true with animation
+  //Writeln(GetASCII)
+  
+    seven:= 0; eight:= 0;
+    for i:= 1 to probe do begin
+       cubeTest;
+      //write(' '+inttostr(cubetest))
+      //writeln('');
+    end;
+    writeln(floattostr(seven/probe) +'   '+floattostr(eight/probe))
+    PrintF('Seven 2 dice: %.4f  Eight 2 dice: %.4f ',[seven/probe,eight/probe])
+  
+  
+//  AESSymetricExecute(exepath+'examples\aestest.txt', exepath+'examples\aestest_encrypt.txt','000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');
+//  AESSymetricExecute(exepath+'examples\aestest.txt', exepath+'examples\aestest_encrypt/.txt','0001020304');
+
+End.
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |
+        |____/  |___| |____| |_|     |_| |_| |_| 
+        
+        
+                                          
+        Weiterführung der Scholz Software Systems 3S
+        
+        

@@ -1,0 +1,1261 @@
+PROGRAM DataGrid_2;
+
+///////////////////////////////////////////////////////////////////////////
+//  #sign:max: APSN21: 05.02.2014 20:18:21 
+//  Purpose: how to call a dll function, still on progress  
+//  #path>ples\E:\maxbox\maxbox3\examples\                                
+//  Lines of Code #locs:701
+///////////////////////////////////////////////////////////////////////////
+
+Const TEXTOUT = 'hi world of dll func in opcode ';
+
+//############################################################################
+// Archimedes DLL Architect
+//############################################################################
+//TODO: Button with stop event, change color and save bitmap as png
+  //TODO: transfer the App to a dll stub function!
+  //{ TODO : the following line looks like a bug... }
+  
+  package = 'com.example.hellousb';
+
+{import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.graphics.Color;
+import android.hardware.usb.UsbConstants;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbDeviceConnection;
+import android.hardware.usb.UsbEndpoint;
+import android.hardware.usb.UsbInterface;
+import android.hardware.usb.UsbManager;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.Menu;
+import android.view.WindowManager;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;}
+
+
+type
+ TAppData = record
+   Name: shortstring;
+   Size: longint;
+   Release: shortstring;
+   descript: shortstring;
+ end;
+
+
+{type  
+  PROCESS_MEMORY_COUNTERS = record
+    cb : DWORD;
+    PageFaultCount : DWORD;
+    PeakWorkingSetSize : DWORD;
+    WorkingSetSize : DWORD; //Task managers MemUsage number
+    QuotaPeakPagedPoolUsage : DWORD;
+    QuotaPagedPoolUsage : DWORD;
+    QuotaPeakNonPagedPoolUsage : DWORD;
+    QuotaNonPagedPoolUsage : DWORD;
+    PagefileUsage : DWORD; //TaskMan's VM Size number
+    PeakPagefileUsage : DWORD;
+  end;
+  TProcessMemoryCounters = PROCESS_MEMORY_COUNTERS;}
+  
+  { _OSVERSIONINFOA = record
+    dwOSVersionInfoSize: DWORD;
+    dwMajorVersion: DWORD;
+    dwMinorVersion: DWORD;
+    dwBuildNumber: DWORD;
+    dwPlatformId: DWORD;
+    szCSDVersion: array[0..127] of AnsiChar; { Maintenance AnsiString for PSS usage }
+  {end;
+ //TIntegerList
+ //var aos: TOSVersionInfo;
+
+//  function  {**************************************************}
+function GetProcessMemoryInfo(Process: THandle; var MemoryCounters: TProcessMemoryCounters;
+                                    cb: DWORD): BOOL; //stdcall;; 
+     External 'GetProcessMemoryInfo@psapi.dll stdcall';
+     
+ Function OpenProcess2(dwDesiredAccess: DWORD; bInheritHandle:BOOL; dwProcessId: DWORD):THandle;
+     External  'OpenProcess@kernel32.dll stdcall';
+
+
+{TYPE <Type declarations>} 
+  var FWait, switch: Boolean;
+      FValueA, FValueB: Float;
+      //asd: TDoubleArray;
+    aGrid: TStringGrid;
+    app: TAppData;
+    f: Text; {file of} //TAppData;
+    FaDatfile: String;
+    Fmodified: Boolean;
+    myrec: TSearchrec;
+    //file: dwstestbin
+  
+     
+//<FUNCTION>
+//<PROCEDURE> 
+
+
+function RemoveSpaces2(const str : String) : String;
+var
+   c : Char;
+   i, p, n : Integer;
+begin
+   n:=Length(str);
+   SetLength(Result, n);
+   p:=1;
+   for i:=1 to n do begin
+      c:=str[i];
+      if c<>' ' then begin
+         Result[p]:=c;
+         Inc(p);
+      end;
+   end;
+   SetLength(Result, p-1);
+end;
+
+
+procedure TBuildAppGrid_fillGrid;
+var
+  crow: Integer;
+  //UTF8FileHeader: integer;
+  //ad: UTF8FileHeader
+  mss: TCopyFileFlag; //, TFileIterator, TFileSearcher;
+  //atr: TCommandModule //ICommandServer 
+  //aert: VK_MOUSEWHEELUP
+  //asrtz: TVirtualKeyCode
+  gbgh: TDataFileCapability;
+  //myintproc: TDelphiColor //TProcInt;
+  
+begin
+
+  crow := 1;
+  with aGrid do begin
+    Cells[0,0]:= 'Application Name';
+    ColWidths[0]:= 120;
+    Cells[1,0]:= 'App Size';
+    ColWidths[1]:= 60;
+    Cells[2,0]:= 'Release Date';
+    ColWidths[2]:= 90;
+    Cells[3,0]:= 'Description';
+    ColWidths[3]:= 140;
+    if FaDatFile <> '' then begin
+      //AssignFileRead(f,FaDatFile);
+      //AssignFile(f,FaDatFile);
+      //findfirst
+      //findfirstutf8
+      //findfirst2
+      //ReadFileToString
+        //keypressed
+        //findnext2
+        //findclose
+       // Reset2(f);
+       //reset2
+      try
+        //while not Eof(F) do begin
+          //Read (F, app);
+          Cells[0,crow]:= app.Name;
+          Cells[1,crow]:= intToStr(app.size);
+          Cells[2,crow]:= app.Release;
+          Cells[3,crow]:= app.descript;
+          Inc(cRow);
+          RowCount:= crow +1;  //new entry
+        //end;
+      finally
+        //CloseFile(f);
+      end;
+    end;// if FileExists...
+  end; //with
+end;
+
+
+var  nYear,
+  nMonth,
+  nDay,
+  fcounter: word;
+  dflistView: TListBox;
+  
+procedure {constructor} TChangeFinder_Create_prepList_and_Date(alistView: TListBox);
+begin
+  //GetDate(Year, Month, Day, DayofWeek);
+  //now date is to slow
+  //inherited Create;
+  dflistView:= alistView;
+  decodedate(date, nyear, nmonth, nday);
+    dflistView.items.insert(0, format('%-120s %10s -%5s',
+       ['Filename:', 'Size:', 'Time:']));
+     fcounter:= 1;
+  with alistView.Items do begin
+    BeginUpdate;
+    Clear;
+    EndUpdate;
+  end;
+end;
+  
+      //faDirectory = $00000010;
+      //faAnyFile   = $0000003F;   
+
+
+PROCEDURE TChangeFinder_ShowFiles(Showpath: STRING; sr: TSearchRec);
+VAR
+  arcdisp: shortSTRING;
+  DateRec: TDateTime;
+  lenStr,
+  insertStr,
+  fname,
+  fext, outPutStr: string;
+  len      : BYTE;
+  AYear, AMonth, ADay: Word;
+  aHour, aMin, aSec, aMsec: word;
+
+BEGIN
+  //IF sr.Attr IN [$8..$F] {, $28..$2F]} THEN BEGIN
+    IF Pos('.', sr.Name) > 0 THEN
+      Delete(sr.Name, Pos('.', sr.Name), 1);
+  //END;
+  IF (Pos('.', sr.Name) > 0) AND (Length(sr.Name) > 0) THEN begin
+    fname:= Copy(sr.Name, 1, Pos('.', sr.Name) - 1);
+    fext:= sr.Name;
+    Delete(fext, 1, Pos('.', fext));
+  END ELSE BEGIN
+    fname:= sr.Name;
+    fext:= '  ';
+  END;
+  arcdisp:= '    ';
+//&&{$WARN SYMBOL_PLATFORM OFF}
+  IF sr.Attr AND faArchive  = faArchive  THEN arcdisp[1] := 'A';
+  IF sr.Attr AND faReadOnly = faReadOnly THEN arcdisp[2] := 'R';
+  IF sr.Attr AND faHidden   = faHidden   THEN arcdisp[3] := 'H';
+  IF sr.Attr AND faSysFile  = faSysFile  THEN arcdisp[4] := 'S';
+//{$WARN SYMBOL_PLATFORM ON}
+  //8..15, 40..47
+  //IF NOT (sr.Attr IN [$8..$F, $28..$2F]) THEN BEGIN
+    //Str(sr.Size, lenStr);
+    IF Length(lenStr) > 3 THEN BEGIN
+      insertStr:= '.';
+      len:= Length(lenStr) - 2;
+      Insert(insertStr, lenStr, len);
+      IF Length(lenStr) > 7 THEN BEGIN
+        len:= Length(lenStr) - 6;
+        Insert(insertStr, lenStr, len);
+      END;
+    END;
+  //END;
+  //IF NOT (sr.Attr IN [$8..$F, $28..$2F]) THEN BEGIN
+   //check the system now date
+    dateRec:= FileDatetoDateTime(sr.Time);
+    DecodeDate(dateRec, AYear, AMonth, ADay);
+    DecodeTime(dateRec, aHour, aMin, aSec, aMsec); //new 1.8
+    //daterec:= now;  //testroutine
+    IF (ADay = nDay) AND (AYear = nYear) AND (AMonth = nMonth) THEN BEGIN
+        IF Showpath[Length(Showpath)] = '\' THEN
+        Delete(Showpath, Length(Showpath), 1);
+        outPutStr:= Showpath + '\' + fname + '.' + fext;
+        //dflistview.Columns:= 3;
+        //dflistView.TabWith:= 50;
+        //dflistView.Items.add(outPutStr +^I+ lenStr);  // ^I is the Tab char
+        dflistView.Items.Insert(0, format('%-80s %10s -%5s',
+           [outPutStr, lenStr, inttoStr(aHour)+':'+inttoStr(aMin)]));
+     END;
+  //END;
+END;
+
+
+PROCEDURE TChangeFinder_SearchDirectories(path: string; const fname: STRING);
+VAR
+  sRecord : TSearchRec;
+  Showpath: STRING;
+  //myf: TChangeFinder; 
+  //amod: TmodCommand;
+BEGIN
+  (* Suche nach Dateien: *)
+  IF Length(path) > 0 THEN
+    IF path[Length(path)] <> '\' THEN
+      path := path + '\';
+  SRecord.Name:= '';
+  if FindFirst2(path+fname, faAnyfile MOD faDirectory, SRecord) = 0 then begin
+    Showpath:= '        .   ';
+    IF SRecord.Name <> '' THEN BEGIN
+      IF Length(path)  > 3 THEN
+      Showpath:= Copy(path, 1, Length(path) - 1)
+     ELSE Showpath:= path;
+    END;
+   try
+    repeat
+     //0..14, 32..46
+      //IF SRecord.Attr IN [$0..$E, $20..$2E] THEN
+      //IF (SRecord.Attr <=$E) or (SRecord.Attr >=$20) or (SRecord.Attr <=$2E) then
+      //IN [$0..$E, $20..$2E] THEN
+      
+      //FindFirst(StartDir+FileMask, faAnyFile-faDirectory) = 0;
+      IF (SRecord.Attr = faAnyFile-faDirectory) then
+          TChangeFinder_ShowFiles(Showpath,SRecord);
+    until FindNext2(sRecord) <> 0;
+   finally
+      WFindClose(sRecord.findhandle);
+   end;
+  end;
+  (* Suche nach Verzeichnissen: *)
+  // hidden dir available with fahidden
+  if FindFirst2(path + '*.*', faDirectory or faHidden, SRecord) = 0 then begin
+    try
+    repeat
+        IF (SRecord.Attr AND faDirectory <> 0) AND
+       (SRecord.Name[1] <> '.') THEN
+      //recursion to get subdirectories
+      TChangeFinder_SearchDirectories(path + SRecord.Name, fname);
+      writeln(path + SRecord.Name)
+    until FindNext2(sRecord) <> 0;
+    finally
+      WFindClose(sRecord.findhandle);
+    end;
+  end;
+end;
+
+
+
+
+{**************************************************}
+//function GetProcessMemoryInfo; external 'psapi.dll';
+{****************************************************}
+
+function ProcessMemoryUsage(ProcessID : DWORD): DWORD;
+var ProcessHandle : THandle;
+    MemCounters   : TProcessMemoryCounters;
+begin
+  Result:= 0;
+  ProcessHandle:= OpenProcess2(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                               false, ProcessID);
+  try
+    if GetProcessMemoryInfo(ProcessHandle,
+                            MemCounters, sizeof(MemCounters))
+    then Result:= MemCounters.WorkingSetSize;
+  finally
+    CloseHandle(ProcessHandle);
+  end;
+end;
+
+function ProcessPageUsage(ProcessID : DWORD): DWORD;
+var ProcessHandle : THandle;
+    MemCounters   : TProcessMemoryCounters;
+begin
+  Result:= 0;
+  ProcessHandle:= OpenProcess2(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                               false, ProcessID);
+  try
+    if GetProcessMemoryInfo(ProcessHandle,
+                            MemCounters, sizeof(MemCounters))
+    then Result:= MemCounters.PagefileUsage;
+  finally
+    CloseHandle(ProcessHandle);
+  end;
+end;
+
+function ProcessAllRec(ProcessID : DWORD): TProcessMemoryCounters;
+var ProcessHandle : THandle;
+    MemCounters   : TProcessMemoryCounters;
+begin
+  //Result:= NULL;
+  ProcessHandle:= OpenProcess2(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                               false, ProcessID);
+  try
+    if GetProcessMemoryInfo(ProcessHandle,
+                            MemCounters, sizeof(MemCounters))
+    then Result:= MemCounters;
+  finally
+    CloseHandle(ProcessHandle);
+  end;
+end;
+
+Procedure OVCInternationalDemoClass;
+begin
+ with TOvcIntlSup.Create do begin
+    //Function InternationalDate( ForceCentury : Boolean) : string');
+    writeln('InternationalDate: '+InternationalDate(true));
+    //Function InternationalDatePChar( Dest : PChar; ForceCentury : Boolean) : PChar');
+    writeln('InternationalLongDate: '+InternationalLongDate(false,false));
+    //Function InternationalTime( ShowSeconds : Boolean) : string');
+    writeln('InternationalTime: '+InternationalTime(false));
+    //Function InternationalTimePChar( Dest : PChar; ShowSeconds : Boolean) : PChar');
+    //Function MonthStringToMonth( const S : string; Width : Byte) : Byte');
+    writeln(Country)
+    Free;
+  end;
+  //TerminateProcess( hProcess : THandle; uExitCode : UINT) : BOOL');
+  //GetExitCodeProcess( hProcess : THandle; var lpExitCode : DWORD) : BOOL');
+ //FatalExit( ExitCode : Integer)');
+ //ExecuteAndWait(cmdLine : String; visibility : Word;
+   //                     timeout : Cardinal = MaxInt;
+     //                   killAppOnTimeOut : Boolean = True) : Integer;
+  //GetTemporaryFilesPath : String;
+ //GetTemporaryFileName : String;
+ //Zero
+ //TPanelStyle
+   //TFontLook
+ //FindFileInPaths(const fileName, paths : String) : String;
+     //MakeForm
+ //PathsToString(const paths : TStrings) : String;
+ //StringToPaths(const pathsString : String; paths : TStrings);
+ //MacroExpandPath(const aPath : String) : String;
+ //TOnGetItemEvent
+   //TCacheRecord
+   //tMessagefunc
+   //EFilerException(CL: TPSPascalCompiler);
+   
+  // TGridPanel
+//EInvalidFileSignature(CL: TPSPascalCompiler);
+//TTextWriter(CL: TPSPascalCompiler);
+//TTextReader(CL: TPSPascalCompiler);
+//TBinaryWriter(CL: TPSPascalCompiler);
+//TBinaryReader(CL: TPSPascalCompiler);
+//TPersistentObjectList(CL: TPSPascalCompiler);
+//TPersistentObject(CL: TPSPascalCompiler);
+//IPersistentObject(CL: TPSPascalCompiler);
+//TVirtualWriter(CL: TPSPascalCompiler);
+//TVirtualReader(CL: TPSPascalCompiler);
+//PersistentClasses(CL: TPSPascalCompiler);
+          //TMouseActivateEvent'
+          //TMouse
+ //TStringsAdapter         
+   //TActiveForm
+          
+        //TControlState', 
+        //TControlStyle
+ //CM_BASE
+ //mrNone
+   //TCMActivate
+ //StripAllFromResult
+ //IsDragObject( Sender : TObject) : Boolean');
+  //IsVCLControl( Handle : HWnd) : Boolean');
+  //FindControl( Handle : HWnd) : TWinControl');
+  {FindVCLWindow( const Pos : TPoint) : TWinControl');
+  FindDragTarget( const Pos : TPoint; AllowDisabled : Boolean) : TControl');
+  GetCaptureControl : TControl');   }
+ {SetCaptureControl( Control : TControl)');
+ CL.AddDelphiFunction('Procedure CancelDrag');
+  CursorToString( Cursor : TCursor) : string');
+  StringToCursor( const S : string) : TCursor');
+ CL.AddDelphiFunction('Procedure GetCursorValues( Proc : TGetStrProc)');
+  CursorToIdent( Cursor : Longint; var Ident : string) : Boolean');
+  IdentToCursor( const Ident : string; var Cursor : Longint) : Boolean');
+  GetShortHint( const Hint : string) : string');
+  GetLongHint( const Hint : string) : string');
+ CL.AddDelphiFunction('Procedure PerformEraseBackground( Control : TControl; DC : HDC)');
+  InitWndProc( HWindow : HWnd; Message, WParam : Longint; LParam : Longint) : Longint');
+ CL.AddConstantN('CTL3D_ALL','LongWord').SetUInt( $FFFF);
+ CL.AddDelphiFunction('Procedure ChangeBiDiModeAlignment( var Alignment : TAlignment)');
+  SendAppMessage( Msg : Cardinal; WParam, LParam : Longint) : Longint');}
+ //MoveWindowOrg( DC : HDC; DX, DY : Integer)');
+ 
+ //SetImeMode( hWnd : HWND; Mode : TImeMode)');
+ //SetImeName( Name : TImeName)');
+  //Win32NLSEnableIME( hWnd : HWND; Enable : Boolean) : Boolean');
+  //Imm32GetContext( hWnd : HWND) : HIMC');
+ 
+  //GetShortHint( const Hint : string) : string');
+  //GetLongHint( const Hint : string) : string');
+ //PerformEraseBackground( Control : TControl; DC : HDC)');
+  
+  //InitWndProc( HWindow : HWnd; Message, WParam : Longint; LParam : Longint) : Longint');
+ //CTL3D_ALL','LongWord').SetUInt( $FFFF);
+ //ChangeBiDiModeAlignment( var Alignment : TAlignment)');
+ 
+ 
+ {DragDone( Drop : Boolean)');
+
+  Imm32ReleaseContext( hWnd : HWND; hImc : HIMC) : Boolean');
+  Imm32GetConversionStatus( hImc : HIMC; var Conversion, Sentence : DWORD) : Boolean');
+  Imm32SetConversionStatus( hImc : HIMC; Conversion, Sentence : DWORD) : Boolean');
+  Imm32SetOpenStatus( hImc : HIMC; fOpen : Boolean) : Boolean');
+  Imm32SetCompositionWindow( hImc : HIMC; lpCompForm : PCOMPOSITIONFORM) : Boolean');
+  Imm32SetCompositionFont( hImc : HIMC; lpLogfont : PLOGFONTA) : Boolean');
+  Imm32GetCompositionString( hImc : HIMC; dWord1 : DWORD; lpBuf : pointer; dwBufLen : DWORD) : Longint');
+  Imm32IsIME( hKl : HKL) : Boolean');
+  Imm32NotifyIME( hImc : HIMC; dwAction, dwIndex, dwValue : DWORD) : Boolean');}
+  
+  //TCheckListBox
+  //DrawButtonFace
+    //TDbEngineErrorDlg 
+ {      Width := 100;
+  Height := 100;
+  ControlStyle := [csDoubleClicks, csCaptureMouse, csDisplayDragImage, csPannable];
+  FButtonItems := GetButtonsClass.Create(Self);
+  FButtonOptions := [gboShowCaptions];
+  FBorderStyle := bsSingle;}
+  //TMargins
+    //TCheckListBox
+    //TSpeedButton  
+      //Tpadding
+    
+   //TWinControlActionLink 
+   GetComCtlVersion
+   //CheckToolMenuDropdown
+     //InitCommonControl
+       //CheckCommonControl(42);
+       
+      // TToolWindow
+     
+     
+     
+end;    
+
+
+function SplitToken(const Text: string; SplitChar: Char;
+                          var First, Last: string): Boolean;
+var  SplitPos: Integer;
+      ec: EJclError;
+begin
+  Result:= False;
+  SplitPos:= Pos(SplitChar, Text);
+  if SplitPos = 0 then Exit;
+  First:= Trim(Copy(Text, 1, SplitPos -1));
+  Last:= Trim(Copy(Text, SplitPos +1, Length(Text) -SplitPos));
+  Result:= (First <>'') and (Last <>'');
+end;
+
+
+function TForm1_scrollAllNode(aNode: TalXmlNode): Integer;
+Var aStack: Tstack;
+    i: integer;
+begin
+  Result := 0;
+  aStack := Tstack.Create;
+  try
+     For i := 0 to aNode.ChildNodes.Count - 1 do
+        aStack.Push((ANode.ChildNodes[i]));
+         While astack.Count > 0 do begin
+        inc(result);
+        aNode := TalxmlNode(astack.Pop);
+        If assigned(ANode.ChildNodes) then
+          For i := 0 to ANode.ChildNodes.Count - 1 do
+            aStack.Push((ANode.ChildNodes[i]));
+           If assigned(ANode.AttributeNodes) then
+          For i := 0 to ANode.attributeNodes.Count - 1 do
+            aStack.Push((ANode.AttributeNodes[i]));
+      end;
+  finally
+    aStack.Free;
+  end;
+
+end;
+
+function IntToStrZeroPad(Value, Count: Integer): AnsiString;
+begin
+  Result := IntToStr(Value);
+  if Length(Result) < Count then
+    Result := StrFillChar('0', Count - Length(Result)) + Result;
+end;
+
+function JclGUIDToString(const GUID: TGUID): string;
+begin
+  {$IFDEf CLR}
+  Result := GUID.ToString();
+  {$ELSE}
+  Result := Format('{%.8x-%.4x-%.4x-%.2x%.2x-%.2x%.2x%.2x%.2x%.2x%.2x}',
+    [GUID.D1, GUID.D2, GUID.D3, GUID.D4[0], GUID.D4[1], GUID.D4[2],
+     GUID.D4[3], GUID.D4[4], GUID.D4[5], GUID.D4[6], GUID.D4[7]]);
+  {$ENDIF CLR}
+end;
+
+
+function GetOsVersionInfo2: TOSVersionInfo; 
+var
+  verInfo: TOSVersionInfo;
+begin
+  verinfo.dwOSVersionInfoSize:= sizeof(verinfo);
+  GetVersionEx(Verinfo);
+  result:= Verinfo;
+end;  
+
+var  verInfo: TOSVersionInfo;
+
+Begin  //Main
+//<Executable statements>
+  //TOutlookExport_Spy;
+  Writeln('');
+  //Writeln('Start Command of DLL: '+CheckIEStartCommand);  
+//<Definitions>  
+   //ares:= TResolver.create;
+ { with TResolver.create do begin
+   //writeln(inttostr(GetHostByName(gethostname)));
+    Free;   end;  }
+    {repeat 
+     TApplication_PaintView(aform.canvas);
+     switch:= NOT switch;
+     Sleep(20);
+   until isKeyPressed or FWait;}
+    {with TledForm.create(self) do begin
+    showmodal; free; end;} 
+ // function GetMacAddresses(const Machine: string; const Addresses: TStrings):Integer;
+   OVCInternationalDemoClass;
+  
+ //GetProcessMemoryInfo(Process 
+     writeln('mem from dll '+inttostr(ProcessMemoryUsage(GetCurrentProcessID)));
+     writeln('page from dll '+inttostr(ProcessPageUsage(GetCurrentProcessID)));
+     writeln('proc all from dll '
+                 +inttostr(ProcessAllRec(GetCurrentProcessID).workingsetsize));
+     writeln('proc peak workingset '
+              +inttostr(ProcessAllRec(GetCurrentProcessID).PeakWorkingSetSize div 1024));
+     writeln('proc peak paged use '
+              +inttostr(ProcessAllRec(GetCurrentProcessID).QuotaPeakPagedPoolUsage));
+     writeln('proc page peak file '
+              +inttostr(getProcMemInfo(GetCurrentProcessID).PeakPagefileUsage div 1024));
+ 
+    // SplitImages(self);
+     //deletefiles(PICPATH,'*.bmp');
+      //GetCurrentHwProfile( var lpHwProfileInfo : THWProfileInfo) : BOOL');
+        //SetPriorityClass
+        //GetPriorityClass
+     //OpenClipboard( 
+     //booleantostr(false);
+     //JclGUIDToString
+       //TJclNumericFormat 
+          //function IsClass(Address: Pointer): Boolean;
+          //function IsObject(Address: Pointer): Boolean;
+           //IsClass(Address: Pointer): Boolean;
+           //IsObject(Address: Pointer): Boolean;
+           //ReadKey
+             //IntToStrZeroPad
+           //  StrFillChar
+           //EndDialog( 
+             //GetDlgItem(
+             //SetDlgItemInt( 
+               //dialogbox
+         //TQuaternionList(CL: TPSPascalCompiler);
+//TByteList(CL: TPSPascalCompiler);
+   //TSingleList(CL: TPSPascalCompiler);
+   //TIntegerList(CL: TPSPascalCompiler);
+   //TTexPointList(CL: TPSPascalCompiler);
+   //TVectorList(CL: TPSPascalCompiler);
+   //TAffineVectorList(CL: TPSPascalCompiler);
+   //TBaseVectorList(CL: TPSPascalCompiler);
+   //TBaseList(CL: TPSPascalCompiler);
+   //VectorLists(CL: TPSPascalCompiler);
+   //TXIntegerList
+   //TJclSimpleLog
+     //jExecute 
+     //TClipRect
+     //TColor
+       //PointLineDistance
+         //TSkeleton
+         //Turn
+       //SetMatrix
+       //ScaleMatrix
+       //TSpaceContains
+         //TriangleArea
+         //TVertex
+         //TVectorGL
+         //IsVolumeClipped
+         //DivMod
+         //ConvertRotation
+         //TRectangle
+         //TFrustum
+       writeln(booleantostr(samepath(exepath, exepath)))
+       
+  verinfo:= GetOsVersionInfo2;
+  writeln('OS Verinfo '+inttostr(Verinfo.dwMajorVersion))
+  writeln('OS Verinfo '+inttostr(Verinfo.dwMinorVersion))
+  writeln('OS Versizeinfo '+inttostr(Verinfo.dwOSVersionInfoSize))
+  //Function IsDelphiProject( const FileName : string) : Boolean');
+  writeln(booleantoStr(IsDelphiProject(exepath+'maxbox3.exe')));
+  //FileBackup(const 
+  
+  //TChangeFinder_SearchDirectories(exepath+'examples','*.txt');
+  //RemoveSpaces2
+    {with TCustomComboBoxStrings.create do begin
+    deleter
+    indexof
+    free
+    end;}
+    //IsPositiveResult
+    //IsAnAllResult  new
+      //IsAbortResult
+      //IsNegativeResult
+      //StripAllFromResult
+        //TSizeConstraints
+        //TCreateParams
+           //TButtonGroup 
+           //TOleStream
+           //TStringsAdapter
+           //SetOleStrings(Strings: 
+           //TAlignment
+           
+           
+     //TAfMemo       
+           
+            
+           
+            
+
+    with TGridPanel.create(self) do begin
+    free
+    end;
+    //TColorBox
+         
+END. 
+
+small set for arduino and android testing 
+
+var drive: string[20];
+    mycf: TChangeFinder;
+begin
+  screen.cursor:=crHourglass;
+    drive:= dcbHD.Drive;
+    drive:= drive + ':';
+    mycf:= TChangeFinder.prepList_and_Date(frmMain.livchangefind);
+    mycf.SearchDirectories(drive + '\','*.*');
+    mycf.Free;
+    screen.cursor:=crDefault;
+end; }
+
+
+
+http://glscene.sourceforge.net/wikka/HomePage
+
+{-Modulename and path: udwsfiler
+//
+//D:\franktech\Delphmax\dws\DWSServer.mpb
+//Category    Access method
+//
+//Developer kleiner kommunikation
+//Last Modification on 30.06.03 17:51:54:
+//question is destructor of grid
+  descript as a new field on 20.6.03
+  modified flag on 30.6.03
+//==========================================================================}
+unit udwsfilerwiz;
+
+
+interface
+
+uses QGrids;
+
+type
+ TAppData = record
+   Name: string[50];
+   Size: longint;
+   Release: string[30];
+   descript: string[80];
+ end;
+
+  TBuildAppGrid = class (TObject)
+  private
+    aGrid: TStringGrid;
+    app: TAppData;
+    f: file of TAppData;
+    FaDatfile: ShortString;
+    Fmodified: Boolean;
+  protected
+    function GetaDatfile: ShortString;
+    procedure SetaDatfile(const Value: ShortString);
+  public
+    constructor initGrid(vGrid: TStringGrid; vFile: shortString);
+    procedure fillGrid;
+    procedure storeGrid;
+    property aDatfile: ShortString read GetaDatfile write SetaDatfile;
+    property modified: Boolean read Fmodified write Fmodified;
+  end;
+
+
+implementation
+
+uses sysutils, QDialogs, QControls,
+  QStdCtrls;
+
+
+{
+******************************** TBuildAppGrid *********************************
+}
+constructor TBuildAppGrid.initGrid(vGrid: TStringGrid; vFile: shortString);
+begin
+  aGrid:= vGrid;
+  aDatfile:= vFile;
+  with aGrid do begin
+    ScrollBars:= ssAutoVertical;
+    FixedRows := 1;
+    FixedCols:= 0;
+    ColCount:= 4;
+    RowCount:= 2; //title is one row
+  end;
+end;
+
+procedure TBuildAppGrid.fillGrid;
+var
+  crow: Integer;
+begin
+  crow := 1;
+  with aGrid do begin
+    Cells[0,0]:= 'Application Name';
+    ColWidths[0]:= 120;
+    Cells[1,0]:= 'App Size';
+    ColWidths[1]:= 60;
+    Cells[2,0]:= 'Release Date';
+    ColWidths[2]:= 90;
+    Cells[3,0]:= 'Description';
+    ColWidths[3]:= 140;
+    if aDatFile <> '' then begin
+      AssignFile(f,aDatFile);
+      Reset(f);
+      try
+        while not Eof(F) do begin
+          Read (F, app);
+          Cells[0,crow]:= app.Name;
+          Cells[1,crow]:= intToStr(app.size);
+          Cells[2,crow]:= app.Release;
+          Cells[3,crow]:= app.descript;
+          Inc(cRow);
+          RowCount:= crow +1;  //new entry
+        end;
+      finally
+        CloseFile(f);
+      end;
+    end;// if FileExists...
+  end; //with
+end;
+
+function TBuildAppGrid.GetaDatfile: ShortString;
+begin
+  if FileExists(FaDatFile) then
+  result:= FaDatFile
+  else begin
+     AssignFile(f, FaDatFile);
+     Rewrite(f);
+     closefile(f);
+     result:= FaDatFile;
+  end;
+  
+  with TCustomComboBoxStrings.create do begin
+    deleter
+    indexof
+    free
+    end;
+end;
+
+procedure TBuildAppGrid.SetaDatfile(const Value: ShortString);
+begin
+  if FaDatfile <> Value then
+  begin
+    FaDatfile := Value;
+  end;
+end;
+
+procedure TBuildAppGrid.storeGrid;
+var
+  crow: Integer;
+begin
+  if FModified then
+  if MessageDlg('Save Changes in ' +
+             aDatFile, mtConfirmation,mbOkCancel,0) = mrOK then
+   begin
+     AssignFile(f, aDatfile);
+     Rewrite(f);
+   try
+     for crow:= 1 to Pred(aGrid.RowCount) do begin
+       app.Name:= aGrid.Cells[0, crow];
+       app.size:= strToInt(aGrid.Cells[1, crow]);
+       app.Release:= aGrid.Cells[2, crow];
+       app.descript:= aGrid.Cells[3, crow];
+       Write (f, app);
+     end;
+   finally
+     CloseFile(f);
+   end;
+  end; //if MessageDlg...
+end;
+
+end.
+
+
+und am TV in SRF Info   um 22:30 oder um 23 Uhr
+
+Wieso dann ausgerechnet um 10 vor 10!?!
+----Simple Browser started----
+----Simple Browser started----
+
+     RegisterMethod('Constructor Create(AOwner: TComponent);');
+    RegisterMethod('Procedure Free');
+ 
+ 
+ RegisterConstructor(@TCustomRadioGroup.Create, 'Create');
+     RegisterMethod(@TCustomRadioGroup.Free, 'Free');
+ 
+ 
+   RegisterMethod('Constructor Create(AOwner: TComponent);');
+   RegisterMethod('Procedure Free');
+   RegisterMethod('function GetControlsAlignment: TAlignment;');
+    RegisterMethod('procedure FlipChildren(AllLevels: Boolean);');
+
+
+ //function Focused
+   RegisterConstructor(@TCUSTOMMEMO.Create, 'Create');
+   RegisterMethod(@TCUSTOMMEMO.Free, 'Free');
+   RegisterMethod(@TCUSTOMMEMO.GetControlsAlignment, 'GetControlsAlignment');
+ 
+     RegisterPublishedProperties;
+     
+    RegisterPublishedProperties;
+   RegisterProperty('ONCLICK', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONDBLCLICK', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONENTER', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONEXIT', 'TNOTIFYEVENT', iptrw);
+     RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
+    RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
+    RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
+     RegisterProperty('ONKEYDOWN', 'TKeyEvent', iptrw);
+    RegisterProperty('ONKEYPRESS', 'TKeyPressEvent', iptrw);
+    RegisterProperty('ONKEYUP', 'TKeyEvent', iptrw);
+   RegisterProperty('ALIGN', 'TALIGN', iptrw);
+    RegisterProperty('ALIGNMENT', 'TALIGNMENT', iptrw);
+    RegisterProperty('CAPTION', 'String', iptrw);
+    RegisterProperty('CHECKED', 'BOOLEAN', iptrw);
+    RegisterProperty('COLOR', 'TColor', iptrw);
+    RegisterProperty('FONT', 'TFont', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CTL3D', 'Boolean', iptrw);
+     RegisterProperty('FONT', 'TFont', iptrw);
+     RegisterProperty('SORTED', 'Boolean', iptrw);
+     RegisterProperty('Visible', 'Boolean', iptrw);
+     RegisterProperty('TEXT', 'String', iptrw);
+    RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
+    RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
+    RegisterProperty('MAXLENGTH', 'Integer', iptrw);
+     RegisterProperty('CHARCASE', 'TEditCharCase', iptrw);
+    RegisterProperty('OEMCONVERT', 'Boolean', iptrw);
+    
+     CL.AddClassN(CL.FindClass('TOBJECT'),'TStatusBar');
+ 
+
+ 
+ 
+ Hallo Max
+Zuerst ein paar Links:
+
+Projekt mit Real Time Clock, Arduino und CSharp-Code
+http://ecotronics.ch.honorius.sui-inter.net/wordpress/2013/arduino-als-uhr-version-2-mit-rtc-komponente-und-led-display/
+
+Überwachung einer Stevia-Pflanze, ebenfalls mit CSharp und Arduino
+http://ecotronics.ch.honorius.sui-inter.net/wordpress/2012/big-sister-is-watching-you-die-totale-uberwachung-einer-stevia-pflanze/
+
+Alle Arduino-Projekte
+http://ecotronics.ch.honorius.sui-inter.net/wordpress/category/physical-computing/arduino/
+
+Und natürlich mein Arduino-Cheat-Sheet:
+http://www.ecotronics.ch/ecotron/arduinocheatsheet.htm
+
+Zu Android gibt es noch nichts Öffentliches
+
+Hier der Code der MainActivity für das Android-Arduino-Projekt
+"Buch_07_RGB_LED_UsbHost"
+Der Code ist fast unverändert aus dem Buch.
+
+package com.example.hellousb;
+
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.graphics.Color;
+import android.hardware.usb.UsbConstants;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbDeviceConnection;
+import android.hardware.usb.UsbEndpoint;
+import android.hardware.usb.UsbInterface;
+import android.hardware.usb.UsbManager;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.Menu;
+import android.view.WindowManager;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
+
+public class MainActivity extends Activity {
+
+public static final String TAG = "HelloUsb";
+
+private UsbDevice mDev = null;
+private UsbDeviceConnection mDeviceConnection = null;
+
+private final AtomicBoolean mStop = new AtomicBoolean(false);
+private final ArrayBlockingQueue<String> mValueQueue = new
+ArrayBlockingQueue<String>(12);
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+registerReceiver(mDetachedReceiver, new
+IntentFilter(UsbManager.ACTION_USB_ACCESSORY_DETACHED));
+setContentView(R.layout.activity_main);
+((SeekBar)findViewById(R.id.seekBarH)).setOnSeekBarChangeListener(mOnSeekBarChangeListener);
+((SeekBar)findViewById(R.id.seekBarS)).setOnSeekBarChangeListener(mOnSeekBarChangeListener);
+((SeekBar)findViewById(R.id.seekBarB)).setOnSeekBarChangeListener(mOnSeekBarChangeListener);
+}
+
+private final OnSeekBarChangeListener mOnSeekBarChangeListener =
+new OnSeekBarChangeListener() {
+
+@Override
+public void onStopTrackingTouch(SeekBar seekBar) {}
+
+@Override
+public void onStartTrackingTouch(SeekBar seekBar) {}
+
+@Override
+public void onProgressChanged(SeekBar seekBar, int progress,
+boolean fromUser) {
+int h = ((SeekBar)findViewById(R.id.seekBarH)).getProgress();
+int s = ((SeekBar)findViewById(R.id.seekBarS)).getProgress();
+int b = ((SeekBar)findViewById(R.id.seekBarB)).getProgress();
+
+/*int color = Color.HSVToColor(new float[]{
+(float)h,
+(float)s/255f,
+(float)b/255f
+});
+
+String cmdRed = "r"+Color.red(color)+"\n";
+String cmdGreen = "g"+Color.green(color)+"\n";
+String cmdBlue = "b"+Color.blue(color)+"\n";*/
+int color = Color.rgb( h, s, b);
+
+String cmdRed = "r"+Color.red(color)+"\n";
+String cmdGreen = "g"+Color.green(color)+"\n";
+String cmdBlue = "b"+Color.blue(color)+"\n";
+Log.e(TAG, "R: " + cmdRed + " G: " + cmdGreen + " B: " + cmdBlue);
+
+mValueQueue.offer(cmdRed);
+mValueQueue.offer(cmdGreen);
+mValueQueue.offer(cmdBlue);
+}
+};
+
+@Override
+protected void onDestroy() {
+unregisterReceiver(mDetachedReceiver);
+super.onDestroy();
+}
+
+@Override
+protected void onResume() {
+if(mDev == null){
+if(getIntent().hasExtra(UsbManager.EXTRA_DEVICE)){
+mDev =
+(UsbDevice)getIntent().getParcelableExtra(UsbManager.EXTRA_DEVICE);
+}
+}
+
+if (mDev == null) {
+e("no device attached");
+} else {
+mStop.set(false);
+if (sUsbThread == null) {
+sUsbThread = new Thread(mUsbRunnable);
+sUsbThread.setName("Usb Thread");
+sUsbThread.start();
+}
+}
+super.onResume();
+}
+
+@Override
+protected void onPause() {
+mStop.set(true);
+if(sUsbThread != null){
+sUsbThread.interrupt();
+}
+super.onPause();
+}
+
+@Override
+protected void onNewIntent(Intent intent) {
+l("on new intent");
+setIntent(intent);
+if(intent.hasExtra(UsbManager.EXTRA_DEVICE)){
+mDev =
+(UsbDevice)getIntent().getParcelableExtra(UsbManager.EXTRA_DEVICE);
+}
+}
+
+@Override
+public boolean onCreateOptionsMenu(Menu menu) {
+// Inflate the menu; this adds items to the action bar if it is
+present.
+getMenuInflater().inflate(R.menu.activity_main, menu);
+return true;
+}
+
+@Override
+protected void onStop() {
+mStop.set(true);
+if(sUsbThread != null){
+sUsbThread.interrupt();
+}
+mValueQueue.clear();
+mValueQueue.offer("-1");
+super.onStop();
+}
+
+private static Thread sUsbThread;
+private final Runnable mUsbRunnable = new Runnable() {
+@Override
+public void run() {
+UsbManager usbman = (UsbManager) getSystemService(USB_SERVICE);
+while (!mStop.get() && mDev != null &&
+usbman.hasPermission(mDev)) {
+mDeviceConnection = usbman.openDevice(mDev);
+UsbInterface usbif = mDev.getInterface(1);
+mDeviceConnection.claimInterface(usbif, true);
+mDeviceConnection.controlTransfer(0x21, 34, 0, 0, null,
+0, 0);
+mDeviceConnection
+.controlTransfer(0x21, 32, 0, 0,
+new byte[] { (byte) 0x80, 0x25, 0x00, 0x00,
+0x00, 0x00, 0x08 }, 7, 0);
+
+UsbEndpoint bulkOutEp = null;
+for (int i = 0; i < usbif.getEndpointCount(); i++) {
+if (usbif.getEndpoint(i).getDirection() ==
+UsbConstants.USB_DIR_OUT
+&& usbif.getEndpoint(i).getType() ==
+UsbConstants.USB_ENDPOINT_XFER_BULK) {
+bulkOutEp = usbif.getEndpoint(i);
+break;
+}
+}
+
+if (bulkOutEp == null) {
+e("OUT endpoint not found");
+break;
+}
+
+String cmd = "";
+try {
+if(!mValueQueue.contains("-1")){
+mValueQueue.clear();
+while(!(cmd = mValueQueue.take()).equals("-1")){
+mDeviceConnection.bulkTransfer(bulkOutEp,
+cmd.getBytes(),
+cmd.getBytes().length, 0);
+}
+}
+} catch (InterruptedException e) {
+e("interrupted while in queue");
+}
+l("releasing interface");
+mDeviceConnection.releaseInterface(usbif);
+mDeviceConnection.close();
+mDev = null;
+while(!mStop.get() && mDev == null) {
+try {
+l("waiting for new device");
+Thread.sleep(500);// waiting
+} catch (InterruptedException e) {
+}// e-gnore
+}
+}
+l("thread ended");
+sUsbThread = null;
+}
+};
+
+private static void l(Object o) {
+Log.d(TAG, ">==< " + o.toString() + " >==<");
+}
+
+private static void e(Object o) {
+Log.e(TAG, ">==< " + o.toString() + " >==<");
+}
+
+private final BroadcastReceiver mDetachedReceiver = new
+BroadcastReceiver() {
+@Override
+public void onReceive(Context context, Intent intent) {
+if (intent.getAction()
+.equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
+l("device detached");
+UsbDevice device = (UsbDevice)
+intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+if (device != null) {
+mValueQueue.clear();
+mValueQueue.offer("-1");
+}
+}
+}
+};
+}
+
+-- 
+Mit freundlichen Grüssen
+Silvia Rothen
+
+rothen ecotronics
+Kasernenstr. 41
+3013 Bern
+
+Tel. G: +41 (0)31 333 71 82
+
+http://www.ecotronics.ch/
+
+constructor TControl.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FWindowProc := WndProc;
+  FControlStyle := [csCaptureMouse, csClickEvents, csSetCaption, csDoubleClicks];
+  FFont := TFont.Create;
+  FFont.OnChange := FontChanged;
+  FAnchors := [akLeft, akTop];
+  FConstraints := TSizeConstraints.Create(Self);
+  FConstraints.OnChange := DoConstraintsChange;
+  FMargins := TMargins.Create(Self);
+  FMargins.OnChange := DoMarginChange;
+  FColor := clWindow;
+  FVisible := True;
+  FEnabled := True;
+  FParentFont := True;
+  FParentColor := True;
+  FParentShowHint := True;
+  FParentBiDiMode := True;
+  FIsControl := False;
+  FDragCursor := crDrag;
+  FFloatingDockSiteClass := TCustomDockForm;
+  FHelpType := htContext;
+end;
+
+constructor TWinControl.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+{$IFDEF LINUX}
+  FObjectInstance := WinUtils.MakeObjectInstance(MainWndProc);
+{$ENDIF}
+{$IFDEF MSWINDOWS}
+  FObjectInstance := Classes.MakeObjectInstance(MainWndProc);
+{$ENDIF}
+  FBrush := TBrush.Create;
+  FBrush.Color := FColor;
+  FParentCtl3D := True;
+  FTabOrder := -1;
+  FImeMode := imDontCare;
+  if SysLocale.PriLangID = LANG_JAPANESE then
+    FImeName := ''
+  else
+    FImeName := Screen.DefaultIme;
+  FUseDockManager := False;
+  FBevelEdges := [beLeft, beTop, beRight, beBottom];
+  FBevelInner := bvRaised;
+  FBevelOuter := bvLowered;
+  FBevelWidth := 1;
+  FHelpType := htContext;
+  FPadding := TPadding.Create(Self);
+  FPadding.OnChange := DoPaddingChange;
+end;

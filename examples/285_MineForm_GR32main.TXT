@@ -1,0 +1,1216 @@
+  program MineForm_Draft_inprogress2;
+
+//interface of 3.9.7
+// this file is on progress!!
+
+{uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ActnList, GR32, GR32_Image, Menus, ImgList, ExtCtrls, Buttons, Math,
+  IniFiles, MineGame, CustomGame, BestTimes, About;}
+
+const
+  TITLE_WIDTH_MIN = 205;
+  UNCLICKED_BMP = 0;
+  CLICKED_BMP = 1;
+  MINED_BMP = 2;
+  MARKED_BMP = 3;
+  MINE1_BMP = 4;
+  RED_BMP = 12;
+  FLAG_BMP = 13;
+  CROSS_BMP = 14;
+  SUN_BMP_WIDTH = 55;
+  SUN_BMP_HEIGHT = 45;
+  SUN_WAIT_BMP = 0;
+  SUN_OOO_BMP = 1;
+  SUN_WON_BMP = 2;
+  SUN_LOST_BMP = 3;
+  
+  //from unit minegame
+  GAME_WIDTH_MAX = 50;
+  GAME_HEIGHT_MAX = 50;
+  CASE_WIDTH = 20;
+  CASE_HEIGHT = 20;
+  CLIKING_STEP_MAX = 5;
+  NB_STEP_MAX = 5;
+
+
+//type
+  //TMinesweeperForm = class(TForm)
+
+type
+ TCaseState = (csUnclicked, csClicking, csClicked, csMined, csMarked);
+  TGameState = (gsBeginning, gsPlaying, gsLost, gsWon);
+
+  TCase = record
+    Mined: Boolean;
+    NearbyMines: Integer;
+    ClickingStep: Integer;
+    State: TCaseState;
+  end;
+  
+  TGame2 = array[0..GAME_HEIGHT_MAX - 1] of TCase;
+  TGame = array[0..GAME_WIDTH_MAX - 1] of TGame2;
+  
+  //TGame2 = array[0..GAME_Width_MAX - 1] of TCase;
+  //TGame = array[0..GAME_HEIGHT_MAX - 1] of TGame2;
+
+  
+  procedure TMinesweeperForm_FormClose(Sender: TObject; var Action: TCloseAction); forward;
+
+   procedure TMinesweeperForm_GamePbMouseDown(Sender: TObject;
+               Button: TMouseButton; Shift: TShiftState; X, Y: Integer); forward;
+               
+   procedure TMinesweeperForm_GamePbMouseUp(Sender: TObject;
+               Button: TMouseButton; Shift: TShiftState; X, Y: Integer); forward;
+               
+   procedure TMinesweeperForm_DrawGame; forward;
+   procedure TMinesweeperForm_GameNewExecute(Sender: TObject); forward;
+   procedure TMinesweeperForm_CaseTimerTimer(Sender: TObject); forward;
+
+
+    var
+    cmineFrm: TForm;
+    MainPnl: TPanel;
+    TitlePnl: TPanel;
+    Timer: TTimer;
+    MainMenu: TMainMenu;
+    GameMi: TMenuItem;
+    NewMenuItem: TMenuItem;
+    N1: TMenuItem;
+    BeginnerMenuItem: TMenuItem;
+    IntermediateMenuItem: TMenuItem;
+    ExpertMenuItem: TMenuItem;
+    CustomMenuItem: TMenuItem;
+    N2: TMenuItem;
+    MarksMenuItem: TMenuItem;
+    N3: TMenuItem;
+    BestTimesMenuItem: TMenuItem;
+    N4: TMenuItem;
+    ExitMenuItem: TMenuItem;
+    OptionsMi: TMenuItem;
+    ContentMenuItem: TMenuItem;
+    AboutMenuItem: TMenuItem;
+    GamePnl: TPanel;
+    GamePb: TPaintBox32;
+    //GamePb: TPaintBox;
+
+    CasesIl: TBitmap32List;   //15!
+    //ActionList1: TActionList;
+    //GameNew: TAction;
+    //GameBeginner: TAction;
+    //GameIntermediate: TAction;
+    GameBeginner, GameIntermediate, GameExpert: boolean;
+    gamemarks: boolean;
+    FMouseDown: Boolean;
+
+    //GameExpert: TAction;
+    GameCustom: TAction;
+    //GameMarks: TAction;
+    GameBestTimes: TAction;
+    GameExit: TAction;
+    HelpContent: TAction;
+    HelpAbout: TAction;
+    CaseTimer: TTimer;
+    TitlePb: TPaintBox32;
+    Num7SegIl: TBitmap32List;
+    SunIl: TBitmap32List;
+    //CasesIl: TBitmap32List;
+    
+ 
+ 
+    //of tminesweeper
+  
+     
+    {procedure FormCreate(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure GamePbMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure GamePbMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure GameNewExecute(Sender: TObject);
+    procedure GameBeginnerExecute(Sender: TObject);
+    procedure GameIntermediateExecute(Sender: TObject);
+    procedure GameExpertExecute(Sender: TObject);
+    procedure GameCustomExecute(Sender: TObject);
+    procedure GameMarksExecute(Sender: TObject);
+    procedure GameBestTimesExecute(Sender: TObject);
+    procedure GameExitExecute(Sender: TObject);
+    procedure HelpContentExecute(Sender: TObject);
+    procedure HelpAboutExecute(Sender: TObject);
+    procedure CaseTimerTimer(Sender: TObject);
+    procedure TimerTimer(Sender: TObject);
+  private }
+    //FMineSweeper: TMineSweeper;
+    {procedure SetSize(AWidth, AHeight, AMineCount: Integer);
+    procedure DrawTitle;
+    procedure DrawCase(X, Y: Integer; ACase: TCase);
+    procedure DrawGame;
+    procedure ReadIniFile;
+    procedure WriteIniFile;
+  public
+    //{ Public declarations }
+  //end;}
+  
+  
+  //TMineSweeper = class(TObject)
+  //private
+    //FClickingCaseList: TIntegerList;
+    
+    ClickingCaseList: TPointArray;
+ 
+    FRemainingMineCount: Integer;
+    //FGame: TGame;
+    //FGameState: TGameState;
+    //FHeight: Integer;
+    //FWidth: Integer;
+    //FMineCount: Integer;
+    FTime: Integer;
+    
+       Game: TGame;
+    //GameState: set of TGameState;
+    GameState: TGameState;
+
+    MHeight: Integer;
+    MineCount: Integer;
+    RemainingMineCount: Integer;
+    MTime: Integer;
+    MWidth: Integer;
+    plistcount: integer;
+ 
+ {   procedure AddClickingCase(X, Y: Integer);
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure DecClickingStep(X, Y: Integer);
+    procedure NewGame;
+    procedure SetSize(AWidth, AHeight, AMineCount: Integer);
+    procedure SetState(X, Y: Integer; Value: TCaseState);
+    property ClickingCaseList: TList read FClickingCaseList;
+    property Game: TGame read FGame;
+    property GameState: TGameState read FGameState;
+    property Height: Integer read FHeight;
+    property MineCount: Integer read FMineCount;
+    property RemainingMineCount: Integer read FRemainingMineCount;
+    property Time: Integer read FTime write FTime;
+    property Width: Integer read FWidth;
+  end; }
+
+
+
+  // TGame = array[0..GAME_WIDTH_MAX - 1, 0..GAME_HEIGHT_MAX - 1] of TCase;
+///var
+  //MinesweeperForm: TMinesweeperForm;
+
+//implementation
+
+//{$R *.dfm}
+
+function getBitmap32(apath: string): TBitmap32;
+  begin
+    result:= TBitmap32.Create;
+    with result do try
+      LoadFromFile(apath);
+    finally
+      //Free;
+    end;
+  end;
+
+ procedure TMinesweeperForm_FormClick(Sender: TObject);
+ begin
+   writeln('click of paintbox');
+ end;  
+ 
+ //------------------------------------------------------------------------------
+
+procedure {constructor} TMineSweeper_Create;
+begin
+  //LoadMineForm;
+  //ClickingCaseList := TIntegerList.Create;
+end;
+
+//------------------------------------------------------------------------------
+
+procedure {destructor} TMineSweeper_Destroy;
+begin
+  //ClickingCaseList.Free;
+  //inherited;
+end;
+
+//------------------------------------------------------------------------------
+
+
+
+procedure LoadMineForm;
+begin
+  cmineFrm:= TForm.create(self);
+  with cmineFrm do begin
+    BorderStyle:= bsDialog;
+    //BorderIcons
+    //windowState
+     Position := poDesktopCenter;
+     Left:= 901;
+     Top:= 113;
+     AutoSize:= True;
+     Caption:= 'Minesweeper_Box'
+    height:= 288;
+    width:= 233;
+    //color:= clblack;
+    Color:= clBtnFace;
+
+    //Color:= clred;
+    font.height:= -11;
+    Font.Style:= [];
+    Menu:= MainMenu;
+    //TextHeight:= 13
+    //Icon.Data
+    //onPaint:= @PaintBox1Paint;
+    OnClose:= @TMinesweeperForm_FormClose;
+    //OnMouseDown:= @TMinesweeperForm_GamePbMouseDown;  //GamePbMouseDown
+    //  OnMouseUp:= GamePbMouseUp
+
+    Show;
+  end;
+  //ClickingCaseList := TIntegerList.Create;
+  SetArrayLength(ClickingCaseList, 200);
+  
+  MainPnl:= TPanel.Create(cmineFrm)
+  MainPnl.parent:= cmineFrm;
+  MainPnl.setBounds(0,0,225,241);
+  MainPnl.bevelOuter:= bvNone;
+  MainPnl.Color:= clred;
+ 
+    TitlePnl:= TPanel.Create(cmineFrm)
+    TitlePnl.parent:= mainpnl;
+    TitlePnl.setBounds(8,8,205,55);
+ 
+      TitlePb:= TPaintBox32.Create(cmineFrm)
+      TitlePb.parent:= titlepnl;
+      TitlePb.SetBounds(1,1,203,53);
+      //TitlePb.loaded;
+      TitlePb.visible:= true;
+      TitlePb.Align:= alClient;
+      TitlePb.OnClick:= @TMinesweeperForm_GameNewExecute;
+
+ 
+    GamePnl:= TPanel.Create(cmineFrm)
+    GamePnl.parent:= mainpnl;
+    GamePnl.setBounds(32,66,162,163);
+    
+        //GamePb:= TPaintBox32.Create(cmineFrm)
+        GamePb:= TPaintBox32.Create(cmineFrm)
+        GamePb.parent:= gamepnl;
+        GamePb.setBounds(1,1,160,160);
+        GamePb.visible:= true;
+        GamePb.Align:= alClient;
+        //gamepb.canvas.textout(20,20,'this is := ');
+        GamePb.OnClick:= @TMinesweeperForm_FormClick;
+        GamePb.OnMouseDown:= @TMinesweeperForm_GamePbMouseDown;
+        GamePb.OnMouseUp:= @TMinesweeperForm_GamePbMouseUp;
+
+  
+  
+ {  UNCLICKED_BMP = 0;
+  CLICKED_BMP = 1;
+  MINED_BMP = 2;
+  MARKED_BMP = 3;
+  MINE1_BMP = 4;}
+       
+ //    Num7SegIl: TBitmap32;
+    Num7SegIl:= TBitmap32List.Create(self);
+    with Num7SegIl do begin
+        //Bitmap.DrawMode:= dmBlend
+        bitmaps.add;
+        bitmap[0]:= getbitmap32(exepath+'\examples\images\num0.bmp');
+   
+        bitmaps.add;
+        bitmap[1]:= getbitmap32(exepath+'\examples\images\num1.bmp');
+   
+        bitmaps.add;
+        bitmap[2]:= getbitmap32(exepath+'\examples\images\num2.bmp');
+   
+        bitmaps.add;
+        bitmap[3]:= getbitmap32(exepath+'\examples\images\num3.bmp');
+   
+        bitmaps.add;
+      bitmap[4]:= getbitmap32(exepath+'\examples\images\num4.bmp');
+        bitmaps.add;
+      bitmap[5]:= getbitmap32(exepath+'\examples\images\num5.bmp');
+        bitmaps.add;
+      bitmap[6]:= getbitmap32(exepath+'\examples\images\num6.bmp');
+        bitmaps.add;
+      bitmap[7]:= getbitmap32(exepath+'\examples\images\num7.bmp');
+        bitmaps.add;
+      bitmap[8]:= getbitmap32(exepath+'\examples\images\num8.bmp');
+        bitmaps.add;
+      bitmap[9]:= getbitmap32(exepath+'\examples\images\num9.bmp');
+   
+     
+        //bitmap[1]:= getbitmap(exepath+'\examples\maxbox.bmp');
+      //Bitmaps.item
+        //Bitmap.DrawMode = dmBlend
+        //Bitmap[1]:= 'juist a test';
+      end;
+  
+{    SUN_WAIT_BMP = 0;
+  SUN_OOO_BMP = 1;
+  SUN_WON_BMP = 2;
+  SUN_LOST_BMP = 3;  }
+ 
+    SunIl:= TBitmap32List.Create(self);
+    with SunIl do begin
+        //Bitmap.DrawMode:= dmBlend
+        bitmaps.add;
+        bitmap[0]:= getbitmap32(exepath+'\exercices\sun_wait.bmp');
+        bitmaps.add;
+        bitmap[1]:= getbitmap32(exepath+'\exercices\sun_ooo.bmp');
+       
+        bitmaps.add;
+        bitmap[2]:= getbitmap32(exepath+'\exercices\sun_won.bmp');
+        bitmaps.add;
+        bitmap[3]:= getbitmap32(exepath+'\exercices\sun_lost.bmp');
+  
+      
+        //bitmap[1]:= getbitmap(exepath+'\examples\maxbox.bmp');
+      //Bitmaps.item
+      //item
+        //Bitmap.DrawMode = dmBlend
+        //Bitmap[1]:= 'juist a test';
+        end;
+        
+    {   UNCLICKED_BMP = 0;
+  CLICKED_BMP = 1;
+  MINED_BMP = 2;
+  MARKED_BMP = 3;
+  MINE1_BMP = 4;
+   RED_BMP = 12;
+  FLAG_BMP = 13;
+  CROSS_BMP = 14; }
+ 
+     
+  
+    CasesIl:= TBitmap32List.Create(self);
+    with CasesIl do begin
+        //Bitmap.DrawMode:= dmBlend
+         //Height:= 50;   //Width:= 30;
+    
+        bitmaps.add;
+        bitmap[0]:= getbitmap32(exepath+'\examples\images\unclicked.bmp');
+        bitmaps.add;
+        bitmap[1]:= getbitmap32(exepath+'\examples\images\clicked.bmp');
+        bitmaps.add;
+        bitmap[2]:= getbitmap32(exepath+'\examples\images\mined.bmp');
+       
+        bitmaps.add;
+        bitmap[3]:= getbitmap32(exepath+'\examples\images\marked.bmp');
+        bitmaps.add;
+        bitmap[4]:= getbitmap32(exepath+'\examples\images\mined_mask.bmp');
+    bitmaps.add;
+        bitmap[5]:= getbitmap32(exepath+'\examples\images\1.bmp');
+
+    bitmaps.add;
+        bitmap[6]:= getbitmap32(exepath+'\examples\images\2.bmp');
+
+    bitmaps.add;
+        bitmap[7]:= getbitmap32(exepath+'\examples\images\3.bmp');
+
+    bitmaps.add;
+        bitmap[8]:= getbitmap32(exepath+'\examples\images\4.bmp');
+
+    bitmaps.add;
+         bitmap[9]:= getbitmap32(exepath+'\examples\images\5.bmp');
+
+    bitmaps.add;
+        bitmap[10]:= getbitmap32(exepath+'\examples\images\6.bmp');
+
+    bitmaps.add;
+        bitmap[11]:= getbitmap32(exepath+'\examples\images\7.bmp');
+ 
+
+    bitmaps.add;
+        bitmap[12]:= getbitmap32(exepath+'\examples\images\red.bmp');
+    bitmaps.add;
+        bitmap[13]:= getbitmap32(exepath+'\examples\images\flag.bmp');
+    bitmaps.add;
+        bitmap[14]:= getbitmap32(exepath+'\examples\images\cross.bmp');
+ 
+  //testcase
+     
+        //GamePb.Buffer.Draw(12, 12, CasesIl.Bitmap[MINED_BMP]);
+        
+          //TitlePb.Buffer.Draw(3, 8, CasesIl.Bitmap[2]);
+        //   TitlePb.Buffer.Draw(100, 8, Num7SegIl[5]);
+ 
+     {  GamePb.Buffer.Draw((TitlePnl.Width - SUN_BMP_WIDTH) div 2,
+       (TitlePnl.Height - SUN_BMP_HEIGHT) div 2,
+        //SunIl[SUN_WAIT_BMP]);  SunIl[2]);  }
+   
+        //bitmap[1]:= getbitmap(exepath+'\examples\maxbox.bmp');
+   end;
+  
+        
+  //     TMinesweeperForm_DrawGame;
+    
+        //OnMouseDown = GamePbMouseDown
+        //OnMouseUp = GamePbMouseUp
+   
+  //TitlePb.OnClick = @GameNewExecute
+   CaseTimer:= TTimer.Create(self);
+   with casetimer do begin
+    Interval:= 30;                //30
+    OnTimer:= @TMinesweeperForm_CaseTimerTimer;
+  end;
+  
+  pListcount:= 0;
+ 
+       
+ {  object Timer: TTimer
+    OnTimer = TimerTimer
+  end  }
+  
+  
+  MainMenu:= TMainMenu.create(cminefrm);
+   GameMi:= TMenuItem.Create(cminefrm);
+    gamemi.Caption:= '&Game';
+    //gamemi.OnClick:= @btnCloseClick;
+   
+    mainmenu.Items.Add(gamemi);
+    NewMenuItem:= TMenuItem.create(cminefrm)
+    NewMenuItem.caption:= 'Game New';
+    mainmenu.Items.Add(newmenuitem);
+    cminefrm.Menu:= MainMenu;
+ 
+   
+
+    //object GameMi: TMenuItem
+      //Caption = '&Game'
+      //object NewMenuItem: TMenuItem
+       // Action = GameNew
+      //end
+      //object N1: TMenuItem
+        //Caption = '-'
+      //end
+   {   object BeginnerMenuItem: TMenuItem
+        Action = GameBeginner
+      end
+      object IntermediateMenuItem: TMenuItem
+        Action = GameIntermediate
+      end
+      object ExpertMenuItem: TMenuItem
+        Action = GameExpert
+      end
+      object N2: TMenuItem
+        Caption = '-'
+      end
+      object MarksMenuItem: TMenuItem
+        Action = GameMarks
+      end
+      object N3: TMenuItem
+        Caption = '-'
+      end
+      object BestTimesMenuItem: TMenuItem
+        Action = GameBestTimes
+      end
+      object N4: TMenuItem
+        Caption = '-'
+      end
+      object ExitMenuItem: TMenuItem
+        Action = GameExit
+      end
+    end
+    object OptionsMi: TMenuItem
+      Caption = '&Help'
+      object ContentMenuItem: TMenuItem
+        Action = HelpContent
+      end
+      object AboutMenuItem: TMenuItem
+        Action = HelpAbout
+      end
+    end
+  end}
+ 
+ 
+end;
+
+
+///////////////////from unit minegame  //////////////////////////////////
+procedure TMineSweeper_AddClickingCase(X, Y: Integer);
+var
+  Point: TPoint;
+begin
+  //New(Point);
+  Point.X:= X;
+  Point.Y:= Y;
+  //FClickingCaseList.Add(Point)
+  inc(plistcount);
+  ClickingCaseList[plistcount]:= Point;
+  //ClickingCaseList.Add(Point.X)
+  //ClickingCaseList.Add(Point.Y)
+
+end;
+
+
+procedure TMineSweeper_DecClickingStep(X, Y: Integer);
+begin
+  Dec(Game[X][Y].ClickingStep);
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TMineSweeper_NewGame;
+var
+  I, J, K, L, X, Y: Integer;
+begin
+  //GameBeginner:= True
+  for I := 0 to MWidth - 1 do
+    for J := 0 to MHeight - 1 do
+      with Game[I][J] do begin
+        Mined := False;
+        NearbyMines := 0;
+        State := csUnclicked;
+      end;
+  for I := 0 to MineCount - 1 do begin
+    repeat
+      X := Random(MWidth);
+      Y := Random(MHeight);
+    until not Game[X][Y].Mined;
+    Game[X][Y].Mined:= True;
+  end;
+  writeln('new '+inttostr(mwidth))
+  writeln('new '+inttostr(mheight))
+
+  for I := 0 to MWidth - 1 do
+    for J := 0 to MHeight - 1 do
+      for K := I - 1 to I + 1 do
+        for L := J - 1 to J + 1 do                                     //K, L in origin!
+          if (K >= 0) and (K < MWidth) and (L >= 0) and (L < MHeight) and Game[K+1][L+1].Mined then
+            Inc(Game[I][J].NearbyMines);
+  RemainingMineCount := MineCount;
+  GameState := gsBeginning;
+  MTime := 0;
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TMineSweeper_SetSize(AWidth, AHeight, AMineCount: Integer);
+begin
+  MWidth := Min(AWidth, GAME_WIDTH_MAX);
+  MHeight := Min(AHeight, GAME_HEIGHT_MAX);
+  Writeln('set size: '+inttostr(mwidth)+' * '+inttostr(mheight))
+  MineCount:= Min(AMineCount, Min(999, (MHeight * MWidth) div 2));
+end;
+
+//locals of _setState
+  procedure ClearZone(X, Y, X0, Y0: Integer);
+  var
+    I, J: Integer;
+  begin
+    Game[X][Y].State := csClicking;
+    Game[X][Y].ClickingStep := NB_STEP_MAX +
+    //Isqrt((X - X0) * (X - X0) + (Y - Y0) * (Y - Y0));
+      {Abs}round(abs(Sqrt((X - X0) * (X - X0) + (Y - Y0) * (Y - Y0))));
+    TMineSweeper_AddClickingCase(X, Y);
+    if Game[X][Y].NearbyMines = 0 then
+      for I := -1 to 1 do
+        for J := -1 to 1 do
+          if ((I <> 0) or (J <> 0))
+            and (X + I >= 0) and (X + I < MWidth)
+            and (Y + J >= 0) and (Y + J < MHeight)
+            and (Game[X + I][Y + J].State = csUnclicked) then
+            ClearZone(X + I, Y + J, X0, Y0);  //recursion
+  end;
+
+  procedure CheckEndedGame;
+  var
+    I, J: Integer;
+    Won: boolean;
+  begin
+    Won := True;
+    for I := 0 to MWidth - 1 do
+      for J := 0 to MHeight - 1 do
+        if (Game[I][J].State = csMined) and not Game[I][J].Mined then
+          Won := False;
+    if Won then
+      GameState := gsWon
+    else
+      GameState := gsLost;
+  end;
+
+
+procedure TMineSweeper_SetState(X, Y: Integer; aValue: TCaseState);
+begin
+  if (X >= 0) and (X < MWidth) and (Y >= 0) and (Y < MHeight) then begin
+    if GameState = gsBeginning then
+      GameState:= gsPlaying;
+
+    if aValue = csMined then begin
+      Dec(RemainingMineCount);
+      if RemainingMineCount = 0 then
+        CheckEndedGame;
+    end
+    else if ((avalue = csUnclicked) and (Game[X][Y].State = csMined)) or (aValue = csMarked) then
+      Inc(RemainingMineCount);
+
+    if (aValue = csClicking) and (Game[X][Y].NearbyMines = 0) then
+      ClearZone(X, Y, X, Y)
+    else begin
+      Game[X][Y].State := aValue;
+      if aValue = csClicking then begin
+        Game[X][Y].ClickingStep := NB_STEP_MAX;
+        TMineSweeper_AddClickingCase(X, Y);
+      end;
+      //if (Value in [csClicked, csClicking]) and Game[X][Y].Mined then
+      if (aValue = csClicked) or (avalue = csClicking) and Game[X][Y].Mined then begin
+  
+        GameState:= gsLost;
+        writeln('you lost ');
+        end;
+    end;
+  end;
+end;
+
+
+/////////////////---------------------------------------------------------------
+
+
+procedure TMinesweeperForm_SetSize(AWidth, AHeight, AMineCount: Integer);
+begin
+  TMineSweeper_SetSize(AWidth, AHeight, AMineCount);
+  GamePnl.Width := AWidth * CASE_WIDTH + 2 * GamePnl.BevelWidth;
+  GamePnl.Height := AHeight * CASE_HEIGHT + 2 * GamePnl.BevelWidth;
+  GamePb.Buffer.SetSize(AWidth * CASE_WIDTH, AHeight * CASE_HEIGHT);
+  TitlePnl.Width := Max(TITLE_WIDTH_MIN, GamePnl.Width);
+  GamePnl.Left := TitlePnl.Left + (TitlePnl.Width - GamePnl.Width) div 2;
+  TitlePb.Buffer.SetSize(Max(TITLE_WIDTH_MIN, GamePnl.Width) - 2 * TitlePnl.BorderWidth, TitlePnl.Height - 2 * TitlePnl.BorderWidth);
+  MainPnl.Width := 2 * TitlePnl.Left + TitlePnl.Width;
+  MainPnl.Height := GamePnl.Top + GamePnl.Height + TitlePnl.Top;
+  cminefrm.Position := poDesktopCenter;
+  {GameBeginner.Checked := False;
+  GameIntermediate.Checked := False;
+  GameExpert.Checked := False;
+  GameCustom.Checked := False;}
+  if (AWidth = 9) and (AHeight = 9) and (AMineCount = 10) then
+    GameBeginner:= True
+  else if (AWidth = 16) and (AHeight = 16) and (AMineCount = 40) then
+    GameIntermediate:= True
+  else if (AWidth = 30) and (AHeight = 16) and (AMineCount = 99) then
+    GameExpert:= True
+  //else GameCustom.Checked := True;
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TMinesweeperForm_DrawTitle;
+var mh: hdc;
+   //Num7SegIl: tcustombitmap32;
+   //TitlePb: TCustombitmap32;
+begin
+  TitlePb.Buffer.BeginUpdate;   // missing
+  //TitlePb.Buffer.Clear(Color32(cminefrm.Color));
+  TitlePb.Buffer.Clear;
+ 
+  if RemainingMineCount > 99 then begin
+    if RemainingMineCount div 100 > 0 then
+   //TitlePb.Buffer.getstipplecolor;
+    //TitlePb.Buffer.Draw(4,5, TCustombitmap32(Num7SegIl.font));
+  
+    //TitlePb.Buffer.Draw2(rect(3,1,3,4), rect(8,5,4,5),Num7SegIl[RemainingMineCount div 100,4]);
+   //TitlePb.Buffer.Draw1(3, 8, rect(3,1,4,5), Num7SegIl[RemainingMineCount mod 100,2]);
+    //TitlePb.Buffer.Draw(27, 8, TCustomBitmap32(Num7SegIl[RemainingMineCount mod 100]));
+      TitlePb.Buffer.Draw(3, 8, Num7SegIl[RemainingMineCount div 100]);
+    TitlePb.Buffer.Draw(27, 8, Num7SegIl[(RemainingMineCount mod 100) div 10]);
+    TitlePb.Buffer.Draw(51, 8, Num7SegIl[RemainingMineCount mod 10]);
+
+   // TitlePb.Buffer.Draw(51, 8, Num7SegIl[FMineSweeper.RemainingMineCount mod 10]);
+  end
+  else
+  begin
+    if RemainingMineCount div 10 > 0 then
+      TitlePb.buffer.Draw(3, 8, Num7SegIl[RemainingMineCount div 10]);
+    TitlePb.Buffer.Draw(27, 8, Num7SegIl[RemainingMineCount mod 10]);
+  end;
+  case GameState of
+    gsBeginning: TitlePb.Buffer.Draw((TitlePnl.Width - SUN_BMP_WIDTH) div 2,
+       (TitlePnl.Height - SUN_BMP_HEIGHT) div 2,
+        //SunIl[SUN_WAIT_BMP]);
+        SunIl[2]);
+  
+        //sleep(10);
+    gsPlaying:
+      if FMouseDown then
+        TitlePb.Buffer.Draw((TitlePnl.Width - SUN_BMP_WIDTH) div 2,
+          (TitlePnl.Height - SUN_BMP_HEIGHT) div 2,
+          SunIl[SUN_OOO_BMP])
+      else
+        TitlePb.Buffer.Draw((TitlePnl.Width - SUN_BMP_WIDTH) div 2,
+          (TitlePnl.Height - SUN_BMP_HEIGHT) div 2,
+          SunIl[SUN_WAIT_BMP]);
+          //sleep(10);
+    gsLost: 
+    TitlePb.Buffer.Draw((TitlePnl.Width - SUN_BMP_WIDTH) div 2,
+       (TitlePnl.Height - SUN_BMP_HEIGHT) div 2,
+        SunIl[SUN_LOST_BMP]);
+        //sleep(10);
+    gsWon: 
+    TitlePb.Buffer.Draw((TitlePnl.Width - SUN_BMP_WIDTH) div 2,
+        (TitlePnl.Height - SUN_BMP_HEIGHT) div 2,
+        SunIl[SUN_WON_BMP]);
+  end;
+  if MTime < 1000 then begin
+    if MTime div 100 > 0 then
+     TitlePb.Buffer.Draw(TitlePb.Buffer.Width - 75, 8, Num7SegIl[MTime div 100]);
+    if (MTime mod 100) div 10 > 0 then
+      TitlePb.Buffer.Draw(TitlePb.Buffer.Width - 51, 8, Num7SegIl[(MTime mod 100) div 10])
+    else if MTime div 100 > 0 then
+      TitlePb.Buffer.Draw(TitlePb.Buffer.Width - 51, 8, Num7SegIl[0]);
+    TitlePb.Buffer.Draw(TitlePb.Buffer.Width - 27, 8, Num7SegIl[MTime mod 10]);
+  end
+  else
+    with TitlePb.buffer do    //missing
+      TextOut(TitlePb.Buffer.Width - TextWidth(IntToStr(MTime)),
+        (TitlePb.Height - TextHeight('1')) div 2,
+        IntToStr(MTime));
+  TitlePb.Buffer.EndUpdate;
+  TitlePb.Buffer.Changed;
+  TitlePb.Repaint;
+end;
+
+function CharInSet(const C: Char; const testSet: TSysCharSet): boolean;
+begin
+ if IsEven(27) then
+  Result:= C in testSet;
+end;
+
+//type
+ //TLetterSet = set of TSyscharset;
+ 
+ {type
+ TPerson = record
+ Name : shortstring;
+ case Schweizer : boolean of
+ true : (Heimatort : string[40]);
+8 false :     9 (Geburtsort : string[40];
+10 Land : string[20]);
+11 end;}
+//3636: {set functions}
+{3637: procedure SplitSet(AText: string; AList: TStringList);
+3638: function JoinSet(AList: TStringList): string;
+3639: function FirstOfSet(const AText: string): string;
+3640: function LastOfSet(const AText: string): string;
+3641: function CountOfSet(const AText: string): Integer;
+3642: function SetRotateRight(const AText: string): string;
+3643: function SetRotateLeft(const AText: string): string;
+3644: function SetPick(const AText: string; AIndex: Integer): string;
+3645: function SetSort(const AText: string): string;
+3646: function SetUnion(const Set1, Set2: string): string;
+3647: function SetIntersect(const Set1, Set2: string): string;
+3648: function SetExclude(const Set1, Set2: string): string; }
+
+//------------------------------------------------------------------------------
+
+procedure TMinesweeperForm_DrawCase(X, Y: Integer; ACase: TCase);
+var testset2, testset3, setletter1,setletter2: TsysCharSet;
+
+begin
+ testSet2:=  ['k','-','5','£'];   
+ testSet3:=  ['k','-','6','9'];   
+ setLetter1:= ['a','c'];
+ setLetter2:= ['a','d'];
+ setLetter1:= setLetter1 + ['f'];
+ setLetter1:= setLetter1 + setLetter2;
+ 
+ //if 'a' in setletter1 then msg('inc -a');
+    //include  //gamestate:= gamestate + [gslost];
+    //if '6' in testset3 then  
+    //if [gslost] in [GameState] then
+        //if 'g' in gamestate then
+  
+  {with TFontDialog.Create(self) do begin
+    execute
+    Free;
+  end;}  
+   
+   //writeln(booltostr(acase.mined,true));
+   //writeln('state '+booltostr(acase.state,true));
+     //GamePb.Buffer.Draw(20, 20, Num7SegIl[2]);
+         GamePb.Buffer.Draw((TitlePnl.Width - SUN_BMP_WIDTH) div 2,
+       (TitlePnl.Height - SUN_BMP_HEIGHT) div 2,
+        //SunIl[SUN_WAIT_BMP]);
+        SunIl[2]);
+   
+  with ACase do
+    case State of
+      csUnclicked:
+        //if (GameState in [gsWon, gslost]) and Mined then 
+        if (GameState = gsWon) or (gamestate = gslost) and (Mined) then begin
+          //if (GameState = gsWon) and Mined then begin
+          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HEIGHT, CasesIl.Bitmap[CLICKED_BMP]);
+          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HEIGHT, CasesIl.Bitmap[MINED_BMP]);
+        end
+        else
+          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HEIGHT, CasesIl.Bitmap[UNCLICKED_BMP]);
+          //sleep(20);
+      csClicking, csclicked:
+       if (State = csClicking) and (ClickingStep >= NB_STEP_MAX) then begin
+          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HEIGHT, CasesIl.Bitmap[UNCLICKED_BMP]);
+        end
+        else begin
+          if Mined then begin
+          writeln('mined ')
+            GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HEIGHT, CasesIl.Bitmap[RED_BMP]);
+            GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HEIGHT, CasesIl.Bitmap[MINED_BMP]);
+          end
+          else if NearbyMines >= 0 then begin
+            GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HEIGHT, CasesIl.Bitmap[CLICKED_BMP]);
+            if NearbyMines > 0 then
+              GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HEIGHT, CasesIl.Bitmap[MINE1_BMP +
+                NearbyMines - 1]);
+          end;
+        end;
+      csMined:
+      //writeln('csmined');
+       // if (GameState in [gsWon, gslost]) and not Mined then begin
+        if (GameState = gsWon) or (gamestate = gslost) and not Mined then begin
+    
+          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HEIGHT, CasesIl.Bitmap[CLICKED_BMP]);
+          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HEIGHT, CasesIl.Bitmap[MINED_BMP]);
+          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HEIGHT, CasesIl.Bitmap[CROSS_BMP]);
+        end
+        else begin
+          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HEIGHT, CasesIl.Bitmap[UNCLICKED_BMP]);
+          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HEIGHT, CasesIl.Bitmap[FLAG_BMP]);
+        end;
+      csMarked:
+      //writeln('csmarked');
+        begin
+          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HEIGHT, CasesIl.Bitmap[UNCLICKED_BMP]);
+          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HEIGHT, CasesIl.Bitmap[MARKED_BMP]);
+        end;
+    end;
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TMinesweeperForm_DrawGame;
+var
+  I, J: Integer;
+begin
+  GamePb.Buffer.BeginUpdate;
+  GamePb.Buffer.DrawMode:= dmBlend;
+  for I := 0 to MWidth - 1 do
+    for J := 0 to MHeight - 1 do
+      TMinesweeperForm_DrawCase(I, J, Game[I][J]);
+  GamePb.Buffer.EndUpdate; 
+  GamePb.Buffer.Changed; 
+  GamePb.Repaint;
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TMinesweeperForm_ReadIniFile;
+begin
+  with TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Minesweeper.ini') do
+  try
+    TMinesweeperForm_SetSize(ReadInteger('Main', 'Width', 9),
+      ReadInteger('Main', 'Height', 9),
+      ReadInteger('Main', 'Mines', 10));
+    GameMarks:= ReadBool('Main', 'Marks', False);
+  finally
+    Free;
+  end;
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TMinesweeperForm_WriteIniFile;
+begin
+  with TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Minesweeper.ini') do
+  try
+    WriteInteger('Main', 'Width', MWidth);
+    WriteInteger('Main', 'Height', MHeight);
+    WriteInteger('Main', 'Mines', MineCount);
+    WriteBool('Main', 'Marks', GameMarks);
+  finally
+    Free;
+  end;
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TMinesweeperForm_GameNewExecute(Sender: TObject);
+begin
+  TMinesweeper_NewGame;
+  TMinesweeperForm_DrawTitle;
+  TMinesweeperForm_DrawGame;
+  writeln('new game clicked');
+end;
+
+
+procedure TMinesweeperForm_FormCreate(Sender: TObject);
+begin
+  Randomize;
+  //FMineSweeper := TMineSweeper.Create;
+  //TMinesweeperForm_ReadIniFile;
+
+  LoadMineForm;
+  TMinesweeperForm_ReadIniFile;
+   //   TMinesweeperForm_DrawGame;
+
+  TMinesweeperForm_GameNewExecute(nil);
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TMinesweeperForm_FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  TMinesweeperForm_WriteIniFile;
+  //ClickingCaseList.Free;
+  SunIl.Free;
+  CasesIl.Free;
+  Num7SegIl.Free;
+  if casetimer <> NIL then begin
+    casetimer.enabled:= false;
+    casetimer.Free;
+    casetimer:= NIL;
+  end;
+
+  Writeln('Game and Timer Freed....');
+
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TMinesweeperForm_GamePbMouseDown(Sender: TObject;
+               Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+//var
+  //PtInt: PTimes;
+begin
+  if (GameState = gsBeginning) or (gamestate = gsPlaying) then begin
+    //   if (GameState = gsWon) or (gamestate = gslost) and (Mined) then 
+
+    case Button of
+      mbLeft:
+        if Game[X div CASE_WIDTH][Y div CASE_HEIGHT].State = csUnclicked then begin
+          TMineSweeper_SetState(X div CASE_WIDTH, Y div CASE_HEIGHT, csClicking);
+          CaseTimer.Enabled := True;
+        end;
+      mbRight: 
+      case Game[X div CASE_WIDTH][Y div CASE_HEIGHT].State of
+          csUnclicked: TMineSweeper_SetState(X div CASE_WIDTH, Y div CASE_HEIGHT, csMined);
+          csMined:
+            if GameMarks then
+              TMineSweeper_SetState(X div CASE_WIDTH,Y div CASE_HEIGHT, csMarked)
+            else
+              TMineSweeper_SetState(X div CASE_WIDTH, Y div CASE_HEIGHT, csUnclicked);
+          csMarked: TMineSweeper_SetState(X div CASE_WIDTH, Y div CASE_HEIGHT, csUnclicked);
+        end;
+    end;
+    if GameState = gsWon then begin
+      //TMinesweeperForm_LoadTimes;
+      //Ptint := GetTimes(FMineSweeper.Width, FMineSweeper.Height, FMineSweeper.MineCount, True);
+    FMouseDown:= True;
+    TMinesweeperForm_DrawTitle;
+    TMinesweeperForm_DrawGame;
+    end;
+  end;
+  writeln('mouse down by paintbox');
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TMinesweeperForm_GamePbMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if GameState = gsPlaying then begin
+    FMouseDown := False;
+    TMinesweeperForm_DrawTitle;
+  end;
+end;
+
+//------------------------------------------------------------------------------
+
+
+//------------------------------------------------------------------------------
+
+procedure TMinesweeperForm_GameBeginnerExecute(Sender: TObject);
+begin
+  //TMinesweeper_SetSize(9, 9, 10);
+  TMinesweeperForm_SetSize(9,9,10);
+  TMinesweeperForm_GameNewExecute(nil);
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TMinesweeperForm_GameIntermediateExecute(Sender: TObject);
+begin
+  TMinesweeperForm_SetSize(16, 16, 40);
+  TMinesweeperForm_GameNewExecute(nil);
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TMinesweeperForm_GameExpertExecute(Sender: TObject);
+begin
+  TMinesweeperForm_SetSize(30, 16, 99);
+  TMinesweeperForm_GameNewExecute(nil);
+end;
+
+//------------------------------------------------------------------------------
+
+
+//------------------------------------------------------------------------------
+
+procedure TMinesweeperForm_GameMarksExecute(Sender: TObject);
+begin
+  GameMarks:= not (GameMarks);
+end;
+
+//------------------------------------------------------------------------------
+
+
+//------------------------------------------------------------------------------
+
+procedure TMinesweeperForm_GameExitExecute(Sender: TObject);
+begin
+  cMineFrm.Close;
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TMinesweeperForm_HelpContentExecute(Sender: TObject);
+begin
+  ShowMessage('Do you really need help ?');
+end;
+
+//------------------------------------------------------------------------------
+
+
+//------------------------------------------------------------------------------
+
+procedure TMinesweeperForm_CaseTimerTimer(Sender: TObject);
+var
+  I: Integer;
+  X1, Y1: Integer;
+  Suppr: Boolean;
+  RefreshNeeded: Boolean;
+  Delta: Integer;
+begin
+  I := 1;
+  RefreshNeeded:= False;
+  
+  //while (I < length(ClickingCaseList)) do
+  while (I < plistcount) do
+   //plistcount
+     with ClickingCaseList[i] do begin
+    
+      //  with PPoint(FMineSweeper.ClickingCaseList[I])^ do
+    //with TPoint(ClickingCaseList[I].x1) do begin
+
+      Suppr:= False;
+      X1:= ClickingCaseList[i].x * CASE_WIDTH;
+      Y1:= ClickingCaseList[i].y * CASE_HEIGHT;
+      with GamePb.Buffer do begin     //missing
+        TMinesweeperForm_DrawCase(X, Y, Game[X][Y]);
+        //if Game[X1][Y1].ClickingStep in [1..NB_STEP_MAX - 1] then begin
+     //   if Game[X1][Y1].ClickingStep in [NB_STEP_MAX - 1] then begin
+        if (Game[X][Y].ClickingStep < NB_STEP_MAX - 1) And (Game[X][Y].ClickingStep > 1) then begin
+         Delta:= (NB_STEP_MAX - Game[X][Y].ClickingStep) * (CASE_WIDTH div
+            NB_STEP_MAX) div 2;
+          Draw2(Rect(X1 + DELTA, Y1 + DELTA, X1 + CASE_WIDTH - DELTA, Y1 + CASE_HEIGHT - DELTA),
+            Rect(0, 0, CASE_WIDTH, CASE_HEIGHT), CasesIl.Bitmap[UNCLICKED_BMP]);
+        end
+        else if Game[X][Y].ClickingStep = 0 then begin
+          Draw(X1, Y1, CasesIl.Bitmap[CLICKED_BMP]);
+          TMineSweeper_SetState(X, Y, csClicked);
+          Suppr:= True;
+        end;
+      end;
+      TMineSweeper_DecClickingStep(X, Y);
+      if Suppr then begin
+        //Dispose(ClickingCaseList[I]);
+        //ClickingCaseList.Delete(I);
+        dec(plistcount);
+        //CaseTimer.Enabled:= ClickingCaseList.Count > 0;
+        CaseTimer.Enabled:= plistcount > 0;
+        RefreshNeeded:= True;
+      end
+      else
+        Inc(I);
+    end;
+  if RefreshNeeded then
+    TMineSweeperForm_DrawGame
+  else
+  begin
+    GamePb.Buffer.Changed;
+    GamePb.Repaint;
+  end;
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TMinesweeperForm_TimerTimer(Sender: TObject);
+begin
+  if GameState = gsPlaying then begin
+    MTime := MTime + 1;
+    TMinesweeperForm_DrawTitle;
+  end;
+end;
+
+//------------------------------------------------------------------------------
+
+begin
+//MWidth
+  //SetSize
+
+//TMinesweeperForm_WriteIniFile;
+ gamemarks:= true;
+ TMinesweeperForm_FormCreate(Self);
+
+end.
+
+////////////////////////////////////////////////////
+add taction
+//add setsize
+
+with TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Minesweeper.ini') do
+  try
+    SetSize(ReadInteger('Main', 'Width', 9),
+  
+  
+  http://www.josef-graef.de/iss.html
+  http://www.heavens-above.com/PassSummary.aspx?lat=50.58&lng=8.7028&alt=0&loc=Giessen&TZ=CET&satid=25544
+  
+  15 Dec	-3.4	18:20:05	10°	SW	18:23:18	71°	SSE	18:24:05	46°	E	Visible
+  
+  P.S. They even managed to make Minesweeper awful to use! (Unless one is five years old). And Civ II which worked fine in Win 7 64 bit, now works but takes 5 seconds to move a unit one square. I know I shouldn't expect software that old to work forever, but really, what is it about 8 that stops it working well when it was fine in 7? 
+  
+  * The mixer has following structure (as it is in this component) :
+ *
+ * Destinations (destinations should be for example: Playback, Recording and Voice commands)
+ *   |
+ *   |--Destination[0]        (if you want to get volume of this call GeVolume (<ThisDestinationNum>,-1,...))
+ *   |    |                                                                          (=0)           ----
+ *   |    |--Data:TMixerLine
+ *   |    |--Controls         (controls of the line, ex: Master volume, master mute)
+ *   |    |    |
+ *   |    |    |--Control[0]
+ *   |    |    |--Control[1]
+ *   |    |    |--Control[..]
+ *   |    |
+ *   |    |--Connections      (ex: Wave, MIDI, CD Audio, Line-In,...)
+ *   |         |
+ *   |         |--Connection[0]   (GetVolume (<ThisDestinationNum>,<ThisConnectionNum>,...))
+ *   |         |    |                               (=0)                 (=0)
+ *   |         |    |--Data:TMixerLine
+ *   |         |    |--Controls   (here can be volume and mute)
+ *   |         |         |
+ *   |         |         |--Control[0]
+ *   |         |         |--Control[1]
+ *   |         |         |--Control[..]
+ *   |         |
+ *   |         |--Connection[1]
+ *   |         |--Connection[..]
+ *   |
+ *   |--Destination[1]
+ *   |--Destination[..]
+ *
+ *

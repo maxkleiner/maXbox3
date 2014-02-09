@@ -1,0 +1,376 @@
+program Refactorings_Draw2;
+
+//*********************************************************************
+// ...draw a symetri spray effect and paint with mouse, loc's=320, example 292
+// Font.Height = -Font.Size * Font.PixelsPerInch/72  
+//   it also mirrors the line in all 4 quadrants
+//   draws as position (x,y) (a,b) (c,d) and (e,f)}
+//*********************************************************************
+(*
+ RRRRR    EEEEEE   AAAA   DDDDD    MM     MM   EEEEEE 
+ RR  RR   EE       AA AA  DD  DD   MMMM MMMM   EE    
+ RRRRR    EEEE    AAAAAA  DD   DD  MM MMM MM   EEEE
+ RR  RR   EE      AA   AA DD   DD  MM  M  MM   EE
+ RR   RR  EEEEEE AA    AA DDDDD    MM  M  MM   EEEEEE
+*)
+
+ //Shows a draw routine with before and after refactoring
+
+//The declaration of the TDrawingTool type is equivalent to declaring a group of constants: 
+{const
+ dtLine = 0;
+ dtRectangle = 1;
+ dtEllipse = 2;
+ dtRoundRect = 3;}
+  
+ {Const
+  CF_TEXT = 1;
+  CF_BITMAP = 2;
+  CF_METAFILEPICT = 3;
+  CF_SYLK = 4;
+  CF_DIF = 5;
+  CF_TIFF = 6;
+  CF_OEMTEXT = 7;
+  CF_DIB = 8;} 
+
+  
+type TXYVector = array[0..2] of TPoint;   
+
+  TDrawingTool = (dtLine, dtRectangle, dtEllipse, dtRoundRect);
+
+var
+   cFrm: TForm;
+  //PaintBox1: TPaintBox;
+     DrawingTool: TDrawingTool;  { field to hold current tool }
+     Origin, MovePt: TPoint;
+     drawing: boolean;
+     X,Y: integer;
+
+//gibt den Winkel im Gradmaﬂ an
+function GetDEG(Winkel: Extended): Extended;
+  begin
+    Result:= (Winkel * 2 * Pi) / 360;
+  end;
+  
+//gibt den Winkel im Winkelmaﬂ an
+function GetRAD(Winkel: Extended): Extended;
+  begin
+    Result := (Winkel * 360) / (2 * Pi);
+  end;
+  
+procedure SaveCanvas(vCanvas: TCanvas; FileName: string);
+var
+  Bmp: TBitmap;
+  bmp1: TLinearBitmap;
+  MyRect: TRect;
+begin
+  Bmp:= TBitmap.Create;
+  bmp1:= TLinearBitmap.create;
+  try
+    MyRect := vCanvas.ClipRect;
+    Bmp.Width := MyRect.Right - MyRect.Left;
+    Bmp.Height := MyRect.Bottom - MyRect.Top;
+    Bmp.Canvas.CopyRect(MyRect, vCanvas, MyRect);
+    bmp1.Assign(Bmp)
+    Bmp1.SaveToFile(FileName);
+  finally
+    Bmp.Free;
+    bmp1.Free;
+  end;
+end; 
+  
+procedure drawPolygon(vPoints: TXYVector);
+var
+  i, hsize: integer;
+begin
+  with cFrm.canvas do begin
+    hsize:= cFrm.Height - 1 div 2;
+    Pen.Color:= (clred);
+    //setZoomFact(high(chartdata), fileNameChart);
+    //moveto(0, hsize -((vPoints[0].y)));
+    cFrm.Canvas.MoveTo(vpoints[1].X, vpoints[1].Y);
+    for i:= 0 to 2 do
+      LineTo(vPoints[i].x, vPoints[i].y);
+  end;
+end;  
+
+procedure Spray(Canvas: TCanvas; x,y,r: Integer; Color: TColor);
+var
+  rad, a: Single;
+  i: Integer;
+begin
+  //canvas.pen.width:= 100;
+  for i:= 0 to 120 do begin
+    a:= Random(20) * 10 * pi;
+    rad:= Random(10) * r;
+    Canvas.Pixels[x + Round(rad*Cos(a)), y + Round(rad*Sin(a))]:= Color;
+  end;
+end;
+
+procedure Image1MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+  var
+    a,b,c,d,e,f:integer;
+begin
+  if ssLeft in Shift then Spray(cfrm.Canvas, x, y, 4, clRed);
+  {when the mouse move with the Left mouse button pressed this draws
+   a line which follows the mouse
+   it also mirrors the line in all 4 quadrants
+   draws as position (x,y) (a,b) (c,d) and (e,f)}
+  cFrm.Canvas.Pen.color:= random(clwhite);
+  with cfrm.canvas do begin
+    MoveTo(X,Y);
+    if (shift=[ssLeft] ) then begin
+      LineTo(x+1,y+1);    //original line
+      {mirror in y-axis }
+      c:=x;
+      d:=Y+2*((cfrm.height div 2) - Y);
+      moveto(c,d);
+      lineto(c-1,d-1);
+      {mirror in x-axis}
+      b:=y;
+      a:=x+2*(cfrm.width div 2 - x);
+      moveto(a,b);
+      lineto(a-1,b+1);
+      {mirrors (a,b) in y-axis}
+      e:=a;f:=d;
+      moveto(e,f);
+      lineto(e+1,f-1);
+    end;
+  end;
+end;
+
+procedure Image1MouseDown(Sender: TObject; Button: TMouseButton;
+                                         Shift: TShiftState; X, Y: Integer);
+begin
+  if ssLeft in Shift then Spray(cfrm.Canvas, x, y, 5, clRed);
+end;
+
+procedure ImageDblClick(Sender: TObject);
+begin
+  SaveCanvas(cfrm.canvas, ExePath+'sysimage.png')
+  showmessage('if ssLeft in Shift then Spray(cfrm.Canvas, x, y, 5, clRed);');
+end;
+
+//*******************before refactoring*************************************3
+procedure TForm1_FormMouseUp(Sender: TObject; Button: TMouseButton;
+                                Shift: TShiftState; X, Y: Integer);
+begin
+  case DrawingTool of
+    dtLine: 
+      begin
+        cFrm.Canvas.MoveTo(Origin.X, Origin.Y);
+       cFrm.Canvas.LineTo(X, Y)
+      end;
+   dtRectangle: cfrm.Canvas.Rectangle(Origin.X, Origin.Y, X, Y);
+   dtEllipse: cfrm.Canvas.Ellipse(Origin.X, Origin.Y, X, Y);
+   dtRoundRect: cfrm.Canvas.RoundRect(Origin.X, Origin.Y, X, Y,
+                   (Origin.X - X) div 2, (Origin.Y - Y) div 2);
+  end;
+ Drawing:= False;
+end;
+
+
+procedure TForm1_FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+begin
+  if Drawing then begin
+    cfrm.Canvas.Pen.Mode:= pmNotXor;
+   case DrawingTool of
+      dtLine: begin
+                cfrm.Canvas.MoveTo(Origin.X, Origin.Y);
+               cfrm.Canvas.LineTo(MovePt.X, MovePt.Y);
+               cfrm.Canvas.MoveTo(Origin.X, Origin.Y);
+               cfrm.Canvas.LineTo(X, Y);
+              end;
+     dtRectangle: begin
+                      cfrm.Canvas.Rectangle(Origin.X, Origin.Y, MovePt.X, MovePt.Y);
+                     cfrm.Canvas.Rectangle(Origin.X, Origin.Y, X, Y);
+                   end;
+     dtEllipse: begin
+                    cfrm.Canvas.Ellipse(Origin.X, Origin.Y, X, Y);
+                   cfrm.Canvas.Ellipse(Origin.X, Origin.Y, X, Y);
+                  end;
+     dtRoundRect: begin
+                     cfrm.Canvas.RoundRect(Origin.X, Origin.Y, X, Y,
+                       (Origin.X - X) div 2, (Origin.Y - Y) div 2);
+                    cfrm.Canvas.RoundRect(Origin.X, Origin.Y, X, Y,
+                       (Origin.X - X) div 2, (Origin.Y - Y) div 2);
+                   end;
+    end;
+   MovePt:= Point(X, Y);
+  end;
+ cfrm.Canvas.Pen.Mode:= pmCopy;
+end;
+
+//++++++++++++++++++++++++++after refactoring++++++++++++++++++++++++++++++
+procedure TForm2_DrawShape(TopLeft, BottomRight: TPoint; AMode: TPenMode);
+begin
+  with cfrm.Canvas do begin
+    Pen.Mode:= AMode;
+    case DrawingTool of 
+      dtLine:
+        begin
+          MoveTo(TopLeft.X, TopLeft.Y);
+          LineTo(BottomRight.X, BottomRight.Y);
+        end;
+     dtRectangle: Rectangle(TopLeft.X, TopLeft.Y, BottomRight.X, BottomRight.Y);
+     dtEllipse: Ellipse(TopLeft.X, TopLeft.Y, BottomRight.X, BottomRight.Y);
+     dtRoundRect: RoundRect(TopLeft.X, TopLeft.Y, BottomRight.X, BottomRight.Y,
+        (TopLeft.X - BottomRight.X) div 2, (TopLeft.Y - BottomRight.Y) div 2);
+    end;
+  end;
+end;
+
+//The other event handlers after refactoring are modified to call DrawShape.
+procedure TForm2_FormMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  TForm2_DrawShape(Origin, Point(X, Y), pmCopy);  { draw the final shape }
+  Drawing:= False;
+end;
+
+procedure TForm2_FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+begin
+  if Drawing then begin
+    TForm2_DrawShape(Origin, MovePt, pmNotXor);  { erase the previous shape }
+    MovePt:= Point(X, Y);  { record the current point }
+    TForm2_DrawShape(Origin, MovePt, pmNotXor);  { draw the current shape }
+  end;
+end;
+
+var image: TImage;
+
+procedure TForm1_Copy1Click(Sender: TObject);
+//var image: TImage;
+begin
+  Clipboard.Assign(image.picture)
+end;
+
+procedure TForm1_Cut1Click(Sender: TObject);
+//var image:
+var
+  ARect: TRect;
+begin
+  Tform1_Copy1Click(Sender);  { copy picture to Clipboard }
+ with Image.Canvas do begin
+    //CopyMode := Whiteness;  { copy everything as white }
+   ARect:= Rect(0, 0, Image.Width, Image.Height);  { get bitmap rectangle }
+   CopyRect(ARect, Image.Canvas, ARect);  { copy bitmap over itself }
+   CopyMode:= SrcCopy;  { cmscrcopy restore normal mode }
+  end;
+end;
+
+//http://msdn.microsoft.com/en-us/library/windows/desktop/dd183370%28v=vs.85%29.aspx
+
+procedure TForm1_PasteButtonClick(Sender: TObject);
+var
+  Bitmap: TBitmap;
+begin
+ if Clipboard.HasFormat(CF_BITMAP) then begin  { is there a bitmap on the Clipboard? )}
+   Image.Picture.Bitmap.Assign(Clipboard);
+ end;
+end;
+
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  with cFrm do begin
+    height:= 540;
+    width:= 580;
+    Position:= poScreenCenter;
+    //onMouseMove:= @Image1MouseMove;
+    onMouseMove:= @TForm2_FormMouseMove;
+    //onMouseDown:= @Image1MouseDown
+    onMouseUp:= @TForm2_FormMouseUp;
+    onDblClick:= @ImageDblClick;
+    caption:= 'this is sym 4 drawing - press mouse & move, save with dblclick!'; 
+    color:= clblack; 
+    show;
+    Canvas.Pen.width:= 30;
+    Canvas.Pen.color:= clred;
+  end  
+end;
+
+
+var i,k, l: integer;
+    btn: TMouseButton;
+
+//main sym drawing
+begin
+//*****************maXbox graphics series**********************************
+  //ProcessMessagesOFF;
+  loadForm();
+  btn:= ssleft;
+  {for i:= 1 to 20 do begin
+  Image1MouseDown(self, btn,[ssleft], random(120), random(150));
+     for k:= 1 to 20 do begin
+       l:= random(300);
+       l:= l+ random(50);
+     Image1MouseMove(self, [ssleft], l, l+random(150));
+     //delay(random(100))
+     end;
+  end;}
+  //dtEllipse:= 1;
+  origin.x:= 20;
+  origin.y:= 20;
+  drawing:= true;
+  drawingTool:= dtEllipse;
+  writeln(inttoStr(cmblackness))
+  //drawingTool:= dtRoundRect;
+  //executecommand('www.softwareschule.ch','');
+  //copyrect
+end.
+
+just inside maxbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+                                     
+
+
+cmBlackness 	Graphics.TCopyMode value : fills the destination rectangle on the canvas with black.
+cmDstInvert 	Graphics.TCopyMode value : inverts the image on the canvas and ignores the source.
+cmMergeCopy 	Graphics.TCopyMode value : combines the image on the canvas and the source bitmap by using the Boolean AND operator.
+cmMergePaint 	Graphics.TCopyMode value : combines the inverted source bitmap with the image on the canvas by using the Boolean OR operator.
+cmNotSrcCopy 	Graphics.TCopyMode value : copies the inverted source bitmap to the canvas.
+cmNotSrcErase 	Graphics.TCopyMode value : combines the image on the canvas and the source bitmap by using the Boolean OR operator, and inverts the result.
+cmPatCopy 	Graphics.TCopyMode value : copies the source pattern to the canvas.
+cmPatInvert 	Graphics.TCopyMode value : combines the source pattern with the image on the canvas using the Boolean XOR operator.
+cmPatPaint 	Graphics.TCopyMode value : combines the inverted source bitmap with the source pattern by using the Boolean OR operator. Combines the result of this operation with the image on the canvas by using the Boolean OR operator.
+cmSrcAnd 	Graphics.TCopyMode value : combines the image on the canvas and source bitmap by using the Boolean AND operator.
+cmSrcCopy 	Graphics.TCopyMode value : copies the source bitmap to the canvas.
+cmSrcErase 	Graphics.TCopyMode value : inverts the image on the canvas and combines the result with the source bitmap by using the Boolean AND operator.
+cmSrcInvert 	Graphics.TCopyMode value : combines the image on the canvas and the source bitmap by using the Boolean XOR operator.
+cmSrcPaint 	Graphics.TCopyMode value : combines the image on the canvas and the source bitmap by using the Boolean OR operator.
+cmWhiteness 	Graphics.TCopyMode value : fills the destination rectangle on the canvas with white.
+
+
+CF_TEXT
+Text with a CR-LF combination at the end of each line. A null character identifies the end of the text.
+
+CF_BITMAP
+A Windows bitmap graphic.
+
+CF_METAFILEPICT
+A Windows metafile graphic.
+
+CF_PICTURE
+An object of type TPicture.
+
+CF_COMPONENT
+Any persistent object. 
+
+In Windows.pas:
+
+  CF_TEXT = 1;
+  CF_BITMAP = 2;
+  CF_METAFILEPICT = 3;
+  CF_SYLK = 4;
+  CF_DIF = 5;
+  CF_TIFF = 6;
+  CF_OEMTEXT = 7;
+  CF_DIB = 8
+etc... 

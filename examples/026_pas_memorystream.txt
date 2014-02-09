@@ -1,0 +1,75 @@
+//changes a binary file from non readable to readable
+//key substitution in delete each char of previously added CR Char, loc's =68
+//solution with one memorystream and 2 stringbuffers
+
+program MemoryStream_Factory;
+
+const
+  // this is the corrupted file
+  FNAME = 'examples\logo1689_defect.gif';
+  // this is the correct file
+  XNAME = 'examples\TEE_logo_real.gif';
+  //MYKEY = 16549813;
+   
+//-------------------buffer service---------------------//
+function DecryptBuffer(const inStr: string; insize: integer): string;
+var
+  locBuffer: string;
+  i: integer;
+begin
+    locBuffer:= inStr;
+    for i:= 1 to insize - 1 do begin
+      writeln(inttoStr(i)+': '+inStr[i])
+      //ASCII 13 is CR, 10 is LF 
+      if (ord(inStr[i]) = 13) and (ord(inStr[i+1]) = 10) then begin
+        showmessage(inttoStr(i)+' CR_PLUS found...now delete')
+        //change stringBuffer in order of ord ;)
+        delete(locBuffer, i, 1);
+      end;
+    end;
+  result:= locBuffer;
+end;
+
+
+procedure FileToStream(const afilename: string);
+var insize: integer;
+    memstream: TMemoryStream;
+    strBuffer2, strBuffer3: string;
+begin
+  memStream:= TMemoryStream.Create;
+  try 
+    memStream.LoadFromfile(afilename);     
+    memStream.Seek(0,0);
+    SetLength(strBuffer2, memstream.Size); 
+    insize:= MemStream.read(strBuffer2, length(strBuffer2));
+    //call subroutine function
+    strBuffer3:= DecryptBuffer(strBuffer2, insize);
+    memStream.clear;
+    memStream.write(strBuffer3, length(strBuffer3))
+    memstream.saveToFile(XNAME); 
+  finally 
+    memstream.Free;
+  end  
+end;
+
+
+begin //main
+  //show greater signs
+  memo2.font.size:= 14;
+  try 
+    //set file to memorystream and store it back
+    if fileExists(FNAME) then
+      FileToStream(FNAME);
+  finally 
+    if fileExists(XNAME) then 
+      showMessage(XNAME+' is decrypted!');
+    beep2(444, 400)
+  end
+end.
+
+
+{Werte GL
+Auch meinerseits noch besten Dank der Zusammenarbeit, noch am Freitag an der DA hatte ich ein ausführliches Gespräch mit Marcel und nachfolgenden email-Kontakt, so dass nach seiner Beurteilung noch meine Tat erfolgt, kommt Zeit kommt Tat;).
+War heute noch auf dem selbsignierten svn, schau mir noch einige Sourcen an und fühle mich dann gestärkt und reif, eine überduchschnittliche Arbeit beurteilen zu wollen.
+Jedenfalls freu ich mich, euch an der Diplomfeier wiederzusehen.
+All the Best, Max}

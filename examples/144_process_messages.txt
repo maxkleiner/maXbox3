@@ -1,0 +1,89 @@
+program ProcessMessages_Random_Experiment;
+
+//*********************************************************************
+// ...draw a spray effect and goes back in UNDO, cause of processmessages,
+// loc's=151, example 80
+// switch between ProcessMessagesON and ProcessMessagesOFF  
+//*********************************************************************
+
+const
+ BETA = 50; // Spannwinkel der Pfeilspitze
+  
+var
+  cFrm: TForm;
+  STATStop: boolean;
+  //PaintBox1: TPaintBox;
+
+function GetDEG(Winkel: Extended): Extended;
+  begin
+    Result:= (Winkel * 2 * Pi) / 360;
+  end;
+  
+procedure Spray(Canvas: TCanvas; x,y,r: Integer; Color: TColor);
+var
+  rad, a: Single;
+  i: Integer;
+begin
+  //canvas.pen.width:= 100;
+  for i:= 0 to 150 do begin
+    a:= Random(20) * 2 * pi;
+    rad:= Random(10) * r;
+    Canvas.Pixels[x + Round(rad*Cos(a)), y + Round(rad*Sin(a))]:= Color;
+  end;
+end;
+
+procedure Image1MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+var i: integer;
+begin
+  for i:= 1 to 10 do
+  if ssLeft in Shift then 
+           Spray(cfrm.Canvas, x +random(i), y +random(10), 4, clRed);
+end;
+
+procedure Image1MouseDown(Sender: TObject; Button: TMouseButton;
+                                         Shift: TShiftState; X, Y: Integer);
+begin
+  if ssLeft in Shift then Spray(cfrm.Canvas, x, y, 3, clRed);
+  STATStop:= true;
+end;
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  with cFrm do begin
+    height:= 440;
+    width:= 450;
+    Position:= poScreenCenter;
+    onMouseMove:= @Image1MouseMove;
+    onMouseDown:= @Image1MouseDown
+    color:= clBlack;
+    caption:= 'this is drawing on wing - press mouse & draw move';  
+    show;
+  end  
+end;
+
+var x,y: integer;
+ {TShiftState = set of (ssShift, ssAlt, ssCtrl,
+    ssLeft, ssRight, ssMiddle, ssDouble);} 
+begin
+//*****************maXbox graphics series**********************************
+  loadForm();
+  STATStop:= false;
+  repeat 
+    x:=100;
+    y:=100;
+    //application.ProcessMessages;
+    processmessagesON;
+    //ProcessMessagesOFF;
+    Image1MouseMove(self, [ssLeft] ,random(x), random(y));
+  until STATStop=true;
+end.
+
+just inside maxbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+                                     

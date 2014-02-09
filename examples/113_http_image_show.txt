@@ -1,0 +1,110 @@
+program HTTP_Image_Show;
+// Composition DEMO for mX3  maXbox3 !! _113
+// this is some kind of a internet exhibition
+
+var 
+  myImage, myImage2, myImage3: TImage;
+  inFrm: TForm;
+  myURL1, myURL2, myURL3: string;
+
+
+procedure FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  myImage.Free;
+  myImage2.Free;
+  myImage3.Free;
+  inFrm.Free;
+end;
+  
+procedure buildImageForm;
+begin
+  inFrm:= TForm.create(self)
+  with inFrm do begin
+    position:= poScreenCenter;
+    FormStyle:= fsStayOnTop;
+    color:= clblue;
+    borderStyle:= bsDialog;
+    caption:= 'mX3 StreamDreamCream'
+    width:= 950; height:= 450;
+    OnClose:= @FormClose;
+    Show;
+  end;
+  myImage:= TImage.Create(inFrm);
+  with myImage do begin
+    Parent:= inFrm;
+    width:= inFrm.width; 
+    height:= inFrm.height;
+    Left:= 10;
+    Top:= 10;
+  end;
+  myImage2:= TImage.Create(inFrm);
+  with myImage2 do begin
+    Parent:= inFrm;
+    width:= inFrm.width; 
+    height:= inFrm.height;
+    Left:= 220;
+    Top:= 90;
+  end;
+  myImage3:= TImage.Create(inFrm);
+  with myImage3 do begin
+    Parent:= inFrm;
+    width:= inFrm.width; 
+    height:= inFrm.height;
+    Left:= 550;
+    Top:= 280;
+  end;
+
+end;  
+
+procedure getHTTP_PNG(vimage, vimage2, vimage3: TImage); 
+var
+  idHTTP: TIDHTTP;
+  pngStream, pngStream2, pngStream3: TMemoryStream;
+begin
+  myURL1:= 'http://www.kleiner.ch/kleiner/images/hohenzollern_maxland.jpg';
+  myURL2:= 'http://www.kleiner.ch/kleiner/images/max_mainz.jpg';
+  myURL3:= 'http://max.kleiner.com/images/maxbox_logo.jpg';
+
+  with TLinearBitmap.Create do
+  try
+    idHTTP:= TIdHTTP.Create(NIL)
+    pngStream:= TMemoryStream.create;
+    //OptimizeMem
+    idHTTP.Get1(myURL1, pngStream)
+    //idHTTP.Get1(myURL2, pngStream)
+    pngStream.Position:= 0;
+    LoadFromStream2(pngstream,'JPG');
+    vimage.Picture:= NIL;
+    AssignTo(vimage.Picture.Bitmap);
+ 
+    pngStream2:= TMemoryStream.create;
+    idHTTP.Get1(myURL2, pngStream2)
+      pngStream2.Position:= 0;
+    LoadFromStream2(pngstream2,'JPG');
+    AssignTo(vimage2.Picture.Bitmap);
+
+    pngStream3:= TMemoryStream.create;
+    idHTTP.Get1(myURL3, pngStream3)
+      pngStream3.Position:= 0;
+    LoadFromStream2(pngstream3,'JPG');
+    AssignTo(vimage3.Picture.Bitmap);
+  
+    //SaveToFile(ExePath+'mX3GUI.jpg');
+  finally
+    Dispose;
+    Free;
+    idHTTP.Free
+    pngStream.Free;
+    pngStream2.Free;
+    pngStream3.Free;
+  end; 
+end;  
+
+begin
+  buildImageForm;
+  getHTTP_PNG(myImage, myImage2, myImage3);
+  //searchAndOpenDoc(ExePath+'mX3GUI.jpg')
+end.
+
+//**************************************************program HTTP_PNG_Streamer;
+//**************************************************

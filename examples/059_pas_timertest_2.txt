@@ -1,0 +1,64 @@
+program TimerEvent;
+
+// simple timerevent with dialog synchronisation or event triggering, loc's=64
+// when messagebox is to early the break condition never arrives  _59
+// got also to a timer test between the time events of accuracy
+
+const
+  ext = 'txt';
+ 
+var mytimer: TTimer;
+    counter: byte;
+    time1, time2, diff: TDateTime;
+
+procedure mySearch;
+//var search: TSearchRec;
+var mylist: tstringlist;
+begin
+  mylist:= TStringlist.create;
+  if findfirst('*.'+ext, faAnyFile) = 0 then begin
+    repeat
+      mylist.add(searchRecName)
+    until
+       (findnext <> 0)  
+    findClose;  
+    writeln('files found')
+    writeln('first file is: '+searchrecname 
+                                     +' '+inttoStr(searchrecsize)+' Bytes');
+  end else
+    writeln('not found');
+  mylist.savetoFile(ext+'_files.txt');
+  mylist.free;
+end;
+
+
+procedure timer1Click(Sender: TObject);
+begin
+  incb(counter)
+  //showmessage('this is '+inttostr(counter)+' time') //never get
+  if counter >= 5 then begin
+    mytimer.enabled:= false;
+    mytimer.free;
+  end;
+  time2:= time;
+  diff:= time2 - time1;
+  writeln(IntToStr(Trunc(Diff * 24)) + 
+                   FormatDateTime('" h elapsed run time is:" nn:ss:zzz',Diff));
+  //save last time!
+  time1:= time2;
+  showmessage('this is '+inttostr(counter)+' time')
+end;  
+
+//main script
+begin
+  mytimer:= TTimer.create(self);
+  mytimer.ontimer:= @timer1Click;
+  mytimer.interval:= 2000;
+  counter:= 0;
+  time1:= time;
+  mysearch;
+  beep;
+  showmessage(datetostr(date))
+  showmessage(DateTimeToStr(now))
+  //orthogonal and idempotent
+end.

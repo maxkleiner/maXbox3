@@ -1,0 +1,328 @@
+Version:0.9
+StartHTML:0000000105
+EndHTML:0000030135
+StartFragment:0000001037
+EndFragment:0000030119
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>mXScriptasHTML</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="generator" content="SynEdit HTML exporter" />
+<style type="text/css">
+<!--
+body { color: #000000; background-color: #FFFFFF; }
+.pas1-assembler { }
+.pas1-character { text-decoration: underline; }
+.pas1-comment { color: #000080; font-style: italic; }
+.pas1-float { color: #800080; }
+.pas1-hexadecimal { color: #FF00FF; }
+.pas1-identifier { }
+.pas1-number { color: #FF0000; }
+.pas1-preprocessor { font-style: italic; }
+.pas1-reservedword { color: #000000; font-weight: bold; }
+.pas1-space { }
+.pas1-string { color: #008080; }
+.pas1-symbol { color: #000000; }
+-->
+</style>
+</head>
+<body>
+<!--StartFragment--><pre><code><span class="pas1-comment">{***************************************************************
+/*
+* System: maXbox :PRODUCT: Big Numbers Report
+* File: $RCS:200_big_numbers2.txt$:locs=195 
+* Purpose: Implements and defines big numbers type calculation
+*
+* Release V: 2.0.1
+* &copy;:public domain; Company: kleiner kommunikation
+* Author: Max
+*
+* Filepath: $E:\maxbox\maxbox3\examples\200_big_numbers2.txt$
+*
+* Created: 2011-02-09 by mX4
+* Modified: $Date: 2012-05-11 2:40p $ @: Max
+* Revision: $LastChanged: 0.1$ 
+*/
+* ***************************************************************}
+</span><span class="pas1-reservedword">Program</span><span class="pas1-space"> Big_Numbers_Max;
+
+</span><span class="pas1-comment">{ $Project$
+  $Workfile$
+  $Revision$
+  $DateUTC$
+  $Log$}
+</span><span class="pas1-space">  </span><span class="pas1-comment">{class function StrToInt64(const S: string): Int64; overload;
+   class function StrToInt64(const S: string; const Default : Int64): Int64;
+  end;}
+
+
+</span><span class="pas1-reservedword">CONST
+</span><span class="pas1-space">    cTiny = </span><span class="pas1-float">1E-15</span><span class="pas1-symbol">;
+    
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> </span><span class="pas1-comment">//mx:  TFloatDynArray;
+</span><span class="pas1-space">    tx: TFloatPoint;
+  </span><span class="pas1-comment">//txa :TFloatPointArray;
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> mCompareDate(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> D1, D2: TDateTime): Integer;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> LTM1, LTM2: TTimeStamp;
+    st: TSystemTime;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   ltm1:= DateTimeToTimeStamp(D1);
+   LTM2:= DateTimeToTimeStamp(D2);
+   DateTimeToSystemTime(D1, sT);
+   D1:= SystemTimeToDateTime(sT);
+
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (LTM1.Date = LTM2.Date) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (LTM1.Time &lt; LTM2.Time) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">       Result:= -</span><span class="pas1-number">1</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-space"> 
+    </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (LTM1.Time &gt; LTM2.Time) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">        Result:= </span><span class="pas1-number">1
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">else</span><span class="pas1-space"> 
+        Result:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> LTM1.Date &gt; LTM2.Date </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">      Result:= </span><span class="pas1-number">1
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">else
+</span><span class="pas1-space">      Result:= -</span><span class="pas1-number">1</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">Function</span><span class="pas1-space"> mStrToInt64(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> S: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">; </span><span class="pas1-reservedword">const</span><span class="pas1-space"> </span><span class="pas1-reservedword">Default</span><span class="pas1-symbol">: Int64): Int64;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Result:= StrToInt64Def(Trim(S),</span><span class="pas1-reservedword">Default</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">Function</span><span class="pas1-space"> cStrToInt64(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> S: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">): Int64;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Result:= StrToInt64(Trim(S));
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> BIGMAXSCREEN;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    CaptureScreenPNG(ExePath+</span><span class="pas1-string">'MyScreenBitmap.png'</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">    SearchandOpenDoc(ExePath+</span><span class="pas1-string">'MyScreenBitmap.png'</span><span class="pas1-symbol">)
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> powerOf2(exponent: Integer): Int64;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> shifter: int64;
+    counter: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  shifter:= </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> counter:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> exponent </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">    shifter:= shifter + shifter;
+  result:= shifter;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">Function</span><span class="pas1-space"> SuperPIN: extended;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> myPi: extended;
+    k: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-identifier">MyPi:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">for</span><span class="pas1-space"> k:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">100</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  MyPi:= MyPi + </span><span class="pas1-number">1</span><span class="pas1-symbol">/Power(</span><span class="pas1-number">16</span><span class="pas1-symbol">,k) * ((</span><span class="pas1-float">0.5</span><span class="pas1-symbol">*k+</span><span class="pas1-number">1</span><span class="pas1-symbol">)-(</span><span class="pas1-float">0.25</span><span class="pas1-symbol">*k + </span><span class="pas1-number">4</span><span class="pas1-symbol">)-(</span><span class="pas1-float">0.125</span><span class="pas1-symbol">*k+</span><span class="pas1-number">5</span><span class="pas1-symbol">)-(</span><span class="pas1-float">0.125</span><span class="pas1-symbol">*k+</span><span class="pas1-number">6</span><span class="pas1-symbol">)) 
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  result:= myPi;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">const
+</span><span class="pas1-space">  MINInt64 = </span><span class="pas1-hexadecimal">$8000000000000000</span><span class="pas1-symbol">;
+  MAXInt64 = </span><span class="pas1-hexadecimal">$7FFFFFFFFFFFFFFF</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> 
+  a,b: integer;
+  zb: boolean;
+  bigI, compi: Int64;
+  verybig, e: extended;
+  s: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+  
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Writeln(</span><span class="pas1-string">'Big Numbers Function Tester ******************'</span><span class="pas1-symbol">)
+  bigI:= round(Power(</span><span class="pas1-number">2</span><span class="pas1-symbol">,</span><span class="pas1-number">31</span><span class="pas1-symbol">)-</span><span class="pas1-number">1</span><span class="pas1-symbol">)
+  </span><span class="pas1-comment">//sum(234,45)
+</span><span class="pas1-space">  writeln(</span><span class="pas1-string">'limit: '</span><span class="pas1-symbol">+intToStr((bigI)))
+  writeln(</span><span class="pas1-string">'64bit: '</span><span class="pas1-symbol">+floatToStr(Power(</span><span class="pas1-number">2</span><span class="pas1-symbol">,</span><span class="pas1-number">64</span><span class="pas1-symbol">)))
+  writeln(format(</span><span class="pas1-string">'64bit: %f'</span><span class="pas1-symbol">,[Power(</span><span class="pas1-number">2</span><span class="pas1-symbol">,</span><span class="pas1-number">64</span><span class="pas1-symbol">)]));
+  writeln(</span><span class="pas1-string">'Int64 max: '</span><span class="pas1-symbol">+IntToStr64(MinInt64)+</span><span class="pas1-string">'..'</span><span class="pas1-symbol">+IntToStr64(MaxInt64))
+  bigI:= powerOf2(</span><span class="pas1-number">62</span><span class="pas1-symbol">) - powerOf2(</span><span class="pas1-number">62</span><span class="pas1-symbol">)-</span><span class="pas1-number">1
+</span><span class="pas1-space">  writeln(</span><span class="pas1-string">'must -1: '</span><span class="pas1-symbol">+inttostr64((bigI)))
+
+  writeln(</span><span class="pas1-string">'int function: '</span><span class="pas1-symbol">+inttoStr64(powerOf2(</span><span class="pas1-number">63</span><span class="pas1-symbol">)-</span><span class="pas1-number">1</span><span class="pas1-symbol">))         
+  writeln(</span><span class="pas1-string">'lib function: '</span><span class="pas1-symbol">+floattostr(Power(</span><span class="pas1-number">2</span><span class="pas1-symbol">,</span><span class="pas1-number">63</span><span class="pas1-symbol">)))         
+  writeln(</span><span class="pas1-string">'const direct '</span><span class="pas1-symbol">+intToStr64(MaxInt64))
+ 
+  bigI:= cStrToInt64(intToStr64(maxint64))
+  writeln(</span><span class="pas1-string">'from convert back: '</span><span class="pas1-symbol">+intToStr64(bigI))
+  bigI:= round(Power(</span><span class="pas1-number">2</span><span class="pas1-symbol">,</span><span class="pas1-number">32</span><span class="pas1-symbol">))
+  writeln(</span><span class="pas1-string">'too big for round: '</span><span class="pas1-symbol">+IntToStr64(bigI))
+  writeln(</span><span class="pas1-string">'too big: '</span><span class="pas1-symbol">+IntToStr64(</span><span class="pas1-number">2</span><span class="pas1-symbol">*(MaxInt64)))
+  verybig:= MaxInt64;
+  writeln(</span><span class="pas1-string">'not too big: '</span><span class="pas1-symbol">+floatToStr(</span><span class="pas1-number">2</span><span class="pas1-symbol">* verybig))
+  writeln(</span><span class="pas1-string">'much more BIG: '</span><span class="pas1-symbol">+floatToStr(Power(</span><span class="pas1-number">2</span><span class="pas1-symbol">,</span><span class="pas1-number">100</span><span class="pas1-symbol">)))
+  writeln(</span><span class="pas1-string">'much more BIGINT: '</span><span class="pas1-symbol">+FloatToStr(IntPower(</span><span class="pas1-number">2</span><span class="pas1-symbol">,</span><span class="pas1-number">1000</span><span class="pas1-symbol">)))
+
+  </span><span class="pas1-comment">//Convert to 
+</span><span class="pas1-space">  Writeln(floatToStr(Power(</span><span class="pas1-number">2</span><span class="pas1-symbol">,</span><span class="pas1-number">100</span><span class="pas1-symbol">)));
+  Writeln(floatToStr(Exp(</span><span class="pas1-number">100</span><span class="pas1-symbol">*Ln(</span><span class="pas1-number">2</span><span class="pas1-symbol">))))
+  Writeln(floatToStr(Ln(Exp(</span><span class="pas1-number">1</span><span class="pas1-symbol">))))
+  </span><span class="pas1-comment">//Writeln(floatToStr(SuperPIN))
+
+</span><span class="pas1-space">  compi:= </span><span class="pas1-number">18446744073709551600</span><span class="pas1-symbol">;
+  compi:= </span><span class="pas1-number">1844674407370955160</span><span class="pas1-symbol">;
+  </span><span class="pas1-comment">//writeln(int64tostr(compi))
+</span><span class="pas1-space">  writeln(format(</span><span class="pas1-string">'%.1d    '</span><span class="pas1-symbol">,[compi]))
+</span><span class="pas1-reservedword">with</span><span class="pas1-space"> TStopwatch.Create </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     Start
+  Writeln(</span><span class="pas1-string">'Big Lotto Combination 1600 of 5000!'</span><span class="pas1-symbol">)
+  Writeln(</span><span class="pas1-string">''</span><span class="pas1-symbol">)
+  Writeln(BinominalCoefficient(</span><span class="pas1-number">5000</span><span class="pas1-symbol">, </span><span class="pas1-number">1600</span><span class="pas1-symbol">));    
+  Writeln(</span><span class="pas1-string">''</span><span class="pas1-symbol">)
+  Writeln(</span><span class="pas1-string">'Lotto Combination 6 of 45!'</span><span class="pas1-symbol">)
+  Writeln(BinominalCoefficient(</span><span class="pas1-number">45</span><span class="pas1-symbol">, </span><span class="pas1-number">6</span><span class="pas1-symbol">));    
+  Writeln(</span><span class="pas1-string">'Lotto Combination 6 of 49!'</span><span class="pas1-symbol">)
+  Writeln(BinominalCoefficient(</span><span class="pas1-number">49</span><span class="pas1-symbol">, </span><span class="pas1-number">6</span><span class="pas1-symbol">));  
+  Writeln(</span><span class="pas1-string">''</span><span class="pas1-symbol">);  
+  Writeln(FormatBigInt(BinominalCoefficient(</span><span class="pas1-number">60</span><span class="pas1-symbol">, </span><span class="pas1-number">10</span><span class="pas1-symbol">)));  
+  Writeln(</span><span class="pas1-string">''</span><span class="pas1-symbol">);  
+  
+  Writeln(FormatBigInt((BinominalCoefficient(</span><span class="pas1-number">5000</span><span class="pas1-symbol">, </span><span class="pas1-number">1600</span><span class="pas1-symbol">))))
+  Writeln(</span><span class="pas1-string">''</span><span class="pas1-symbol">); 
+  Writeln(FormatInt(</span><span class="pas1-number">4100000</span><span class="pas1-symbol">))
+  writeln(FloatToStr((Power(</span><span class="pas1-number">2</span><span class="pas1-symbol">,</span><span class="pas1-number">64</span><span class="pas1-symbol">))))
+  writeln(((powerBig(</span><span class="pas1-number">10</span><span class="pas1-symbol">,</span><span class="pas1-number">308</span><span class="pas1-symbol">)))) </span><span class="pas1-comment">//1.8 *10^308
+</span><span class="pas1-space">  writeln(((powerBig(</span><span class="pas1-number">2</span><span class="pas1-symbol">,</span><span class="pas1-number">1024</span><span class="pas1-symbol">))))
+  writeln(</span><span class="pas1-string">''</span><span class="pas1-symbol">)
+  writeln(((powerBig(</span><span class="pas1-number">10</span><span class="pas1-symbol">,</span><span class="pas1-number">38</span><span class="pas1-symbol">))))  </span><span class="pas1-comment">//3.4 *10^38
+</span><span class="pas1-space">  writeln(((powerBig(</span><span class="pas1-number">2</span><span class="pas1-symbol">,</span><span class="pas1-number">128</span><span class="pas1-symbol">))))
+    Stop
+   Writeln(</span><span class="pas1-string">'Time: '</span><span class="pas1-space"> +(floattoStr(GetValueMSec/</span><span class="pas1-number">1000</span><span class="pas1-symbol">)));
+   Writeln(</span><span class="pas1-string">'Time: '</span><span class="pas1-space"> +GetTimeString);
+    Free;
+    a:= -</span><span class="pas1-number">23456</span><span class="pas1-symbol">;
+    b:= -</span><span class="pas1-number">12</span><span class="pas1-symbol">;
+    writeln(inttostr(a-b))
+    </span><span class="pas1-comment">//writeln(getAscii)
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;    
+
+  </span><span class="pas1-comment">//BIGMAXSCREEN
+</span><span class="pas1-space">  </span><span class="pas1-comment">//OpenCDDrive
+</span><span class="pas1-space">  </span><span class="pas1-comment">//boolean tester - small numbers;)
+</span><span class="pas1-space">  a:= </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+  b:= -</span><span class="pas1-number">1</span><span class="pas1-symbol">;
+  zb:= a=b;
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> zb </span><span class="pas1-reservedword">then</span><span class="pas1-space"> write(</span><span class="pas1-string">'true '</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">else</span><span class="pas1-space"> write(</span><span class="pas1-string">'false '</span><span class="pas1-symbol">);
+  zb:= a=-b;
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> zb </span><span class="pas1-reservedword">then</span><span class="pas1-space"> write(</span><span class="pas1-string">'true '</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">else</span><span class="pas1-space"> write(</span><span class="pas1-string">'false '</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">End</span><span class="pas1-symbol">.
+
+
+just inside maXbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_|      
+
+
+It</span><span class="pas1-string">'s a matter of fact that programming is the only art that never ends - programming is the synthesizer in our live that sounds each time a BIT different.                   
+
+
+
+</span><span class="pas1-comment">//examples to test the integrity and correctness in Groovy/Java
+</span><span class="pas1-symbol">---------------------------------
+
+/* Big Numbers </span><span class="pas1-reservedword">in</span><span class="pas1-space"> Groovy */
+
+</span><span class="pas1-reservedword">package</span><span class="pas1-space"> ch.ecotronics.maxbox
+
+println LONG.MAX_VALUE
+assert Long.MAX_VALUE == </span><span class="pas1-number">9223372036854775807
+
+</span><span class="pas1-identifier">BigInteger big = </span><span class="pas1-number">2</span><span class="pas1-space"> * Long.MAX_VALUE
+println big
+assert big == -</span><span class="pas1-number">2
+
+</span><span class="pas1-identifier">BigDecimal bigDec = </span><span class="pas1-float">2.0</span><span class="pas1-space"> * Long.MAX_VALUE
+println bigDec
+assert bigDec == </span><span class="pas1-float">18446744073709551614.0
+
+</span><span class="pas1-identifier">double bigger = Math.pow(</span><span class="pas1-number">2</span><span class="pas1-symbol">,</span><span class="pas1-number">1000</span><span class="pas1-symbol">)
+assert bigger == </span><span class="pas1-float">1.1E+0301
+</span><span class="pas1-identifier">println bigger
+
+------------------------------------------------------------------------
+</span><span class="pas1-number">2</span><span class="pas1-symbol">^</span><span class="pas1-number">64</span><span class="pas1-space"> = </span><span class="pas1-number">18446744073709551616
+
+</span><span class="pas1-identifier">Now that the &quot;signed&quot; Words are </span><span class="pas1-reservedword">finally</span><span class="pas1-space"> up-</span><span class="pas1-reservedword">to</span><span class="pas1-symbol">-par </span><span class="pas1-reservedword">with</span><span class="pas1-space"> the unsigned integer types, Delphi </span><span class="pas1-number">4</span><span class="pas1-space"> immediately introduces a new </span><span class="pas1-number">64</span><span class="pas1-symbol">-bits integer </span><span class="pas1-reservedword">type</span><span class="pas1-symbol">, called Int64, </span><span class="pas1-reservedword">with</span><span class="pas1-space"> a whopping range </span><span class="pas1-reservedword">of</span><span class="pas1-space"> -</span><span class="pas1-number">2</span><span class="pas1-symbol">^</span><span class="pas1-number">63</span><span class="pas1-symbol">..</span><span class="pas1-number">2</span><span class="pas1-symbol">^</span><span class="pas1-number">63</span><span class="pas1-space"> - </span><span class="pas1-number">1</span><span class="pas1-space">  
+
+</span><span class="pas1-number">2</span><span class="pas1-symbol">^</span><span class="pas1-number">100</span><span class="pas1-symbol">=
+</span><span class="pas1-number">1267650600228229401496703205376
+
+</span><span class="pas1-identifier">ExecuteShell(ExePath+</span><span class="pas1-string">'maxbox3.exe'</span><span class="pas1-symbol">, </span><span class="pas1-string">'&quot;'</span><span class="pas1-space"> + ExePath+</span><span class="pas1-string">'examples\218_biorythmus_studio.txt&quot;'</span><span class="pas1-symbol">);
+
+
+</span><span class="pas1-comment">{** A power function from Jack Lyle. Said to be more powerful than the
+    Pow function that comes with Delphi. }
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> Power2(Base, Exponent : Double) : Double;
+</span><span class="pas1-comment">{ raises the base to the exponent }
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">CONST
+</span><span class="pas1-space">    cTiny = </span><span class="pas1-float">1e-15</span><span class="pas1-symbol">;
+
+  </span><span class="pas1-reservedword">VAR
+</span><span class="pas1-space">    Power : Double; </span><span class="pas1-comment">{ Value before sign correction }
+
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">BEGIN
+</span><span class="pas1-space">    Power := </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+    </span><span class="pas1-comment">{ Deal with the near zero special cases }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> (Abs(Base) &lt; cTiny) </span><span class="pas1-reservedword">THEN</span><span class="pas1-space"> </span><span class="pas1-reservedword">BEGIN
+</span><span class="pas1-space">      Base := </span><span class="pas1-float">0.0</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">END</span><span class="pas1-symbol">; </span><span class="pas1-comment">{ IF }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> (Abs(Exponent) &lt; cTiny) </span><span class="pas1-reservedword">THEN</span><span class="pas1-space"> </span><span class="pas1-reservedword">BEGIN
+</span><span class="pas1-space">      Exponent := </span><span class="pas1-float">0.0</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">END</span><span class="pas1-symbol">; </span><span class="pas1-comment">{ IF }
+
+</span><span class="pas1-space">    </span><span class="pas1-comment">{ Deal with the exactly zero cases }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> (Base = </span><span class="pas1-float">0.0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">THEN</span><span class="pas1-space"> </span><span class="pas1-reservedword">BEGIN
+</span><span class="pas1-space">      Power := </span><span class="pas1-float">0.0</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">END</span><span class="pas1-symbol">; </span><span class="pas1-comment">{ IF }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> (Exponent = </span><span class="pas1-float">0.0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">THEN</span><span class="pas1-space"> </span><span class="pas1-reservedword">BEGIN
+</span><span class="pas1-space">      Power := </span><span class="pas1-float">1.0</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">END</span><span class="pas1-symbol">; </span><span class="pas1-comment">{ IF }
+
+</span><span class="pas1-space">    </span><span class="pas1-comment">{ Cover everything else }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> ((Base &lt; </span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">AND</span><span class="pas1-space"> (Exponent &lt; </span><span class="pas1-number">0</span><span class="pas1-symbol">)) </span><span class="pas1-reservedword">THEN
+</span><span class="pas1-space">        Power := </span><span class="pas1-number">1</span><span class="pas1-symbol">/Exp(-Exponent*Ln(-Base))
+    </span><span class="pas1-reservedword">ELSE</span><span class="pas1-space"> </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> ((Base &lt; </span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">AND</span><span class="pas1-space"> (Exponent &gt;= </span><span class="pas1-number">0</span><span class="pas1-symbol">)) </span><span class="pas1-reservedword">THEN
+</span><span class="pas1-space">        Power := Exp(Exponent*Ln(-Base))
+    </span><span class="pas1-reservedword">ELSE</span><span class="pas1-space"> </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> ((Base &gt; </span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">AND</span><span class="pas1-space"> (Exponent &lt; </span><span class="pas1-number">0</span><span class="pas1-symbol">)) </span><span class="pas1-reservedword">THEN
+</span><span class="pas1-space">        Power := </span><span class="pas1-number">1</span><span class="pas1-symbol">/Exp(-Exponent*Ln(Base))
+    </span><span class="pas1-reservedword">ELSE</span><span class="pas1-space"> </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> ((Base &gt; </span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">AND</span><span class="pas1-space"> (Exponent &gt;= </span><span class="pas1-number">0</span><span class="pas1-symbol">)) </span><span class="pas1-reservedword">THEN
+</span><span class="pas1-space">        Power := Exp(Exponent*Ln(Base));
+
+    </span><span class="pas1-comment">{ Correct the sign }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> ((Base &lt; </span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">AND</span><span class="pas1-space"> (Frac(Exponent/</span><span class="pas1-float">2.0</span><span class="pas1-symbol">) &lt;&gt; </span><span class="pas1-float">0.0</span><span class="pas1-symbol">)) </span><span class="pas1-reservedword">THEN
+</span><span class="pas1-space">      Result := -Power
+    </span><span class="pas1-reservedword">ELSE
+</span><span class="pas1-space">      Result := Power;
+  </span><span class="pas1-reservedword">END</span><span class="pas1-symbol">; </span><span class="pas1-comment">{ FUNCTION Pow }
+</span><span class="pas1-space">  
+  
+  
+
+
+
+
+----code_cleared_checked----
+</span></code></pre><!--EndFragment--></body>
+</html>

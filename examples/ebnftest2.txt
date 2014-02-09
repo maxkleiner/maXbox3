@@ -1,0 +1,175 @@
+<postal-address> ::= <name-part> <street-address> <zip-part>
+       <name-part> ::= <personal-part> <last-name> <opt-jr-part> <EOL> 
+                    | <personal-part> <name-part>
+   <personal-part> ::= <first-name> | <initial> "." 
+  <street-address> ::= <house-num> <street-name> <opt-apt-num> <EOL>
+        <zip-part> ::= <town-name> "," <state-code> <ZIP-code> <EOL>
+     <opt-jr-part> ::= "Sr." | "Jr." | <roman-numeral> | ""
+
+
+fql-expression = (operator-expression / paren-expression / token)
+
+operator-expression = [in-expression] (and / andnot / any / or / rank
+      / xrank / near / onear / not / equals / filter / starts-with 
+      / ends-with / count)
+
+paren-expression = [in-expression] "(" fql-expression ")"
+
+token = [in-expression] (datetime-token / float-token / int-token
+      / phrase-token / range-token / string-token)
+
+; Operator expressions
+and = "and" "(" multiple-fql-params ")"
+andnot = "andnot" "(" multiple-fql-params ")"
+any = "any" "(" multiple-fql-params ")"
+or = "or" "(" multiple-fql-params ")"
+
+rank = "rank" "(" rank-param *("," rank-param) ")"
+rank-param = token / fql-expression
+
+xrank = "xrank" "(" xrank-param *("," xrank-param) ")"
+xrank-param = ("boost" "=" integer-value)
+      / ("boostall" "=" yesno-value)
+      / fql-expression
+
+near = "near" "(" near-param *("," near-param) ")"
+near-param = ("N" "=" token-distance) / fql-expression
+
+onear = "onear" "(" onear-param *("," onear-param) ")"
+onear-param = ("N" "=" token-distance) / fql-expression
+
+not = "not" "(" fql-expression ")"
+
+count = ("count" "(" token
+      1*("," (("from" "=" int-token) / ("to" "=" int-token))) ")")
+
+equals = "equals" "("
+      [in-expression] (string-token / phrase-token) ")"
+starts-with = "starts-with" "("
+      [in-expression] (string-token / phrase-token) ")"
+ends-with = "ends-with" "("
+      [in-expression] (string-token / phrase-token) ")"
+filter = "filter" "(" fql-expression ")"
+
+; Token operator expressions
+
+phrase-token = "phrase" "(" phrase-token-param
+      *("," phrase-token-param) ")"
+phrase-token-param = ("weight" "=" unsigned-integer-value)
+      / ("linguistics" "=" onoff-value)
+      / ("wildcard" "=" onoff-value)
+      / token
+
+string-token = explicit-string-token / implicit-string-token
+explicit-string-token = "string" "(" string-token-param
+      *("," string-token-param) ")"
+string-token-param = ("mode" "=" mode-value)
+      / ("N" "=" token-distance)
+      / ("weight" "=" integer-value)
+      / ("minexpansion" "=" integer-value)
+      / ("maxexpansion" "=" integer-value)
+      / ("linguistics" "=" onoff-value)
+      / ("wildcard" "=" onoff-value)
+      / token
+implicit-string-token = string-value
+
+float-token = explicit-float-token / implicit-float-token
+explicit-float-token = "float" "(" (float-value
+      / (DQUOTE float-value DQUOTE)) ")"
+implicit-float-token = *DIGIT "." 1*DIGIT
+
+int-token = explicit-int-token / implicit-int-token
+explicit-int-token = "int" "(" (integer-value
+      / (DQUOTE integer-value DQUOTE)
+      / (DQUOTE integer-value *(SP integer-value) DQUOTE ","
+      numeric-or-mode)
+      / (numeric-or-mode "," DQUOTE 1*integer-value *(SP integer-value)
+      DQUOTE))
+      ")"
+implicit-int-token = integer-value
+
+datetime-token = explicit-datetime-token / implicit-datetime-token
+explicit-datetime-token = "datetime" "(" (datetime-value
+      / (DQUOTE datetime-value DQUOTE)) ")"
+      implicit-datetime-token = datetime-value
+
+range-token = "range" "(" range-token-param *("," range-token-param)
+      ")"
+range-token-param = ("from" "=" from-condition)
+      / ("to" "=" to-condition)
+      / range-limit
+range-limit = datetime-token / float-token / int-token
+      / "min" / "max"
+from-condition = unquoted-from-condition
+      / (DQUOTE unquoted-from-condition DQUOTE)
+unquoted-from-condition = "GE" / "GT"
+to-condition = unquoted-to-condition
+      / (DQUOTE unquoted-to-condition DQUOTE)
+unquoted-to-condition = "LE" / "LT"
+
+; Data types
+string-value = quoted-string-value / unquoted-string-value
+
+; <quoted-string-value> can contain any characters
+; (including wide characters) that are not control
+; characters, except for double quotation marks.quoted-string-value = DQUOTE 1*(quoted-escaped-character
+      / %x20-21 / %x23-ffffffff) DQUOTE
+quoted-escaped-character =
+      quoted-escaped-backslash
+      / quoted-escaped-newline
+      / quoted-escaped-carriage-return
+      / quoted-escaped-tab
+      / quoted-escaped-backspace
+      / quoted-escaped-form-feed
+      / quoted-escaped-double-quote
+      / quoted-escaped-single-quote
+
+quoted-escaped-backslash = "\\"
+quoted-escaped-newline = "\n"
+quoted-escaped-carriage-return = "\r"
+quoted-escaped-tab = "\t"
+quoted-escaped-backspace = "\b"
+quoted-escaped-form-feed = "\f"
+quoted-escaped-double-quote = "\" DQUOTE
+quoted-escaped-single-quote = "'"
+
+; <unquoted-string-value> can contain any characters (including wide
+; characters) that are not control characters, except for spaces,
+; commas, double quotation marks, parentheses,colons, and equals
+; signs.unquoted-string-value =
+      1*(%x21 / %x23-27 / %x2a-2b / %x2d-39 / %x3b-3c / %x3e-ffffffff)
+integer-value = ["-" / "+"] 1*DIGIT
+unsigned-integer-value = 1*DIGIT
+float-value = ["-" / "+"] (*DIGIT "." 1*DIGIT) / 1*DIGIT
+
+datetime-value = year "-" month "-" day
+      ["T" hour ":" minute ":" second ["Z"]]
+year = 4*DIGIT                 ; four-digit or longer year (0000-infinity)
+month = ("0" DIGIT)           ; two-digit month (00-09)
+      / ("1" %x30-32)          ; two-digit month (10-12)
+day = (%x30-32 DIGIT)      ; two-digit day (00-29)
+      / ("3" %x30-31)          ; two-digit day (30-31)
+hour = (%x30-31 DIGIT)     ; two-digit hour (00-19)
+      / ("2" %x30-33)          ; two-digit hour (20-23)
+minute = (%x30-35 DIGIT)  ; two-digit minute (00-59)
+second = (%x30-35 DIGIT)  ; two-digit second (00-59)
+
+yesno-value = quoted-yesno-value / unquoted-yesno-value
+quoted-yesno-value = DQUOTE unquoted-yesno-value DQUOTE
+unquoted-yesno-value = "YES" / "NO"
+
+onoff-value = quoted-onoff-value / unquoted-onoff-value
+quoted-onoff-value = DQUOTE unquoted-onoff-value DQUOTE
+unquoted-onoff-value = "ON" / "OFF"
+
+; <mode-value> must be inside double quotation marks.mode-value = DQUOTE ("PHRASE" / "AND" / "OR" / "ANY" / "NEAR"
+      / "ONEAR" / "SIMPLEALL" / "SIMPLEANY") DQUOTE
+
+; General syntax elements
+in-expression = ((internal-property-name / property-name) ":")
+      / (DQUOTE (internal-property-name / property-name) DQUOTE ":")
+numeric-or-mode = "mode" "=" DQUOTE "OR" DQUOTE
+token-distance = unsigned-integer-value
+internal-property-name = property-name "." property-name
+property-name = 1*(ALPHA / DIGIT)
+multiple-fql-params = fql-expression 1*("," fql-expression)

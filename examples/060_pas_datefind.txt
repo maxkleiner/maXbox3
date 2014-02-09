@@ -1,0 +1,69 @@
+program DateFind_MX;
+
+// complex filefunction which shows all files of the day time stamp
+// has findfirst with a TSearchRec structure, loc's = 69, _60
+
+const ext = 'txt';   
+      sw = 'SW_SHOW';
+     
+var
+  year, year1, month, month1, day, day1: word;   
+   
+procedure FindAllFiles(FilesList: TStringList; StartDir, FileMask: string);
+var
+  //SR: TSearchRec;
+  DirList: TStringList;
+  IsFound: Boolean;
+  i: integer;
+  myDosdate: TDateTime;
+begin
+  if StartDir[length(StartDir)] <> '\' then
+                       StartDir:= StartDir + '\';
+  { Build a list of the files in directory StartDir (not the directories!)}
+  IsFound:= FindFirst(StartDir+FileMask, faAnyFile-faDirectory) = 0;
+  while IsFound do begin
+    myDosdate:= fileDatetoDateTime(searchrectime)
+    decodedate(mydosdate, year, month, day)
+    if (day = day1) and (month = month1) and (year = year1) then 
+       FilesList.Add(StartDir + searchrecName);// + DateTimetoStr(mydosdate));
+    IsFound:= FindNext = 0;
+  end;
+  FindClose;
+  //Build a list of subdirectories
+  DirList:= TStringList.Create;
+    IsFound:= FindFirst(StartDir+'*.*', faAnyFile) = 0;
+    while IsFound do begin
+      if ((searchrecAttr and faDirectory) <> 0) and
+         (searchrecName[1] <> '.') then
+           DirList.Add(StartDir + searchrecName);
+      IsFound:= FindNext = 0;
+    end;
+    FindClose;
+  //Scan the list of subdirectories recursive!
+  for i:= 0 to DirList.Count - 1 do
+    FindAllFiles(FilesList, DirList[i], FileMask);
+  DirList.Free;
+end;
+
+procedure StartFileFinder;
+var
+  FilesList: TStringList;
+begin
+  FilesList:= TStringList.Create;
+  try
+    FindAllFiles(FilesList, ExePath, '*.txt');
+    fileslist.saveToFile(ExePath+ 'examples\pas_files.txt');
+  finally 
+    FilesList.Free;
+  end;
+end;
+
+//main script
+begin
+  //the the date from now to compare with file date
+  decodeDate(date, year1, month1, day1) 
+  StartFileFinder;
+  beep;
+  //shellexecute(1, 'open', 'notepad', 'rec_files.txt', '', 2)
+  //orthogonal and idempotent
+end.

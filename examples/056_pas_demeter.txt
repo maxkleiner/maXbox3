@@ -1,0 +1,78 @@
+program demeter_design;   // _56
+
+//example with 4 cases from law of demeter (don't talk to strangers), loc's=78
+
+function GetWinner: TStringList;
+var
+  i, bet: Integer;
+  betS: string;
+begin
+  result:= TStringList.Create;
+  try
+    randomize;
+    for i:= 1 to 5 do begin
+      bet:= random((1000)+100);
+      if bet < 1000 then begin
+        bet:= bet+1000;
+        betS:= intTostr(bet);
+        betS[1]:= '0';
+      end else
+        betS:= intToStr(bet);
+      result.add(betS);
+    end;
+    result.Sort;
+  except
+    result.Free;
+    //raise;
+  end;
+end;
+
+
+procedure Obj2_executeTemplate2(aMemo: TMemo);
+var
+  Mst: TMemoryStream;
+begin
+  Mst:= TMemoryStream.Create;
+  try
+    Mst.LoadFromFile('firstdemo.txt');
+    Mst.Seek(0,0);
+    aMemo.Lines.LoadFromStream(Mst);      
+  finally
+    Mst.Free;
+  end;
+end;
+
+procedure Obj1_executeTemplate1(aList: TStringList);
+begin
+  try
+    alist.LoadFromFile('firstdemo.txt');
+  except
+    //alist.Free;
+    showmessage('file not found')
+  end;
+end;
+
+//main
+var 
+  mylist: TStringList;
+  i: byte;
+begin
+  myList:= TStringList.create;
+  // demeter 1 
+  myList.clear;
+
+  // demeter 2
+  mylist:= TStringlist.create;
+  Obj1_executeTemplate1(mylist)
+  for i:= 1 to 4 do
+    memo2.lines.add(mylist[i]);
+  myList.Free;
+
+  // demeter 3 with mst create
+  Obj2_executeTemplate2(memo2);
+  // or mst. is global member to obj2
+  
+  // demeter 4 with lines as member of memo2
+  memo2.lines.add('this is demeter 4');
+  //memo2.clear; 
+end.

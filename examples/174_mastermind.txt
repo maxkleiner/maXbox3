@@ -1,0 +1,325 @@
+{****************************************************************
+ *
+ * Project  : Logic Game Series for SWS of OpenTools API
+ * Unit Name: 174_mastermind.txt, loc's = 148
+ * Purpose  : Introduction and Demo to the mX3 game environment
+ ****************************************************************}
+
+
+program maXbox_mastermind;
+
+//uses crt;
+{ Master Mind generates a set of four digits from 0 to 9.  The user is then
+  allowed to guess what the set of digits is.  For every correct guess that
+  is in the correct position, a "2" will be displayed.  For every correct
+  guess in the wrong position, a "1" will be displayed.  For every wrong
+  guess, a "0" will be displayed.  The user wins when four "2"s are
+  displayed.  The user then has the option to play again. }
+
+const                               
+     maxguesses = 20;
+     maxdigits = 10;
+
+type
+    guesstype = array[1..maxdigits] of integer;
+
+var
+   computerset,guess:guesstype;
+   maxnums,guesses, i:integer;
+   done,won:boolean;
+
+{ ------------------------------------------------------------------------- }
+
+procedure instruct;
+{ Allows the user to have instructions to be printed to the screen. }
+
+var
+   yn: string;
+
+begin
+     //clrscr;
+           write('Do you want instructions (Y/N)? ');
+           yn:= readln('type y or n');
+           yn:= uppercase(yn);
+  if yn='Y' then begin
+    writeln('  Master Mind generates a set of 1 to 10 digits from 0 to 9.  You are then');
+    writeln('allowed '+intToStr(maxguesses)+' guesses to find a set of digits.  For every correct guess that is');
+    writeln('in the correct position, a "2" will be displayed.  For every correct guess in');
+    writeln('the wrong position, a "1" will be displayed.  For every wrong guess, a "0"');
+    writeln('will be displayed.  The you win when four "2"s are displayed.  You then have');
+    writeln('the option to play again.  Guesses are entered by typing the numbers in the');
+    writeln('order that you think the computer has them in.  BACKSPACE lets you change a');
+    writeln('guess and ENTER lets you state that you have made your guess.  If, while');
+    writeln('entering a guess, you want to make some notes, press RIGHT ARROW to enter the');
+    writeln('notemaking space on the right-hand part of the screen. Use the arrow keys to');
+    writeln('move around and numbers 0 through 9 and SPACE to make changes.  Press ENTER');       writeln('to return to making your guess.');
+             writeln('');
+             writeln('Disclaimer, this game is NOT endorsed by ------------');
+             writeln('');
+             writeln('Press ENTER to continue.');
+             readln('');
+        end;
+end; { instruct }
+
+{ ------------------------------------------------------------------------- }
+
+procedure generate(var comp: guesstype; var max: integer);
+
+var
+   j,i:integer;
+   user: string;
+
+begin
+     memo2.clear;
+     memo2.height:= 500;
+     memo2.color:= clblack;
+     memo2.font.color:= clred; 
+     memo2.font.size:= 18;
+     writeln('MasterXMind Game');  
+     writeln('*******************');
+     repeat
+           //clrscr;
+           //memo2.clear;
+           write('How many digits you want (1 to '+intToStr(maxdigits)+')? ');
+           max:= StrToInt(readln('how many numbers?'));
+     until (max>0) and (max<=maxdigits);
+           //clrscr;
+           //write('Do you want note section to have blank or filled (B/F)? ');
+           write(' 0: false, 1: right number but wrong place, 2: right ');
+           
+           //user:= readln('user');
+           user:= 'b';
+           user:= uppercase(user);
+           writeln(' ');
+     //clrscr;
+     for i:=1 to max do
+         comp[i]:= random(10);
+     if user='F' then
+        for i:=0 to 9 do begin
+                 //gotoxy(50,i+1);
+                 //writeln('')
+                 for j:=1 to max do
+                     write(inttoStr(i)+' ');
+            end else
+         for i:=0 to 9 do begin
+                  //gotoxy(50,i+1);
+                  //writeln('')
+                  for j:= 1 to max do
+                      write('* ');
+             end;
+       writeln('');      
+    // gotoxy(1,1);
+end; { generate }
+
+{ ------------------------------------------------------------------------- }
+
+procedure input(var ch:integer; var bool:boolean);
+{ This is a universal input routine for inputing data from the keyboard.  The
+  boolean checks for function keys and other special keys.  Ch stores the
+  ASCII code for the character. }
+  var key: string;
+begin
+     key:= readln('readkey your next tip');
+     ch:= ord(key[1]);
+     if ch= 0 then begin
+	     bool:= true;
+ 	     ch:= ord(key[1]);
+        end
+     else
+	 bool:=false;
+end; { input }
+
+{ ------------------------------------------------------------------------- }
+
+procedure analyze(lim:integer);
+{ Allows the user to test data in a visible way. }
+
+var
+   done,arrow:boolean;
+   x,y,iresult:integer;
+
+begin
+     x:=50;
+     y:=1;
+     done:=false;
+     repeat
+           //gotoxy(x,y);
+           input(iresult,arrow);
+           //if (arrow and(iresult in [72,75,77,80])) then
+      
+        if (arrow and (iresult = 72) or (iresult = 75) 
+                   or (iresult = 77) or (iresult = 80)) then
+              case iresult of
+                   72: if y<>1 then y:=y-1 else y:=10;
+                   75: if x<>50 then x:=x-2 else x:=48+2*lim;
+                   77: if x<>48+2*lim then x:=x+2 else x:=50;
+                   80: if y<>10 then y:=y+1 else y:=1;
+              end { case }
+          // else if (not arrow and (iresult in [ord(' '),ord('0')..ord('9')])) then
+           else if (not arrow and (iresult = ord(' ')) or (iresult > 48) 
+                                      or (iresult < 57)) then 
+                begin
+                     if iresult <> ord(' ') then
+                        write(chr(iresult))
+                     else
+                         write('*');
+                end
+           else if (not arrow and (iresult=13)) then
+                done:= true;
+     until done;
+end;
+
+{ ------------------------------------------------------------------------- }
+
+procedure makeguess(var atry: guesstype; var tries:integer;max:integer);
+{ Allows the user to make a guess. }
+
+var
+   i,j,temptry:integer;
+   special,guessmade,ready:boolean;
+
+begin
+     for i:=1 to max do
+         atry[i]:= -1;
+     tries:= tries+1;
+     write(' Make guess ');
+     if tries < 10 then
+        write('0'+inttoStr(tries)+': ')
+     else
+         writeln(inttostr(tries)+': ');
+     i:=1;
+     guessmade:= false;
+     repeat
+           input(temptry,special);
+           if not(special) and (temptry = 8) or (temptry =13) 
+                                 or (temptry > 48) or (temptry < 57) then
+                                 //,ord('0')..ord('9')]) then
+              begin
+                   case temptry of
+                        8:if i<>1 then begin
+                                  i:=i-1;
+                                  write(chr(temptry));
+                                  write(chr(temptry));
+                             end;
+                       84:begin  //13 old 84 is T
+                                ready:=true;
+                                for j:=1 to max do
+                                    if atry[j]=-1 then ready:=false;
+                                if ready then begin
+                                        guessmade:=true;
+                                   end;
+                           end;
+                         //ord('0')..ord('9'):if i<>max+1 then
+              48,49,50,51,52,53,54,55,56,57: if i<>max+1 then begin
+                                                   atry[i]:=ord(temptry)-ord('0');
+                                                   write(chr(temptry));
+                                                   if i<>max then write(',')
+                                                      else begin 
+                                                        write(chr(8));
+                                                        guessmade:= true;
+                                                      end;  
+                                                   if i<>max then i:=i+1;
+                                              end;
+                   end; { case }
+              end;
+           if special and (temptry = 77) then begin
+                   analyze(max);
+                   //gotoxy(16,tries);
+                   i:= 1;
+              end;
+     until guessmade;
+end; { guess }
+
+{ ------------------------------------------------------------------------- }
+
+procedure evaluate(atry,actual:guesstype; var allcorrect:boolean;tries,max:integer);
+
+var
+   i,j,rights:integer;
+begin
+     //gotoxy(15+2*max,tries);
+     write('   ');
+     rights:=0;
+     for i:=1 to max do
+         if atry[i] = actual[i] then begin
+                 write('2 '); //yes
+                 atry[i]:=-1;
+                 actual[i]:=-2;
+                 rights:=rights+1;
+            end;
+     for i:=1 to max do
+         for j:=1 to max do
+             if atry[i]=actual[j] then begin
+                     write('1 '); //right
+                     atry[i]:=-1;
+                     actual[j]:=-2;
+                end;
+     for i:=1 to max do
+         if atry[i]<>-1 then
+            write('0 '); //false
+     writeln('  ');
+     if rights=max then begin
+             writeln('You won in only '+inttostr(guesses)+' '+inttostr(tries)+'.');
+             writeln('');
+             writeln('Press ENTER to continue');
+             allcorrect:=true;
+             //readln;
+        end
+     else if tries=maxguesses then begin
+               writeln('Sorry, you lost!');
+               write('  The code is:');
+               for i:=1 to max do
+                   write(inttostr(computerset[i]));
+               writeln('');
+               writeln('');
+               writeln('Press ENTER to continue');
+               //readln;
+          end;
+end; { evaluate }
+
+{ ------------------------------------------------------------------------- }
+
+procedure quit(var bool:boolean);
+var
+   yn: string;
+begin
+     //clrscr;
+     repeat
+           write('Do you want to quit (Y/N)? ');
+           yn:= readln('do you want leave the game y or n');
+           yn:= uppercase(yn);
+     until (yn = 'Y') or (yn = 'N');
+     if yn= 'Y' then bool:= true else bool:= false;
+end; { done }
+
+{ ========================================================================= }
+
+begin
+     randomize;
+     //instruct;
+     repeat
+           generate(computerset,maxnums);
+           won:=false;
+           guesses:=0;
+           for i:= 1 to maxnums do 
+              write('deb:'+inttostr(computerset[i]));
+              writeln('');
+           repeat
+                 makeguess(guess,guesses,maxnums);
+                 evaluate(guess,computerset,won,guesses,maxnums);
+                 application.processmessages;
+           until won or (guesses=maxguesses);
+           quit(done);
+     until done;
+end.
+//{
+*******************************************************
+There is no place like 127.0.0.1 
+
+osoft's new Consolas font but only for VS.NET | Yahoo Go for TV, yeah it's written in Delphi >>
+Skype, yeah it too is written in Delphi
+June 02 2006 3:57PM
+I've seen this mentioned before but since I just posted about Yahoo's Go for TV I figured what the heck, might was well throw Skype into the mix too. Skype is only slightly harder to recognize as being written in Delphi but only because they've decided to package the whole application up into a single 18MB EXE btw, isn't it nice how Delphi gives you that option. If you search for strings in the Skype.exe you'll see lots of Delphi classnames like TInterfacedObject and friends.
+
+Inevitably, the question "Can you point me to any well known large Delphi applications out there?" comes up time and again on the public newsgroups. Well, I think Skype.exe weighing in at 18MB and worth $2.6 Billion answers that question wouldn't you agree? 
+

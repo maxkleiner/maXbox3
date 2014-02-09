@@ -1,0 +1,96 @@
+program Bitmap_Load_Solution;
+
+//Loads a bitmap with an aggregation from TPicture Class
+//A function stretches also a bitmap with specified number of pixels
+// in horizontal, vertical dimension, locs=96 _86
+
+var
+  Image1: TImage;
+  frmMon: TForm;
+  
+procedure loadImage;
+begin
+  Image1.Picture.BitMap.LoadFromFile(ExePath+'examples\citymax.bmp');
+end; 
+
+procedure Image1MouseDown(Sender: TObject; Button: TMouseButton;
+Shift: TShiftState; X, Y: Integer);
+var i: byte;
+begin
+//test
+  Image1.Canvas.MoveTo(X,Y);
+  for i:= 1 to 70 do
+    //Image1.Canvas.LineTo(X+random(140),Y+random(140));
+    Image1.Picture.Bitmap.Canvas.LineTo(X+random(140),Y+random(140));
+end;  
+
+
+Function RGB(R,G,B: Byte): TColor;
+Begin
+  Result:= B Shl 16 Or G Shl 8 Or R;
+End;
+
+
+function ResizeBmp(bitmp: TBitmap; wid, hei: Integer): Boolean;
+var 
+  TmpBmp: TBitmap;
+  ARect: TRect;
+begin
+  Result:= False;
+  try
+    TmpBmp:= TBitmap.Create;
+    try
+      TmpBmp.Width := wid;
+      TmpBmp.Height:= hei;
+      //ARect:= Rect(0,0, wid, hei);
+      //TmpBmp.Canvas.StretchDraw(ARect, Bitmp);
+      TmpBmp.loadfromfile('examples\citymax.bmp')
+      bitmp.Assign(TmpBmp);
+    finally
+      TmpBmp.Free;
+    end;
+    Result:= True;
+  except
+    Result:= False;
+  end;
+end;
+
+
+procedure InitForms;
+begin
+ frmMon:= TForm.create(self);
+ with frmMon do begin
+   //FormStyle := fsStayOnTop;
+   Position := poScreenCenter;
+   caption:='click on the bitmap';
+   color:= clred;
+   width:= 450;
+   height:= 400;
+   show
+ end;
+ Image1:= TImage.create(frmMon);
+ with Image1 do begin
+   parent:= frmMon;
+   setbounds(20,25, 400,320);
+   onMousedown:= @Image1MouseDown;
+   show;
+   //onMouseup:= @Image1MouseUp
+ end;
+end; 
+
+procedure LoadBitMap;
+var mybitmap: Tbitmap;
+     mycanvas: TCanvas;
+begin
+ mybitmap:= TBitmap.create;
+ mycanvas:= TCanvas.create;
+ if ResizeBmp(mybitmap, 300, 300) then
+    showmessage('picture almost resized');
+  //Image1.LoadFromFile(ExtractFilePath(Application.Exename) + 'Bild.bmp');
+end;
+
+begin
+  InitForms;
+  LoadBitMap; //test
+  loadImage;
+end.  

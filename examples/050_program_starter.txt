@@ -1,0 +1,59 @@
+program Primtester_3;
+
+{ simple primtester between range for perfomance- and filehandling 
+has a function and procedure, consts, globals and locals, locs = 59, _50
+shows sequence, selection and iteration (units are implicit)
+to teach programming for beginners in maXbox!}
+
+const
+  FROM_RANGE = 1000;
+  TO_RANGE = 5000;
+
+//globals
+var  
+  mylist: TStringList;   //is an object from class TStringList! 
+  beforeTime, afterTime: string;
+
+function checkPrim(acti: integer): boolean;
+var //locals
+  j: integer;
+  isprim: boolean;
+begin
+  isprim:= true;
+  for j:= 2 to round(SQRT(acti)) do
+    if ((acti mod j) = 0) then begin
+      isprim:= false
+      break
+    end; 
+  result:= isprim;
+end;
+
+
+procedure TestPrimNumbers(Vfrom_range, Vto_range: integer);
+var acti, count: integer;
+begin
+  count:= 0; //init
+  mylist:= TStringList.create;
+  for acti:= Vfrom_range to Vto_range do begin
+    inc(acti)
+    if checkPrim(acti) then begin
+      inc(count)
+      mylist.add(intToStr(count) +': '+intToStr(acti))
+    end //if
+  end //for
+end;
+
+//main program
+begin
+  //time performance
+  beforeTime:= DateTimeToStr(Now);
+    TestPrimNumbers(FROM_RANGE, TO_RANGE);
+  afterTime:= DateTimeToStr(Now);
+  writeln('start: '+ beforeTime + ' from: '+intToStr(FROM_RANGE))
+  writeln('stop: ' + afterTime + ' to: '+intToStr(TO_RANGE))
+  mylist.add(memo2.text)
+  mylist.saveToFile('primetest8.txt')
+  //memo2.lines.loadFromFile('primetest8.txt')
+  mylist.Free;
+  //orthogonal and idempotent!
+end.

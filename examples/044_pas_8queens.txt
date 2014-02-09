@@ -1,0 +1,77 @@
+//shows the recursive solution to the 8 queens chess problem, max@kleiner.com
+//small output of solution in text mode, loc's =43
+
+PROGRAM EightQueens;
+
+type
+  Play = array[1..8] of boolean;
+  // to solve with array [1..8, 1..8]
+  rowCheck = array[1..8] of boolean;
+  leftdiagonalCheck = array[2..16] of boolean;
+  rightdiagonalCheck = array[-7..7] of boolean;
+  
+var 
+  Board : array[1..8] of Play;
+  safeRow: rowCheck;
+  safeleftDiag: LeftDiagonalCheck;
+  safeRightDiag: RightDiagonalCheck;
+  row, column, i: integer;
+  
+function Safe(row,col: byte; saferow: rowCheck; safeleftDiag: leftDiagonalCheck;
+                      saferightDiag: rightDiagonalCheck): boolean;
+//true if a queen can be safely placed in the current position
+begin
+   result:= safeRow[row] and safeLeftDiag[row+col]
+                              and safeRightDiag[row-col]
+end;
+ 
+procedure chPrint(board: Play);                                                   
+var i,j: integer;
+// shows the current board layout
+begin
+  for i:= 1 to 8 do begin
+    for j:= 1 to 8 do 
+      //if board[i,j] then write('Q') else write ('*'); 
+     writeln('');
+  end;   
+ writeln('');
+end;
+
+procedure TryColumn(column: integer; var board: play);
+//recursive procedure for attempting queen placement
+var row: integer;
+begin
+  row:= 1
+  repeat 
+    if safe(row, column, saferow, safeleftdiag, saferightdiag) then begin
+      //set the queen
+      saferow[row]:= false;
+      safeleftdiag[row+column]:= false;
+      saferightdiag[row-column]:= false;
+      //board[row, column]:= true;
+      if column < 8 then
+        Trycolumn(column + 1, board) else
+        chPrint(board);
+      //removes queen
+      safeRow[row]:= true;
+      safeleftDiag[row+column]:= true;
+      saferightDiag[row-column]:= true;
+      //board[row, column]:= false;
+    end; //row was safe
+    row:= row + 1;
+  until row > 8
+end;
+
+begin
+  //init board
+  for row:= 1 to 8 do safeRow[row]:= true;    
+  for i:= 2 to 16 do safeleftDiag[i]:= true;
+  for i:= -7 to 7 do saferightDiag[i]:= true;
+  for row:= 1 to 8 do 
+    for column:= 1 to 8 do
+      //board[row, column]:= false;
+      //make the firs recursive call
+      tryColumn(1, board);  
+end.
+      
+      

@@ -1,0 +1,1075 @@
+Version:0.9
+StartHTML:0000000105
+EndHTML:0000106092
+StartFragment:0000001037
+EndFragment:0000106076
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>mXScriptasHTML</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="generator" content="SynEdit HTML exporter" />
+<style type="text/css">
+<!--
+body { color: #000000; background-color: #FFFFFF; }
+.pas1-assembler { }
+.pas1-character { text-decoration: underline; }
+.pas1-comment { color: #000080; font-style: italic; }
+.pas1-float { color: #800080; }
+.pas1-hexadecimal { color: #FF00FF; }
+.pas1-identifier { }
+.pas1-number { color: #FF0000; }
+.pas1-preprocessor { font-style: italic; }
+.pas1-reservedword { color: #000000; font-weight: bold; }
+.pas1-space { }
+.pas1-string { color: #008080; }
+.pas1-symbol { color: #000000; }
+-->
+</style>
+</head>
+<body>
+<!--StartFragment--><pre><code><span class="pas1-reservedword">Program</span><span class="pas1-space"> MineSweeperForm_2_Final;
+  
+</span><span class="pas1-comment">//if ((aValue = csClicked) or (avalue = csClicking)) and Game[X][Y].Mined then begin
+</span><span class="pas1-space">  
+</span><span class="pas1-comment">//interface of 3.9.7 , locs=993
+// this file is on progress!!, tasks --&gt; blendmode of bitmaplist, set flag and draw in once
+
+{uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ActnList, GR32, GR32_Image, Menus, ImgList, ExtCtrls, Buttons, Math,
+  IniFiles, MineGame, CustomGame, BestTimes, About;}
+
+</span><span class="pas1-reservedword">const
+</span><span class="pas1-space">  TITLE_WIDTH_MIN = </span><span class="pas1-number">205</span><span class="pas1-symbol">;
+  UNCLICKED_BMP = </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+  CLICKED_BMP = </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+  MINED_BMP = </span><span class="pas1-number">2</span><span class="pas1-symbol">;
+  MARKED_BMP = </span><span class="pas1-number">3</span><span class="pas1-symbol">;
+  MINE1_BMP = </span><span class="pas1-number">4</span><span class="pas1-symbol">;
+  RED_BMP = </span><span class="pas1-number">12</span><span class="pas1-symbol">;
+  FLAG_BMP = </span><span class="pas1-number">13</span><span class="pas1-symbol">;
+  CROSS_BMP = </span><span class="pas1-number">14</span><span class="pas1-symbol">;
+  SUN_BMP_WIDTH = </span><span class="pas1-number">55</span><span class="pas1-symbol">;
+  SUN_BMP_HEIGHT = </span><span class="pas1-number">45</span><span class="pas1-symbol">;
+  SUN_WAIT_BMP = </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+  SUN_OOO_BMP = </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+  SUN_WON_BMP = </span><span class="pas1-number">2</span><span class="pas1-symbol">;
+  SUN_LOST_BMP = </span><span class="pas1-number">3</span><span class="pas1-symbol">;
+  
+  </span><span class="pas1-comment">//from unit minegame
+</span><span class="pas1-space">  GAME_WIDTH_MAX = </span><span class="pas1-number">50</span><span class="pas1-symbol">;
+  GAME_HI_MAX = </span><span class="pas1-number">50</span><span class="pas1-symbol">;
+  CASE_WIDTH = </span><span class="pas1-number">20</span><span class="pas1-symbol">;
+  CASE_HI = </span><span class="pas1-number">20</span><span class="pas1-symbol">;
+  CLIKING_STEP_MAX = </span><span class="pas1-number">5</span><span class="pas1-symbol">;
+  NB_STEP_MAX = </span><span class="pas1-number">5</span><span class="pas1-symbol">;
+  CLICKLISTCOUNTMAX = </span><span class="pas1-number">200</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">type
+</span><span class="pas1-space">  TCaseState = (csUnclicked, csClicking, csClicked, csMined, csMarked);
+  TGameState = (gsBeginning, gsPlaying, gsLost, gsWon);
+
+  TCase = </span><span class="pas1-reservedword">record
+</span><span class="pas1-space">    Mined: Boolean;
+    NearbyMines: Integer;
+    ClickingStep: Integer;
+    State: TCaseState;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  
+  TGame2 = </span><span class="pas1-reservedword">array</span><span class="pas1-symbol">[-</span><span class="pas1-number">1</span><span class="pas1-symbol">..GAME_HI_MAX - </span><span class="pas1-number">1</span><span class="pas1-symbol">] </span><span class="pas1-reservedword">of</span><span class="pas1-space"> TCase;
+  TGame = </span><span class="pas1-reservedword">array</span><span class="pas1-symbol">[-</span><span class="pas1-number">1</span><span class="pas1-symbol">..GAME_WIDTH_MAX - </span><span class="pas1-number">1</span><span class="pas1-symbol">] </span><span class="pas1-reservedword">of</span><span class="pas1-space"> TGame2;
+  </span><span class="pas1-comment">//TGame2 = array[0..GAME_Width_MAX - 1] of TCase;
+</span><span class="pas1-space">  </span><span class="pas1-comment">//TGame = array[0..GAME_HI_MAX - 1] of TGame2;
+
+
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_Close(Sender: TObject; </span><span class="pas1-reservedword">var</span><span class="pas1-space"> Action: TCloseAction); </span><span class="pas1-reservedword">forward</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_GamePbMouseDown(Sender: TObject;
+               Button: TMouseButton; Shift: TShiftState; X, Y: Integer); </span><span class="pas1-reservedword">forward</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_GamePbMouseUp(Sender: TObject;
+               Button: TMouseButton; Shift: TShiftState; X, Y: Integer); </span><span class="pas1-reservedword">forward</span><span class="pas1-symbol">;
+               
+   </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_DrawGame; </span><span class="pas1-reservedword">forward</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_DrawTitle; </span><span class="pas1-reservedword">forward</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_DrawCase(X, Y: Integer; ACase: TCase); </span><span class="pas1-reservedword">forward</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_GameNewExecute(Sender: TObject); </span><span class="pas1-reservedword">forward</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_CaseTimerTimer(Sender: TObject); </span><span class="pas1-reservedword">forward</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_TimerTimer(Sender: TObject); </span><span class="pas1-reservedword">forward</span><span class="pas1-symbol">;
+
+
+  </span><span class="pas1-reservedword">var
+</span><span class="pas1-space">    cmineFrm: TForm;
+    MainPnl: TPanel;
+    TitlePnl: TPanel;
+    Timer: TTimer;
+    MainMenu: TMainMenu;
+    GameMi: TMenuItem;
+    NewMenuItem: TMenuItem;
+    N1: TMenuItem;
+    BeginnerMenuItem: TMenuItem;
+    IntermediateMenuItem: TMenuItem;
+    ExpertMenuItem: TMenuItem;
+    CustomMenuItem: TMenuItem;
+    N2, N3, N4: TMenuItem;
+    MarksMenuItem: TMenuItem;
+    ExitMenuItem: TMenuItem;
+    OptionsMi: TMenuItem;
+    ContentMenuItem: TMenuItem;
+    AboutMenuItem: TMenuItem;
+    GamePnl: TPanel;
+    GamePb: TPaintBox32;
+  
+    </span><span class="pas1-comment">//ActionList1: TActionList;
+</span><span class="pas1-space">    </span><span class="pas1-comment">//GameNew: TAction;
+</span><span class="pas1-space">    </span><span class="pas1-comment">//GameBeginner: TAction;
+</span><span class="pas1-space">    GameBeginner, GameIntermediate, GameExpert: boolean;
+    gamemarks: boolean;
+    FMouseDown: Boolean;
+    </span><span class="pas1-comment">//GameExpert: TAction;
+</span><span class="pas1-space">    GameCustom: TAction;
+    </span><span class="pas1-comment">//GameMarks: TAction;
+</span><span class="pas1-space">    GameExit: TAction;
+    HelpContent: TAction;
+    CaseTimer: TTimer;
+    TitlePb: TPaintBox32;
+    Num7SegIl: TBitmap32List;
+    SunIl: TBitmap32List;
+    CasesIl: TBitmap32List;   </span><span class="pas1-comment">//15!
+</span><span class="pas1-space">  
+    </span><span class="pas1-comment">//of tminesweeper
+</span><span class="pas1-space">   </span><span class="pas1-comment">{procedure FormCreate(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure GamePbMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure GamePbMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure GameNewExecute(Sender: TObject);
+    procedure GameBeginnerExecute(Sender: TObject);
+    procedure GameIntermediateExecute(Sender: TObject);
+    procedure GameExpertExecute(Sender: TObject);
+    procedure GameCustomExecute(Sender: TObject);
+    procedure GameMarksExecute(Sender: TObject);
+    procedure GameBestTimesExecute(Sender: TObject);
+    procedure GameExitExecute(Sender: TObject);
+    procedure HelpContentExecute(Sender: TObject);
+    procedure HelpAboutExecute(Sender: TObject);
+    procedure CaseTimerTimer(Sender: TObject);
+    procedure TimerTimer(Sender: TObject);
+  private }
+</span><span class="pas1-space">    </span><span class="pas1-comment">//FMineSweeper: TMineSweeper;
+</span><span class="pas1-space">    </span><span class="pas1-comment">{procedure SetSize(AWidth, AHeight, AMineCount: Integer);
+    procedure DrawTitle;
+    procedure DrawCase(X, Y: Integer; ACase: TCase);
+    procedure DrawGame;
+    procedure ReadIniFile;
+    procedure WriteIniFile;
+  //end;}
+</span><span class="pas1-space">  
+  
+  </span><span class="pas1-comment">//TMineSweeper = class(TObject)
+</span><span class="pas1-space">  </span><span class="pas1-comment">//private
+</span><span class="pas1-space">    ClickCaseList: TPointArray;
+    FTime: Integer;
+    Game: TGame;
+    </span><span class="pas1-comment">//GameState: set of TGameState;
+</span><span class="pas1-space">    GameState: TGameState;
+    MHeight: Integer;
+    MineCount: Integer;
+    RemainingMineCount: Integer;
+    MTime, MWidth: Integer;
+    plistcount: integer;
+ 
+ </span><span class="pas1-comment">{   procedure AddClickingCase(X, Y: Integer);
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure DecClickingStep(X, Y: Integer);
+    procedure NewGame;
+    procedure SetSize(AWidth, AHeight, AMineCount: Integer);
+    procedure SetState(X, Y: Integer; Value: TCaseState);
+    property ClickCaseList: TList read FClickCaseList;
+    property Game: TGame read FGame;
+    property GameState: TGameState read FGameState;
+    property Height: Integer read FHeight;
+    property MineCount: Integer read FMineCount;
+    property RemainingMineCount: Integer read FRemainingMineCount;
+    property Time: Integer read FTime write FTime;
+    property Width: Integer read FWidth;
+  end; }
+
+</span><span class="pas1-space">  </span><span class="pas1-comment">// TGame = array[0..GAME_WIDTH_MAX - 1, 0..GAME_HI_MAX - 1] of TCase;
+///var  MinesweeperForm: TMinesweeperForm;
+
+//implementation
+//{$R *.dfm}
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> getBitmap32(apath: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">): TBitmap32;
+  </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    result:= TBitmap32.Create;
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> result </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">      LoadFromFile(apath);
+    </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">      </span><span class="pas1-comment">//Free;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+ </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_FormClick(Sender: TObject);
+ </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   </span><span class="pas1-comment">//writeln('click of paintbox test');
+</span><span class="pas1-space"> </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+ 
+ </span><span class="pas1-comment">//------------------------------------------------------------------------------
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> </span><span class="pas1-comment">{constructor}</span><span class="pas1-space"> TMineSweeper_Create;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//LoadMineForm;
+</span><span class="pas1-space">  </span><span class="pas1-comment">//ClickCaseList := TIntegerList.Create;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> </span><span class="pas1-comment">{destructor}</span><span class="pas1-space"> TMineSweeper_Destroy;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//ClickCaseList.Free;
+</span><span class="pas1-space">  </span><span class="pas1-comment">//inherited;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> LoadMineForm;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> it: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  cmineFrm:= TForm.create(self);
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> cmineFrm </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-comment">//BorderStyle:= bsDialog;
+</span><span class="pas1-space">    </span><span class="pas1-comment">//BorderIcons
+</span><span class="pas1-space">    Position := poDesktopCenter;
+    Left:= </span><span class="pas1-number">901</span><span class="pas1-symbol">;
+    Top:= </span><span class="pas1-number">113</span><span class="pas1-symbol">;
+    AutoSize:= True;
+    Caption:= </span><span class="pas1-string">'Minesweeper_Box'
+</span><span class="pas1-space">    height:= </span><span class="pas1-number">288</span><span class="pas1-symbol">;
+    width:= </span><span class="pas1-number">233</span><span class="pas1-symbol">;
+    </span><span class="pas1-comment">//color:= clblack;
+</span><span class="pas1-space">    Color:= clBtnFace;
+    font.height:= -</span><span class="pas1-number">11</span><span class="pas1-symbol">;
+    Font.Style:= [];
+    Menu:= MainMenu;
+    </span><span class="pas1-comment">//TextHeight:= 13
+</span><span class="pas1-space">    </span><span class="pas1-comment">//Icon.Data
+</span><span class="pas1-space">    </span><span class="pas1-comment">//onPaint:= @PaintBox1Paint;
+</span><span class="pas1-space">    OnClose:= @TMinesweeperForm_Close;
+    </span><span class="pas1-comment">//OnMouseDown:= @TMinesweeperForm_GamePbMouseDown;  //GamePbMouseDown
+</span><span class="pas1-space">    Show;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  SetArrayLength(ClickCaseList, CLICKLISTCOUNTMAX);
+  
+  MainPnl:= TPanel.Create(cmineFrm)
+  MainPnl.parent:= cmineFrm;
+  MainPnl.setBounds(</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">225</span><span class="pas1-symbol">,</span><span class="pas1-number">241</span><span class="pas1-symbol">);
+  MainPnl.bevelOuter:= bvNone;
+  MainPnl.Color:= clred;
+ 
+    TitlePnl:= TPanel.Create(cmineFrm)
+    TitlePnl.parent:= mainpnl;
+    TitlePnl.setBounds(</span><span class="pas1-number">8</span><span class="pas1-symbol">,</span><span class="pas1-number">8</span><span class="pas1-symbol">,</span><span class="pas1-number">205</span><span class="pas1-symbol">,</span><span class="pas1-number">55</span><span class="pas1-symbol">);
+ 
+      TitlePb:= TPaintBox32.Create(cmineFrm)
+      TitlePb.parent:= titlepnl;
+      TitlePb.SetBounds(</span><span class="pas1-number">1</span><span class="pas1-symbol">,</span><span class="pas1-number">1</span><span class="pas1-symbol">,</span><span class="pas1-number">203</span><span class="pas1-symbol">,</span><span class="pas1-number">53</span><span class="pas1-symbol">);
+      </span><span class="pas1-comment">//TitlePb.loaded;
+</span><span class="pas1-space">      TitlePb.visible:= true;
+      TitlePb.Align:= alClient;
+      TitlePb.OnClick:= @TMinesweeperForm_GameNewExecute;
+
+    GamePnl:= TPanel.Create(cmineFrm)
+    GamePnl.parent:= mainpnl;
+    GamePnl.setBounds(</span><span class="pas1-number">32</span><span class="pas1-symbol">,</span><span class="pas1-number">66</span><span class="pas1-symbol">,</span><span class="pas1-number">162</span><span class="pas1-symbol">,</span><span class="pas1-number">163</span><span class="pas1-symbol">);
+       </span><span class="pas1-comment">//GamePb:= TPaintBox32.Create(cmineFrm)
+</span><span class="pas1-space">        GamePb:= TPaintBox32.Create(cmineFrm)
+        GamePb.parent:= gamepnl;
+        GamePb.setBounds(</span><span class="pas1-number">1</span><span class="pas1-symbol">,</span><span class="pas1-number">1</span><span class="pas1-symbol">,</span><span class="pas1-number">160</span><span class="pas1-symbol">,</span><span class="pas1-number">160</span><span class="pas1-symbol">);
+        GamePb.visible:= true;
+        GamePb.Align:= alClient;
+        </span><span class="pas1-comment">//gamepb.canvas.textout(20,20,'this is := ');
+</span><span class="pas1-space">        GamePb.OnClick:= @TMinesweeperForm_FormClick;
+        GamePb.OnMouseDown:= @TMinesweeperForm_GamePbMouseDown;
+        GamePb.OnMouseUp:= @TMinesweeperForm_GamePbMouseUp;
+
+  Num7SegIl:= TBitmap32List.Create(self);   </span><span class="pas1-comment">//should be ten
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> Num7SegIl </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">for</span><span class="pas1-space"> it:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">9</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        </span><span class="pas1-comment">//Bitmap.DrawMode:= dmBlend
+</span><span class="pas1-space">        bitmaps.add;
+        bitmap[it]:= getbitmap32(exepath+</span><span class="pas1-string">'\examples\images\num'</span><span class="pas1-symbol">+inttostr(it)+</span><span class="pas1-string">'_mask.bmp'</span><span class="pas1-symbol">);
+      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+        </span><span class="pas1-comment">//bitmap[1]:= getbitmap32(exepath+'\examples\images\num1_mask.bmp');
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  
+</span><span class="pas1-comment">{ SUN_WAIT_BMP = 0;
+  SUN_OOO_BMP = 1;
+  SUN_WON_BMP = 2;
+  SUN_LOST_BMP = 3;  }
+</span><span class="pas1-space">  SunIl:= TBitmap32List.Create(self);
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> SunIl </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        </span><span class="pas1-comment">//Bitmap.DrawMode:= dmBlend
+</span><span class="pas1-space">        bitmaps.add;
+        bitmap[</span><span class="pas1-number">0</span><span class="pas1-symbol">]:= getbitmap32(exepath+</span><span class="pas1-string">'\exercices\sun_wait.bmp'</span><span class="pas1-symbol">);
+        bitmaps.add;
+        bitmap[</span><span class="pas1-number">1</span><span class="pas1-symbol">]:= getbitmap32(exepath+</span><span class="pas1-string">'\exercices\sun_ooo.bmp'</span><span class="pas1-symbol">);
+        bitmaps.add;
+        bitmap[</span><span class="pas1-number">2</span><span class="pas1-symbol">]:= getbitmap32(exepath+</span><span class="pas1-string">'\exercices\sun_won.bmp'</span><span class="pas1-symbol">);
+        bitmaps.add;
+        bitmap[</span><span class="pas1-number">3</span><span class="pas1-symbol">]:= getbitmap32(exepath+</span><span class="pas1-string">'\exercices\sun_lost.bmp'</span><span class="pas1-symbol">);
+        </span><span class="pas1-comment">//bitmap[1]:= getbitmap(exepath+'\examples\maxbox.bmp');
+</span><span class="pas1-space">      </span><span class="pas1-comment">//Bitmaps.item //item
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+        
+  </span><span class="pas1-comment">{UNCLICKED_BMP = 0;
+  CLICKED_BMP = 1;
+  MINED_BMP = 2;
+  MARKED_BMP = 3;
+  MINE1_BMP = 4;
+   RED_BMP = 12;
+  FLAG_BMP = 13;
+  CROSS_BMP = 14; }
+</span><span class="pas1-space"> 
+   CasesIl:= TBitmap32List.Create(self);  </span><span class="pas1-comment">//15 should be in the list!
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> CasesIl </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        </span><span class="pas1-comment">//bitmap[0].DrawMode:= dmBlend;
+</span><span class="pas1-space">        bitmaps.add;
+        bitmap[</span><span class="pas1-number">0</span><span class="pas1-symbol">]:= getbitmap32(exepath+</span><span class="pas1-string">'\examples\images\unclicked.bmp'</span><span class="pas1-symbol">);
+        bitmaps.add;
+        bitmap[</span><span class="pas1-number">1</span><span class="pas1-symbol">]:= getbitmap32(exepath+</span><span class="pas1-string">'\examples\images\clicked.bmp'</span><span class="pas1-symbol">);
+        bitmaps.add;
+        bitmap[</span><span class="pas1-number">2</span><span class="pas1-symbol">]:= getbitmap32(exepath+</span><span class="pas1-string">'\examples\images\mined.bmp'</span><span class="pas1-symbol">);
+        bitmaps.add;
+        bitmap[</span><span class="pas1-number">3</span><span class="pas1-symbol">]:= getbitmap32(exepath+</span><span class="pas1-string">'\examples\images\marked.bmp'</span><span class="pas1-symbol">);
+        bitmaps.add;
+        bitmap[</span><span class="pas1-number">4</span><span class="pas1-symbol">].DrawMode:= dmBlend;
+        bitmap[</span><span class="pas1-number">4</span><span class="pas1-symbol">]:= getbitmap32(exepath+</span><span class="pas1-string">'\examples\images\mined_mask.bmp'</span><span class="pas1-symbol">);
+        </span><span class="pas1-reservedword">for</span><span class="pas1-space"> it:= </span><span class="pas1-number">5</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">11</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        </span><span class="pas1-comment">//Bitmap.DrawMode:= dmBlend
+</span><span class="pas1-space">          bitmaps.add;
+          bitmap[it].DrawMode:= dmBlend;
+          bitmap[it]:= getbitmap32(exepath+</span><span class="pas1-string">'\examples\images\'</span><span class="pas1-symbol">+inttostr(it-</span><span class="pas1-number">4</span><span class="pas1-symbol">)+</span><span class="pas1-string">'.bmp'</span><span class="pas1-symbol">);
+        </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+        bitmaps.add;
+        bitmap[</span><span class="pas1-number">12</span><span class="pas1-symbol">].DrawMode:= dmBlend;
+        bitmap[</span><span class="pas1-number">12</span><span class="pas1-symbol">]:= getbitmap32(exepath+</span><span class="pas1-string">'\examples\images\red.bmp'</span><span class="pas1-symbol">);
+        </span><span class="pas1-comment">//for it:= 1 to 12 do bitmap[it].DrawMode:= dmBlend;
+</span><span class="pas1-space">        bitmaps.add;
+        bitmap[</span><span class="pas1-number">13</span><span class="pas1-symbol">]:= getbitmap32(exepath+</span><span class="pas1-string">'\examples\images\flag.bmp'</span><span class="pas1-symbol">);
+        bitmaps.add;
+        bitmap[</span><span class="pas1-number">14</span><span class="pas1-symbol">]:= getbitmap32(exepath+</span><span class="pas1-string">'\examples\images\cross.bmp'</span><span class="pas1-symbol">);
+ 
+     </span><span class="pas1-comment">//testcase
+</span><span class="pas1-space">     </span><span class="pas1-comment">//GamePb.Buffer.Draw(12, 12, CasesIl.Bitmap[MINED_BMP]);
+</span><span class="pas1-space">       </span><span class="pas1-comment">//TitlePb.Buffer.Draw(3, 8, CasesIl.Bitmap[2]);
+</span><span class="pas1-space">        </span><span class="pas1-comment">//   TitlePb.Buffer.Draw(100, 8, Num7SegIl[5]);
+</span><span class="pas1-space">       </span><span class="pas1-comment">{  GamePb.Buffer.Draw((TitlePnl.Width - SUN_BMP_WIDTH) div 2,
+       (TitlePnl.Height - SUN_BMP_HEIGHT) div 2,
+        //SunIl[SUN_WAIT_BMP]);  SunIl[2]);  }
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; </span><span class="pas1-comment">//LoadMineForm;
+</span><span class="pas1-space">  
+        
+  CaseTimer:= TTimer.Create(self);
+   </span><span class="pas1-reservedword">with</span><span class="pas1-space"> casetimer </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Interval:= </span><span class="pas1-number">50</span><span class="pas1-symbol">;                </span><span class="pas1-comment">//30
+</span><span class="pas1-space">    OnTimer:= @TMinesweeperForm_CaseTimerTimer;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  
+  pListCount:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+ 
+  Timer:= TTimer.Create(self);
+   </span><span class="pas1-reservedword">with</span><span class="pas1-space"> casetimer </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-comment">//Interval:= 5000;                //1000
+</span><span class="pas1-space">    enabled:= false;
+    </span><span class="pas1-comment">//OnTimer:= @TMinesweeperForm_TimerTimer;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+ 
+  MainMenu:= TMainMenu.create(cminefrm);
+    GameMi:= TMenuItem.Create(cminefrm);
+    gamemi.Caption:= </span><span class="pas1-string">'&amp;Game'</span><span class="pas1-symbol">;
+    </span><span class="pas1-comment">//gamemi.OnClick:= @btnCloseClick;
+</span><span class="pas1-space">   
+    mainmenu.Items.Add(gamemi);
+    NewMenuItem:= TMenuItem.create(cminefrm)
+    NewMenuItem.caption:= </span><span class="pas1-string">'G&amp;ame New'</span><span class="pas1-symbol">;
+    NewMenuItem.onClick:= @TMinesweeperForm_GameNewExecute;
+    mainmenu.Items.Add(newmenuitem);
+    BeginnerMenuItem:= TMenuItem.create(cminefrm);
+    BeginnerMenuItem.caption:= </span><span class="pas1-string">'&amp;Beginner'</span><span class="pas1-symbol">;
+    gamemi.Add(beginnermenuitem);
+    N1:= TMenuItem.create(cminefrm);
+    N1.caption:= </span><span class="pas1-string">'-'</span><span class="pas1-symbol">;
+    gamemi.Add(N1);
+    ExpertMenuItem:= TMenuItem.create(cminefrm);
+    ExpertMenuItem.caption:= </span><span class="pas1-string">'&amp;Expert'</span><span class="pas1-symbol">;
+    gamemi.Add(expertmenuitem);
+    
+    cminefrm.Menu:= MainMenu;
+ 
+     </span><span class="pas1-comment">//object GameMi: TMenuItem
+</span><span class="pas1-space">      </span><span class="pas1-comment">//Caption = '&amp;Game'
+</span><span class="pas1-space">      </span><span class="pas1-comment">//object NewMenuItem: TMenuItem
+</span><span class="pas1-space">       </span><span class="pas1-comment">// Action = GameNew
+</span><span class="pas1-space">      </span><span class="pas1-comment">//end
+</span><span class="pas1-space">      </span><span class="pas1-comment">{object MarksMenuItem: TMenuItem
+        Action = GameMarks
+      end
+      object ExitMenuItem: TMenuItem
+        Action = GameExit
+      end
+    end
+    object OptionsMi: TMenuItem
+      Caption = '&amp;Help'
+      object ContentMenuItem: TMenuItem
+        Action = HelpContent
+      end
+      object AboutMenuItem: TMenuItem
+        Action = HelpAbout
+      end
+    end
+  end}
+</span><span class="pas1-space"> 
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-comment">///////////////////from unit minegame  //////////////////////////////////
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMineSweeper_AddClickingCase(X, Y: Integer);
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  Point: TPoint;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//New(Point);
+</span><span class="pas1-space">  Point.X:= X;
+  Point.Y:= Y;
+  </span><span class="pas1-comment">//FClickCaseList.Add(Point)
+</span><span class="pas1-space">  ClickCaseList[plistcount]:= Point;
+  inc(plistcount);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMineSweeper_DecClickingStep(X, Y: Integer);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Dec(Game[X][Y].ClickingStep);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMineSweeper_NewGame;
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  I, J, K, L, X, Y: Integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//GameBeginner:= True
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> I:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> MWidth - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> J:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> MHeight - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">with</span><span class="pas1-space"> Game[I][J] </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        Mined:= False;
+        NearbyMines:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+        State:= csUnclicked;
+      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> I:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> MineCount - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">repeat
+</span><span class="pas1-space">      X:= Random(MWidth);
+      Y:= Random(MHeight);
+    </span><span class="pas1-reservedword">until</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> Game[X][Y].Mined;
+    Game[X][Y].Mined:= True;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  writeln(</span><span class="pas1-string">'new '</span><span class="pas1-symbol">+inttostr(mwidth))
+  writeln(</span><span class="pas1-string">'new '</span><span class="pas1-symbol">+inttostr(mheight))
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> I:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> MWidth - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> J:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> MHeight - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">for</span><span class="pas1-space"> K:= I - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> I + </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">        </span><span class="pas1-reservedword">for</span><span class="pas1-space"> L:= J - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> J + </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space">                                     </span><span class="pas1-comment">//K, L in origin!
+</span><span class="pas1-space">          </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (K &gt;= </span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (K&lt; MWidth) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (L &gt;= </span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (L&lt; MHeight) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (Game[K][L].Mined) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">             </span><span class="pas1-comment">//Inc(Game[I][J].NearbyMines);
+</span><span class="pas1-space">              Game[I][J].NearbyMines:= Game[I][J].NearbyMines + </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+  RemainingMineCount:= MineCount;
+  GameState:= gsBeginning;
+  MTime:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+  gamemarks:= true;
+  </span><span class="pas1-comment">//plistcount:= 0;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMineSweeper_SetSize(AWidth, AHeight, AMineCount: Integer);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  MWidth:= Min(AWidth, GAME_WIDTH_MAX);
+  MHeight:= Min(AHeight, GAME_HI_MAX);
+  Writeln(</span><span class="pas1-string">'debug set size: '</span><span class="pas1-symbol">+inttostr(mwidth)+</span><span class="pas1-string">' * '</span><span class="pas1-symbol">+inttostr(mheight))
+  MineCount:= Min(AMineCount, Min(</span><span class="pas1-number">999</span><span class="pas1-symbol">, (MHeight * MWidth) </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">));
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//locals proc of _setState
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> ClearZone(X, Y, X0, Y0: Integer);
+  </span><span class="pas1-reservedword">var
+</span><span class="pas1-space">    I, J: Integer;
+  </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Game[X][Y].State:= csClicking;
+    Game[X][Y].ClickingStep:= NB_STEP_MAX +
+    </span><span class="pas1-comment">//Isqrt((X - X0) * (X - X0) + (Y - Y0) * (Y - Y0));
+</span><span class="pas1-space">      </span><span class="pas1-comment">{Abs}</span><span class="pas1-identifier">round(ABS(Sqrt((X - X0) * (X - X0) + (Y - Y0) * (Y - Y0))));   </span><span class="pas1-comment">//check
+</span><span class="pas1-space">    TMineSweeper_AddClickingCase(X, Y);
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Game[X][Y].NearbyMines = </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">for</span><span class="pas1-space"> I:= -</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">        </span><span class="pas1-reservedword">for</span><span class="pas1-space"> J:= -</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">          </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ((I &lt;&gt; </span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">or</span><span class="pas1-space"> (J &lt;&gt; </span><span class="pas1-number">0</span><span class="pas1-symbol">))
+            </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (X + I &gt;= </span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (X + I &lt; MWidth)
+            </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (Y + J &gt;= </span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (Y + J &lt; MHeight)
+            </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (Game[X + I][Y + J].State = csUnclicked) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">               ClearZone(X + I, Y + J, X0,Y0);  </span><span class="pas1-comment">//recursion
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+  </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> CheckEndedGame;
+  </span><span class="pas1-reservedword">var</span><span class="pas1-space"> I, J: Integer;
+      Won: boolean;
+  </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Won:= True;
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> I:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> MWidth - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">for</span><span class="pas1-space"> J:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> MHeight - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">        </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (Game[I][J].State = csMined) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> Game[I][J].Mined </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">          Won:= False;
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Won </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">      GameState:= gsWon
+    </span><span class="pas1-reservedword">else
+</span><span class="pas1-space">      GameState:= gsLost;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMineSweeper_SetState(X, Y: Integer; aValue: TCaseState);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (X &gt;= </span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (X &lt; MWidth) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (Y &gt;= </span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (Y &lt; MHeight) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> GameState = gsBeginning </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">      GameState:= gsPlaying;
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> aValue = csMined </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      Dec(RemainingMineCount);
+      TMinesweeperForm_DrawCase(X, Y, Game[X][Y]);
+      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> RemainingMineCount = </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">        CheckEndedGame;
+    </span><span class="pas1-reservedword">end
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ((avalue = csUnclicked) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (Game[X][Y].State = csMined)) </span><span class="pas1-reservedword">or</span><span class="pas1-space"> (aValue = csMarked) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      Inc(RemainingMineCount);
+      </span><span class="pas1-comment">//TMinesweeperForm_DrawCase(X, Y, Game[X][Y]);
+</span><span class="pas1-space">       </span><span class="pas1-comment">//TMineSweeper_AddClickingCase(X, Y);
+</span><span class="pas1-space">       </span><span class="pas1-comment">//GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HI, CasesIl.Bitmap[MINED_BMP]);
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (aValue = csClicking) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (Game[X][Y].NearbyMines = </span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">      ClearZone(X, Y, X, Y)
+    </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      Game[X][Y].State:= aValue;
+      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> aValue = csClicking </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        Game[X][Y].ClickingStep := NB_STEP_MAX;
+        TMineSweeper_AddClickingCase(X, Y);
+        </span><span class="pas1-comment">//TMinesweeperForm_DrawCase(X, Y, Game[X][Y]);
+</span><span class="pas1-space">        </span><span class="pas1-comment">//writeln('set the mark 2 !!!!');
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+      </span><span class="pas1-comment">//if (Value in [csClicked, csClicking]) and Game[X][Y].Mined then
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ((aValue = csClicked) </span><span class="pas1-reservedword">or</span><span class="pas1-space"> (avalue = csClicking)) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> Game[X][Y].Mined </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        GameState:= gsLost;
+        TMinesweeperForm_DrawTitle;
+        writeln(</span><span class="pas1-string">'you sorry lost '</span><span class="pas1-symbol">);
+      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">/////////////////---------------------------------------------------------------
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_SetSize(AWidth, AHeight, AMineCount: Integer);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  TMineSweeper_SetSize(AWidth, AHeight, AMineCount);
+  GamePnl.Width := AWidth * CASE_WIDTH + </span><span class="pas1-number">2</span><span class="pas1-space"> * GamePnl.BevelWidth;
+  GamePnl.Height := AHeight * CASE_HI + </span><span class="pas1-number">2</span><span class="pas1-space"> * GamePnl.BevelWidth;
+  GamePb.Buffer.SetSize(AWidth * CASE_WIDTH, AHeight * CASE_HI);
+  TitlePnl.Width := Max(TITLE_WIDTH_MIN, GamePnl.Width);
+  GamePnl.Left := TitlePnl.Left + (TitlePnl.Width - GamePnl.Width) </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">;
+  TitlePb.Buffer.SetSize(Max(TITLE_WIDTH_MIN,GamePnl.Width)-</span><span class="pas1-number">2</span><span class="pas1-symbol">*TitlePnl.BorderWidth,TitlePnl.Height-</span><span class="pas1-number">2</span><span class="pas1-symbol">*TitlePnl.BorderWidth);
+  MainPnl.Width := </span><span class="pas1-number">2</span><span class="pas1-space"> * TitlePnl.Left + TitlePnl.Width;
+  MainPnl.Height := GamePnl.Top + GamePnl.Height + TitlePnl.Top;
+  cminefrm.Position := poDesktopCenter;
+  </span><span class="pas1-comment">{GameBeginner.Checked := False;
+  GameExpert.Checked := False;
+  GameCustom.Checked := False;}
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (AWidth = </span><span class="pas1-number">9</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (AHeight = </span><span class="pas1-number">9</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (AMineCount = </span><span class="pas1-number">10</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    GameBeginner:= True
+  </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (AWidth = </span><span class="pas1-number">16</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (AHeight = </span><span class="pas1-number">16</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (AMineCount = </span><span class="pas1-number">40</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    GameIntermediate:= True
+  </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (AWidth = </span><span class="pas1-number">30</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (AHeight = </span><span class="pas1-number">16</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (AMineCount = </span><span class="pas1-number">99</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    GameExpert:= True
+  </span><span class="pas1-comment">//else GameCustom.Checked := True;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_DrawTitle;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> mh: hdc;
+   </span><span class="pas1-comment">//TitlePb: TCustombitmap32;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  TitlePb.Buffer.BeginUpdate;   </span><span class="pas1-comment">// missing
+</span><span class="pas1-space">  </span><span class="pas1-comment">//TitlePb.Buffer.Clear(Color32(cminefrm.Color));
+</span><span class="pas1-space">  TitlePb.Buffer.Clear;
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> RemainingMineCount &gt; </span><span class="pas1-number">99</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> RemainingMineCount </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">100</span><span class="pas1-space"> &gt; </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">   </span><span class="pas1-comment">//TitlePb.Buffer.getstipplecolor;
+</span><span class="pas1-space">    </span><span class="pas1-comment">//TitlePb.Buffer.Draw(4,5, TCustombitmap32(Num7SegIl.font));
+</span><span class="pas1-space">    </span><span class="pas1-comment">//TitlePb.Buffer.Draw2(rect(3,1,3,4), rect(8,5,4,5),Num7SegIl[RemainingMineCount div 100,4]);
+</span><span class="pas1-space">    </span><span class="pas1-comment">//TitlePb.Buffer.Draw(27, 8, TCustomBitmap32(Num7SegIl[RemainingMineCount mod 100]));
+</span><span class="pas1-space">    TitlePb.Buffer.Draw(</span><span class="pas1-number">3</span><span class="pas1-symbol">, </span><span class="pas1-number">8</span><span class="pas1-symbol">, Num7SegIl[RemainingMineCount </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">100</span><span class="pas1-symbol">]);
+    TitlePb.Buffer.Draw(</span><span class="pas1-number">27</span><span class="pas1-symbol">, </span><span class="pas1-number">8</span><span class="pas1-symbol">, Num7SegIl[(RemainingMineCount </span><span class="pas1-reservedword">mod</span><span class="pas1-space"> </span><span class="pas1-number">100</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">10</span><span class="pas1-symbol">]);
+    TitlePb.Buffer.Draw(</span><span class="pas1-number">51</span><span class="pas1-symbol">, </span><span class="pas1-number">8</span><span class="pas1-symbol">, Num7SegIl[RemainingMineCount </span><span class="pas1-reservedword">mod</span><span class="pas1-space"> </span><span class="pas1-number">10</span><span class="pas1-symbol">]);
+   </span><span class="pas1-comment">// TitlePb.Buffer.Draw(51, 8, Num7SegIl[FMineSweeper.RemainingMineCount mod 10]);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> RemainingMineCount </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">10</span><span class="pas1-space"> &gt; </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">      TitlePb.buffer.Draw(</span><span class="pas1-number">3</span><span class="pas1-symbol">, </span><span class="pas1-number">8</span><span class="pas1-symbol">, Num7SegIl[RemainingMineCount </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">10</span><span class="pas1-symbol">]);
+    TitlePb.Buffer.Draw(</span><span class="pas1-number">27</span><span class="pas1-symbol">, </span><span class="pas1-number">8</span><span class="pas1-symbol">, Num7SegIl[RemainingMineCount </span><span class="pas1-reservedword">mod</span><span class="pas1-space"> </span><span class="pas1-number">10</span><span class="pas1-symbol">]);
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">case</span><span class="pas1-space"> GameState </span><span class="pas1-reservedword">of
+</span><span class="pas1-space">    gsBeginning: TitlePb.Buffer.Draw((TitlePnl.Width - SUN_BMP_WIDTH) </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">,
+       (TitlePnl.Height - SUN_BMP_HEIGHT) </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">,
+        </span><span class="pas1-comment">{SunIl[SUN_WAIT_BMP]);}</span><span class="pas1-space">  SunIl[</span><span class="pas1-number">2</span><span class="pas1-symbol">]);
+        </span><span class="pas1-comment">//sleep(10);
+</span><span class="pas1-space">    gsPlaying:
+      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> FMouseDown </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">        TitlePb.Buffer.Draw((TitlePnl.Width - SUN_BMP_WIDTH) </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">,
+          (TitlePnl.Height - SUN_BMP_HEIGHT) </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">,
+          SunIl[SUN_OOO_BMP])
+      </span><span class="pas1-reservedword">else
+</span><span class="pas1-space">        TitlePb.Buffer.Draw((TitlePnl.Width - SUN_BMP_WIDTH) </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">,
+          (TitlePnl.Height - SUN_BMP_HEIGHT) </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">,
+          SunIl[SUN_WAIT_BMP]);
+          </span><span class="pas1-comment">//sleep(10);
+</span><span class="pas1-space">    gsLost: 
+    TitlePb.Buffer.Draw((TitlePnl.Width - SUN_BMP_WIDTH) </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">,
+       (TitlePnl.Height - SUN_BMP_HEIGHT) </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">,
+        SunIl[SUN_LOST_BMP]);
+        </span><span class="pas1-comment">//sleep(10);
+</span><span class="pas1-space">    gsWon: 
+    TitlePb.Buffer.Draw((TitlePnl.Width - SUN_BMP_WIDTH) </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">,
+        (TitlePnl.Height - SUN_BMP_HEIGHT) </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">,
+        SunIl[SUN_WON_BMP]);
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> MTime &lt; </span><span class="pas1-number">1000</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> MTime </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">100</span><span class="pas1-space"> &gt; </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">     TitlePb.Buffer.Draw(TitlePb.Buffer.Width - </span><span class="pas1-number">75</span><span class="pas1-symbol">, </span><span class="pas1-number">8</span><span class="pas1-symbol">, Num7SegIl[MTime </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">100</span><span class="pas1-symbol">]);
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (MTime </span><span class="pas1-reservedword">mod</span><span class="pas1-space"> </span><span class="pas1-number">100</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">10</span><span class="pas1-space"> &gt; </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">      TitlePb.Buffer.Draw(TitlePb.Buffer.Width - </span><span class="pas1-number">51</span><span class="pas1-symbol">, </span><span class="pas1-number">8</span><span class="pas1-symbol">, Num7SegIl[(MTime </span><span class="pas1-reservedword">mod</span><span class="pas1-space"> </span><span class="pas1-number">100</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">10</span><span class="pas1-symbol">])
+    </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> MTime </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">100</span><span class="pas1-space"> &gt; </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">      TitlePb.Buffer.Draw(TitlePb.Buffer.Width - </span><span class="pas1-number">51</span><span class="pas1-symbol">, </span><span class="pas1-number">8</span><span class="pas1-symbol">, Num7SegIl[</span><span class="pas1-number">0</span><span class="pas1-symbol">]);
+    TitlePb.Buffer.Draw(TitlePb.Buffer.Width - </span><span class="pas1-number">27</span><span class="pas1-symbol">, </span><span class="pas1-number">8</span><span class="pas1-symbol">, Num7SegIl[MTime </span><span class="pas1-reservedword">mod</span><span class="pas1-space"> </span><span class="pas1-number">10</span><span class="pas1-symbol">]);
+  </span><span class="pas1-reservedword">end
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">else
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TitlePb.buffer </span><span class="pas1-reservedword">do</span><span class="pas1-space">   
+      TextOut(TitlePb.Buffer.Width - TextWidth(IntToStr(MTime)),
+        (TitlePb.Height - TextHeight(</span><span class="pas1-string">'1'</span><span class="pas1-symbol">)) </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">,
+        IntToStr(MTime));
+  TitlePb.Buffer.EndUpdate;
+  TitlePb.Buffer.Changed;
+  TitlePb.Repaint;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> CharInSet(</span><span class="pas1-reservedword">const</span><span class="pas1-space"> C: Char; </span><span class="pas1-reservedword">const</span><span class="pas1-space"> testSet: TSysCharSet): boolean;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> IsEven(</span><span class="pas1-number">27</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">  Result:= C </span><span class="pas1-reservedword">in</span><span class="pas1-space"> testSet;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//type
+</span><span class="pas1-space"> </span><span class="pas1-comment">//TLetterSet = set of TSyscharset;
+</span><span class="pas1-space"> </span><span class="pas1-comment">{TPerson = record
+ Name : shortstring;
+ case Schweizer : boolean of
+8 false :     9 (Geburtsort : string[40];
+10 Land : string[20]); 11 end;}
+//3636: {set functions}
+{3637: procedure SplitSet(AText: string; AList: TStringList);
+3638: function JoinSet(AList: TStringList): string;
+3639: function FirstOfSet(const AText: string): string;
+3640: function LastOfSet(const AText: string): string;
+3641: function CountOfSet(const AText: string): Integer;
+3642: function SetRotateRight(const AText: string): string;
+3643: function SetRotateLeft(const AText: string): string;
+3644: function SetPick(const AText: string; AIndex: Integer): string;
+3645: function SetSort(const AText: string): string;
+3646: function SetUnion(const Set1, Set2: string): string;
+3647: function SetIntersect(const Set1, Set2: string): string;
+3648: function SetExclude(const Set1, Set2: string): string; }
+
+//------------------------------------------------------------------------------
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_DrawCase(X, Y: Integer; ACase: TCase);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> testset2, testset3, setletter1,setletter2: TsysCharSet;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space"> testSet2:=  [</span><span class="pas1-string">'k'</span><span class="pas1-symbol">,</span><span class="pas1-string">'-'</span><span class="pas1-symbol">,</span><span class="pas1-string">'5'</span><span class="pas1-symbol">,</span><span class="pas1-string">'&pound;'</span><span class="pas1-symbol">];   
+ testSet3:=  [</span><span class="pas1-string">'k'</span><span class="pas1-symbol">,</span><span class="pas1-string">'-'</span><span class="pas1-symbol">,</span><span class="pas1-string">'6'</span><span class="pas1-symbol">,</span><span class="pas1-string">'9'</span><span class="pas1-symbol">];   
+ setLetter1:= [</span><span class="pas1-string">'a'</span><span class="pas1-symbol">,</span><span class="pas1-string">'c'</span><span class="pas1-symbol">];
+ setLetter2:= [</span><span class="pas1-string">'a'</span><span class="pas1-symbol">,</span><span class="pas1-string">'d'</span><span class="pas1-symbol">];
+ setLetter1:= setLetter1 + [</span><span class="pas1-string">'f'</span><span class="pas1-symbol">];
+ setLetter1:= setLetter1 + setLetter2;
+ 
+ </span><span class="pas1-comment">//if 'a' in setletter1 then msg('inc -a');
+</span><span class="pas1-space">    </span><span class="pas1-comment">//include  //gamestate:= gamestate + [gslost];
+</span><span class="pas1-space">    </span><span class="pas1-comment">//if [gslost] in [GameState] then
+</span><span class="pas1-space">   </span><span class="pas1-comment">//writeln(booltostr(acase.mined,true));
+</span><span class="pas1-space">   </span><span class="pas1-comment">//writeln('state '+booltostr(acase.state,true));
+</span><span class="pas1-space">   </span><span class="pas1-comment">//GamePb.Buffer.Draw(20, 20, Num7SegIl[2]);
+</span><span class="pas1-space">    </span><span class="pas1-comment">{ GamePb.Buffer.Draw((TitlePnl.Width - SUN_BMP_WIDTH) div 2+18,
+       (TitlePnl.Height - SUN_BMP_HEIGHT) div 2,
+        //SunIl[SUN_WAIT_BMP]); SunIl[2]); }
+
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> ACase </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">case</span><span class="pas1-space"> State </span><span class="pas1-reservedword">of
+</span><span class="pas1-space">      csUnclicked:
+        </span><span class="pas1-comment">//if (GameState in [gsWon, gslost]) and Mined then 
+</span><span class="pas1-space">        </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ((GameState = gsWon) </span><span class="pas1-reservedword">or</span><span class="pas1-space"> (gamestate = gslost)) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> Mined </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">          </span><span class="pas1-comment">//if (GameState = gsWon) and Mined then begin
+</span><span class="pas1-space">          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HI, CasesIl.Bitmap[CLICKED_BMP]);
+          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HI, CasesIl.Bitmap[MINED_BMP]);
+        </span><span class="pas1-reservedword">end
+</span><span class="pas1-space">        </span><span class="pas1-reservedword">else
+</span><span class="pas1-space">          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HI, CasesIl.Bitmap[UNCLICKED_BMP]);
+          </span><span class="pas1-comment">//sleep(20);
+</span><span class="pas1-space">      csClicking, csclicked:
+       </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (State = csClicking) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (ClickingStep &gt;= NB_STEP_MAX) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HI, CasesIl.Bitmap[UNCLICKED_BMP]);
+        </span><span class="pas1-reservedword">end
+</span><span class="pas1-space">        </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">          </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Mined </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">          writeln(</span><span class="pas1-string">'is mined case '</span><span class="pas1-symbol">)
+            GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HI, CasesIl.Bitmap[RED_BMP]);
+            GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HI, CasesIl.Bitmap[MINED_BMP]);
+          </span><span class="pas1-reservedword">end
+</span><span class="pas1-space">          </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> NearbyMines &gt;= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">            GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HI, CasesIl.Bitmap[CLICKED_BMP]);
+            </span><span class="pas1-reservedword">if</span><span class="pas1-space"> NearbyMines &gt; </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">              GamePb.Buffer.Draw(X*CASE_WIDTH, Y*CASE_HI,CasesIl.Bitmap[MINE1_BMP + NearbyMines]);  </span><span class="pas1-comment">//orig -1!
+</span><span class="pas1-space">                  </span><span class="pas1-comment">//shows numbers of mines
+</span><span class="pas1-space">          </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+        </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+      csMined:
+      </span><span class="pas1-comment">//writeln('csmined');
+</span><span class="pas1-space">       </span><span class="pas1-comment">// if (GameState in [gsWon, gslost]) and not Mined then begin
+</span><span class="pas1-space">        </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ((GameState = gsWon) </span><span class="pas1-reservedword">or</span><span class="pas1-space"> (gamestate = gslost)) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (</span><span class="pas1-reservedword">not</span><span class="pas1-space"> Mined) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HI, CasesIl.Bitmap[CLICKED_BMP]);
+          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HI, CasesIl.Bitmap[MINED_BMP]);
+          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HI, CasesIl.Bitmap[CROSS_BMP]);
+        </span><span class="pas1-reservedword">end
+</span><span class="pas1-space">        </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HI, CasesIl.Bitmap[UNCLICKED_BMP]);
+          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HI, CasesIl.Bitmap[FLAG_BMP]);
+        </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+      csMarked:
+        </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HI, CasesIl.Bitmap[UNCLICKED_BMP]);
+          GamePb.Buffer.Draw(X * CASE_WIDTH, Y * CASE_HI, CasesIl.Bitmap[MARKED_BMP]);
+          writeln(</span><span class="pas1-string">'csmarked'</span><span class="pas1-symbol">);
+        </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_DrawGame;
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  I, J: Integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  GamePb.Buffer.BeginUpdate;
+  GamePb.Buffer.DrawMode:= dmBlend;
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> I:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> MWidth - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> J:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> MHeight - </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">      TMinesweeperForm_DrawCase(I, J, Game[I][J]);
+  GamePb.Buffer.EndUpdate; 
+  GamePb.Buffer.Changed; 
+  GamePb.Repaint;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_ReadIniFile;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TIniFile.Create(ExtractFilePath(ParamStr(</span><span class="pas1-number">0</span><span class="pas1-symbol">)) + </span><span class="pas1-string">'Minesweeper.ini'</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    TMinesweeperForm_SetSize(ReadInteger(</span><span class="pas1-string">'Main'</span><span class="pas1-symbol">, </span><span class="pas1-string">'Width'</span><span class="pas1-symbol">, </span><span class="pas1-number">9</span><span class="pas1-symbol">),
+      ReadInteger(</span><span class="pas1-string">'Main'</span><span class="pas1-symbol">, </span><span class="pas1-string">'Height'</span><span class="pas1-symbol">, </span><span class="pas1-number">9</span><span class="pas1-symbol">),
+      ReadInteger(</span><span class="pas1-string">'Main'</span><span class="pas1-symbol">, </span><span class="pas1-string">'Mines'</span><span class="pas1-symbol">, </span><span class="pas1-number">10</span><span class="pas1-symbol">));
+    GameMarks:= ReadBool(</span><span class="pas1-string">'Main'</span><span class="pas1-symbol">, </span><span class="pas1-string">'Marks'</span><span class="pas1-symbol">, False);
+  </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">    Free;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_WriteIniFile;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TIniFile.Create(ExtractFilePath(ParamStr(</span><span class="pas1-number">0</span><span class="pas1-symbol">)) + </span><span class="pas1-string">'Minesweeper.ini'</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    WriteInteger(</span><span class="pas1-string">'Main'</span><span class="pas1-symbol">, </span><span class="pas1-string">'Width'</span><span class="pas1-symbol">, MWidth);
+    WriteInteger(</span><span class="pas1-string">'Main'</span><span class="pas1-symbol">, </span><span class="pas1-string">'Height'</span><span class="pas1-symbol">, MHeight);
+    WriteInteger(</span><span class="pas1-string">'Main'</span><span class="pas1-symbol">, </span><span class="pas1-string">'Mines'</span><span class="pas1-symbol">, MineCount);
+    WriteBool(</span><span class="pas1-string">'Main'</span><span class="pas1-symbol">, </span><span class="pas1-string">'Marks'</span><span class="pas1-symbol">, GameMarks);
+  </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">    Free;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_GameNewExecute(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  TMinesweeperForm_SetSize(</span><span class="pas1-number">9</span><span class="pas1-symbol">,</span><span class="pas1-number">9</span><span class="pas1-symbol">,</span><span class="pas1-number">10</span><span class="pas1-symbol">);   </span><span class="pas1-comment">//test case in case of no ini
+</span><span class="pas1-space">  </span><span class="pas1-comment">//  TMinesweeperForm_SetSize(16,16,40);
+</span><span class="pas1-space">  TMinesweeper_NewGame;
+  TMinesweeperForm_DrawTitle;
+  TMinesweeperForm_DrawGame;
+  writeln(</span><span class="pas1-string">'new game clicked'</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_FormCreate(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Randomize;
+  </span><span class="pas1-comment">//FMineSweeper := TMineSweeper.Create;
+</span><span class="pas1-space">  LoadMineForm;
+  TMinesweeperForm_ReadIniFile;
+   </span><span class="pas1-comment">//TMinesweeperForm_DrawGame;
+</span><span class="pas1-space">  TMinesweeperForm_GameNewExecute(</span><span class="pas1-reservedword">nil</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_Close(Sender: TObject; </span><span class="pas1-reservedword">var</span><span class="pas1-space"> Action: TCloseAction);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  TMinesweeperForm_WriteIniFile;
+  </span><span class="pas1-comment">//ClickCaseList.Free;
+</span><span class="pas1-space">  SunIl.Free;
+  CasesIl.Free;
+  Num7SegIl.Free;
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> casetimer &lt;&gt; </span><span class="pas1-reservedword">NIL</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    casetimer.enabled:= false;
+    casetimer.Free;
+    casetimer:= </span><span class="pas1-reservedword">NIL</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> timer &lt;&gt; </span><span class="pas1-reservedword">NIL</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    timer.enabled:= false;
+    timer.Free;
+    timer:= </span><span class="pas1-reservedword">NIL</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  Writeln(</span><span class="pas1-string">'Game and Timer Freed....'</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_GamePbMouseDown(Sender: TObject;
+               Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+</span><span class="pas1-comment">//var //PtInt: PTimes;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ((GameState = gsBeginning) </span><span class="pas1-reservedword">Or</span><span class="pas1-space"> (gamestate = gsPlaying)) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">case</span><span class="pas1-space"> Button </span><span class="pas1-reservedword">of
+</span><span class="pas1-space">      mbLeft:
+        </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Game[X </span><span class="pas1-reservedword">div</span><span class="pas1-space"> CASE_WIDTH][Y </span><span class="pas1-reservedword">div</span><span class="pas1-space"> CASE_HI].State = csUnclicked </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">          TMineSweeper_SetState(X </span><span class="pas1-reservedword">div</span><span class="pas1-space"> CASE_WIDTH, Y </span><span class="pas1-reservedword">div</span><span class="pas1-space"> CASE_HI, csClicking);
+          CaseTimer.Enabled := True;
+        </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+      mbRight: 
+      </span><span class="pas1-reservedword">case</span><span class="pas1-space"> Game[X </span><span class="pas1-reservedword">div</span><span class="pas1-space"> CASE_WIDTH][Y </span><span class="pas1-reservedword">div</span><span class="pas1-space"> CASE_HI].State </span><span class="pas1-reservedword">of
+</span><span class="pas1-space">          csUnclicked:
+              TMineSweeper_SetState(X </span><span class="pas1-reservedword">div</span><span class="pas1-space"> CASE_WIDTH, Y </span><span class="pas1-reservedword">div</span><span class="pas1-space"> CASE_HI, csMined);
+          csMined:
+            </span><span class="pas1-reservedword">if</span><span class="pas1-space"> GameMarks </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">              TMineSweeper_SetState(X </span><span class="pas1-reservedword">div</span><span class="pas1-space"> CASE_WIDTH,Y </span><span class="pas1-reservedword">div</span><span class="pas1-space"> CASE_HI, csMarked)
+            </span><span class="pas1-reservedword">else
+</span><span class="pas1-space">              TMineSweeper_SetState(X </span><span class="pas1-reservedword">div</span><span class="pas1-space"> CASE_WIDTH, Y </span><span class="pas1-reservedword">div</span><span class="pas1-space"> CASE_HI, csUnclicked);
+          csMarked: </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">              TMineSweeper_SetState(X </span><span class="pas1-reservedword">div</span><span class="pas1-space"> CASE_WIDTH, Y </span><span class="pas1-reservedword">div</span><span class="pas1-space"> CASE_HI, csUnclicked);
+              writeln(</span><span class="pas1-string">'set a mine mark'</span><span class="pas1-symbol">)
+          </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> GameState = gsWon </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      </span><span class="pas1-comment">//TMinesweeperForm_LoadTimes;
+</span><span class="pas1-space">      </span><span class="pas1-comment">//Ptint := GetTimes(FMineSweeper.Width, FMineSweeper.Height, FMineSweeper.MineCount, True);
+</span><span class="pas1-space">    FMouseDown:= True;
+    casetimer.enabled:= false;
+    TMinesweeperForm_DrawTitle;
+    TMinesweeperForm_DrawGame;
+    Writeln(InputBox(</span><span class="pas1-string">'You have saved the world!'</span><span class="pas1-symbol">, </span><span class="pas1-string">'Name :'</span><span class="pas1-symbol">, </span><span class="pas1-string">'Anonymous winner: '</span><span class="pas1-symbol">)+ </span><span class="pas1-string">' '</span><span class="pas1-symbol">+DateToStr(Date))
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_GamePbMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> GameState = gsPlaying </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    FMouseDown:= False;
+    TMinesweeperForm_DrawTitle;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_GameBeginnerExecute(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//TMinesweeper_SetSize(9, 9, 10);
+</span><span class="pas1-space">  TMinesweeperForm_SetSize(</span><span class="pas1-number">9</span><span class="pas1-symbol">,</span><span class="pas1-number">9</span><span class="pas1-symbol">,</span><span class="pas1-number">10</span><span class="pas1-symbol">);
+  TMinesweeperForm_GameNewExecute(</span><span class="pas1-reservedword">nil</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_GameIntermediateExecute(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  TMinesweeperForm_SetSize(</span><span class="pas1-number">16</span><span class="pas1-symbol">, </span><span class="pas1-number">16</span><span class="pas1-symbol">, </span><span class="pas1-number">40</span><span class="pas1-symbol">);
+  TMinesweeperForm_GameNewExecute(</span><span class="pas1-reservedword">nil</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_GameExpertExecute(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  TMinesweeperForm_SetSize(</span><span class="pas1-number">30</span><span class="pas1-symbol">, </span><span class="pas1-number">16</span><span class="pas1-symbol">, </span><span class="pas1-number">99</span><span class="pas1-symbol">);
+  TMinesweeperForm_GameNewExecute(</span><span class="pas1-reservedword">nil</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_GameMarksExecute(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  GameMarks:= </span><span class="pas1-reservedword">not</span><span class="pas1-space"> (GameMarks);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_GameExitExecute(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  cMineFrm.Close;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_HelpContentExecute(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  ShowMessage(</span><span class="pas1-string">'Do you really need mine help ?'</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_CaseTimerTimer(Sender: TObject);
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  I, X1, Y1: Integer;
+  Suppr, RefreshNeeded: Boolean;
+  Delta: Integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  I:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+  RefreshNeeded:= False;
+  </span><span class="pas1-comment">//while (I &lt; length(ClickCaseList)) do
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">while</span><span class="pas1-space"> (I &lt; plistcount) </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">   </span><span class="pas1-comment">//plistcount
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> ClickCaseList[I] </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-comment">//with PPoint(FMineSweeper.ClickCaseList[I])^ do
+</span><span class="pas1-space">    </span><span class="pas1-comment">//with TPoint(ClickCaseList[I].x1) do begin
+</span><span class="pas1-space">      Suppr:= False;
+      X1:= ClickCaseList[i].X * CASE_WIDTH;
+      Y1:= ClickCaseList[i].Y * CASE_HI;
+      </span><span class="pas1-reservedword">with</span><span class="pas1-space"> GamePb.Buffer </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin</span><span class="pas1-space">     
+        TMinesweeperForm_DrawCase(X, Y, Game[X][Y]);
+        </span><span class="pas1-comment">//if Game[X1][Y1].ClickingStep in [1..NB_STEP_MAX - 1] then begin
+</span><span class="pas1-space">        </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ((Game[X][Y].ClickingStep &lt; NB_STEP_MAX - </span><span class="pas1-number">1</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">And</span><span class="pas1-space"> (Game[X][Y].ClickingStep &gt; </span><span class="pas1-number">1</span><span class="pas1-symbol">)) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">         Delta:= (NB_STEP_MAX- Game[X][Y].ClickingStep) * (CASE_WIDTH </span><span class="pas1-reservedword">div</span><span class="pas1-space"> NB_STEP_MAX) </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">;
+          Draw2(Rect(X1 + DELTA, Y1 + DELTA, X1 + CASE_WIDTH - DELTA, Y1 + CASE_HI - DELTA),
+            Rect(</span><span class="pas1-number">0</span><span class="pas1-symbol">, </span><span class="pas1-number">0</span><span class="pas1-symbol">, CASE_WIDTH, CASE_HI), CasesIl.Bitmap[UNCLICKED_BMP]);
+        </span><span class="pas1-reservedword">end
+</span><span class="pas1-space">        </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Game[X][Y].ClickingStep = </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">          Draw(X1, Y1, CasesIl.Bitmap[CLICKED_BMP]);
+          TMineSweeper_SetState(X, Y, csClicked);
+          Suppr:= True;
+        </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+      TMineSweeper_DecClickingStep(X, Y);
+      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Suppr </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        </span><span class="pas1-comment">//ClickCaseList.Delete(I);
+</span><span class="pas1-space">        Dec(plistcount);
+          </span><span class="pas1-comment">{for i:= 1 to length(ClickCaseList) do begin
+               ClickCaseList[i].x:= 0; ClickCaseList[i].y:= 0; end; }
+</span><span class="pas1-space">        CaseTimer.Enabled:= plistcount &gt; </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+        RefreshNeeded:= True;
+      </span><span class="pas1-reservedword">end
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">else
+</span><span class="pas1-space">        Inc(I);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> RefreshNeeded </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    TMineSweeperForm_DrawGame
+  </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    GamePb.Buffer.Changed;
+    GamePb.Repaint;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TMinesweeperForm_TimerTimer(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> GameState = gsPlaying </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    MTime:= MTime + </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+    TMinesweeperForm_DrawTitle;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-comment">//------------------------------------------------------------------------------
+
+</span><span class="pas1-reservedword">begin</span><span class="pas1-space">     </span><span class="pas1-comment">//Main Mine App
+</span><span class="pas1-space"> </span><span class="pas1-comment">//SetSize
+//TMinesweeperForm_WriteIniFile;
+</span><span class="pas1-space"> gamemarks:= true;
+ TMinesweeperForm_FormCreate(Self);
+</span><span class="pas1-reservedword">End</span><span class="pas1-symbol">.
+
+</span><span class="pas1-comment">////////////////////////////////////////////////////
+</span><span class="pas1-identifier">add taction
+</span><span class="pas1-comment">//add setsize
+
+</span><span class="pas1-reservedword">with</span><span class="pas1-space"> TIniFile.Create(ExtractFilePath(ParamStr(</span><span class="pas1-number">0</span><span class="pas1-symbol">)) + </span><span class="pas1-string">'Minesweeper.ini'</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    SetSize(ReadInteger(</span><span class="pas1-string">'Main'</span><span class="pas1-symbol">, </span><span class="pas1-string">'Width'</span><span class="pas1-symbol">, </span><span class="pas1-number">9</span><span class="pas1-symbol">),
+  
+  
+  http:</span><span class="pas1-comment">//www.josef-graef.de/iss.html
+</span><span class="pas1-space">  http:</span><span class="pas1-comment">//www.heavens-above.com/PassSummary.aspx?lat=50.58&amp;lng=8.7028&amp;alt=0&amp;loc=Giessen&amp;TZ=CET&amp;satid=25544
+</span><span class="pas1-space">  
+  </span><span class="pas1-number">15</span><span class="pas1-space"> Dec	-</span><span class="pas1-float">3.4</span><span class="pas1-space">	</span><span class="pas1-number">18</span><span class="pas1-symbol">:</span><span class="pas1-number">20</span><span class="pas1-symbol">:</span><span class="pas1-number">05</span><span class="pas1-space">	</span><span class="pas1-number">10</span><span class="pas1-symbol">&deg;	SW	</span><span class="pas1-number">18</span><span class="pas1-symbol">:</span><span class="pas1-number">23</span><span class="pas1-symbol">:</span><span class="pas1-number">18</span><span class="pas1-space">	</span><span class="pas1-number">71</span><span class="pas1-symbol">&deg;	SSE	</span><span class="pas1-number">18</span><span class="pas1-symbol">:</span><span class="pas1-number">24</span><span class="pas1-symbol">:</span><span class="pas1-number">05</span><span class="pas1-space">	</span><span class="pas1-number">46</span><span class="pas1-symbol">&deg;	E	Visible
+  
+  P.S. They even managed </span><span class="pas1-reservedword">to</span><span class="pas1-space"> make Minesweeper awful </span><span class="pas1-reservedword">to</span><span class="pas1-space"> use! (Unless one </span><span class="pas1-reservedword">is</span><span class="pas1-space"> five years old). </span><span class="pas1-reservedword">And</span><span class="pas1-space"> Civ II which worked fine </span><span class="pas1-reservedword">in</span><span class="pas1-space"> Win </span><span class="pas1-number">7</span><span class="pas1-space"> </span><span class="pas1-number">64</span><span class="pas1-space"> bit, now works but takes </span><span class="pas1-number">5</span><span class="pas1-space"> seconds </span><span class="pas1-reservedword">to</span><span class="pas1-space"> move a </span><span class="pas1-reservedword">unit</span><span class="pas1-space"> one square. I know I shouldn</span><span class="pas1-string">'t expect software that old to work forever, but really, what is it about 8 that stops it working well when it was fine in 7? 
+</span><span class="pas1-space">  
+  * The mixer has following structure (</span><span class="pas1-reservedword">as</span><span class="pas1-space"> it </span><span class="pas1-reservedword">is</span><span class="pas1-space"> </span><span class="pas1-reservedword">in</span><span class="pas1-space"> this component) :
+ *
+ * Destinations (destinations should be </span><span class="pas1-reservedword">for</span><span class="pas1-space"> example: Playback, Recording </span><span class="pas1-reservedword">and</span><span class="pas1-space"> </span><span class="pas1-reservedword">Voice</span><span class="pas1-space"> commands)
+ *   |
+ *   |--Destination[</span><span class="pas1-number">0</span><span class="pas1-symbol">]        (</span><span class="pas1-reservedword">if</span><span class="pas1-space"> you want </span><span class="pas1-reservedword">to</span><span class="pas1-space"> get volume </span><span class="pas1-reservedword">of</span><span class="pas1-space"> this call GeVolume (&lt;ThisDestinationNum&gt;,-</span><span class="pas1-number">1</span><span class="pas1-symbol">,...))
+ *   |    |                                                                          (=</span><span class="pas1-number">0</span><span class="pas1-symbol">)           ----
+ *   |    |--Data:TMixerLine
+ *   |    |--Controls         (controls </span><span class="pas1-reservedword">of</span><span class="pas1-space"> the line, ex: Master volume, master mute)
+ *   |    |    |
+ *   |    |    |--Control[</span><span class="pas1-number">0</span><span class="pas1-symbol">]
+ *   |    |    |--Control[</span><span class="pas1-number">1</span><span class="pas1-symbol">]
+ *   |    |    |--Control[..]
+ *   |    |
+ *   |    |--Connections      (ex: Wave, MIDI, CD Audio, Line-</span><span class="pas1-reservedword">In</span><span class="pas1-symbol">,...)
+ *   |         |
+ *   |         |--Connection[</span><span class="pas1-number">0</span><span class="pas1-symbol">]   (GetVolume (&lt;ThisDestinationNum&gt;,&lt;ThisConnectionNum&gt;,...))
+ *   |         |    |                               (=</span><span class="pas1-number">0</span><span class="pas1-symbol">)                 (=</span><span class="pas1-number">0</span><span class="pas1-symbol">)
+ *   |         |    |--Data:TMixerLine
+ *   |         |    |--Controls   (here can be volume </span><span class="pas1-reservedword">and</span><span class="pas1-space"> mute)
+ *   |         |         |
+ *   |         |         |--Control[</span><span class="pas1-number">0</span><span class="pas1-symbol">]
+ *   |         |         |--Control[</span><span class="pas1-number">1</span><span class="pas1-symbol">]
+ *   |         |         |--Control[..]
+ *   |         |
+ *   |         |--Connection[</span><span class="pas1-number">1</span><span class="pas1-symbol">]
+ *   |         |--Connection[..]
+ *   |
+ *   |--Destination[</span><span class="pas1-number">1</span><span class="pas1-symbol">]
+ *   |--Destination[..]
+ *
+ *
+
+</span></code></pre><!--EndFragment--></body>
+</html>

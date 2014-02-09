@@ -1,0 +1,425 @@
+{****************************************************************
+ *
+ * Project  : CryptoBox AES Crypto Series
+ * App Name : 258_AES_cryptobox.txt, loc's = 388
+ * Purpose  : crypt & decrypt a file with AES symmetric keys
+ * History  : system for mX3.2, internal random generator, newdir
+            : 220_CipherBox_form2.txt, loc's = 355
+            : get LockBox3 for more acurate Standard
+ * ToDo: check if key is loaded!, one time pad key list, rename encrypted file 
+            : code a better password dialog to reset the password
+ ****************************************************************}
+
+program CipherBox3_FORM_Lab;
+
+const LEFTBASE = 20;
+      TOPBASE = 25; 
+      MEDIAPATH =  'exercices\';
+      KEYPATH = 'crypt\';
+      CIPHERLOG = 'cipherbox_log3.txt';
+                                                                                      
+var 
+  selectFile: string;
+  mpanel: TPanel;
+  mPlayer: TMediaPlayer;
+  inFrm: TForm;  
+  mbtn3: TBitBtn;
+  cLstbox: TListbox;
+  mp3list: TStringList;
+  stat: TStatusbar;
+  STATchoice: boolean;
+  idx, i: integer;
+  //fileToCrypt, cryptFile, decryptFile: string;
+  cryptlog, aespassw: string;
+  
+  
+function MSecToTime(mSec: Int64): string;
+var dt: TDateTime;
+begin
+  dt:= (mSec/1000/86400);  //SecsPerDay;
+  Result:= FormatDateTime('" song length is:" nn:ss:zzz',dt);
+end; 
+  
+procedure FindAllFiles(FilesList: TStringList; StartDir, FileMask: string);
+var //SR: TSearchRec;
+  DirList: TStringList;
+  IsFound: Boolean;
+  i: integer;
+begin
+  if StartDir[length(StartDir)] <> '\' then
+                       StartDir:= StartDir + '\';
+  {Build a list of the files in dir StartDir (not the directories!)}
+  IsFound:= FindFirst(StartDir+FileMask, faAnyFile-faDirectory) = 0;
+  while IsFound do begin
+    //only file name less StartDir
+    FilesList.Add(StartDir + searchrecName);
+    IsFound:= FindNext = 0;
+  end;
+  FindClose;
+  //Build a list of subdirectories
+  DirList:= TStringList.Create;
+    IsFound:= FindFirst(StartDir+'*.*', faAnyFile) = 0;
+    while IsFound do begin
+      if ((searchrecAttr and faDirectory) <> 0) and
+         (searchrecName[1] <> '.') then
+           DirList.Add(StartDir + searchrecName);
+      IsFound:= FindNext = 0;
+    end;
+    FindClose;
+  //Scan the list of subdirectories recursive!
+  for i:= 0 to DirList.Count - 1 do
+    FindAllFiles(FilesList, DirList[i], FileMask);
+  DirList.Free;
+end;  
+
+procedure StartFileFinder(vlist: TStringList);
+//var i: integer;
+begin
+  //FindAllFiles(vlist, MEDIAPATH, '*.*');
+  getdirlist(Exepath+MEDIAPATH+'*.*',vlist,false) 
+  //vlist.saveToFile('maXbox_mp3files.txt');
+end;
+
+
+procedure ChangeKey(self: TObject);    //to be done
+begin
+  MPlayer.filename:= clstbox.items[clstbox.itemIndex];
+  StatChoice:= true;
+  mBtn3.Caption:= 'One Time Pad!';
+end; 
+
+//procedure CloseClick(Sender: TObject; var action: TCloseAction);
+procedure CloseCryptClick(Sender: TObject; var action: TCloseAction);
+begin
+  //Form1.Close;  free 308 kByte
+  if MessageDlg('Wanna Leave Crypt?',mtConfirmation,[mbYes, mbNo],0) = mrYes then begin
+     //form1.Free;
+    MPlayer.Close;
+    MPlayer.Free;
+    //bmp.Free;
+    mp3List.Free;
+    action:= caFree;
+ end else
+    Action:= caNone;
+end;
+
+procedure CryptoButtonCloseClick(sender: TObject);
+begin
+  //mbitmap.Free;
+  inFrm.Close;
+end;
+
+//AES CryptoBox
+procedure BtngetPassword(Sender: TObject);
+var keysave: string;
+begin
+  aespassw:= InputBox('AES CryptoBox Password' ,'Enter Password:','password');
+  clstBox.Items.Add('Password is set! at: '+DateTimeToStr(Now));
+  {with TPasswordDlg.Create(NIL) do begin
+    showmodal;
+    if modalresult = mrOK then begin
+    aespassw:= password.Text;
+        with clstBox.Items do begin
+         Add('Password is set! at: '+DateTimeToStr(Now));
+       end;
+    end else begin
+    //if cancelbtn.modalresult = mrCancel then begin
+     password.Text:= '';
+     aespassw:= '';
+     clstBox.Items.Add('Password empty reset at: '+DateTimeToStr(Now));
+     //showmessage(aespassw);  debig
+    end;
+    Free;}
+  end;
+
+procedure OpenCD(self: TObject);
+begin
+  OpenCDDrive;
+end; 
+
+procedure EncryptMediaAES(sender: TObject);
+var i: integer;
+begin
+   //cryptFile:= 'C:\SecureCenter\Dec 15 2010mx3\maxboxerrorlog2.txt';
+ //cryptFile:= 'C:\SecureCenter\Dec 15 2010mx3\maxboxerrorlog2.txt';
+  if aespassw <> '' then begin
+  //if PromptForFileName(selectFile,'Files(*.*)|*.*',//others
+    //                  '', 'Select your file to crypt', MEDIAPATH, False)
+  
+  mp3list.clear;
+  StartFileFinder(mp3list);  //update the directory!!
+  clstbox.items.clear;
+  for i:= 1 to mp3list.count - 1 do begin
+    //clstbox.items.add(mp3list[i]);
+    selectFile:= mp3list[i];
+     // Display this full file/path value
+    mPanel.font.color:= clyellow;
+    mPanel.font.size:= 18;
+    mPanel.caption:= ExtractFileName(selectFile)+' encrypt...';
+    //cfile:= LoadFileAsString(selectFile);
+   Application.ProcessMessages;
+   screen.Cursor:= crHourglass;
+   with clstBox.Items do begin
+      Add('SHA256 Hash of: '+ExtractFileName(selectFile));
+      Add('is: '+ComputeSHA256(selectFile,'F'));
+      idx:= Add('File to Crypt: '+ExtractFileName(selectFile));
+      stat.SimpleText:= clstBox.items[idx];
+    end;
+    with TStopwatch.Create do begin
+     Start;
+    AESSymetricExecute(selectFile,selectFile+'_encrypt',aespassw);
+    clstbox.items.add(mp3list[i]+' encrypted');
+    mPanel.font.color:= clblue;
+    mPanel.font.size:= 30;
+    mPanel.caption:= 'Files Encrypted!';
+    screen.Cursor:= crDefault;
+    Stop;
+      //clstBox.Items.Add('Time: ' +(floattoStr(GetValueMSec/1000)));
+      clstBox.Items.Add('Time consuming: ' +GetValueStr +' of: '+
+              inttoStr(getFileSize(selectFile))+' File Size');
+     Free;
+   end;
+    //add hash and cipher to compare later on
+    //cfile:= cfile + 'SHA$'+SHA1(selectFile);
+    //cryptin:= S_StrEncrypt96(cfile, StartKey, MultKey, AddKey);
+    //CreateFileFromString(selectFile+'_crypt', cryptin);
+    cLstbox.Items.Add('Crypted file: '+ExtractFileName(selectFile)+'_encrypt');
+    {clearout:= S_StrDEcrypt96(cryptin, StartKey, MultKey, AddKey);
+    CreateFileFromString(selectFile+'_decrypt', clearout);}
+  end; //for
+  WriteLog(cryptLog, clstbox.items.text)
+  end else showmessage('Set your password first!');
+end;
+
+procedure DecryptMediaAES(sender: TObject);
+var clearout: string;
+    i: integer;
+begin
+ //if aespassw= '' then showmessage('Set your password first!');
+ if aespassw <> '' then begin
+ //if PromptForFileName(selectFile,'Files(*_encrypt)|*_encrypt',//others
+   //                   '', 'Select your file to decrypt', MEDIAPATH, False)
+   
+  mp3list.clear;
+  StartFileFinder(mp3list);  //update the directory!!
+  //writeln('list count after '+inttostr(mp3list.count)) debug
+  clstbox.items.clear;
+
+  for i:= 1 to mp3list.count - 1 do begin
+    selectFile:= mp3list[i];
+    
+  if Pos('encrypt',selectFile) > 0 then begin
+     // Display this full file/path value
+    mPanel.font.color:= clyellow;
+    mPanel.font.size:= 18;
+    mPanel.caption:= ExtractFileName(selectFile)+' decrypt...';
+     idx:= cLstbox.Items.Add('File to Decrypt: '+ExtractFileName(selectFile));
+     stat.SimpleText:= cLstbox.Items[idx];
+    //Delete(selectFile, length(selectFile)-7, 8); //-7!
+    Application.ProcessMessages;
+    screen.Cursor:= crHourglass;
+    with TStopwatch.Create do begin
+     Start;
+     AESDecryptFile(selectFile+'_decrypt',selectFile,aespassw);
+     clstbox.items.add(mp3list[i]+' decrypted');
+
+     clearout:= selectFile+'_decrypt';
+     Delete(clearout, length(clearout)-15, 8); //-7!
+     RenameFile(selectFile+'_decrypt', clearout);
+     screen.Cursor:= crDefault;
+     Stop;
+      //clstBox.Items.Add('Time: ' +(floattoStr(GetValueMSec/1000)));
+      clstBox.Items.Add('Time consuming: ' +GetValueStr +' of: '+
+              inttoStr(getFileSize(clearout))+' File Size');
+     Free;
+    end;
+     mPanel.font.color:= clGreen;  //clLime
+     mPanel.font.size:= 30;
+      mPanel.caption:= 'Files Decrypted!';
+     //if VerifySignature(clearout) then
+       // cLstbox.Items.Add('Signatur Valid and Integrity Check done');
+     //CreateFileFromString(selectFile+'_decrypt', clearout);
+     with clstBox.Items do begin
+       Add('SHA256 Hash of '+ExtractFileName(clearout));
+       Add('is: '+ComputeSHA256(clearout,'F'));
+       Add('File Decrypted as: '+ExtractFileName(clearout));
+     end;
+    end; 
+   end;
+    WriteLog(cryptLog, clstbox.items.text)
+  
+ end else showmessage('Set your password first!');
+end;
+
+
+
+procedure SetCryptFormAES;
+var
+  mbtn, mbtn2, mbtn4: TBitBtn;
+  mi, mi1, mi2: TMenuItem;
+  mt: TMainMenu;
+  mlbl, mlbl1: TLabel;
+begin
+  STATChoice:= false;
+  inFrm:= TForm.Create(self);
+  mLbl:= TLabel.create(inFrm);
+  mLbl1:= TLabel.create(inFrm);
+  mPanel:= TPanel.Create(inFrm);
+  stat:= TStatusbar.Create(inFrm);
+  cLstbox:= TListbox.create(inFrm);
+
+  with inFrm do begin
+     caption:= '********CryptoBox3 AES256 and SHA256************';
+     height:= 610;
+     width:= 1180;
+     //color:= clred;
+     Position:= poScreenCenter;
+     onClose:= @CloseCryptClick;
+     Show;
+   end;
+   with mPanel do begin
+     caption:= '****CryptoBox_AES256_SHA256****';
+     parent:= inFrm;
+     SetBounds(LEFTBASE+10,TOPBASE+40,416,400);
+     color:= clsilver;
+     font.color:= clyellow;
+     font.size:= 20;
+     Show;
+   end;
+  with cLstbox do begin
+    parent:= inFrm;
+    SetBounds(LEFTBASE+450, TOPBASE+40, 670, 400);
+    font.size:= 10;
+    color:= clYellow;
+    //scrollbars:= ssvertical;
+    //onClick:= ChangeKey;
+  end;
+
+  // mp3List.Free;
+  mBtn:= TBitBtn.Create(inFrm);
+  with mBtn do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 650, TOPBASE+ 460,150, 40);
+    caption:= 'Files to &Encrypt';
+    font.size:= 12;
+    //font.Style:= [fsBold];
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPNEXT');
+    onclick:= @EncryptMediaAES;
+  end;
+  mBtn4:= TBitBtn.Create(inFrm);
+  with mBtn4 do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 810, TOPBASE+460,150, 40);
+    caption:= 'Files to &Decrypt';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPLAY');
+    onclick:= @DecryptMediaAES;
+  end;
+  with TBitBtn.Create(inFrm) do begin
+    Parent:= inFrm;
+    setBounds(LEFTBASE+490,TOPBASE+460,150,40);
+    caption:= '&Close';
+    font.size:= 12;
+    glyph.LoadFromResourceName(HINSTANCE,'CL_MPSTOP');
+    onclick:= @CryptoButtonCloseClick; //CloseCryptClick;
+  end;
+  mBtn3:= TBitBtn.Create(inFrm);
+  with mBtn3 do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 970, TOPBASE+460,150, 40);
+    caption:= 'Enter &Password!';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPAUSE');
+    //event handler
+    onclick:= @BtngetPassword;
+  end;
+  with mlbl do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+15,TOPBASE-15,180,20);
+    font.size:= 32;
+    font.color:= clred;
+    font.style:= [fsunderline];
+    caption:= 'AES CryptoBox';
+  end;
+  with mlbl1 do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+455,TOPBASE-1,180,20);
+    font.size:= 20;
+    font.color:= clred;
+    caption:= 'Directory Log Register:';
+  end;
+  mt:= TMainMenu.Create(infrm);
+  with mt do begin
+   //parent:= frmMon;
+  end;
+  mi:= TMenuItem.Create(mt);
+  mi1:= TMenuItem.Create(mt);
+  mi2:= TMenuItem.Create(mt);
+  with mi do begin
+    //parent:= frmMon;
+    Caption:='Encrypt File';
+    Name:='ITEM';
+    mt.Items.Add(mi);
+    OnClick:= @EncryptMediaAES;
+  end;
+  with mi1 do begin
+    //parent:= frmMon;
+    Caption:='Decrypt File';
+    Name:='ITEM2';
+    mt.Items.Add(mi1) ;
+    OnClick:= @DecryptMediaAES;
+  end;
+  with mi2 do begin
+    //parent:= frmMon;
+    Caption:='Set Password';
+    Name:='ITEM3';
+    mt.Items.Add(mi2);
+    OnClick:= @BtngetPassword;
+  end;
+  with Stat do begin
+    parent:= inFrm;
+    stat.SimplePanel:= true;
+  end;
+  MPlayer:= TMediaPlayer.create(self);
+  with MPlayer do begin
+    parent:= inFrm;
+    height:= 38;
+    top:= TOPBASE + 460;
+    left:= LEFTBASE+ 10;
+    Display:= mPanel;   //for video show
+  end;
+  if DirectoryExists(ExePath+KEYPATH) = false then
+    CreateDir(ExePath + KEYPATH);
+  cLstbox.Items.Add('Welcome to CryptoBox3 to protect your Data '+datetimetoStr(Now));
+  idx:= cLstbox.Items.Add('Keypath is: '+ExePath+KEYPATH);
+  stat.SimpleText:= cLstbox.Items[idx];
+  cryptLog:= ExePath+CIPHERLOG;
+  cLstbox.Items.Add('CryptoBox3 ready, Save or load a Password protected Cipher');
+end;
+
+
+//main app
+begin
+  SetCryptFormAES;
+  // get directory and fill list
+  mp3list:= TStringList.Create;
+  StartFileFinder(mp3list);
+  for i:= 1 to mp3list.count - 1 do 
+    clstbox.items.add(mp3list[i]);
+
+  if DirectoryExists(ExePath+KEYPATH) = false then
+    CreateDir(ExePath + KEYPATH);
+  //idx:= cLstbox.Items.Add('Keypath is: '+ExePath+KEYPATH);
+  //stat.SimpleText:= clstbox.Items[idx];
+  cryptLog:= ExePath+CIPHERLOG;
+   //writeln(gethostbyname('www.kleiner.ch'))
+   writeln('Instance: '+intToStr(getHinstance))
+   writeln('Procid: '+intToStr(getProcessid))
+   writeln('Processors: '+inttostr(GetNumberOfProcessors)) 
+End.
+
+//---------------------------------------------------------
+
+
+------------------------------------------------------
+Programmers never die, they just GOSUB without RETURN 

@@ -1,0 +1,127 @@
+program WebServiceSimpleCall;
+
+
+//type
+//IVCLScanner = interface(IInvokable)
+  //['{7FC432BE-087E-EC81-4052-0CEC41DBF999}']
+  {function  PostData(const UserData: WideString; const CheckSum: Cardinal): Boolean; stdcall;
+  procedure PostUser(const Email: WideString; const FirstName: WideString; const LastName: WideString); stdcall;
+    function  GetTicketNr: Integer; stdcall;
+  end;}
+
+const
+  defWSDL = 'D:\Program Files\Apache Group\Apache2\cgi-bin\IVCLScanner.xml';
+  defURL  = 'http://APSN21/cgi-bin/VCLScannerServer.exe/soap/IVCLScanner';
+  defSvc  = 'IVCLScannerservice';
+  defPrt  = 'IVCLScannerPort';
+  
+  StrHttpwebsrv_path_scripts =
+                'http://APSN21/cgi-bin/vclscannerserver.exe/soap/IVCLScanner';
+
+  
+  StrSomethingWentWrong = 'Something went wrong while sending report.';
+  StrSendingReportFaile = 'Sending report failed...';
+  StrSomethingWentWrongT = 'Something went wrong while sending your ticket.';
+  StrSendingTicketFaileT = 'Sending ticket failed...';
+  
+//function GetWS(UseWSDL: Boolean; Addr: string; HTTPRIO: THTTPRIO): THTTPRIO;
+//function GetWS(UseWSDL: Boolean; Addr: string; HTTPRIO: THTTPRIO): IVCLScanner;
+
+function GetWS(UseWSDL: Boolean; Addr: string; HTTPRIO: THTTPRIO): THTTPRIO;
+var
+  RIO: THTTPRIO;
+begin
+  Result := NIL;
+  if (Addr = '') then begin
+    if UseWSDL then
+      Addr := defWSDL
+    else
+      Addr := defURL;
+  end;
+  if HTTPRIO = nil then
+    RIO := THTTPRIO.Create(NIL)
+  else
+    RIO := HTTPRIO;
+  try
+    //Result := (RIO as IVCLScanner);
+      Result:= (RIO);
+    if UseWSDL then begin
+      RIO.WSDLLocation := Addr;
+      RIO.Service := defSvc;
+      RIO.Port := defPrt;
+      //rio.name
+    end else
+      RIO.URL := Addr;
+  finally
+    if (Result = NIL) and (HTTPRIO = NIL) then
+      RIO.Free;
+  end;
+end;
+
+Procedure TestIntf;
+Var
+   A : IVCLScanner;
+    //B : IInvokable;
+Begin
+    //A := TVCLScanner.Create As IVCLScanner;
+    //B := IInvokable(A);
+    //Can now successfully call any of B's methods
+End;
+
+
+
+
+ var
+   mi: IStreamLoader;
+   mm: TMemoryStream;
+   WS: IVCLScanner;
+   wsc: TVCLScanner;
+   httprio1: THTTPRIO;
+   rio: Thttprio;
+
+
+begin
+   Writeln((GetWS(true, '',NIL).WSDLLocation));
+   Writeln((GetWS(true, '',NIL).Service));
+     
+     RIO := THTTPRIO.Create(NIL)
+     //rio.queryinterface
+     //ws:= (RIO as IVCLScanner);
+     Rio.free;
+   //mi:= IStreamLoader.create;
+   mi:= GetDefaultStreamLoader;
+   mm:= TMemoryStream.Create;
+   mi.Load(defWSDL, mm);
+   //Writeln(mi.GetUsername)
+   mm.savetofile(Exepath+'myxmlws.xml')
+   mm.Free;
+   //Writeln(floattostr(BinaryToDouble('1111', 0.0)));
+  // S_ShellExecute(ExePath+'maxbox3.exe','',seCmdopen);
+  //Application.MessageBox(StrSomethingWentWrong,StrSendingReportFaile,0);
+  maxform1.setactivelinecolor(clnone);
+  //maxform1.ScriptListbox1Click
+end.
+
+-------------------------------------------------
+ // Call web service sequence
+      // http://milo2/scripts/vclscannerserver.exe/soap/IVCLScanner
+      WS:= HTTPRIO1 as IVCLScanner;
+      WS.PostData(reFinalResults.Text,CRC);
+      //WS := HTTPRIO1 as IVCLScanner;
+      
+        WS: IVCLScanner;
+
+If you created a web service client with the WSDL importer, the generated client code will invoke a method on the server. So in fact, the method 'body' (code) is on the web service server.
+
+Delphi generates a Soap request based on the WSDL, and behind the scenes RTTI (introspection) is used to generate parameters etc. of the web service call as XML. This XML is sent to the server, which executes the method implementation and sends back a Soap response.
+
+Things are opposite if you create the web service server, in this case the Delphi application of course needs to implement all method bodies.
+
+
+You're in fact calling a method defined in a Interface, which in turn inherits from IInvokable, declared in System.pas.
+
+If you check your source code you'll note that no local object in your project implements the IInvokable interface you're calling, that's because that method is remotely executed in the server.
+
+Before that occurs, there's some pascal code used to create a proper SOAP request to the server, send it and then wait and interpret the server response, consider this implementation details. If you're interested in know a bit more how this works, enable the "use debug .dcus" compiler option, so you can debug inside the VCL/RTL.
+
+Then, as usual, use the StepInto (F7) command to ask the debugger to execute the Transmit method step by step... after some assembler in the TRIO.GenericStub method you'll get to the TRIO.Generic method where the packet is prepared and sent. 

@@ -1,0 +1,224 @@
+PROGRAM procedureType_FunctionPlotter;
+//shows structure of procedure types, max@kleiner.com
+//compilerswitch $N+ turns the coprocessor on, loc's =110
+
+const 
+ DIM = 790;
+ PI2 = 5.1415926535897932384626433832795;
+   E = 2.718281828459;
+
+type
+  TSinglePoint = record
+    X,Y : single;
+  end; 
+  
+  TMath_Func = Procedure(var x: single);
+  TXYVector = array[0..DIM] of TSinglePoint; 
+
+var 
+  //@fct1x: TMath_Func;
+  cFrm: TForm;
+  fPoints: TXYVector;
+  amp, freq: byte;
+  wow: string;
+
+procedure drawChart(vPoints: TXYVector; vcolor: integer);
+var
+  i,hsize: integer;
+begin
+  with cFrm.canvas do begin
+    hsize:= cFrm.Height -1 div 2;
+    Pen.Color:= vcolor;
+    MoveTo(0, hsize -((round(vPoints[0].Y))));
+    for i:= 0 to DIM do
+      LineTo(i, round(vPoints[i].Y));
+  end;
+end;  
+  
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  with cFrm do begin
+    caption:= 'maXbox_FunCPlotter(((((\*/)))))';  
+    BorderStyle:= bsDialog;
+    height:= 440;
+    width:= 800;
+    color:= clblack;
+    //onPaint:= @PaintBox1Paint;
+    Show;
+  end  
+end;
+
+//---------------------------ADD math functions---------------------------------  
+procedure logistic_S(var x: single);
+begin
+  x:= 1/1 + power(E, (-x/0.5));
+end;  
+
+
+procedure gauss(var x: single);
+begin
+  x:= exp(-sqr(x/2));
+end;  
+
+procedure fct4e(var x: single);
+begin
+   x:= power(E, -x);
+end;
+
+procedure fct3eSin(var x: single);
+begin
+  //power() means e^-x
+   x:= power(E, -x) * (sin(PI2 * x));
+end;
+
+PROCEDURE fct1sin(var x: single);
+BEGIN
+   x:= Sin(PI2*x);
+END;
+  
+PROCEDURE fct2cos(var x: single);
+BEGIN
+  x:= Cos(PI2*x);
+END;
+
+  
+PROCEDURE fct_Table(start,amp,freq,color: integer; FCT: TMath_Func;
+                                         fct_name: string);
+var x, tempx, it: single;
+    origy, i: Integer;
+BEGIN
+  Writeln('x   |   ' + fct_name);
+  origy:= cFrm.Height div 2;
+  x:= start;
+  for i:= 0 to (DIM) do begin
+    it:= i;
+    x:= it/freq
+    tempx:= x;
+    if start < 50 then begin
+      FCT(x);
+      FCT(x) end
+    else
+      FCT(x);
+    fPoints[i].Y:= origy + (x * amp);
+    Writeln(floatToStr(x) +' | '+ floatToStr((tempx)));
+  end;
+  DrawChart(fPoints, color)
+END;
+  
+//main function_p call  
+BEGIN
+  //calls the proc with a function var
+  amp:= 110;
+  freq:= 440;
+  loadForm
+  fct_Table(40, amp, freq, clred, @fct1sin, 'Sin(x)');
+  //fct_table(50, amp, freq, clyellow, @fct2cos, 'Cos(x)');
+  fct_Table(30, amp, freq, cllime, @fct3eSin, 'ESin(x)');
+  fct_Table(30, amp, freq, clblue, @fct4e, 'E(x)');
+  fct_Table(60, amp, freq, clyellow, @gauss, 'exp(sqr(x))');
+  fct_Table(60, 74, 200, clpurple, @logistic_s, 'logistic function');
+  with TThreadSortForm.Create(self) do begin
+    label1.caption:= 'Bubble Sort down up';
+    slowmotionfirst:= 1;   //to begin
+    slowmotion:= 3;        // for each thread
+    show;
+    //StartBtn.caption:= 'go parallel';
+    //StartBtnClick(self);
+  end; 
+  with CreateCalculatorForm(self,0) do 
+    show;
+  {with CreatePopupCalculator(self,bdlefttoright) do begin
+    //parent:= cFrm;
+    show; end;}  
+  if IsWin64 then writeln('win 64'); 
+  if iswow64string(wow) 
+    then writeln('win 64'); 
+   Writeln(wow)
+END.
+
+
+  //tthread
+  
+    TThread  = class
+    private
+  {$IFDEF MSWINDOWS}
+      FHandle: THandle;
+      FThreadID: THandle;
+  {$ENDIF}
+  {$IFDEF LINUX}
+      // ** FThreadID is not THandle in Linux **
+      FThreadID: Cardinal;
+      FCreateSuspendedSem: TSemaphore;
+      FInitialSuspendDone: Boolean;
+  {$ENDIF}
+      FCreateSuspended: Boolean;
+      FTerminated: Boolean;
+      FSuspended: Boolean;
+      FFreeOnTerminate: Boolean;
+      FFinished: Boolean;
+      FReturnValue: Integer;
+      FOnTerminate: TNotifyEvent;
+      FSynchronize: TSynchronizeRecord;
+      FFatalException: TObject;
+      procedure CallOnTerminate;
+      class procedure Synchronize(ASyncRec: PSynchronizeRecord; QueueEvent: Boolean = False); overload;
+  {$IFDEF MSWINDOWS}
+      function GetPriority: TThreadPriority;
+      procedure SetPriority(Value: TThreadPriority);
+  {$ENDIF}
+  {$IFDEF LINUX}
+      // ** Priority is an Integer value in Linux
+      function GetPriority: Integer;
+      procedure SetPriority(Value: Integer);
+      function GetPolicy: Integer;
+      procedure SetPolicy(Value: Integer);
+  {$ENDIF}
+      procedure SetSuspended(Value: Boolean);
+    protected
+      procedure CheckThreadError(ErrCode: Integer); overload;
+      procedure CheckThreadError(Success: Boolean); overload;
+      procedure DoTerminate; virtual;
+      procedure Execute; virtual; abstract;
+      procedure Queue(AMethod: TThreadMethod); overload;
+      procedure Synchronize(AMethod: TThreadMethod); overload;
+      property ReturnValue: Integer read FReturnValue write FReturnValue;
+      property Terminated: Boolean read FTerminated;
+    public
+      constructor Create(CreateSuspended: Boolean);
+      destructor Destroy; override;
+      procedure AfterConstruction; override;
+      procedure Resume;
+      procedure Suspend;
+      procedure Terminate;
+      function WaitFor: LongWord;
+      class procedure Queue(AThread: TThread; AMethod: TThreadMethod); overload;
+      class procedure RemoveQueuedEvents(AThread: TThread; AMethod: TThreadMethod);
+      class procedure StaticQueue(AThread: TThread; AMethod: TThreadMethod);
+      class procedure Synchronize(AThread: TThread; AMethod: TThreadMethod); overload;
+      class procedure StaticSynchronize(AThread: TThread; AMethod: TThreadMethod);
+      property FatalException: TObject read FFatalException;
+      property FreeOnTerminate: Boolean read FFreeOnTerminate write FFreeOnTerminate;
+  {$IFDEF MSWINDOWS}
+      property Handle: THandle read FHandle;
+      property Priority: TThreadPriority read GetPriority write SetPriority;
+  {$ENDIF}
+  {$IFDEF LINUX}
+      // ** Priority is an Integer **
+      property Priority: Integer read GetPriority write SetPriority;
+      property Policy: Integer read GetPolicy write SetPolicy;
+  {$ENDIF}
+      property Suspended: Boolean read FSuspended write SetSuspended;
+  {$IFDEF MSWINDOWS}
+      property ThreadID: THandle read FThreadID;
+  {$ENDIF}
+  {$IFDEF LINUX}
+      // ** ThreadId is Cardinal **
+      property ThreadID: Cardinal read FThreadID;
+  {$ENDIF}
+      property OnTerminate: TNotifyEvent read FOnTerminate write FOnTerminate;
+    end;
+  
+   
+    

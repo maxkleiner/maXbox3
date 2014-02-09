@@ -1,0 +1,102 @@
+program Mask_Operations;
+
+//Purpose: implement mask object and matchesmask function
+
+{procedure SIRegister_TMask(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TOBJECT', 'TMask') do
+  with CL.AddClassN(CL.FindClass('TOBJECT'),'TMask') do begin
+    RegisterMethod('Constructor Create( const MaskValue : string)');
+      RegisterMethod('Procedure Free;');
+      RegisterMethod('Function Matches( const Filename : string) : Boolean');
+  end;
+end;}
+
+const 
+   s = 'http://delphi.about.com';
+
+type
+   TImplementIntf = TIncomeRealIntf;
+
+Procedure TestIntf;
+Var
+    A: IIncomeInt;
+    B: TIncomeRealIntf;
+Begin
+    A:= TIncomeRealIntf.Create As IIncomeInt;
+    A:= TImplementIntf.Create As IIncomeInt;
+    // interest rate in percent , year
+    A.SetRate(5,8)
+    Writeln(FloatToStr(A.GetIncome(4000)))
+    //Can now successfully call any of B's --> A methods
+End;
+
+var
+   maskObj: TMask;
+   incomeIntRef: IIncomeInt;
+   //incomeReal: TIncomeRealIntf;
+   interlist: TStringlist;
+   year, percent: integer;
+   amount: double;
+
+begin
+   //TestIntf;
+   //mymask:= TMask.Create('*.txt');
+   maskObj:= TMask.Create('c:\(test)]\*');
+   try
+     if MaskObj.Matches('c:\(test)]\text') then 
+       Writeln('mask is matching');
+   finally
+     MaskObj.Free;
+   end;
+   
+   MatchesMask(s,'h?p://*') //== FALSE
+   MatchesMask(s,'h??p://*') //== TRUE
+   MatchesMask(s,'http://*') //== TRUE
+   MatchesMask(s,'http://*.com') //== TRUE
+   MatchesMask(s,'http://*.net') //== FALSE
+   MatchesMask(s,'*.about.com') //== TRUE
+   MatchesMask(s,'about.com*') //== FALSE
+  
+   percent:= 5; year:= 8;
+   Writeln(FloatToStr(Abs(FutureValue(0.05, 8, 0, 405.2, ptEndofPeriod))))
+end.
+
+-------------------------------------------------
+
+
+declaration
+function MatchesMask(const StringToMatch, Mask: string): Boolean;
+description
+Returns True is a string value matches a format specifed by a mask.
+
+The function raises an exception if the Mask parameter is syntactically invalid. Syntactically valid Mask consists of literal characters, sets, and wildcards.
+Wildcards are asterisks (*) or question marks (?). An asterisk matches any number of characters. A question mark matches a single arbitrary character.
+The comparison to literal characters is NOT case-sensitive.(*)
+
+Then your test becomes:
+for i := Low(Masks) to High(Masks) do
+begin
+if Masks[i].Matches(FileName) then
+  AddToList(FileName);
+end;
+If you are only looking for the first match each time, you can speed it up
+significantly by breaking out of the loop as soon as a match is found.
+Also, make sure your array is arranged so that the most frequently matched
+masks are at the beginning.
+
+array of masks all the time, create the array of TMasks first.
+For example:
+Masks[0] := TMask.Create('*.txt');
+Masks[1] := TMask.Create('*.doc');
+
+
+ Function FutureValue(const Rate :Extended;NPeriods:Integer; 
+                      const Payment,PresentValue:Extended
+                      ;PaymentTime:TPaymentTime):Extended;
+
+ http://www.interest.net/
+ 
+    
+  
+  

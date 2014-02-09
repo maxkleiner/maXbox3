@@ -1,0 +1,401 @@
+{***************************************************************
+ *
+ * Project  : SystemInformation
+ * Unit Name: main
+ * Purpose  : Demonstrates the functions of Indy globals and maXbox
+ * Date  : 21/08/2010  -  14:38:56
+ * History  : translate and integrate to maXbox June 2010
+ *
+ ****************************************************************}
+
+
+
+TYPE
+  TString = ARRAY [0..256] OF CHAR;
+
+
+var
+shiftw: longword;
+//indytime: TIdDateTime;
+
+  mytcp: TIdTCPClient;
+  //GLogCS: TCriticalSection;
+  
+   sb: String;
+   ib: INTEGER;
+
+ 
+
+function IdTCPServer1TIdCommandHandler2Command: string;
+var
+LFormat: string;
+  i,c,a: integer;
+  d: double;
+begin
+//procedure Val(const S: string; var Result; var Code: integer);
+   a:= 20;
+   c:= 5;
+   sb := '12345334';
+   VAL(sb, ib, c);
+   writeln(inttostr(ib))
+   c:= 5;
+   i:= a div c;
+   writeln(inttostr(i))
+   LFormat := 'yyyy-mm-dd hh:nn:ss:mmmm';
+    result:= FormatDateTime(LFormat, Now);
+end;
+    
+    var filehandle, a, b: integer;
+     mytext: Pchar;
+
+begin
+    writeln(inttostr64(factint(16)));
+    //myclose:= caMinimize;
+    //setlength
+    //fmtstr
+    writeln(Format('%8.2f', [123.45668774])); 
+    //FmtStr(Result, ‘%d%s%d%d’, [Major, DecimalSeparator, Minor, Release]);
+    //copybytestohostword
+     // copytidnetworkword   
+      //if  copyfileto('mytest.INI','my2ini.txt') then writeln('done')
+        //domainname
+    mytext:= 'this is maxcom calling out of';    
+    filehandle:= FileCreate('mytest.INI')
+    Filewrite(filehandle, mytext, length(mytext))
+    FileClose(filehandle);    
+    writeln('size of ini-file :'+inttostr(filesizebyname('mytest.INI')))
+    //GetMIMETypeFromFile       
+      //GetGMTDateByName 
+         //TimeStampToDateTime(MSecsToTimeStamp(34567))
+              //idgetdefaultcharset
+              //inttobin
+                //indycomputername
+         //indystrtobool
+          shiftw:= ror(123456,4); 
+          writeln(inttostr(shiftw))
+          strinternettodatetime('12:12:12')
+          //unixdatetimetodelphidatetime('12:12:12')
+           //rawstrinternettodatetime
+           //temppath
+           if (indystrtobool('true')) then writeln('false'); 
+           //gettickdiff
+           writeln(servicesfilepath)
+           //splitcolumnsnotrim  
+           //mytcp.write
+      writeln(IdTCPServer1TIdCommandHandler2Command)        
+              
+end.   
+
+
+Windows crashed again. I am the Blue Screen of Death. No one hears your screams.
+Three things are certain: Death, taxes, and lost data. Guess which has occurred.
+
+
+
+function ExecConsoleApp(const ApplicationName, Parameters: String;
+                        AppOutput: TStrings;     {will receive output of child process}
+                        OnNewLine: TNotifyEvent  {if assigned called on each new line}
+                        ): DWORD;
+
+{we assume that child process requires no input. I have not thought about the
+possible consequences of this assumption. I expect we could come up with some
+sort of tricky console IO thingy - but we would need to either run an auxilliary
+thread or process windows messages somewhere.
+
+This function returns exit code of child process (normally 0 for no error)
+
+If the function returns STILL_ACTIVE ($00000103) then the ReadLoop
+has terminated before the app has finished executing. See comments in body
+of function
+}
+
+const
+  CR = #$0D;
+  LF = #$0A;
+  TerminationWaitTime = 5000;
+  ExeExt = '.EXE';
+  ComExt = '.COM'; {the original dot com}
+
+var
+  StartupInfo:TStartupInfo;
+  ProcessInfo:TProcessInformation;
+  SecurityAttributes: TSecurityAttributes;
+
+  TempHandle,
+  WriteHandle,
+  ReadHandle: THandle;
+  ReadBuf: array[0..2 (* $100*)] of Char;
+  BytesRead: Cardinal;
+  LineBuf: array[0..$100] of Char;
+  LineBufPtr: Integer;
+  Newline: Boolean;
+  i: Integer;
+  BinType, SubSyst: DWORD;
+
+  Ext, CommandLine: String;
+  AppNameBuf: array[0..MAX_PATH] of Char;
+  ExeName: PChar;
+
+{$IFDEF DEBUG}
+  ReadCount: Integer;
+  StartExec,
+  EndExec,
+  PerfFreq: Int64;
+{$ENDIF}
+
+procedure OutputLine;
+begin
+  LineBuf[LineBufPtr]:= #0;
+  with AppOutput do
+  if Newline then
+    Add(LineBuf)
+  else
+    Strings[Count-1]:= LineBuf; {should never happen with count = 0}
+  Newline:= false;
+  LineBufPtr:= 0;
+  if Assigned(OnNewLine) then
+    OnNewLine(AppOutput)
+  {there is no reasonable justification for passing AppOutput as self,
+  but I don't have anything else to send, and I fancied using TNotifyEvent}
+end;
+
+begin
+  {Find out about app}
+  Ext:= UpperCase(ExtractFileExt(ApplicationName));
+  if (Ext = '.BAT') or ((Win32Platform = VER_PLATFORM_WIN32_NT) and (Ext = '.CMD')) then begin
+    {just have a bash}
+    FmtStr(CommandLine, '"%s" %s', [ApplicationName, Parameters])
+  end else
+  if (Ext = '') or (Ext = ExeExt) or (Ext = ComExt) then  {locate and test the application}
+  begin
+    if SearchPath(nil, PChar(ApplicationName), ExeExt, SizeOf(AppNameBuf), AppNameBuf, ExeName) = 0 then
+      raise EInOutError.CreateFmt('Could not find file %s', [ApplicationName]);
+    if Ext = ComExt then
+      BinType:= SCS_DOS_BINARY
+      {in fact, there is no way of telling, but we will just try to run the program. NT is
+      equally ignorant and will blindly run anything with a .COM extension}
+    else
+      GetExecutableInfo(AppNameBuf, BinType, SubSyst);
+    if ((BinType = SCS_DOS_BINARY) or (BinType = SCS_DPMI_BINARY)) and
+        (Win32Platform = VER_PLATFORM_WIN32_NT) then
+      FmtStr(CommandLine, 'cmd /c""%s" %s"', [AppNameBuf, Parameters])
+    else
+    if (BinType = SCS_32BIT_BINARY) and (SubSyst = IMAGE_SUBSYSTEM_WINDOWS_CUI) then
+      FmtStr(CommandLine, '"%s" %s', [AppNameBuf, Parameters])
+    else
+      raise EInOutError.Create('Executable image is not a supported type')
+            {Supported types are Win32 Console or MSDOS under Windows NT only}
+  end else
+    raise EInOutError.CreateFmt('%s has invalid file extension', [ApplicationName]);
+
+  FillChar(StartupInfo,SizeOf(StartupInfo), 0);
+  FillChar(ReadBuf, SizeOf(ReadBuf), 0);
+  FillChar(SecurityAttributes, SizeOf(SecurityAttributes), 0);
+{$IFDEF DEBUG}
+  ReadCount:= 0;
+  if QueryPerformanceFrequency(PerfFreq) then
+    QueryPerformanceCounter(StartExec);
+{$ENDIF}
+  LineBufPtr:= 0;
+  Newline:= true;
+  with SecurityAttributes do begin
+    nLength:= Sizeof(SecurityAttributes);
+    bInheritHandle:= true
+  end;
+  if not CreatePipe(ReadHandle, WriteHandle, @SecurityAttributes, 0) then
+    RaiseLastOSError;
+  {create a pipe to act as StdOut for the child. The write end will need
+   to be inherited by the child process}
+  try
+    {Read end should not be inherited by child process}
+    if Win32Platform = VER_PLATFORM_WIN32_NT then begin
+      if not SetHandleInformation(ReadHandle, HANDLE_FLAG_INHERIT, 0) then
+        RaiseLastOSError
+    end else begin
+      {SetHandleInformation does not work under Window95, so we
+      have to make a copy then close the original}
+      if not DuplicateHandle(GetCurrentProcess, ReadHandle,
+        GetCurrentProcess, @TempHandle, 0, True, DUPLICATE_SAME_ACCESS) then
+        RaiseLastOSError;
+      CloseHandle(ReadHandle);
+      ReadHandle:= TempHandle
+    end;
+
+    with StartupInfo do begin
+      cb:= SizeOf(StartupInfo);
+      dwFlags:= STARTF_USESTDHANDLES or STARTF_USESHOWWINDOW;
+      wShowWindow:= SW_HIDE;
+      hStdOutput:= WriteHandle
+    end;
+    {StartupInfo provides additional parameters to CreateProcess.
+    I suspect that it is only safe to pass WriteHandle as hStdOutput
+    because we are going to make sure that the child inherits it.
+    This is not documented anywhere, but I am reasonably sure it is
+    correct. It is (mildly) interesting to note that the example
+    given in Win32.hlp "Creating a Child process with redirected
+    input and output" does not set the 'StdHandle' fields of StartupInfo.
+    Instead the parent process sets its own StdInput and StdOutput
+    handles prior to creating the child process - Apparently, the child
+    process will then use these values. It all seems a bit odd to me,
+    given that a much simpler mechanism (Handle fields of StartupInfo)
+    seems to have been provided. Anyway, this alternative approach does
+    not seem to work when the parent process is GUI-based. Perhaps Windows
+    ignores SetStdHandle for a GUI app.
+
+    We should not have to use STARTF_USESHOWWINDOW and
+    wShowWindow:= SW_HIDE as we are going to tell CreateProcess not to
+    bother with an output window, but it would appear that Windows 95
+    ignores the CREATE_NO_WINDOW flag. Fair enough - it is not in the SDK
+    documentation (I got it out of Richter). CREATE_NO_WINDOW actually makes
+    virtually no difference to the execution time of my 'hello world' test
+    program, but it seems the correct thing to do.
+
+    I shouldn't bother with the DETACHED_PROCESS flag. I suspect that it is
+    only relevant when the calling process is a console app.
+    }
+
+    if not CreateProcess(nil, PChar(CommandLine),
+       nil, nil,
+       true,                   {inherit kernel object handles from parent}
+       CREATE_NO_WINDOW,
+       nil,
+       nil,
+       StartupInfo,
+       ProcessInfo) then
+     RaiseLastOSError;
+
+    CloseHandle(ProcessInfo.hThread);
+    {not interested in threadhandle - close it}
+
+    CloseHandle(WriteHandle);
+    {close our copy of Write handle - Child has its own copy now. It is important
+    to close ours, otherwise ReadFile may not return when child closes its
+    StdOutput - this is the mechanism by which the following loop detects the
+    termination of the child process: it does not poll GetExitCodeProcess.
+
+    The clue to this behaviour is in the 'Anonymous Pipes' topic of Win32.hlp - quote
+
+    "To read from the pipe, a process uses the read handle in a call to the
+    ReadFile function. When a write operation of any number of bytes completes,
+    the ReadFile call returns. The ReadFile call also returns when all handles
+    to the write end of the pipe have been closed or if any errors occur before
+    the read operation completes normally."
+
+    On this basis (and going somewhat beyond that stated above) I have assumed that
+    ReadFile will return TRUE when a write is completed at the other end of the pipe
+    and will return FALSE when the write handle is closed at the other end.
+
+    I have also assumed that ReadFile will return when its output buffer is full
+    regardless of the size of the write at the other end.
+
+    I have tested all these assumptions as best I can (under NT 4)}
+
+    try
+      while ReadFile(ReadHandle, ReadBuf, SizeOf(ReadBuf), BytesRead, nil) do begin
+        {There are much more efficient ways of doing this: we don't really
+        need two buffers, but we do need to scan for CR & LF &&&}
+{$IFDEF Debug}
+        Inc(ReadCount);
+{$ENDIF}
+        for  i:= 0 to BytesRead - 1 do begin
+          if (ReadBuf[i] = LF) then begin
+            OutputLine;
+            Newline:= true;
+          end else
+          if (ReadBuf[i] = CR) then begin
+            OutputLine;
+          end else begin
+            LineBuf[LineBufPtr]:= ReadBuf[i];
+            Inc(LineBufPtr);
+            if LineBufPtr >= (SizeOf(LineBuf) - 1) then {line too long - force a break}
+            begin
+              Newline:= true;
+              OutputLine;
+            end
+          end
+        end
+      end;
+      WaitForSingleObject(ProcessInfo.hProcess, TerminationWaitTime);
+      {The child process may have closed its StdOutput handle but not yet
+      terminated, so will wait for up to five seconds to give it a chance to
+      terminate. If it has not done so after this time, then we will end
+      up returning STILL_ACTIVE ($103)
+
+      If you don't care about the exit code of the process, then you don't
+      need this wait: having said that, unless the child process has a
+      particularly longwinded cleanup routine, the wait will be very short
+      in any event.
+      I recommend you leave this wait in place unless you have an intimate
+      understanding of the child process you are spawining and are sure you
+      don't want to wait for it}
+
+      GetExitCodeProcess(ProcessInfo.hProcess, Result);
+      OutputLine {flush the line buffer}
+
+{$IFDEF DEBUG} ;  {that's how much I dislike null statements!
+                   Is there a nobel prize for pedantry?}
+      if PerfFreq > 0 then
+      begin
+        QueryPerformanceCounter(EndExec);
+        AppOutput.Add(Format('Debug: (readcount = %d), ExecTime = %.3f ms',
+          [ReadCount, ((EndExec - StartExec)*1000.0)/PerfFreq]))
+      end else
+      begin
+        AppOutput.Add(Format('Debug: (readcount = %d)', [ReadCount]))
+      end
+{$ENDIF}
+    finally
+      CloseHandle(ProcessInfo.hProcess)
+    end
+  finally
+    CloseHandle(ReadHandle)
+  end
+end;
+
+
+The Comp (computational) type is native to the Intel CPU and represents a 64-bit integer. A Comp is classified as a real, however, it does not behave like an ordinal type. Comp is maintained for backward compatibility only. Use the Int64  type for better performance.
+
+String quote = “if the facts don’t fit the theory, face the facts. – Albert Einstein”;
+<script type="text/javascript" src="http://www.brainyquote.com/link/quotebr.js"></script>
+
+debian.pool.ntp.org
+
+Stack := #0#0#0#0 + Stack;
+          Pointer((@Stack[1])^) := VarPtr;
+
+function SafeStr(const s: string): string;
+var
+ i : Longint;
+begin
+  Result:= s;
+  for i:= 1 to length(s) do begin
+    if s[i] in [#0..#31] then begin
+      Result := Copy(s, 1, i-1);
+      exit;
+    end;
+  end;
+end;
+
+procedure Set_Union(Dest, Src: PByteArray; ByteSize: Integer);
+var
+  i: Longint;
+begin
+  for i := ByteSize -1 downto 0 do
+    Dest^[i] := Dest^[i] or Src^[i];
+end;
+
+procedure Set_Diff(Dest, Src: PByteArray; ByteSize: Integer);
+var
+  i: Longint;
+begin
+  for i := ByteSize -1 downto 0 do
+    Dest^[i] := Dest^[i] and not Src^[i];
+end;
+
+procedure Set_Intersect(Dest, Src: PByteArray; ByteSize: Integer);
+var
+  i: Longint;
+begin
+  for i := ByteSize -1 downto 0 do
+    Dest^[i] := Dest^[i] and Src^[i];
+end;

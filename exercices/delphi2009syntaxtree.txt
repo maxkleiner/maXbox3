@@ -1,0 +1,1275 @@
+//****************************
+section Start
+//****************************
+File                         = Program
+                             | Library
+                             | Unit
+                             | Package
+                             ;
+//****************************
+section FileDefinition
+//****************************
+Program                      = [ProgramHead], [UsesFileClause], Block, ','
+                             ;
+ProgramHead                  = 'program', NamespaceName, [ProgramParmSeq], ';'
+                             ;
+ProgramParmSeq               = '(', [Ident, {',', Ident}], ')'
+                             ;
+Library                      = LibraryHead, [UsesFileClause], Block, '.'
+                             ;
+LibraryHead                  = 'library', NamespaceName, {HintingDirective}, ';'
+                             ;
+Package                      = PackageHead, RequiresClause, [ContainsClause], 'end', '.'
+                             ;
+PackageHead                  = 'package', NamespaceName, ';'
+                             ;
+Unit                         = UnitHead, UnitInterface, UnitImplementation, UnitBlock, '.'
+                             ;
+UnitHead                     = 'unit', NamespaceName, {HintingDirective}, ';'
+                             ;
+UnitInterface                = 'interface', [UsesClause], {InterfaceDecl}
+                             ;
+UnitImplementation           = 'implementation', [UsesClause], {DeclSection}
+                             ;
+UnitBlock                    = UnitInitialization, 'end'
+                             | CompoundStatement
+                             | 'end'
+                             ;
+UnitInitialization           = 'initialization', StatementList, [UnitFinalization]
+                             ;
+UnitFinalization             = 'finalization', StatementList
+                             ;
+//****************************
+section FileUsage
+//****************************
+ContainsClause               = 'contains', NamespaceFileNameList
+                             ;
+RequiresClause               = 'requires', NamespaceNameList
+                             ;
+UsesClause                   = 'uses', NamespaceNameList
+                             ;
+UsesFileClause               = 'uses', NamespaceFileNameList
+                             ;
+NamespaceFileNameList        = NamespaceFileName, {',', NamespaceFileName}, ';'
+                             ;
+NamespaceFileName            = NamespaceName, ['in', QuotedString]
+                             ;
+NamespaceNameList            = NamespaceName, {',', NamespaceName}, ';'
+                             ;
+//****************************
+section Declaration
+//****************************
+Block                        = {DeclSection}, [BlockBody]
+                             ;
+BlockBody                    = CompoundStatement
+                             | AssemblerStatement
+                             ;
+DeclSection                  = LabelDeclSection
+                             | ConstSection
+                             | TypeSection
+                             | VarSection
+                             | MethodDecl
+                             | ProcDecl
+                             | ExportsSection
+                             | AssemblyAttribute  // .Net only
+                             ;
+InterfaceDecl                = ConstSection
+                             | TypeSection
+                             | VarSection
+                             | ExportedProcHeading
+                             | ExportsSection
+                             | AssemblyAttribute  // ? .Net only
+                             ;
+LabelDeclSection             = 'label', Label, {',', Label}, ';'
+                             ;
+ConstSection                 = ConstKey, ConstDeclaration, {ConstDeclaration}
+                             ;
+ConstKey                     = 'const'
+                             | 'resourcestring'
+                             ;
+ConstDeclaration             = [CustomAttribute], Ident, [':', TypeDecl], '=', ConstExpression, {HintingDirective}, ';'
+                             ;
+TypeSection                  = 'type', TypeDeclaration, {TypeDeclaration}
+                             ;
+TypeDeclaration              = [CustomAttribute], GenericTypeIdent, '=', TypeDecl, {HintingDirective}, ';'
+                             ;
+VarSection                   = VarKey, VarDeclaration, {VarDeclaration}
+                             ;
+VarKey                       = 'var'
+                             | 'threadvar'
+                             ;
+// threadvar geen initializations, alleen globaal
+VarDeclaration               = [CustomAttribute], IdentList, ':', TypeDecl, [VarValueSpec], {HintingDirective}, ';'
+                             ;
+VarValueSpec                 = 'absolute', Ident
+                             | 'absolute', ConstExpression
+                             | '=', ConstExpression
+                             ;
+ExportsSection               = 'exports', Ident, ExportItem, {',', Ident, ExportItem}, ';'
+                             ;
+ExportItem                   = ['(', [FormalParameterList], ')'], ['index', Expression], ['name', Expression], ['resident']
+                             ;
+// Usage of index is specific to a platform.
+// Usage of resident is deprecated.
+// FormalParameterList only valid by overloaded procs.
+//****************************
+section Type
+//****************************
+// Float Types
+// 'real48'
+// 'real'
+// 'single'
+// 'double'
+// 'extended'
+// 'currency'
+// 'comp'
+// Ordinal types
+// 'shortint'
+// 'smallint'
+// 'integer'
+// 'cardinal'
+// 'byte'
+// 'longint'
+// 'int64'
+// 'word'
+// 'boolean'
+// 'bytebool'
+// 'wordbool'
+// 'ansichar'
+// 'pansichar'
+// 'longbool'
+// 'char'
+// 'widechar'
+// 'pwidechar'
+// 'longword'
+// 'pchar'
+// String types
+// 'shortstring'
+// 'ansistring'
+// 'widestring'
+// Variant types
+// 'variant'
+// 'olevariant'
+//****************************
+TypeDecl                     = StrucType
+                             | PointerType
+                             | StringType
+                             | ProcedureType
+                             | VariantType
+                             | SimpleType
+                             | ['type'], TypeID, [GenericPostfix]
+                             ;
+StrucType                    = ['packed'], StrucTypePart
+                             ;
+StrucTypePart                = ArrayType
+                             | SetType
+                             | FileType
+                             | ClassDecl
+                             ;
+ArrayType                    = 'array', ['[', [ArrayIndex], {',', [ArrayIndex]}, ']'], 'of', ArraySubType
+                             ;
+// Empty Array index for .NET only
+ArrayIndex                   = TypeID
+                             | ConstExpression, '..', ConstExpression
+                             ;
+ArraySubType                 = 'const'
+                             | TypeDecl
+                             ;
+SetType                      = 'set', 'of', TypeDecl
+                             ;
+// Set type alleen ordinal of subrange type
+FileType                     = 'file', ['of', TypeDecl]
+                             ;
+PointerType                  = '^', TypeDecl
+                             | 'pointer'
+                             ;
+StringType                   = 'string', ['[', Expression, ']']
+                             | TypeID, [CodePageNumber]
+                             ;
+CodePageNumber               = '(', ConstExpression, ')'
+                             ;
+ProcedureType                = SimpleProcedureType
+                             | MethodType
+                             | ProcedureReference
+                             ;
+SimpleProcedureType          = ProcedureTypeHeading
+                             ;
+MethodType                   = ProcedureTypeHeading, 'of', 'object'
+                             ;
+ProcedureReference           = 'reference', 'to', ProcedureTypeHeading
+                             ;
+ProcedureTypeHeading         = 'function', [FormalParameterSection], ':', [CustomAttribute], TypeDecl
+                             | 'procedure', [FormalParameterSection]
+                             ;
+VariantType                  = Ident
+                             ;
+SimpleType                   = Ident
+                             | SubRangeType
+                             | EnumType
+                             ;
+SubRangeType                 = ConstExpression, ['..', ConstExpression]
+                             ;
+EnumType                     = '(', Ident, ['=', Expression], {',', Ident, ['=', Expression] }, ')'
+                             ;
+TypeID                       = NamespacedQualifiedIdent
+                             ;
+//****************************
+section Generics
+//****************************
+GenericTypeIdent             = Ident, [GenericDefinition]
+                             ;
+GenericDefinition            = SimpleGenericDefinition
+                             | ConstrainedGenericDefinition
+                             ;
+SimpleGenericDefinition      = '<', Ident, {',', Ident}, '>'
+                             ;
+ConstrainedGenericDefinition = '<', ConstrainedGeneric, {';', ConstrainedGeneric}, '>'
+                             ;
+ConstrainedGeneric           = Ident, [':', GenericConstraint, {',', GenericConstraint}]
+                             ;
+GenericConstraint            = Ident
+                             | 'record'
+                             | 'class'
+                             | 'constructor'
+                             ;
+GenericPostfix               = '<', TypeDecl, {',', TypeDecl}, '>'
+                             ;
+//****************************
+section Class
+//****************************
+ClassDecl                    = ClassTypeTypeDecl
+                             | ClassTypeDecl
+                             | ClassHelperDecl
+                             | InterfaceTypeDecl
+                             | ObjectDecl
+                             | RecordDecl
+                             | RecordHelperDecl
+                             ;
+ClassTypeTypeDecl            = 'class', 'of', TypeID
+                             ;
+ClassTypeDecl                = 'class', [ClassState], [ClassParent], {ClassItem}, 'end'
+                             | 'class', [ClassParent]
+                             ;
+ClassState                   = 'sealed'
+                             | 'abstract'
+                             ;
+ClassParent                  = '(', TypeID, {',', TypeID}, ')'
+                             ;
+ClassItem                    = Visibility
+                             | ClassMethod
+                             | ClassMethodResolution
+                             | ClassField
+                             | ClassProperty
+                             | ConstSection
+                             | TypeSection
+                             | ['class'], VarSection
+                             ;
+ClassHelperDecl              = 'class', 'helper', [ClassParent], 'for', TypeID, [ClassHelperItem], 'end'
+                             ;
+ClassHelperItem              = Visibility
+                             | ClassMethod
+                             | ClassProperty
+                             | ['class'], VarSection
+                             ;
+InterfaceTypeDecl            = InterfaceKey, [ClassParent], [InterfaceGuid], {InterfaceItem}, 'end'
+                             | InterfaceKey, [ClassParent]
+                             ;
+InterfaceKey                 = 'interface'
+                             | 'dispinterface'
+                             ;
+InterfaceGuid                = '[', QuotedString, ']'
+                             ;
+InterfaceItem                = ClassMethod
+                             | ['class'], ClassProperty
+                             ;
+ObjectDecl                   = 'object', [ClassParent], {ObjectItem}, 'end'
+                             ;
+ObjectItem                   = Visibility
+                             | ClassMethod
+                             | ClassField
+                             ;
+RecordDecl                   = SimpleRecord
+                             | VariantRecord
+                             ;
+SimpleRecord                 = 'record', {RecordField}, {RecordItem}, 'end'
+                             ;
+VariantRecord                = 'record', {RecordField}, RecordVariantSection, 'end'
+                             ;
+RecordItem                   = ClassMethod
+                             | ClassProperty
+                             | ConstSection
+                             | TypeSection
+                             | RecordField
+                             | ['class'], VarSection
+                             ;
+RecordField                  = IdentList, ':', TypeDecl, {HintingDirective}, ';'
+                             ;
+RecordVariantSection         = 'case', [Ident, ':'], TypeDecl, 'of', (RecordVariant | ';'), {RecordVariant | ';'}
+                             ;
+RecordVariant                = ConstExpression, {',', ConstExpression}, ':', '(', {RecordField}, ')'
+                             ;
+RecordHelperDecl             = 'record', 'helper', 'for', TypeID, {RecordHelperItem},'end'
+                             ;
+RecordHelperItem             = ClassMethod
+                             | ClassProperty
+                             ;
+ClassMethod                  = MethodKey, Ident, [GenericDefinition], [FormalParameterSection], ';', {MethodDirective}
+                             | ['class'], 'function', Ident, [GenericDefinition], [FormalParameterSection], ':', [CustomAttribute], TypeDecl, ';', {MethodDirective}
+                             ;
+ClassMethodResolution        = ['class'], ProcKey, TypeID, '.', Ident, '=', Ident, ';'
+                             ;
+ClassField                   = [CustomAttribute], IdentList, ':', TypeDecl, {HintingDirective}
+                             ;
+ClassProperty                = [CustomAttribute], ['class'], 'property', Ident, [ClassPropertyArray], [':', TypeID],
+                               [ClassPropertyIndex], {ClassPropertySpecifier}, ';'
+                             ;
+ClassPropertyArray           = '[', FormalParameterList, ']'
+                             ;
+ClassPropertyIndex           = 'index', Expression, ';'
+                             ;
+ClassPropertySpecifier       = ClassPropertyReadWrite
+                             | ClassPropertyDispInterface
+                             | 'stored', Expresson, ';'
+                             | 'default', Expression, ';'
+                             | 'default', ';'             // for array properties only (1 per class)
+                             | 'nodefault', ';'
+                             | 'implements', TypeID, ';'  // Not on .NET
+                             ;
+ClassPropertyReadWrite       = 'read', QualifiedIdent  // Waarom qualified ident???
+                             | 'write', QualifiedIdent
+                             | 'add', QualifiedIdent       // .NET Multicast event
+                             | 'remove', QualifiedIdent    // .NET Multicast event
+                             ;
+ClassPropertyDispInterface   = 'readonly', ';'
+                             | 'writeonly', ';'
+                             | DispIDDirective
+                             ;
+Visibility                   = ['strict'], 'protected'
+                             | ['strict'], 'private'
+                             | 'public'
+                             | 'published'
+                             | 'automated'      // win32, deprecated
+                             ;
+//****************************
+section Procedure
+//****************************
+ExportedProcHeading          = 'procedure', Ident, [FormalParameterSection], ':', [CustomAttribute], TypeDecl, ';', {FunctionDirective}
+                             | 'function', Ident, [FormalParameterSection], ';', {FunctionDirective}
+                             ;
+MethodDecl                   = MethodDeclHeading, ';', {MethodDirective}, [MethodBody]
+                             ;
+MethodDeclHeading            = [CustomAttribute], MethodKey, QualifiedIdent, [GenericDefinition], [FormalParameterSection]
+                             | [CustomAttribute], ['class'], 'function', QualifiedIdent, [GenericDefinition], [FormalParameterSection], ':', [CustomAttribute], TypeDecl
+                             ;
+MethodKey                    = ['class'], 'procedure'
+                             | 'constructor'
+                             | 'destructor'
+                             | 'class', 'operator'
+                             ;
+ProcDecl                     = ProcDeclHeading, ';', {FunctionDirective}, [ProcBody]
+                             ;
+ProcDeclHeading              = [CustomAttribute], 'procedure', Ident, [FormalParameterSection]
+                             | [CustomAttribute], 'function', Ident, [FormalParameterSection], ':', TypeDecl
+                             ;
+ProcKey                      = 'function'
+                             | 'procedure'
+                             ;
+FormalParameterSection       = '(', [FormalParameterList], ')'
+                             ;
+FormalParameterList          = FormalParameter, {';', FormalParameter}
+                             ;
+FormalParameter              = [CustomAttribute], [ParmType], IdentList, [':', TypeDecl], ['=', Expression]
+                             ;
+ParmType                     = 'const'
+                             | 'var'
+                             | 'out'
+                             ;
+MethodBody                   = Block, ';'
+                             ;
+ProcBody                     = 'forward', ';', {FunctionDirective}   // CHECKEN ; en directive plaats!
+                             | 'external', {'name', Expression | 'index', Expression}, {FunctionDirective} // CHECKEN directive plaats
+                             | Block, ';'
+                             ;
+//****************************
+section CustomAttributes // (.NET only)
+//****************************
+AssemblyAttribute            = '[', 'assembly', ':', CustomAttributeDecl, ']'
+                             ;
+CustomAttribute              = '[', CustomAttributeDecl, ']'
+                             | AssemblyAttribute
+                             ;
+CustomAttributeDecl          =  NamespacedQualifiedIdent, '(', ExpressionList, ')'
+                             ;
+//****************************
+section Expression
+//****************************
+Expression                   = SimpleExpression, [RelOp, SimpleExpression]
+                             | ClosureExpression
+                             ;
+ClosureExpression            = 'procedure', [FormalParameterSection], Block
+                             | 'function', [FormalParameterSection], ':', TypeDecl, Block
+                             ;
+SimpleExpression             = Term, {AddOp, Term}
+                             ;
+Term                         = Factor, {MulOp, Factor}
+                             ;
+Factor                       = '@', Factor
+                             | '@@', Factor       // used to get address of proc var
+                             | 'not', Factor
+                             | '+', Factor
+                             | '-', Factor
+                             | '^', Ident           // geeft volgnummer van letter
+                             | IntNum
+                             | RealNum
+                             | tkAsmHexNum          // Alleen in asm statement
+                             | 'true'
+                             | 'false'
+                             | 'nil'
+                             | '(', Expression, ')'
+                             | StringFactor
+                             | SetSection
+                             | Designator
+                             | TypeId, '(', Expression, ')'
+                             ;
+StringFactor                 = ControlString, {QuotedString, ControlString}, [QuotedString]
+                             | QuotedString, {ControlString, QuotedString}, [ControlString]
+                             ;
+SetSection                   = '[', [Expression, {(',' | '..'), Expression}], ']'
+                             ;
+Designator                   = ['inherited'],  [NamespacedQualifiedIdent | TypeID], {DesignatorItem}
+                             ;
+DesignatorItem               = '^'
+                             | '.', Ident
+                             | '[', ExpressionList, ']'
+                             | '(', [Expression, [ColonConstruct], {',', Expression, [ColonConstruct]}], ')'
+                             ;
+ExpressionList               = Expression, {',', Expression}
+                             ;
+ColonConstruct               = ':', Expression, [':', Expression]
+                             ;
+// Alleen voor Write/WriteLn.
+AddOp                        = '+'
+                             | '-'
+                             | 'or'
+                             | 'xor'
+                             ;
+MulOp                        = '*'
+                             | '/'
+                             | 'div'
+                             | 'mod'
+                             | 'and'
+                             | 'shl'
+                             | 'shr'
+                             | 'as'
+                             ;
+RelOp                        = '<'
+                             | '>'
+                             | '<='
+                             | '>='
+                             | '<>'
+                             | '='
+                             | 'in'
+                             | 'is'
+                             ;
+//****************************
+section Statement
+//****************************
+Statement                    = [Label, ':'], StatementPart
+                             ;
+StatementPart                = IfStatement
+                             | CaseStatement
+                             | RepeatStatement
+                             | WhileStatement
+                             | ForStatement
+                             | WithStatement
+                             | TryStatement
+                             | RaiseStatement
+                             | AssemblerStatement
+                             | CompoundStatement
+                             | SimpleStatement
+                             ;
+IfStatement                  = 'if', Expression, 'then', Statement, ['else', Statement]
+                             ;
+CaseStatement                = 'case', Expression, 'of', {CaseItem}, ['else', StatementList, [';']], 'end'
+                             ;
+CaseItem                     = CaseLabel, {',', CaseLabel}, ':', Statement, [';'] // Checken of ; sep of scheider is
+                             ;
+CaseLabel                    = Expression, ['..', Expression]
+                             ;
+RepeatStatement              = 'repeat', [StatementList], 'until', Expression
+                             ;
+WhileStatement               = 'while', Expression, 'do', Statement
+                             ;
+ForStatement                 = 'for', Designator, ':=', Expression, 'to', Expression, 'do', Statement
+                             | 'for', Designator, ':=', Expression, 'downto', Expression, 'do', Statement
+                             | 'for', Designator, 'in', Expression, 'do', Statement
+                             ;
+WithStatement                = 'with', Designator, {',', Designator}, 'do', Statement
+                             ;
+CompoundStatement            = 'begin', [StatementList], 'end'
+                             ;
+StatementList                = [Statement], {';', [Statement]}
+                             ;
+SimpleStatement              = GotoStatement
+                             | Designator, ':=', Expression
+                             | Designator // Call
+                             | Designator, ':=', NewStatement // .NET only
+                             ;
+GotoStatement                = 'goto', Label
+                             | 'exit', ['(', Expression, ')']  // jumps out of the procedure
+                             | 'break'                           // leaves the loop
+                             | 'continue'                        // jumps to the next iteration of the loop
+                             ;
+NewStatement                 = 'New', '(', [Expression], {',', [Expression]}, [',', ConstExpression], ')'
+                             ;
+//****************************
+section ConstExpression
+//****************************
+ConstExpression              = Expression
+                             | '(', ConstExpression, {',', ConstExpression}, ')'
+                             | '(', RecordConstExpression, {';', RecordConstExpression}, ')'
+                             ;
+RecordConstExpression        = Ident, ':', ConstExpression
+                             ;
+//****************************
+section ExceptionStatement
+//****************************
+TryStatement                 = 'try', StatementList, 'except', HandlerList, 'end'
+                             | 'try', StatementList, 'finally', StatementList, 'end'
+                             ;
+HandlerList                  = {Handler}, ['else', StatementList]
+                             | StatementList
+                             ;
+Handler                      = 'on', Ident, ':', TypeID, 'do', Statement, ';'
+                             ;
+RaiseStatement               = 'raise', [Designator], ['at', Designator] // CHECKEN!
+                             ;
+//****************************
+section AssemblerStatement
+//****************************
+AssemblerStatement           = 'asm', {AssemblyStatement}, 'end'
+                             ;
+AssemblyStatement            = [AssemblyLabel, ':'], [AssemblyPrefix], AssemblyOpcode, [AssemblyOperand, {',', AssemblyOperand}]
+                             ;
+AssemblyLabel                = Label
+                             | LocalLabelPart, {LocalLabelPart} // hoeft niet te worden gedeclareerd.
+                             ;
+LocalLabelPart               = '@', Label
+                             | tkAsmHexLabel
+                             ;
+AssemblyPrefix               = LockAndRepeatPrefix, [SegmentOverridePrefix]
+                             | SegmentOverridePrefix, [LockAndRepeatPrefix]
+                             ;
+LockAndRepeatPrefix          = 'lock'
+                             | 'repne'
+                             | 'repnz'
+                             | 'rep'
+                             | 'repe'
+                             | 'repz'
+                             ;
+SegmentOverridePrefix        = 'cs'
+                             | 'ds'
+                             | 'es'
+                             | 'fs'
+                             | 'gs'
+                             | 'ss'
+                             ;
+AssemblyOpcode               = PentiumOpcode
+                             | [Ident], AssemblyDirective
+                             ;
+//AssemblyOpcode               = Pentium1Opcode
+//                             | Pentium2Opcode
+//                             | Pentium3Opcode
+//                             | Pentium4Opcode
+//                             | AmdOpcode
+//                             | AmdEnhancedOpcode
+//                             | [Ident], AssemblyDirective
+//                             ;
+AssemblyOperand              = '[', Idx16Offset, ']', ['+', (Disp8|Disp16)]
+                             | '[', 'bx', ']', ['+', (Disp8|Disp16)]
+                             | [disp8|disp32], '[', IdxReg32, ']'
+                             | (disp8|disp32), '[', 'ebp', ']'
+                             | [disp8|disp32], '[', '--', ']', '[', '--', ']'
+                             | '[', IdxReg32, '*', RegMul, ']'
+                             | '[', 'ebp', '*', RegMul, ']'
+                             | Reg32
+                             | Reg16
+                             | Reg8H
+                             | Reg8L
+                             | RegMM
+                             | RegXMM
+                             | FloatReg
+                             | Disp16
+                             ;
+Reg8L                        = 'al'
+                             | 'bl'
+                             | 'cl'
+                             | 'dl'
+                             ;
+Reg8H                        = 'ah'
+                             | 'bh'
+                             | 'ch'
+                             | 'dh'
+                             ;
+Reg16                        = 'ax'
+                             | 'bx'
+                             | 'cx'
+                             | 'dx'
+                             | 'si'
+                             | 'di'
+                             | 'sp'
+                             | 'bp'
+                             ;
+Reg32                        = IdxReg32
+                             | RegDebug
+                             | RegControl
+                             | 'esp'
+                             | 'ebp'
+                             ;
+IdxReg32                     = 'eax'
+                             | 'ebx'
+                             | 'ecx'
+                             | 'edx'
+                             | 'esi'
+                             | 'edi'
+                             ;
+RegMM                        = 'mm0'
+                             | 'mm1'
+                             | 'mm2'
+                             | 'mm3'
+                             | 'mm4'
+                             | 'mm5'
+                             | 'mm6'
+                             | 'mm7'
+                             ;
+RegXMM                       = 'xmm0'
+                             | 'xmm1'
+                             | 'xmm2'
+                             | 'xmm3'
+                             | 'xmm4'
+                             | 'xmm5'
+                             | 'xmm6'
+                             | 'xmm7'
+                             ;
+Idx16Offset                  = [('bx' | 'bp'), '+'], ('si'|'di')
+                             ;
+RegMul                       = '2'
+                             | '4'
+                             | '8'
+                             ;
+RegControl                   = 'cr0'
+                             | 'cr1'
+                             | 'cr2'
+                             | 'cr3'
+                             | 'cr4'
+                             ;
+RegDebug                     = 'dr0'
+                             | 'dr1'
+                             | 'dr2'
+                             | 'dr3'
+                             | 'dr4'
+                             | 'dr5'
+                             | 'dr6'
+                             | 'dr7'
+                             ;
+FloatReg                     = 'st', ['(', FloatRegIndex, ')']
+                             ;
+FloatRegIndex                = '0'
+                             | '1'
+                             | '2'
+                             | '3'
+                             | '4'
+                             | '5'
+                             | '6'
+                             | '7'
+                             ;
+Disp8                        = ConstExpression
+                             ;
+Disp16                       = ConstExpression
+                             ;
+Disp32                       = ConstExpression
+                             ;
+PentiumOpcode                = 'aaa'
+                             | 'aad'
+                             | 'aam'
+                             | 'aas'
+                             | 'adc'
+                             | 'add'
+                             | 'addps'
+                             | 'addss'
+                             | 'and'
+                             | 'andnps'
+                             | 'andps'
+                             | 'arpl'
+                             | 'bound'
+                             | 'bsf'
+                             | 'bsr'
+                             | 'bswap'
+                             | 'bt'
+                             | 'btc'
+                             | 'btr'
+                             | 'bts'
+                             | 'call'
+                             | 'cbw'
+                             | 'cdq'
+                             | 'clc'
+                             | 'cld'
+                             | 'cli'
+                             | 'clts'
+                             | 'cmc'
+                             | 'cmova'
+                             | 'cmovae'
+                             | 'cmovb'
+                             | 'cmovbe'
+                             | 'cmovc'
+                             | 'cmove'
+                             | 'cmovg'
+                             | 'cmovge'
+                             | 'cmovl'
+                             | 'cmovle'
+                             | 'cmovna'
+                             | 'cmovnae'
+                             | 'cmovnb'
+                             | 'cmovnbe'
+                             | 'cmovnc'
+                             | 'cmovne'
+                             | 'cmovng'
+                             | 'cmovnge'
+                             | 'cmovnl'
+                             | 'cmovnle'
+                             | 'cmp'
+                             | 'cmpps'
+                             | 'cmps'
+                             | 'cmpsd'
+                             | 'cmpsb'
+                             | 'cmpsw'
+                             | 'cmpss'
+                             | 'cmpxchg'
+                             | 'cmpxchg8b'
+                             | 'comiss'
+                             | 'cpuid'
+                             | 'cvtpi2ps'
+                             | 'cvtsi2ss'
+                             | 'cvtss2si'
+                             | 'cvttps2pi'
+                             | 'cvttss2si'
+                             | 'cwd'
+                             | 'cwde'
+                             | 'daa'
+                             | 'das'
+                             | 'dec'
+                             | 'div'
+                             | 'divps'
+                             | 'divss'
+                             | 'emms'
+                             | 'enter'
+//                             | 'esc'
+                             | 'f2xm1'
+                             | 'fabs'
+                             | 'fadd'
+                             | 'faddp'
+                             | 'fbld'
+                             | 'fbstp'
+                             | 'fchs'
+                             | 'fclex'
+                             | 'fcmovb'
+                             | 'fcmovbe'
+                             | 'fcmove'
+                             | 'fcmovnb'
+                             | 'fcmovnbe'
+                             | 'fcmovne'
+                             | 'fcmovnu'
+                             | 'fcmovu'
+                             | 'fcom'
+                             | 'fcomi'
+                             | 'fcomip'
+                             | 'fcomp'
+                             | 'fcompp'
+                             | 'fcos'
+                             | 'fdecstp'
+//                             | 'fdisi'
+                             | 'fdiv'
+                             | 'fdivp'
+                             | 'fdivr'
+                             | 'fdivrp'
+//                             | 'feni'
+                             | 'ffree'
+                             | 'fiadd'
+                             | 'ficom'
+                             | 'ficomp'
+                             | 'fidiv'
+                             | 'fidivr'
+                             | 'fild'
+                             | 'fimul'
+                             | 'fincstp'
+                             | 'finit'
+                             | 'fist'
+                             | 'fistp'
+                             | 'fisub'
+                             | 'fisubr'
+                             | 'fld'
+                             | 'fld1'
+                             | 'fldcw'
+                             | 'fldenv'
+                             | 'fldl2e'
+                             | 'fldl2t'
+                             | 'fldlg2'
+                             | 'fldln2'
+                             | 'fldpi'
+                             | 'fldz'
+                             | 'fmul'
+                             | 'fmulp'
+                             | 'fnclex'
+//                             | 'fndisi'
+//                             | 'fneni'
+                             | 'fninit'
+                             | 'fnop'
+                             | 'fnsave'
+                             | 'fnstcw'
+                             | 'fnstenv'
+                             | 'fnstsw' // Niet in lijst Intell?
+                             | 'fpatan'
+                             | 'fprem'
+                             | 'fprem1'
+                             | 'fptan'
+                             | 'frndint'
+                             | 'frstor'
+                             | 'fsave'
+                             | 'fscale'
+//                             | 'fsetpm'
+                             | 'fsin'
+                             | 'fsincos'
+                             | 'fsqrt'
+                             | 'fst'
+                             | 'fstcw'
+                             | 'fstenv'
+                             | 'fstp'
+                             | 'fstsw'
+                             | 'fsub'
+                             | 'fsubp'
+                             | 'fsubr'
+                             | 'fsubrp'
+                             | 'ftst'
+                             | 'fucom'
+                             | 'fucomi'
+                             | 'fucomip'
+                             | 'fucomp'
+                             | 'fucompp'
+                             | 'fwait'
+                             | 'fxam'
+                             | 'fxch'
+                             | 'fxrstor'
+                             | 'fxsave'
+                             | 'fxtract'
+                             | 'fyl2x'
+                             | 'fyl2xp1'
+                             | 'hlt'
+                             | 'idiv'
+                             | 'imul'
+                             | 'in'
+                             | 'inc'
+                             | 'ins'
+                             | 'insd'
+                             | 'insb'
+                             | 'insw'
+                             | 'int'
+                             | 'into'
+                             | 'invd'
+                             | 'invlpg'
+                             | 'iret'
+                             | 'iretd'
+                             | 'ja'
+                             | 'jae'
+                             | 'jb'
+                             | 'jbe'
+                             | 'jc'
+                             | 'jcxz'
+                             | 'je'
+                             | 'jecxz'
+                             | 'jg'
+                             | 'jge'
+                             | 'jl'
+                             | 'jle'
+                             | 'jmp'
+                             | 'jna'
+                             | 'jnae'
+                             | 'jnb'
+                             | 'jnbe'
+                             | 'jnc'
+                             | 'jne'
+                             | 'jng'
+                             | 'jnge'
+                             | 'jnl'
+                             | 'jnle'
+                             | 'jno'
+                             | 'jnp'
+                             | 'jns'
+                             | 'jnz'
+                             | 'jo'
+                             | 'jp'
+                             | 'jpe'
+                             | 'jpo'
+                             | 'js'
+                             | 'jz'
+                             | 'lahf'
+                             | 'lar'
+                             | 'ldmxcsr'
+                             | 'lds'
+                             | 'les'
+                             | 'lfs'
+                             | 'lgs'
+                             | 'lss'
+                             | 'lea'
+                             | 'leave'
+                             | 'lgdt'
+                             | 'lidt'
+                             | 'lldt'
+                             | 'lmsw'
+                             | 'lods'
+                             | 'lodsb'
+                             | 'lodsd'
+                             | 'lodsw'
+                             | 'loop'
+                             | 'loope'
+                             | 'loopne'
+                             | 'loopnz'
+                             | 'loopz'
+                             | 'lsl'
+                             | 'ltr'
+                             | 'maskmovq'
+                             | 'maxps'
+                             | 'maxss'
+                             | 'minps'
+                             | 'minss'
+                             | 'mov'
+                             | 'movaps'
+                             | 'movd'
+                             | 'movhlps'
+                             | 'movhps'
+                             | 'movlhps'
+                             | 'movlps'
+                             | 'movmskps'
+                             | 'movntps'
+                             | 'movntq'
+                             | 'movq'
+                             | 'movs'
+                             | 'movsb'
+                             | 'movsd'
+                             | 'movss'
+                             | 'movsw'
+                             | 'movsx'
+                             | 'movups'
+                             | 'movzx'
+                             | 'mul'
+                             | 'mulps'
+                             | 'mulss'
+                             | 'neg'
+                             | 'nop'
+                             | 'not'
+                             | 'or'
+                             | 'orps'
+                             | 'out'
+                             | 'outs'
+                             | 'outsb'
+                             | 'outsd'
+                             | 'outsw'
+                             | 'packssdw'
+                             | 'packsswb'
+                             | 'packuswb'
+                             | 'paddb'
+                             | 'paddd'
+                             | 'paddsb'
+                             | 'paddusb'
+                             | 'passusw'
+                             | 'paddsw'
+                             | 'paddw'
+                             | 'pand'
+                             | 'pandn'
+                             | 'pavgb'
+                             | 'pavgw'
+                             | 'pcmpeqb'
+                             | 'pcmpeqd'
+                             | 'pcmpeqw'
+                             | 'pcmpgtb'
+                             | 'pcmpgtd'
+                             | 'pcmpgtw'
+                             | 'pextrw'
+                             | 'pinsrw'
+                             | 'pmaddwd'
+                             | 'pmaxsw'
+                             | 'pmaxub'
+                             | 'pminsw'
+                             | 'pminub'
+                             | 'pmovmskb'
+                             | 'pmulhuw'
+                             | 'pmulhw'
+                             | 'pmullw'
+                             | 'pop'
+                             | 'popa'
+                             | 'popad'
+                             | 'popf'
+                             | 'popfd'
+                             | 'por'
+                             | 'prefetch'
+                             | 'psadbw'
+                             | 'pshufw'
+                             | 'pslld'
+                             | 'psllq'
+                             | 'psllw'
+                             | 'psrad'
+                             | 'psraw'
+                             | 'psrld'
+                             | 'psrlq'
+                             | 'psrlw'
+                             | 'psubb'
+                             | 'psubd'
+                             | 'psubw'
+                             | 'psubsb'
+                             | 'psubsw'
+                             | 'psubusb'
+                             | 'psubusw'
+//                             | 'punpckhbd'
+//                             | 'punpckhbq'
+//                             | 'punpckhbw'
+//                             | 'punpcklbd'
+//                             | 'punpcklbq'
+                             | 'punpcklbw'
+                             | 'push'
+                             | 'pusha'
+                             | 'pushad'
+                             | 'pushf'
+                             | 'pushfd'
+                             | 'pxor'
+                             | 'rcl'
+                             | 'rcpps'
+                             | 'rcpss'
+                             | 'rcr'
+                             | 'rdmsr'
+                             | 'rdpmc'
+                             | 'rdtsc'
+                             | 'ret'
+                             | 'rol'
+                             | 'ror'
+                             | 'rsm'
+                             | 'rsqrtps'
+                             | 'rsqrtss'
+                             | 'sahf'
+                             | 'sal'
+                             | 'sar'
+                             | 'sbb'
+                             | 'scas'
+                             | 'scasb'
+                             | 'scasd'
+                             | 'scasw'
+//                             | 'set'
+                             | 'seta'
+                             | 'setae'
+                             | 'setb'
+                             | 'setbe'
+                             | 'setc'
+                             | 'sete'
+                             | 'setg'
+                             | 'setge'
+                             | 'setl'
+                             | 'setle'
+                             | 'setna'
+                             | 'setnae'
+                             | 'setnb'
+                             | 'setnbe'
+                             | 'setnc'
+                             | 'setne'
+                             | 'setng'
+                             | 'setnge'
+                             | 'setnl'
+                             | 'setnle'
+                             | 'setno'
+                             | 'setnp'
+                             | 'setns'
+                             | 'setnz'
+                             | 'seto'
+                             | 'setp'
+                             | 'setpe'
+                             | 'setpo'
+                             | 'sets'
+                             | 'setz'
+                             | 'sfence'
+                             | 'sgdt'
+                             | 'shl'
+                             | 'shld'
+                             | 'shr'
+                             | 'shrd'
+                             | 'shufps'
+                             | 'sidt'
+                             | 'sldt'
+                             | 'smsw'
+                             | 'sqrtps'
+                             | 'sqrtss'
+                             | 'stc'
+                             | 'std'
+                             | 'sti'
+                             | 'stmxcsr'
+                             | 'stos'
+                             | 'stosb'
+                             | 'stosd'
+                             | 'stosw'
+                             | 'str'
+                             | 'sub'
+                             | 'subps'
+                             | 'subss'
+                             | 'sysenter'
+                             | 'sysexit'
+                             | 'test'
+                             | 'ucomiss'
+                             | 'ud2'
+                             | 'unpckhps'
+                             | 'unpcklps'
+                             | 'verr'
+                             | 'verw'
+                             | 'wait'
+                             | 'wbinvd'
+                             | 'wrmsr'
+                             | 'xadd'
+                             | 'xchg'
+                             | 'xlat'
+                             | 'xlatb'
+                             | 'xor'
+                             | 'xorps'
+                             ;
+//Pentium1Opcode               = Ident // Pentium family. Documentatie zoeken!
+//                             ;
+//Pentium2Opcode               = Ident // Pentium Pro and Pentium II. Documentatie zoeken!
+//                             ;
+//Pentium3Opcode               = Ident // Pentium III. Documentatie zoeken!
+//                             ;
+//Pentium4Opcode               = Ident // Pentium 4. Documentatie zoeken!
+//                             ;
+//AmdOpcode                    = Ident // AMD 3DNow! (from the AMD K6 onwards). Documentatie zoeken!
+//                             ;
+//AmdEnhancedOpcode            = Ident // AMD Enhanced 3DNow! (from the AMD Athlon onwards). Documentatie zoeken!
+//                             ;
+AssemblyDirective            = 'db'   // byte
+                             | 'dw'   // word
+                             | 'dd'   // double word
+                             | 'dq'   // quad word
+                             ;
+//****************************
+section Directive
+//****************************
+MethodDirective              = ReintroduceDirective       // 1
+                             | OverloadDirective          // 2
+                             | BindingDirective           // 3
+                             | AbstractDirective          // 3 virtual;
+                             | InlineDirective            // 4 niet virtual or dynamic
+                             | CallConvention             // 4
+                             | HintingDirective, ';'      // 4 (niet abstract)
+                             | DispIDDirective
+                             ;
+FunctionDirective            = OverloadDirective          // 1
+                             | InlineDirective            // 1
+                             | CallConvention             // 1
+                             | OldCallConventionDirective // 1
+                             | HintingDirective, ';'      // 1
+                             | ExternalDirective          // 1
+                             | 'unsafe', ';'              // 1 .Net?
+                             ;
+ReintroduceDirective         = 'reintroduce', ';'
+                             ;
+OverloadDirective            = 'overload', ';'
+                             ;
+BindingDirective             = 'message', Expression, ';'
+                             | 'static', ';'
+                             | 'dynamic', ';'
+                             | 'override', ';'
+                             | 'virtual', ';'
+                             ;
+AbstractDirective            = 'abstract', ';'
+                             | 'final', ';'
+                             ;
+InlineDirective              = 'inline', ';'
+                             | 'assembler', ';'        // deprecated
+                             ;
+CallConvention               = 'cdecl', ';'    //
+                             | 'pascal', ';'   //
+                             | 'register', ';' //
+                             | 'safecall', ';' //
+                             | 'stdcall', ';'  //
+                             | 'export', ';'   // deprecated
+                             ;
+OldCallConventionDirective   = 'far', ';'      // deprecated
+                             | 'local', ';'    // niet in windows, maakt functie niet exporteerbaar
+                             | 'near', ';'     // deprecated
+                             ;
+HintingDirective             = 'deprecated', [StringFactor]
+                             | 'experimental'  // added 2006
+                             | 'platform'
+                             | 'library'
+                             ;
+ExternalDirective            = 'varargs', ';'   // alleen bij external cdecl
+                             | 'external', ';'
+                             | 'external', ConstExpression, {ExternalSpecifier}, ';' // Expression = dll name
+                             ;
+ExternalSpecifier            = 'name', ConstExpression
+                             | 'index', ConstExpression   // specific to a platform
+                             ;
+DispIDDirective              = 'dispid', Expression, ';'
+                             ;
+//****************************
+section General
+//****************************
+Ident                        = tkIdentifier
+                             | '&', ReservedWord
+                             ;
+ReservedWord                 = tkIdentifier  // Keyword
+                             ;
+IdentList                    = Ident, {',', Ident}
+                             ;
+Label                        = tkIdentifier
+                             | tkIntNum
+                             | tkHexNum
+                             ;
+IntNum                       = tkIntNum
+                             | tkHexNum
+                             ;
+RealNum                      = tkRealNum
+                             ;
+NamespacedQualifiedIdent     = [NamespaceName, '.'], QualifiedIdent
+                             ;
+NamespaceName                = Ident, {'.', Ident}
+                             ;
+QualifiedIdent               =  {Ident, '.'}, Ident
+                             ;
+//****************************
+section Token
+//****************************
+tkIdentifier                 = (alpha | '_'), {alpha | digit | '_'}
+                             ;
+alpha                        = 'a'..'z'
+                             | 'A'..'Z'
+                             ;
+digit                        = '0'..'9'
+                             ;
+digitseq                     = digit, {digit}
+                             ;
+hexdigit                     = digit | 'a'..'f' | 'A'..'F'
+                             ;
+hexdigitseq                  = hexdigit, {hexdigit}
+                             ;
+tkIntNum                     = digitseq
+                             ;
+tkRealNum                    = digitseq, ['.', [digitseq]], [('e'|'E'), ['+'|'-'], digitseq]
+                             ;
+tkHexNum                     = '$', hexdigitseq
+                             ;
+tkAsmHexNum                  = hexdigitseq, ('h'|'H')
+                             ;
+tkAsmHexLabel                = hexdigitseq, ':'
+                             ;
+QuotedString                 = "'", {stringchar}, "'"
+                             ;
+stringchar                   = "'" | any but "'"
+                             ;
+ControlString                = controlchar, {controlchar}
+                             ;
+controlchar                  = '#', digitseq
+                             | '#', '$', hexdigitseq
+                             ;

@@ -1,0 +1,1233 @@
+{//*********************************************************************
+ logic game example with form, objects & structure, loc's=696, example _175
+ How to play: Create horizontal lines using the falling blocks. When you make a
+  line, it is cleared from the screen. The game is over when the blocks pile up
+  and reach the top of the screen. Use the left and right arrow keys to move
+  blocks,  and down arrow key to drop pieces faster. 
+  Runs in maXbox www.softwareschule.ch
+  ********************************************************************* }
+// declaration of 1 form class possible , bug of inc(score+5) solved!
+
+program TETRIS_Solution;
+
+const
+  GlassWidth=10;
+  GlassHeight=19; //orig is 23
+  BarWidth= 14;
+  BarHeight=14;
+  NextBarWidth= 9;
+  NextBarHeight=9;
+  TopOfs=    6;
+  LeftOfs=   5;
+  FieldWidth=4;
+  MaxFigureNumber=7;
+  MaxCornerNumber=4;
+  MaxFigureSize=  4;
+  MaxFigureColor= 7;
+
+
+type                                              
+  TMoveDirect=  (mdDown,mdLeft,mdRight);
+  TFigureCorner= (fc00,fc90,fc180,fc270);
+  TFigureCornerSet = set of TFigureCorner;
+  TFigureWorksheet1 = array [1..4] of Byte;
+  TFigureWorksheet = array [1..4] of TFigureWorksheet1;
+  TGlassWorkSheet1 = array [1..GlassWidth] of Byte;
+  TGlassWorkSheet = array [1..GlassHeight] of TGlassWorkSheet1;
+
+
+var
+  pForm: TForm;
+  sbutton: TButton;
+  label3, label4: TLabel;
+  Timer1: TTimer;
+  bevel3: TBevel;
+  GlassWS, OldGlassWS:  TGlassWorkSheet;
+  Triada, LCorner, RCorner: TFigureWorksheet;
+  LZigzag, RZigzag, Stick, Box: TFigureWorkSheet;
+  FigureWS: TFigureWorksheet;
+    Level,cntr:   Byte;
+    Score:        Longint;
+    ReentTimer:   Boolean;
+    ReentKeys:    Boolean;
+    FigureActive: Boolean;
+    FigureType:   Byte;
+    FigureX:      Byte;
+    FigureY:      Byte;
+    FigureCorner: TFigureCorner;
+    FigureMove:   TMoveDirect;
+    FirstColor:   Byte;
+    SecondColor:  Byte;
+    FirstFigure:  Byte;
+    SecondFigure: Byte;
+    NextTopOfs:   Integer;
+    NextLeftOfs:  Integer;
+    RedrawSheet:  Boolean;
+
+//----------------------Sub Routines--------------------------------------- 
+
+procedure Move(const Source: TFigureWorksheet;
+                      var Dest: TFigureWorksheet; count : Integer );
+//{$IFDEF PUREPASCAL}
+var
+  I,J: Integer;
+begin
+  //S:= PChar(@Source);
+  //D:= PChar(@Dest);
+  //if Cardinal(D) > Cardinal(S) then
+  //if D[1][1] > S[1][1] then
+   for J:= 1 to 4 do
+    for I:= 1 to 4  do
+     if Source[J][I] > 0 then  //special effect
+      Dest[J][I]:= Source[J][I]
+end;
+
+
+procedure MoveOld(const Source: TGlassWorksheet;
+                      var Dest: TGlassWorksheet; count : Integer );
+//{$IFDEF PUREPASCAL}
+var
+  I,J: Integer;
+begin
+  //if high(S) = high(D) then Exit;
+  for J:= 1 to GlassHeight do
+    for I:= 1 to GlassWidth  do
+    //if Source[J][I] > 0 then
+      Dest[J][I]:= Source[J][I]
+end;
+
+procedure FillCharOldGlass(sign: byte);
+var
+  I,J: Byte;
+begin
+    for J:= 1 to GlassHeight  do
+      for I:= 1 to GlassWidth  do
+        OldGlassWS[J][I]:= sign;
+end;        
+
+procedure FillCharCS(sign: byte; var worksheet: TFigureWorksheet);
+var I,J: Byte;
+begin
+    for J:= 1 to 4  do
+      for I:= 1 to 4  do
+        worksheet[J][I]:= sign;
+end;
+
+procedure FillCharWS(sign: byte);
+var I,J: Byte;
+begin
+    for J:= 1 to 4 do
+      for I:= 1 to 4  do
+        FigureWS[J][I]:= sign;
+end;        
+
+procedure SetFigures;
+begin
+  Triada[1][1]:= 0;  Triada[1][2]:= 1;  Triada[1][3]:= 0;  Triada[1][4]:= 0;
+  Triada[2][1]:= 1;  Triada[2][2]:= 1;  Triada[2][3]:= 1;  Triada[2][4]:= 0;
+  Triada[3][1]:= 0;  Triada[3][2]:= 0;  Triada[3][3]:= 0;  Triada[3][4]:= 0;
+  Triada[4][1]:= 0;  Triada[4][2]:= 0;  Triada[4][3]:= 0;  Triada[4][4]:= 0;
+
+  FigureWS[1][1]:= 0; FigureWS[1][2]:= 0; FigureWS[1][3]:= 0; FigureWS[1][4]:= 0;
+  FigureWS[2][1]:= 0; FigureWS[2][2]:= 0; FigureWS[2][3]:= 0; FigureWS[2][4]:= 0;
+  FigureWS[3][1]:= 0; FigureWS[3][2]:= 0; FigureWS[3][3]:= 0; FigureWS[3][4]:= 0;
+  FigureWS[4][1]:= 0; FigureWS[4][2]:= 0; FigureWS[4][3]:= 0; FigureWS[4][4]:= 0;
+
+  LCorner[1][1]:= 1;  LCorner[1][2]:= 1;  LCorner[1][3]:= 1;  LCorner[1][4]:= 0;
+  LCorner[2][1]:= 1;  LCorner[2][2]:= 0;  LCorner[2][3]:= 0;  LCorner[2][4]:= 0;
+  LCorner[3][1]:= 0;  LCorner[3][2]:= 0;  LCorner[3][3]:= 0;  LCorner[3][4]:= 0;
+  LCorner[4][1]:= 0;  LCorner[4][2]:= 0;  LCorner[4][3]:= 0;  LCorner[4][4]:= 0;
+
+  RCorner[1][1]:= 1;  RCorner[1][2]:= 1;  RCorner[1][3]:= 1;  RCorner[1][4]:= 0;
+  RCorner[2][1]:= 0;  RCorner[2][2]:= 0;  RCorner[2][3]:= 1;  RCorner[2][4]:= 0;
+  RCorner[3][1]:= 0;  RCorner[3][2]:= 0;  RCorner[3][3]:= 0;  RCorner[3][4]:= 0;
+  RCorner[4][1]:= 0;  RCorner[4][2]:= 0;  RCorner[4][3]:= 0;  RCorner[4][4]:= 0;
+
+  LZigzag[1][1]:= 1;  LZigzag[1][2]:= 1;  LZigzag[1][3]:= 0;  LZigzag[1][4]:= 0;
+  LZigzag[2][1]:= 0;  LZigzag[2][2]:= 1;  LZigzag[2][3]:= 1;  LZigzag[2][4]:= 0;
+  LZigzag[3][1]:= 0;  LZigzag[3][2]:= 0;  LZigzag[3][3]:= 0;  LZigzag[3][4]:= 0;
+  LZigzag[4][1]:= 0;  LZigzag[4][2]:= 0;  LZigzag[4][3]:= 0;  LZigzag[4][4]:= 0;
+
+  RZigzag[1][1]:= 0;  RZigzag[1][2]:= 1;  RZigzag[1][3]:= 1;  RZigzag[1][4]:= 0;
+  RZigzag[2][1]:= 1;  RZigzag[2][2]:= 1;  RZigzag[2][3]:= 0;  RZigzag[2][4]:= 0;
+  RZigzag[3][1]:= 0;  RZigzag[3][2]:= 0;  RZigzag[3][3]:= 0;  RZigzag[3][4]:= 0;
+  RZigzag[4][1]:= 0;  RZigzag[4][2]:= 0;  RZigzag[4][3]:= 0;  RZigzag[4][4]:= 0;
+
+  Stick[1][1]:= 1;  Stick[1][2]:= 1;  Stick[1][3]:= 1;  Stick[1][4]:= 1;
+  Stick[2][1]:= 0;  Stick[2][2]:= 0;  Stick[2][3]:= 0;  Stick[2][4]:= 0;
+  Stick[3][1]:= 0;  Stick[3][2]:= 0;  Stick[3][3]:= 0;  Stick[3][4]:= 0;
+  Stick[4][1]:= 0;  Stick[4][2]:= 0;  Stick[4][3]:= 0;  Stick[4][4]:= 0;
+ 
+  Box[1][1]:= 1;  Box[1][2]:= 1;  Box[1][3]:= 0;  Box[1][4]:= 0;
+  Box[2][1]:= 1;  Box[2][2]:= 1;  Box[2][3]:= 0;  Box[2][4]:= 0;
+  Box[3][1]:= 0;  Box[3][2]:= 0;  Box[3][3]:= 0;  Box[3][4]:= 0;
+  Box[4][1]:= 0;  Box[4][2]:= 0;  Box[4][3]:= 0;  Box[4][4]:= 0;
+ 
+ {FWSheet[1][1]:= 0;  FWSheet[1][2]:= 0;  FWSheet[1][3]:= 0;  FWSheet[1][4]:= 0;
+  FWSheet[2][1]:= 0;  FWSheet[2][2]:= 0;  FWSheet[2][3]:= 0;  FWSheet[2][4]:= 0;
+  FWSheet[3][1]:= 0;  FWSheet[3][2]:= 0;  FWSheet[3][3]:= 0;  FWSheet[3][4]:= 0;
+  FWSheet[4][1]:= 0;  FWSheet[4][2]:= 0;  FWSheet[4][3]:= 0;  FWSheet[4][4]:= 0;}
+end;
+
+procedure SetFigureColor;
+var I,J: Byte;
+begin
+  for I:= 1 to MaxFigureSize do
+    for J:= 1 to MaxFigureSize do
+      if FigureWS[I][J] > 0 then FigureWS[I][J]:= SecondColor;
+end;
+
+function FigureXSize: Byte;
+var I,J,K: Byte;
+begin
+  K:= 0;
+  for J:= 1 to MaxFigureSize do
+    for I:= 1 to MaxFigureSize do
+      if FigureWS[J][I]>0 then
+        if K<I then K:= I;
+  result:= K;
+end;
+
+function FigureYSize: Byte;
+var I,J,K: Byte;
+begin
+  K:= 0;
+  for J:= 1 to MaxFigureSize do
+    for I:= 1 to MaxFigureSize do
+      if FigureWS[J][I]>0 then
+        if K<J then K:= J;
+  result:= K;
+end;
+
+//------------------------------------Procedures Routines-------------------
+procedure GenerateNewFigure;         
+begin
+  Timer1.Enabled:= False;
+  SecondFigure:= FirstFigure;
+  SecondColor:= FirstColor;
+  FigureType:= SecondFigure;
+  FigureX:= 5;
+  FigureY:= 0;
+  FigureCorner:= fc270;
+  FillCharWS(0);    //is 0 or 255?
+  writeln('debug figure: '+inttostr(figuretype))
+  case FigureType of
+    0: Move(Triada,FigureWS,SizeOf(FigureWS));
+    1: Move(LCorner,FigureWS,SizeOf(FigureWS));
+    2: Move(RCorner,FigureWS,SizeOf(FigureWS));
+    3: Move(LZigzag,FigureWS,SizeOf(FigureWS));
+    4: Move(RZigzag,FigureWS,SizeOf(FigureWS));
+    5: Move(Stick,FigureWS,SizeOf(FigureWS));
+    6: Move(Box,FigureWS,SizeOf(FigureWS));
+  end;
+  SetFigureColor;
+  FigureMove:= mdDown;
+  FirstFigure:= Random(MaxFigureNumber);
+  FirstColor:= Random(MaxFigureColor)+1;
+  Timer1.Enabled:= True;
+end;
+
+procedure ClearFigureIntoGlass;
+var I,J: Byte;
+begin
+  for J:= 1 to FigureYSize do
+    for I:= 1 to FigureXSize do
+      if FigureWS[J][I]>0 then
+        GlassWS[FigureY+J][FigureX+I]:= 0;
+end;
+
+procedure FormPaint(Sender: TObject);
+var
+  X1,Y1,X2,Y2: Integer;
+  NewRect:     TRect;
+  I,J:         Byte;
+  CurSheet:    TFigureWorksheet;
+  NextColor:   TColor;
+begin
+if RedrawSheet then FillCharoldGlass(255); //#255
+  for J:= 1 to GlassHeight do
+    for I:= 1 to GlassWidth do begin
+      if GlassWS[J][I]= OldGlassWS[J][I] then Continue;
+      X1:= LeftOfs+(I-1)*BarWidth;
+      X2:= X1+BarWidth;
+      Y1:= TopOfs+(J-1)*BarHeight;
+      Y2:= Y1+BarHeight;
+      case GlassWS[J][I] of
+        0: pForm.Canvas.Brush.Color:= clNavy;
+        1: pForm.Canvas.Brush.Color:= clSilver;
+        2: pForm.Canvas.Brush.Color:= clOlive;
+        3: pForm.Canvas.Brush.Color:= clGray;
+        4: pForm.Canvas.Brush.Color:= clBlue;
+        5: pForm.Canvas.Brush.Color:= clPurple;
+        6: pForm.Canvas.Brush.Color:= clAqua;
+        7: pForm.Canvas.Brush.Color:= clTeal;
+        8: pForm.Canvas.Brush.Color:= clWhite;
+      end;
+      if GlassWS[J][I]>0 then begin
+        NewRect := Rect(X1+1,Y1+1,X2-1,Y2-1);
+        pForm.Canvas.FillRect(NewRect);
+        pForm.Canvas.Pen.Color:= clGray;
+        pForm.Canvas.MoveTo(X1,Y1);
+        pForm.Canvas.LineTo(X1,Y2-1);
+        pForm.Canvas.LineTo(X2-1,Y2-1);
+        pForm.Canvas.Pen.Color:= clWhite;
+        pForm.Canvas.LineTo(X2-1,Y1);
+        pForm.Canvas.LineTo(X1,Y1);
+      end
+      else begin
+        NewRect:= Rect(X1,Y1,X2,Y2);
+        pForm.Canvas.FillRect(NewRect);
+      end;
+    end;
+  case FirstFigure of
+    0: Move(Triada,CurSheet,SizeOf(CurSheet));
+    1: Move(LCorner,CurSheet,SizeOf(CurSheet));
+    2: Move(RCorner,CurSheet,SizeOf(CurSheet));
+    3: Move(LZigzag,CurSheet,SizeOf(CurSheet));
+    4: Move(RZigzag,CurSheet,SizeOf(CurSheet));
+    5: Move(Stick,CurSheet,SizeOf(CurSheet));
+    6: Move(Box,CurSheet,SizeOf(CurSheet));
+  end;
+  case FirstColor of
+    0: NextColor:= clNavy;
+    1: NextColor:= clSilver;
+    2: NextColor:= clOlive;
+    3: NextColor:= clGray;
+    4: NextColor:= clBlue;
+    5: NextColor:= clPurple;
+    6: NextColor:= clAqua;
+    7: NextColor:= clTeal;
+    8: NextColor:= clWhite;
+  end;
+  for J:= 1 to MaxFigureSize-2 do
+    for I:= 1 to MaxFigureSize do begin
+      X1:= NextLeftOfs+(I-1)*NextBarWidth;
+      X2:= X1+NextBarWidth;
+      Y1:= NextTopOfs+(J-1)*NextBarHeight;
+      Y2:= Y1+NextBarHeight;
+      if CurSheet[J][I]>0 then begin
+        NewRect:= Rect(X1+1,Y1+1,X2-1,Y2-1);
+        pForm.Canvas.Brush.Color:= NextColor;
+        pForm.Canvas.FillRect(NewRect);
+        pForm.Canvas.Pen.Color:= clGray;
+        pForm.Canvas.MoveTo(X1,Y1);
+        pForm.Canvas.LineTo(X1,Y2-1);
+        pForm.Canvas.LineTo(X2-1,Y2-1);
+        pForm.Canvas.Pen.Color:= clWhite;
+        pForm.Canvas.LineTo(X2-1,Y1);
+        pForm.Canvas.LineTo(X1,Y1);
+      end
+      else begin   //foresight or clSilver
+        pForm.Canvas.Brush.Color:= random(clblue);
+        NewRect:= Rect(X1,Y1,X2,Y2);
+        pForm.Canvas.FillRect(NewRect);
+      end;
+    end;
+  MoveOld(GlassWS,OldGlassWS,SizeOf(OldGlassWS));
+end;
+
+function PutFigureIntoGlass(MoveDirect: TMoveDirect): Boolean;
+var
+  I,J: Byte;
+begin
+  result:= True;
+  if (FigureY+FigureYSize > GlassHeight) and (MoveDirect=mdDown) then begin
+    Dec(FigureY);
+    result:= False;
+    Exit;
+  end else
+    while (FigureX+FigureXSize > GlassWidth) and (MoveDirect=mdDown) do
+       Dec(FigureX);
+    for J:= 1 to FigureYSize do begin      //-1 anti Tetris !!
+      for I:= 1 to FigureXSize do begin
+        if (FigureWS[J][I] > 0) and
+          (GlassWS[FigureY+J][FigureX+I]>0) then begin
+          if (FigureY+J < 3) then begin
+            result:= false;
+            exit;
+          end;  
+          //writeln('glass debug :'+inttoStr(FigureY+J))
+          result:= False;
+          case MoveDirect of
+            mdDown:  Dec(FigureY);
+            mdRight: Dec(FigureX);
+            mdLeft:  Inc(FigureX);
+          end;
+          Exit;
+        end;
+      end;
+    end;
+  for J:= 1 to FigureYSize do
+    for I:= 1 to FigureXSize do
+      if FigureWS[J][I] > 0 then
+        GlassWS[FigureY+J][FigureX+I]:= FigureWS[J][I];
+  RedrawSheet:= False;
+  FormPaint(Self);
+  RedrawSheet:= True;
+end;
+
+procedure ScanFillLines;
+var
+  I,J,K,L: byte;
+begin
+  ClearFigureIntoGlass;
+  for J:= 1 to GlassHeight do begin
+    K:= 0;
+    for I:= 1 to GlassWidth do
+      if GlassWS[J][I]>0 then Inc(K);
+    if K = GlassWidth then begin   // if line is full
+      for L:= J downto 1 do
+        for I:= 1 to GlassWidth do
+          if L>1 then GlassWS[L][I]:= GlassWS[L-1][I];
+    end;
+  end;
+  PutFigureIntoGlass(FigureMove);
+end;
+
+
+procedure Timer1Timer(Sender: TObject);
+var
+  I,J: Byte;
+begin
+  if ReentTimer then Exit
+    else ReentTimer:= True;
+  if StrToInt(Label3.Caption)<>Level then Label3.Caption := IntToStr(Level);
+  if StrToInt(Label4.Caption)<>Score then Label4.Caption := IntToStr(Score);
+  if not FigureActive then begin
+    GenerateNewFigure;
+    if not PutFigureIntoGlass(FigureMove) then begin
+   if MessageDlg('Another Game..my Flame?',mtConfirmation,[mbYes,mbNo],0)=mrYes
+    then begin
+      FillCharOldGlass(250);   //#255
+      Timer1.Enabled:= False;
+       //SpeedButton7.Enabled := False;
+      ClearFigureIntoGlass;
+      FigureActive:= False;
+      pForm.KeyPreview:= true;
+      pform.SetFocus;
+      Level:= 1;
+      Score:= 0;
+      for J:= 1 to GlassHeight do
+        for I:= 1 to GlassWidth do GlassWS[J][I]:= 0;
+      RedrawSheet:= False;
+      FormPaint(Self);
+      RedrawSheet:= True;
+      timer1.enabled:= True; 
+    end 
+     else pForm.close
+     end; 
+   FigureActive:= true; 
+  end
+  else begin
+    ClearFigureIntoGlass;
+    Inc(FigureY);
+    if not PutFigureIntoGlass(FigureMove) then begin
+      //image1.visible:=true;  //linux gag
+      case FigureType of
+        0: Score:= Score+10;
+        1: Score:= Score+30;
+        2: Score:= Score+30;
+        3: Score:= Score+25;
+        4: Score:= Score+25;
+        5: Score:= Score+15;
+        6: Score:= Score+20;
+      end;
+      if Score>300 then Level:= 2;
+      if Score>700 then Level:= 3;
+      if Score>1300 then Level:= 4;
+      if Score>2000 then Level:= 5;
+      if Score>3000 then Level:= 6;
+      if Score>5000 then Level:= 7;
+      Timer1.Interval:= Round((7.1-Level)*100);
+      //timer1.interval:= 1000;
+      FigureActive:= false; //if true then timertest
+    end;
+  end;
+  ScanFillLines;
+  ReentTimer:= False;
+end;
+
+
+//it was a subprocedure with rotate figure
+procedure RotateFigureWorksheet(OldFigureCornet: TFigureCorner; CurSheet:
+        TFigureWorksheet; OldFigureCorner: TFigureCorner);
+var
+  VertFlag, HorizFlag, K,I,J:  Byte;
+begin
+  FillCharWS(0);
+  case FigureType of
+    0: Move(Triada,FigureWS,SizeOf(FigureWS));
+    1: Move(LCorner,FigureWS,SizeOf(FigureWS));
+    2: Move(RCorner,FigureWS,SizeOf(FigureWS));
+    3: Move(LZigzag,FigureWS,SizeOf(FigureWS));
+    4: Move(RZigzag,FigureWS,SizeOf(FigureWS));
+    5: Move(Stick,FigureWS,SizeOf(FigureWS));
+    6: Move(Box,FigureWS,SizeOf(FigureWS));
+  end;
+  FillCharCS(0, curSheet); //!!
+  for K:= 0 to Byte(FigureCorner) do begin
+    for I:= 1 to MaxFigureSize do
+      for J:= 1 to MaxFigureSize do
+        CurSheet[J][I]:= FigureWS[MaxFigureSize-I+1][J];
+    Move(CurSheet,FigureWS,SizeOf(FigureWS));
+  end;
+  SetFigureColor;
+  HorizFlag:= 0;
+  while HorizFlag=0 do begin
+    for I:= 1 to MaxFigureSize do
+      if FigureWS[1][I]>0 then HorizFlag:= 1;
+    if HorizFlag=0 then begin
+      for J:= 1 to MaxFigureSize-1 do
+        for I:= 1 to MaxFigureSize do
+          FigureWS[J][I]:= FigureWS[J+1][I];
+      for J:= 1 to MaxFigureSize do
+        FigureWS[MaxFigureSize][J]:= 0;
+    end;
+  end;
+  VertFlag:= 0;
+  while VertFlag=0 do begin
+    for J:= 1 to MaxFigureSize do
+      if FigureWS[J][1]>0 then VertFlag:= 1;
+    if VertFlag=0 then begin
+      for J:= 1 to MaxFigureSize do
+        for I:= 1 to MaxFigureSize-1 do
+          FigureWS[J][I]:= FigureWS[J][I+1];
+      for J:= 1 to MaxFigureSize do
+        FigureWS[J][MaxFigureSize]:= 0;
+    end;
+  end;
+end;
+
+procedure RotateFigure;
+var
+  OldFigureCornet, OldFigureCorner: TFigureCorner;
+  CurSheet: TFigureWorksheet;
+  figurecSet: TFigureCornerSet;
+begin
+  ClearFigureIntoGlass;
+  OldFigureCorner:= FigureCorner;
+  //if FigureCorner > fc00 then Dec(FigureCorner)
+  figurecset:= [fc90, fc180, fc270]
+  if FigureCorner in figurecset then Dec(FigureCorner)
+    else FigureCorner:= fc270;
+  RotateFigureWorksheet(oldfigurecornet, cursheet, oldfigurecorner);
+  if not PutFigureIntoGlass(mdDown) then begin
+    FigureCorner:= OldFigureCorner;
+    RotateFigureWorksheet(oldfigurecornet, cursheet, oldfigurecorner);
+    PutFigureIntoGlass(mdDown);
+  end;
+end;
+
+//----------------------- button & key controls------------------------------
+
+procedure CloseClick(Sender: TObject; var action: TCloseAction);
+begin
+  if Timer1 <> NIL then begin
+    Timer1.enabled:= false;
+    Timer1.Free;
+    Timer1:= NIL;
+  end;
+end;
+
+procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if ReentKeys then Exit
+    else ReentKeys:= True;
+  if not FigureActive then begin
+    ReentKeys:= False;
+    Exit;
+  end;
+  writeln('debug'+Chr(Key)+' - '+IntToStr(Key));  //alternate J,K,L
+  case Key of                                     //            M   for arrows!
+   {$IFDEF LINUX}4096{$ELSE}27{$ENDIF} : pForm.close;  //4096 linux.....
+   {$IFDEF LINUX}4115{$ELSE}38,75{$ENDIF} {Key_Up}:    RotateFigure;  //4115 
+   {$IFDEF LINUX}4117{$ELSE}40,77{$ENDIF}{Key_Down},                 //4117
+    32 {Key_Space}: begin    //VK_SPACE in win
+                repeat
+                  ClearFigureIntoGlass;
+                  Inc(FigureY);
+                until not PutFigureIntoGlass(mdDown);
+                Inc(Score);
+              end;
+  {$IFDEF LINUX}4114{$ELSE}37,74{$ENDIF}{Key_Left}:
+              if FigureX>0 then begin
+                ClearFigureIntoGlass;
+                Dec(FigureX);
+                PutFigureIntoGlass(mdLeft);
+              end;
+  {$IFDEF LINUX}4116{$ELSE}39,76{$ENDIF}{Key_Right}:
+              if FigureX+FigureXSize<GlassWidth then begin  
+                ClearFigureIntoGlass;
+                Inc(FigureX);
+                PutFigureIntoGlass(mdRight);
+              end;
+  end;
+  ReentKeys:= False;
+end;
+
+procedure BreakClick(Sender: TObject);
+var state: Tshiftstate;
+  keys: integer;
+begin
+  if Timer1.Enabled then begin
+    Timer1.Enabled:= False;
+    sbutton.caption:= 'Go On';
+    //SpeedButton1.Enabled := False;
+  end
+  else begin
+    Timer1.Enabled := True;
+    sbutton.caption:= 'Pause Game';
+    pForm.KeyPreview:= true;
+    //pForm.onClick;
+    //pForm.onKeyDown:= @FormKeyDown;
+    pform.SetFocus;
+    //figureActive:= true;
+    //SpeedButton7.Enabled := True;
+  end;
+end;
+
+procedure FormTCreate(Sender: TObject);
+var label1, label2: TLabel;
+   bevel1, bevel2, bevel4: TBevel;
+begin
+  FillCharOldGlass(250);
+  SetFigures;
+  cntr:= 0;
+  RedrawSheet:= True;
+  pform:= Tform.create(self); //constructors
+  bevel1:= TBevel.create(pform)
+  bevel1.parent:= pForm;
+  label1:= TLabel.create(pform)
+  label1.parent:= pForm;
+  bevel2:= TBevel.create(pform)
+  bevel2.parent:= pForm;
+  bevel3:= TBevel.create(pform)
+  bevel4:= TBevel.create(pform)
+  bevel4.parent:= pForm;
+  label2:= TLabel.create(pform)
+  label2.parent:= pForm;
+  label3:= TLabel.create(pform)
+  label3.parent:= pForm;
+  label4:= TLabel.create(pform)
+  label4.parent:= pForm;
+  sButton:= TButton.create(pform)
+  timer1:= TTimer.create(pform);
+  with pform do begin
+    caption:= 'Tetris boX3';  
+    BorderStyle:= bsDialog;
+    Position:= poScreenCenter;
+    //onKeyPress:= @FormKeyPress
+    onKeyDown:= @FormKeyDown;
+    onPaint:= @FormPaint;
+    onClose:= @CloseClick;
+    color:= clTeal;
+    //KeyPreview:= true;
+    show;
+  end;  
+  with SButton do begin
+    parent:= pForm;
+    caption:= 'Pause TBox'
+    top:= 20;
+    width:= 76;
+    onclick:= @Breakclick;
+  end;  
+  with Bevel3 do begin
+    parent:= pForm;
+    Top:= TopOfs-FieldWidth;
+    Left:= LeftOfs-FieldWidth;
+    Width:= GlassWidth*BarWidth+FieldWidth*2;
+    Height:= GlassHeight*BarHeight+FieldWidth*2;
+  end;
+  with Bevel4 do begin
+     Top:= 82;
+     Left:= (176);
+     Height:= NextBarHeight*(MaxFigureSize-1)+10;
+     Width:=NextBarWidth*MaxFigureSize+8;
+  end;   
+
+  pForm.ClientWidth:= Bevel3.Width+FieldWidth*3+100; 
+  pForm.ClientHeight:= Bevel3.Height+FieldWidth*2;
+  SButton.Left:= Bevel3.Width+FieldWidth*4;
+  Label2.Left:= Bevel4.Left+FieldWidth-6;
+  Label2.top:= Bevel4.Top+FieldWidth+55;
+  label2.caption:= 'Level / Score: ';
+  Bevel2.Left:= Label2.Left-8;
+  Bevel2.Width:= bevel4.Width+30;
+  Bevel2.Top:= Bevel4.Left+FieldWidth-20;
+  Bevel2.Height:= Bevel4.Height+22;
+  Label3.Left := Bevel4.Left+FieldWidth;
+  Label3.top  := Bevel4.Top+FieldWidth+77;
+  Label4.Left := Bevel4.Left+FieldWidth;
+  Label4.top  := Bevel4.Top+FieldWidth+100;
+  Label1.Left := Bevel4.Left+FieldWidth-8;
+  Label1.top  := Bevel4.Top+FieldWidth+145;
+  label1.caption:= 'Player: '+#13#10+GetUserName; //{$IFDEF LINUX}IndyGetHostName
+  Bevel1.Left:= Label2.Left-8;
+  Bevel1.Width:= bevel4.Width+30;
+  Bevel1.Top:= Bevel4.Left+FieldWidth+50;
+  Bevel1.Height:= Bevel4.Height-5;
+  NextTopOfs:= 86;
+  NextLeftOfs:= 180;
+  Level:= 1;
+  timer1.onTimer:= @Timer1Timer;
+  Timer1.Interval:= 2000; //Timer1.Interval := Round((6.5-Level)*100);
+  Score := 0;
+  ReentTimer:= False;
+  ReentKeys:= False;
+  FigureActive:= False;
+  Label3.Font.size:= 14;  //level
+  Label4.font.size:= 14;  //score
+  Label3.Font.color:= clRed;
+  Label4.font.color:= clRed;  
+  Label3.Caption:= '1';  //level
+  Label4.Caption:= '0';  //score
+  Randomize;
+  FirstFigure:= Random(MaxFigureNumber);
+  FirstColor:= Random(MaxFigureColor)+1;
+  pForm.BorderStyle:= bsDialog;
+end;
+
+//main of TETRIS
+begin
+//**************************** mX3 Game Series *******************************
+  //loadPForm();
+  ProcessMessagesOFF;
+  FormTCreate(self);
+  //initPuzzle();
+  //solver()
+  //testVerify
+end.
+//
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+          
+
+TestSequence:
+    RedrawSheet := False;
+    SetFigures;
+    GenerateNewFigure;
+    putfigureintoGlass(mddown);
+    //Timer1.Enabled := True;
+    FormPaint(Self);
+    RedrawSheet := True;
+
+// Reset Procedure
+
+procedure SpeedButton7Click(Sender: TObject);
+var
+  I,J: Byte;
+begin
+  Timer1.Enabled := False;
+  ClearFigureIntoGlass;
+  FigureActive := False;
+  Level := 1;
+  Score := 0;
+  for I := 1 to GlassHeight do
+    for J := 1 to GlassWidth do GlassWS[I,J] := 0;
+  RedrawSheet := False;
+  FormPaint(Self);
+  RedrawSheet := True;
+  Timer1.Enabled := True;
+end;
+
+
+//The Delphi function StrToInt for string-to-integer conversions generates an exception if the given string does not represent a valid integer. Examples: StrToInt('ABC') or StrToInt('1.5'). That's a nice thing for the automatic validation of user input: if you try to convert an invalid value that was entered, such as into an Edit box, then Delphi automatically displays an error message.
+
+But sometimes you don't want this behaviour, especially when you want to convert several strings into integer numbers, such as the stuff entered in a bunch of Edit boxes, or the strings of a StringGrid, a ListBox,... Then it would be annoying to show an error message for every conversion that goes wrong -- imagine 100 error messages, and each time the user has to click a button to close the dialog window :p
+
+If you use StrToIntDef (string-to-integer-default) instead, you'll never get an exception. If the string is invalid, then this function will return the default value that you provided. Example: StrToIntDef('ABC', 0) returns 0.
+
+Here's a simple source code example, using a TEdit and TLabel components:
+
+    The user has to enter the desired amounts of products into several edit boxes. After clicking a button, the amounts are displayed in labels. But if an amount entered is invalid, then act as if 0 was entered:
+
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  N: integer;
+begin
+  N := StrToIntDef(EditApples.Text, 0); // if invalid, result is 0
+  LabelApples.Caption := IntToStr(N);
+  N := StrToIntDef(EditPears.Text, 0);
+  LabelPears.Caption := IntToStr(N);
+  N := StrToIntDef(EditOranges.Text, 0);
+  LabelOranges.Caption := IntToStr(N);
+
+  // and so on...
+end;
+
+
+Note that FillChar fills the buffer with Byte values now, and no longer with Char values. A beter named function is FillMemory, defined in the Windows unit:
+
+   procedure FillMemory(Destination: Pointer; Length: DWORD; Fill: Byte);
+   begin
+     FillChar(Destination^, Length, Fill);
+   end;
+   
+TShiftState = set of (ssShift, ssAlt, ssCtrl,
+    ssLeft, ssRight, ssMiddle, ssDouble);} 
+    
+    
+OnKeyDown - called when any key on the keyboard is pressed.
+OnKeyUp - called when any key on the keyboard is released.
+OnKeyPress - called when a key corresponding to an ASCII character is pressed.
+     
+Problem:
+The KEYDOWN event does not get fired for the left/right arrow keys.
+When placed on a form with more than one other control, the left and right
+ arrow keys move the focus, instead of firing an event.
+
+Solution:
+You need to handle WM_GETDLGCODE to tell Windows
+what keyboard messages you want to process.
+
+//-----------------------------------------------------------------------------
+{*****************************************************}
+{ 4GEWINNT.PAS: Implementierung des Spiels 4Gewinnt   }
+{ --------------------------------------------------- }
+{ Autor       : Max Kleiner                           }
+{ Version     : 1.5 vom 07.03.1995                    }
+{ Sprache     : Borland Pascal                        }
+{*****************************************************}
+
+Program VierGewinnt;
+
+Uses WinTypes, WinProcs, OWindows, ODialogs, Strings;
+
+
+{*****************************************************}
+{                  Globale Konstanten                 }
+{*****************************************************}
+
+Const cm_playerstart       = 101;
+      cm_computerstart     = 102;
+      cm_beenden           = 103;
+      cm_anfaenger         = 201;
+      cm_fortgeschrittener = 202;
+      cm_experte           = 203;
+      cm_meister           = 204;
+      cm_info              = 301;
+      wm_setzestein        = wm_user+1;
+      wm_spielfeld         = wm_user+2;
+      wm_rechner           = wm_user+3;
+      wm_gewonnen          = wm_user+4;
+      N                    = 6;
+      M                    = 7;
+      Blau                 = 1;
+      Rot                  = 10;
+
+
+{*****************************************************}
+{                  Typ-Definitionen                   }
+{*****************************************************}
+
+Type SpaltenVektor = Array[1..N] Of Integer;
+     ZeilenVektor  = Array[1..M] Of Integer;
+     SpielMatrix   = Array[1..N] Of ZeilenVektor;
+
+  {---------------- Applikationsobjekt -------------}
+  TVierGewinnt=Object(TApplication)
+    Procedure InitMainWindow; virtual;
+  End;
+
+  {------------------- Hauptfenster ----------------}
+  P4GwWindow=^T4GwWindow;
+  T4GwWindow=Object(TWindow)
+    {--------------------- Daten ---------------------}
+    Dialog                              : PDialog;
+    MyMenu                              : HMenu;
+    SpM                                 : SpielMatrix;
+    Count                               : ZeilenVektor;
+    Grad, Delta, StX, StY, L, Color,
+    ComputerBegin                       : Integer;
+    Berechnen, Sieger_Rot, Sieger_Blau,
+    Unentschieden                       : Boolean;
+    {------------------- Methoden --------------------}
+    Constructor Init(AName:PChar);
+    Procedure GetWindowClass(Var WndClass:TWndClass);
+      virtual;
+    Procedure Paint(PaintDC:HDC;
+                    Var PaintInfo:TPaintStruct);
+      virtual;
+    Procedure Reset;
+      virtual;
+    Procedure Gewonnen(Var Msg:TMessage);
+      virtual wm_first + wm_gewonnen;
+    Procedure Spielfeld(Var Msg:TMessage);
+      virtual wm_first + wm_spielfeld;
+    Procedure SetzeStein(Var Msg:TMessage);
+      virtual wm_first + wm_setzestein;
+    Procedure WMMouseMove(Var Msg:TMessage);
+      virtual wm_first+wm_MouseMove;
+    Procedure WMLButtonDown(Var Msg:TMessage);
+      virtual wm_first+wm_LButtonDown;
+    Procedure PlayerStart(Var Msg:TMessage);
+      virtual cm_first + cm_playerstart;
+    Procedure ComputerStart(Var Msg:TMessage);
+      virtual cm_first + cm_computerstart;
+    Procedure GameOver(Var Msg:TMessage);
+      virtual cm_first + cm_beenden;
+    Procedure Anfaenger(Var Msg:TMessage);
+      virtual cm_first + cm_anfaenger;
+    Procedure Fortgeschrittener(Var Msg:TMessage);
+      virtual cm_first + cm_fortgeschrittener;
+    Procedure Experte(Var Msg:TMessage);
+      virtual cm_first + cm_experte;
+    Procedure Meister(Var Msg:TMessage);
+      virtual cm_first + cm_meister;
+    Procedure Info(Var Msg:TMessage);
+      virtual cm_first + cm_info;
+    Procedure Rechner(Var Msg:TMessage);
+      virtual wm_first + wm_rechner;
+  End;
+
+
+{*****************************************************}
+{                  Globale Variablen                  }
+{*****************************************************}
+
+Var _4Gewinnt : TVierGewinnt;
+
+
+{*****************************************************}
+{ FarbWert: Liefert Farbwert zurück (Hilfsfunktion)   }
+{*****************************************************}
+
+Function FarbWert(W:Word):TColorRef;
+Begin
+  Case W Of
+    0:FarbWert:=RGB($BF,$BF,$BF);
+    1:FarbWert:=RGB($00,$00,$00);
+    2:FarbWert:=RGB($FF,$FF,$FF);
+    3:FarbWert:=RGB($FF,$00,$ff);
+    4:FarbWert:=RGB($00,$00,$00);
+    5:FarbWert:=RGB($00,$00,$FF);
+    6:FarbWert:=RGB($F7,$00,$00);
+    7:FarbWert:=RGB($7F,$7F,$7F);
+  End;
+End;
+
+
+{---------- Methoden der Klasse TVierGewinnt ---------}
+
+{*****************************************************}
+{ TVierGewinnt.InitMainWindow: Konsturieren des       }
+{                              Fensterobjektes        }
+{*****************************************************}
+
+Procedure TVierGewinnt.InitMainWindow;
+Begin
+  MainWindow:=New(P4GwWindow,Init('4 Gewinnt'));
+End;
+
+
+{----------- Methoden der Klasse T4GwWindow ----------}
+
+{*****************************************************}
+{ T4GwWindow.Reset: Zurücksetzen der Spielfelddaten   }
+{                   (Hilfprozedur)                    }
+{*****************************************************}
+
+Procedure T4GwWindow.Reset;
+
+Var i, j : Integer;
+
+Begin
+  Berechnen:=False;
+  Sieger_Rot:=False;
+  Sieger_Blau:=False;
+  Unentschieden:=False;
+  For i:=1 To N Do
+    For j:=1 To M Do SpM[i,j]:=0;
+  For j:=1 To M Do Count[j]:=0;
+  Delta:=0;
+End;
+
+
+{*****************************************************}
+{ T4GwWindow.Init: Konstruktor des Hauptfensters      }
+{*****************************************************}
+
+Constructor T4GwWindow.Init;
+
+Begin
+  TWindow.Init(NIL,AName);
+  Attr.Menu:=LoadMenu(HInstance,'MENU');
+  Attr.X:=100;
+  Attr.Y:=100;
+  ATtr.W:=250;
+  Attr.H:=280;
+  Grad:=0;
+  ComputerBegin:=0;
+  Reset;
+End;
+
+
+{*****************************************************}
+{ T4GwWindow.GetWindowClass: Cursorattribut löschen,  }
+{                            Symbol laden             }
+{*****************************************************}
+
+Procedure T4GwWindow.GetWindowClass;
+Begin
+  TWindow.GetWindowClass(WndClass);
+  With WndClass Do Begin
+    HIcon:=LoadIcon(HInstance,'ICON_1');
+    HCursor:=0;
+  End;
+End;
+
+
+{*****************************************************}
+{ T4GwWindow.Paint: Wird nach dem Eintreffen einer    }
+{                   wm_paint-Meldung aufgerufen.      }
+{                   Zeichnet das Fenster neu.         }
+{*****************************************************}
+
+Procedure T4GwWindow.Paint;
+
+Var i, j : Word;
+
+Begin
+  If GetDeviceCaps(PaintDC,NumColors)<3 Then Color:=0
+  Else Color:=4;
+  SendMessage(HWindow,wm_spielfeld,0,0);
+  For i:=1 To M Do
+    For j:=1 To Count[i] Do Begin
+      If SpM[j,i]=Rot Then
+      SendMessage(HWindow,wm_setzestein,i*256+j,2);
+      If SpM[j,i]=Blau Then
+      SendMessage(HWindow,wm_setzestein,i*256+j,1);
+    End;
+  SendMessage(HWindow,wm_gewonnen,0,0);
+End;
+
+
+{*****************************************************}
+{ T4GwWindow.SetzeStein: Reaktion auf die Meldung     }
+{                        wm_setzestein                }
+{                        Setzt einen Spielstein.      }
+{                        Msg.wParam: Koordinaten      }
+{                        Msg.lParam: Farbnummer       }
+{*****************************************************}
+
+Procedure T4GwWindow.SetzeStein;
+
+Var Brush            : HBrush;
+    DC               : HDC;
+    XPos, YPos, X, Y : Integer;
+
+Begin
+  Y:=7-Msg.wParam Mod 256;
+  X:=Msg.wParam Div 256;
+  XPos:=StX+(X-1)*L+2;
+  YPos:=StY+(Y-1)*L+2;
+  DC:=GetDC(HWindow);
+  Brush:=CreateSolidBrush(FarbWert(Msg.lParam+Color));
+  SelectObject(DC,Brush);
+  Ellipse(DC,XPos,Ypos,Xpos+L-3,Ypos+L-3);
+  ReleaseDc(HWindow,DC);
+  DeleteObject(Brush);
+End;
+
+
+{*****************************************************}
+{ T4GwWindow.Spielfeld: Reaktion auf die Meldung      }
+{                       wm_spielfeld.                 }
+{                       Zeichnet das Spielfeld.       }
+{*****************************************************}
+
+Procedure T4GwWindow.Spielfeld;
+
+Var Rect             : TRect;
+    Brush            : HBrush;
+    DC               : HDC;
+    Breite, Hoehe, i : Integer;
+
+Begin
+  GetClientRect(HWindow,Rect);
+  DC:=GetDC(HWindow);
+  Brush:=CreateSolidBrush(FarbWert(0+Color));
+  FillRect(DC,Rect,Brush);
+  Breite:=(Rect.Right-20) Div M;
+  Hoehe:=(Rect.Bottom-40) Div N;
+  If Breite>Hoehe Then L:=Hoehe Else L:=Breite;
+  Brush:=CreateSolidBrush(FarbWert(3+Color));
+  SelectObject(DC,Brush);
+  StX:=(Rect.Right-L*M) Div 2;
+  StY:=(Rect.Bottom-L*N) Div 2;
+  Rectangle(DC,StX,StY,L*M+StX+1,L*N+StY+1);
+  For i:=1 To M-1 Do Begin
+    MoveTo(DC,L*i+StX,StY);
+    LineTo(DC,L*i+StX,StY+L*N);
+  End;
+  For i:=1 To N-1 Do Begin
+    MoveTo(DC,StX,L*i+StY);
+    LineTo(DC,L*M+StX,L*i+StY);
+  End;
+  ReleaseDC(HWindow,DC);
+  DeleteObject(Brush);
+End;
+
+
+{*****************************************************}
+{ T4GwWindow.Gewonnen: Reaktion auf die Meldung       }
+{                      wm_gewonnen.                   }
+{                      Ausgabe der Gewinnmeldung.     }
+{*****************************************************}
+
+Procedure T4GwWindow.Gewonnen;
+
+Var Rect : TRect;
+    DC   : HDC;
+    GMsg : PChar;
+
+Begin
+  DC:=GetDC(HWindow);
+  GMsg:='';
+  If Sieger_Rot Then GMsg:='  Wow Gratulation !!!  ';
+  If Sieger_Blau Then GMsg:='  Leider verloren !!!  ';
+  If Unentschieden Then GMsg:='  Unentschieden !!!  ';
+  If Sieger_Rot Or Sieger_Blau Or Unentschieden Then
+  Begin
+    GetClientRect(HWindow,Rect);
+    Rect.Top:=2;
+    Rect.Bottom:=24;
+    SetTextColor(DC,FarbWert(2));
+    SetBKColor(DC,FarbWert(1));
+    DrawText(DC,GMsg,StrLen(GMsg),Rect,dt_Center);
+  End;
+  ReleaseDC(HWindow,DC);
+End;
+
+
+{*****************************************************}
+{ T4GwWindow.WMMouseMove: Reaktion auf Mausbewegungen }
+{*****************************************************}
+
+Procedure T4GwWindow.WMMouseMove;
+
+Var XPos, X      : Integer;
+    Help1, Help2 : PChar;
+
+begin
+  If Not Berechnen Then Help1:=idc_Arrow
+    Else Help1:=idc_wait;
+  If Not Berechnen Then Help2:=idc_cross
+    Else Help2:=idc_wait;
+  XPos:=LoWord(Msg.LParam);
+  If (XPos>StX) And (XPos<StX+M*L) And Not
+     (Sieger_Rot Or Sieger_Blau Or Unentschieden) Then
+  Begin
+    X:=(XPos-StX) Div L+1;
+    If X>7 Then X:=7;
+    If X<1 Then X:=1;
+    If Count[X]<N Then SetCursor(LoadCursor(0,Help2))
+    Else SetCursor(LoadCursor(0,Help1));
+  End
+  Else SetCursor(LoadCursor(0,Help1));
+End;
+
+
+{*****************************************************}
+{ T4GwWindow.WMLButtonDown: Reaktion auf das Drücken  }
+{                           der linken Maustaste      }
+{*****************************************************}
+
+Procedure T4GwWindow.WMLButtonDown;
+
+Var XPos, X : Word;
+
+Begin
+  XPos:=LoWord(Msg.lParam);
+  If (XPos>StX) And (XPos<StX+M*L) And Not
+     (Sieger_Rot Or Sieger_Blau Or Unentschieden) Then
+  Begin
+    X:=(XPos-StX) Div L+1;
+    If X>M Then X:=M;
+    If X<1 Then X:=1;
+    If Count[X]<N Then Begin
+      Inc(Count[X]);
+      If Count[X]=N Then Inc(Delta);
+      SpM[Count[X],X]:=Rot;
+      SendMessage(HWindow,wm_setzestein,
+                  X*256+Count[X],2);
+      SendMessage(HWindow,wm_rechner,0,0);
+    End;
+  End;
+End;
+
+
+{*****************************************************}
+{ T4GwWindow.ComputerStart: Reaktion auf die Auswahl  }
+{                 des Menüpunktes 'Computer beginnt'  }
+{*****************************************************}
+
+Procedure T4GwWindow.ComputerStart;
+Begin
+  Reset;
+  ComputerBegin:=1;
+  SendMessage(HWindow,wm_paint,0,0);
+  SendMessage(HWindow,wm_rechner,0,0);
+End;
+
+
+{*****************************************************}
+{ T4GwWindow.PlayerStart: Reaktion auf die Auswahl    }
+{                des Menüpunktes 'Spieler beginnt'    }
+{*****************************************************}
+
+Procedure T4GwWindow.PlayerStart;
+Begin
+  Reset;
+  ComputerBegin:=0;
+  SendMessage(HWindow,wm_paint,0,0);
+End;
+
+{*****************************************************}
+{ T4GwWindow.GameOver: Reaktion auf die Auswahl des   }
+{                      Menüpunktes 'Beenden'          }
+{*****************************************************}
+
+Procedure T4GwWindow.GameOver;
+Begin
+  PostQuitMessage(0);
+End;
+
+
+{*****************************************************}
+{ T4GwWindow.Info: Reaktion auf die Auswahl des Menü- }
+{                  punktes 'Info über 4Gewinnt'       }
+{*****************************************************}
+
+Procedure T4GwWindow.Info;
+Begin
+  Dialog:=New(PDialog,Init(@Self,'DIALOG'));
+  Dialog^.Execute;
+  Dispose(Dialog,Done);
+End;
+
+
+{ Strategie + Menü-Schwierigkeitsgrad }
+{$I ../maxbox3/examples/170_4gewinnt.INC}
+
+{ Laden der Ressourcen }
+//{$R 4GEWINNT.RES}
+
+
+{*****************************************************}
+{                   Hauptprogramm                     }
+{*****************************************************}
+
+Begin
+  _4Gewinnt.Init('');   { Applikation initialisieren, }
+  _4Gewinnt.Run;        { ausführen,                  }
+  _4Gewinnt.Done;       { und wieder beenden.         }
+End.
+{*****************************************************}
+
+       
+----code_cleared_checked----

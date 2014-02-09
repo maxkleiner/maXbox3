@@ -1,0 +1,112 @@
+program SimpleFileAssign2;
+// file read & write , some hints to RegEX
+// shows subroutines of assign file direct from filesystem
+
+const E6= 1000000;   
+
+procedure AssignFileWrite_Read; 
+var 
+  mystring: string;
+  mylist: TStringlist; 
+begin 
+  //mystring:=('this is first'+ #13#10+'this is second');
+  //writes text from memo2 to file and read it again
+  mystring:= memo2.text;
+  try 
+    Assign2(mystring,'assign_file_test.txt'); 
+    mylist:= Reset2('assign_file_test.txt'); 
+  finally 
+    ShowMessage(mystring);
+    mylist.Free; 
+  end; 
+end;
+
+
+procedure simulateMOON;
+var papersize: single;
+    counter: integer;
+begin
+  papersize:= 0.2;
+  counter:= 0;
+  repeat
+    papersize:= (papersize * 2);
+    inc(counter);
+    writeln(floattosTr((papersize/E6)))
+  until (papersize/E6) > (384000)
+    writeln(inttoStr(counter))
+end;  
+
+begin
+  //simulateMoon;
+  AssignFileWrite_Read;
+end.
+
+//some file routines*********************************************************:
+    procedure TForm1.Button1Click(Sender: TObject); 
+    var 
+      myFile : TextFile; 
+      text   : string; 
+      bit : string;
+    begin 
+      AssignFile(myFile, 'C:\test.txt'); 
+      try 
+        Reset(myFile); 
+        while not Eof(myFile) do 
+        begin 
+          ReadLN(myFile,bit); 
+          text := text + bit + #13#10; 
+        end; 
+      finally 
+        ShowMessage(text); 
+        CloseFile(myFile); 
+      end; 
+      
+    end;
+   A faster way:
+
+    function LoadFile(const FileName: TFileName): string; 
+    begin 
+      with TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite) do begin 
+        try 
+          SetLength(Result, Size); 
+          Read(Pointer(Result)^, Size); 
+        except 
+          Result := '';  // Deallocates memory 
+          Free; 
+          raise; 
+        end; 
+        Free; 
+      end; 
+    end; 
+      
+ FileContents := LoadFile('rss.xml'); 
+    
+Here's how to read each line of a tab-delimited text file, and save this into an SQLite database:
+
+    With ASQLite3DB1 do begin 
+        DefaultDir := ExtractFileDir(Application.ExeName); 
+        Database := 'test.sqlite'; 
+        CharacterEncoding := 'STANDARD'; 
+        Open; 
+        SQLite3_ExecSQL('CREATE TABLE IF NOT EXISTS mytable (id INTEGER PRIMARY KEY, label VARCHAR)'); 
+    end; 
+      
+    AssignFile(SomeTxtFile, FILE2PARSE) ; 
+    Reset(SomeTxtFile) ; 
+    ASQLite3DB1.SQLite3_ExecSQL('BEGIN;'); 
+      
+    while not EOF(SomeTxtFile) do begin 
+        ReadLn(SomeTxtFile, buffer) ; 
+        PerlRegEx1.RegEx := '^([^d].+)\s(\d+)$'; 
+        PerlRegEx1.Options := [preCaseLess]; 
+        PerlRegEx1.Subject := buffer; 
+        If PerlRegEx1.Match then begin 
+            row:= Format('INSERT INTO mytable (id,label) VALUES (%s,"%s");',[PerlRegEx1.SubExpressions[2],PerlRegEx1.SubExpressions[1]]); 
+            ASQLite3DB1.SQLite3_ExecSQL(row); 
+        end; 
+    end; 
+      
+    ASQLite3DB1.SQLite3_ExecSQL('COMMIT;'); 
+    ASQLite3DB1.Close; 
+    CloseFile(SomeTxtFile);      
+  

@@ -1,0 +1,122 @@
+{****************************************************************
+ *
+ * Project  : CipherBox Crypto Series
+ * App Name : 219_CipherBox.txt, loc's = 82
+ * Purpose  : crypt & decrypt a file with symmetric keys
+ * History  : system for mX3.2, internal random generator  
+ ****************************************************************}
+program Cipher_BOX3;
+
+
+function MyGetTickCount: Longint;
+  external 'GetTickCount@kernel32.dll stdcall';
+  
+var
+  myTimeStamp, DateTime1, DateTime2: TDateTime;
+  fileToCrypt, cryptFile, decryptFile: string;
+  StartKey, MultKey, AddKey, i: integer;
+  cfile, cryptin, clearout, cryptlog: string;
+  ws: TWideStrings;
+
+Procedure InitRandomKeys;
+begin
+  DateTime1:= Now;
+  DateTime2:= Now; 
+  S_GetEncryptionKeys(DateTime1, DateTime2, StartKey, MultKey, AddKey);
+  Write('S_key: '+inttoStr(StartKey)+ ' ');
+  Write('M_key: '+inttoStr(MultKey)+ ' ');
+  Write('A_key: '+inttoStr(AddKey)+ ' ');
+  Writeln(' ');
+end;
+
+Procedure ADOConnectTest;
+var
+  dconnect: TADOConnection;
+begin
+  dconnect:= TADOConnection.Create(self);
+  try
+    dconnect.Provider:= 'Microsoft.Jet.OLEDB.4.0'
+  //or for MS Jet (MS Access):
+    dconnect.ConnectionString:= 'Provider=Microsoft.Jet.OLEDB.4.0;'+
+                                  'DataSource=c:\db.mdb;';
+    dconnect.Connected:= true;
+    dconnect.LoginPrompt := False
+    dconnect.Open('Admin','');
+    //dconnect.Active:= true;
+  finally
+    dconnect.Close;
+    dconnect.Free;
+  end;
+end;     
+
+begin
+  //Set File Names
+  fileToCrypt:= ExePath+'examples/max_locomotion.bmp';
+  cryptFile:= ExePath+'examples/max_locomotion_crypt.txt';
+  decryptFile:= ExePath+'examples/max_locomotion_back.bmp'; 
+  cryptLog:= ExePath+'mycryptolog2.txt'
+  
+  InitRandomKeys;
+  //binary testbed sequence as one time pad
+  cfile:= LoadFileAsString(fileToCrypt);
+  cryptin:= S_StrEncrypt96(cfile, StartKey, MultKey, AddKey);
+  CreateFileFromString(cryptFile, cryptin);
+  
+  WriteLog(cryptLog, memo2.text)
+  clearout:= S_StrDEcrypt96(cryptin, StartKey, MultKey, AddKey);
+  CreateFileFromString(decryptFile, clearout);
+
+  writeln('Data Link Dir is: '+ DataLinkDir);
+  writeln('machine name is: '+getHostName)
+  writeln('user name is: '+getUserName)
+  mytimestamp:= GetFileCreationTime(exepath+'maxbox3.exe')
+  writeln(dateTimetoStr(mytimestamp)+' Creation Date of mX3')
+  //DLL Test
+  writeln('tick count from DLL ' +IntToStr(myGetTickCount));
+  writeln('Host is: '+getHostbyName('www.softwareschule.ch'))
+  ws:= TWideStringList.create;
+  getProviderNames(ws)
+  for i:= 1 to ws.count -1 do 
+    //writeln(inttostr(i) +' '+ws.strings[i])
+  ws.free;  
+end.   
+
+
+*******************************************************
+There is no place like 127.0.0.1 
+
+  Exe Crypt Testbed
+  fileToCrypt:= ExePath+'maxbox3.exe';
+  cryptFile:= ExePath+'maxbox3_crypt.txt';
+  decryptFile:= ExePath+'maxbox33.exe'; 
+
+  //bin test back
+    //cfile:= LoadFileAsString(ExePath+'cryptobox_cipher_bin.txt');
+  //cryptin:= S_StrEncrypt96(cfile, StartKey, MultKey, AddKey);
+  //CreateFileFromString(ExePath+'cryptobox_cipher_bin.txt',cryptin);
+  //WriteLog(ExePath+'mycryptolog.txt',memo2.text)
+   //clearout:= S_StrDEcrypt96(cfile, 606018104, 270734614, 890776868);
+   //CreateFileFromString(ExePath+'bintest2_out.png',clearout);
+  //Writeln('clear out '+clearout)
+  
+    {cfile:= LoadFileAsString(ExePath+'systemchecklog.txt');
+  cryptin:= S_StrEncrypt96(cfile, StartKey, MultKey, AddKey);
+  CreateFileFromString(ExePath+'cryptobox_cipher.txt',cryptin);
+  WriteLog(ExePath+'mycryptolog.txt',memo2.text)
+  clearout:= S_StrDEcrypt96(cryptin, StartKey, MultKey, AddKey);
+  Writeln('clear out '+clearout) }
+  
+clearout:= S_StrDEcrypt96(loadFileasString(cryptFile), 339683886, 137568553, 1024735531);
+
+Exception: Access violation at address 4DE2F83C in module 'msado15.dll'. Read of address 78742E67 at 0.1057
+
+[Microsoft][ODBC Driver Manager] Data source name not found and no default driver specified at 35.440
+
+[Microsoft][ODBC Microsoft Access Driver] Query is too complex at 35.607
+
+[Microsoft][ODBC Microsoft Access Driver] The Microsoft Jet database engine cannot find the input table or query 'Table1d'.  Make sure it exists and that its name is spelled correctly at 35.556
+
+
+
+
+

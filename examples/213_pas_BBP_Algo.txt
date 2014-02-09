@@ -1,0 +1,131 @@
+PROGRAM BBP;
+
+{The Bailey–Borwein–Plouffe formula (BBP formula) provides a spigot algorithm for the computation of the nth binary digit of x. This summation formula was discovered in 1995 by Simon Plouffe. The formula is named after the authors of the paper in which the formula was published, David H. Bailey, Peter Borwein, and Plouffe.} 
+
+//http://en.wikipedia.org/wiki/Bailey-Borwein-Plouffe_formula
+//{$APPTYPE CONSOLE}
+
+function series (m, id: Integer): Extended; forward;
+function expm (p, ak: Extended ): Extended; forward;
+procedure ihex (x: Extended; m: Integer; var chx: String);  forward;
+
+
+const
+  NHX = 16;
+  eps = 1e-17;
+  ntp = 25;
+  HX2 = '0123456789ABCDEF';
+
+var
+  tp: array [0..ntp-1] of Extended ;
+  tp1 : Integer;
+
+
+procedure mainX;
+var
+  pid, s1, s2, s3, s4: Extended;
+  id: integer;
+  chx: String;
+begin
+  while ( True ) do begin
+    WriteLn(#13#10'Pi hex digit computation: enter position (enter -1 to quit)'#13#10);
+    id:= StrToInt(InputBox('Position: Enter -1 to Quit' ,'Pos to PI','50'));
+    //ReadLn(id);
+    if ( id < 0 ) Then Break;
+    if ( id >= 10000000 ) Then 
+      WriteLn('Warning: program not reliable for such a large position.'#13#10);
+      s1 := series (1, id);
+      s2 := series (4, id);
+      s3 := series (5, id);
+      s4 := series (6, id);
+      pid := 4 * s1 - 2 * s2 - s3 - s4;
+      pid := Frac(pid);
+      if (pid < 0.0) Then pid := pid + 1.0;
+      chx := '';
+      ihex (pid, NHX, chx);
+      WriteLn(Format(' pos. = %d'#13#10' fraction = %.15f '#13#10' hex digits =  %10.10s'
+      + #13#10,[id, pid, chx]));
+  end;
+end;
+
+procedure ihex (x: Extended; m: Integer; var chx: String); 
+var
+  i: Integer;
+  y: Extended;
+  HX: string;
+begin
+  hx:= '0123456789ABCDEF';
+  y := abs (x);
+  for i := 0 to nhx -1 do begin
+    y := 16 * Frac(y);
+    chx := chx + hx[1+Trunc(y)];
+  end;
+end;
+
+function series (m, id: Integer) : Extended ;
+var
+  k: Integer;
+  ak, p, s, t: Extended;
+begin
+  s:= 0.;
+  for k := 0 to id - 1 do begin
+    ak := 8 * k + m;
+    p := id - k;
+    t := expm (p, ak);
+    s := frac(s + t / ak);
+  end;
+  for k := id to id + 100 do begin
+    ak := 8 * k + m;
+    t := power (16., (id - k)) / ak;
+    if (t < eps) Then 
+        break;
+    s := Frac(s + t);
+  end;
+  Result := s;
+end;
+
+Function expm (p, ak: Extended ): Extended ;
+var
+  i, j: integer;
+  p1, pt, r: Extended;
+begin
+  if (tp1 = 0) then begin
+    tp1 := 1;
+    tp[0] := 1.;
+    for i := 1 to ntp - 1 do tp[i] := 2. * tp[i-1];
+  end;
+
+  if (ak = 1) then Begin
+    Result := 0.;
+    Exit;
+  end;
+
+  I := ntp - 1;
+  While (tp[i] > p) do
+    Dec(I);
+  pt := tp[i];
+  p1 := p;
+  r := 1.;
+  for j := 1 to i do begin
+    if (p1 >= pt) then begin
+      r := 16. * r;
+      r := r - Trunc (r / ak) * ak;
+      p1 := p1 - pt;
+    end;
+    pt := 0.5 * pt;
+    if (pt >= 1) Then begin
+      r := r * r;
+      r := r - Trunc (r / ak) * ak;
+    end;
+  end;
+  Result := r;
+end;
+
+
+BEGIN  //Main
+  //maxform1.TerminalStyle1Click(self)
+  tp1:= 0;
+  mainX; 
+END. 
+ 
+----app_template_loaded----

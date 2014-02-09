@@ -1,0 +1,149 @@
+{****************************************************************
+ *
+ * Project  : System Information Series
+ * App Name:  136_sysinformation_dll, loc's = 79
+ * Purpose  : Demonstrates of 3 imported functions from Windows API
+ * History  : system demo for mX3 beta
+ ****************************************************************}
+program SysDLL;
+
+function  MyMessageBeep(para: integer): byte;
+     external 'MessageBeep@user32.dll stdcall';  
+
+function MyGetTickCount: Longint;
+  external 'GetTickCount@kernel32.dll stdcall';
+ 
+procedure MySleep(Milliseconds: Cardinal);
+  external 'Sleep@kernel32.dll stdcall';
+ 
+var
+  mytimestamp: TDateTime;
+  E: Extended;
+
+function OctToDec(OctStr: string): string;
+var
+  DecNum: single;
+  i: byte;
+  Error: Boolean;
+  charset: set of char;
+begin
+  DecNum:=0;
+  Error:=False;
+  charset:= ['1','2','3','4','5','6','7']
+  for i:=Length(OctStr) downto 1 do begin
+    if OctStr[i] in charset then begin
+      Error:= True;
+      ShowMessage('This is not octal number');
+      Break;
+    end;
+    DecNum:= DecNum+StrToInt(OctStr[i])*Power(8, Length(OctStr)-i);
+  end;
+  if not Error then
+    Result:= FloatToStr(DecNum)
+  else Result:='';
+end;
+
+
+Procedure DateTimeExample;
+Var
+  S, S1 : String;
+begin
+  {Time, Date, and Now are all basically interchangable.}
+  {They all return a DateTime value.}
+  S1:=DateToStr(Now2);
+  Case DayOfWeek(Date) of
+     1: S:='Sunday';
+     2: S:='Monday';
+     3: S:='Tuesday';
+     4: S:='Wednesday';
+     5: S:='Thursday';
+     6: S:='Friday';
+     7: S:='Saturday';
+  Else S:='Noneday';
+  End; {Case}
+  writeln(S+' '+S1+' '+TimeToStr(Time));
+end;
+
+begin
+  writeln(Format('Pi starts off as %.15f', [E]));
+  dateTimeExample;
+  writeln('machine name is: '+getHostName)
+  writeln('user name is: '+getUserName)
+  mytimestamp:= GetFileCreationTime(exepath+'maxbox3.exe')
+  writeln(datetimetoStr(mytimestamp)+' Creation Date of maXbox3')
+  writeln('oct to dec '+(OcttoDec('888')))
+  writeln('tick count from func ' +IntToStr(GetTickCount));
+  writeln('tick count from api   ' +IntToStr(MyGetTickCount));
+  MyMessageBeep(60);
+  MySleep(10);
+end.   
+
+
+*******************************************************
+There is no place like 127.0.0.1 
+
+The structure of a script is as follows (keywords are shown in ALLCAPS bold): 
+
+PROGRAM
+
+CONST 
+
+<Constant declarations> 
+TYPE 
+
+<Type declarations> 
+VAR 
+
+<Variable declarations> 
+BEGIN 
+
+<Executable statements> 
+END. 
+ 
+
+Note that: 
+
+The main code must be within the begin and end. keywords. 
+All statements in the script use the semicolon ";" as terminator. Only the last statement (END.) uses a dot as terminator. 
+
+
+function BinToOct(BinStr: string): string;
+var
+  i: Integer;
+  OctPart: single;
+  LastPart, OctStr: string;
+  Error: Boolean;
+begin
+  Error:=False;
+  OctStr:='';
+  case Length(BinStr) mod 3 of
+    1: BinStr:='00'+BinStr;
+    2: BinStr:='0'+BinStr;
+  end;
+
+  while Length(BinStr)>0 do
+  begin
+    LastPart:=Copy(BinStr, Length(BinStr)-2, 3);
+    Delete(BinStr, Length(BinStr)-2, 3);
+    OctPart:=0;
+    for i:=1 to 3 do
+      if not ((LastPart[i] ='1') or (LastPart[i] ='0')) then begin
+        ShowMessage('This is not binary number');
+        Error:=True;
+        Break;
+      end
+      else
+        OctPart:=OctPart+StrToInt(LastPart[i])*Power(2, 3-i);
+    OctStr:=OctStr+FloatToStr(OctPart);
+  end;
+  Result:='';
+  if Error<>True then begin
+    for i:=1 to Length(OctStr) do
+      Result:=Result+OctStr[Length(OctStr)-i+1];
+    while (Result[1]='0') and (Length(Result)>1) do
+      Delete(Result, 1, 1);
+  end;
+end;
+
+
+

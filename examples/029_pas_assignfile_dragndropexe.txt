@@ -1,0 +1,200 @@
+program SimpleFileAssign2;
+// file read & write , some hints to RegEX
+// shows subroutines of assign file direct from filesystem
+
+const E6= 1000000;   
+
+procedure AssignFileWrite_Read; 
+var 
+  mystring: string;
+  mystringback: TStringlist; 
+  //assign_file_test.txt
+begin 
+  //mystring:=('this is first'+ #13#10+'this is second');
+  //writes text from memo2 to file and read it again
+  mystring:= memo2.text;
+  try 
+    Assign2(mystring,exepath+'assign_file_test.txt'); 
+    mystringback:= Reset2(exepath+'assign_file_test.txt'); 
+    //mystring:= Reset2(assign_file_test.txt); 
+
+  finally 
+    ShowMessage(mystringback.text); 
+  end; 
+end;
+
+
+(*int main(int argc, char *argv[])
+02	{
+03	   //argv[0] is your exe file name with its path.
+04	   //Your filenames start from argv[1]
+05	   if(argc<2)
+06	   {
+07	      cout<<"Drag and drop files to the exe"<<endl;
+08	      cin.get()
+09	      return 0;
+10	   }
+11	   else
+12	   {
+13	     //do something
+14	   }
+15	   return 0;
+
+http://www.dreamincode.net/forums/topic/159739-drag-and-drop-onto-exe/ *)
+
+
+procedure simulateMOON;
+var papersize: single;
+    counter: integer;
+begin
+  papersize:= 0.2;
+  counter:= 0;
+  repeat
+    papersize:= (papersize * 2);
+    inc(counter);
+    writeln(floattosTr((papersize/E6)))
+  until (papersize/E6) > (384000)
+    writeln(inttoStr(counter))
+end;  
+
+begin
+  //simulateMoon;
+  AssignFileWrite_Read;
+end.
+
+The filename of the document dropped on your EXE is found in ParamStr(1).
+
+
+I'd put this at the start of my .dpr file's code:
+
+if ParamCount>1 then
+begin
+  for i := 1 to ParamCount do
+    ShellExecute(0, nil, PChar(ParamStr(0)), PChar('"'+ParamStr(i)+'"'), 
+        nil, SW_SHOWDEFAULT);
+  exit;
+end;
+
+//{$R *.res}
+var
+i:Integer;
+begin
+  for I := 2 to Paramcount  do
+      ShellExecute(0,'OPEN',PChar(Paramstr(0)),PChar(Paramstr(i)),'',sw_Show);
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TForm2, Form2);
+  Application.Run;
+end.
+
+//some file routines*********************************************************:
+    procedure TForm1.Button1Click(Sender: TObject); 
+    var 
+      myFile : TextFile; 
+      text   : string; 
+      bit : string;
+    begin 
+      AssignFile(myFile, 'C:\test.txt'); 
+      try 
+        Reset(myFile); 
+        while not Eof(myFile) do 
+        begin 
+          ReadLN(myFile,bit); 
+          text := text + bit + #13#10; 
+        end; 
+      finally 
+        ShowMessage(text); 
+        CloseFile(myFile); 
+      end; 
+      
+    end;
+   A faster way:
+
+    function LoadFile(const FileName: TFileName): string; 
+    begin 
+      with TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite) do begin 
+        try 
+          SetLength(Result, Size); 
+          Read(Pointer(Result)^, Size); 
+        except 
+          Result := '';  // Deallocates memory 
+          Free; 
+          raise; 
+        end; 
+        Free; 
+      end; 
+    end; 
+      
+ FileContents := LoadFile('rss.xml'); 
+    
+Here's how to read each line of a tab-delimited text file, and save this into an SQLite database:
+
+    With ASQLite3DB1 do begin 
+        DefaultDir := ExtractFileDir(Application.ExeName); 
+        Database := 'test.sqlite'; 
+        CharacterEncoding := 'STANDARD'; 
+        Open; 
+        SQLite3_ExecSQL('CREATE TABLE IF NOT EXISTS mytable (id INTEGER PRIMARY KEY, label VARCHAR)'); 
+    end; 
+      
+    AssignFile(SomeTxtFile, FILE2PARSE) ; 
+    Reset(SomeTxtFile) ; 
+    ASQLite3DB1.SQLite3_ExecSQL('BEGIN;'); 
+      
+    while not EOF(SomeTxtFile) do begin 
+        ReadLn(SomeTxtFile, buffer) ; 
+        PerlRegEx1.RegEx := '^([^d].+)\s(\d+)$'; 
+        PerlRegEx1.Options := [preCaseLess]; 
+        PerlRegEx1.Subject := buffer; 
+        If PerlRegEx1.Match then begin 
+            row:= Format('INSERT INTO mytable (id,label) VALUES (%s,"%s");',[PerlRegEx1.SubExpressions[2],PerlRegEx1.SubExpressions[1]]); 
+            ASQLite3DB1.SQLite3_ExecSQL(row); 
+        end; 
+    end; 
+      
+    ASQLite3DB1.SQLite3_ExecSQL('COMMIT;'); 
+    ASQLite3DB1.Close; 
+    CloseFile(SomeTxtFile);      
+    
+    docs in
+  C:\Program Files\Microsoft.NET\SDK\v2.0
+
+
+   patchProject1.dpr.12: if ParamCount=1 then begin
+004637B7 E86CFBF9FF       call ParamCount
+
+patchProject1.dpr.17: if ParamCount=2 then begin
+0046380F E814FBF9FF       call ParamCount
+00463814 83F802           cmp eax,$02
+00463817 7550             jnz $00463869
+
+patchProject1.dpr.22: if ParamCount=3 then begin
+00463869 E8BAFAF9FF       call ParamCount
+0046386E 83F803           cmp eax,$03
+00463871 7550             jnz $004638c3
+
+patchProject1.dpr.27: if ParamCount=4 then begin
+004638C3 E860FAF9FF       call ParamCount
+004638C8 83F804           cmp eax,$04
+004638CB 7550             jnz $0046391d
+
+patchProject1.dpr.32: if ParamCount=5 then begin
+0046391D E806FAF9FF       call ParamCount
+00463922 83F805           cmp eax,$05
+00463925 7550             jnz $00463977
+
+patchProject1.dpr.12: if ParamCount=1 then begin
+004637B7 E86CFBF9FF       call ParamCount
+004637BC 48               dec eax
+004637BD 7550             jnz $0046380f
+patchProject1.dpr.15: ShellExecute(0,NIL,PChar(ParamStr(0)), PChar('"'+ParamStr(1)+'"'), NIL, 1); //SW_SHOWDEFAULT
+004637BF 6A01             push $01
+004637C1 6A00             push $00
+
+0046381D 68BC3B4600       push $00463bbc
+004637C3 68BC3B4600       push $00463bbc
+
+
+Search Found 75506A016A00
+004637BC 40               inc eax
+    

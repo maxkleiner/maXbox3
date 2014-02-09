@@ -1,0 +1,89 @@
+PROGRAM Demo_App_Visitor_Object_Pattern_Short;
+//see also _55 factory   ,loc's=88
+
+CONST 
+  TEXTOUT = 'hi world of visitors'+#13#10;
+
+Type 
+  //TPerson = TStringlist; to add an object
+  TPerson = record
+    aname: shortstring;
+    place: shortstring;
+  end;
+   
+  TPersons = TStringlist;
+  TPersonOperation = Procedure(P: TPersons);    //to show for each operator
+  
+var 
+   //fperson: TPersons; //aPerson: TPerson;
+   i: byte;
+   plist: TObjectList;
+
+procedure AddPersons(vlist: TObjectList);
+var i: byte;
+    fPerson: TPersons;
+begin
+ for i:= 1 to 5 do begin
+  fPerson:= TPersons.Create;
+  with fPerson do begin
+    //add persons
+    text:=  'Person'+inttoStr(i); 
+    vlist.add(fPerson);
+  end;
+ end;
+ //fPerson.Free; to show last object has gone
+end; 
+ 
+PROCEDURE TForm1_CapitalizeNames(vlist: TObjectlist);
+VAR I: INTEGER;
+BEGIN
+  FOR I:= 0 TO vList.Count - 1 DO
+    WITH TPersons(vlist[i]) DO
+      Text:= UpperCase(Text);
+END;
+
+PROCEDURE TForm1_ListObjects(vlist: TObjectlist);
+VAR I: INTEGER;
+BEGIN
+  FOR I:= 0 TO vList.Count - 1 DO
+    Write(TPersons(vlist[i]).text);
+END;
+
+//-----------------------with foreach operator-------------------------
+PROCEDURE ForeachPerson(Op: TPersonOperation; vlist: TObjectlist);
+VAR I: INTEGER;
+BEGIN
+  FOR I:= 0 TO vList.Count-1 DO Op(TPersons(vList[i]));
+END;
+
+PROCEDURE CapitalizePerson(P: TPersons);   //procedure type
+BEGIN
+  P.Text:= UpperCase(P.Text);  //test with lowerCase
+END;
+
+PROCEDURE TForm1_Capitalize_ForEach(vlist: TObjectList);
+BEGIN
+  ForeachPerson(@CapitalizePerson, vlist);
+END;
+
+
+BEGIN  //Main
+//<Executable statements>
+  plist:= TObjectList.create;
+    AddPersons(plist)
+    for i:= 0 to plist.count -1 do 
+       Write(TPersons(plist[i]).text);                            
+    Writeln('Now the CAPITALIZE: ')     
+    TForm1_CapitalizeNames(plist);
+    TForm1_ListObjects(plist);
+    // foreach operator
+    Writeln('foreach operator: ')
+    TForm1_Capitalize_ForEach(plist);
+    TForm1_ListObjects(plist);
+    write(TPersons(plist[0]).text)
+    //Test Function 
+    Assert2(TPersons(plist[0]).text='PERSON1'+#13#10,'Must capitalized')
+  plist.Free;
+//<Definitions>  
+END.
+-----------------

@@ -1,0 +1,458 @@
+Program Send_Message_API_experiment_beta2;
+
+//Hints to improve your code , loc's = 188
+
+function  LoadLibrary(lib: pchar): Longint;
+  external 'LoadLibraryA@kernel32.dll stdcall';
+
+function  FreeLibrary(h: THandle): Longint;
+  external 'FreeLibrary@kernel32.dll stdcall';
+
+function  GetProcAddress(h: Thandle; addr: pchar): longint;
+  external 'GetProcAddress@kernel32.dll stdcall';
+  
+//procedure MessageReceiver(var msg: TMessage); message MY_MESSAGE;   
+
+
+const
+  WM_USER = 3000;
+  MY_MESSAGE = WM_USER + 4;
+  WM_MY_MESSAGE = WM_USER +1;
+  
+Type 
+  THello = Function: boolean;  //procedure type
+  
+var frmDummy: TForm;
+
+
+procedure JustUseIs;
+begin
+  //TForm(frmDummy).Caption is more efficient than using as
+  //and we know from the first line that it is of TForm
+  if frmDummy is TForm then
+    (frmDummy as TForm).Caption:='Main Form Tester';
+end;
+
+procedure CursorChanged;
+begin
+  Screen.Cursor:= crHourGlass;
+  If Application.Terminated then
+    Exit;  //this exit command means the next line that changes
+           //the cursor does not get called and the cursor is left
+           //busy
+  Screen.Cursor:= crDefault;
+end;
+
+function ImproveDate: string;
+begin
+  //If you're just looking for the current Time, use Time
+  //If you're looking for the current date, use Date
+  //Only use Now when you are looking for both added
+  Result:= DateTimeToStr(Now);
+end;
+
+function FasterSinCos(x:extended):boolean;
+var
+  y,z: extended;
+begin
+  y:= Sin(x);
+  z:= Cos(x);
+  //Calling for procedure SinCos for the same value
+  //is twice as fast though it requires Math in your uses clause
+  Result:= (y<90) AND (z<0);
+end;
+
+function BetterCopy1: string;
+begin
+  //Faster to use MaxInt than make a call to Length
+  Result:= Copy(frmDummy.Caption,1,Length(frmDummy.Caption));
+end;
+
+function BetterCopy2: string;
+begin
+  Result:= frmDummy.Caption;
+  //Faster to use Delete to remove the first four characters
+  Result:= Copy(Result,5,Length(Result));
+end;
+
+function BetterCopy3: string;
+begin
+  Result:= frmDummy.Caption;
+  //Faster to use SetLength to reduce string by 4 characters
+  Result:= Copy(Result,1,Length(Result)-4);
+end;
+
+function BetterCopy4: string;
+begin
+  Result:= frmDummy.Caption;
+  //Faster to check the length before returning either
+  //a blank string or Result[5]
+  Result:= Copy(Result,5,1);
+end;
+
+function CompatibiltyCommand1(const s: string): string;
+var
+  t: string;
+begin
+  //AppendStr only exists for compatibility
+  AppendStr(t,s);
+  Result:= t;
+end;
+
+procedure ReduceCallStack(tbl: TTable);
+var mytable: Ttable;
+begin
+  //For TTable.Open; the Delphi source code calls
+  mytable.Active:= True;
+  //so we can cut out a procedure if our code does this
+  tbl.Open;
+end;
+
+function SlowLength(const s:PChar):integer;
+begin
+  Result:= StrLen(s);
+end;
+
+procedure getmp3fromexe;
+var rstream: TResourceStream;
+    fname: string;
+    fstream: TFileStream;
+begin
+{this part extracts the mp3 from exe}
+ fname := ExtractFileDir(Paramstr(0))+'Intro.mp3';
+ rStream := TResourceStream.Create(hInstance, 'Intro', 'RT_RCDATA') ;
+ try
+  fStream := TFileStream.Create(fname, fmCreate) ;
+  try
+   fStream.CopyFrom(rStream, 0) ;
+  finally
+   fStream.Free;
+  end;
+ finally
+  rStream.Free;
+ end;
+end; 
+
+
+Function sayhello: boolean; //functiontype
+  BEGIN
+    result:= true;
+  END;
+
+
+procedure LoadResofDLL;
+var
+  h : THandle;
+  Icon : HIcon;
+  mf: TForm;
+  ms: string;
+  stream: TResourceStream;
+  //rate: function(FileName: PChar): Integer;
+  sayinc: function: boolean;
+  sayinc2: THello;
+  addr: longint;
+begin
+  h:= LoadLibrary('income.dll');
+  try
+    if h <> 0 then begin
+     //loadedmoduleslist
+    //memo2.lines.LoadFromResourceName(h, 'CDROM');
+    //GetStringFromResource(h,  
+  {  with TResourceStream.Create(h, '4092', '10') do
+  try
+  //Stream:= TResourceStream.Create(hinstance, MAINICON, 'RT_RCDATA');
+    SetLength(ms, Size);
+    Read(ms[1], Size);
+  finally
+    Free;
+  end;}
+    addr:= GetProcAddress(H, '_SayHello2');
+    writeln('addr of function1 '+inttostr(addr))
+   //sayhello:= GetProcAddress(H, '_SayHello2');
+    //getmem(sayinc2,)
+    //sayinc2:= THello(pointer(addr));
+    sayinc2:= @sayhello;
+    addr:= GetProcAddress(H, '_CreateIncome');
+    writeln('addr of function2 '+inttostr(addr))
+    //infrm.canvas.bitmap.LoadFromResourceName(HINSTANCE,'OPENFOLDER'); 
+      //Icon := self.LoadIcon(h, resICON);
+      //mf.handle.DrawIcon(Canvas.Handle, 10, 10, Icon);
+    end
+    else
+    begin
+      ShowMessage('Load Resource DLL FAILED!');
+    end;
+  finally
+    FreeLibrary(h);
+  end;
+end;
+
+
+
+function ReverseString(const InString: string): string;   //Delphi
+var
+  i: integer;
+begin
+  for i:= Length(InString) downto 1 do
+    Result:= Result + InString[i];
+end;
+
+function reverse(s:string): string;  //Extended Pascal
+var i:integer;
+var tmp:char;
+begin
+    for i:=1 to length(s) div 2 do begin
+       tmp:=s[i];
+       s[i]:= s[length(s)+1-i];
+       s[length(s)+1-i]:= tmp;
+       result:= s;
+      end;
+end;
+
+function revstr(my_s:string): string; //Standard Pascal
+    var out_s:string;
+    ls,i:integer;
+    begin
+      ls:=length(my_s);
+      for i:=1 to ls do
+        out_s:=out_s+my_s[ls-i+1];
+    result:=out_s;
+    end;
+    
+procedure TfrmHookTest_btnSendMessageClick(Sender: TObject);
+begin
+  SendMessage(Application.Handle, WM_MY_MESSAGE, 0, 0);
+end; 
+
+procedure TfrmHookTest_ProcessHookMessage(Sender: TObject;
+  var Message: TMessage; var Handled: Boolean);
+begin
+  if Message.Msg = WM_MY_MESSAGE then begin
+     ShowMessage('I received a message!');
+   end;
+end;   
+
+
+    
+procedure TForm1_Button1Click(Sender: TObject);
+var
+  txt: string;
+begin
+  txt:= 'Hello World';
+  SendMessage(HInstance, MY_MESSAGE, 0, DWORD(9));
+end;
+
+procedure TForm1_MessageReceiver(var msg: TMsg);
+var
+  txti: dword;
+begin
+  txti:= msg.wParam;
+  txti:= msg.lParam;
+  txti:= msg.message;
+  //msg.Result:= 1;
+  //msg.message:= 1;
+  ShowMessage('from api '+inttostr(txti));
+end;
+
+
+procedure TForm2_Button1Click(Sender: TObject);
+var
+  txt: string;
+begin
+  txt := 'Hello Mess World';
+  //SendMessage(Application.Handle, MY_MESSAGE, 0, DWORD(PChar(txt)));
+  SendMessage(Application.Handle, MY_MESSAGE, 0, DWORD(9));
+
+end;
+
+
+procedure TForm2_MessageReceiver(var msg: TMsg; var Handled: Boolean);
+//((procedure TForm2_MessageReceiver;
+
+var
+  //txt: PChar;
+  txt: Dword;
+begin
+  //txt := PChar(msg.lParam);
+  txt:= (msg.lParam);
+  //msg.Result:= 1;
+  //ShowMessage(inttoStr(txt));
+  if Msg.hwnd = Application.Handle then begin
+    if Msg.message = MY_MESSAGE then
+    begin
+      //msgStr:= PChar(Msg.lParam);
+      //Memo1.Lines.LoadFromFile(msgStr);
+      Handled := True;
+    end;
+  end;  
+end; 
+
+function ShortFilename(LongName:string): string;
+var ShortName : PChar;
+begin
+  ShortName:= StrAlloc(Max_Path);      //Max_Path
+  //function GetShortPathName; external kernel32 name 'GetShortPathNameW';
+  GetShortPathName(PChar(LongName), ShortName, Max_Path);
+  writeln(inttoStr(GetShortPathName(pchar(LongName), ShortName, Max_Path)));
+  //Result:= string(ShortName);
+  
+  Result:= strpas(ShortName);
+  //StrDispose(ShortName);
+end;
+    
+ 
+ 
+var
+  mystrings: TStrings;
+  ws: widestring;
+  msg: Tmsg;
+
+begin
+
+  CursorChanged;
+
+  JustUseIs;
+  CursorChanged;
+  Writeln(ImproveDate)
+  ws:= ' This is bitboX   ';
+
+  Writeln((ws))
+  Writeln(ansirightstr(ws,11))
+  Writeln(trim(ws))
+  Writeln(trim('   d   this is bitbox_  '))
+  
+   Writeln(ReverseString(ws))  //Delphi
+   Writeln(reverse(ws))        //Extended Pascal
+   Writeln(revstr(ws))         //Standard Pascal
+
+{function FasterSinCos(x:extended):boolean;
+function BetterCopy1:string;
+function BetterCopy2:string;
+function BetterCopy3:string;
+function BetterCopy4:string;
+function CompatibiltyCommand1(const s:string):string;
+CompatibiltyCommand1
+procedure ReduceCallStack(tbl:TTable);
+function SlowLength(const s:PChar):integer;}
+  writeln(CompatibiltyCommand1('cry for crypt'))
+
+  writeln(booltostr(isinternet,true))
+  writeln(datetimetostr(now))
+  
+  //send message
+  TForm1_Button1Click(self);
+  TForm1_MessageReceiver(msg);
+
+  //send message 2
+  TfrmHookTest_btnSendMessageClick(self)
+  
+  //Application.OnMessage:= @TForm2_MessageReceiver;
+
+  
+   mystrings:= TStringlist.Create;
+   getVisibleWindows(mystrings)
+   showmessage(mystrings.text)
+   mystrings.Free;
+  LoadResofDLL; 
+  //GetShortPathName(lpszLongPath: PChar; lpszShortPath: PChar; cchBuffer: DWORD): DWORD');
+  Writeln(ShortFilename('maXbox3_260_sendmessage_beta.txt'));
+  
+End.
+
+{
+  This is useful if you want to send a message from your DLL back
+  to the calling application.
+}
+
+const
+  MY_MESSAGE = WM_USER + 4242;
+ 
+type
+  TForm1 = class(TForm)
+    Button1: TButton;
+    procedure Button1Click(Sender: TObject);
+    // Handler that receive the Message
+    procedure MessageReceiver(var msg: TMessage); message MY_MESSAGE;
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+//{$R *.DFM}
+
+procedure TfrmHookTest_btnSendMessageClick(Sender: TObject);
+begin
+  SendMessage(Application.Handle, WM_MY_MESSAGE, 0, 0);
+end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  txt: string;
+begin
+  txt := 'Hello World';
+  SendMessage(Form1.Handle, MY_MESSAGE, 0, DWORD(PChar(txt)));
+end;
+
+// To receive this custom Message that is addressed to form1.handle
+// you need a message handler.
+
+procedure TForm1.MessageReceiver(var msg: TMessage);
+var
+  txt: PChar;
+begin
+  txt := PChar(msg.lParam);
+  msg.Result := 1;
+  ShowMessage(txt);
+end;
+
+
+end.
+
+
+
+----code_cleared_checked----
+
+const WM_FILEREADY = WM_USER + 2000;
+procedure TForm1.Button1Click(Sender: TObject);
+const Path: PChar = 'OverView.RTF';
+begin
+  PostMessage(Application.Handle, WM_FILEREADY, 0, integer(Path));
+end;
+ 
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  Application.OnMessage := AppMessage;
+end;
+ 
+procedure TForm1.AppMessage(var Msg: TMsg; var Handled: Boolean);
+var msgStr: String;
+begin
+  if Msg.hwnd = Application.Handle then
+  begin
+    if Msg.message = WM_FILEREADY then
+    begin
+      msgStr:= PChar(Msg.lParam);
+      Memo1.Lines.LoadFromFile(msgStr);
+      Handled := True;
+    end;
+  end;
+  { For all other messages, Handled remains False }
+  { so that other message handlers can respond. }
+end;
+
+
+Recently I've been researching different ways of communication between two applications (IPC) written in Borland Delphi. There are many ways to reach an application from another one. The challenge is to find the best one for your situation and one of the possible solutions is to use a call to the Windows API function SendMessage.
+
+Windows is built around messages. You can create and send messages to windows (or controls) within a Delphi application. In addition, applications send messages to each other, and applications even send messages to themselves.
+
+The SendMessage API function requires 4 arguments. The first argument is the handle of the window to which the message is addressed; the second argument-usually a symbolic constant-is the numeric value of the message; the third and fourth arguments, traditionally named wParam and lParam, carry any additional information needed by the message-in this case, which margin should be set and its new width, respectively. When more than two values are needed, they are usually gathered in a structure and its address is sent in the lParam argument.
+
+The first task here is to establish the communication. To do this the client needs to find the servers window (it needs its window handle). The best way for that is the FindWindow API function. The FindWindow function retrieves the handle to the top-level window whose class name and window name match the specified strings. As a target window we will use Application's window. Why? because the global variable Application, of type TApplication, is in every Delphi Windows application. Application encapsulates your application as well as providing many functions that occur in the background of the program. In this case we already know that the value of the first parameter of FindWindow will be 'TApplication'. The second is a window's title and it equal to Application.Title. Simple, isn't ?
+
+My first solution was to use OnMessage event of TApplication class to trap the messages. However, this solution has a problem. The OnMessage event occurs when an application receives a Windows message. An OnMessage event handler allows an application to respond to messages other than those declared in the events for TApplication. Unfortunately, OnMessage only receives messages that are posted to the message queue, not those sent directly with the Windows API SendMessage function, so we need another way for it.
+
+To solve this problem we can use one of the special methods of the TApplication class usually used internally for displaying Windows common dialogs. TApplication class has a special method called HookMainWindow that enables a non-VCL dialog box to receive messages sent to the application's main window (the window of TApplication, not main form of the application). 
+
+http://www.delphi-central.com/ipc_sendmessage.aspx

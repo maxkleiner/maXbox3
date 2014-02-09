@@ -1,0 +1,42 @@
+//converts a text to a stream in a memo component
+//the memo is the output file, loc's =41 _5
+
+program TextfromFile;
+
+procedure stringtofile(acontent, afilename:string);
+var fls: TFileStream;
+begin
+ fls:= TFileStream.Create(afilename, fmOpenWrite or fmCreate);
+ try
+   // no no acontent[1]
+   fls.Write(acontent,length(acontent));
+ finally
+   fls.Free;
+ end  
+end;
+
+function fileToString(afilename: string; var returnString: string): boolean;
+var fls: TFileStream;
+begin
+ result:= false;
+ if not fileExists(afilename) then exit;
+ fls:= TFileStream.Create(afilename, fmOpenRead or fmShareCompat);
+ try 
+   if fls.size > 0 then begin
+     SetLength(returnString, fls.Size);
+     fls.Read(returnString,fls.Size);
+     result:= true;
+   end; 
+ finally 
+   fls.Free;
+ end
+end;
+
+//main
+var mystring: string;
+begin
+  if fileToString('readmefirst_maxbox.txt',mystring) then 
+  showmessage(mystring)
+  //memo2.text:= mystring
+end.
+

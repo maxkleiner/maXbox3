@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Look Ma, no tables! -->
+
+<head>
+  <meta name="generator" content="Jekyll content generator" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Rudy's Delphi Corner - Decimals unit</title>
+  <meta name="Author" content="Rudy Velthuis" />
+  <meta name="keywords" content="Embarcadero Delphi C++Builder programming components articles programs source code links" />
+<!--[if lt IE 9]><!-->
+  <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+<!--<![endif]-->
+  <link rel="stylesheet" type="text/css" href="../rdc-print.css" media="print" />
+  <link rel="stylesheet" type="text/css" href="../rdc-oldbrowser.css" media="screen" />
+  <link rel="stylesheet" type="text/css" href="../rdc-style.css" media="screen" />
+  <link rel="stylesheet" type="text/css" href="../rdc-pygments.css" media="all" />
+</head>
+
+<body>
+  <div id="tl"><div id="tr"></div></div>
+
+  <div id="inner">
+    <div id="inner-right">
+      <div id="horizon">
+        <header><div id="header">
+          <div id="zollverein" title="Former coal mine Zollverein, Essen, Germany">
+            <p>Rudy's <span>Delphi</span> Corner</p>
+          </div>
+        </div></header>
+
+<!-- For old browsers only -->
+
+        <div class="old-browser">
+          <p>[<a href="#top">To contents</a>]</p>
+
+          <p><strong>Attention</strong>: My webpages are optimized for barriere free
+          access and therefore use standardized CSS (stylesheets). If you see this
+          text, your browser does not support the usual web standards. This means that
+          your browser is not capable of displaying these pages entirely correctly. You
+          can find further information on the pages of the <a
+          href="http://webstandards.org/act/campaign/buc/">Web Standards
+          Project</a>.</p>
+
+          <h2>Navigation</h2>
+
+        </div>
+
+<!-- Main navigation -->
+
+        <nav><div id="nav">
+          <ul id="navul">
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="../articles/index.html">Articles</a></li>
+            <li><a href="../downloads.html">Downloads</a>
+              <ul>
+                <li><a href="../programs/index.html">Programs</a></li>
+                <li><a href="../components.html">Components</a></li>
+                <li><a href="../downloads.html">All downloads</a></li>
+              </ul>
+            </li>
+
+            <li><a href="../links.html">Links</a>
+              <ul>
+                <li><a href="../links.html">General</a></li>
+                <li><a href="../blogs.html">Blogs</a></li>
+              </ul>
+            </li>
+            <li><a href="../personal.html">About</a>
+              <ul>
+                <li><a href="../personal.html">Rudy</a></li>
+                <li><a href="../delphi.html">Delphi</a></li>
+                <li><a href="../teamb.html">TeamB</a></li>
+                <li><a href="../jedi.html">Project JEDI</a></li>
+              </ul>
+            </li>
+            <li><a href="../credits.html">Credits</a></li>
+          </ul>
+        </div></nav>
+
+        <article><div id="main">
+          <div id="maintext">
+            <div id="maintextcontents">
+
+<!-- Content -->
+
+
+
+<!-- Secondary navigation -->
+
+<div id="sidebar">
+  
+  <h4>See also</h4>
+  <ul>
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../articles/index.html">Articles</a></li>
+    <li><a href="../programs/index.html">Programs</a></li>
+    <li><a href="../downloads.html">Downloads</a></li>
+  </ul>
+  <h4>Links</h4>
+  <ul>
+    <li><a href="../links.html">My Delphi links</a></li>
+    <li><a href="../blogs.html">My blog links</a></li>
+  </ul>
+</div>
+
+<div id="top"></div>
+
+<h1>Decimals unit</h1>
+
+<p><a href="../zips/decimals.zip" class="download">Download</a></p>
+
+<p class="notabene"><strong><span class="caps">UPDATE</span></strong>: If you downloaded a version from before <strong>July 1, 2010</strong>, please download the <a href="../zips/decimals.zip">new version 2.0</a>. It was improved and made faster. The files uploaded May 21 were apparently still not good enough, see <a href="#update">below</a></p>
+
+<p>To calculate non-integral numbers, most programming languages provide floating point types. These are usually fast, because they often are <span class="caps">FPU</span>-supported, but there are quite a few problems with their accuracy. More about the problems you can expect can be found in my article about <a href="../articles/articles-floats.html">Floating Point Numbers</a>.</p>
+
+<p>In Microsoft .<span class="caps">NET</span>, there is a type, called <var>Decimal</var> that is not <abbr title="Floating Point Unit"><span class="caps">FPU</span></abbr>-supported, but very accurate in a defined range. The <var>Decimals</var> unit tries to emulate this type as well as possible, in Delphi (and a lot of assembler). The internal format is exactly the same, but the routines that manipulate the bits were entirely written by me.</p>
+
+<h2>The Decimal type</h2>
+
+<p>Unlike the <span class="caps">FPU</span>-supported types, this type uses a decimal &#8220;exponent&#8221;, although in this case the exponent is more like a scaling factor, and has a range of <span class="numeric">0..28</span>. The mantissa is binary, but much larger than that of the <span class="caps">FPU</span> types: it contains 96 bits. The sign bit is stored separately. The exact format is like this:</p>
+
+<!-- 10% 30% 60% --><table>
+	<tr>
+		<th>Bits</th>
+		<th>Function</th>
+		<th>Comments</th>
+	</tr>
+	<tr>
+		<td><span class="numeric">000..095</span></td>
+		<td>Mantissa</td>
+		<td>Unsigned 96 bit integer</td>
+	</tr>
+	<tr>
+		<td><span class="numeric">096..111</span></td>
+		<td>Reserved</td>
+		<td>Must be <span class="numeric">0</span></td>
+	</tr>
+	<tr>
+		<td><span class="numeric">112..116</span></td>
+		<td>Scale</td>
+		<td>Range <span class="numeric">0..28</span>, where <span class="numeric">0</span> stands for <span class="numeric">&times;&nbsp;10<sup>0</sup></span> and <span class="numeric">28</span> stands for <span class="numeric">&times;&nbsp;10<sup>&minus;28</sup></span></td>
+	</tr>
+	<tr>
+		<td><span class="numeric">117..126</span></td>
+		<td>Reserved</td>
+		<td>Must be <span class="numeric">0</span></td>
+	</tr>
+	<tr>
+		<td><span class="numeric">127</span></td>
+		<td>Sign bit</td>
+		<td><span class="numeric">1</span> = negative, <span class="numeric">0</span> = positive</td>
+	</tr>
+</table>
+
+<p>Unlike most others floating point types, this type has a different format for values like <span class="numeric">0.1</span> and <span class="numeric">0.1000</span>. The first value is stored as mantissa <span class="numeric">1</span> and a scaling factor of <span class="numeric">1</span> (i.e. as <span class="numeric">1&nbsp;&times;&nbsp;10<sup>&minus;1</sup></span>). The second is stored as <span class="numeric">1000</span> with a scaling factor of <span class="numeric">4</span> (i.e. as <span class="numeric">1000&nbsp;&times;&nbsp;10<sup>&minus;4</sup></span>), etc. In other words, this type &#8220;remembers&#8221;, as much as possible, the number of decimals entered. Of course, if you multiply or divide, you will get more decimals.</p>
+
+<p>Although values like <span class="numeric">0.123</span> and <span class="numeric">0.1230000</span> are stored differently, the comparison routines and operators recognize them as equal.</p>
+
+<p>The Decimal type is a record type. That enables it to be used like any other numeric type. It has operators for comparison, simple arithmetic like addition, subtraction, multiplication and division, and conversion operators to and from other numeric types.</p>
+
+<p>Initialization is best done using one of the conversion operators. If you want a specific format, with a specific number of decimals, use the conversion operator that converts from a string:</p>
+
+<div class="highlight"><pre class="delphi"><span class="n">myDecimal</span> <span class="o">:=</span> <span class="s">&#39;1.3456&#39;</span><span class="o">;</span>
+</pre>
+</div>
+<p>If you want to control the exact contents of the <var>Decimal</var>, you can use the following constructor:</p>
+
+<div class="highlight"><pre class="delphi"><span class="k">constructor</span> <span class="nf">Create</span><span class="p">(</span><span class="nb">Lo</span><span class="o">,</span> <span class="n">Mid</span><span class="o">,</span> <span class="nb">Hi</span><span class="o">:</span> <span class="kt">Longword</span><span class="o">;</span> <span class="n">IsNegative</span><span class="o">:</span> <span class="kt">Boolean</span><span class="o">;</span> <span class="n">Scale</span><span class="o">:</span> <span class="kt">Byte</span><span class="p">)</span><span class="o">;</span>
+</pre>
+</div>
+<p>To get the exact contents, you can use the <var>GetBits</var> function.</p>
+
+<p>Additionally to the functions and operators discussed above, <var>Decimal</var> has a full set of conversion functions and the usual mathematic functions, like <var>Abs</var>, <var>Floor</var>, etc. There is a <var>ToString</var> function that converts the <var>Decimal</var> to a string. The other <var>ToString</var> function that takes a Format string is not functional yet, but is being worked on.</p>
+
+<p>The simple <var>DecimalDevelopment</var> program shows a few ways to use the type.</p>
+
+<h2>Speed</h2>
+
+<p>As I already mentioned, the type is not <span class="caps">FPU</span>-supported. This means it is a lot slower than the normal <span class="caps">FPU</span> types like <var>Single</var>, <var>Double</var> or <var>Extended</var>. I did my best to make the routines as fast as I could, using assembler everywhere it made sense, but 96 bit multiplications or divisions are not really fast, even when they are done in assembler. This produces the desired results, but I&#8217;m glad about any suggestion to speed up the type. Just <a href="mailto:Rudy%20Velthuis%20%3Carticles@rvelthuis.de%3E?subject=Decimals%20unit">e-mail</a> me.</p>
+
+<div class="notabene">
+<h3 style="margin-top: 0;" id="update">Update</h3>
+
+<p>I managed to make the basic math operations (addition, subtraction, multiplication and division) quite a bit faster. Division is about 8 times as fast as it used to be, addition and subtraction are about twice as fast and multiplication is also a little faster (there was not a lot I could do to optimize multiplication anymore). Division uses a totally different algorithm (<var>basecase</var>, see source) and all of the four operations profit from better scaling routines.</p>
+
+<p>The version from May 21 appeared to be still buggy. So I took some inspiration from some tests I had seen from the Mono project, and did something similar: I created a simple C# program that uses an array with a range of decimal values to calculate the basic operations on each against each other. The result values are written to a text file that can immediately be included in a Delphi program that runs the same tests using my Decimal code, and checks the results against the generated result arrays. The code of the result generator is included in the <a href="../zips/decimals.zip">zip</a> file, and so are the test program and the generated include file. The C# program can be compiled with the freely available Microsoft Visual C# Express or a regular Visual C#.</p>
+
+<p>I changed the code of the Decimals unit thus that now, no error should be produced anymore. In other words, the results produced should be exactly the same as those produced by .<span class="caps">NET</span>.</p>
+
+<p>If you want to enhance the test program with your own values, be sure to simply add the values to the C# program and generate a new include file. That can then be used &#8211; as is &#8211; by the Delphi test program. If you still find any discrepancies, I&#8217;d love to hear about them.</p>
+
+</div>
+<h2>Conclusion</h2>
+
+<p>I hope this code is useful to you. If you use some of it, please credit me. If you modify or improve the unit, please send me the modifications.</p>
+
+<p>I may improve or enhance the unit myself, and I will try to post changes here. But this is not a promise. Please don&#8217;t request features.</p>
+
+<p><em>Rudy Velthuis</em></p>
+
+<div class="disclaimer">
+
+<h3>Standard Disclaimer for External Links</h3>
+
+<p>These links are being provided as a convenience and for
+informational purposes only; they do not constitute an endorsement or
+an approval of any of the products, services or opinions of the
+corporation or organization or individual. I bear no responsibility
+for the accuracy, legality or content of the external site or for that
+of subsequent links. Contact the external site for answers to
+questions regarding its content.</p>
+
+<h4>Disclaimer and Copyright</h4>
+
+<p>The coding examples presented here are for illustration purposes
+only. The author takes no responsibility for end-user use. All content
+herein is copyrighted by Rudy Velthuis, and may not be
+reproduced in any form without the author's permission. Source code
+written by Rudy Velthuis presented as download is subject to the
+license in the files.</p>
+
+</div>
+
+
+<!-- /Content -->
+
+            </div>
+          </div>
+
+<!-- Copyright notice and last update -->
+
+          <div id="copyright">
+            <p><img src="../images/expertindelphi.png" alt=
+            "Image: From Vision to Code - Expert in Delphi" width=
+            "75" height="125" /></p>
+
+            <p>
+              <span id="copy-p" class="nowrap">Copyright © 2012</span>
+              <span class="nowrap">by Rudy Velthuis</span></p>
+            <p><span id="date-p" class="nowrap"> </span></p>
+          </div>
+        </div></article>
+
+<!-- Footer-->
+
+        <footer><div id="footer">
+          <div id="validators">
+            <a href="http://www.spreadfirefox.com/?q=affiliates&amp;id=0&amp;t=81">
+              <img alt="Get Firefox!" title="Get Firefox!" src="../images/getfirefox.gif" /></a>
+            <a href="http://validator.w3.org/check?uri=referer">
+              <img src="../images/valid-html5.png" alt="Valid HTML 5!" height="15" width="80" /></a>
+            <a href="http://jigsaw.w3.org/css-validator/">
+              <img src="../images/valid-css.png" alt="Valid CSS!" height="15" width="80" /></a>
+
+            <!-- Begin W3Counter Secure Tracking Code -->
+
+            <script type="text/javascript" src="https://www.w3counter.com/securetracker.js"></script>
+            <script type="text/javascript">
+            //<![CDATA[
+              w3counter(25496);
+            //]]>
+            </script>
+            <noscript>
+              <p style="display: inline"><a href="http://www.w3counter.com">
+                <img src="https://www.w3counter.com/tracker.php?id=25496" alt="W3Counter" />
+              </a></p>
+            </noscript>
+
+            <!-- End W3Counter Secure Tracking Code-->
+
+          </div>
+        </div></footer>
+      </div>
+    </div>
+  </div>
+
+  <div id="bl"><div id="br"></div></div>
+
+  <p id="back-to-top">
+    <a href="#top"><span></span>Back to top</a>
+  </p>
+
+  <script type="text/javascript" src="../jquery.min.js"></script>
+  <script type="text/javascript" src="../rdc-menu.js"></script>
+</body>
+</html>

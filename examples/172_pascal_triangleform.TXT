@@ -1,0 +1,336 @@
+PROGRAM Pascal_Triangle_Form;
+//shows Pascal Triangle Variation (odd&even) of the binominal coefficients  
+
+Const
+   CROW = 15;
+   CTRI = 13;
+   CCOL = 2 * CTRI-1;
+   LotNR = 250;
+   LotRANGE = 250;
+
+Type 
+   TLottolist = array[0..lotNR] of integer;
+
+Var 
+//<Variable declarations>
+    quadrat,square: extended;
+    iz, i, j: integer;
+    bigstring: string;
+    larr: TLottolist; 
+    comblist: TStringList;
+    sGrid1: TStringGrid;  
+    mForm: Tform;
+
+//<FUNCTION> //<PROCEDURE> 
+
+procedure CreateDrawForm;
+begin
+  mForm:= TForm.create(self);
+  with mForm do begin
+    FormStyle:= fsStayOnTop;
+    Position:= poScreenCenter;
+    color:= clred;
+    Caption:= 'Pascal Triangle Odd';
+    Width:= 990;
+    Height:= 450;
+    BorderStyle:= bsDialog;
+    //onClose:= @FormClose;
+    Show
+  end;
+  sGrid1:= TStringGrid.Create(self);
+  sGrid1.parent:= mForm;
+  with sGrid1 do begin
+    defaultColwidth:= 34;
+    defaultRowheight:= 22;
+    height:= 380;
+    width:= 975;       
+    colcount:= CCOL;  
+    rowcount:= CROW-1;
+    top:= 20;
+    borderStyle:= bsNone;
+    GridLineWidth:= 5;
+    scrollbars:= false;
+  end;
+end;
+
+
+procedure putAllNumbersbyRandom(vrange: byte);
+var ti, z, myrand: byte;
+    dup: boolean;
+begin
+  ti:= 1;
+  Randomize
+  //if vrange < lotnr then vrange:= 6; 
+  repeat
+    myrand:= Random(vrange)+1;     
+    dup:= false;
+    for z:= 1 to lotnr do 
+      if (larr[z] = myrand) then dup:= true;
+    if (not dup) then begin
+      larr[ti]:= myrand;
+      //lstat[myrand]:= lstat[myrand] + 1;
+      ti:= ti + 1;
+    end;
+  until ti = lotnr + 1
+end;  
+
+
+procedure FillGrid;
+var i: byte;
+begin
+  j:= 1
+  with sGrid1 do begin
+    for i:= 1 to lotrange do begin
+      for iz:= 1 to lotnr do
+        if larr[iz] = i then
+          Cells[((i+CCOL-1) mod CCOL)+1, j]:= intToStr(i);
+      if i mod CCOL = 0 then
+       inc(j)
+    end;
+    Font.Size:= 12;
+    //Cells[6,5]:= 'test!!!';
+  end;  
+end;
+
+procedure FillPascalGrid;
+var i: byte;
+begin
+  j:= 1
+  with sGrid1 do begin
+    for i:= 0 to lotrange do begin
+      if larr[i] > 0 then begin 
+        repeat 
+          Cells[((i+CCOL-1) mod CCOL)+1, j]:= intToStr(larr[i])
+          inc(i)
+        until (larr[i]= 0) or (i=161);
+       inc(j)
+      end
+    end;
+  Font.Size:= 15;
+  end;  
+end;
+
+
+procedure FillPascalTriangle;
+var
+  num,i,j,k, space1: integer;
+  difffact,diff,n,r,comb,nfact,rfact, ar: integer;
+begin
+  //maxForm1.Console1Click(self);
+  difffact:= 1;
+  comb:= 0;
+  nfact:= 1;
+  rfact:= 1;
+  num:= CTRI;
+  ar:= (CTRI -1) div 2;
+  k:= num-1;
+  space1:= num-1;
+  //for(i=0;i<num;i++)
+  for i:= 0 to num -1 do begin
+   //k=space--;
+    dec(space1)
+    k:= space1;
+   //for(;k>0;k--)
+    for k:= k downto 0 do begin
+      write('  ')
+      larr[ar]:= 0;
+      inc(ar)
+      end;
+    //for(j=0;j<=i;j++)
+    for j:= 0 to i do begin
+      comb:= 0;
+      nfact:= 1;
+      rfact:= 1;
+      difffact:= 1;
+      //for(n=i;n>=1;n--)
+      for n:= i downto 1 do
+        nfact:= nfact*n;
+      //for(r=j;r>=1;r--)
+      for r:= j downto 1 do
+        rfact:= rfact*r;
+      diff:= i-j;
+      //for(;diff>=1;diff--)
+      for diff:= diff downto 1 do
+        difffact:= difffact*diff;
+      comb:= (nfact div (rfact*difffact));      
+      write(format('  %d',[comb]));
+      //if not odd(i) then 
+        larr[ar]:= comb //else 
+        //larr[ar]:= comb
+      inc(ar)
+    end;
+    writeln('')
+  //printf("\n");
+  end
+end;
+
+
+function GetBigIntFact(aval: byte): string;
+  //unit mybigint
+var mbResult: TMyBigInt;
+    i: integer;
+begin
+  mbResult:= TMyBigInt.Create(1);
+  try
+    for i:= 1  to aval do 
+      //mbResult.Multiply(mbresult, mbresult);
+      mbResult.Multiply1(mbresult, i);
+    Result:= mbResult.ToString;
+  finally 
+    mbResult.Free;
+  end;
+end;
+
+function getPermutation(npr, k: integer): extended; 
+//2. Permutation(Variation without repeating) = nPr = n!/(n-k)!
+begin
+  result:= (Fact(npr)/Fact(npr-k));
+  //test 4 of 10 = 5040 = NPR(10,4)
+end;
+
+function getCombination(npr, k: integer): extended; 
+//3. Combination (binominal coefficient)= nCr = nPr / k!
+begin
+  result:= (Fact(npr)/Fact(npr-k)/Fact(k));
+  //ncr:= npr/round(fact(ncr))
+  //test 4 of 20 = 4845 = NCR(20,4)
+end;
+
+ 
+BEGIN  //Main
+//<Executable statements>
+  {x:= 100; quadrat:= power(x,2); 
+  writeln(format('%f', [quadrat]))
+  square:= sqrt(quadrat)
+  writeln(format('%f', [square]))}
+
+  CreateDrawForm;
+  FillPascalTriangle;
+  FillPascalGrid;
+  //PutAllNumbersbyRandom(lotrange)
+  //FillGrid;  
+  
+  writeln(floattoStr(getPermutation(45,6)))
+  writeln(floattoStr(getCombination(45,6)))
+  writeln(floattoStr(getCombination(45,22)))
+  comblist:= TStringlist.create;
+  {for i:= 1 to LotRANGE do
+    comblist.add(Format('case: %d is %f',[i, getCombination(Lotrange,i)]))
+  for i:= 1 to LotRANGE do
+    Writeln(comblist[i-1])} 
+  comblist.Free;  
+  //for i:= 1 to lotnr do 
+    //Write(inttostr(larr[i])+ ' ');
+End. 
+
+----------------------------------------------
+
+-----------------------------------------------------
+     {for i:= 1 to 10 do
+       for j:= 1 to 10 do begin
+         //printf('%d',[j])
+           write(inttostr(j*i)+ '  ')
+           if j=10 then writeln('')
+        end
+        writeln('')
+     for i:= 1 to 10 do
+       for j:= 1 to 10 do begin
+         //printf('%d',[j])
+           ein:= j*i;
+           if (ein < 10) and (j<7) then
+             write(inttostr(ein)+ '    ')
+             else 
+             write(inttostr(ein)+ '  ')
+          if j=10 then writeln('')
+        end}
+       // big fact 70 = 1.1978571669969891796072783721689e+100
+
+        
+  00000000000000000000000100101100 XOR
+  00000000000000000000000100101100
+                         000000000
+
+
+  Dealing with Big Numbers (Integers)
+  -----------------------------------
+  
+  As you may know there's no simple solution to print or store big numbers, for example you want to compute fact(70), your calculator shows:
+  fact(70) = 1.1978571669969891796072783721689e+100
+  
+  but the maximum range on Delphi depends on your operating system types, means nowadays an int64 range is the big int.
+  Now that the "signed" Words are finally up-to-par with the unsigned integer types, Delphi 4 introduces a new 64-bits integer type, called Int64, with a whopping range of -2^63..2^63 - 1  
+
+ Another way is to use the type extended, but the limitation is precision like
+   
+    Writeln(FloatToStr(Fact(70)))
+ 
+    it only shows 
+    1.2E+0100
+
+With a BigInt Library (bigintlib) you'll see the full range of Fact(70):
+
+11978571669969891796072783721689098736458938142546425857555362864628009582789845319680000000000000000
+    
+The call respectively the calculation goes like this:
+
+function GetBigIntFact(aval: byte): string;
+//call of unit mybigint
+var mbRes: TMyBigInt;
+    i: integer;
+begin
+  mbRes:= TMyBigInt.Create(1);
+  try
+    //multiplication of factor
+    for i:= 1  to aval do 
+      mbRes.Multiply1(mbresult, i);
+    Result:= mbRes.ToString;
+  finally 
+    //FreeAndNil(mbResult);
+    mbRes.Free;
+  end;
+end;
+    
+Or you want the power of 100        
+2^100=
+1267650600228229401496703205376
+  
+The definition of the function could be the following:
+
+function GetBigIntPower(aval: integer): string;
+var mbResult: TMyBigInt;
+     i: integer;
+begin
+  mbResult:= TMyBigInt.Create(1);
+  try
+    for i:= 1 to aval do 
+      mbResult.Multiply1(mbresult, 2);
+    Result:= mbResult.ToString;
+  finally 
+    mbResult.Free;
+  end;
+end;
+  
+  
+At least one really big, it's 2^1000
+
+10715086071862673209484250490600018105614048117055336074437503883703510511249361224931983788156958581275946729175531468251871452856923140435984577574698574803934567774824230985421074605062371141877954182153046474983581941267398767559165543946077062914571196477686542167660429831652624386837205668069376
+
+
+the class of the unit from swiss delphi:
+
+  TMyBigInt = class
+  private
+    Len: Integer;
+    Value: AnsiString;
+    procedure Trim;
+    procedure Shift(k: Integer);
+    procedure MultiplyAtom(Multiplier1: TMyBigInt; Multiplier2: Integer);
+  public
+    constructor Create(iValue: Integer = 0);
+    procedure Add(Addend1, Addend2: TMyBigInt);
+    procedure Multiply(Multiplier1, Multiplier2: TMyBigInt); overload;
+    procedure Multiply(Multiplier1: TMyBigInt; Multiplier2: Integer); overload;
+    function ToString: string;
+    procedure CopyFrom(mbCopy: TMyBigInt);
+  end;
+    

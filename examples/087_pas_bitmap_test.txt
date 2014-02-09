@@ -1,0 +1,181 @@
+program Bitmap_load;
+
+//This function stretches a bitmap with specified number of pixels
+// in horizontal, vertical dimension  _87
+//TASK: save the bitmap you draw
+
+//uses RND2;
+
+type TByteArray2 = array[0..455] of byte;
+
+
+var
+  Image1: TImage;
+  frmMon: TForm;
+  //cm: TByteArray;
+  
+
+procedure Image1MouseDown(Sender: TObject; Button: TMouseButton;
+Shift: TShiftState; X, Y: Integer);
+var i: byte;
+begin
+//test
+  Image1.Canvas.MoveTo(X,Y);
+  for i:= 1 to 70 do
+    Image1.Canvas.LineTo(X+random(140),Y+random(140));
+   //image1.canvas.picture.savetofile(ExePath+'examples\citydraw.bmp')
+   //point
+    
+end;  
+
+
+Function RGB(R,G,B: Byte): TColor;
+Begin
+  Result:= B Shl 16 Or
+            G Shl 8  Or  R;
+End;
+
+function ResizeBmp(bitmp: TBitmap; wid, hei: Integer): Boolean;
+var 
+  TmpBmp: TBitmap;
+  ARect: TRect;
+begin
+  Result:= false;
+  try
+    TmpBmp:= TBitmap.Create;
+    try
+      TmpBmp.Width := wid;
+      TmpBmp.Height:= hei;
+      ARect:= Rect(0,0, wid, hei);
+      TmpBmp.loadfromfile(ExePath+'examples\citymax.bmp')
+      TmpBmp.Canvas.StretchDraw(ARect, TmpBmp);
+      //image1.canvas.assign(tmpbmp.canvas)
+      bitmp.Assign(TmpBmp);
+    finally
+      TmpBmp.Free;
+    end;
+    Result:= True;
+  except
+    Result:= False;
+  end;
+end;
+
+procedure SaveCanvas(vCanvas: TCanvas; FileName: string);
+var
+  Bmp: TBitmap;
+  MyRect: TRect;
+begin
+  Bmp:= TBitmap.Create;
+  try
+    MyRect:= vCanvas.ClipRect;
+    Bmp.Width:= MyRect.Right - MyRect.Left;
+    Bmp.Height:= MyRect.Bottom - MyRect.Top;
+    Bmp.Canvas.CopyRect(MyRect, vCanvas, MyRect);
+    Bmp.SaveToFile(FileName);
+  finally
+    Bmp.Free;
+  end;
+end; 
+
+
+procedure InitForms;
+begin
+frmMon:= TForm.create(self);
+ with frmMon do begin
+   //FormStyle := fsStayOnTop;
+   Position := poScreenCenter;
+   caption:='click on the form';
+   color:= clred;
+   width:= 450;
+   height:= 400;
+   show
+ end;
+Image1:= TImage.create(frmMon);
+ with Image1 do begin
+   parent:= frmMon;
+   setbounds(10,25, 400,320);
+   onMousedown:= @Image1MouseDown;
+   show;
+   //onMouseup:= @Image1MouseUp
+ end;
+end; 
+
+procedure LoadBitMap;
+var mybitmap, bitmap: Tbitmap;
+   mycanvas: TCanvas;
+    ARect: TRect;
+begin
+ mybitmap:= TBitmap.create;
+ mycanvas:= TCanvas.create;
+ if ResizeBmp(mybitmap, 300, 300) then
+    showmessage('picture resized');
+  image1.canvas.draw(10,10,mybitmap)
+  //mybitmap.assign
+  
+  Image1.canvas.moveto(10,10);
+  Image1.canvas.lineto(500,50);
+    Image1.canvas.moveto(10,10);
+  Image1.canvas.lineto(500,150);
+  //image1.canvas.copymode
+  //image1.canvas.cliprect
+  
+  //SaveCanvas(image1.canvas, ExePath+'examples\citycanvas.bmp');
+
+
+  mybitmap.FreeImage;
+  //image1.canvas.refresh;
+    //mycanvas.copyrect
+   //mycanvas.draw((mybitmap))
+   //image1.picture.bitmap.loadfromfile(ExePath+'examples\citymax.bmp')
+    //image1.picture.bitmap.assign(mybitmap)
+  //loadbitmap
+    //image1.canvas.assign(mybitmap.canvas)
+  //Image1.LoadFromFile(ExtractFilePath(Application.Exename) + 'Bild.bmp');
+  //mybitmap.assign(image1.canvas)
+  //mybitmap.savetoFile('maxwork.bmp')
+  mybitmap.Free;
+  mycanvas.free;
+  
+  {Bitmap:=TBitmap.create;(*Create a bitmap object*)
+  Bitmap.width:=400;(*Assign dimensions*)
+  Bitmap.height:=100;
+  Image1.Picture.Graphic:=Bitmap;(*Assign the bitmap to the image component*)
+  Image1.Picture.Bitmap.canvas.pen.color:=clRed;
+   (*Have a look at the canvas Help to see all the properties*)
+  Image1.Picture.Bitmap.canvas.moveto(10,10);
+  Image1.Picture.Bitmap.canvas.lineto(300,50);}
+
+  
+end;
+
+
+BEGIN
+  InitForms;
+  LoadBitMap;
+ 
+  
+End.  
+
+
+
+procedure TForm1.Button1Click(Sender: TObject);
+// This example shows drawing directly to the Bitmap
+var
+x,y : integer;
+Bitmap : TBitmap;
+P : PByteArray;
+begin
+Bitmap := TBitmap.create;
+try
+Bitmap.LoadFromFile("C:\Program Files\Borland\factory.bmp");
+for y := 0 to Bitmap.height -1 do
+begin
+P := Bitmap.ScanLine[y];
+for x := 0 to Bitmap.width -1 do
+P[x] := y;
+end;
+canvas.draw(0,0,Bitmap);
+finally
+Bitmap.free;
+end;
+end;
