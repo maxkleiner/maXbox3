@@ -1,6 +1,6 @@
 maXbox
+======
 
-maXbox programming
 
 ****************************************************************
 Release Notes maXbox 3.9.9.88 March 2014
