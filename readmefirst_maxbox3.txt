@@ -1906,3 +1906,18 @@ maXbox is a free scripter tool with an inbuilt delphi engine in one exe! It is d
 [004259E6]{bds.exe     } bds.bds (Line 198, "" + 8) + $FFFB
 
 https://github.com/maxkleiner/maXbox3.git
+
+
+http://downloads.sourceforge.net/project/maxbox/maxbox3clx.tar.gz
+
+
+http://de.sourceforge.jp/projects/sfnet_maxbox/downloads/maxbox3clx.tar.gz/
+http://www.mirrorservice.org/sites/downloads.sourceforge.net/m/ma/maxbox/maxbox3clx.tar.gz
+http://www.mirrorservice.org/sites/downloads.sourceforge.net/m/ma/maxbox/
+
+
+
+
+httpde.sourceforge.jp%2Fprojects%2Fsfnet_maxbox%2Fdownloads%2Fmaxbox3clx.tar.gz%2F&ei=iir5UunlHYWxywO17YLYAg&usg=AFQjCNHecwAFuIbxLJ8nKZ2_NLcdAZpfpg
+
+http://www.google.de/url?sa=t&rct=j&q=&esrc=s&source=web&cd=4&cad=rja&ved=0CE4QFjAD&url=http%3A%2F%2Fde.sourceforge.jp%2Fprojects%2Fsfnet_maxbox%2Fdownloads%2Fmaxbox3clx.tar.gz%2F&ei=iir5UunlHYWxywO17YLYAg&usg=AFQjCNHecwAFuIbxLJ8nKZ2_NLcdAZpfp
