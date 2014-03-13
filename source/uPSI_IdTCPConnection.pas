@@ -1,6 +1,6 @@
 unit uPSI_IdTCPConnection;
 {
-
+    writestream1, 3.9.9.91 and more events  like on work, use idcomponent
 }
 interface
  
@@ -112,7 +112,11 @@ begin
     RegisterMethod('Procedure WriteRFCReply( AReply : TIdRFCReply)');
     RegisterMethod('Procedure WriteRFCStrings( AStrings : TStrings)');
     RegisterMethod('Procedure WriteSmallInt( AValue : SmallInt; const AConvert : Boolean)');
+    //  procedure WriteStream(AStream: TStream; const AAll: Boolean = True;
+      //const AWriteByteCount: Boolean = False; const ASize: Integer = 0); virtual;
+
     RegisterMethod('Procedure WriteStream( AStream : TStream; const AAll : Boolean; const AWriteByteCount : Boolean; const ASize : Integer)');
+    RegisterMethod('Procedure WriteStream1( AStream : TStream)');
     RegisterMethod('Procedure WriteStrings( AValue : TStrings; const AWriteLinesCount : Boolean)');
     RegisterMethod('Function WriteFile( const AFile : string; const AEnableTransferFile : Boolean) : Cardinal');
     RegisterProperty('ClosedGracefully', 'Boolean', iptr);
@@ -130,6 +134,19 @@ begin
     RegisterProperty('RecvBufferSize', 'Integer', iptrw);
     RegisterProperty('SendBufferSize', 'Integer', iptrw);
     RegisterProperty('OnDisconnected', 'TNotifyEvent', iptrw);
+    RegisterProperty('OnWork', 'TWorkEvent', iptrw);
+  RegisterProperty('OnWorkBegin', 'TWorkBeginEvent', iptrw);
+  RegisterProperty('OnWorkEnd', 'TWorkEndEvent', iptrw);
+
+ {      FOnWork: TWorkEvent;
+    FOnWorkBegin: TWorkBeginEvent;
+    FOnWorkEnd: TWorkEndEvent;}
+
+    {property OnWork;
+    property OnWorkBegin;
+    property OnWorkEnd;}
+
+
   end;
 end;
 
@@ -137,8 +154,7 @@ end;
 procedure SIRegister_TIdManagedBuffer(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TIdSimpleBuffer', 'TIdManagedBuffer') do
-  with CL.AddClassN(CL.FindClass('TIdSimpleBuffer'),'TIdManagedBuffer') do
-  begin
+  with CL.AddClassN(CL.FindClass('TIdSimpleBuffer'),'TIdManagedBuffer') do begin
     RegisterMethod('Constructor Create( AOnBytesRemoved : TIdBufferBytesRemoved)');
     RegisterMethod('Procedure Clear');
     RegisterMethod('Function Memory : Pointer');
@@ -190,6 +206,35 @@ begin Self.OnDisconnected := T; end;
 (*----------------------------------------------------------------------------*)
 procedure TIdTCPConnectionOnDisconnected_R(Self: TIdTCPConnection; var T: TNotifyEvent);
 begin T := Self.OnDisconnected; end;
+
+
+(*----------------------------------------------------------------------------*)
+procedure TIdTCPConnectionOnWork_W(Self: TIdTCPConnection; const T: TWorkEvent);
+begin Self.OnWork:= T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TIdTCPConnectionOnWork_R(Self: TIdTCPConnection; var T: TWorkEvent);
+begin T:= Self.OnWork; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TIdTCPConnectionOnWorkBegin_W(Self: TIdTCPConnection; const T: TWorkBeginEvent);
+begin Self.OnWorkBegin:= T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TIdTCPConnectionOnWorkBegin_R(Self: TIdTCPConnection; var T: TWorkBeginEvent);
+begin T:= Self.OnWorkBegin; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TIdTCPConnectionOnWorkEnd_W(Self: TIdTCPConnection; const T: TWorkEndEvent);
+begin Self.OnWorkEnd:= T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TIdTCPConnectionOnWorkEnd_R(Self: TIdTCPConnection; var T: TWorkEndEvent);
+begin T:= Self.OnWorkEnd; end;
+
+   {property OnWork;
+    property OnWorkBegin;
+    property OnWorkEnd;}
 
 (*----------------------------------------------------------------------------*)
 procedure TIdTCPConnectionSendBufferSize_W(Self: TIdTCPConnection; const T: Integer);
@@ -389,6 +434,7 @@ begin
     RegisterMethod(@TIdTCPConnection.WriteRFCStrings, 'WriteRFCStrings');
     RegisterMethod(@TIdTCPConnection.WriteSmallInt, 'WriteSmallInt');
     RegisterVirtualMethod(@TIdTCPConnection.WriteStream, 'WriteStream');
+    RegisterVirtualMethod(@TIdTCPConnection.WriteStream, 'WriteStream1');
     RegisterMethod(@TIdTCPConnection.WriteStrings, 'WriteStrings');
     RegisterVirtualMethod(@TIdTCPConnection.WriteFile, 'WriteFile');
     RegisterPropertyHelper(@TIdTCPConnectionClosedGracefully_R,nil,'ClosedGracefully');
@@ -406,14 +452,21 @@ begin
     RegisterPropertyHelper(@TIdTCPConnectionRecvBufferSize_R,@TIdTCPConnectionRecvBufferSize_W,'RecvBufferSize');
     RegisterPropertyHelper(@TIdTCPConnectionSendBufferSize_R,@TIdTCPConnectionSendBufferSize_W,'SendBufferSize');
     RegisterPropertyHelper(@TIdTCPConnectionOnDisconnected_R,@TIdTCPConnectionOnDisconnected_W,'OnDisconnected');
+    RegisterPropertyHelper(@TIdTCPConnectionOnWork_R,@TIdTCPConnectionOnWork_W,'OnWork');
+    RegisterPropertyHelper(@TIdTCPConnectionOnWorkBegin_R,@TIdTCPConnectionOnWorkBegin_W,'OnWorkBegin');
+    RegisterPropertyHelper(@TIdTCPConnectionOnWorkEnd_R,@TIdTCPConnectionOnWorkEnd_W,'OnWorkEnd');
+
+    {property OnWork;
+    property OnWorkBegin;
+    property OnWorkEnd;}
+
   end;
 end;
 
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TIdManagedBuffer(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TIdManagedBuffer) do
-  begin
+  with CL.Add(TIdManagedBuffer) do begin
     RegisterConstructor(@TIdManagedBuffer.Create, 'Create');
     RegisterMethod(@TIdManagedBuffer.Clear, 'Clear');
     RegisterMethod(@TIdManagedBuffer.Memory, 'Memory');

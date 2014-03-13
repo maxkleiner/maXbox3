@@ -13,7 +13,7 @@ uses
 
 type
   // Implements a block <extlink http://en.wikipedia.org/wiki/Internet_socket>socket</extlink> as a class
-  TBlockSocket = class
+  TBlockSocket2 = class
   private
     Socket : TSocket;
 		RemoteSin : TInetSockAddr;
@@ -51,7 +51,7 @@ Puts the socket in listening state, used on the server side
 @param Backlog The maximum length of the queue of pending connections
 @see Error
 }
-procedure TBlockSocket.Bind(pPort, BackLog : word); begin
+procedure TBlockSocket2.Bind(pPort, BackLog : word); begin
   with RemoteSin do begin
     Sin_Family := AF_INET;
     Sin_Addr.s_Addr := 0;
@@ -68,7 +68,7 @@ Attempts to establish a new TCP connection, used on the client side
 @param Port Port number to connect
 @see Error
 }
-procedure TBlockSocket.Connect(Host : string; pPort : word); begin
+procedure TBlockSocket2.Connect(Host : string; pPort : word); begin
   with RemoteSin do begin
     Sin_Family := AF_INET;
     Sin_Addr   := StrToNetAddr(Host);
@@ -81,7 +81,7 @@ end;
 Creates a new socket stream
 @param S Assigns an existing socket to the TBlockSocket
 }
-constructor TBlockSocket.Create(S : integer = 0); begin
+constructor TBlockSocket2.Create(S : integer = 0); begin
   {$IFNDEF MSWINDOWS}fpSetErrNo(0);{$ENDIF}
 	if S = 0 then
   	Socket := fpSocket(AF_INET, SOCK_STREAM, 0)
@@ -90,13 +90,13 @@ constructor TBlockSocket.Create(S : integer = 0); begin
 end;
 
 // Closes the socket and frees the object
-destructor TBlockSocket.Destroy; begin
+destructor TBlockSocket2.Destroy; begin
   Close;
 	inherited;
 end;
 
 // Returns the host IP address
-function TBlockSocket.GetHostAddress: string;
+function TBlockSocket2.GetHostAddress: string;
 var
   Tam : integer;
   Addr: SockAddr;
@@ -107,7 +107,7 @@ begin
 end;
 
 // Closes the socket
-procedure TBlockSocket.Close; begin
+procedure TBlockSocket2.Close; begin
   CloseSocket(Socket);
 end;
 
@@ -116,7 +116,7 @@ Attempts to accept a new TCP connection from the client and creates a new socket
 @param Timeout Time in milliseconds to wait to accept a new connection
 @return A new socket handler or 0 if none connection was accepted
 }
-function TBlockSocket.Accept(Timeout : integer) : integer;
+function TBlockSocket2.Accept(Timeout : integer) : integer;
 var
 	Tam : integer;
 begin
@@ -130,7 +130,7 @@ begin
 end;
 
 // Returns number of bytes waiting to read
-function TBlockSocket.WaitingData : cardinal;
+function TBlockSocket2.WaitingData : cardinal;
 var
   Tam : dword;
 begin
@@ -146,7 +146,7 @@ Tests if data are available for reading within the timeout
 @param Timeout Max time to wait until returns
 @return True if data are available, false otherwise
 }
-function TBlockSocket.CanRead(Timeout : Integer) : Boolean;
+function TBlockSocket2.CanRead(Timeout : Integer) : Boolean;
 var
   FDS: TFDSet;
   TimeV: TTimeVal;
@@ -159,7 +159,7 @@ begin
 end;
 
 // Cleans the socket input stream
-procedure TBlockSocket.Purge;
+procedure TBlockSocket2.Purge;
 var
 	Tam : cardinal;
 	Buffer : pointer;
@@ -172,7 +172,7 @@ begin
 end;
 
 // Receives the next available tcp packet
-function TBlockSocket.RecvPacket : AnsiString;
+function TBlockSocket2.RecvPacket : AnsiString;
 var
 	Tam : integer;
 begin
@@ -188,7 +188,7 @@ Returns the socket input stream as a string
 @param Timeout Max time to wait until some data is available for reading. Default is 300 miliseconds
 @see Error
 }
-function TBlockSocket.RecvString(Timeout : integer = 300) : AnsiString; begin
+function TBlockSocket2.RecvString(Timeout : integer = 300) : AnsiString; begin
   Result := '';
   if CanRead(Timeout) then
     while WaitingData <> 0 do
@@ -200,7 +200,7 @@ Sends a string by the socket
 @param Data String to send
 @see Error
 }
-procedure TBlockSocket.SendString(const Data : AnsiString); begin
+procedure TBlockSocket2.SendString(const Data : AnsiString); begin
 	fpSend(Socket, @Data[1], length(Data), 0);
 end;
 
@@ -208,7 +208,7 @@ end;
 Use Error method to test if others TBlockSocket methods succeded
 @return 0 if success or socket error code otherwise
 }
-function TBlockSocket.Error : integer; begin
+function TBlockSocket2.Error : integer; begin
   Result := SocketError
 end;
 

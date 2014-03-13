@@ -249,6 +249,9 @@ begin
     RegisterProperty('TextFlags', 'Longint', iptrw);
     RegisterProperty('CopyMode', 'TCopyMode', iptrw);
     //RegisterProperty('Brush', 'TBrush', iptrw);
+    RegisterProperty('OnChange', 'TNotifyEvent', iptrw);
+    RegisterProperty('OnChanging', 'TNotifyEvent', iptrw);
+
    end;
 end;
 
@@ -659,6 +662,8 @@ begin
     end;
       RegisterMethod('Procedure FreeImage');
       RegisterMethod('Procedure Mask( TransparentColor : TColor)');
+      RegisterMethod('function ReleaseMaskHandle: HBITMAP)');
+
 
      RegisterProperty('Canvas', 'TCanvas', iptr);
 {$IFNDEF CLX}

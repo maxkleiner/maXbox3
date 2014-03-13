@@ -1,7 +1,7 @@
 unit uPSI_ComCtrls;
 {
 without win utils  , advanced tlistview , more basemethods in customcontrol
-add tBytesstream , redesign of construct and overrides
+add tBytesstream , redesign of construct and overrides , ttreenode.data   , changedevent
 }
 interface
  
@@ -762,6 +762,7 @@ begin
   RegisterProperty('Visible', 'boolean', iptrw);
   RegisterProperty('ReadOnly', 'boolean', iptrw);
   RegisterProperty('GridLines', 'boolean', iptrw);
+  RegisterProperty('Color', 'TColor', iptrw);
   RegisterProperty('Checkboxes', 'boolean', iptrw);
   RegisterProperty('Columns', 'TListColumns', iptrw);
   RegisterProperty('ColumnClick', 'boolean', iptrw);
@@ -774,18 +775,21 @@ begin
   RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
   RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
    RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
-   RegisterProperty('MultiSelect', 'boolean', iptrw);
+   RegisterProperty('ONCHANGE', 'TLVChangeEvent', iptrw);
+    RegisterProperty('MultiSelect', 'boolean', iptrw);
   RegisterProperty('Enabled', 'boolean', iptrw);
   RegisterProperty('FlatScrollBars', 'boolean', iptrw);
   RegisterProperty('SmallImages', 'TCustomImageList', iptrw);
+  RegisterProperty('StateImages', 'TCustomImageList', iptrw);
   RegisterProperty('ShowHint', 'boolean', iptrw);
   RegisterProperty('Font', 'TFont', iptrw);
   RegisterProperty('ItemIndex', 'integer', iptrw);
   RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
   RegisterProperty('BORDERWidth', 'integer', iptrw);
   RegisterProperty('SortType', 'TSortType', iptrw);
+  RegisterProperty('IconOptions', 'TIconOptions', iptrw);
 
-
+  // property IconOptions: TIconOptions read FIconOptions write SetIconOptions;
   //property Items: TListItems read FListItems write SetItems stored AreItemsStored;
    //property Columns: TListColumns read FListColumns write SetListColumns;
   end;
@@ -1293,8 +1297,8 @@ begin
     RegisterProperty('PARENTFONT', 'Boolean', iptrw);
      RegisterProperty('CHARCASE', 'TEditCharCase', iptrw);
     RegisterProperty('OEMCONVERT', 'Boolean', iptrw);
-
-  end;
+     RegisterProperty('Step', 'Integer', iptrw);
+   end;
 end;
 
 (*----------------------------------------------------------------------------*)
@@ -1327,7 +1331,15 @@ begin
     RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
     RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
     RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
-    RegisterProperty('Images', 'TCustomImageList', iptrw);
+    RegisterProperty('ONChange', 'TTVChangedEvent', iptrw);
+    RegisterProperty('ONChanging', 'TTVChangingEvent', iptrw);
+    RegisterProperty('OnCollapsed', 'TTVExpandedEvent', iptrw);
+  RegisterProperty('OnCollapsing', 'TTVCollapsingEvent', iptrw);
+  RegisterProperty('OnCompare', 'TTVCompareEvent', iptrw);
+  RegisterProperty('OnAddition', 'TTVExpandedEvent', iptrw);
+  RegisterProperty('OnCustomDraw', 'TTVCustomDrawEvent', iptrw);
+  RegisterProperty('OnCustomDrawItem', 'TTVCustomDrawItemEvent', iptrw);
+   RegisterProperty('Images', 'TCustomImageList', iptrw);
     RegisterProperty('Indent', 'Integer', iptrw);
     //RegisterProperty('Items', 'TTreeNodes Integer', iptrw);
     RegisterProperty('Items', 'TTreeNodes', iptrw);
@@ -1342,10 +1354,18 @@ begin
     RegisterProperty('ShowHint', 'boolean', iptrw);
     RegisterProperty('ToolTips', 'boolean', iptrw);
     RegisterProperty('Visible', 'boolean', iptrw);
+    RegisterProperty('ShowColumnHeaders', 'boolean', iptrw);
+    RegisterProperty('ShowWorkAreas', 'boolean', iptrw);
+    RegisterProperty('Canvas', 'TCanvas', iptrw);
+
+
     //RegisterProperty('Selected', 'TTreeNode', iptrw);
     RegisterProperty('TopItem', 'TTreeNode', iptrw);
     RegisterProperty('ItemIndex', 'integer', iptrw);
    // function GetItemIndex(Value: TListItem): Integer; reintroduce; overload;
+   //   RegisterProperty('OnChange', 'TTVChangedEvent', iptr);
+
+    //   TTVChangedEvent = procedure(Sender: TObject; Node: TTreeNode) of object;
 
     {property ShowLines;
     property ShowRoot;
@@ -1475,7 +1495,7 @@ begin
     RegisterMethod('Function IsFirstNode : Boolean');
     RegisterProperty('Count', 'Integer', iptr);
     RegisterProperty('Cut', 'Boolean', iptrw);
-    RegisterProperty('Data', 'Pointer', iptrw);
+    RegisterProperty('Data', 'TObject', iptrw);     //instead of pointer
     RegisterProperty('Deleting', 'Boolean', iptr);
     RegisterProperty('Focused', 'Boolean', iptrw);
     RegisterProperty('DropTarget', 'Boolean', iptrw);
@@ -1497,6 +1517,11 @@ begin
     RegisterProperty('StateIndex', 'Integer', iptrw);
     RegisterProperty('Text', 'string', iptrw);
     RegisterProperty('TreeView', 'TCustomTreeView', iptr);
+    //RegisterProperty('OnChange', 'TTVChangedEvent', iptr);
+
+
+    //  TTVChangedEvent = procedure(Sender: TObject; Node: TTreeNode) of object;
+
   end;
 end;
 
@@ -1946,6 +1971,8 @@ begin
   CL.AddClassN(CL.FindClass('TOBJECT'),'ETreeViewError');
   CL.AddTypeS('TTVChangingEvent', 'Procedure ( Sender : TObject; Node : TTreeNode; var AllowChange : Boolean)');
   CL.AddTypeS('TTVChangedEvent', 'Procedure ( Sender : TObject; Node : TTreeNode)');
+  //  TTVChangedEvent = procedure(Sender: TObject; Node: TTreeNode) of object;
+
   CL.AddTypeS('TTVEditingEvent', 'Procedure ( Sender : TObject; Node : TTreeNode; var AllowEdit : Boolean)');
   CL.AddTypeS('TTVEditedEvent', 'Procedure ( Sender : TObject; Node : TTreeNode; var S : string)');
   CL.AddTypeS('TTVExpandingEvent', 'Procedure ( Sender : TObject; Node : TTreeN'
@@ -4184,6 +4211,11 @@ procedure TTreeNodeText_R(Self: TTreeNode; var T: string);
 begin T := Self.Text; end;
 
 (*----------------------------------------------------------------------------*)
+//procedure TTreeNodeOnChange_R(Self: TTreeView; var T: TTreeNode);
+//begin T := Self.onchange; end;
+
+
+(*----------------------------------------------------------------------------*)
 procedure TTreeNodeStateIndex_W(Self: TTreeNode; const T: Integer);
 begin Self.StateIndex := T; end;
 
@@ -4863,7 +4895,7 @@ procedure RIRegister_TCustomComboBoxEx(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TCustomComboBoxEx) do begin
     RegisterConstructor(@TCustomComboBoxEx.Create, 'Create');
-    RegisterMethod(@TCustomComboBoxEx.Free, 'Free');
+    RegisterMethod(@TCustomComboBoxEx.Destroy, 'Free');
     RegisterMethod(@TCustomComboBoxEx.Focused, 'Focused');
 
     RegisterPropertyHelper(@TCustomComboBoxExAutoCompleteOptions_R,@TCustomComboBoxExAutoCompleteOptions_W,'AutoCompleteOptions');
@@ -4883,7 +4915,7 @@ procedure RIRegister_TComboBoxExStrings(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TComboBoxExStrings) do begin
     RegisterConstructor(@TComboBoxExStrings.Create, 'Create');
-    RegisterMethod(@TComboBoxExStrings.Free, 'Free');
+    RegisterMethod(@TComboBoxExStrings.Destroy, 'Free');
     RegisterMethod(@TComboBoxExStrings.Add, 'Add');
     RegisterMethod(@TComboBoxExStrings.AddItem, 'AddItem');
     RegisterPropertyHelper(@TComboBoxExStringsSortType_R,@TComboBoxExStringsSortType_W,'SortType');
@@ -4988,7 +5020,7 @@ procedure RIRegister_TCommonCalendar(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TCommonCalendar) do begin
     RegisterConstructor(@TCommonCalendar.Create, 'Create');
-   RegisterMethod(@TCommonCalendar.Free, 'Free');
+   RegisterMethod(@TCommonCalendar.Destroy, 'Free');
      RegisterMethod(@TCommonCalendar.BoldDays, 'BoldDays');
   end;
 end;
@@ -5013,7 +5045,7 @@ procedure RIRegister_TCoolBar(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TCoolBar) do begin
     RegisterConstructor(@TCoolbar.Create, 'Create');
-    RegisterMethod(@TCoolBar.Free, 'Free');
+    RegisterMethod(@TCoolBar.Destroy, 'Free');
     RegisterMethod(@TCoolBar.FlipChildren, 'FlipChildren');
     RegisterPropertyHelper(@TCoolBarBandBorderStyle_R,@TCoolBarBandBorderStyle_W,'BandBorderStyle');
     RegisterPropertyHelper(@TCoolBarBandMaximize_R,@TCoolBarBandMaximize_W,'BandMaximize');
@@ -5079,7 +5111,7 @@ procedure RIRegister_TToolBar(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TToolBar) do begin
      RegisterConstructor(@TToolbar.Create, 'Create');
-    RegisterMethod(@TToolBar.Free, 'Free');
+    RegisterMethod(@TToolBar.Destroy, 'Free');
     RegisterMethod(@TToolBar.FlipChildren, 'FlipChildren');
      RegisterMethod(@TToolBar.GetEnumerator, 'GetEnumerator');
     RegisterVirtualMethod(@TToolBar.TrackMenu, 'TrackMenu');
@@ -5229,7 +5261,7 @@ procedure RIRegister_TCustomListView(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TCustomListView) do begin
     RegisterConstructor(@TCustomListView.Create, 'Create');
-    RegisterMethod(@TCustomListView.Free, 'Free');
+    RegisterMethod(@TCustomListView.Destroy, 'Free');
     RegisterMethod(@TCustomListView.SetBounds, 'SetBounds');
     RegisterMethod(@TCustomListView.AddItem, 'AddItem');
   RegisterMethod(@TCustomListView.Clear, 'Clear');
@@ -5313,7 +5345,7 @@ procedure RIRegister_TListItems(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TListItems) do begin
     RegisterConstructor(@TListItems.Create, 'Create');
-    RegisterMethod(@TListItems.Free, 'Free');
+    RegisterMethod(@TListItems.Destroy, 'Free');
      RegisterMethod(@TListItems.Assign, 'Assign');
     RegisterMethod(@TListItems.Add, 'Add');
     RegisterMethod(@TListItems.AddItem, 'AddItem');
@@ -5348,7 +5380,7 @@ begin
   with CL.Add(TListItem) do begin
     RegisterConstructor(@TListItem.Create, 'Create');
     RegisterMethod(@TListItem.Assign, 'Assign');
-    RegisterMethod(@TListItem.Free, 'Free');
+    RegisterMethod(@TListItem.Destroy, 'Free');
      RegisterMethod(@TListItem.CancelEdit, 'CancelEdit');
     RegisterMethod(@TListItem.Delete, 'Delete');
     RegisterMethod(@TListItem.DisplayRect, 'DisplayRect');
@@ -5387,7 +5419,7 @@ procedure RIRegister_TListColumns(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TListColumns) do begin
     RegisterConstructor(@TListColumns.Create, 'Create');
-       RegisterMethod(@TListColumns.Free, 'Free');
+       RegisterMethod(@TListColumns.Destroy, 'Free');
     RegisterMethod(@TListColumns.Add, 'Add');
     RegisterMethod(@TListColumns.Owner, 'Owner');
     RegisterPropertyHelper(@TListColumnsItems_R,@TListColumnsItems_W,'Items');
@@ -5400,7 +5432,7 @@ begin
   with CL.Add(TListColumn) do begin
      RegisterConstructor(@TListColumn.Create, 'Create');
       RegisterMethod(@TListColumn.Assign, 'Assign');
-       RegisterMethod(@TListColumn.Free, 'Free');
+       RegisterMethod(@TListColumn.Destroy, 'Free');
      RegisterPropertyHelper(@TListColumnWidthType_R,nil,'WidthType');
     RegisterPropertyHelper(@TListColumnAlignment_R,@TListColumnAlignment_W,'Alignment');
     RegisterPropertyHelper(@TListColumnAutoSize_R,@TListColumnAutoSize_W,'AutoSize');
@@ -5570,11 +5602,43 @@ procedure TTreeViewItems_R(Self: TTreeView; var T: TTreeNodes; const t1: Integer
 begin T:= Self.Items; end;
 
 
+//procedure THeaderControlOnDrawSection_R(Self: THeaderControl; var T: TDrawSectionEvent);
+//begin T := Self.OnDrawSection; end;
+
+
+
+procedure TTreeViewOnChange_R(Self: TTreeView; var T:  TTVChangedEvent; node: TTreeNode);
+begin T:= Self.OnChange; end;
+
+procedure TTreeViewOnChange_W(Self: TTreeView; const T: TTVChangedEvent; node: TTreeNode);
+begin Self.OnChange:= T; end;
+
+
+(*----------------------------------------------------------------------------*)
+//procedure THeaderControlOnDrawSection_W(Self: THeaderControl; const T: TDrawSectionEvent);
+//begin Self.OnDrawSection := T; end;
+
+
+procedure TTreeViewOnChanging_R(Self: TTreeView; var T:  TTVChangingEvent; node: TTreeNode);
+begin T:= Self.OnChanging; end;
+procedure TTreeViewOnChanging_W(Self: TTreeView; const T: TTVChangingEvent; node: TTreeNode);
+begin Self.OnChanging:= T; end;
+
+
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TTreeView(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TTreeView) do begin
+      //RegisterPublishedProperties;
       RegisterPropertyHelper(@TTreeViewItems_R,@TTreeViewItems_W,'Items');
+
+
+      RegisterPropertyHelper(@TTreeViewOnChange_R,@TTreeViewOnChange_W,'OnChange');
+      RegisterPropertyHelper(@TTreeViewOnChanging_R,@TTreeViewOnChanging_W,'OnChanging');
+
+    //RegisterProperty('ONChange', 'TTVChangedEvent', iptr);
+    //RegisterProperty('ONChanging', 'TTVChangingEvent', iptr);
+
 
   end;
 end;
@@ -5719,6 +5783,9 @@ begin
     RegisterPropertyHelper(@TTreeNodeStateIndex_R,@TTreeNodeStateIndex_W,'StateIndex');
     RegisterPropertyHelper(@TTreeNodeText_R,@TTreeNodeText_W,'Text');
     RegisterPropertyHelper(@TTreeNodeTreeView_R,nil,'TreeView');
+
+   //  RegisterProperty('OnChange', 'TTVChangedEvent', iptr);
+
   end;
 end;
 
@@ -5739,7 +5806,7 @@ begin
   with CL.Add(TCustomHeaderControl) do begin
     RegisterPropertyHelper(@TCustomHeaderControlCanvas_R,nil,'Canvas');
         RegisterConstructor(@TCustomHeaderControl.Create, 'Create');
-         RegisterMethod(@TCustomHeaderControl.Free, 'Free');
+         RegisterMethod(@TCustomHeaderControl.Destroy, 'Free');
      RegisterPropertyHelper(@TCustomHeaderControlDragReorder_R,@TCustomHeaderControlDragReorder_W,'DragReorder');
     RegisterPropertyHelper(@TCustomHeaderControlFullDrag_R,@TCustomHeaderControlFullDrag_W,'FullDrag');
     RegisterPropertyHelper(@TCustomHeaderControlHotTrack_R,@TCustomHeaderControlHotTrack_W,'HotTrack');
@@ -5815,7 +5882,7 @@ begin
     RegisterPropertyHelper(@TCustomStatusBarCanvas_R,nil,'Canvas');
     RegisterMethod(@TCustomStatusBar.SetBounds,'SetBounds');
     RegisterConstructor(@TCustomStatusBar.Create, 'Create');
-   RegisterMethod(@TCustomStatusBar.Free, 'Free');
+   RegisterMethod(@TCustomStatusBar.Destroy, 'Free');
    RegisterMethod(@TCustomStatusBar.ExecuteAction, 'ExecuteAction');
   RegisterMethod(@TCustomStatusBar.FlipChildren, 'FlipChildren');
      //RegisterPropertyHelper(@TCustomStatusBarHideS_R,@TCustomStatusBarHideS_W,'HideSelection');
@@ -5870,7 +5937,7 @@ procedure RIRegister_TPageControl(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TPageControl) do begin
     RegisterConstructor(@TPageControl.Create, 'Create');
-   RegisterMethod(@TPageControl.Free, 'Free');
+   RegisterMethod(@TPageControl.Destroy, 'Free');
      RegisterMethod(@TPageControl.FindNextPage, 'FindNextPage');
     RegisterMethod(@TPageControl.SelectNextPage, 'SelectNextPage');
     RegisterPropertyHelper(@TPageControlActivePageIndex_R,@TPageControlActivePageIndex_W,'ActivePageIndex');
@@ -5885,7 +5952,7 @@ procedure RIRegister_TTabSheet(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TTabSheet) do begin
    RegisterConstructor(@TTabSheet.Create, 'Create');
-   RegisterMethod(@TTabSheet.Free, 'Free');
+   RegisterMethod(@TTabSheet.Destroy, 'Free');
      RegisterPropertyHelper(@TTabSheetPageControl_R,@TTabSheetPageControl_W,'PageControl');
     RegisterPropertyHelper(@TTabSheetTabIndex_R,nil,'TabIndex');
     RegisterPropertyHelper(@TTabSheetHighlighted_R,@TTabSheetHighlighted_W,'Highlighted');
@@ -5911,7 +5978,7 @@ procedure RIRegister_TCustomTabControl(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TCustomTabControl) do begin
     RegisterConstructor(@TCustomTabControl.Create, 'Create');
-     RegisterMethod(@TCustomTabControl.Free, 'Free');
+     RegisterMethod(@TCustomTabControl.Destroy, 'Free');
       RegisterMethod(@TCustomTabControl.IndexOfTabAt, 'IndexOfTabAt');
     RegisterMethod(@TCustomTabControl.GetHitTestInfoAt, 'GetHitTestInfoAt');
     RegisterMethod(@TCustomTabControl.TabRect, 'TabRect');

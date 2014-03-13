@@ -225,12 +225,17 @@ begin
 
 end;
 
+procedure TButtoncolor_R(Self: TButton; var T: TColor);
+ begin //T:= Self.Color;
+ end;
+
 
 procedure RIRegisterTBUTTON(Cl: TPSRuntimeClassImporter);
 begin
   with Cl.Add(TBUTTON) do begin
    RegisterMethod(@TButton.Click, 'Click');
    RegisterConstructor(@TButton.Create, 'Create');
+   //RegisterPropertyHelper(@TButtonColor_R, @TButtonColor_W, 'Color');
    RegisterMethod(@TButton.UseRightToLeftAlignment, 'UseRightToLeftAlignment');
   end;
 end;

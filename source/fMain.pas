@@ -99,7 +99,7 @@
          8533      build 84 persistform, autobookmark , AL package2, isadmin
          8650      build 85 orpheus, asyncfree, guid  , advapi, form constructor
          8783      build 86 bugfixing, winapi2 , mysql firebird first, gsAPI
-         8999      build 88 2 tutorials, component, persistence, opengl
+         9181      build 91 2 tutorials, synapse, component, persistence, opengl, environment change
                   V4.0   in  June 2014
  ************************************************************************** }
 
@@ -146,7 +146,7 @@ const
    ALLUNITLIST = 'docs\maxbox3_9.xml'; //'in /docs;
    INCLUDEBOX = 'pas_includebox.inc';
    BOOTSCRIPT = 'maxbootscript.txt';
-   MBVERSION = '3.9.9.88';
+   MBVERSION = '3.9.9.91';
    MBVER = '399';              //for checking!
    EXENAME ='maXbox3.exe';
    MXSITE = 'http://www.softwareschule.ch/maxbox.htm';
@@ -155,6 +155,7 @@ const
    MXMAIL = 'max@kleiner.com';
    TAB = #$09;
    CODECOMPLETION ='bds_delphi.dci';
+   ENDSIGN='end.';
 
 type
   TMaxForm1 = class(TForm)
@@ -870,7 +871,7 @@ uses
   uPSR_std,
   uPSC_std,
   uPSR_stdctrls,
-  uPSC_stdctrls,
+  uPSC_stdctrls,    //listbox   , memo
   uPSC_classes,
   uPSR_classes,
   uPSR_forms,
@@ -921,7 +922,7 @@ uses
   uPSI_JvZoom,
   uPSI_PMrand,
   uPSI_JvSticker,
-  //ide_debugoutput,
+   //ide_debugoutput,
   //ToolWin; Types, Grids
   UCMainForm,
    JimShape,
@@ -1553,7 +1554,7 @@ uses
   uPSI_ovctimer,
   uPSI_ovcintl,
   uPSI_AfCircularBuffer,
-  uPSI_AfUtils,         //regopenkey advapi_ADVAPI32.DLL  wGetClassName
+  uPSI_AfUtils,         //regopenkey advapi_ADVAPI32.DLL  wGetClassName , hooks
   uPSI_AfSafeSync,
   uPSI_AfComPortCore,
   uPSI_AfComPort,
@@ -1625,8 +1626,55 @@ uses
   uPSI_gl_actorUnit1,
   uPSI_StdVCL,
   uPSI_DataAwareMain,  //3.9.9.88
+  uPSI_TabNotBk,
+  //uPSI_Tabs,
+  uPSI_udwsfiler,
+  uPSI_synaip,
+  uPSI_synacode,
+  uPSI_synachar,
+  uPSI_synamisc,
+  synamisc, //for dns info
+  uPSI_synaser,
+  uPSI_synaicnv,
+  uPSI_tlntsend,
+  uPSI_pingsend,
+  uPSI_blcksock,
+  uPSI_asn1util,
+  uPSI_dnssend, 
+  uPSI_clamsend,
+  uPSI_ldapsend,
+  uPSI_mimemess,
+  uPSI_slogsend,
+  uPSI_mimepart,
+  uPSI_mimeinln,
+  uPSI_ftpsend,
+  uPSI_ftptsend,
+  uPSI_httpsend,
+  uPSI_sntpsend,
+  uPSI_smtpsend,
+  uPSI_snmpsend,    //3.9.9.91
+  uPSI_imapsend,
+  uPSI_pop3send,
+  uPSI_nntpsend,
+  //uPSI_ssl_sbb,
+  //uPSI_ssl_cryptlib,
+  //{$IFDEF CD2XXUNIT}
+    // uPSI_ssl_openssl,
+  //{$ENDIF}
+  uPSI_ssl_openssl,  //3.9.9.91
+  uPSI_synhttp_daemon,
+  uPSI_NetWork,
+  uPSI_PingThread,
+  uPSI_JvThreadTimer,
+  uPSI_wwSystem,
+  uPSI_IdComponent,
+  uPSI_IdIOHandlerThrottle,
+  uPSI_Themes,
+  uPSI_StdStyleActnCtrls,
+  uPSI_UDDIHelper,
+  uPSI_IdIMAP4Server,
 
-
+ 
   //MDIFrame,
   uPSI_St2DBarC,
   uPSI_FmxUtils,
@@ -2026,6 +2074,9 @@ begin
   SIRegister_IdDateTimeStamp(X);  //3.9.9.40
   SIRegister_IdStack(X);
   SIRegister_IdSocks(X);
+  SIRegister_IdComponent(X); //3.9.9.91
+  SIRegister_IdIOHandlerThrottle(X);
+
   SIRegister_IdSocketHandle(X);
   SIRegister_IdIntercept(X);
   SIRegister_IdIOHandlerSocket(X);
@@ -2502,7 +2553,44 @@ begin
   SIRegister_AxCtrls(X);
   SIRegister_gl_actorUnit1(X);  //3.9.9.88
   SIRegister_DataAwareMain(X);
-
+  SIRegister_TabNotBk(X);
+  SIRegister_udwsfiler(X);
+  SIRegister_synaip(X);
+  SIRegister_synacode(X);
+  SIRegister_synachar(X);
+  SIRegister_synamisc(X);
+  SIRegister_synaser(X);
+  SIRegister_synaicnv(X);
+  SIRegister_blcksock(X); //synaclient
+  SIRegister_tlntsend(X);
+  SIRegister_pingsend(X);
+  SIRegister_asn1util(X);
+  SIRegister_dnssend(X);
+  SIRegister_ldapsend(X);
+  SIRegister_clamsend(X);
+  SIRegister_slogsend(X);
+  SIRegister_mimepart(X);
+  SIRegister_mimemess(X);
+  SIRegister_mimeinln(X);
+  SIRegister_ftpsend(X);
+  SIRegister_ftptsend(X);
+  SIRegister_httpsend(X);
+  SIRegister_sntpsend(X);
+  SIRegister_snmpsend(X);
+  SIRegister_smtpsend(X);    //3.9.9.91
+  SIRegister_imapsend(X);
+  SIRegister_pop3send(X);
+  SIRegister_nntpsend(X);
+  SIRegister_ssl_openssl(X); //3.9.9.91
+  SIRegister_synhttp_daemon(X);
+  SIRegister_PingThread(X);
+  SIRegister_JvThreadTimer(X);
+  SIRegister_NetWork(X);
+  SIRegister_wwSystem(X);
+  SIRegister_Themes(X);
+  SIRegister_StdStyleActnCtrls(X);
+  SIRegister_UDDIHelper(X);
+  SIRegister_IdIMAP4Server(X);
 
   SIRegister_JvSimLogic(X);      //3.9.7.4
   SIRegister_JvSimIndicator(X);
@@ -2698,6 +2786,7 @@ begin
   RIRegister_Forms(x);
   RIRegister_Grids(x);
   RIRegister_Menus(X);
+  RIRegister_Menus_Routines(Exec);
   RIRegister_Buttons(X);
   RIRegister_Buttons_Routines(Exec);
   RIRegister_TwinFormp(x);
@@ -3585,6 +3674,57 @@ begin
   RIRegister_gl_actorUnit1(X);  //3.9.9.88
   RIRegister_AxCtrls_Routines(Exec);
   RIRegister_DataAwareMain(X);
+  RIRegister_TabNotBk(X);
+  RIRegister_udwsfiler(X);
+  RIRegister_synaip_Routines(Exec);
+  RIRegister_synacode_Routines(Exec);
+  RIRegister_synachar_Routines(Exec);
+  RIRegister_synamisc_Routines(Exec); // comment it if no routines
+  RIRegister_synaser(X);
+  RIRegister_synaser_Routines(Exec);
+  RIRegister_synaicnv_Routines(Exec);
+  RIRegister_blcksock(X);
+  RIRegister_tlntsend(X);
+  RIRegister_pingsend_Routines(Exec);
+  RIRegister_pingsend(X);
+  RIRegister_asn1util_Routines(exec);
+  RIRegister_dnssend(X);
+  RIRegister_dnssend_Routines(Exec);
+  RIRegister_ldapsend(X);
+  RIRegister_clamsend(X);
+  RIRegister_ldapsend_Routines(Exec);
+  RIRegister_slogsend(X);
+  RIRegister_mimemess(X);
+  RIRegister_slogsend_Routines(Exec);
+  RIRegister_mimepart(X);
+  RIRegister_mimepart_Routines(Exec);
+  RIRegister_mimeinln_Routines(Exec);
+  RIRegister_ftpsend(X);
+  RIRegister_ftptsend(X);
+  RIRegister_httpsend(X);
+  RIRegister_ftpsend_Routines(Exec);
+  RIRegister_httpsend_Routines(Exec);
+  RIRegister_sntpsend(X);
+  RIRegister_snmpsend(X);
+  RIRegister_snmpsend_Routines(Exec);
+  RIRegister_smtpsend_Routines(Exec);
+  RIRegister_smtpsend(X);    //3.9.9.91
+  RIRegister_imapsend(X);
+  RIRegister_pop3send(X);
+  RIRegister_nntpsend(X);
+  RIRegister_ssl_openssl(X); //3.9.9.91
+  RIRegister_synhttp_daemon(X);
+  RIRegister_PingThread(X);
+  RIRegister_JvThreadTimer(X);
+  RIRegister_NetWork_Routines(EXec);
+  RIRegister_wwSystem_Routines(Exec);
+  RIRegister_IdComponent(X);
+  RIRegister_IdIOHandlerThrottle(X);
+  RIRegister_Themes(X);
+  RIRegister_StdStyleActnCtrls(X);
+  RIRegister_Themes_Routines(Exec);
+  RIRegister_UDDIHelper_Routines(EXec);
+  RIRegister_IdIMAP4Server(X);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -4194,7 +4334,15 @@ begin
   if IOResult = 0 then begin
     ReadLN(fx, mystring);
     CloseFile(fx);
+    //append
   end;
+end;
+
+//procedure myappend(var mystring: string); //v3.99.91
+procedure myappend(var F: text); //v3.99.91
+begin
+    //append(Text(mystring))
+    append(F)
 end;
 
 
@@ -4387,6 +4535,9 @@ begin
   Sender.AddFunction(@constrain, 'function constrain(x, a, b: integer): integer;');
   Sender.AddFunction(@myassign,'procedure Assign2(mystring, mypath: string);');
   Sender.AddFunction(@myreset,'function Reset2(mypath: string): TStringlist;');
+  Sender.AddFunction(@myappend,'procedure append(var F: text);');
+  //procedure myappend(var F: text); //v3.99.91
+
   Sender.AddFunction(@myassignfileWrite,'procedure AssignFileWrite(mystring, myfilename: string);');
   Sender.AddFunction(@myassignfileRead,'procedure AssignFileRead(var mystring, myfilename: string);');
   Sender.AddFunction(@NormalizeRect,'function NormalizeRect(const Rect: TRect): TRect;');
@@ -4675,6 +4826,8 @@ begin
        [getUserNameWin, getComputernameWin, datetimetoStr(now)]), 11);
   SearchAndCopy(memo1.lines, '#tech',Format('perf: %s threads: %d %s %s %s',
        [perftime, numprocessthreads, getIPAddress(getComputerNameWin), timetoStr(time),mbversion]), 11);
+  SearchAndCopy(memo1.lines, '#net',Format('DNS: %s; local IPs: %s; local IP: %s',
+       [getDNS, GetLocalIPs, getIPAddress(getComputerNameWin)]), 10);
 
   memo2.Lines.Add('Macro Expanded '+inttostr(memo1.Lines.count-1)+' lines');
 end;
@@ -5720,6 +5873,10 @@ begin
     //drive:= drive + ':';
     //drive:= drive + 'E:';
     drive:= Exepath;
+    alistview.BorderStyle:= bsSingle; //bsSizeable; //bsSingle;
+    alistview.color:= clcream;
+    alistview.AutoComplete:= true;
+    //alistview.gridlines;
     mycf:= TChangeFinder.Create_prepList_and_Date(alistview);
     mycf.SearchDirectories(drive + '\','*.*');
     alistview.items.savetofile(exepath+'mXfileChangeToday_list.txt');
@@ -6418,7 +6575,9 @@ begin
    //mymemo.searchengine:= mysearch;
    //mymemo.searchengine:= maxform1.SynEditSearch1;
    //t1:= mymemo.searchReplace(uppercase('function '),'',[]);
-   if pos(uppercase('end.'),uppercase(s1)) > 0 then break;  //bug 3.9.3
+   if (pos(uppercase(ENDSIGN),uppercase(s1)) > 0)
+      and (pos(uppercase(ENDSIGN),uppercase(s1)) < 6)
+   then break;  //bug 3.9.3  afterbug
 
    t2:= memo1.searchReplace(uppercase('procedure '),'',[]);
    //memo1.PrevWordPos;
@@ -6465,10 +6624,13 @@ begin
       //showmessage('comment bold');
       //if posex(  amemo1. then
       //if it1 > 6 then break;
-      if (it1 > 7) or (it2 > 6) then continue;
+      if (it1 > 6) or (it2 > 6) then continue;
 
      //t1:= mymemo.searchReplace(uppercase('function '),'',[]);
-      if pos(uppercase('end.'),uppercase(s1)) > 0 then break;
+      //if pos(uppercase(ENDSIGN),uppercase(s1)) > 0 then break;   //bug 3.9.9.91
+        if (pos(uppercase(ENDSIGN),uppercase(s1)) > 0)
+      and (pos(uppercase(ENDSIGN),uppercase(s1)) < 6)
+       then break;
       if ((it2 > 0) or (it1 > 0)) and (itstr < 9) and (it3 = 0) and (it4=0) and (it5=0) then begin
         inc(itstr);
         if STATAutobookmark then
@@ -6498,7 +6660,10 @@ begin
       s1:= aStrList[i];
       it1:= pos(uppercase('TODO'), uppercase(s1));
      //t1:= mymemo.searchReplace(uppercase('function '),'',[]);
-      if pos(uppercase('end.'),uppercase(s1)) > 0 then break;
+      //if pos(uppercase(ENDSIGN),uppercase(s1)) > 0 then break;   //bug 3.9.9.91
+        if (pos(uppercase(ENDSIGN),uppercase(s1)) > 0)
+      and (pos(uppercase(ENDSIGN),uppercase(s1)) < 6)
+        then break;
       if it1 > 0 then begin
         inc(itstr);
         aMark:= TSynEditMark.Create;
@@ -6533,7 +6698,10 @@ begin
       it1:= pos(uppercase('function '), uppercase(s1));
       it2:= pos(uppercase('procedure '), uppercase(s1));
      //t1:= mymemo.searchReplace(uppercase('function '),'',[]);
-      if pos(uppercase('end.'),uppercase(s1)) > 0 then break;
+      //if pos(uppercase(ENDSIGN),uppercase(s1)) > 0 then break;
+        if (pos(uppercase(ENDSIGN),uppercase(s1)) > 0)
+          and (pos(uppercase(ENDSIGN),uppercase(s1)) < 6)
+           then break;
       if (it2 > 0) or (it1 > 0) and (itstr < 9) then begin
         inc(itstr);
         memo1.SetBookmark(itstr,2,i+1);
@@ -6748,7 +6916,7 @@ begin
                    else output.Lines.Add('ProcessMessages Off');
         if IsInternet then output.Lines.Add('Internet On')
                    else output.Lines.Add('Internet Off');
-        output.Lines.add('Local IP: '+getIPAddress(getComputerNameWin));
+        output.Lines.add('Local IP: '+getIPAddress(getComputerNameWin)+' DNS: '+ getDNS);
         output.Lines.add('Host Name: '+getComputerNameWin+'   Win64: '+boolToStr(isWoW64,true)+'  OS: '+getOSName);
         output.Lines.add('User Name: '+getUserNameWin+'    Is Admin: '+boolToStr(getISAdmin,true));
         output.Lines.add('Process ID: '+intToStr(CurrentProcessID) +'  ThreadCount: '+intToStr(numprocessthreads));
@@ -7561,8 +7729,10 @@ var
      //t1:= mymemo.searchReplace(uppercase('function '),'',[]);
       //if pos(uppercase('end.'),uppercase(s1)) > 0 then break;
       //if ((it2 > 0) or (it1 > 0)) and (itstr < 9) and (it3 = 0) and (it4=0) then begin
-
-     if pos(uppercase('end.'),uppercase(s1)) > 0 then break;  //bug 3.9.3
+       if (pos(uppercase(ENDSIGN),uppercase(s1)) > 0)
+        and (pos(uppercase(ENDSIGN),uppercase(s1)) < 6)
+          then break;
+     //if pos(uppercase(ENDSIGN),uppercase(s1)) > 0 then break;  //bug 3.9.3
     end;
 
     if javaSyntax1.Checked then begin
@@ -7705,7 +7875,7 @@ begin
   ReplaceText:= '';
    //cbxSearch.Clear;
    cbxReplace.Clear;
-    Findtext:= 'End.';
+    Findtext:= 'End.';   //ENDSIGN
     //OnFind:= FindNextText;
     FindNextText(self);
     //Execute(false);
@@ -7823,7 +7993,10 @@ begin
         inc(tstr);
         mstr:= mstr + s1 + #10+#13;
       end;
-     if pos(uppercase('end.'),uppercase(s1)) > 0 then break;  //bug 3.9.3
+        if (pos(uppercase(ENDSIGN),uppercase(s1)) > 0)
+         and (pos(uppercase(ENDSIGN),uppercase(s1)) < 6)
+           then break;
+     //if pos(uppercase(ENDSIGN),uppercase(s1)) > 0 then break;  //bug 3.9.3
     end;
   debugout.output.Font.Size:= 12;
   debugout.output.Lines.Text:= mstr;
@@ -8890,7 +9063,9 @@ var i: integer;
 begin
   for i:= 0 to memo1.lines.Count -1 do begin
      s1:= memo1.lines[i];
-     if pos(uppercase('end.'),uppercase(s1)) > 0 then begin
+    if (pos(uppercase(ENDSIGN),uppercase(s1)) > 0)
+      and (pos(uppercase(ENDSIGN),uppercase(s1)) < 6) then begin
+      //if pos(uppercase(ENDSIGN),uppercase(s1)) > 0 then begin
        result:= i+1;
        break;  //first end counts!
      end;
@@ -8917,7 +9092,10 @@ begin
         inc(tstr);
         mstr:= mstr + s1 + #10+#13;
       end;
-     if pos(uppercase('end.'),uppercase(s1)) > 0 then break;  //bug 3.9.3
+        if (pos(uppercase(ENDSIGN),uppercase(s1)) > 0)
+         and (pos(uppercase(ENDSIGN),uppercase(s1)) < 6)
+           then break;
+     //if pos(uppercase(ENDSIGN),uppercase(s1)) > 0 then break;  //bug 3.9.3
     end;
    if javaSyntax1.Checked then begin
     for i:= 0 to aStrList.Count -1 do begin
@@ -9000,4 +9178,4 @@ end;
      RegisterMethod('Procedure Free');
     RegisterMethod(@TJvMail.Destroy, 'Free');}
 
-end.
+End.

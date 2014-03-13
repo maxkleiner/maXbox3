@@ -3,7 +3,7 @@ unit uPSR_classes;
 
 //Register STD first   add delimiter & quotechar by max
 
-   //3.6.8.4 , tbasicaction in 3.9.3
+   //3.6.8.4 , tbasicaction in 3.9.3 , custommemorystream.memory
 
 {$I PascalScript.inc}
 interface
@@ -621,6 +621,13 @@ procedure TSTREAMSIZE_R(Self: TSTREAM; var T: LONGINT); begin t := Self.SIZE; en
 procedure TSTREAMSIZE_W(Self: TSTREAM; T: LONGINT); begin Self.SIZE := t; end;
 {$ENDIF}
 
+procedure TCUSTOMMEMORYSTREAMMemory_R(Self: TCustomMemorySTREAM; var T: TObject);
+ begin
+   t:= Self.Memory;
+  end;
+
+//TCUSTOMMEMORYSTREAMMemory
+
 
 {procedure ReadBufferAB(var Buffer; Count: Longint);
 begin
@@ -648,7 +655,7 @@ begin
     RegisterMethod(@TSTREAM.READBUFFER , 'READBUFFERABD');
     RegisterMethod(@TSTREAM.WRITEBUFFER, 'WRITEBUFFERABD');
     RegisterMethod(@TSTREAM.READBUFFER , 'READBUFFERP');
-    RegisterMethod(@TSTREAM.WRITEBUFFER, 'WRITEBUFFEP');
+    RegisterMethod(@TSTREAM.WRITEBUFFER, 'WRITEBUFFERP');
     RegisterMethod(@TSTREAM.READBUFFER , 'READBUFFERAC');
     RegisterMethod(@TSTREAM.WRITEBUFFER, 'WRITEBUFFERAC');
     RegisterMethod(@TSTREAM.READBUFFER , 'READBUFFERACD');
@@ -657,9 +664,13 @@ begin
     RegisterMethod(@TSTREAM.WRITEBUFFER, 'WRITEBUFFERAW');
     RegisterMethod(@TSTREAM.READBUFFER , 'READBUFFERAWD');
     RegisterMethod(@TSTREAM.WRITEBUFFER, 'WRITEBUFFERAWD');
+    RegisterMethod(@TSTREAM.READBUFFER , 'READBUFFERO');
+    RegisterMethod(@TSTREAM.WRITEBUFFER, 'WRITEBUFFERO');
 
+ //     RegisterMethod('procedure ReadBufferO(Buffer: TObject;Count:LongInt)');
+ //   RegisterMethod('procedure WriteBufferO(Buffer: TObject;Count:LongInt)');
 
-    RegisterMethod(@TSTREAM.READ , 'READAB');
+     RegisterMethod(@TSTREAM.READ , 'READAB');
     RegisterMethod(@TSTREAM.WRITE, 'WRITEAB');
     RegisterMethod(@TSTREAM.READ , 'READABD');
     RegisterMethod(@TSTREAM.WRITE, 'WRITEABD');
@@ -675,6 +686,11 @@ begin
     RegisterMethod(@TStream.InstanceSize, 'InstanceSize');
     RegisterMethod(@TStream.FixupResourceHeader, 'FixupResourceHeader');
     RegisterMethod(@TStream.ReadResHeader, 'ReadResHeader');
+    RegisterMethod(@TStream.ReadComponent, 'ReadComponent');
+    RegisterMethod(@TStream.ReadComponentRes, 'ReadComponentRes');
+    RegisterMethod(@TStream.WriteComponent, 'WriteComponent');
+    RegisterMethod(@TStream.WriteComponentRes, 'WriteComponentRes');
+
     RegisterPropertyHelper(@TSTREAMPOSITION_R, @TSTREAMPOSITION_W, 'POSITION');
     RegisterPropertyHelper(@TSTREAMSIZE_R, {$IFDEF DELPHI3UP}@TSTREAMSIZE_W, {$ELSE}nil, {$ENDIF}'SIZE');
   end;
@@ -715,6 +731,18 @@ begin
 end;
 {$ENDIF}
 
+
+Procedure TFILESTREAMCREATE_P(Self: TFileStream;  FileName:String;Mode:Word;Rights: Cardinal);
+Begin Self.Create(Filename, mode, rights); END;
+
+
+procedure TFileStreamfilename_R(Self: TFileSTREAM; var T: string);
+ begin
+   t:= Self.FileName;
+  end;
+
+
+
 procedure RIRegisterTFILESTREAM(Cl: TPSRuntimeClassImporter);
 begin
   with Cl.Add(TFILESTREAM) do begin
@@ -722,7 +750,12 @@ begin
     RegisterConstructor(@TFileStream.Create, 'CREATE');
     {$ELSE}
     RegisterConstructor(@TFILESTREAM.CREATE, 'CREATE');
+    RegisterConstructor(@TFILESTREAMCREATE_P, 'CREATE1');
+
     RegisterMethod(@TFileStream.Destroy, 'Free');
+    RegisterPropertyHelper(@TFileStreamfilename_R, nil, 'FileName');
+ // RegisterProperty('FileName', 'string', iptr);
+
     {$ENDIF}
   end;
 end;
@@ -733,6 +766,9 @@ begin
   with Cl.Add(TCUSTOMMEMORYSTREAM) do begin
     RegisterMethod(@TCUSTOMMEMORYSTREAM.SAVETOSTREAM, 'SAVETOSTREAM');
     RegisterMethod(@TCUSTOMMEMORYSTREAM.SAVETOFILE, 'SAVETOFILE');
+    RegisterMethod(@TCUSTOMMEMORYSTREAM.Read, 'Read');
+    RegisterMethod(@TCUSTOMMEMORYSTREAM.Seek, 'Seek');
+    RegisterPropertyHelper(@TCUSTOMMEMORYSTREAMMemory_R, nil, 'Memory');
   end;
 end;
 

@@ -157,6 +157,7 @@ begin
     RegisterProperty('ACTIVECONTROL', 'TWINCONTROL', iptrw);
     RegisterProperty('BORDERICONS', 'TBorderIcons', iptrw);
     RegisterProperty('BORDERSTYLE', 'TFORMBORDERSTYLE', iptrw);
+    RegisterProperty('BORDERWIDTH', 'TBorderWidth', iptrw);
     RegisterProperty('CAPTION', 'STRING', iptrw);
     RegisterProperty('AUTOSCROLL', 'BOOLEAN', iptrw);
     RegisterProperty('AUTOSIZE', 'BOOLEAN', iptrw);

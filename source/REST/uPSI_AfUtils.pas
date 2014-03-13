@@ -57,6 +57,22 @@ begin
 
   CL.AddTypeS('ACCESS_MASK', 'DWORD');
   CL.AddTypeS('REGSAM', 'ACCESS_MASK');
+  CL.AddConstantN('READ_CONTROL','LongWord').SetUInt( $00020000);
+ CL.AddConstantN('WRITE_DAC','LongWord').SetUInt( $00040000);
+ CL.AddConstantN('WRITE_OWNER','LongWord').SetUInt( $00080000);
+ CL.AddConstantN('STANDARD_RIGHTS_READ','LongWord').SetUint($00020000);
+ CL.AddConstantN('STANDARD_RIGHTS_WRITE','LongWord').SetUint($00020000);
+ CL.AddConstantN('STANDARD_RIGHTS_EXECUTE','LongWord').SetUint($00020000);
+ CL.AddConstantN('STANDARD_RIGHTS_ALL','LongWord').SetUInt( $001F0000);
+ CL.AddConstantN('SPECIFIC_RIGHTS_ALL','LongWord').SetUInt( $0000FFFF);
+ CL.AddConstantN('ACCESS_SYSTEM_SECURITY','LongWord').SetUInt( $01000000);
+ CL.AddConstantN('MAXIMUM_ALLOWED','LongWord').SetUInt( $02000000);
+ CL.AddConstantN('GENERIC_READ','LongWord').SetUInt( DWORD ( $80000000 ));
+ CL.AddConstantN('GENERIC_WRITE','LongWord').SetUInt( $40000000);
+ CL.AddConstantN('GENERIC_EXECUTE','LongWord').SetUInt( $20000000);
+ CL.AddConstantN('GENERIC_ALL','LongWord').SetUInt( $10000000);
+ //getcurrentmodule
+
 
   //    ACCESS_MASK = DWORD;
   //    REGSAM = ACCESS_MASK;  { Requested Key access mask type. }
@@ -151,6 +167,15 @@ begin
  CL.AddDelphiFunction('Function wCreateDirectoryEx( lpTemplateDirectory, lpNewDirectory : PKOLChar; lpSecurityAttributes : PSecurityAttributes) : BOOL');
  CL.AddDelphiFunction('Function wCreateEvent( lpEventAttributes : PSecurityAttributes; bManualReset, bInitialState : BOOL; lpName : PKOLChar) : THandle');
  CL.AddDelphiFunction('Function wCreateFile( lpFileName : PKOLChar; dwDesiredAccess, dwShareMode : DWORD; lpSecurityAttributes : PSecurityAttributes; dwCreationDisposition, dwFlagsAndAttributes : DWORD; hTemplateFile : THandle) : THandle');
+ CL.AddDelphiFunction('Function CreateFile( lpFileName : PChar; dwDesiredAccess, dwShareMode : DWORD; lpSecurityAttributes : PSecurityAttributes; dwCreationDisposition, dwFlagsAndAttributes : DWORD; hTemplateFile : THandle) : THandle');
+
+ CL.AddDelphiFunction('Function GetStdHandle( nStdHandle : DWORD) : THandle');
+ CL.AddDelphiFunction('Function SetStdHandle1( nStdHandle : DWORD; hHandle : THandle) : BOOL');
+ CL.AddDelphiFunction('Function WriteFile( hFile : THandle; const Buffer, nNumberOfBytesToWrite : DWORD; var lpNumberOfBytesWritten : DWORD; lpOverlapped : DWord) : BOOL');
+ CL.AddDelphiFunction('Function ReadFile( hFile : THandle; var Buffer, nNumberOfBytesToRead : DWORD; var lpNumberOfBytesRead : DWORD; lpOverlapped : DWord) : BOOL');
+ CL.AddDelphiFunction('Function FlushFileBuffers( hFile : THandle) : BOOL');
+ CL.AddDelphiFunction('Function SetEndOfFile( hFile : THandle) : BOOL');
+
  CL.AddDelphiFunction('Function wCreateFileMapping( hFile : THandle; lpFileMappingAttributes : PSecurityAttributes; flProtect, dwMaximumSizeHigh, dwMaximumSizeLow : DWORD; lpName : PKOLChar) : THandle');
  CL.AddDelphiFunction('Function wCreateHardLink( lpFileName, lpExistingFileName : PKOLChar; lpSecurityAttributes : PSecurityAttributes) : BOOL');
  CL.AddDelphiFunction('Function wCreateMailslot( lpName : PKOLChar; nMaxMessageSize : DWORD; lReadTimeout : DWORD; lpSecurityAttributes : PSecurityAttributes) : THandle');
@@ -585,6 +610,14 @@ begin
  S.RegisterDelphiFunction(@CreateDirectoryEx, 'wCreateDirectoryEx', CdStdCall);
  S.RegisterDelphiFunction(@CreateEvent, 'wCreateEvent', CdStdCall);
  S.RegisterDelphiFunction(@CreateFile, 'wCreateFile', CdStdCall);
+ S.RegisterDelphiFunction(@CreateFile, 'CreateFile', CdStdCall);
+ S.RegisterDelphiFunction(@GetStdHandle, 'GetStdHandle', CdStdCall);
+ S.RegisterDelphiFunction(@GetStdHandle, 'SetStdHandle1', CdStdCall);
+ S.RegisterDelphiFunction(@WriteFile, 'WriteFile', CdStdCall);
+ S.RegisterDelphiFunction(@ReadFile, 'ReadFile', CdStdCall);
+ S.RegisterDelphiFunction(@FlushFileBuffers, 'FlushFileBuffers', CdStdCall);
+ S.RegisterDelphiFunction(@SetEndOfFile, 'SetEndOfFile', CdStdCall);
+
  S.RegisterDelphiFunction(@CreateFileMapping, 'wCreateFileMapping', CdStdCall);
  S.RegisterDelphiFunction(@CreateHardLink, 'wCreateHardLink', CdStdCall);
  S.RegisterDelphiFunction(@CreateMailslot, 'wCreateMailslot', CdStdCall);
@@ -870,10 +903,17 @@ begin
  S.RegisterDelphiFunction(@GetLogicalDrives, 'GetLogicalDrives', CdStdCall);
  S.RegisterDelphiFunction(@LockFile, 'LockFile', CdStdCall);
  S.RegisterDelphiFunction(@UnlockFile, 'UnlockFile', CdStdCall);
+ S.RegisterDelphiFunction(@SetWindowsHook, 'SetWindowsHook', CdStdCall);
+ S.RegisterDelphiFunction(@SetWindowsHookA, 'SetWindowsHookA', CdStdCall);
+ S.RegisterDelphiFunction(@SetWindowsHookW, 'SetWindowsHookW', CdStdCall);
+ S.RegisterDelphiFunction(@SetWindowsHookEx, 'SetWindowsHookEx', CdStdCall);
+ S.RegisterDelphiFunction(@SetWindowsHookExA, 'SetWindowsHookExA', CdStdCall);
+ S.RegisterDelphiFunction(@SetWindowsHookExW, 'SetWindowsHookExW', CdStdCall);
+ S.RegisterDelphiFunction(@UnhookWindowsHook, 'UnhookWindowsHook', CdStdCall);
+ S.RegisterDelphiFunction(@UnhookWindowsHookEx, 'UnhookWindowsHookEx', CdStdCall);
+ S.RegisterDelphiFunction(@CallNextHookEx, 'CallNextHookEx', CdStdCall);
+ S.RegisterDelphiFunction(@DefHookProc, 'DefHookProc', cdRegister);
 
-
-
- 
 end;
 
  

@@ -13,7 +13,8 @@ uses
   Register the STD, Classes (at least the types&consts) and Graphics libraries first
     add with TImage
     CreateParented and TWinControl Constructor
-    seems NO constructor in TWinControl with canvas
+    seems NO constructor in TWinControl with canvas  , boundsrect!  'BORDERWIDTH', 'TBorderWidth', iptrw);
+
 }
 
 procedure SIRegister_Controls_TypesAndConsts(Cl: TPSPascalCompiler);
@@ -292,6 +293,7 @@ begin
     RegisterMethod('procedure InitiateAction;');
     RegisterMethod('function GetControlsAlignment: TAlignment;');
 
+     RegisterPublishedProperties;
     RegisterProperty('AlignWithMargins', 'Boolean', iptrw);
     RegisterProperty('Floating', 'Boolean', iptr);
     RegisterProperty('Left', 'Integer', iptRW);
@@ -304,6 +306,11 @@ begin
     RegisterProperty('ClientWidth', 'Longint', iptRW);
     RegisterProperty('ClientOrigin', 'TPoint', iptr);
     RegisterProperty('ClientRect', 'TRect', iptr);
+    RegisterProperty('Anchors', 'TAnchors', iptRW);
+    RegisterProperty('BidiMode', 'TBiDiMode', iptr);
+    RegisterProperty('BoundsRect', 'TRect', iptr);
+    //RegisterProperty('Color', 'TColor', iptr);
+
     //RegisterProperty('ClientWidth', 'Integer', iptrw);
     RegisterProperty('Constraints', 'TSizeConstraints', iptrw);
     RegisterProperty('ExplicitLeft', 'Integer', iptr);
@@ -321,7 +328,7 @@ begin
     RegisterProperty('CURSOR', 'TCURSOR', iptrw);
     RegisterProperty('Parent', 'TWinControl', iptRW);
 
-    RegisterPublishedProperties;
+    //RegisterPublishedProperties;
     RegisterProperty('ONCHANGE', 'TNotifyEvent', iptrw);
     RegisterProperty('ONCLICK', 'TNotifyEvent', iptrw);
     RegisterProperty('ONDBLCLICK', 'TNotifyEvent', iptrw);
@@ -334,6 +341,10 @@ begin
     RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
     RegisterProperty('ControlState', 'TControlState', iptrw);
     RegisterProperty('ControlStyle', 'TControlStyle', iptrw);
+    RegisterProperty('WindowProc', 'TWndMethod', iptrw);
+
+    //AlignWithMargins
+    //WindowProc
 
     {$IFNDEF PS_MINIVCL}
     RegisterMethod('function Dragging: Boolean;');
@@ -409,9 +420,9 @@ begin
        RegisterProperty('AlignDisabled', 'Boolean', iptr);
     RegisterProperty('MouseInClient', 'Boolean', iptr);
     RegisterProperty('VisibleDockClientCount', 'Integer', iptr);
+    RegisterProperty('UseDockManager', 'Boolean', iptr);
 
-
-      {$IFNDEF PS_MINIVCL}
+       {$IFNDEF PS_MINIVCL}
     RegisterMethod('function HandleAllocated: Boolean;');
     RegisterMethod('procedure HandleNeeded;');
     RegisterMethod('procedure EnableAlign;');
@@ -446,6 +457,8 @@ begin
 
     RegisterProperty('BRUSH', 'TBRUSH', iptr);
     RegisterProperty('HELPCONTEXT', 'LONGINT', iptrw);
+    //RegisterProperty('BORDERWIDTH', 'TBorderWidth', iptrw);    in Forms
+
     {$ENDIF}
   end;
 end;
@@ -463,6 +476,8 @@ begin
   with Cl.AddClassN(cl.FindClass('TWinControl'), 'TCUSTOMCONTROL') do begin
    RegisterMethod('Constructor Create(AOwner: TComponent);');
    RegisterMethod('Procedure Free');
+   //RegisterProperty('Color', 'TColor', iptr);
+
   end;
 end;
 
@@ -496,6 +511,13 @@ begin
   CL.AddTypeS('TAlignSet', 'set of TAlign');
   cl.addTypeS('TAnchorKind', '(akTop, akLeft, akRight, akBottom)');
   cl.addTypeS('TAnchors','set of TAnchorKind');
+  CL.AddTypeS('TMessage','record msg: Cardinal; WParam, LParam, Result: Longint; end');
+  CL.AddTypeS('TWndMethod', 'procedure(var Message: TMessage) of object');
+
+
+//    TAnchorKind = (akLeft, akTop, akRight, akBottom);
+ // TAnchors = set of TAnchorKind;
+
   cl.AddTypeS('TModalResult', 'Integer');
   cl.AddTypeS('TCursor', 'Integer');
   //cl.AddTypeS('TPoint', 'record x,y: Longint; end;');

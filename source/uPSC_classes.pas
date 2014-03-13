@@ -19,6 +19,7 @@ uses
    TTextReader  , assign TStrings
        RegisterMethod(@TSTREAM.READBUFFER , 'READBUFFERAW');
     RegisterMethod(@TSTREAM.WRITEBUFFER, 'WRITEBUFFERAW');  add more stringstream
+    custommemorystream.memory as TObject
        }
 procedure SIRegister_Classes_TypesAndConsts(Cl: TPSPascalCompiler);
 
@@ -357,9 +358,18 @@ begin
     RegisterMethod('procedure ReadBufferP(Buffer: PChar;Count:LongInt)');
     RegisterMethod('procedure WriteBufferP(Buffer: PChar;Count:LongInt)');
 
+    RegisterMethod('procedure ReadBufferO(Buffer: TObject;Count:LongInt)');
+    RegisterMethod('procedure WriteBufferO(Buffer: TObject;Count:LongInt)');
+
      RegisterMethod('function InstanceSize: Longint');
     RegisterMethod('Procedure FixupResourceHeader( FixupInfo : Integer)');
     RegisterMethod('Procedure ReadResHeader');
+
+     RegisterMethod('function ReadComponent(Instance: TComponent): TComponent)');
+    RegisterMethod('function ReadComponentRes(Instance: TComponent): TComponent)');
+    RegisterMethod('WriteComponent(Instance: TComponent)');
+    RegisterMethod('Procedure WriteComponentRes(const ResName: string; Instance: TComponent)');
+
 
     {$IFDEF DELPHI4UP}
     RegisterMethod('function CopyFrom(Source:TStream;Count:Int64):LongInt');
@@ -400,11 +410,17 @@ begin
 end;
 {$ENDIF}
 
+
+
 procedure SIRegisterTFILESTREAM(Cl: TPSPascalCompiler);
 begin
   with Cl.AddClassN(cl.FindClass('THandleStream'), 'TFileStream') do begin
     RegisterMethod('constructor Create(FileName:String;Mode:Word)');
+    RegisterMethod('constructor Create1(FileName:String;Mode:Word;Rights: Cardinal)');
+ // constructor Create(const AFileName: string; Mode: Word; Rights: Cardinal); overload;
     RegisterMethod('Procedure Free');
+    RegisterProperty('FileName', 'string', iptr);
+    //property FileName: string read FFileName;
   end;
 end;
 
@@ -415,7 +431,12 @@ begin
     IsAbstract := True;
     RegisterMethod('procedure SaveToStream(Stream:TStream)');
     RegisterMethod('procedure SaveToFile(FileName:String)');
-  end;
+    RegisterProperty('Memory', 'TObject', iptr);
+    RegisterMethod('function Read(var Buffer; Count: Longint): Longint');
+    RegisterMethod('function Seek(Offset: Longint; Origin: Word): Longint;');
+
+    //property Memory: Pointer read FMemory;
+ end;
 end;
 
 procedure SIRegisterTRESOURCESTREAM(Cl: TPSPascalCompiler);
@@ -573,6 +594,12 @@ begin
   CL.AddTypeS('TReaderProc', 'Procedure ( Reader : TReader)');
   CL.AddTypeS('TWriterProc', 'Procedure ( Writer : TWriter)');
   CL.AddTypeS('TStreamProc', 'Procedure ( Stream : TStream)');
+  //CL.AddTypeS('TWndMethod', 'procedure(var Message: TMessage) of object');
+
+  //type
+  //TWndMethod = procedure(var Message: TMessage) of object;
+
+
   CL.AddTypeS('TListNotification', '( lnAdded, lnExtracted, lnDeleted )');
   CL.AddTypeS('TListAssignOp', '(laCopy, laAnd, laOr, laXor, laSrcUnique, laDestUnique )');
   CL.AddClassN(CL.FindClass('TOBJECT'),'TList');

@@ -1,6 +1,6 @@
 unit uPSI_Starter;
 {
-   kind of TProcess of Hydra
+   kind of TProcess of Hydra and DWS
 }
 interface
  

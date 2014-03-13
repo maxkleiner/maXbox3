@@ -71,6 +71,11 @@ procedure TControlVisibleW(Self: TControl; T: Boolean); begin Self.Visible:= T; 
 procedure TControlParentR(Self: TControl; var T: TWinControl); begin T := Self.Parent; end;
 procedure TControlParentW(Self: TControl; T: TWinControl); begin Self.Parent:= T; end;
 
+procedure TControlWinProcR(Self: TControl; var T: TWndMethod); begin T := Self.WindowProc; end;
+procedure TControlWinProcW(Self: TControl; T: TWndMethod); begin Self.WindowProc:= T; end;
+
+  // RegisterProperty('WindowProc', 'TWndMethod', iptrw);
+
 procedure TControlStateR(Self: TControl; var T: TControlState); begin T := Self.ControlState; end;
 procedure TControlStateW(Self: TControl; T: TControlState); begin Self.ControlState:= T; end;
 
@@ -82,6 +87,15 @@ procedure TCONTROLSHOWHINT_R(Self: TCONTROL; var T: BOOLEAN); begin T := Self.SH
 procedure TCONTROLENABLED_W(Self: TCONTROL; T: BOOLEAN); begin Self.ENABLED := T; end;
 procedure TCONTROLENABLED_R(Self: TCONTROL; var T: BOOLEAN); begin T := Self.ENABLED; end;
 
+procedure TControlAnchorsR(Self: TControl; var T: TAnchors); begin T := Self.Anchors; end;
+procedure TControlAnchorsW(Self: TControl; T: TAnchors); begin Self.Anchors:= T; end;
+procedure TControlBiDiModeR(Self: TControl; var T: TBiDiMode); begin T := Self.BiDiMode; end;
+procedure TControlBiDiModeW(Self: TControl; T: TBiDiMode); begin Self.BiDiMode:= T; end;
+procedure TControlBoundsRectR(Self: TControl; var T: TRect); begin T := Self.BoundsRect; end;
+procedure TControlBoundsRectW(Self: TControl; T: TRect); begin Self.BoundsRect:= T; end;
+
+//procedure TControlColorW(Self: TWinControl; T: TColor); begin Self.Color:= T; end;
+//procedure TControlColorR(Self: TControl; var T: TColor); begin T := Self.Color; end;
 
 
 (*----------------------------------------------------------------------------*)
@@ -347,6 +361,10 @@ begin
 
     RegisterPropertyHelper(@TControlParentR, @TControlParentW, 'PARENT');
 
+    RegisterPropertyHelper(@TControlWinProcR, @TControlWinProcW, 'WindowProc');
+
+    // RegisterProperty('WindowProc', 'TWndMethod', iptrw);
+
     RegisterPropertyHelper(@TControlConstraints_R,@TControlConstraints_W,'Constraints');
     //RegisterPropertyHelper(@TControlControlState_R,@TControlControlState_W,'ControlState');
     //RegisterPropertyHelper(@TControlControlStyle_R,@TControlControlStyle_W,'ControlStyle');
@@ -371,6 +389,9 @@ begin
     //property ControlState: TControlState read FControlState write FControlState;
     //property ControlStyle: TControlStyle read FControlStyle write FControlStyle;
 
+    RegisterPropertyHelper(@TControlAnchorsR, @TControlAnchorsW, 'Anchors');
+    RegisterPropertyHelper(@TControlBidiModeR, @TControlBidiModeW, 'BidiMode');
+    RegisterPropertyHelper(@TControlBoundsRectR, @TControlBoundsRectW, 'BoundsRect');
 
     {$IFNDEF PS_MINIVCL}
     RegisterMethod(@TControl.Dragging, 'DRAGGING');
@@ -412,6 +433,13 @@ procedure TWINCONTROLCONTROLCOUNT_R(Self: TWINCONTROL; var T: INTEGER); begin t 
 
 procedure TWinControlDB_R(Self: TWinControl; var T: boolean); begin T:= Self.DoubleBuffered; end;
 procedure TWinControlDB_W(Self: TWinControl; T: boolean); begin Self.DoubleBuffered:= T; end;
+
+procedure TWinControlUDM_R(Self: TWinControl; var T: boolean); begin T:= Self.UseDockManager; end;
+procedure TWinControlUDM_W(Self: TWinControl; T: boolean); begin Self.UseDockManager:= T; end;
+
+//7procedure TWinControlBW_R(Self: TWinControl; var T: TBorderWidth); begin T:= Self.borderwidth; end;
+//procedure TWinControlBW_W(Self: TWinControl; T: boolean); begin Self.DoubleBuffered:= T; end;
+
 
 (*----------------------------------------------------------------------------*)
 Procedure TWinControlPaintTo1_P(Self: TWinControl;  Canvas : TCanvas; X, Y : Integer);
@@ -532,6 +560,8 @@ begin
 
     RegisterPropertyHelper(@TWINCONTROLBRUSH_R, nil, 'BRUSH');
     RegisterPropertyHelper(@TWINCONTROLDB_R, @TWINCONTROLDB_W, 'DoubleBuffered');
+    //RegisterPropertyHelper(@TWINCONTROLBW_R, @TWINCONTROLBW_W, 'BORDERWIDTH');
+    RegisterPropertyHelper(@TWINCONTROLUDM_R, @TWINCONTROLUDM_W, 'UseDockManager');
 
     {$ENDIF}
   end;
@@ -544,6 +574,12 @@ begin
    RegisterMethod(@TGraphicControl.Free, 'Free');
   end;
 end;
+
+
+//procedure TCCColorW(Self: TCustomControl; T: TColor); begin Self.Color:= T; end;
+//procedure TCCColorR(Self: TWinControl; var T: TColor); begin T := Self.Color; end;
+
+
 procedure RIRegisterTCustomControl(cl: TPSRuntimeClassImporter); // requires TControl
 begin
   with Cl.Add(TCustomControl) do begin

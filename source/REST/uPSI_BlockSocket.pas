@@ -1,6 +1,6 @@
 unit uPSI_BlockSocket;
 {
-   blocks for externals
+   blocks for externals  rename to blocksocket2
 }
 interface
  
@@ -50,7 +50,7 @@ end;
 procedure SIRegister_TBlockSocket(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TOBJECT', 'TBlockSocket') do
-  with CL.AddClassN(CL.FindClass('TOBJECT'),'TBlockSocket') do begin
+  with CL.AddClassN(CL.FindClass('TOBJECT'),'TBlockSocket2') do begin
     RegisterMethod('Constructor Create( S : integer)');
     RegisterMethod('Procedure Bind( pPort, BackLog : word)');
     RegisterMethod('Function Accept( Timeout : integer) : integer');
@@ -77,20 +77,20 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TBlockSocket(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TBlockSocket) do begin
-    RegisterConstructor(@TBlockSocket.Create, 'Create');
-    RegisterMethod(@TBlockSocket.Bind, 'Bind');
-    RegisterMethod(@TBlockSocket.Accept, 'Accept');
-    RegisterMethod(@TBlockSocket.Connect, 'Connect');
-    RegisterMethod(@TBlockSocket.Purge, 'Purge');
-    RegisterMethod(@TBlockSocket.Close, 'Close');
-    RegisterMethod(@TBlockSocket.RecvPacket, 'RecvPacket');
-    RegisterMethod(@TBlockSocket.RecvString, 'RecvString');
-    RegisterMethod(@TBlockSocket.SendString, 'SendString');
-    RegisterMethod(@TBlockSocket.WaitingData, 'WaitingData');
-    RegisterMethod(@TBlockSocket.CanRead, 'CanRead');
-    RegisterMethod(@TBlockSocket.Error, 'Error');
-    RegisterMethod(@TBlockSocket.GetHostAddress, 'GetHostAddress');
+  with CL.Add(TBlockSocket2) do begin
+    RegisterConstructor(@TBlockSocket2.Create, 'Create');
+    RegisterMethod(@TBlockSocket2.Bind, 'Bind');
+    RegisterMethod(@TBlockSocket2.Accept, 'Accept');
+    RegisterMethod(@TBlockSocket2.Connect, 'Connect');
+    RegisterMethod(@TBlockSocket2.Purge, 'Purge');
+    RegisterMethod(@TBlockSocket2.Close, 'Close');
+    RegisterMethod(@TBlockSocket2.RecvPacket, 'RecvPacket');
+    RegisterMethod(@TBlockSocket2.RecvString, 'RecvString');
+    RegisterMethod(@TBlockSocket2.SendString, 'SendString');
+    RegisterMethod(@TBlockSocket2.WaitingData, 'WaitingData');
+    RegisterMethod(@TBlockSocket2.CanRead, 'CanRead');
+    RegisterMethod(@TBlockSocket2.Error, 'Error');
+    RegisterMethod(@TBlockSocket2.GetHostAddress, 'GetHostAddress');
   end;
 end;
 

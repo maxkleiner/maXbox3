@@ -250,7 +250,10 @@ begin
   BuildList;
   // in case of no entry
     AddFirstHelp(self);
-
+    //btnClose.color;
+    //lv.Color:= clyellow;
+    //lv.BorderStyle:= bsetched;
+    self.BorderWidth:= 10;
 end;
 
 procedure TViewToDoForm.btnCloseClick(Sender: TObject);

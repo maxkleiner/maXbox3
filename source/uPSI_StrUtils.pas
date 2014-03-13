@@ -434,8 +434,12 @@ begin
  CL.AddDelphiFunction('function CenterPoint(const Rect: TRect): TPoint)');
  CL.AddDelphiFunction('function SmallPoint(X, Y: Integer): TSmallPoint)');
  CL.AddDelphiFunction('function StrFillChar(const C: Char; Count: Integer): string)');
+ CL.AddDelphiFunction('function IntFillChar(const I: Integer; Count: Integer): string)');
+ CL.AddDelphiFunction('function ByteFillChar(const B: Byte; Count: Integer): string)');
+ CL.AddDelphiFunction('function ArrFillChar(const AC: Char; Count: Integer): TCharArray;');
+ CL.AddDelphiFunction('function ArrByteFillChar(const AB: Char; Count: Integer): TByteArray;');
 
-                                   //tsmallpoint
+                                    //tsmallpoint
  //CL.AddFunction('Function GetWindowRect(hdwnd: HWND, arect: TRect): boolean;');
         //cl.add               // getwindowrect
  end;
@@ -462,7 +466,35 @@ begin
     FillChar(Result[1], Count, C);
 end;
 
+ function IntFillChar(const I: Integer; Count: Integer): string;
+begin
+  SetLength(Result, Count);
+  if Count > 0 then
+    FillChar(Result[1], Count, I);
+end;
 
+function ByteFillChar(const B: Byte; Count: Integer): string;
+begin
+  SetLength(Result, Count);
+  if Count > 0 then
+    FillChar(Result[1], Count, B);
+end;
+
+type TCharArray = array of char;
+
+function ArrFillChar(const AC: Char; Count: Integer): TCharArray;
+begin
+  SetLength(Result, Count);
+  if Count > 0 then
+    FillChar(Result[1], Count, AC);
+end;
+
+function ArrByteFillChar(const AB: Char; Count: Integer): TByteArray;
+begin
+  //SetLength(Result, Count);
+  if Count > 0 then
+    FillChar(Result[1], Count, AB);
+end;
 
 (* === run-time registration functions === *)
 (*----------------------------------------------------------------------------*)
@@ -760,6 +792,10 @@ begin
  S.RegisterDelphiFunction(@FreeMem,'FreeMem', cdRegister);}
   S.RegisterDelphiFunction(@StrFillChar,'FillCharS', cdRegister);
   S.RegisterDelphiFunction(@StrFillChar,'StrFillChar', cdRegister);
+  S.RegisterDelphiFunction(@IntFillChar,'IntFillChar', cdRegister);
+  S.RegisterDelphiFunction(@ByteFillChar,'ByteFillChar', cdRegister);
+  S.RegisterDelphiFunction(@ArrFillChar,'ArrFillChar', cdRegister);
+  S.RegisterDelphiFunction(@ArrFillChar,'ArrByteFillChar', cdRegister);
 
  //S.RegisterDelphiFunction(@Concat,'Concat', cdRegister);
  S.RegisterDelphiFunction(@GetMemP, 'GetMemP', cdRegister);

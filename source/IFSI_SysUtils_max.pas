@@ -1353,6 +1353,7 @@ begin
   CL.AddTypeS('ATOM','Word');
   CL.AddTypeS('TATOM','Word');
   CL.AddTypeS('HLOCAL', 'THandle');
+  CL.AddTypeS('HHOOK', 'LongWord');
    //HFILE = LongWord;
   CL.AddTypeS('HGLRC', 'LongWord');
   CL.AddTypeS('HDESK', 'LongWord');
@@ -1405,6 +1406,7 @@ begin
   CL.AddTypeS('LOWORD','Word');
   CL.AddTypeS('FARPROC', '___Pointer');
   CL.AddTypeS('TFARPROC', '___Pointer');
+  //TFNHookProc
 
   {CL.AddTypeS('LPCSTR', 'PAnsiChar');
   CL.AddTypeS('LPCTSTR', 'PAnsiChar');
@@ -1412,6 +1414,7 @@ begin
   CL.AddTypeS('TFNThreadStartRoutine', 'TFarProc');
   CL.AddTypeS('TFNFiberStartRoutine', 'TFarProc');
   CL.AddTypeS('TThreadFunction2','procedure; stdcall');
+
 
  // record DebugInfo : PRTLCriticalSectionDebug;
  CL.AddTypeS('_RTL_CRITICAL_SECTION','record DebugInfo: TFARPROC; LockCount: Longint;'+

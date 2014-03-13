@@ -145,6 +145,9 @@ procedure TFORMBUFFER_W(Self: TFORM; T: BOOLEAN); begin Self.DoubleBuffered:= T;
 procedure TFORMIcon_W(Self: TFORM; T: TICON); begin Self.Icon:= T; end;
 procedure TFORMIcon_R(Self: TFORM; var T: TICON); begin T:= Self.Icon; end;
 
+procedure TFORMBorderwidth_W(Self: TFORM; T: TBorderWidth); begin Self.BorderWidth:= T; end;
+procedure TFORMBorderwidth_R(Self: TFORM; var T: TBorderWidth); begin T:= Self.BorderWidth; end;
+
 //procedure TFORMState_W(Self: TFORM; T: TFormState); begin Self.Formstate:= T; end;
 procedure TFORMState_R(Self: TFORM; var T: TFormState); begin T:= Self.FormState; end;
 
@@ -235,6 +238,7 @@ begin
     RegisterPropertyHelper(@TFORMCANVAS_R, nil, 'CANVAS');
     RegisterPropertyHelper(@TFORMMODALRESULT_R, @TFORMMODALRESULT_W, 'MODALRESULT');
     RegisterPropertyHelper(@TFORMIcon_R, @TFORMIcon_W, 'ICON');
+    RegisterPropertyHelper(@TFORMBorderwidth_R, @TFORMBorderWidth_W, 'BorderWidth');
 
     {$ENDIF}{PS_MINIVCL}
   end;

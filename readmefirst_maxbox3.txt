@@ -1,4 +1,55 @@
 ****************************************************************
+Release Notes maXbox 3.9.9.91 March 2014
+****************************************************************
+2 Tutorials, 42 Units add, Synapse V40, LDAP, OpenSSL, AVScan
+
+816 uPSI_TabNotBk;
+817 uPSI_udwsfiler;
+818 uPSI_synaip; //iputils
+819 uPSI_synacode;
+820 uPSI_synachar;
+821 uPSI_synamisc;
+822 uPSI_synaser;
+823 uPSI_synaicnv;
+824 uPSI_tlntsend;
+825 uPSI_pingsend;
+826 uPSI_blcksock;
+827 uPSI_asn1util; //V2
+828 uPSI_dnssend;
+829 uPSI_clamsend;
+830 uPSI_ldapsend;
+831 uPSI_mimemess;
+832 uPSI_slogsend;
+833 uPSI_mimepart;
+834 uPSI_mimeinln;
+835 uPSI_ftpsend;
+836 uPSI_ftptsend;
+837 uPSI_httpsend;
+838 uPSI_sntpsend;
+839 uPSI_smtpsend;
+840 uPSI_snmpsend;
+841 uPSI_imapsend;
+842 uPSI_pop3send;
+843 uPSI_nntpsend;
+844 uPSI_ssl_cryptlib;
+845 uPSI_ssl_openssl;
+846 uPSI_synhttp_daemon;
+847 uPSI_NetWork;
+848 uPSI_PingThread;
+849 uPSI_JvThreadTimer;
+850 unit uPSI_wwSystem;
+851 unit uPSI_IdComponent;
+852 unit uPSI_IdIOHandlerThrottle;
+853 unit uPSI_Themes;
+854 uPSI_StdStyleActnCtrls;
+855 unit uPSI_UDDIHelper;
+856 unit uPSI_IdIMAP4Server;
+
+
+SHA1: Win 3.9.9.91: 8099E25F2508B262E909B76EDF7BB301AFFA1864
+
+
+****************************************************************
 Release Notes maXbox 3.9.9.88 March 2014
 ****************************************************************
 2 Tutorials 30 Units add, VCL constructors, controls+, unit list
@@ -1914,6 +1965,99 @@ http://downloads.sourceforge.net/project/maxbox/maxbox3clx.tar.gz
 http://de.sourceforge.jp/projects/sfnet_maxbox/downloads/maxbox3clx.tar.gz/
 http://www.mirrorservice.org/sites/downloads.sourceforge.net/m/ma/maxbox/maxbox3clx.tar.gz
 http://www.mirrorservice.org/sites/downloads.sourceforge.net/m/ma/maxbox/
+
+This is the detailed report:
+
+============================================================
+
+Scan report of: 114461-maxbox3.zip
+
+Ahnlab -
+Avast -
+AVG -
+Avira -
+Bitdefender -
+Command W32/Hupigon.C.gen!Eldorado
+Command (Online) W32/Hupigon.C.gen!Eldorado
+Dr.Web -
+Eset Nod32 -
+Fortinet -
+F-Prot W32/Hupigon.C.gen!Eldorado
+G Data -
+Ikarus -
+K7 Computing -
+Kaspersky -
+Kaspersky (Online) -
+McAfee -
+McAfee (BETA) -
+McAfee (Online) -
+McAfee GW Edition (Online) -
+Microsoft -
+Norman -
+Panda -
+Panda (Online) -
+QuickHeal BAT.MouseDis
+Rising -
+Sophos -
+Sophos (Online) -
+Symantec -
+Symantec (BETA) -
+ThreatTrack -
+Total Defense -
+Trend Micro -
+Trend Micro (Cons.) -
+Trend Micro (CPR) -
+VBA32 -
+VirusBuster -
+
+============================================================
+
+The following updates have been used for the test (all times in UTC):
+
+Ahnlab sdscan-console.zip 2014-02-12 08:45
+Avast av5stream.zip 2014-02-12 13:15
+AVG avg10cmd1191a6547.zip 2014-02-12 12:20
+Avira vdf_fusebundle.zip 2014-02-12 11:00
+Bitdefender bdc.zip 2014-02-12 12:45
+Command antivir-v2-z-201402121102.zip 2014-02-12 13:00
+Command (Online) antivir-v2-z-201402121102.zip 2014-02-12 13:00
+Dr.Web drweb-500-wcl.zip 2014-01-22 21:45
+Eset Nod32 minnt3.exe 2014-02-12 12:05
+Fortinet vir_high 2014-02-12 12:30
+F-Prot antivir.def 2014-02-11 10:20
+G Data bd.zip 2014-02-12 12:30
+Ikarus t3sigs.vdb 2014-02-12 09:40
+K7 Computing K7Cmdline.zip 2014-02-11 13:20
+Kaspersky kdb-i386-cumul.zip 2014-02-12 04:45
+Kaspersky (Online) kdb-i386-cumul.zip 2014-02-12 04:45
+McAfee avvdat-7346.zip 2014-02-11 16:50
+McAfee (BETA) avvwin_netware_betadat.zip 2014-02-12 13:15
+McAfee (Online) avvdat-7346.zip 2014-02-11 16:50
+McAfee GW Edition (Online) mfegw-cmd-scanner-windows.zip 2014-02-12 01:20
+Microsoft mpam-fe.exe 2014-02-12 12:30
+Norman nse7legacy.zip 2014-02-12 05:45
+Panda pav.zip 2014-02-12 09:35
+Panda (Online) pav.zip 2014-02-12 09:35
+QuickHeal qhadvdef.zip 2014-02-12 11:50
+Rising RavDef.zip 2014-01-28 01:45
+Sophos ides.zip 2014-02-12 09:55
+Sophos (Online) ides.zip 2014-02-12 09:55
+Symantec streamset.zip 2014-02-12 13:15
+Symantec (BETA) symrapidreleasedefsv5i32.exe 2014-02-12 12:25
+ThreatTrack CSE39VT-EN-26384-F.sbr.sgn 2014-02-12 12:40
+Total Defense fv_nt86.exe 2014-02-11 20:15
+Trend Micro itbl1408601200.zip 2014-02-12 12:40
+Trend Micro (Cons.) hcoth1059995.zip 2014-02-11 13:35
+Trend Micro (CPR) lpt602.zip 2014-02-12 11:25
+VBA32 vba32w-latest.rar 2014-02-12 11:50
+VirusBuster vdb.zip 2014-02-11 12:00
+
+
+We will recheck your software. In the meantime it will not be available on our download servers.
+
+Greetings,
+your heise software team
+
 
 
 

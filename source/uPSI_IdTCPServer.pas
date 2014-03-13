@@ -1,6 +1,6 @@
 unit uPSI_IdTCPServer;
 {
-  for http server
+  for http server , add loaded
 }
 interface
  
@@ -83,6 +83,9 @@ begin
   with CL.AddClassN(CL.FindClass('TIdComponent'),'TIdTCPServer') do begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
    RegisterMethod('Procedure Free');
+   RegisterMethod('Procedure Loaded');
+   // procedure Loaded; override;
+
    RegisterProperty('ImplicitIOHandler', 'Boolean', iptr);
     RegisterProperty('ImplicitThreadMgr', 'Boolean', iptr);
     RegisterProperty('ThreadClass', 'TIdThreadClass', iptrw);
@@ -700,6 +703,7 @@ begin
   with CL.Add(TIdTCPServer) do begin
     RegisterConstructor(@TIdTCPServer.Create, 'Create');
      RegisterMethod(@TIDTCPServer.Destroy, 'Free');
+     RegisterMethod(@TIDTCPServer.loaded, 'Loaded');
     RegisterPropertyHelper(@TIdTCPServerImplicitIOHandler_R,nil,'ImplicitIOHandler');
     RegisterPropertyHelper(@TIdTCPServerImplicitThreadMgr_R,nil,'ImplicitThreadMgr');
     RegisterPropertyHelper(@TIdTCPServerThreadClass_R,@TIdTCPServerThreadClass_W,'ThreadClass');
@@ -735,8 +739,7 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TIdPeerThread(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TIdPeerThread) do
-  begin
+  with CL.Add(TIdPeerThread) do begin
     RegisterPropertyHelper(@TIdPeerThreadConnection_R,nil,'Connection');
   end;
 end;

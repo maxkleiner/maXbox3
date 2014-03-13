@@ -425,6 +425,7 @@ begin
 
     RegisterPublishedProperties;
     RegisterProperty('CANCEL', 'BOOLEAN', iptrw);
+    RegisterProperty('Color', 'TColor', iptrw);
     RegisterProperty('CAPTION', 'String', iptrw);
     RegisterProperty('DEFAULT', 'BOOLEAN', iptrw);
     RegisterProperty('FONT', 'TFont', iptrw);
@@ -668,6 +669,8 @@ begin
     +' odFocused, odDefault, odHotLight, odInactive, odNoAccel, odNoFocusRect,'
     +' odReserved1, odReserved2, odComboBoxEdit)');
   CL.AddClassN(CL.FindClass('TOBJECT'),'TPopUpMenu');
+   cl.AddTypeS('TFormBorderStyle', '(bsNone, bsSingle, bsSizeable, bsDialog, bsToolWindow, bsSizeToolWin)');
+  cl.AddTypeS('TBorderStyle', 'TFormBorderStyle');       //also in upsc_forms
   cl.AddTypeS('TOwnerDrawState', 'set of TEOwnerDrawState');
   cl.AddTypeS('TEditCharCase', '(ecNormal, ecUpperCase, ecLowerCase)');
   cl.AddTypeS('TScrollStyle', '(ssNone, ssHorizontal, ssVertical, ssBoth)');

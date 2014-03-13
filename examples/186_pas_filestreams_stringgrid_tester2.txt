@@ -1,0 +1,1787 @@
+//middle test demo which shows use of object TFileStream  and GRIDS
+//loads a file, bitmap and so on
+//{$R+}{$D-,L-,O+,Q-,R-,Y-,S-}
+//#sign:Administrator: PC08: 08/03/2014 10:43:57 AM 
+
+
+program GRIDFileBITStream_DWS_Framework;
+
+const
+  CTR_LIST = 'return_list';
+  CTR_FILE = 'return_file';
+  FILE_PATH = 'binaries3.txt';
+  DWS_PORT = 9010;
+  SSL_PORT = 443;
+  DWSVersion ='V1.8';
+
+
+var 
+  //ole: TOleVariant;
+  //amime: TMimeChar;
+  asd: TDCB;
+
+  ms: TStringGrid;
+  mg: TDrawGrid;
+  listbox1, listbox2: TListbox;
+  inFrm: TForm;
+  bmp: TBitmap;
+  windir: string;
+  mm: TMenu;
+  bitb: TBitBtn;
+  mstr: widestring;
+  handle: THandle;
+  mp: Tparams;
+  myprinter: TPrinter;
+  mystatus: TStatusBar;
+  mycp: TClipboard;
+  mynote: TNoteBook;
+  mediaplayer: TMediaPlayer;
+  apge: TPagecontrol;
+  
+  
+function GetTextFromFile(const AFile: String; var ReturnString: string): boolean;
+var
+  fileStream: TFileStream;
+begin
+  result:= false;
+  if not fileExists(AFile) then exit;
+  FileStream:= TFileStream.Create(AFile, fmOpenRead);
+    writeln(inttostr(filestream.size));
+  try
+    if FileStream.Size > 0 then begin
+      SetLength(ReturnString, FileStream.Size);
+      fileStream.Seek(0, soBeginning);
+      writeln(inttostr(filestream.size));
+      FileStream.Read(ReturnString, FileStream.Size); 
+      result:= true;
+    end;
+  finally
+    FileStream.Free;
+  end; //try
+end;
+
+procedure ListboxFill;
+begin
+  ListBox1.Items.Add('Plants = 10');
+  ListBox1.Items.Add('Animals = 20');
+  ListBox1.Items.Add('Minerals = 15');
+  ListBox2.Items.Add('Animals = 4');
+  ListBox2.Items.Add('Plants = 9');
+  ListBox2.Items.Add('Minerals = 78');
+end;
+
+procedure openFileSystem;
+var s: string;
+begin
+  if GetTextFromFile('c:\rocklist.txt',s) then
+    ShowMessage(s);
+     //Memo2.text:= s;
+     //writeln('this is');   
+     Writeln(inttoStr(SW_Show)) 
+  end;
+
+
+function LoadBitMap: TBitmap;
+begin
+  Bmp:= TBitmap.Create;
+  try
+    Bmp.LoadFromFile(ExePath+'examples\citymax.bmp');
+    //inFrm.Canvas.Brush.Bitmap:= bmp;
+    //vFrm.Canvas.FillRect(Rect(10,10,180,150));
+  finally
+    //inFrm.Canvas.Brush.Bitmap:= NIL;
+    //inFrm.Free;
+    result:= bmp;
+  end;
+end; 
+
+  
+procedure DrawGrid1DrawCell(Sender: TObject; Col, Row: Integer;
+                                    Rect: TRect; State: TGridDrawState);
+begin
+  MS.Canvas.Draw(Rect.Left, Rect.Top, Bmp);
+end;
+
+var BoundsRect: TRect;
+
+//DWS 1.8
+
+var     lbStatus: TListBox;
+      IdTCPServer1: TIdTCPServer;
+       meData: TMemo;
+       strgrd: TStringGrid;
+        // myGridC: TBuildAppGrid;
+        myGridC: TStringGrid;
+  
+
+       
+       
+function GetFullPath(const filename: String): String;
+var
+  idx: Integer;
+begin
+  for idx:= 0 to meData.Lines.count - 1 do
+    if Pos(filename, meData.Lines[idx]) > 0 then
+      Result:= ExpandFileName(filename);
+end;
+
+function GetFullPath2(const filename: String): String;
+var
+  idx: Integer;
+begin
+  for idx:= 0 to strGrd.RowCount -1 do
+    if Pos(filename, strGrd.Cells[0,idx]) > 0 then
+      result:= strGrd.Cells[0, idx];
+end;
+
+procedure Server_gridToMemo;
+var crow: integer;
+begin
+  //shows appname, date and description
+  medata.Lines.Clear;
+  for crow:= 1 to Pred(strGrd.RowCount) do begin
+    medata.Lines.Add(format('%-5s %25s %10s',
+       [strGrd.Cells[0, crow], strGrd.Cells[3, crow],
+                strGrd.Cells[2, crow]]));
+  end;
+end;
+
+       
+
+procedure TAppLoaderFrm_Server_LoadBinariesListClick(Sender: TObject);
+begin
+  with TOpenDialog.Create(NIL) do begin
+    FileName:= '*.txt';
+    if Execute then begin
+      //myDatFile:= FileName;
+      //myGridC.aDatfile:= FileName;
+      //myGridC.fillGrid;
+      Server_gridToMemo;
+      lbStatus.Items.Insert(0, Format('%-20s %s',
+        [DateTimeToStr(now), 'Definitionfile activated: ' + FileName]));
+    end;
+   free;
+  end;
+end;
+
+procedure TAppLoaderFrm_Server_SaveBinariesListClick(Sender: TObject);
+begin
+  with TSaveDialog.Create(NIL) do begin
+    filename:= '*.txt';
+    if Execute then begin
+      //myGridC.aDatfile:= filename;
+      if FileExists(filename) then begin
+        if MessageDlg('File exists!, do you want to override?',
+        mtConfirmation, [mbYes, mbNo], 0) = mrYes then begin
+          //myGridC.storeGrid;
+          lbStatus.Items.Insert(0, Format('%-20s %s',
+          [DateTimeToStr(now), 'Existing Definitionfile overwrite: '+ filename]));
+        end;
+      end else begin
+         //myGridC.storeGrid;
+         lbStatus.Items.Insert(0, Format('%-20s %s',
+         [DateTimeToStr(now), 'New Definitionfile stored: ' + filename]));
+      end;
+    end;
+    Free;
+  end;
+end;
+
+
+procedure TAppLoaderFrm_Server_IdTCPServer1Execute(AThread: TIdPeerThread);
+var
+  fname, sRequest: String;
+  idx, iPos: Integer;
+  FileStream: TFileStream;
+begin
+  sRequest:= AThread.Connection.ReadLn('',1000,80);
+  lbStatus.Items.Insert(0, Format('%-20s %s %s',
+    [DateTimeToStr(now), AThread.Connection.Socket.Binding.PeerIP, sRequest]));
+  // comes with writeline from client
+  if sRequest = CTR_LIST then begin
+    for idx:= 0 to meData.Lines.Count - 1 do
+    AThread.Connection.WriteLn(ExtractFileName(meData.Lines[idx]));
+    AThread.Connection.WriteLn('::END::');
+    AThread.Connection.Disconnect;
+    lbStatus.Items.Insert(0, Format('%-20s %s',
+      [DateTimeToStr(now), 'return filelist ...']));
+  end else
+  if Pos(CTR_FILE, sRequest) > 0 then begin
+    iPos:= Pos(CTR_FILE, sRequest);
+    fname:= Trim(copy(sRequest, iPos+12, length(sRequest)- iPos - 11));
+    delete(fname,pos(' ',fname),
+               length(fname)- pos(' ', fname) + 1);
+    fname:= GetFullPath2(fname);
+    lbStatus.Items.Insert(0, Format('%-20s %s',
+       [DateTimeToStr(now), 'Filename: ' + fname]));
+    if FileExists(fname) then begin
+      lbStatus.Items.Insert(0, Format('%-20s %s',
+        [DateTimeToStr(now), 'Transfer starts ...']));
+      FileStream := TFileStream.Create(fname, fmOpenRead + fmShareDenyNone);
+      try
+        //AThread.Connection.OpenWriteBuffer;
+        //AThread.Connection.WriteStream(FileStream);
+        AThread.Connection.CloseWriteBuffer;
+      finally
+        
+        //FreeAndNil(FileStream);
+        AThread.Connection.Disconnect;
+        lbStatus.Items.Insert(0, Format('%-20s %s',
+          [DateTimeToStr(now), 'Transfer finished ...']));
+      end
+    end else lbStatus.Items.Insert(0, 'File not Found...');
+  end;
+end;
+
+procedure TAppLoaderFrm_Server_IdTCPServer1Connect(AThread: TIdPeerThread);
+begin
+  lbStatus.Items.Insert(0, Format('%-20s %s',
+  [DateTimeToStr(now), 'DWS Connected with ' +
+                AThread.Connection.Socket.Binding.PeerIP]));
+                //+ connection.socket in D7
+end;
+
+procedure TAppLoaderFrm_Server_IdTCPServer1Disconnect(AThread: TIdPeerThread);
+begin
+  lbStatus.Items.Insert(0, Format('%-20s %s',
+     [DateTimeToStr(now), 'DWS Connection closed']));
+end;
+
+
+
+
+
+var dwsfrm: TForm;
+
+procedure loadDWSServerForm;
+
+var Panel1: TPanel;
+    Panel2: TPanel;
+ //    meData: TMemo;
+    Panel3: TPanel;
+    cbActivated: TCheckBox;
+    pnlCF: TPanel;
+ //   strgrd: TStringGrid;
+//     lbStatus: TListBox;
+  // IdTCPServer1: TIdTCPServer;
+   PopupMn_LList: TPopupMenu;
+
+begin
+dwsfrm:= TForm.create(self);
+with dwsfrm do begin
+  Left:= 259;
+  Top:= 242
+  Width:= 770
+  Height:= 532;
+  VertScrollBar.Range:= 209;
+  //ActiveControl:= cbActivated;
+  BorderStyle:= bsSingle;
+  Caption:= 'DelphiWebStart V1.6'
+  Color:= clteal;  //Background
+  //OnClose:= FormClose                                  
+  //OnCreate = FormCreate
+  PixelsPerInch:= 75
+  //Boundsrect:=456;;
+  //Anchors;
+  //TextHeight:= 13
+  TextWidth('6');
+  show;
+end;  
+  with TSplitter.create(self) do begin
+    parent:= dwsfrm;
+    Left:= 0
+    Top:= 193
+    Width:= 770
+    Height:= 16
+    Cursor:= crVSplit
+    Align:= alTop
+  end;
+  Panel1:= TPanel.create(dwsfrm);
+  with panel1 do begin  
+    parent:= dwsfrm;
+    color:= clyellow;
+    Left:= 0
+    Top:= 0
+    Width:= 770
+    Height:= 49
+    Align:= alTop
+    Alignment:= taLeftJustify
+    BevelOuter:= bvNone
+    TabOrder:= 2
+  end;  
+   cbActivated:= TCheckBox.create(dwsfrm)
+   with cbActivated do begin
+      parent:= panel1;
+      Left:= 8
+      Top:= 4
+      Width:= 121
+      Height:= 30
+      Caption:= 'SocketServer on'
+      TabOrder:= 1
+      //OnClick:= cbActivatedClick
+    end;
+    with {lblApplicationList:} TLabel.create(dwsfrm) do begin
+      parent:= panel1;
+      Left:= 371
+      Top:= 36
+      Width:= 110
+      Height:= 13
+      Caption:= 'Application Loader List:'
+      Layout:= tlCenter
+    end;
+    with {lblAppMonitor:} TLabel.create(dwsfrm) do begin
+      parent:= panel1;
+      Left:= 11
+      Top:= 36
+      Width:= 60
+      Height:= 13
+      Caption:= 'App Monitor:'
+      Layout:= tlCenter
+    end;
+    pnlCF:= TPanel.create(dwsfrm);
+    with pnlCF do begin
+      parent:= panel1;
+      Left:= 544;
+      Top:= 8
+      Width:= 201
+      Height:= 38
+      TabOrder:= 3
+      end;
+      with {edtDrive:} TEdit.create(dwsfrm) do begin
+        parent:= pnlCF;
+        Left:= 46
+        Top:= 8
+        Width:= 39
+        Height:= 21
+        TabOrder:= 0
+        Text:= 'D'
+      end;
+      with {lblDrive} TLabel.create(dwsfrm) do begin
+        parent:= pnlCF;
+        Left:= 13
+        Top:= 9
+        Width:= 28
+        Height:= 13
+        Caption:= 'Drive:'
+      end;
+      with {btnchfind:} TButton.create(dwsfrm) do begin
+        parent:= pnlCF;
+        Left:= 94
+        Top:= 8
+        Width:= 87
+        Height:= 21
+        //color
+        Hint:= 'shows all files with now date on disk'
+        Caption:= '&Change Finder'
+        font.Color:= clSilver
+        ParentShowHint:= False
+        ShowHint:= True
+        TabOrder:= 2
+        //((OnClick = btnchfindClick
+      end;
+    //end
+    with {cbSSL:} TCheckBox.create(self) do begin
+      parent:= panel1;
+      Left:= 120
+      Top:= 5
+      Width:= 121
+      Height:= 30
+      Caption:= 'SSL Channel'
+      TabOrder:= 4
+      //OnClick:= cbSSLClick
+    end;
+  //end
+  Panel2:= TPanel.create(dwsfrm);
+  with panel2 do begin
+    parent:= dwsfrm;
+     Left:= 0
+    Top:= 49
+    Width:= 770
+    Height:= 144
+    Align:= alTop
+    BevelOuter:= bvNone
+    BorderWidth:= 6
+    Caption:= 'Panel2'
+    TabOrder:= 0
+    meData:= TMemo.create(dwsfrm);
+    end;
+    with medata do begin
+      parent:= panel2;
+      Left:= 6
+      Top:= 6
+      Width:= 355
+      Height:= 132
+      Hint:= 'will send to the client to start app'
+      Align:= alLeft
+      //Font.CharSet:= fcsLatin1
+      Font.Color:= clBlack
+      Font.Height:= 11
+      Font.Name:= 'Arial'
+      //Font.Pitch:= fpVariable;
+      Font.Style:= []
+      //Font.Weight:= 0
+      ParentFont:= False
+      ParentShowHint:= False
+      ScrollBars:= ssVertical
+      ShowHint:= True
+      TabOrder:= 0
+      //BorderStyle
+      //SelLength
+      //Modified
+      //Lines
+   end;
+    strgrd:= TStringGrid.create(dwsfrm)
+      with strgrd do begin
+      parent:= panel2;
+      Left:= 370
+      Top:= 6
+      Width:= 394
+      Height:= 132
+      Hint:= 'editor to manage and store available files'
+      Align:= alRight
+      ColCount:= 4
+      DefaultColWidth:= 91
+      FixedCols:= 0
+      RowCount:= 10
+      Options:= [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowMoving, goEditing]
+      ParentShowHint:= False
+      //PopupMenu:= PopupMn_LList
+      ScrollBars:= ssVertical
+      ShowHint:= True
+      //TabOrder:= 1
+      //OnGetEditText = strgrdGetEditText
+      //OnSelectCell = strgrdSelectCell
+      //OnSetEditText = strgrdSetEditText
+    end;
+  //end
+  Panel3:= TPanel.create(dwsfrm);
+  with panel3 do begin
+    parent:= dwsfrm;
+    Left:= 0
+    Top:= 209
+    Width:= 770
+    Height:= 323
+    Align:= alClient
+    BevelOuter:= bvNone
+    BorderWidth:= 6
+    Caption:= 'Panel3'
+    TabOrder:= 1
+   end; 
+    lbStatus:= TListBox.create(dwsfrm);
+    with lbStatus do begin
+    parent:= panel3;
+      Left:= 6
+      Top:= 6
+      Width:= 758
+      Height:= 311
+      Align:= alClient
+      //BorderStyle:= bsEtched
+      Color:= clteal
+      //Font.CharSet:= fcsLatin1
+      Font.Color:= clBlack
+      Font.Height:= 13
+      Font.Name:= 'adobe-courier'
+      //Font.Pitch:= fpVariable
+      Font.Style:= []
+      //Font.Weight:= 0
+      ParentFont:= False
+      TabOrder:= 0
+    end;
+  //end
+  IdTCPServer1:= TIdTCPServer.create(dwsfrm);
+  with IdTCPServer1 do begin
+    //Bindings:= <>  .add
+    //CommandHandlers:= <>
+    DefaultPort:= 9010
+    Greeting.NumericCode:= 0
+    MaxConnectionReply.NumericCode:= 0
+    //OnConnect = IdTCPServer1Connect
+    //OnExecute = IdTCPServer1Execute
+    //OnDisconnect = IdTCPServer1Disconnect
+    ReplyExceptionCode:= 0
+    //ReplyTexts:= <>
+    ReplyUnknownCommand.NumericCode:= 0
+    //Left:= 264
+    //Top:= 8
+  end;
+  PopupMn_LList:= TPopupMenu.create(dwsfrm);
+   with PopupMn_LList do begin
+    //parent:= dwsfrm;
+    //Left:= 352
+    //Top:= 8
+    end;
+   with {LoadlistFile} TMenuItem.create(dwsfrm) do begin
+      //parent:= PopupMn_LList;
+      Caption:= 'Load_Binaries_List'
+      //OnClick:= LoadBinariesListClick
+      //HelpType:= htContext
+    end;
+    with {SaveListFile:} TMenuItem.create(dwsfrm) do begin
+      parent;
+      Caption:= 'Save_Binaries_List'
+      //OnClick = SaveBinariesListClick
+      //HelpType:= htContext;
+    end;
+  //end
+  with {IdServerIOHandlerSSL1:} TIdServerIOHandlerSSL.create(dwsfrm) do begin
+    SSLOptions.Method:= sslvSSLv2
+    SSLOptions.Mode:= sslmServer
+    SSLOptions.VerifyMode:= [];
+    SSLOptions.VerifyDepth:= 0
+    //Left:= 304
+    //Top:= 8
+  end;
+end;  
+
+var glActorForm1: TglActorForm1;
+ 
+
+begin
+  //clrscr;
+  openFileSystem
+  loadbitmap;
+  mstr:= 'this is maXboxTV';
+  {myprinter:= Printer;
+  //Printer.Printers;
+  myPrinter.Orientation:= poLandscape;
+  myPrinter.BeginDoc;
+  //aGraphic.Height:= Printer.PageHeight;
+  //aGraphic.Width:= Printer.PageWidth;
+  myPrinter.Canvas.Draw(0,0, loadbitmap);
+  myPrinter.EndDoc;}
+  //appendstr
+
+  //myprinter.free;
+  
+ // with TListbox.create(self) do begin
+    //items.add('Canvas.FillRect(Rect);');
+  //end;   
+     //bounds
+   inFrm:= TForm.create(self);
+    with inFrm do begin
+      caption:= '*****GRIDListboX************';  
+      height:= 610;
+      width:= 610;
+      //color:= clred;
+      Position:= poScreenCenter;
+      doublebuffered:= true;
+      show;
+      Left := inFrm.Left;
+      Top := inFrm.Top;
+      //Right := infrm.Left + infrm.Width;
+      //Bottom := infrm.Top + infrm.Height;
+      //boundsrect;
+      //margins
+      //CustomHint
+      //WindowProc
+      //TfWndMethod
+      //Cursor
+      //Constraints
+    end;
+  //LoadBitMap;
+  ms:= TStringGrid.create(inFrm);
+  //ms.cellrect
+  //ms.mousetocell
+  //ms.parent
+  with ms do begin
+    //objects
+    parent:= inFrm;
+    defaultdrawing:= true;
+    options:= options + [goediting]
+    defaultcolwidth:= 50;
+    defaultrowheight:= 50;
+    height:= 550;
+    width:= 500;
+    colcount:= 9;
+    rowcount:= 10;
+     //cols[3]:= mstr[2];
+     top:= 8;
+    //row
+    //onrowmoved:=
+    //onEnter:= 
+    //onselectcell:= 
+    //ondrawcell:= 
+    //ondrawcell:= @DrawGrid1DrawCell;
+  end;
+
+  
+  ms.cells[0,1]:= 'this grid';
+  ms.cells[1,1]:= 'this is grid2';
+  ms.cells[3,4]:= 'this grid34';
+  ms.cells[2,2]:= 'mX3TV';
+  ms.cells[4,5]:= 'mX3.1';
+  //ms.free;
+  ms.repaint;
+  
+  {mg:= TDrawGrid.create(self);
+    with mg do begin
+    //parent:= inFrm;
+    //cellrect(23,34)
+    defaultcolwidth:= 50;
+    defaultrowheight:= 50;
+    height:= 540;
+    width:= 400;
+    colcount:= 4;
+    rowcount:= 5;
+    ColWidths;
+    top:= 8;
+    row:= 4
+    //onrowmoved:= 
+    //ondrawcell:= @DrawGrid1DrawCell;
+    mg.repaint;
+  end;}
+  //mg.free;
+  
+  //mg.mousetocell
+   //mg.cellrect
+   //assignfile
+   //rewrite
+   //messagedlg
+     //if messagebox(0, 'this is', 'ignorance is bliss', 2) = mrIgnore then
+      //writeln('this ignorance')
+   //PlaySound(pchar(Exepath+'examples\maxbox.wav'), 0, 1);
+  writeln(floattostr(fibo(110))) 
+  writeln(floattostr(fibo(30))) 
+  writeln(inttostr(fiboInt(30))) 
+  //screen;
+  //writeln(gethostbyname('www.swisscom.ch'))
+  //writeln(gethostbyname('www.kleiner.ch'))
+
+  writeln(inttostr(gethinstance))
+   writeln(inttostr(getprocessid));
+   //if ExeFileisRunning('mmaxbox3_0.exe') then writeln('running')
+  // Handle:= FindWindow('TMaxForm1','');
+  if Handle <> 0 then 
+    Showmessage('maXbox is alive');  
+    
+  //Writeln(RegistryRead('HKEY_CURRENT_USER\Software\Microsoft\Internet Explorer\TypedURLs\','url1'));
+    writeln(inttostr(GetNumberOfProcessors)) 
+    //printbitmap
+    //normalizerect
+      //diff
+      //pointdist
+      //rotatepoint
+      //gauss
+      //vectoradd
+      //GetMem(WinDir, 144);
+      windir:='';
+  //GetWindowsDirectory(WinDir, sizeof(windir));
+  //writeln(windir)
+  //HKEY_CURRENT_USER
+    
+    Writeln(RegistryRead(HKEY_CURRENT_USER,
+                     '\Software\Microsoft\Internet Explorer\TypedURLs','url13'))
+    //LoadBitmap                 
+    //PrintBitmap(LoadBitmap, 'this is bit')
+    //maxform1.statusbar1.simpletext:= 'this is maxland';
+    mystatus:= TStatusBar.create(self);
+    mystatus.free;
+    mycp:= TClipboard.create;
+    mycp:= Clipboard;
+
+    mycp.Free;
+    //maxform1.ShellStyle1Click(self);
+      //networkvolume
+      //maXboxTV
+      MediaPlayer:= TMediaPlayer.create(self);
+      MediaPlayer.parent:= inFrm;
+      MediaPlayer.top:= 20;
+      MediaPlayer.left:= 3;
+      Mediaplayer.Display:= inFrm;
+      Mediaplayer.Refresh;
+      MediaPlayer.filename:= ExePath+'examples\airmaxloop3.mp3';
+      //VIDEO...
+      //MediaPlayer.filename:= ExePath+'examples\pushit.mpeg';
+      {MediaPlayer.open;
+      MediaPlayer.play;}
+      //mediaPlayer.close; 
+      loadDWSServerForm;
+      //ttablist
+      
+ glActorForm1:= TglActorForm1.Create(self);
+  try
+    glActorForm1.Cursor:= CRHandpoint;
+    glActorForm1.ShowModal;
+    memo2.Lines.Add('OpenGL start in single mode ..\exercices\model');
+  finally
+    glActorForm1.Cursor:= CRDefault;
+    glActorForm1.Free;
+  end;
+ 
+      
+end.
+
+------------------------------------------------------
+Programmers never die, they just GOSUB without RETURN 
+
+
+  type
+  TAppLoaderFrm_Server = class(TForm)
+    lblApplicationList: TLabel;
+    Panel1: TPanel;
+    Panel2: TPanel;
+    Panel3: TPanel;
+    meData: TMemo;
+    Splitter1: TSplitter;
+    lbStatus: TListBox;
+    cbActivated: TCheckBox;
+    IdTCPServer1: TIdTCPServer;
+    PopupMn_LList: TPopupMenu;
+    LoadlistFile: TMenuItem;
+    SaveListFile: TMenuItem;
+    strGrd: TStringGrid;
+    lblAppMonitor: TLabel;
+    pnlCF: TPanel;
+    edtDrive: TEdit;
+    lblDrive: TLabel;
+    btnchfind: TButton;
+    IdServerIOHandlerSSL1: TIdServerIOHandlerSSL;
+    cbSSL: TCheckBox;
+    procedure LoadBinariesListClick(Sender: TObject);
+    procedure SaveBinariesListClick(Sender: TObject);
+    procedure IdTCPServer1Execute(AThread: TIdPeerThread);
+    procedure IdTCPServer1Connect(AThread: TIdPeerThread);
+    procedure IdTCPServer1Disconnect(AThread: TIdPeerThread);
+    procedure cbActivatedClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure strgrdGetEditText(Sender: TObject; ACol, ARow: Integer;
+      var Value: WideString);
+    procedure strgrdSetEditText(Sender: TObject; ACol, ARow: Integer;
+      const Value: WideString);
+    procedure strgrdSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure btnchfindClick(Sender: TObject);
+    procedure cbSSLClick(Sender: TObject);
+  private
+    myGridC: TBuildAppGrid;
+    myDatFile: shortString;
+    function GetFullPath(const filename: String): String;
+    function GetFullPath2(const filename: String): String;
+    procedure gridToMemo;
+    procedure dwsInfoCallback(mmsg: string);
+    procedure GetRSAKeyPassword(var vPassword: string);
+    //procedure initTCPConnection;
+   public
+    { Public declarations }
+  end;
+
+
+var
+  AppLoaderFrm_Server: TAppLoaderFrm_Server;
+
+
+implementation
+uses
+{$IFDEF MSWindows}
+  changefind;
+{$ENDIF}
+
+//{$R *.xfm}
+
+const
+  CTR_LIST = 'return_list';
+  CTR_FILE = 'return_file';
+  FILE_PATH = 'binaries3.txt';
+  DWS_PORT = 9010;
+  SSL_PORT = 443;
+  DWSVersion ='V1.8';
+
+function TAppLoaderFrm_Server.GetFullPath(const filename: String): String;
+var
+  idx: Integer;
+begin
+  for idx:= 0 to meData.Lines.count - 1 do
+    if Pos(filename, meData.Lines[idx]) > 0 then
+      Result:= ExpandFileName(filename);
+end;
+
+function TAppLoaderFrm_Server.GetFullPath2(const filename: String): String;
+var
+  idx: Integer;
+begin
+  for idx:= 0 to strGrd.RowCount -1 do
+    if Pos(filename, strGrd.Cells[0,idx]) > 0 then
+      result:= strGrd.Cells[0, idx];
+end;
+
+procedure TAppLoaderFrm_Server.LoadBinariesListClick(Sender: TObject);
+begin
+  with TOpenDialog.Create(NIL) do begin
+    FileName:= '*.txt';
+    if Execute then begin
+      //myDatFile:= FileName;
+      myGridC.aDatfile:= FileName;
+      myGridC.fillGrid;
+      gridToMemo;
+      lbStatus.Items.Insert(0, Format('%-20s %s',
+        [DateTimeToStr(now), 'Definitionfile activated: ' + FileName]));
+    end;
+   free;
+  end;
+end;
+
+procedure TAppLoaderFrm_Server.SaveBinariesListClick(Sender: TObject);
+begin
+  with TSaveDialog.Create(NIL) do begin
+    filename:= '*.txt';
+    if Execute then begin
+      myGridC.aDatfile:= filename;
+      if FileExists(filename) then begin
+        if MessageDlg('File exists!, do you want to override?',
+        mtConfirmation, [mbYes, mbNo], 0) = mrYes then begin
+          myGridC.storeGrid;
+          lbStatus.Items.Insert(0, Format('%-20s %s',
+          [DateTimeToStr(now), 'Existing Definitionfile overwrite: '+ filename]));
+        end;
+      end else begin
+         myGridC.storeGrid;
+         lbStatus.Items.Insert(0, Format('%-20s %s',
+         [DateTimeToStr(now), 'New Definitionfile stored: ' + filename]));
+      end;
+    end;
+    Free;
+  end;
+end;
+
+procedure TAppLoaderFrm_Server.IdTCPServer1Execute(AThread: TIdPeerThread);
+var
+  fname, sRequest: String;
+  idx, iPos: Integer;
+  FileStream: TFileStream;
+begin
+  sRequest:= AThread.Connection.ReadLn;
+  lbStatus.Items.Insert(0, Format('%-20s %s %s',
+    [DateTimeToStr(now), AThread.Connection.Socket.Binding.PeerIP, sRequest]));
+  // comes with writeline from client
+  if sRequest = CTR_LIST then begin
+    for idx:= 0 to meData.Lines.Count - 1 do
+    AThread.Connection.WriteLn(ExtractFileName(meData.Lines[idx]));
+    AThread.Connection.WriteLn('::END::');
+    AThread.Connection.Disconnect;
+    lbStatus.Items.Insert(0, Format('%-20s %s',
+      [DateTimeToStr(now), 'return filelist ...']));
+  end else
+  if Pos(CTR_FILE, sRequest) > 0 then begin
+    iPos:= Pos(CTR_FILE, sRequest);
+    fname:= Trim(copy(sRequest, iPos+12, length(sRequest)- iPos - 11));
+    delete(fname,pos(' ',fname),
+               length(fname)- pos(' ', fname) + 1);
+    fname:= GetFullPath2(fname);
+    lbStatus.Items.Insert(0, Format('%-20s %s',
+       [DateTimeToStr(now), 'Filename: ' + fname]));
+    if FileExists(fname) then begin
+      lbStatus.Items.Insert(0, Format('%-20s %s',
+        [DateTimeToStr(now), 'Transfer starts ...']));
+      FileStream := TFileStream.Create(fname, fmOpenRead + fmShareDenyNone);
+      try
+        AThread.Connection.OpenWriteBuffer;
+        AThread.Connection.WriteStream(FileStream);
+        AThread.Connection.CloseWriteBuffer;
+      finally
+        FreeAndNil(FileStream);
+        AThread.Connection.Disconnect;
+        lbStatus.Items.Insert(0, Format('%-20s %s',
+          [DateTimeToStr(now), 'Transfer finished ...']));
+      end
+    end else lbStatus.Items.Insert(0, 'File not Found...');
+  end;
+end;
+
+procedure TAppLoaderFrm_Server.IdTCPServer1Connect(AThread: TIdPeerThread);
+begin
+  lbStatus.Items.Insert(0, Format('%-20s %s',
+  [DateTimeToStr(now), 'DWS Connected with ' +
+                AThread.Connection.Socket.Binding.PeerIP]));
+                //+ connection.socket in D7
+end;
+
+procedure TAppLoaderFrm_Server.IdTCPServer1Disconnect(AThread: TIdPeerThread);
+begin
+  lbStatus.Items.Insert(0, Format('%-20s %s',
+     [DateTimeToStr(now), 'DWS Connection closed']));
+end;
+
+procedure TAppLoaderFrm_Server.cbActivatedClick(Sender: TObject);
+var
+ AppDir: string;
+ _IniFile: TIniFile;
+
+begin
+  //cbSSL.Checked:= false;
+  if cbActivated.Checked then begin
+    IdTCPServer1.defaultPort:= DWS_PORT;
+    IdTCPServer1.IOHandler:= NIL;
+    lbStatus.Items.Insert(0, Format('%-20s %s',
+    [DateTimeToStr(now), 'SSL IOHandler reset']));
+    if cbSSL.Checked then begin
+    //cbSSL.Checked:= not cbSSL.Checked;
+      _IniFile:= TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'IP_A.INI');
+      IdTCPServer1.IOHandler:= IdServerIOHandlerSSL1;
+      with IdServerIOHandlerSSL1.SSLOptions do begin
+        Method:= sslvSSLv3;
+        Mode:= sslmServer;
+        AppDir:= ExtractFilePath(Application.ExeName);
+        RootCertFile:= AppDir +
+            _IniFile.ReadString('CERT', 'ROOTCERT', '');
+        CertFile:= AppDir +
+              _IniFile.ReadString('CERT', 'SCERT', '');
+        KeyFile:= AppDir +
+               _IniFile.ReadString('CERT', 'RSAKEY', '');
+        VerifyMode:= [sslvrfPeer];
+      end;
+      //IdTCPServer1.Bindings.Items[0].port:= 443;
+      IdTCPServer1.Bindings.DefaultPort:= SSL_PORT;
+      IdServerIOHandlerSSL1.OnStatusInfo:= dwsInfoCallback;
+      //IdTCPServer1.IOHandler:= IdServerIOHandlerSSL1;
+      IdServerIOHandlerSSL1.OnGetPassword:= GetRSAKeyPassword;
+      lbStatus.Items.Insert(0, Format('%-20s %s',
+         [DateTimeToStr(now), 'RSA KeyPass has been passed ;)']));
+      _IniFile.Free;
+    end; // end SSL stuff
+    IdTCPServer1.Active:= true;
+  // socket not activated
+  end else
+    IdTCPServer1.Active:= false;
+  cbActivated.Checked:= IdTCPServer1.Active;
+  case cbActivated.Checked of
+    true: lbStatus.Items.Insert(0, Format('%-20s %s',
+      [DateTimeToStr(now), 'DWS Server activ on port: ' +
+           intToStr(IdTCPServer1.DefaultPort)]));
+    false: lbStatus.Items.Insert(0, Format('%-20s %s',
+      [DateTimeToStr(now), 'DWS Server is halted ... ']));
+  end;
+end;
+
+
+procedure TAppLoaderFrm_Server.FormCreate(Sender: TObject);
+begin
+  myDatFile:= FILE_PATH;
+  myGridC:= TBuildAppGrid.Create_initGrid(strGrd, myDatFile);
+  myGridC.fillGrid;
+  ShortDateFormat := 'dd.mm.yyyy';
+  LongTimeFormat := 'hh.mm.ss';
+  meData.WordWrap:= false;
+  meData.ScrollBars:= ssVertical;
+  AppLoaderFrm_Server.Caption:= 'DelphiWebStart '+DWSVersion;
+  //meData.Lines.LoadFromFile(ExpandFileName(FILE_PATH));
+  if fileexists(FILE_PATH) then begin
+    gridToMemo;
+    lbStatus.Items.Insert(0, Format('%-20s %s',
+       [DateTimeToStr(now), 'State Logger started, DWS '+DWSVersion]));
+    lbStatus.Items.Insert(0, Format('%-20s %s',
+       [DateTimeToStr(now), 'Definitionfile activated: ' + myDatFile]));
+    lbStatus.Items.Insert(0, Format('%-20s %s',
+       [DateTimeToStr(now), 'DWSServer.exe /allowinstances not set']));
+  //idTCPServer1.Intercept
+  end;
+end;
+
+procedure TAppLoaderFrm_Server.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  myGridC.storeGrid;
+  myGridC.Free;
+end;
+
+
+procedure TAppLoaderFrm_Server.strgrdGetEditText(Sender: TObject; ACol, ARow: Integer;
+  var Value: WideString);
+begin
+  // cause of linux names
+  if ACol = 0 then
+    if value <> '' then
+     Value:= AnsiLowerCase(Value);
+end;
+
+procedure TAppLoaderFrm_Server.strgrdSetEditText(Sender: TObject; ACol, ARow: Integer;
+  const Value: WideString);
+begin
+  if ACol = 1 then begin
+    try
+      if value <> '' then
+        strtoInt(Value);
+    except
+      raise Exception.Create('must be an integer value in app size');
+    end;
+  end;
+ //myGridC.modified:= false;
+// better solution in selectcell
+end;
+
+procedure TAppLoaderFrm_Server.gridToMemo;
+var crow: integer;
+begin
+  //shows appname, date and description
+  medata.Lines.Clear;
+  for crow:= 1 to Pred(strGrd.RowCount) do begin
+    medata.Lines.Add(format('%-5s %25s %10s',
+       [strGrd.Cells[0, crow], strGrd.Cells[3, crow],
+                strGrd.Cells[2, crow]]));
+  end;
+end;
+
+procedure TAppLoaderFrm_Server.strgrdSelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+begin
+  myGridC.modified:= true;
+end;
+
+procedure TAppLoaderFrm_Server.btnchfindClick(Sender: TObject);
+ var mycf: TChangeFinder;
+     drive: string[10];
+begin
+  screen.cursor:=crHourglass;
+  drive:= edtDrive.Text + ':';
+ {$IFDEF MSWindows}
+  mycf:= TChangeFinder.Create_prepList_and_Date(lbStatus);
+  try
+    mycf.SearchDirectories(drive + '\','*.*');
+  finally
+    mycf.Free;
+  end;
+ {$ENDIF}
+  screen.cursor:=crDefault;
+end;
+
+
+procedure TAppLoaderFrm_Server.cbSSLClick(Sender: TObject);
+begin
+  if cbSSL.Checked then begin
+    lbStatus.Items.Insert(0, Format('%-20s %s',
+    [DateTimeToStr(now), 'SSL Port Connected with '+intToStr(SSL_PORT)]));
+  end else begin
+    lbStatus.Items.Insert(0, Format('%-20s %s',
+    [DateTimeToStr(now), 'Port Connected with'+ intToStr(DWS_PORT)]));
+  end;
+end;
+
+
+procedure TAppLoaderFrm_Server.dwsInfoCallback(mmsg: string);
+begin
+  lbStatus.Items.Insert(0, Format('%-20s %s',
+                       [DateTimeToStr(now), mmsg]));
+end;
+
+procedure TAppLoaderFrm_Server.GetRSAKeyPassword(var vPassword: string);
+begin
+  //pass of the machine rsakey on which you hold the certificate!!
+  vPassword := 'belplan02';
+  //this is a password for unlocking the server
+  //rsakey. If you have your own key, then it would probably be different
+end;
+
+end.
+
+
+
+Client
+{-Modulename and path: udwsfiler
+//
+//D:\franktech\Delphmax\dws\DWSServer.mpb
+//Category    Access method
+//
+//Developer kleiner kommunikation
+//Last Modification on 30.06.03 17:51:54:
+//question is destructor of grid
+  descript as a new field on 20.6.03
+  modified flag on 30.6.03,
+  longer filename, initvalues 12.2.07, LOCs = 152
+//==========================================================================}
+unit udwsfiler;
+
+
+interface
+uses
+//{$IFDEF Linux}
+
+ QGrids;
+//{$ELSE}
+//  Grids;
+
+// {$ENDIF}
+
+
+type
+ TAppData = record
+   Name: string[50];
+   size: longint;
+   Release: string[30];
+   descript: string[80];
+ end;
+
+  TBuildAppGrid = class (TObject)
+  private
+    aGrid: TStringGrid;
+    app: TAppData;
+    f: file of TAppData;
+    FaDatfile: ShortString;
+    FModified: Boolean;
+  protected
+    function GetaDatfile: ShortString;
+    procedure SetaDatfile(const Value: ShortString);
+  public
+    constructor Create_initGrid(vGrid: TStringGrid; const vFile: shortString);
+    procedure fillGrid;
+    procedure storeGrid;
+    property aDatFile: ShortString read GetaDatfile write SetaDatfile;
+    property modified: Boolean read FModified write FModified;
+  end;
+
+
+implementation
+
+
+uses
+//{$IFDEF Linux}
+
+ QDialogs, QControls, QStdCtrls,
+ //{$ELSE}
+ //Dialogs, Controls, StdCtrls,
+  sysutils;
+
+//{$ENDIF}
+
+{
+******************************** TBuildAppGrid *********************************
+}
+constructor TBuildAppGrid.Create_initGrid(vGrid: TStringGrid; const vFile: shortString);
+begin
+  aGrid:= vGrid;
+  aDatfile:= vFile;
+  with aGrid do begin
+    ScrollBars:= ssVertical;
+    FixedRows:= 1;
+    FixedCols:= 0;
+    ColCount:= 4;
+    RowCount:= 2; //title is one row
+    DefaultColWidth:= 90;
+    DefaultRowHeight:= 20;
+  end;
+end;
+
+procedure TBuildAppGrid.fillGrid;
+var
+  crow: Integer;
+begin
+  crow := 1;
+  with aGrid do begin
+    Cells[0,0]:= 'Application Name';
+    ColWidths[0]:= 140;
+    Cells[1,0]:= 'App Size';
+    ColWidths[1]:= 60;
+    Cells[2,0]:= 'Release Date';
+    ColWidths[2]:= 90;
+    Cells[3,0]:= 'Description';
+    ColWidths[3]:= 120;
+    if aDatFile <> '' then begin
+      AssignFile(f,aDatFile);
+      Reset(f);
+      try
+        while not Eof(f) do begin
+          Read (f, app);
+          Cells[0,crow]:= app.Name;
+          Cells[1,crow]:= intToStr(app.size);
+          Cells[2,crow]:= app.Release;
+          Cells[3,crow]:= app.descript;
+          Inc(crow);
+          RowCount:= crow +1;  //new entry
+        end;
+      finally
+        CloseFile(f);
+    end;
+   end;// if FileExists...
+  end; //with
+end;
+
+function TBuildAppGrid.GetaDatfile: ShortString;
+begin
+  if FileExists(FaDatFile) then
+    result:= FaDatFile
+  else begin
+     AssignFile(f, FaDatFile);
+     Rewrite(f);
+     closefile(f);
+     result:= FaDatFile;
+ end;
+end;
+
+procedure TBuildAppGrid.SetaDatfile(const Value: ShortString);
+begin
+  if FaDatfile <> Value then begin
+    FaDatfile:= Value;
+  end;
+end;
+
+procedure TBuildAppGrid.storeGrid;
+var
+  crow: Integer;
+  realRowCount: byte;
+begin
+  if FModified then
+  if MessageDlg('Save Changes in ' +
+             aDatFile, mtConfirmation, mbOkCancel,0) = mrOK then begin
+     realRowCount:= 0;
+     AssignFile(f, aDatfile);
+     Rewrite(f);
+   try
+     for crow:= 1 to Pred(aGrid.RowCount) do begin
+       if (aGrid.Cells[0, crow]) <> '' then
+       inc(realRowCount)
+     end;
+     for crow:= 1 to realRowCount do begin
+       app.Name:= aGrid.Cells[0, crow];
+       app.size:= strToInt(aGrid.Cells[1, crow]);
+       app.Release:= aGrid.Cells[2, crow];
+       app.descript:= aGrid.Cells[3, crow];
+       Write (f, app);
+     end;
+   finally
+     CloseFile(f);
+   end;
+  end; //if MessageDlg...
+end;
+
+end.
+
+
+unit udwsclient;
+
+//========================================================================
+// Delphi Web Start Pattern
+// provide a technique to start apps from a TCPServer
+// based on Dr. Karlheinz Mörth and Max Kleiner
+// model: Indy Toolset;
+// Ex.:  with IdTCPClient1 do begin
+//         if Connected then DisConnect;
+//         showStatus;
+//         Host:= edHost.Text;
+//         Port:= StrToInt(edPort.Text);
+//         Connect;
+//         WriteLn(CTR_LIST);
+// V1.0 lokal const with path check
+// V1.1 libc execute of apps
+// V1.2 compilerdirectives, execute of win apps  19.3.03
+//   files already on disk aren't transported
+// bug_a: filenames with spaces doesn't work
+// still searching for a real progressbar while reading from indy-buffer
+// to solve with events onWork...
+// V1.5 version check control on client, simple on name
+// V1.5 exit message to server, letTCPConnect, antifreeze component, LoCs=294
+// V1.8 enhanced with openSLL on Indy Sockets, LoCs=307
+// this CLX app needs qtintf70.dll
+// http://max.kleiner.com, max@kleiner.com
+//========================================================================
+
+
+interface
+
+uses
+  SysUtils, Types, Classes, QGraphics, QControls, QForms, QDialogs,
+  QStdCtrls, IdBaseComponent, IdComponent, IdTCPConnection,
+  IdTCPClient,  IdAntiFreezeBase, IdAntiFreeze, QExtCtrls,  QComCtrls,
+  IdServerIOHandler, IdSSLOpenSSL,
+  IdServerIOHandlerSocket, IdIOHandler, IdIOHandlerSocket;
+
+type
+  TfrmDWS = class(TForm)
+    Panel1: TPanel;
+    Panel2: TPanel;
+    Panel3: TPanel;
+    Panel4: TPanel;
+    Label2: TLabel;
+    Label3: TLabel;
+    Label4: TLabel;
+    Label5: TLabel;
+    Label6: TLabel;
+    Splitter1: TSplitter;
+    edHost: TEdit;
+    edPath: TEdit;
+    edPort: TEdit;
+    btngetfile: TButton;
+    IdTCPClient1: TIdTCPClient;
+    lbStatus: TListBox;
+    lbres: TListBox;
+    IdAntiFreeze1: TIdAntiFreeze;
+    lblload: TLabel;
+    pnlProgbar: TPanel;
+    progbar: TProgressBar;
+    chkBVersion: TCheckBox;
+    startimage: TImage;
+    cbSSL: TCheckBox;
+    IdSSLIOHandlerSocket1: TIdSSLIOHandlerSocket;
+    //SSL: TIdConnectionInterceptOpenSSL;
+    procedure btngetfileClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure lbResDblClick(Sender: TObject);
+    procedure IdTCPClient1Disconnected(Sender: TObject);
+    procedure IdTCPClient1Work(Sender: TObject; AWorkMode: TWorkMode;
+      const AWorkCount: Integer);
+    procedure FormDestroy(Sender: TObject);
+  private
+    procedure showStatus;
+    function sureDisconnect: boolean;
+    procedure letTCPConnect;
+  public
+    { Public declarations }
+  end;
+
+var
+  frmDWS: TfrmDWS;
+
+implementation
+
+//{$R *.xfm}
+
+
+{$IFDEF LINUX}
+
+uses libc;
+
+{$ENDIF}
+{$IFDEF MSWINDOWS}
+uses shellapi, windows, starter;
+{$ENDIF}
+
+const
+  kAnswer = 1;
+  kEnd    = 2;
+  kEmpty  = 3;
+  CTR_LIST = 'return_list';
+  CTR_FILE = 'return_file ';
+  CTR_END = 'client exit: ';
+
+function ReturnType(const s: String): word;
+begin
+  if pos(s, '::END::') > 0 then Result:= kEnd else
+  if length(Trim(s)) = 0 then Result:= kEmpty else
+    Result:= kAnswer;
+end;
+
+procedure TfrmDWS.btngetfileClick(Sender: TObject);
+var
+  sReturn: String;
+  wAnswerType: Word;
+  LineCnt: Integer;
+begin
+  lbres.Visible:= true;
+  startimage.Free;
+  with IdTCPClient1 do begin
+    letTCPConnect;
+    showStatus;
+    try
+      //writeln('this is testmessage');
+      WriteLn(CTR_LIST);
+      lbres.Clear;
+      LineCnt:= 0;
+      repeat
+        sReturn:= ReadLn;
+        wAnswerType:= ReturnType(sReturn);
+        if wAnswerType = kAnswer then begin
+          lbres.Items.Add(sReturn);
+          inc(LineCnt);
+        end;
+      until wAnswerType = kEnd;
+      lbStatus.Items.Insert(0, Format('%-20s %s',
+      [DateTimeToStr(now), 'DWS Server Files available: '
+                + IntToStr(LineCnt) + ' entries']));
+      sureDisconnect;
+    except
+      on E: Exception do ShowMessage(E.Message);
+    end;
+  end; //with
+end;
+
+procedure TfrmDWS.FormCreate(Sender: TObject);
+begin
+  ShortDateFormat:= 'dd.mm.yyyy';
+  LongTimeFormat:= 'hh.mm.ss';
+  //just a test to find a real progressbar
+  with progbar do begin
+     visible:= True;
+     Min:= 0;
+     //Max:= Size;
+     Step:= 5;
+  end;
+  IdAntiFreeze1.active:= true;
+  IdAntiFreeze1.IdleTimeOut:= 500;
+  lbres.visible:= false;
+  lbStatus.Items.Insert(0, Format('%-20s %s',
+     [DateTimeToStr(now), 'DWS client started...']));
+  lbStatus.Items.Insert(0, IdTCPClient1.LocalName +'  Client');
+  edHost.Text:= IdTCPClient1.LocalName;
+  //edHost.Text:= IdTCPClient1.Host;
+  //debug
+end;
+
+procedure TfrmDWS.lbResDblClick(Sender: TObject);
+var
+  FileStream: TFileStream;
+  fname: String;
+begin
+  with IdTCPClient1 do begin
+    letTCPConnect;
+    showStatus;
+    //progbar.Repaint;
+    try
+      lbStatus.Items.Insert(0, Format('%-20s %s',
+          [DateTimeToStr(now), 'Copy... ' +
+          ExtractFileName(lbres.Items[lbres.ItemIndex])]));
+      WriteLn(CTR_FILE + lbres.Items[lbres.ItemIndex]);
+      fname:= ExpandFileName(edPath.Text + '/' +
+        ExtractFileName(lbres.Items[lbres.ItemIndex]));
+      delete(fname,pos(' ',fname),length(fname)- pos(' ', fname) + 1);
+      if not DirectoryExists(ExtractFileDir(fname)) then
+        ForceDirectories(ExtractFileDir(fname));
+      //TStarter not on Linux
+      if chkBVersion.Checked then
+      if not TStarter.checkNameVersion(fname) then begin
+        FileStream:= TFileStream.Create(fname, fmCreate);
+        while connected do begin
+          //progbar.Max:= filestream.size;
+          //true means read until disconnect
+          ReadStream(FileStream, -1, true);
+          //currentReadBuffersize;
+          lbStatus.Items.Insert(0, Format('%-20s %s',
+          [DateTimeToStr(now),IntToStr(FileStream.Size)+ ' Chk Bytes copied']));
+        end;
+       FreeAndNil(FileStream);
+       sureDisconnect;
+      end; //if
+      if not chkBVersion.Checked then begin
+        FileStream:= TFileStream.Create(fname, fmCreate);
+        while connected do
+          ReadStream(FileStream, -1, true);
+        lbStatus.Items.Insert(0, Format('%-20s %s',
+        [DateTimeToStr(now), IntToStr(FileStream.Size) + ' Bytes copied']));
+        FreeAndNil(FileStream);
+        sureDisconnect;
+      end;
+     //then start application
+     {$IFDEF LINUX}
+      pid:= fork;
+        if pid = 0 then begin
+          if execvp(pchar(fname),NIL) <> 0 then halt(1);
+        end else begin
+          waitpid(pid, @status, 0);
+        end;
+      //execv(pchar(filename),NIL);
+      //libc.system(pchar(filename));
+     {$ENDIF}
+     {$IFDEF MSWINDOWS}
+     // shellapi.WinExec('c:\testcua.bat', SW_SHOW);
+     with lbStatus.items do begin
+       case shellapi.shellExecute(0,'open', pchar(fname), '',NIL,
+                    SW_SHOWNORMAL) of
+         0: insert(0, 'out of memory or resources');
+         ERROR_BAD_FORMAT: insert(0, 'file is invalid in image');
+         ERROR_FILE_NOT_FOUND: insert(0,'file was not found');
+         ERROR_PATH_NOT_FOUND: insert(0,'path was not found');
+       end;
+       Insert(0, Format('%-20s %s',
+               [DateTimeToStr(now), fname + ' Loaded...']));
+     end
+     {$ENDIF}
+    except
+      on E: Exception do ShowMessage(E.Message);
+    end;
+  end; //with
+end;
+
+procedure TfrmDWS.showStatus;
+begin
+  lbStatus.Items.Insert(0, Format('%-20s %s',
+       [DateTimeToStr(now), 'connect to DWS Server ...']));
+  lbStatus.Items.Insert(0, Format('%-20s %s %s',
+       [DateTimeToStr(now), 'Host: ', edHost.Text]));
+  lbStatus.Items.Insert(0, Format('%-20s %s %s',
+       [DateTimeToStr(now), 'Port: ', edPort.Text]));
+end;
+
+function TfrmDWS.sureDisconnect: boolean;
+begin
+ result:= false;
+ if IdTCPClient1.Connected then
+ try
+   IDTCPClient1.IOHandler:= IdSSLIOHandlerSocket1;
+   IdTCPClient1.Disconnect;
+   repeat
+     until NOT IdTCPClient1.Connected;
+   result:= true;
+ except
+ end;
+end;
+
+procedure TfrmDWS.IdTCPClient1Disconnected(Sender: TObject);
+begin
+  lbStatus.Items.Insert(0, Format('%-20s %s',
+     [DateTimeToStr(now), 'DWS Connection closed ...']));
+end;
+
+procedure TfrmDWS.IdTCPClient1Work(Sender: TObject; AWorkMode: TWorkMode;
+  const AWorkCount: Integer);
+begin
+  //progbar.Step:= aWorkCount div 8 ;
+  progbar.StepIt;
+end;
+
+
+procedure TfrmDWS.FormDestroy(Sender: TObject);
+begin
+  with IdTCPClient1 do begin
+    letTCPConnect;
+    WriteLn(CTR_END + IdTCPClient1.LocalName);
+    sureDisconnect;
+  end;
+end;
+
+procedure TfrmDWS.letTCPConnect;
+begin
+  with IdTCPClient1 do begin
+    if Connected then sureDisconnect;
+    Port:= StrToInt(edPort.Text);
+    IOHandler:= NIL;
+    if cbSSL.Checked then begin
+      IOHandler:= IdSSLIOHandlerSocket1;
+      Port:= StrToInt('443');
+      edPort.Text:= '443';
+    end;
+    Host:= edHost.Text;
+    Connect;
+  end;
+end;
+
+end.
+
+
+
+
+{
+**********************************************************
+ * DWS Temp - Starter
+ *
+ * Versionchecker and launcher
+ * implemented as a static class
+ *
+ * Author: Arik Dasen, Max Kleiner
+ * Date: 7.2.2004
+ * experimental for version checking and more utilities
+ * this unit is for the time not CLX
+ * License: GPL
+ * 17.11.2005 getfilelist: result correction
+ *********************************************************
+}
+
+unit Starter;
+
+interface
+
+uses Windows,  sysutils, classes;
+
+type
+  TStarter = class
+  private
+    class function GetStdError(const Command: String; var Errors: TStringList): Boolean;
+    class function WinExecAndWait32Process(FileName:String; Visibility :
+                       integer; process : PProcessInformation):DWORD;
+    class function GetVersion(version : string) : integer;
+  public
+    class function CheckVersion(version, required, nojre : string) : boolean;
+    class function WinExecAndWait32(FileName:String; Visibility : integer):DWORD;
+    class function getFileList(aList: TStringList): integer;
+    class function checkNameVersion(aFilename: string): boolean;
+  end;
+
+implementation
+
+{ TStarter }
+  uses udwsclient;
+
+// execute a command and get stderror as a stringlist
+class function TStarter.GetStdError(const Command: String; var Errors: TStringList): Boolean;
+var
+  StartupInfo: TStartupInfo;
+  ProcessInfo: TProcessInformation;
+  SecurityAttr: TSecurityAttributes;
+  PipeErrorsRead: THandle;
+  PipeErrorsWrite: THandle;
+  Succeed: Boolean;
+  Buffer: array [0..255] of Char;
+  NumberOfBytesRead: DWORD;
+  Stream: TMemoryStream;
+begin
+  //Init ProcessInfo
+  FillChar(ProcessInfo, SizeOf(TProcessInformation), 0);
+  //Init SecurityAttr
+  FillChar(SecurityAttr, SizeOf(TSecurityAttributes), 0);
+  SecurityAttr.nLength := SizeOf(SecurityAttr);
+  SecurityAttr.bInheritHandle := true;
+  SecurityAttr.lpSecurityDescriptor := nil;
+  //create pipe
+  CreatePipe(PipeErrorsRead, PipeErrorsWrite, @SecurityAttr, 0);
+  //init StartupInfo
+  FillChar(StartupInfo, SizeOf(TStartupInfo), 0);
+  StartupInfo.cb:=SizeOf(StartupInfo);
+  StartupInfo.hStdInput := 0;
+  StartupInfo.hStdOutput := 0;
+  StartupInfo.hStdError := PipeErrorsWrite;
+  StartupInfo.wShowWindow := sw_Hide;
+  StartupInfo.dwFlags := STARTF_USESHOWWINDOW or STARTF_USESTDHANDLES;
+  if CreateProcess(nil, PChar(command), nil, nil, true, CREATE_DEFAULT_ERROR_MODE or
+                    CREATE_NEW_CONSOLE or NORMAL_PRIORITY_CLASS, nil, nil, StartupInfo,
+                    ProcessInfo) then
+  begin
+    result:=true;
+    //close write-pipe
+    CloseHandle(PipeErrorsWrite);
+    // read error-pipe
+    Stream := TMemoryStream.Create;
+    try
+      while true do begin
+        succeed:= ReadFile(PipeErrorsRead, Buffer, 255, NumberOfBytesRead, NIL);
+        if not succeed then
+          break;
+        Stream.Write(Buffer, NumberOfBytesRead);
+      end;
+      Stream.Position := 0;
+      Errors.LoadFromStream(Stream);
+    finally
+      Stream.Free;
+    end;
+    CloseHandle(PipeErrorsRead);
+    WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
+    CloseHandle(ProcessInfo.hProcess);
+  end
+  else begin
+    result:= false;
+    CloseHandle(PipeErrorsRead);
+    CloseHandle(PipeErrorsWrite);
+  end;
+end;
+
+// simple version-to-integer converter (shame on me)
+class function TStarter.GetVersion(version : string) : integer;
+var p : integer;
+begin
+  version := version + '.';
+  Result := 0;
+  p := Pos('.', version);
+  if p > 0 then begin
+    Result := StrToIntDef(Copy(version,1,p-1), 0) * 100;
+    Delete(version, 1, Pos('.', version));
+    p := Pos('.', version);
+    if p > 0 then begin
+      Result := Result + StrToIntDef(Copy(version,1,p-1), 0) * 10;
+      Delete(version, 1, Pos('.', version));
+      p := Pos('.', version);
+      if p > 0 then
+        Result:= Result + StrToIntDef(Copy(version,1,p-1), 0);
+    end;
+  end;
+end;
+
+// check if installed java runtime version is equal or higher than ...
+class function TStarter.CheckVersion(version, required, nojre : string) : boolean;
+var checkerrorList : TStringList;
+    nversion : integer;
+    s : string;
+begin
+  Result:= false;
+  nversion:= GetVersion(version);
+
+  checkerrorList:= TStringList.Create;
+  GetStdError('java -version', checkerrorList);
+  if Pos('java', checkerrorList[0]) = 0 then
+    MessageBox(0, PChar(nojre), 'Error', MB_ICONERROR)
+  else begin
+    s := Copy(checkerrorList[0], 15, 5);
+    required := StringReplace(required, '%v', version, [rfReplaceAll]);
+    if nversion > GetVersion(s) then
+      MessageBox(0, PChar(required), 'Error', MB_ICONERROR)
+    else
+      Result := true;
+  end;
+end;
+
+// start a process and wait for its termination
+class function TStarter.WinExecAndWait32Process(FileName: String; Visibility: integer; process: PProcessInformation): DWORD;
+var cmd : array[0..512] of char;
+    StartupInfo:TStartupInfo;
+begin
+  StrPCopy(cmd, FileName);
+  FillChar(StartupInfo,Sizeof(StartupInfo),#0);
+  StartupInfo.cb := Sizeof(StartupInfo);
+  StartupInfo.dwFlags := STARTF_USESHOWWINDOW;
+
+  StartupInfo.wShowWindow := Visibility;
+  if not CreateProcess(nil,
+    cmd,                           // pointer to command line string
+    nil,                           // pointer to process security attributes
+    nil,                           // pointer to thread security attributes
+    false,                         // handle inheritance flag
+    CREATE_NEW_CONSOLE or          // creation flags
+    NORMAL_PRIORITY_CLASS,
+    nil,                           // pointer to new environment block
+    nil,                           // pointer to current directory name
+    StartupInfo,                   // pointer to STARTUPINFO
+    process^)                      // pointer to PROCESS_INF
+  then Result := DWORD(-1)
+  else begin
+     WaitforSingleObject(process^.hProcess,INFINITE);
+     GetExitCodeProcess(process^.hProcess,Result);
+     CloseHandle( process^.hProcess );
+     CloseHandle( process^.hThread );
+  end;
+end;
+
+// wrapper
+class function TStarter.WinExecAndWait32(FileName: String; Visibility: integer): DWORD;
+var process : TProcessInformation;
+begin
+  Result := WinExecAndWait32Process(FileName, Visibility, @process);
+end;
+
+class function TStarter.getFileList(aList: TStringList): integer;
+var DOSerr: integer;
+    fsrch: TsearchRec;
+begin
+  // result 0 or 1
+  result:= 1;
+  // implement uses on form frmDWS!!
+  doserr:= FindFirst(frmDWS.edPath.Text+'/*.*',faAnyFile, fsrch);
+  if (DOSerr = 0) then begin
+    while (DOSerr = 0) do begin
+      aList.Add(fsrch.Name);
+      if (fsrch.attr and faDirectory) = 0 then inc(result);
+      DOSerr:= findnext(fsrch);
+    end;
+   findClose(fsrch);
+  end;
+end;
+
+class function TStarter.checkNameVersion(aFilename: string): boolean;
+var diskfilename: string;
+    aList: TStringList;
+    filecount, i: integer;
+begin
+  result:= false;
+  aList:= TStringList.Create;
+  try
+    //WriteLn(CTR_FILE + lbres.Items[lbres.ItemIndex]);
+    // just a name checking, we work on a secure timestamp checking
+    delete(aFilename,pos(' ',afilename),
+              length(afilename)- pos(' ', afilename) + 1);
+    afilename:= extractFilename(afilename);
+    filecount:= TStarter.getFileList(aList);
+    for i:= 0 to filecount do begin
+        if afilename = aList.strings[i] then
+              result:= true;
+    end;
+  finally
+    aList.Free;
+  end;
+end;
+
+end.
+
+
+http://www.ebay.de/itm/Lima-HO-BR-E-03-002-Vorserie-/371006551448?pt=DE_Modellbau_Modelleisenbahnen&hash=item5661b6b598

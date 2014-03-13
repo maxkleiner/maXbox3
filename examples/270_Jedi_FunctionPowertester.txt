@@ -224,8 +224,44 @@ begin
    writeln('free it label objects')     //debug
 end; 
  
+procedure showForm(Sender: TObject);
+var i: integer;
+begin 
+   writeln('show form it label objects')     //debug
+end; 
+
+
+var   list: TStrings;
+        F: TForm;
+
+
+procedure raiseWindow(Sender: TObject);
+var i: integer;
+  F: TForm;
+begin 
+   F:= GetParentForm(self);
+   writeln('GetParentForm '+F.name)     //debug
+   
+   I:= (sender as TMenuItem).tag;
+   
+   writeln('tag '+inttostr(i));
+   
+   F:= TForm(list.Objects[i]);
+   writeln(F.name);
+   F.SetFocus;
+   
+   writeln('raise window objects')     //debug
+   
+        //debug
+end; 
 
 procedure loadPForm(vx, vy: integer);
+var i: integer;
+  NewItem: TMenuItem;
+  MainMenu1: TMainMenu;
+  //list: TStrings;
+  F: TForm;
+
 begin
   psize:= vx*vy
   //constructor
@@ -234,14 +270,58 @@ begin
     caption:= 'LEDBOX, click to edit, dblclick write out pattern'+
                  ' Press <Return> to run the Sentence';  
     width:= (vx*psize)+ 10 + 300;
-    height:= (vy*psize)+ 30;
-    BorderStyle:= bsDialog;
+    height:= (vy*psize)+ 130;
+    //BorderStyle:= bsDialog;
+    //BorderStyle:= bsDialog;
+  
     Position:= poScreenCenter;
     onKeyPress:= @FormKeyPress
     //OnClick:= @Label1Click;
     OnClose:= @closeForm;
+    onShow:= @showForm;
     Show;
-  end  
+    SELF.color:= clwhite;
+  end;
+  
+  MainMenu1:= TMainMenu.Create(ppform)
+  list:= TStringlist.create;
+  list.clear;
+
+  //NewItem := TMenuItem.Create(MainMenu1.Items[1]);
+  NewItem := TMenuItem.Create(MainMenu1);
+  NewItem.Name:= 'Separator';
+  //NewItem.Caption:='Load SongList';
+  
+  NewItem.Caption := '-';
+  { Add the new item to the Windows menu. }
+  MainMenu1.Items.Add(NewItem);
+  { Now create and add a menu item for each form. }
+  
+  
+  for  I:= 0 to Screen.FormCount-1 do begin
+    NewItem:= TMenuItem.Create(MainMenu1);
+    NewItem.Caption := Screen.Forms[I].Name + 'Item';
+    NewItem.Name := Screen.Forms[I].Name;
+    NewItem.Tag:= I;
+    newitem.onclick:= @raiseWindow;
+ 
+    //MainMenu1.Items[1].Add(NewItem);
+    //MainMenu1.Items.Add(NewItem);
+    MainMenu1.Items.Add(NewItem);
+    //MainMenu1.Add(NewItem);
+    
+    //MainMenu1.Items.Items[I].Free;
+    //MainMenu1.Items.Items[I].add(newitem);
+ 
+    //newitem.add(newitem);
+    //newitem.Items[I].Add(newitem);
+    F:= Screen.Forms[I];
+    List.AddObject(F.Caption, F);
+    //F:= TForm(list.Objects[i]);
+    //f.Show;
+    
+
+   end;  
 end;
 
 
@@ -1291,8 +1371,7 @@ Begin
   writeln('Formula SinCos:  '+floattoSTr(s1)+ ' '+floattoSTr(c1));
 
   //SinCosJ(1, s1, c1); // 0 test
-
-  //s1:= 0.3; c1:= 0.5;
+   //s1:= 0.3; c1:= 0.5;
   SinCos(10.0, s1, c1);
 
   writeln('Formula SinCos:  '+floattoSTr(s1)+ ' '+floattoSTr(c1));
@@ -1386,7 +1465,7 @@ Begin
        writeln('ThreadID '+inttoStr(threadID));
        writeln('ThreadHdn '+inttoStr(handle));
        writeln('Thread Priority '+inttoStr(Priority));
-       Sleep(3000)
+       Sleep(1000)
        Terminate;
        Free;
      end;  
@@ -1396,8 +1475,8 @@ Begin
   //maxform1.SerialRS2321Click(self)
   //Application.onmessage
   //Application.onException
-    //PathIsUNC
-    //PathIsAbsolute
+    PathIsUNC(ExePath);
+    PathIsAbsolute(ExePath);
     //loadtextfile
       //delay
       //findbytag

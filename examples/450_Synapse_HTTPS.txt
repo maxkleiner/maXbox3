@@ -1,0 +1,1024 @@
+PROGRAM Synapse_Tutor_2_DRAFFFT_UnderConstruction;
+
+///////////////////////////////////////////////////////////////////////////
+//  #sign:Administrator: PC08: 11/03/2014 07:45:40 PM 
+//  Purpose: how to call a dll function, still on progress with lots of experiments 
+//  #path>ples\E:\maxbox3\mXGit39988\maxbox3\examples\                    
+//  Lines of Code #locs:9541
+///////////////////////////////////////////////////////////////////////////
+
+Const TEXTOUT = 'hi world of dll func in opcode ';
+
+{$DEFINE MSWINDOWS}
+
+//############################################################################
+// SYNAPSE Architect //E:\maxbox3\mXGit39988\source\demo\http
+//############################################################################
+//TODO: Button with stop event, change color and save bitmap as png
+  //TODO: transfer the App to a dll stub function!
+  //{ TODO : the following line looks like a bug... }
+
+ //TIntegerList
+ //var aos: TOSVersionInfo;
+ 
+ function TTCPHttpThrd_ProcessHttpRequest(Request, URI: string): integer; forward;
+
+
+//  function  {**************************************************}
+ Function GetProcessMemoryInfo(Process: THandle; var MemoryCounters: TProcessMemoryCounters;
+                                    cb: DWORD): BOOL; //stdcall;; 
+     External 'GetProcessMemoryInfo@psapi.dll stdcall';
+     
+ Function OpenProcess2(dwDesiredAccess:DWORD; bInheritHandle:BOOL; dwProcessId:DWORD):THandle;
+     External  'OpenProcess@kernel32.dll stdcall';
+
+ Procedure GetVersionEx3(out verinfo: TOSVersionInfo);    //var verinfo: TOSVersionInfo
+     External  'GetVersionExA@kernel32.dll stdcall';
+
+{TYPE <Type declarations>} 
+  var FWait, switch: Boolean;
+      FValueA, FValueB: Float;
+      //asd: TDoubleArray;
+     
+//<FUNCTION>
+//<PROCEDURE> 
+
+
+    Sock:TTCPBlockSocket;
+    Headers: TStringList;
+    InputData, OutputData: TMemoryStream;
+ 
+
+
+
+Procedure TTCPHttpThrd_Create(Hsock:TSocket);
+begin
+  sock:=TTCPBlockSocket.create;
+  Headers := TStringList.Create;
+  InputData := TMemoryStream.Create;
+  OutputData := TMemoryStream.Create;
+  Sock.socket:=HSock;
+  //FreeOnTerminate:=true;
+  //Priority:=tpNormal;
+  //inherited create(false);
+end;
+
+Procedure TTCPHttpThrd_Destroy;
+begin
+  Sock.free;
+  Headers.Free;
+  InputData.Free;
+  OutputData.Free;
+  //inherited Destroy;
+end;
+
+procedure TTCPHttpThrd_Execute;
+var
+  timeout: integer;
+  amem: TMemory;
+  s: string;
+  method, uri, protocol: string;
+  size: integer;
+  x, n: integer;
+  resultcode: integer;
+  close: boolean;
+begin
+  timeout := 120000;
+  repeat
+    //read request line
+    s := sock.RecvString(timeout);
+    if sock.lasterror <> 0 then
+      Exit;
+    if s = '' then
+      Exit;
+    method := cfetch(s, ' ');
+    if (s = '') or (method = '') then
+      Exit;
+    uri := cfetch(s, ' ');
+    if uri = '' then
+      Exit;
+    protocol := cfetch(s, ' ');
+    headers.Clear;
+    size := -1;
+    close := false;
+    //read request headers
+    if protocol <> '' then begin
+      if pos('HTTP/', protocol) <> 1 then
+        Exit;
+      if pos('HTTP/1.1', protocol) <> 1 then
+        close := true;
+      repeat
+        s := sock.RecvString(Timeout);
+        if sock.lasterror <> 0 then
+          Exit;
+        if s <> '' then
+          Headers.add(s);
+        if Pos('CONTENT-LENGTH:', Uppercase(s)) = 1 then
+          Size := StrToIntDef(SeparateRight(s, ' '), -1);
+        if Pos('CONNECTION: CLOSE', Uppercase(s)) = 1 then
+          close := true;
+      until s = '';
+    end;
+    //recv document...
+    InputData.Clear;
+    if size >= 0 then
+    begin
+      InputData.SetSize(Size);
+       x:= Sock.RecvBufferEx(InputData.Memory, Size, Timeout);
+      InputData.SetSize(x);
+      if sock.lasterror <> 0 then
+        Exit;
+    end;
+    OutputData.Clear;
+    ResultCode:= TTCPHttpThrd_ProcessHttpRequest(method, uri);
+    sock.SendString(protocol + ' ' + IntTostr(ResultCode) + CRLF);
+    if protocol <> '' then
+    begin
+      headers.Add('Content-length: ' + IntTostr(OutputData.Size));
+      if close then
+        headers.Add('Connection: close');
+      headers.Add('Date: ' + Rfc822DateTime(now));
+      headers.Add('Server: Synapse HTTP server demo');
+      headers.Add('');
+      for n := 0 to headers.count - 1 do
+        sock.sendstring(headers[n] + CRLF);
+    end;
+    if sock.lasterror <> 0 then
+      Exit;
+    Sock.SendBuffer(OutputData.Memory, OutputData.Size);
+    if close then
+      Break;
+  until Sock.LastError <> 0;
+end;
+
+
+function TTCPHttpThrd_ProcessHttpRequest(Request, URI: string): integer;
+var
+  l: TStringlist;
+begin
+//sample of precessing HTTP request:
+// InputData is uploaded document, headers is stringlist with request headers.
+// Request is type of request and URI is URI of request
+// OutputData is document with reply, headers is stringlist with reply headers.
+// Result is result code
+  result := 504;
+  if request = 'GET' then begin
+    headers.Clear;
+    headers.Add('Content-type: Text/Html');
+    l := TStringList.Create;
+    try
+      l.Add('<html>');
+      l.Add('<head></head>');
+      l.Add('<body>');
+      l.Add('Request Uri: ' + uri);
+      l.Add('<br>');
+      l.Add('This document is generated by Synapse HTTP server demo!');
+      l.Add('</body>');
+      l.Add('</html>');
+      l.SaveToStream(OutputData);
+    finally
+      l.free;
+    end;
+    Result := 200;
+  end;
+end;
+
+
+//E:\maxbox3\mXGit39988\source\demo\http
+
+function ProxyHttpPostURL(const URL, URLData: string; const Data: TStream): Boolean;
+var
+  HTTP: THTTPSend;
+begin
+  HTTP := THTTPSend.Create;
+  try
+    HTTP.ProxyHost := 'Form1.Edit8.Text';
+    HTTP.ProxyPort := 'Form1.Edit9.Text';
+    //HTTP.Document.Write(Pointer(URLData)^, Length(URLData));
+    HTTP.Document.Write((URLData), Length(URLData));
+    
+    HTTP.MimeType := 'application/x-www-form-urlencoded';
+    Result := HTTP.HTTPMethod('POST', URL);
+    Data.CopyFrom(HTTP.Document, 0);
+  finally
+    HTTP.Free;
+  end;
+end;
+
+
+const
+  aCRLF = #$0D + #$0A;
+
+function ProxyHttpPostFile(const URL, FieldName, FileName: string;
+  const Data: TStream; const ResultData: TStrings): Boolean;
+var
+  HTTP: THTTPSend;
+  Bound, s: string;
+begin
+  Bound := IntToHex(Random(MaxInt), 8) + '_Synapse_boundary';
+  HTTP := THTTPSend.Create;
+  try
+    HTTP.ProxyHost := 'Form1.Edit8.Text';
+    HTTP.ProxyPort := 'Form1.Edit9.Text';
+    s := '--' + Bound + CRLF;
+    s := s + 'content-disposition: form-data; name="' + FieldName + '";';
+    s := s + ' filename="' + FileName +'"' + CRLF;
+    s := s + 'Content-Type: Application/octet-string' + CRLF + CRLF;
+    //HTTP.Document.Write(Pointer(s)^, Length(s));
+    HTTP.Document.Write((s), Length(s));
+
+    HTTP.Document.CopyFrom(Data, 0);
+    s := CRLF + '--' + Bound + '--' + CRLF;
+    //HTTP.Document.Write(Pointer(s)^, Length(s));
+    HTTP.Document.Write((s), Length(s));
+
+    HTTP.MimeType := 'multipart/form-data, boundary=' + Bound;
+    Result := HTTP.HTTPMethod('POST', URL);
+    ResultData.LoadFromStream(HTTP.Document);
+  finally
+    HTTP.Free;
+  end;
+end;
+
+
+procedure TForm1_Button1Click(Sender: TObject);
+var HTTP: THTTPSend;
+begin
+  HTTP := THTTPSend.Create;
+  try
+    HTTP.ProxyHost := 'Edit8.Text';
+    HTTP.ProxyPort := 'Edit9.Text';
+    HTTP.HTTPMethod('GET', 'Edit1.text');
+    Memo1.Lines.Assign(HTTP.Headers);
+    Memo2.Lines.LoadFromStream(HTTP.Document);
+  finally
+    HTTP.Free;
+  end;
+end;
+
+procedure TForm1_Button2Click(Sender: TObject);
+var
+  st: TMemoryStream;
+begin
+  st:=TMemoryStream.Create;
+  try
+    ProxyHTTPpostURL('Edit2.Text', 'Edit3.Text' + '=' + 'Edit4.Text', st);
+    st.Seek(0,soFromBeginning);
+    Memo2.Lines.LoadFromStream(st);
+  finally
+    st.Free;
+  end;
+end;
+
+procedure TForm1_Button3Click(Sender: TObject);
+var
+  st: TFileStream;
+begin
+  st:= TFileStream.Create('Edit7.Text', fmOpenRead	or fmShareDenyWrite);
+  try
+    ProxyHTTPPostFile('Edit5.Text', 'Edit6.Text', ExtractFilename('Edit7.Text'), st, TStringList(memo2.Lines));
+  finally
+    st.Free;
+  end;
+end;
+
+
+{*****************************************************}
+//function GetProcessMemoryInfo; external 'psapi.dll';
+{*****************************************************}
+
+function ProcessMemoryUsage(ProcessID : DWORD): DWORD;
+var ProcessHandle : THandle;
+    MemCounters   : TProcessMemoryCounters;
+begin
+  Result:= 0;
+  //PROCESS_QUERY_INFORMATION Required to retrieve certain information about process, such as its token, exit code, and priority class   - 0x0400
+  //PROCESS_VM_READ Required to read memory in a process using ReadProcessMemory.
+  ProcessHandle:= OpenProcess2(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                               false, ProcessID);
+  writeln('Process Handle inside: '+inttostr(ProcessHandle));
+  try
+    if GetProcessMemoryInfo(ProcessHandle,
+                            MemCounters, sizeof(MemCounters))
+    then Result:= MemCounters.WorkingSetSize;
+  finally
+    CloseHandle(ProcessHandle);
+  end;
+end;
+
+function ProcessPageUsage(ProcessID: DWORD): DWORD;
+var ProcessHandle : THandle;
+    MemCounters   : TProcessMemoryCounters;
+begin
+  Result:= 0;
+  ProcessHandle:= OpenProcess2(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                                false, ProcessID);
+  try
+    if GetProcessMemoryInfo(ProcessHandle, 
+                              MemCounters, sizeof(MemCounters))
+    then Result:= MemCounters.PagefileUsage;
+  finally
+    CloseHandle(ProcessHandle);
+  end;
+end;
+
+function ProcessAllRec(ProcessID : DWORD): TProcessMemoryCounters;
+var ProcessHandle : THandle;
+    MemCounters   : TProcessMemoryCounters;
+begin
+  //Result:= NULL;
+  ProcessHandle:= OpenProcess2(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                               false, ProcessID);
+  try
+    if GetProcessMemoryInfo(ProcessHandle,
+                            MemCounters, sizeof(MemCounters))
+    then Result:= MemCounters;
+  finally
+    CloseHandle(ProcessHandle);
+  end;
+end;
+
+
+
+function SplitToken(const Text: string; SplitChar: Char;
+                          var First, Last: string): Boolean;
+var  SplitPos: Integer;
+begin
+  Result:= False;
+  SplitPos:= Pos(SplitChar, Text);
+  if SplitPos = 0 then Exit;
+  First:= Trim(Copy(Text, 1, SplitPos -1));
+  Last:= Trim(Copy(Text, SplitPos +1, Length(Text) -SplitPos));
+  Result:= (First <>'') and (Last <>'');
+end;
+
+
+function TForm1_scrollAllNode(aNode: TalXmlNode): Integer;
+Var aStack: Tstack;
+    i: integer;
+begin
+  Result := 0;
+  aStack := Tstack.Create;
+  try
+     For i := 0 to aNode.ChildNodes.Count - 1 do
+        aStack.Push((ANode.ChildNodes[i]));
+         While astack.Count > 0 do begin
+        inc(result);
+        aNode := TalxmlNode(astack.Pop);
+        If assigned(ANode.ChildNodes) then
+          For i := 0 to ANode.ChildNodes.Count - 1 do
+            aStack.Push((ANode.ChildNodes[i]));
+           If assigned(ANode.AttributeNodes) then
+          For i := 0 to ANode.attributeNodes.Count - 1 do
+            aStack.Push((ANode.AttributeNodes[i]));
+      end;
+  finally
+    aStack.Free;
+  end;
+end;
+
+
+function CheckPSAPILoaded: Boolean;
+var hPSAPI: THandle;
+begin
+  if hPSAPI = 0 then begin
+{$IFDEF MSWINDOWS}
+    hPSAPI:= LoadLibrary('PSAPI.dll');
+    //writeln('debug DLL handle '+inttostr(hPSAPI));
+    if hPSAPI > 32 then result:= true;
+    if hPSAPI < 32 then begin
+      hPSAPI:= 0;
+      Result:= False;
+      Exit;
+    end;
+ {$ENDIF}   
+  end; 
+end;
+
+function IntToStrZeroPad(Value, Count: Integer): AnsiString;
+begin
+  Result := IntToStr(Value);
+  if Length(Result) < Count then
+    Result := StrFillChar('0', Count - Length(Result)) + Result;
+end;
+
+function JclGUIDToString(const GUID: TGUID): string;
+begin
+  {$IFDEf CLR}
+  Result := GUID.ToString();
+  {$ELSE}
+  Result := Format('{%.8x-%.4x-%.4x-%.2x%.2x-%.2x%.2x%.2x%.2x%.2x%.2x}',
+    [GUID.D1, GUID.D2, GUID.D3, GUID.D4[0], GUID.D4[1], GUID.D4[2],
+     GUID.D4[3], GUID.D4[4], GUID.D4[5], GUID.D4[6], GUID.D4[7]]);
+  {$ENDIF CLR}
+end;
+
+{BOOL GetVersionEx( 
+  LPOSVERSIONINFO lpVersionInformation );}
+
+function GetOsVersionInfo2: TOSVersionInfo; 
+var
+  verInfo: TOSVersionInfo;
+begin
+  verinfo.dwOSVersionInfoSize:= sizeof(verinfo);
+  GetVersionEx(Verinfo);
+  result:= Verinfo;
+end;  
+
+function GetOsVersionInfo3: TOSVersionInfo; 
+var
+  verInfo: TOSVersionInfo;
+begin
+  verinfo.dwOSVersionInfoSize:= sizeof(verinfo);
+  GetVersionEx3(Verinfo);
+  result:= Verinfo;
+end; 
+
+function IsWindowsVista: boolean;
+var
+  verInfo: TOSVersionInfo;
+begin
+  verinfo.dwOSVersionInfoSize:= Sizeof(verinfo);
+  GetVersionEx(Verinfo);
+  result:= Verinfo.dwMajorVersion >=6;
+end;
+ 
+
+var  verInfo: TOSVersionInfo;
+     aProcessHandle : THandle;
+     filestr: string;
+
+Begin  //Main
+//<Executable statements> //TOutlookExport_Spy;
+  Writeln('');
+  //Writeln('Start Command of DLL: '+CheckIEStartCommand);  
+//<Definitions>  
+   //ares:= TResolver.create;
+ // function GetMacAddresses(const Machine: string; const Addresses: TStrings):Integer;
+  
+ //GetProcessMemoryInfo(Process 
+     writeln('workset mem from dll '+inttostr(ProcessMemoryUsage(GetCurrentProcessID)));
+     writeln('workset page from dll '+inttostr(ProcessPageUsage(GetCurrentProcessID)));
+     writeln('workset memproc test in bytes '
+                 +inttostr(ProcessAllRec(GetCurrentProcessID).workingsetsize));
+     writeln('proc peak max. workingset in K '
+              +inttostr(ProcessAllRec(GetCurrentProcessID).PeakWorkingSetSize div 1024));
+     writeln('proc peak max. paged use in K '
+              +inttostr(ProcessAllRec(GetCurrentProcessID).QuotaPeakPagedPoolUsage));
+     writeln('proc page peak file usage K '
+              +inttostr(getProcMemInfo(GetCurrentProcessID).PeakPagefileUsage div 1024));
+     if CheckPSAPILoaded then
+        writeln('!workset! mem from dll in K '
+              +inttostr(getProcMemInfo(GetCurrentProcessID).Workingsetsize div 1024));
+ 
+    // SplitImages(self);
+     //deletefiles(PICPATH,'*.bmp');
+      //GetCurrentHwProfile( var lpHwProfileInfo : THWProfileInfo) : BOOL');
+        //SetPriorityClass  //GetPriorityClass
+     //OpenClipboard(   //booleantostr(false);
+     //JclGUIDToString  //TJclNumericFormat 
+          //function IsClass(Address: Pointer): Boolean;
+          //function IsObject(Address: Pointer): Boolean;
+           //IsClass(Address: Pointer): Boolean;
+           //IsObject(Address: Pointer): Boolean;
+           //ReadKey  //IntToStrZeroPad //  StrFillChar //EndDialog( 
+         //GetDlgItem(  //SetDlgItemInt( //dialogbox
+         //TQuaternionList(CL: TPSPascalCompiler);
+   //TByteList(CL: TPSPascalCompiler);
+   //TSingleList(CL: TPSPascalCompiler);
+   //TIntegerList(CL: TPSPascalCompiler);
+   //TTexPointList(CL: TPSPascalCompiler);
+   //TVectorList(CL: TPSPascalCompiler);
+   //TAffineVectorList(CL: TPSPascalCompiler);
+   //TBaseVectorList(CL: TPSPascalCompiler);
+   //TBaseList(CL: TPSPascalCompiler);
+   //VectorLists(CL: TPSPascalCompiler); 
+   //TXIntegerList
+   //TJclSimpleLog  //jExecute 
+  
+   writeln('get current dir '+GetCurrentDir);
+   //GetCurrentModule  
+   //GetModuleFileName(hmod, szPath, MAX_PATH);
+//HMODULE hmod = GetCurrentModule();
+//TCHAR szPath[MAX_PATH + 1] = 0;          
+//DWORD dwLen = GetModuleFileHName(hmod, szPath, MAX_PATH);    
+  //GetModuleHandle               
+   writeln(booleantostr(samepath(exepath, exepath)))
+       
+  verinfo:= GetOsVersionInfo2; //script dll
+  writeln('OS Verinfo Major: '+inttostr(Verinfo.dwMajorVersion))
+  writeln('OS Verinfo Minor: '+inttostr(Verinfo.dwMinorVersion))
+  writeln('OS VerSizeinfo '+inttostr(Verinfo.dwOSVersionInfoSize))
+  
+  verinfo:= GetOsVersionInfo; //internal dll
+  writeln('OS Verinfo Major: '+inttostr(Verinfo.dwMajorVersion))
+  writeln('OS Verinfo Minor: '+inttostr(Verinfo.dwMinorVersion))
+  writeln('OS VerSizeinfo '+inttostr(Verinfo.dwOSVersionInfoSize))
+  
+  verinfo:= GetOsVersionInfo3; //dll external
+  writeln('OS Verinfo Major: '+inttostr(Verinfo.dwMajorVersion))
+  writeln('OS Verinfo Minor: '+inttostr(Verinfo.dwMinorVersion))
+  writeln('OS VerSizeinfo '+inttostr(Verinfo.dwOSVersionInfoSize))
+  
+  //Function IsDelphiProject( const FileName : string) : Boolean');
+  writeln(booleantoStr(IsDelphiProject(exepath+'maxbox3.exe')));
+  //FileBackup(const 
+  aProcessHandle:= OpenProcess2(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                               false, GetCurrentProcessID);
+  writeln('Process Handle direct: '+inttostr(aProcessHandle));
+  aProcessHandle:= OpenProcess2($0400 or $0010, false, GetCurrentProcessID);
+  writeln('Process Handle direct: '+inttostr(aProcessHandle));
+  
+  writeln(sha1(exepath+'maxbox3.exe'));
+  
+  //filestr:= loadfileasstring(exepath+'maxbox3_9.exe');
+  //writeln(synsha1(filestr));
+  
+  { with TTCPHttpDaemon.create do begin
+     Free;
+   end;}  
+
+ End. //very end 
+
+
+//DOC
+Small set for arduino and android unit testing 
+
+http://glscene.sourceforge.net/wikka/HomePage
+
+unit Unit1;
+
+interface
+
+pascal delphi 
+
+uses Windows,
+     Messages,
+     SysUtils,
+     Variants,
+     Classes,
+     Graphics,
+     Controls,
+     Forms,
+     Dialogs,
+     Contnrs,
+     StdCtrls,
+     xmldom,
+     XMLIntf,
+     msxmldom,
+     XMLDoc,
+     AlFcnString,
+     AlXmlDoc,
+     ExtCtrls,
+     OleCtrls,
+     SHDocVw,
+     ComObj,
+     ALFcnFile,
+     ALStringList;
+
+{------------------------------------}
+Const WM_XmlFullyLoaded = WM_user + 1;
+
+type
+
+  PPROCESS_MEMORY_COUNTERS = ^PROCESS_MEMORY_COUNTERS;
+  PROCESS_MEMORY_COUNTERS = record
+    cb : DWORD;
+    PageFaultCount : DWORD;
+    PeakWorkingSetSize : DWORD;
+    WorkingSetSize : DWORD; //Task managers MemUsage number
+    QuotaPeakPagedPoolUsage : DWORD;
+    QuotaPagedPoolUsage : DWORD;
+    QuotaPeakNonPagedPoolUsage : DWORD;
+    QuotaNonPagedPoolUsage : DWORD;
+    PagefileUsage : DWORD; //TaskMan's VM Size number
+    PeakPagefileUsage : DWORD;
+  end;
+  TProcessMemoryCounters = PROCESS_MEMORY_COUNTERS;
+
+  TForm1 = class(TForm)
+    ButtonLoadXmlWithALXmlDocument: TButton;
+    ButtonLoadXmlWithXmlDocument: TButton;
+    MemoLoadXmlWithALXmlDocument: TMemo;
+    MemoLoadXmlWithXmlDocument: TMemo;
+    MainOpenDialog: TOpenDialog;
+    ButtonGenerate100000NodeWithALXmlDocument: TButton;
+    MemoGenerate100000NodeWithALXmlDocument: TMemo;
+    MemoGenerate100000NodeWithXmlDocument: TMemo;
+    ButtonGenerate100000NodeWithXmlDocument: TButton;
+    ButtonParseXMLWithALXmlDocumentInSaxMode: TButton;
+    MemoParseXmlWithALXmlDocumentInSaxMode: TMemo;
+    Panel1: TPanel;
+    Label8: TLabel;
+    Label12: TLabel;
+    Panel2: TPanel;
+    PanelWebBrowser: TPanel;
+    procedure ButtonLoadXmlWithALXmlDocumentClick(Sender: TObject);
+    procedure ButtonLoadXmlWithXmlDocumentClick(Sender: TObject);
+    procedure ButtonGenerate100000NodeWithALXmlDocumentClick(Sender: TObject);
+    procedure ButtonGenerate100000NodeWithXmlDocumentClick(Sender: TObject);
+    procedure ButtonParseXMLWithALXmlDocumentInSaxModeClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormCreate(Sender: TObject);
+  private
+    FnodeCount: Integer;
+    Function scrollAllNode(aNode: iXmlNode): Integer; overload;
+    Function scrollAllNode(aNode: TalXmlNode): Integer; overload;
+  public
+    { Public declarations }
+  end;
+
+function GetProcessMemoryInfo(Process : THandle; var MemoryCounters : TProcessMemoryCounters; cb : DWORD) : BOOL; stdcall;
+function ProcessMemoryUsage(ProcessID : DWORD): DWORD;
+
+var
+  Form1: TForm1;
+
+implementation
+
+//{$R *.dfm}
+
+{**************************************************}
+function GetProcessMemoryInfo; external 'psapi.dll';
+
+{****************************************************}
+function ProcessMemoryUsage(ProcessID : DWORD): DWORD;
+var ProcessHandle : THandle;
+    MemCounters   : TProcessMemoryCounters;
+begin
+  Result := 0;
+  ProcessHandle := OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                               false,
+                               ProcessID);
+  try
+    if GetProcessMemoryInfo(ProcessHandle,
+                            MemCounters,
+                            sizeof(MemCounters))
+    then Result := MemCounters.WorkingSetSize;
+  finally
+    CloseHandle(ProcessHandle);
+  end;
+end;
+
+{****************************************************************}
+Function CreateEmptyXMLDocument(Rootname:AnsiString):IXMLDocument;
+Var aXmlDoc: TXMLDocument;
+begin
+  aXmlDoc := TXMLDocument.Create(nil);
+  Result := aXmlDoc;
+  with result do begin
+    Options := [];
+    ParseOptions := [];
+    FileName := '';
+  end;
+End;
+
+{******************************************************}
+function TForm1.scrollAllNode(aNode: iXmlNode): Integer;
+Var aStack: Tstack;
+    i: integer;
+begin
+  Result := 0;
+  aStack := Tstack.Create;
+  try
+      For i := 0 to aNode.ChildNodes.Count - 1 do
+        aStack.Push(pointer(ANode.ChildNodes[i]));
+      While astack.Count > 0 do begin
+        inc(result);
+        aNode := ixmlNode(astack.Pop);
+        If assigned(ANode.ChildNodes) then
+          For i := 0 to ANode.ChildNodes.Count - 1 do
+            aStack.Push(pointer(ANode.ChildNodes[i]));
+
+        If assigned(ANode.AttributeNodes) then
+          For i := 0 to ANode.AttributeNodes.Count - 1 do
+            aStack.Push(pointer(ANode.AttributeNodes[i]));
+      end;
+  finally
+    aStack.Free;
+  end;
+
+end;
+
+//############################################################################
+// Archimedes Spiral App
+//############################################################################
+
+
+initialization 
+  MyIntObject:= TMyObject.Create; 
+finalization 
+  MyIntObject.Free; 
+
+But how about the DLL is written in C++?
+
+At the very end we call a C++ DLL from maXbox:
+First of all, you have to translate the header-file (should be delivered with the DLL), which is like an interface-section in OP. Headers in c usually contain all sorts of definitions which are relevant outside the module. In our c++ example it looks like: 
+
+/*FILE: income.h */ 
+class CIncome 
+{ 
+  public: 
+    virtual double __stdcall GetIncome( double aNetto ) = 0 ; 
+    virtual void   __stdcall SetRate( int aPercent, int  aYear ) = 0 ; 
+    virtual void   __stdcall FreeObject() = 0 ; 
+} ;
+
+Then you translate it to an Abstract Class in a unit of her own: 
+
+//FILE: income.pas 
+interface 
+type 
+CIncome = class 
+   public 
+   function GetIncome(const aNetto: double): double; 
+                               virtual; stdcall; abstract; 
+   procedure SetRate(const aPercent: Integer; aYear: integer); 
+                               virtual; stdcall; abstract; 
+   procedure FreeObject; virtual; stdcall; abstract; 
+end;
+
+
+
+
+----app_template_loaded_code----
+
+10 vor 10 kannst Du entweder live am PC schauen
+http://www.srf.ch/livestream/player/srf-1
+
+oder anschliessend an die Sendung:
+http://www.srf.ch/sendungen/10vor10
+
+
+Short for Dynamic Link Library, a library of executable functions or data that can be used by a Windows application. Typically, a DLL provides one or more particular functions and a program accesses the functions by creating either a static or dynamic link to the DLL. A static link remains constant during program execution while a dynamic link is created by the program as needed. DLLs can also contain just data. DLL files usually end with the extension .dll,.exe., drv, or .fon.
+
+A DLL can be used by several applications at the same time. Some DLLs are provided with the Windows operating system and available for any Windows application. Other DLLs are written for a particular application and are loaded with the application.
+
+
+Disclaimer: The foregoing release may contain forward-looking statements that
+can be identified by terminology such as 'seek', 'not pursue', 'not approvable',
+'continue', 'believes', 'believe', 'will', 'remained open to exploring',
+'would', 'could', or similar expressions, or by express or implied discussions
+regarding Addex Therapeutics, formerly known as, Addex Pharmaceuticals, its
+business, the potential approval of its products by regulatory authorities, or
+regarding potential future revenues from such products. Such forward-looking
+statements reflect the current views of Addex Therapeutics regarding future
+
+events, future economic performance or prospects, and, by their very nature. 
+
+----Simple Browser started----
+----Simple Browser started----
+
+unit http;
+
+interface
+
+uses
+  Classes, blcksock, winsock, Synautil, SysUtils;
+
+type
+  TTCPHttpDaemon = class(TThread)
+  private
+    Sock:TTCPBlockSocket;
+  public
+    Constructor Create;
+    Destructor Destroy; override;
+    procedure Execute; override;
+  end;
+
+  TTCPHttpThrd = class(TThread)
+  private
+    Sock:TTCPBlockSocket;
+  public
+    Headers: TStringList;
+    InputData, OutputData: TMemoryStream;
+    Constructor Create (hsock:tSocket);
+    Destructor Destroy; override;
+    procedure Execute; override;
+    function ProcessHttpRequest(Request, URI: string): integer;
+  end;
+
+implementation
+
+{ TTCPHttpDaemon }
+
+Constructor TTCPHttpDaemon.Create;
+begin
+  inherited create(false);
+  sock:=TTCPBlockSocket.create;
+  FreeOnTerminate:=true;
+end;
+
+Destructor TTCPHttpDaemon.Destroy;
+begin
+  Sock.free;
+  inherited Destroy;
+end;
+
+procedure TTCPHttpDaemon.Execute;
+var
+  ClientSock:TSocket;
+begin
+  with sock do
+    begin
+      CreateSocket;
+      setLinger(true,10000);
+      bind('0.0.0.0','80');
+      listen;
+      repeat
+        if terminated then break;
+        if canread(1000) then
+          begin
+            ClientSock:=accept;
+            if lastError=0 then TTCPHttpThrd.create(ClientSock);
+          end;
+      until false;
+    end;
+end;
+
+{ TTCPHttpThrd }
+
+Constructor TTCPHttpThrd.Create(Hsock:TSocket);
+begin
+  sock:=TTCPBlockSocket.create;
+  Headers := TStringList.Create;
+  InputData := TMemoryStream.Create;
+  OutputData := TMemoryStream.Create;
+  Sock.socket:=HSock;
+  FreeOnTerminate:=true;
+  Priority:=tpNormal;
+  inherited create(false);
+end;
+
+Destructor TTCPHttpThrd.Destroy;
+begin
+  Sock.free;
+  Headers.Free;
+  InputData.Free;
+  OutputData.Free;
+  inherited Destroy;
+end;
+
+procedure TTCPHttpThrd.Execute;
+var
+  timeout: integer;
+  s: string;
+  method, uri, protocol: string;
+  size: integer;
+  x, n: integer;
+  resultcode: integer;
+  close: boolean;
+begin
+  timeout := 120000;
+  repeat
+    //read request line
+    s := sock.RecvString(timeout);
+    if sock.lasterror <> 0 then
+      Exit;
+    if s = '' then
+      Exit;
+    method := fetch(s, ' ');
+    if (s = '') or (method = '') then
+      Exit;
+    uri := fetch(s, ' ');
+    if uri = '' then
+      Exit;
+    protocol := fetch(s, ' ');
+    headers.Clear;
+    size := -1;
+    close := false;
+    //read request headers
+    if protocol <> '' then
+    begin
+      if pos('HTTP/', protocol) <> 1 then
+        Exit;
+      if pos('HTTP/1.1', protocol) <> 1 then
+        close := true;
+      repeat
+        s := sock.RecvString(Timeout);
+        if sock.lasterror <> 0 then
+          Exit;
+        if s <> '' then
+          Headers.add(s);
+        if Pos('CONTENT-LENGTH:', Uppercase(s)) = 1 then
+          Size := StrToIntDef(SeparateRight(s, ' '), -1);
+        if Pos('CONNECTION: CLOSE', Uppercase(s)) = 1 then
+          close := true;
+      until s = '';
+    end;
+    //recv document...
+    InputData.Clear;
+    if size >= 0 then
+    begin
+      InputData.SetSize(Size);
+      x := Sock.RecvBufferEx(InputData.Memory, Size, Timeout);
+      InputData.SetSize(x);
+      if sock.lasterror <> 0 then
+        Exit;
+    end;
+    OutputData.Clear;
+    ResultCode := ProcessHttpRequest(method, uri);
+    sock.SendString(protocol + ' ' + IntTostr(ResultCode) + CRLF);
+    if protocol <> '' then
+    begin
+      headers.Add('Content-length: ' + IntTostr(OutputData.Size));
+      if close then
+        headers.Add('Connection: close');
+      headers.Add('Date: ' + Rfc822DateTime(now));
+      headers.Add('Server: Synapse HTTP server demo');
+      headers.Add('');
+      for n := 0 to headers.count - 1 do
+        sock.sendstring(headers[n] + CRLF);
+    end;
+    if sock.lasterror <> 0 then
+      Exit;
+    Sock.SendBuffer(OutputData.Memory, OutputData.Size);
+    if close then
+      Break;
+  until Sock.LastError <> 0;
+end;
+
+function TTCPHttpThrd.ProcessHttpRequest(Request, URI: string): integer;
+var
+  l: TStringlist;
+begin
+//sample of precessing HTTP request:
+// InputData is uploaded document, headers is stringlist with request headers.
+// Request is type of request and URI is URI of request
+// OutputData is document with reply, headers is stringlist with reply headers.
+// Result is result code
+  result := 504;
+  if request = 'GET' then
+  begin
+    headers.Clear;
+    headers.Add('Content-type: Text/Html');
+    l := TStringList.Create;
+    try
+      l.Add('<html>');
+      l.Add('<head></head>');
+      l.Add('<body>');
+      l.Add('Request Uri: ' + uri);
+      l.Add('<br>');
+      l.Add('This document is generated by Synapse HTTP server demo!');
+      l.Add('</body>');
+      l.Add('</html>');
+      l.SaveToStream(OutputData);
+    finally
+      l.free;
+    end;
+    Result := 200;
+  end;
+end;
+
+
+//E:\maxbox3\mXGit39988\source\demo\http
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  HTTPSend, StdCtrls, ExtCtrls;
+
+type
+  TForm1 = class(TForm)
+    Panel1: TPanel;
+    Panel2: TPanel;
+    Panel3: TPanel;
+    Panel4: TPanel;
+    Memo1: TMemo;
+    Memo2: TMemo;
+    Label1: TLabel;
+    Edit1: TEdit;
+    Button1: TButton;
+    Label2: TLabel;
+    Label3: TLabel;
+    Edit2: TEdit;
+    Button2: TButton;
+    Label4: TLabel;
+    Label5: TLabel;
+    Edit3: TEdit;
+    Label6: TLabel;
+    Edit4: TEdit;
+    Label7: TLabel;
+    Label8: TLabel;
+    Edit5: TEdit;
+    Button3: TButton;
+    Label9: TLabel;
+    Edit6: TEdit;
+    Edit7: TEdit;
+    Label10: TLabel;
+    Panel5: TPanel;
+    Label11: TLabel;
+    Label12: TLabel;
+    Edit8: TEdit;
+    Edit9: TEdit;
+    Label13: TLabel;
+    procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+    procedure Button3Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+
+end.

@@ -1,0 +1,913 @@
+PROGRAM Arduino_Time_Modula;
+//_47, #locs=506
+
+
+var ComFile: THandle;
+    ser: TSerial;
+    
+    //adr: TIPAdr;
+    
+    //andt: TJvThreadTimer;
+     attim:  tjvtimer;                 
+
+function modula10(zahl: Int64): Int64;
+{   Nach diesem Verfahren werden z.B. die Prüfziffern
+    von EAN-Codes (immer die ganz rechte Stelle) berechnet.
+    Das System funktioniert wie folgt:
+    Angenommener Code 4205 4504 (Camel Filter)
+    Die letzte Stelle wollen wir berechnen, diese
+    wird also nicht mit einbezogen.
+    Die einzelen Stellen werden abwechselnd mit
+    3 und 1 multipliziert wobei rechts immer mit
+    3 begonnen wird. Die Summe der Produkte wird
+    durch 10 (dem Modul) geteilt, der Rest wird von
+    10 abgezogen. Sollte hierbei 10 übrigbleiben
+    ist die Prüfziffer 0. Hier das Beispiel:
+
+    Stelle      Wert    Wichtung    Produkt
+      1           4   *    3          12
+      2           2   *    1           2
+      3           0   *    3           0
+      4           5   *    1           5
+      5           4   *    3          12
+      6           5   *    1           5
+      7           0   *    3           0
+                                    -------
+    Summe                             
+
+    Summe / 10(Modul) = 3 Rest 6
+    10(Modul) - 6(Rest) = 4  <- Die Prüfziffer
+    Wenn der Rest 0 ist wäre die Prüfziffer also 10.
+    Da aber nur eine Stelle zur Verfügung steht,
+    wird die Prüfziffer 0.     }
+    
+var 
+  wert: Longint;
+  multi: Word;
+begin
+  //Rechte Stelle wird immer mit 3 multipliziert
+  multi := 3;
+  wert  := 0;
+  repeat
+    //Wert erhöhen um den Wert der letzten Stelle * Multiplikator
+    wert := wert + (zahl - trunc(zahl / 10) * 10) * multi;
+    //Multiplikator ist abwechselnd 3 und 1
+    if multi = 3 then multi := 1 
+    else 
+      multi := 3;
+    //Letzte Stelle der Zahl abschneiden
+    zahl := trunc(zahl / 10);
+  until zahl = 0;
+  //Prüfziffer ermitteln
+  Result := 10 - (wert - trunc(wert / 10) * 10);
+  //Wenn
+  if Result = 10 then Result := 0;
+end;
+
+function IsModula10(zahl: Int64): Boolean;
+  //Prüft mit Hilfe von "modula10", ob die letzte
+  //(rechte) Stelle als Prüfziffer korrekt ist.
+begin
+  //letzte Stelle Abschneiden und Prüfziffer errechnen,
+  //dann mit letzter Stelle der übergebenen Zahl vergleichen
+  if modula10(trunc(zahl / 10)) = zahl - (trunc(zahl / 10) * 10) then
+    Result := True 
+  else 
+    Result := False;
+end;
+
+var FComPort: TAfComPort;
+procedure AFComPortInit;
+begin
+   FComPort:= TAfComPort.Create(self);
+   with FcomPort do begin
+     BaudRate:= br9600;
+     //OpenComPort(5);
+     ComNumber:= 5;
+     Parity:= paNone;
+     // coParityCheck, coDsrSensitivity, coIgnoreXOff,' coErrorChar, coStripNull )');
+     Options:= [coParityCheck, coStripNull];
+     StopBits:= sbOneStopBit;
+     DataBits:= dbEight;
+     autoopen:= true;
+     //OnDataRecived:= @TPortForm1_AfComPort1DataRecived;
+  end;
+end;
+
+procedure SetArduinoTime2(Sender: TObject);
+var arduinoTime,aout: string;
+
+begin
+  //arduinoTime:= FormatDatetime('0:HHmmssddMMyy',Now)//+intToStr(DayOfWeek(Now-1));
+   arduinoTime:= FormatDatetime('HHmmssddMMyyyy',Now)//+intToStr(DayOfWeek(Now-1)); 
+    //formatdatetime('"stop is:" hh:mm:ss:zzz', time)) 
+   WriteLn(arduinoTime);
+     //pass the time to COM port
+   //FComPort.ExecuteConfigDialog
+   FComPort.Open;   
+   FComPort.Active:= true;  
+   FComPort.WriteString(arduinoTime)
+   //while (true) do 
+      repeat
+        //aout:='';
+        aout:= FComPort.ReadString;
+            //if aout <> '' then
+        WriteLn('From Arduino: ' + aout);
+        sleep(1000)
+      until iskeyPressed;  
+   FComPort.Close;    
+   FComPort.Free;    
+end;       
+
+
+
+const COMPORT ='COM12';
+  var cPort: TComPort;
+
+procedure InitCreateComPort(Sender: TObject);
+begin
+  cPort:= TComPort.Create(self);
+  with cPort do begin
+    BaudRate:= br9600;
+    Port:= COMPORT;
+    Parity.Bits:= prNone;
+    StopBits:= sbOneStopBit;
+    DataBits:= dbEight;
+  end;
+end; 
+
+ procedure SetArduinoTime(Sender: TObject);
+ var arduinoTime,aout: shortstring;
+   begin
+   arduinoTime:= FormatDatetime('HHmmssddMMyyyy',Now)
+   //+intToStr(DayOfWeek(Now-1)); 
+   //formatdatetime('"stop is:" hh:mm:ss:zzz', time)) 
+   WriteLn(arduinoTime);
+   //pass the time to COM port
+   try
+     cPort.Open;
+   except 
+     writeln(' No free com port found! ');
+    //cPort.Free;
+   end;      
+     cPort.WriteStr(arduinoTime)
+     //while (true) do 
+   repeat
+     aout:='';
+     cport.ReadStr(aout, 21)
+         //if aout <> '' then
+     WriteLn('From Arduino: ' + aout);
+     sleep(1000)
+   until iskeyPressed;  
+   cPort.Close;    
+   cPort.Free;    
+end; 
+
+
+{const GENERIC_READ= $80000000;
+      GENERIC_WRITE = $40000000;}      
+ 
+
+function OpenCOMPort: Boolean;
+var
+  DeviceName: array[0..80] of Char;
+  //ComFile: THandle;
+  DeviceNames: string;
+begin
+   { First step is to open the communications device for read/write.
+     This is achieved using the Win32 'CreateFile' function.
+     If it fails, the function returns false.   }
+  //StrPCopy(DeviceName, 'COM1:');
+  {      HANDLE WINAPI CreateFile(
+  _In_      LPCTSTR lpFileName,
+  _In_      DWORD dwDesiredAccess,
+  _In_      DWORD dwShareMode,
+  _In_opt_  LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+  _In_      DWORD dwCreationDisposition,
+  _In_      DWORD dwFlagsAndAttributes,
+  _In_opt_  HANDLE hTemplateFile
+);  }
+  ComFile:= WCreateFile(DeviceNames,
+    (GENERIC_READ or GENERIC_WRITE), 0, 0, 
+    (OPEN_EXISTING), dword(FILE_ATTRIBUTE_NORMAL),0);
+  if ComFile = INVALID_HANDLE_VALUE then
+    Result:= False
+  else
+    Result:= True;
+end;
+
+
+//http://www.luisdigital.com/programacion/fpc/serial.pp
+function SerOpen(const DeviceName: String): THandle;
+begin
+  Result:= CreateFile(PChar('\\.\' + DeviceName),
+                       GENERIC_READ or GENERIC_WRITE,
+                       0,
+                       0 {NIL},
+                       OPEN_EXISTING,
+                       FILE_ATTRIBUTE_NORMAL,
+                       0);
+end;
+
+procedure CloseCOMPort;
+begin
+  // finally close the COM Port!
+  // nicht vergessen den COM Port wieder zu schliessen!
+  CloseHandle(ComFile);
+end;
+
+
+const
+  NTdyn = 'System\CurrentControlSet\Services\Tcpip\Parameters\Temporary';
+  NTfix = 'System\CurrentControlSet\Services\Tcpip\Parameters';
+  W9xfix = 'System\CurrentControlSet\Services\MSTCP';
+
+function GetLocalIPs: string;
+var
+  //TcpSock: TTCPBlockSocket;
+  TcpSock: TBlockSocket;
+
+  ipList: TStringList;
+begin
+  Result := '';
+  ipList := TStringList.Create;
+  try
+    TcpSock := TBlockSocket.create;
+    try
+      //TcpSock.ResolveNameToIP(TcpSock.LocalName, ipList);
+      Result := ipList.CommaText;
+    finally
+      TcpSock.Free;
+    end;
+  finally
+    ipList.Free;
+  end;
+end;
+
+
+(*{function ReadReg2(SubKey, Vn: PChar): string;
+var
+ OpenKey: HKEY;
+ DataType, DataSize: integer;
+ Temp: array [0..2048] of char;
+begin
+  Result := '';
+  if RegOpenKeyEx(HKEY_LOCAL_MACHINE, SubKey, REG_OPTION_NON_VOLATILE,
+    'KEY_READ', OpenKey) = ERROR_SUCCESS then begin
+    DataType := REG_SZ;
+    DataSize := SizeOf(Temp);
+    if RegQueryValueEx(OpenKey, Vn, nil, @DataType, @Temp, @DataSize) = ERROR_SUCCESS then
+      SetString(Result, Temp, DataSize div SizeOf(Char) - 1);
+    RegCloseKey(OpenKey);
+   end;
+end ;*)
+
+
+function GetDNS: string;
+{$IFDEF UNIX}
+var
+  l: TStringList;
+  n: integer;
+begin
+  Result := '';
+  l := TStringList.Create;
+  try
+    l.LoadFromFile('/etc/resolv.conf');
+    for n := 0 to l.Count - 1 do 
+      if Pos('NAMESERVER', uppercase(l[n])) = 1 then begin
+        if Result <> '' then
+          Result := Result + ',';
+        Result := Result + SeparateRight(l[n], ' ');
+      end;
+  finally
+    l.Free;
+  end;
+end;
+{$ELSE}
+begin
+  //Result := GetDNSbyIpHlp;
+  if Result = '...' then begin
+    if Win32Platform = VER_PLATFORM_WIN32_NT then
+    begin
+      Result := ReadReg(HKEY_LOCAL_MACHINE, NTdyn, 'NameServer');
+      if result = '' then
+        Result := ReadReg(HKEY_LOCAL_MACHINE, NTfix, 'NameServer');
+      if result = '' then
+        Result := ReadReg(HKEY_LOCAL_MACHINE, NTfix, 'DhcpNameServer');
+    end
+    else
+      Result := ReadReg(HKEY_LOCAL_MACHINE, W9xfix, 'NameServer');
+    Result := ReplaceString(trim(Result), ' ', ',');
+  end;
+end;
+{$ENDIF}
+
+
+procedure AppendToLog(logfile: string; const value: Ansistring);
+var
+  st: TFileStream;
+  s: string;
+  h, m, ss, ms: word;
+  dt: Tdatetime;
+//var LogFile: string;
+begin
+  if fileexists(LogFile) then
+    st:= TFileStream.Create(LogFile, fmOpenReadWrite or fmShareDenyWrite)
+  else
+    st:= TFileStream.Create(LogFile, fmCreate or fmShareDenyWrite);
+  try
+    st.Position:= st.Size;
+    dt:= Now;
+    decodetime(dt, h, m, ss, ms);
+    s:= formatDateTime('yyyymmdd-hhnnss', dt)+format('.%.3d', [ms]) + ' '+value;
+    WriteStrToStream(st, s);
+  finally
+    st.free;
+  end;
+end;
+
+
+
+
+Procedure TForm1_Start1ClickTest(Sender: TObject);
+Var
+   I               : Word;
+   NR,SB            : Cardinal;
+   Buffer         : Array [1..5120] Of Byte;
+   FHandle         : Cardinal;
+   E1,E2,CB,Ende         : Boolean;
+   edit1: Tedit;
+   CB11: TCheckBox;
+Begin
+   Ende:=False;
+   SB:=SizeOf(Buffer);
+   {Tastenstatus merken und deaktivieren}
+   //E1:=Edit1.Enabled;
+   //7/Edit1.Enabled:=False;
+   //E2:=Edit2.Enabled;
+   //Edit2.Enabled:=False;
+   //CB:=CB1.Enabled;
+   //CB1.Enabled:=False;
+   //Start1.Visible:=False;
+   //Stop1.Visible:=True;
+   {Puffer mit Zufallszahlen füllen}
+   //StringToWide
+   //  WideToString
+   //CharsetConversion
+    // TSpecials
+  // TableBase64
+    //DecodeTriplet, 'DecodeTriplet', cdRegister);
+ //DecodeQuotedPrintable, 'DecodeQuotedPrintable', cdRegister);
+ //DecodeURL, 'DecodeURL', cdRegister);
+ //EncodeTriplet, 'EncodeTriplet', cdRegister);
+ //EncodeQuotedPrintable, 'EncodeQuotedPrintable', cdRegister);
+ //EncodeSafeQuotedPrintable, 'EncodeSafeQuotedPrintable', cdRegister);
+ //EncodeURLElement, 'EncodeURLElement', cdRegister);
+ //EncodeURL, 'EncodeURL', cdRegister);
+ //Decode4to3, 'Decode4to3', cdRegister);
+ //Decode4to3Ex, 'Decode4to3Ex', cdRegister);
+ //Encode3to4, 'Encode3to4', cdRegister);
+ //DecodeBase64, 'DecodeBase64', cdRegister);
+ //EncodeBase64, 'EncodeBase64', cdRegister);
+ //DecodeBase64mod, 'DecodeBase64mod', cdRegister);
+ //EncodeBase64mod, 'EncodeBase64mod', cdRegister);
+ //DecodeUU, 'DecodeUU', cdRegister);
+ //EncodeUU, 'EncodeUU', cdRegister);
+ //DecodeXX, 'DecodeXX', cdRegister);
+ //DecodeYEnc, 'DecodeYEnc', cdRegister);
+ //UpdateCrc32, 'UpdateCrc32', cdRegister);
+ //Crc32, 'Crc32', cdRegister);
+ //UpdateCrc16, 'UpdateCrc16', cdRegister);
+ //Crc16, 'Crc16', cdRegister);
+ //MD5, 'MD5', cdRegister);
+ //HMAC_MD5, 'HMAC_MD5', cdRegister);
+ //MD5LongHash, 'MD5LongHash', cdRegister);
+ //SHA1, 'SHA1', cdRegister);
+ //HMAC_SHA1, 'HMAC_SHA1', cdRegister);
+ //SHA1LongHash, 'SHA1LongHash', cdRegister);
+ //MD4, 'MD4', cdRegister);e
+   //TProxySetting
+     //GetDNS
+     //WakeOnLan
+     //GetIEProxy
+   //GetLocalIPs
+   //ASNEncOIDItem
+   //ASNEn cInt
+    //ASNItem
+    //dcb_ParityCheck
+   //SB1
+    //INVALID_HANDLE_VALUE
+      //sTDCB
+      //O_SYNC
+     //sOK 
+     //TBlockSocket
+       //TPINGSend
+      //TSocksType
+      //TSSLType
+      //PingHost
+        //TraceRouteHost
+     //FtpGetFile   
+       //NUMBERSET 
+         //numbers
+           //LETTERS
+       //PROCESS_TERMINATE    
+       //  PROCESS_SET_QUOTA  
+       //  PROCESS_DUP_HANDLE
+        
+        
+   //TMimeChar
+   Randomize;
+   //FillCharByte(Buffer,SB,0);
+   For I:=1 To SB Do Buffer[I]:= 0;
+   For I:=1 To SB Do Begin
+      Buffer[I]:=Random(256);
+   End;
+   {Datei anlegen}   
+   FHandle:= CreateFile(PChar(Edit1.Text),
+                       GENERIC_READ or GENERIC_WRITE,
+                       0,
+                       0, {nil}
+                       CREATE_ALWAYS,
+                       FILE_ATTRIBUTE_NORMAL,//FILE_FLAG_NO_BUFFERING or FILE_FLAG_WRITE_THROUGH,
+                       0);
+   { Jetzt schreiben}
+   If FHandle<>INVALID_HANDLE_VALUE Then Begin
+      If CB11.Checked Then Begin
+         Repeat
+            //WriteFile(FHandle,pchar(Buffer),SB,NR,0);
+            Application.ProcessMessages;
+         Until (NR<SB) Or Ende;
+      End
+      Else
+      Begin
+         //If WriteFile(FHandle,Buffer,SB,NR,nil)
+            //Then ShowMessage(IntToStr(NR))
+         //Else ShowMessage('Mist: '+SysErrorMessage(GetLastError));}
+      End;
+      {Datei schließen}
+      FileClose(FHandle);
+   End;
+   {Tastenstatus wiederherstellen}
+   Edit1.Enabled:=E1;
+   //Edit2.Enabled:=E2;
+   CB11.Enabled:=CB;
+   //Start1.Visible:=True;
+   //Stop1.Visible:=False;
+End; 
+
+
+begin
+  maxform1.console1click(self);
+  if ismodula10(42054504) then writeln('EAN Mod10 correct') else
+                                 writeln('Mod10 false'); 
+  //writefile, readfile
+  //cCOM
+  InitCreateComPort(self)
+  SetArduinoTime(self);
+  
+  //Async Free Pro
+  {AFComPortInit;
+  SetArduinoTime2(self);}
+  
+  //ComFile:= wCreateFile(
+   //DecodeURL
+  //TSpecials
+  //ASNdump
+    //ASNEncOIDItem   
+     //EncodeURL 
+    //TSyslogMessage
+      //TMessHeader
+      //TMimeMess
+      //TMimePart
+      //TMimeEncoding
+      //TNtp
+      //IsIPAdr
+      //StrToIP
+      //GetDomainName
+      //GetDomainController
+      //GetDomainUsers       
+ //GetDomainGroups( Controller : AnsiString) : AnsiString');
+ //GetDateTime( Controller : AnsiString) : TDateTime');
+ //GetFullName( Controller, UserID : AnsiString) : AnsiString');
+          //TWorkEvent
+          //TIdStatus
+ //    CL.AddTypeS('TCommandEvent', 'Procedure ( Thread : TIdPeerThread; const Tag, '
+   //+'CmdStr : String; var Handled : Boolean)');
+   
+     //SHORTCUT 
+      // NEWSUBMENU
+      //DRAWMENUITEM
+      //TShiftState
+        //IsAltGRPressed
+        //tagCRGB
+         // CRGB
+        // TCommandEvent
+                     
+End.
+
+http://www.pjrc.com/teensy/td_libs_Time.html
+
+//****************************************************
+
+/*
+ * Arduino als Uhr
+ * Weiterentwicklung des mit der Time Library mitgelieferten Beispiels
+ * Autorin: Max, Silvia Rothen, rothen ecotronics, Bern, Switzerland
+ * http://ecotronics.ch.honorius.sui-inter.net/wordpress/2012/arduino-als-uhr/
+ *
+ */
+ 
+#include <Time.h>
+char incoming[15] = {}; //wegen Endzeichen
+int led = 13;
+ 
+void setup() {
+  Serial.begin(9600);
+}
+ 
+void loop() {
+  int i = 0;
+  
+  //Zeit aus der seriellen Schnittstelle auslesen
+  if (Serial.available() > 0) {
+    //Array of Char leeren
+    memset(incoming, 0, sizeof(incoming));
+    //Zeit wird geliefert als HHmmssddMMyyyy, z.B. 23120027112012
+    while (Serial.available() > 0 && i < sizeof(incoming) - 1) {
+      incoming[i] = Serial.read();
+      i++;
+      delay(3);
+    }
+     
+    //in Zeit umwandeln
+    char hr[3] = {};
+    char min[3] = {};
+    char sec[3] = {};
+    char day[3] = {};
+    char month[3] = {};
+    char yr[5] = {};
+    hr[0] = incoming[0];
+    hr[1] = incoming[1];
+    min[0] = incoming[2];
+    min[1] = incoming[3];
+    sec[0] = incoming[4];
+    sec[1] = incoming[5];
+    day[0] = incoming[6];
+    day[1] = incoming[7];
+    month[0] = incoming[8];
+    month[1] = incoming[9];
+    yr[0] = incoming[10];
+    yr[1] = incoming[11];
+    yr[2] = incoming[12];
+    yr[3] = incoming[13];
+    setTime(atoi(hr), atoi(min), atoi(sec),
+      atoi(day), atoi(month), atoi(yr));
+    Serial.println("!new Time set");
+  }
+  
+  //Zeit anzeigen
+  digitalClockDisplay();
+  //1 Sekunde warten
+  delay(1000);
+}
+ 
+void digitalClockDisplay(){
+  // Digitalanzeige der Zeit
+  printDigits(hour(), "");
+  printDigits(minute(), ":");
+  printDigits(second(), ":");
+  printDigits(day(), " ");
+  printDigits(month(), ".");
+  Serial.print(".");
+  Serial.print(year());
+  Serial.println();
+}
+ 
+void printDigits(int digits, char trennzeichen[2] ){
+  // Hilfsfunktion zur Uhrendarstellung: Gibt vorstehenden Doppelpunkt und führende 0 aus
+  Serial.print(trennzeichen);
+  if(digits < 10) {
+    Serial.print('0');
+  }
+  Serial.print(digits);
+}
+      
+      
+
+
+function OpenCOMPort: Boolean;
+var
+  DeviceName: array[0..80] of Char;
+  ComFile: THandle;
+begin
+   { First step is to open the communications device for read/write.
+     This is achieved using the Win32 'CreateFile' function.
+     If it fails, the function returns false.
+
+     Wir versuchen, COM1 zu öffnen.
+     Sollte dies fehlschlagen, gibt die Funktion false zurück.
+   }
+  StrPCopy(DeviceName, 'COM1:');
+
+  ComFile := CreateFile(DeviceName,
+    GENERIC_READ or GENERIC_WRITE,
+    0,
+    nil,
+    OPEN_EXISTING,
+    FILE_ATTRIBUTE_NORMAL,
+    0);
+
+  if ComFile = INVALID_HANDLE_VALUE then
+    Result := False
+  else
+    Result := True;
+end;
+
+
+function SetupCOMPort: Boolean;
+const
+  RxBufferSize = 256;
+  TxBufferSize = 256;
+var
+  DCB: TDCB;
+  Config: string;
+  CommTimeouts: TCommTimeouts;
+begin
+   { We assume that the setup to configure the setup works fine.
+     Otherwise the function returns false.
+
+     wir gehen davon aus das das Einstellen des COM Ports funktioniert.
+     sollte dies fehlschlagen wird der Rückgabewert auf "FALSE" gesetzt.
+   }
+
+  Result := True;
+
+  if not SetupComm(ComFile, RxBufferSize, TxBufferSize) then
+    Result := False;
+
+  if not GetCommState(ComFile, DCB) then
+    Result := False;
+
+  // define the baudrate, parity,...
+  // hier die Baudrate, Parität usw. konfigurieren
+   
+  Config := 'baud=9600 parity=n data=8 stop=1';
+
+  if not BuildCommDCB(@Config[1], DCB) then
+    Result := False;
+
+  if not SetCommState(ComFile, DCB) then
+    Result := False;
+
+  with CommTimeouts do
+  begin
+    ReadIntervalTimeout         := 0;
+    ReadTotalTimeoutMultiplier  := 0;
+    ReadTotalTimeoutConstant    := 1000;
+    WriteTotalTimeoutMultiplier := 0;
+    WriteTotalTimeoutConstant   := 1000;
+  end;
+
+  if not SetCommTimeouts(ComFile, CommTimeouts) then
+    Result := False;
+end;
+
+
+{
+  The following is an example of using the 'WriteFile' function
+  to write data to the serial port.
+
+  Folgendes Beispiel verwendet die 'WriteFile' Funktion, um Daten
+  auf den seriellen Port zu schreiben.
+}
+
+
+procedure SendText(s: string);
+var
+  BytesWritten: DWORD;
+begin
+   {
+     Add a word-wrap (#13 + #10) to the string
+      An den übergebenen String einen Zeilenumbruch (#13 + #10) hängen
+   }
+  s := s + #13 + #10;
+  WriteFile(ComFile, s[1], Length(s), BytesWritten, nil);
+end;
+
+
+{
+  The following is an example of using the 'ReadFile' function to read
+  data from the serial port.
+  
+  Folgendes Beispiel verwendet die 'ReadFile' Funktion, um Daten
+  vom seriellen Port zu lesen.
+}
+
+
+procedure ReadText: string;
+var
+  d: array[1..80] of Char;
+  s: string;
+  BytesRead, i: Integer;
+begin
+  Result := '';
+  if not ReadFile(ComFile, d, SizeOf(d), BytesRead, nil) then
+  begin
+    { Raise an exception }
+  end;
+  s := '';
+  for i := 1 to BytesRead do s := s + d[I];
+  Result := s;
+end;
+
+
+procedure CloseCOMPort;
+begin
+  // finally close the COM Port!
+  // nicht vergessen den COM Port wieder zu schliessen!
+  CloseHandle(ComFile);
+end;
+
+
+http://www.jbox.dk/sanos/source/include/win32.h.html
+
+
+Procedure TForm1.Start1Click(Sender: TObject);
+Var
+   I               : Word;
+   NR,SB            : Cardinal;
+   Buffer         : Array [1..5120] Of Byte;
+   FHandle         : Cardinal;
+   E1,E2,CB         : Boolean;
+Begin
+   Ende:=False;
+   SB:=SizeOf(Buffer);
+   {Tastenstatus merken und deaktivieren}
+   E1:=Edit1.Enabled;
+   Edit1.Enabled:=False;
+   E2:=Edit2.Enabled;
+   Edit2.Enabled:=False;
+   CB:=CB1.Enabled;
+   CB1.Enabled:=False;
+   Start1.Visible:=False;
+   Stop1.Visible:=True;
+   {Puffer mit Zufallszahlen füllen}
+   Randomize;
+   FillChar(Buffer,SB,0);
+   For I:=1 To SB Do
+   Begin
+      Buffer[I]:=Random(256);
+   End;
+   {Datei anlegen}   
+   FHandle:=CreateFile(PChar(Edit1.Text),
+                       GENERIC_READ or GENERIC_WRITE,
+                       0,
+                       nil,
+                       CREATE_ALWAYS,
+                       FILE_FLAG_NO_BUFFERING or FILE_FLAG_WRITE_THROUGH,
+                       0);
+   { Jetzt schreiben}
+   If FHandle<>INVALID_HANDLE_VALUE Then
+   Begin
+      If CB1.Checked Then
+      Begin
+         Repeat
+            WriteFile(FHandle,Buffer,SB,NR,nil);
+            Application.ProcessMessages;
+         Until (NR<SB) Or Ende;
+      End
+      Else
+      Begin
+         If WriteFile(FHandle,Buffer,SB,NR,nil)
+            Then ShowMessage(IntToStr(NR))
+         Else ShowMessage('Mist: '+SysErrorMessage(GetLastError));
+      End;
+      {Datei schließen}
+      //FileClose(FHandle);
+   End;
+   {Tastenstatus wiederherstellen}
+   Edit1.Enabled:=E1;
+   Edit2.Enabled:=E2;
+   CB1.Enabled:=CB;
+   Start1.Visible:=True;
+   Stop1.Visible:=False;
+End; 
+
+ttp://www.jbox.dk/sanos/source/include/win32.h.html
+
+with Tcolordialog.create(self) do begin
+    try 
+      execute;
+    finally
+      free
+    end
+  end;    
+  
+           
+BASTA 2014           
+           Basic
+           Android
+           Session 
+           To 
+           Arduino
+           
+           if (Console.ReadKey().KeyChar == 'Q')                      
+                       Console.WriteLine("out box");
+                       
+****************************************
+ArduinoTimeSetter.cs                       
+using System;
+using System.Collections.Generic;
+using System.IO.Ports;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Configuration;
+//using System.Apparduino.config;
+//using apparduino.config.Properties;
+
+//using ch.maxbox.arduino.time.Properties;
+
+//namespace ConsoleApplication2
+  namespace ch.maxbox.arduino.time  {
+     class ArduinoTimeSetter {  
+         static void Main(string[] args) { 
+             //Settings settings = new Settings();
+              //SerialPort port = new SerialPort(settings.port,9600);
+             SerialPort port = new SerialPort("COM5", 9600);
+          
+             DateTime now = DateTime.Now;
+             try
+             {
+                 port.Open();
+             }
+             catch (System.IO.IOException e)
+             {
+                 if (e.Source != null)
+                     Console.WriteLine("IOException no Port found: {0}", e.Source);
+                 //throw;
+                 Environment.Exit(0); 
+             }
+
+             //time formatting, be aware new format (incl weekdays) for DS1307
+             String arduinoTime = String.Format("{0:HHmmssddMMyy}", DateTime.Now);
+                                                        //+((int)DateTime.Now.DayOfWeek); 
+              Console.WriteLine(arduinoTime);
+              //pass the time to COM port
+              port.Write(arduinoTime);
+              
+              while (true) {
+                 Console.WriteLine("Time From Arduino: " + port.ReadLine());
+                 if (Console.ReadKey().KeyChar == 'Q')
+                 {
+                     Console.WriteLine("close from out of box: ");
+                     Environment.Exit(0);
+                     port.Close();
+                 }
+                 else continue;
+              }
+          port.Close();   //unreachable C has to be set with consoleexit
+        } 
+       
+     } 
+  }
+                       
+                       
+  http://www.nas-hilfe.de/buffalo-linkstation-pro-duo/software/86-den-telnet-zugang-zur-linkstation-pro-duo-dauerhaft-aktivieren
+  
+  OK - what a frustrating process this is. Big tip - the vast majority of links and advice provided around the web about fixing this E06 problem either leads to dead links, self references or to versions that are out of date. I'm not exactly ignorant of IT matters but this has to be the most stupidly complex thing to talk to I have ever tried to use!
+
+
+  The same error occured after re-installing CodeGear, I followed the steps below, and re-installed CodeGear by Administrator login. Now, CodeGear is running without errors.
+
+Ilyas
+*************************
+CodeGear 5/25/2007 11:25:36 AM dated solution;
+
+1) Uninstall Delphi 2007.
+
+2) Remove the Program Files\CodeGear\RAD Studio\5.0 directory.
+
+For Windows Vista:
+
+3a) Remove the Program Data\CodeGear\RAD Studio\5.0 directory.
+
+3b) Remove the Program Data\{AB3EC276... directory.
+
+3c) Remove the User\All Users\CodeGear\RAD Studio\5.0 directory.
+
+For pre-Vista Windows OS:
+
+3a) Remove the Documents and Setting\All Users\Application Data\CodeGear\RAD Studio\5.0 directory.
+
+3b) Remove the Documents and Setting\All Users\Application Data\{AB3EC276... directory.
+
+4) If you had the Trial or Enterprise version installed and are now installing the Professional version, then run Regedit and remove the key: HKEY_CURRENT_USER\Software\Borland\BDS\5.0
+
+5) Re-install Delphi 2007   }
+
+ Lazarus-IDE für Pascal und Object Pascal in Version 1.2 veröffentlicht
+
+Die freie Entwicklungsumgebung enthält im ersten größeren Release nach etwa anderthalb Jahren unter anderem einen Makro-Recorder, einen verbesserten Debugger und überarbeiteten Compiler-Optionen.
+
+Version 1.2 der integrierten Entwicklungsumgebung Lazarus steht zum Download bereit. Sie ist zum Rapid Application Development (RAD) mit Pascal und Object Pascal gedacht und zu Delphi kompatibel, während andere Pascal-IDEs sich eher an Turbo Pascal anlehnen. Intern kommt der Free-Pascal-Compiler zum Einsatz.

@@ -5,7 +5,7 @@ unit uPSR_graphics;
 {Date: 2010-05-19 08:24:27 +0200 (Wed, 19 May 2010)
 New Revision: 227, tbrush-bitmap, max}
 //extended bitmap  transparent mode, mask, new TIcon  and TMetaFile
-// override additional  3.9.7
+// override additional  3.9.7  TNotifyEvent onchange in canvas
 
 
 interface
@@ -108,6 +108,14 @@ procedure TCanvasHandleW(Self: TCanvas; T: Longint); begin Self.Handle:= T; end;
 
 procedure TCanvasPixelsR(Self: TCanvas; var T: Longint; X,Y: Longint); begin T := Self.Pixels[X,Y]; end;
 procedure TCanvasPixelsW(Self: TCanvas; T, X, Y: Longint); begin Self.Pixels[X,Y]:= T; end;
+
+procedure TCanvasOnChangeR(Self: TCanvas; var T: TNotifyEvent); begin T := Self.OnChange; end;
+procedure TCanvasOnChangeW(Self: TCanvas; T: TNotifyEvent); begin Self.OnChange:= T; end;
+
+procedure TCanvasOnChangingR(Self: TCanvas; var T: TNotifyEvent); begin T := Self.OnChanging; end;
+procedure TCanvasOnChangingW(Self: TCanvas; T: TNotifyEvent); begin Self.OnChanging:= T; end;
+
+
 procedure TCanvasClipRectR(Self: TCanvas; var T: TRect); begin T := Self.ClipRect; end;
 
 
@@ -263,6 +271,10 @@ begin
 {$ENDIF}
     RegisterPropertyHelper(@TCanvasPixelsR, @TCanvasPixelsW, 'PIXELS');
     RegisterPropertyHelper(@TCanvasClipRectR, NIL, 'CLIPRECT');
+    RegisterPropertyHelper(@TCanvasOnChangeR, @TCanvasOnChangeW, 'OnChange');
+    RegisterPropertyHelper(@TCanvasOnChangingR, @TCanvasOnChangingW, 'OnChanging');
+
+
   end;
 end;
 
@@ -453,6 +465,7 @@ begin
       RegisterMethod(@TBitmap.SaveToStream, 'SaveToStream');
     end;
     RegisterMethod(@TBitmap.FreeImage, 'FreeImage');
+    RegisterMethod(@TBitmap.ReleaseMaskHandle, 'ReleaseMaskHandle');
 
     RegisterPropertyHelper(@TBitmapCanvas_R,nil,'Canvas');
 {$IFNDEF CLX}
