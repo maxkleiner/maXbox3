@@ -77,6 +77,13 @@ begin
   with CL.AddClassN(CL.FindClass('TCustomDBGrid'),'TDBGrid') do begin
     RegisterPublishedProperties;
     RegisterProperty('SelectedRows','TBookmarkList',iptr);
+      RegisterProperty('BorderStyle', 'TBorderStyle', iptrw);
+    RegisterProperty('BORDERWIDTH', 'Integer', iptrw);
+    RegisterProperty('COLOR', 'TColor', iptrw);
+    RegisterProperty('FONT', 'TFont', iptrw);
+    RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
+    RegisterProperty('Taborder', 'byte', iptrw);
+
 
   end;
 end;

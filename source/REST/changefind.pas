@@ -72,7 +72,7 @@ begin
   dflistView:= alistView;
   //dflistView.scrollbars:= ssBoth;
   decodedate(date, nyear, nmonth, nday);
-    dflistView.items.insert(0, format('%-100s %10s -%10s',
+    dflistView.items.insert(0, format('%-80s %10s -%10s',
        ['---Filename:', '---Size:', '---Time:']));
      fcounter:= 0;
   {with alistView.Items do begin

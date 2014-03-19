@@ -144,6 +144,7 @@ begin
 {$ENDIF}
     {$ENDIF}
     RegisterProperty('Caption', 'TCaption', iptrw);
+   RegisterProperty('CaptionS', 'STRING', iptrw);
    RegisterMethod('Constructor Create(AOwner: TComponent);');
   end;
 end;
@@ -581,7 +582,9 @@ begin
     RegisterProperty('BEVELWIDTH', 'TBevelWidth', iptrw);
     RegisterProperty('BORDERWIDTH', 'TBorderWidth', iptrw);
     //RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
-
+    //RegisterProperty('Style', 'TListboxStyle', iptrw);
+    RegisterProperty('AutoComplete', 'boolean', iptrw);
+    RegisterProperty('AutoCompleteDelay', 'integer', iptrw);
     RegisterProperty('COLOR', 'TColor', iptrw);
     RegisterProperty('FONT', 'TFont', iptrw);
     RegisterProperty('MULTISELECT', 'Boolean', iptrw);

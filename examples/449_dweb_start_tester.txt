@@ -1,7 +1,7 @@
 //middle test demo which shows use of object TFileStream  and GRIDS
 //loads a file, bitmap and so on
 //{$R+}{$D-,L-,O+,Q-,R-,Y-,S-}
-//#sign:Administrator: PC08: 12/03/2014 09:45:26 AM 
+//#sign:Administrator: PC08: 17/03/2014 02:03:45 PM 
 
 
 program GRIDFileBITStream_DWS_Framework_UnderConstruction;
@@ -37,6 +37,9 @@ var
   mynote: TNoteBook;
   mediaplayer: TMediaPlayer;
   apge: TPagecontrol;
+  dwsfrm: TForm;
+
+  
   
   
 function GetTextFromFile(const AFile: String; var ReturnString: string): boolean;
@@ -113,6 +116,18 @@ var     lbStatus: TListBox;
         myGridC: TBuildAppGrid;
         myGridCS: TStringGrid;
        myDatFile: shortString;
+    cbActivated: TCheckBox;
+    PopupMn_LList: TPopupMenu;
+    LoadlistFile: TMenuItem;
+    SaveListFile: TMenuItem;
+    lblAppMonitor: TLabel;
+    pnlCF: TPanel;
+    edtDrive: TEdit;
+    lblDrive: TLabel;
+    btnchfind: TButton;
+    IdServerIOHandlerSSL1: TIdServerIOHandlerSSL;
+    cbSSL: TCheckBox;
+ 
   
 function GetFullPath(const filename: String): String;
 var
@@ -146,7 +161,7 @@ end;
 
        
 
-procedure TAppLoaderFrm_Server_LoadBinariesListClick(Sender: TObject);
+procedure TAppLoadSrv_LoadBinariesListClick(Sender: TObject);
 begin
   with TOpenDialog.Create(NIL) do begin
     FileName:= '*.txt';
@@ -162,7 +177,7 @@ begin
   end;
 end;
 
-procedure TAppLoaderFrm_Server_SaveBinariesListClick(Sender: TObject);
+procedure TAppLoadSrv_SaveBinariesListClick(Sender: TObject);
 begin
   with TSaveDialog.Create(NIL) do begin
     filename:= '*.txt';
@@ -186,7 +201,7 @@ begin
 end;
 
 
-procedure TAppLoaderFrm_Server_IdTCPServer1Execute(AThread: TIdPeerThread);
+procedure TAppLoadSrv_IdTCPServer1Execute(AThread: TIdPeerThread);
 var
   fname, sRequest: String;
   idx, iPos: Integer;
@@ -239,7 +254,7 @@ begin
   end;
 end;
 
-procedure TAppLoaderFrm_Server_IdTCPServer1Connect(AThread: TIdPeerThread);
+procedure TAppLoadSrv_IdTCPServer1Connect(AThread: TIdPeerThread);
 begin
   lbStatus.Items.Insert(0, Format('%-20s %s',
   [DateTimeToStr(now), 'DWS Connected with ' +
@@ -247,15 +262,139 @@ begin
                 //+ connection.socket in D7
 end;
 
-procedure TAppLoaderFrm_Server_IdTCPServer1Disconnect(AThread: TIdPeerThread);
+procedure TAppLoadSrv_IdTCPServer1Disconnect(AThread: TIdPeerThread);
 begin
   lbStatus.Items.Insert(0, Format('%-20s %s',
      [DateTimeToStr(now), 'DWS Connection closed']));
 end;
 
+procedure TAppLoadSrv_dwsInfoCallback(mmsg: string);
+begin
+  lbStatus.Items.Insert(0, Format('%-20s %s',
+                       [DateTimeToStr(now), mmsg]));
+end;
+
+procedure TAppLoadSrv_GetRSAKeyPassword(var vPassword: string);
+begin
+  //pass of the machine rsakey on which you hold the certificate!!
+  vPassword := 'belplan02';
+  //this is a password for unlocking the server
+  //rsakey. If you have your own key, then it would probably be different
+end;
 
 
-var dwsfrm: TForm;
+//var cbActivated, cbSSL: TCheckbox;
+
+procedure TAppLoadSrv_cbActivatedClick(Sender: TObject);
+var
+ AppDir: string;
+ _IniFile: TIniFile;
+
+begin
+  //cbSSL.Checked:= false;
+  if cbActivated.Checked then begin
+    IdTCPServer1.defaultPort:= DWS_PORT;
+    IdTCPServer1.IOHandler:= NIL;
+    lbStatus.Items.Insert(0, Format('%-20s %s',
+    [DateTimeToStr(now), 'SSL IOHandler reset']));
+    if cbSSL.Checked then begin
+    //cbSSL.Checked:= not cbSSL.Checked;
+      _IniFile:= TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'IP_A.INI');
+      IdTCPServer1.IOHandler:= IdServerIOHandlerSSL1;
+      with IdServerIOHandlerSSL1.SSLOptions do begin
+        Method:= sslvSSLv3;
+        Mode:= sslmServer;
+        AppDir:= ExtractFilePath(Application.ExeName);
+        RootCertFile:= AppDir +
+            _IniFile.ReadString('CERT', 'ROOTCERT', '');
+        CertFile:= AppDir +
+              _IniFile.ReadString('CERT', 'SCERT', '');
+        KeyFile:= AppDir +
+               _IniFile.ReadString('CERT', 'RSAKEY', '');
+        VerifyMode:= [sslvrfPeer];
+      end;
+      //IdTCPServer1.Bindings.Items[0].port:= 443;
+      IdTCPServer1.Bindings.DefaultPort:= SSL_PORT;
+      IdServerIOHandlerSSL1.OnStatusInfo:= @TAppLoadSrv_dwsInfoCallback;
+      //IdTCPServer1.IOHandler:= IdServerIOHandlerSSL1;
+      IdServerIOHandlerSSL1.OnGetPassword:= @TAppLoadSrv_GetRSAKeyPassword;
+      lbStatus.Items.Insert(0, Format('%-20s %s',
+         [DateTimeToStr(now), 'RSA KeyPass has been passed ;)']));
+      _IniFile.Free;
+    end; // end SSL stuff
+    IdTCPServer1.Active:= true;
+  // socket not activated
+  end else
+    IdTCPServer1.Active:= false;
+  cbActivated.Checked:= IdTCPServer1.Active;
+  case cbActivated.Checked of
+    true: lbStatus.Items.Insert(0, Format('%-20s %s',
+      [DateTimeToStr(now), 'DWS Server activ on port: ' +
+           intToStr(IdTCPServer1.DefaultPort)]));
+    false: lbStatus.Items.Insert(0, Format('%-20s %s',
+      [DateTimeToStr(now), 'DWS Server is halted ... ']));
+  end;
+end;
+
+
+procedure TAppLoadSrv_FormCreate(Sender: TObject);
+begin
+  myDatFile:= FILE_PATH;
+  myGridC:= TBuildAppGrid.Create_initGrid(strGrd, myDatFile);
+  myGridC.fillGrid;
+  //ShortDateFormat:= 'dd.mm.yyyy';
+  //LongTimeFormat:= 'hh.mm.ss';
+  meData.WordWrap:= false;
+  meData.ScrollBars:= ssVertical;
+  dwsFrm.Caption:= 'DelphiWebStart '+DWSVersion;
+  //meData.Lines.LoadFromFile(ExpandFileName(FILE_PATH));
+  if fileexists(FILE_PATH) then begin
+    Server_gridToMemo;
+    lbStatus.Items.Insert(0, Format('%-20s %s',
+       [DateTimeToStr(now), 'State Logger started, DWS '+DWSVersion]));
+    lbStatus.Items.Insert(0, Format('%-20s %s',
+       [DateTimeToStr(now), 'Definitionfile activated: ' + myDatFile]));
+    lbStatus.Items.Insert(0, Format('%-20s %s',
+       [DateTimeToStr(now), 'DWSServer.exe /allowinstances not set']));
+  //idTCPServer1.Intercept
+  end;
+end;
+
+procedure TAppLoadSrv_FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  myGridC.storeGrid;
+  myGridC.Free;
+end;
+
+
+procedure TAppLoadSrv_strgrdGetEditText(Sender: TObject; ACol, ARow: Integer;
+  var Value: WideString);
+begin
+  // cause of linux names
+  if ACol = 0 then
+    if value <> '' then
+     Value:= AnsiLowerCase(Value);
+end;
+
+procedure TAppLoadSrv_strgrdSetEditText(Sender: TObject; ACol, ARow: Integer;
+  const Value: WideString);
+begin
+  if ACol = 1 then begin
+    try
+      if value <> '' then
+        strtoInt(Value);
+    except
+      raise Exception.Create('must be an integer value in app size');
+    end;
+  end;
+ //myGridC.modified:= false;
+// better solution in selectcell
+end;
+
+
+
+
+//var dwsfrm: TForm;
 
 procedure loadDWSServerForm;
 
@@ -750,6 +889,8 @@ begin
     //maxform1.statusbar1.simpletext:= 'this is maxland';
       loadDWSServerForm;
       //ttablist
+       writeDebug('//TCustomDBLookupControl ---');
+ 
       
  end. 
 

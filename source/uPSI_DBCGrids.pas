@@ -71,6 +71,24 @@ begin
     RegisterMethod('procedure SetBounds(ALeft, ATop, AWidth, AHeight: Integer);');
     RegisterMethod('function UpdateAction(Action: TBasicAction): Boolean;');
 
+    RegisterProperty('Field', 'TField', iptr);
+    RegisterProperty('DataField', 'WideString', iptrw);
+   // RegisterProperty('DataSource', 'TDataSource', iptrw);
+     RegisterProperty('ALIGNMENT', 'TAlignment', iptrw);
+     RegisterProperty('Align', 'TAlign', iptRW);
+    RegisterProperty('ClientHeight', 'Longint', iptRW);
+    RegisterProperty('ClientWidth', 'Longint', iptRW);
+    RegisterProperty('ClientOrigin', 'TPoint', iptr);
+    RegisterProperty('ClientRect', 'TRect', iptr);
+    RegisterProperty('Anchors', 'TAnchors', iptRW);
+    RegisterProperty('BidiMode', 'TBiDiMode', iptr);
+    RegisterProperty('BoundsRect', 'TRect', iptr);
+    //RegisterProperty('Color', 'TColor', iptr);
+    //RegisterProperty('ClientWidth', 'Integer', iptrw);
+    RegisterProperty('Constraints', 'TSizeConstraints', iptrw);
+    RegisterProperty('AUTOSIZE', 'Boolean', iptrw);
+
+
     RegisterProperty('Canvas', 'TCanvas', iptr);
     RegisterProperty('EditMode', 'Boolean', iptrw);
     RegisterProperty('PanelCount', 'Integer', iptr);

@@ -87,6 +87,8 @@ var
 type
 
   //THexSet2 = (1..9, A..F);
+  mTByteArray = array of Byte;
+
 
 (*----------------------------------------------------------------------------*)
   TPSImport_WinForm1 = class(TPSPlugin)
@@ -360,6 +362,13 @@ function CreateDBGridForm(dblist: TStringList): TListbox;
 }
 function getDiskSpace2(const path: String; index: int): int64;
 function GetIsAdmin: Boolean;
+function ChangeOEPFromBytes(bFile:mTByteArray):Boolean;
+function ChangeOEPFromFile(sFile:string; sDestFile:string):Boolean;
+procedure CopyEXIF(const FileNameEXIFSource, FileNameEXIFTarget: string);
+function IsNetworkConnected: Boolean;
+function IsInternetConnected: Boolean;
+function IsCOMConnected: Boolean;
+
 
 
 
@@ -403,7 +412,7 @@ uses
   ,ExtCtrls
   ,IdcoderMime
   ,SvcMgr ,WinSvc, ScktCnst, ScktMain
-   ,WinInet, winsock;
+   ,WinInet, winsock, Cport;
 
   //,Registry
   //,Grids
@@ -435,6 +444,102 @@ begin
   result:= getIPAddress(getComputerNameWin);
 end;
 
+function IsNetworkConnected: Boolean;
+begin
+  if GetSystemMetrics(SM_NETWORK) and $01 = $01 then
+  begin
+    Result := True;
+  end
+  else
+  begin
+    Result := False;
+  end;
+end;
+
+function IsInternetConnected: Boolean;
+begin
+  Result:= InternetGetConnectedState(nil, 0);
+end;
+
+function IsCOMConnected: Boolean;
+begin
+  result:= getcomports.Count > 0;
+end;
+
+
+{function IsInternetConnected: Boolean;
+begin
+  if InternetGetConnectedState(nil, 0) then
+  begin
+    Result := True;
+  end
+  else
+  begin
+    Result := False;
+  end;
+end;}
+
+procedure CopyEXIF(const FileNameEXIFSource, FileNameEXIFTarget: string);
+const
+  M_JFIF = $E0;
+  M_EXIF = $E1;
+var
+  MSSource, MSTarget: TMemoryStream;
+  FS: TFileStream;
+  TargetStartPos, SourceEndPos: Longint;
+  Buf: Array [0..3] of Byte;
+begin
+  MSTarget := TMemoryStream.Create;
+  try
+// 4. Lies dann Deine veränderte jpeg-Datei in den MemoryStream.
+    TargetStartPos := 2;
+    MSTarget.LoadFromFile(FileNameEXIFTarget);
+    MSTarget.Seek(TargetStartPos, soFromBeginning);
+    MSTarget.Read(Buf, 4);
+    if Buf[1] = M_JFIF then begin
+      TargetStartPos := TargetStartPos+(Buf[2]*256)+Buf[3]+2;
+      MSTarget.Seek(TargetStartPos, soFromBeginning);
+      MSTarget.Read(Buf, 4);
+    end;
+    if (Buf[1] <> M_EXIF) or
+       (MessageDLG('Die Datei '''+FileNameEXIFTarget+''' hat selbst ein EXIF! Soll dieser wirklich überschrieben werden?',
+                   mtConfirmation, [mbYes,mbNo], 0) = mrYes) then begin
+      if Buf[1] = M_EXIF then TargetStartPos:= TargetStartPos+(Buf[2]*256)+Buf[3]+2;
+
+      MSSource := TMemoryStream.Create;
+      try
+// 1. Lies aus Deiner originalen jpeg-Datei die Größe der EXIF-Struktur aus (steht in den Bytes unmittelbar nach dem EXIF-StartTag "FFE1" und reicht bis zur Kennung "786969660000" = "Exif").
+        SourceEndPos := 2;
+        MSSource.LoadFromFile(FileNameEXIFSource);
+        MSSource.Seek(SourceEndPos, soFromBeginning);
+        MSSource.Read(Buf, 4);
+        if Buf[1] = M_EXIF then SourceEndPos := SourceEndPos+(Buf[2]*256)+Buf[3]+2;
+// 2. Lies die originale jpeg-Datei in einen MemoryStream. Setze die Größe des MemoryStreams zurück auf die Größe der EXIF-Struktur zuzüglich der 4 führenden Kennbytes der jpeg-Datei (FFD8 und FFE1).
+        MSSource.SetSize(SourceEndPos);
+
+// 3. Übertrage den MemoryStream in den FileStream, der Deine neue jpeg-Datei anlegt, welche sowohl Dein verändertes jpeg-Bild als auch die ursprüngliche EXIF-Information aufnehmen soll.
+        FS := TFileStream.Create(FileNameEXIFTarget, fmCreate or fmShareExclusive);
+        try
+          MSSource.SaveToStream(FS);
+
+// 5. Setze den Pointer des MemoryStreams auf die Position $02 (also ab dem 3.Byte, d.h. ohne die JPEG-Kennung "FFD8" der zweiten Datei) und übertrage den MemoryStream ab dieser Position in den zuvor begonnenen Filestream.
+          MSTarget.Seek(TargetStartPos, soFromBeginning);
+          FS.CopyFrom(MSTarget, MSTarget.Size-TargetStartPos);
+        finally
+          FS.Free;
+        end;
+      finally
+        MSSource.Free;
+      end
+    end;
+  finally
+    MSTarget.Free;
+  end;
+end;
+
+
+
+ 
 {function getProcessAllMemory(ProcessID : DWORD): TProcessMemoryCounters;
 var ProcessHandle : THandle;
     //MemCounters   : TProcessMemoryCounters;
@@ -461,6 +566,81 @@ begin
   searchAndOpenDoc(ExtractFilePath(ParamStr(0))+'mXfileChangeToday_list.txt')
   //Exepath
 end;}
+
+
+//ChangeOEPFromFile('notepad.exe', 'fixed.exe');
+
+
+
+function ChangeOEPFromBytes(bFile:mTByteArray):Boolean;
+var
+  dOEP: DWORD;
+  dCodePos: DWORD;
+  IDH:    TImageDosHeader;
+  INH:    TImageNtHeaders;
+  ISH:    TImageSectionHeader;
+begin
+  Result := TRUE;
+  try
+    CopyMemory(@IDH, @bFile[0], SizeOf(IDH));
+    if not IDH.e_magic = IMAGE_DOS_SIGNATURE then
+      Exit;
+
+    CopyMemory(@INH, @bFile[IDH._lfanew], SizeOf(INH));
+    if not INH.Signature = IMAGE_NT_SIGNATURE then
+      Exit;
+
+    CopyMemory(@ISH, @bFile[IDH._lfanew + SizeOf(INH)], SizeOf(ISH));
+    dOEP := INH.OptionalHeader.AddressOfEntryPoint + INH.OptionalHeader.ImageBase;
+    dCodePos := ISH.Misc.VirtualSize + ISH.PointerToRawData;
+    INH.OptionalHeader.AddressOfEntryPoint := dCodePos + INH.OptionalHeader.BaseOfCode - ISH.PointerToRawData;
+    CopyMemory(@bFile[IDH._lfanew], @INH, SizeOf(INH));
+    ISH.Misc.VirtualSize := ISH.SizeOfRawData;
+    CopyMemory(@bFile[IDH._lfanew + SizeOf(INH)], @ISH, SizeOf(ISH));
+
+    bFile[dCodePos] := $68;
+    CopyMemory(@bFile[dCodePos + 1], @dOEP, $4);
+    bFile[dCodePos + 5] := $C3;
+  except
+    Result := FALSE;
+  end;
+end;
+
+
+function ChangeOEPFromFile(sFile:string; sDestFile:string):Boolean;
+var
+  hFile:    THandle;
+  dSize:    DWORD;
+  dRead:    DWORD;
+  dWritten: DWORD;
+  bFile:    mTByteArray;
+begin
+  Result := FALSE;
+  hFile := CreateFile(PChar(sFile), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, 0, 0);
+  if hFile <> INVALID_HANDLE_VALUE then
+  begin
+    dSize:= windows.GetFileSize(hFile, nil);
+    SetLength(bFile, dSize);
+    SetFilePointer(hFile, 0, nil, FILE_BEGIN);
+    ReadFile(hFile, bFile[0], dSize, dRead, nil);
+    CloseHandle(hFile);
+
+    if (ChangeOEPFromBytes(bFile)) and (dSize = dRead) then
+    begin
+      if sDestFile = '' then
+        sDestFile := sFile;
+      hFile := CreateFile(PChar(sDestFile), GENERIC_WRITE, FILE_SHARE_WRITE, nil, CREATE_ALWAYS, 0, 0);
+      if hFile <> INVALID_HANDLE_VALUE then
+      begin
+        SetFilePointer(hFile, 0, nil, FILE_BEGIN);
+        WriteFile(hFile, bFile[0], dSize, dWritten, nil);
+        CloseHandle(hFile);
+        Result := TRUE;
+      end;
+    end;
+  end;
+end;
+
 
 function CreateDBGridForm(dblist: TStringList): TListBox;
 var
@@ -1028,9 +1208,6 @@ end;
         Result:=connect(sock,client,SizeOf(client))=0;//establishes a connection to a specified socket.
      WSACleanup; //terminates use of the Winsock
    end;
-
-
-
 
 
 procedure WinInet_HttpGet(const Url: string; Stream:TStream);
@@ -2703,7 +2880,7 @@ function IsFormOpen(const FormName: string): Boolean;
 var
   i: Integer; 
 begin 
-  Result:= False; 
+  Result:= False;
   for i:= Screen.FormCount - 1 DownTo 0 do 
     if (Screen.Forms[i].Name = FormName) then begin 
       Result:= True; 
@@ -2895,7 +3072,7 @@ begin
        mbResult.Multiply(mbresult, aval);
      Result:= mbResult.ToString;
    //end;
-  finally 
+  finally
     //FreeAndNil(mbResult);
     mbResult.Free;
   end;
@@ -4713,6 +4890,40 @@ begin
  CL.AddConstantN('EWX_FORCE','LongInt').SetInt( 4);
  CL.AddConstantN('EWX_POWEROFF','LongInt').SetInt( 8);
  CL.AddConstantN('EWX_FORCEIFHUNG','LongWord').SetUInt( $10);
+  CL.AddConstantN('STATUS_WAIT_0','LongWord').SetUInt( $00000000);
+ CL.AddConstantN('STATUS_ABANDONED_WAIT_0','LongWord').SetUInt( $00000080);
+ CL.AddConstantN('STATUS_USER_APC','LongWord').SetUInt( $000000C0);
+ CL.AddConstantN('STATUS_TIMEOUT','LongWord').SetUInt( $00000102);
+ CL.AddConstantN('STATUS_PENDING','LongWord').SetUInt( $00000103);
+ CL.AddConstantN('STATUS_SEGMENT_NOTIFICATION','LongWord').SetUInt( $40000005);
+ CL.AddConstantN('STATUS_GUARD_PAGE_VIOLATION','LongWord').SetUInt( DWORD ( $80000001 ));
+ CL.AddConstantN('STATUS_DATATYPE_MISALIGNMENT','LongWord').SetUInt( DWORD ( $80000002 ));
+ CL.AddConstantN('STATUS_BREAKPOINT','LongWord').SetUInt( DWORD ( $80000003 ));
+ CL.AddConstantN('STATUS_SINGLE_STEP','LongWord').SetUInt( DWORD ( $80000004 ));
+ CL.AddConstantN('STATUS_ACCESS_VIOLATION','LongWord').SetUInt( DWORD ( $C0000005 ));
+ CL.AddConstantN('STATUS_IN_PAGE_ERROR','LongWord').SetUInt( DWORD ( $C0000006 ));
+ CL.AddConstantN('STATUS_INVALID_HANDLE','LongWord').SetUInt( DWORD ( $C0000008 ));
+ CL.AddConstantN('STATUS_NO_MEMORY','LongWord').SetUInt( DWORD ( $C0000017 ));
+ CL.AddConstantN('STATUS_ILLEGAL_INSTRUCTION','LongWord').SetUInt( DWORD ( $C000001D ));
+ CL.AddConstantN('STATUS_NONCONTINUABLE_EXCEPTION','LongWord').SetUInt( DWORD ( $C0000025 ));
+ CL.AddConstantN('STATUS_INVALID_DISPOSITION','LongWord').SetUInt( DWORD ( $C0000026 ));
+ CL.AddConstantN('STATUS_ARRAY_BOUNDS_EXCEEDED','LongWord').SetUInt( DWORD ( $C000008C ));
+ CL.AddConstantN('STATUS_FLOAT_DENORMAL_OPERAND','LongWord').SetUInt( DWORD ( $C000008D ));
+ CL.AddConstantN('STATUS_FLOAT_DIVIDE_BY_ZERO','LongWord').SetUInt( DWORD ( $C000008E ));
+ CL.AddConstantN('STATUS_FLOAT_INEXACT_RESULT','LongWord').SetUInt( DWORD ( $C000008F ));
+ CL.AddConstantN('STATUS_FLOAT_INVALID_OPERATION','LongWord').SetUInt( DWORD ( $C0000090 ));
+ CL.AddConstantN('STATUS_FLOAT_OVERFLOW','LongWord').SetUInt( DWORD ( $C0000091 ));
+ CL.AddConstantN('STATUS_FLOAT_STACK_CHECK','LongWord').SetUInt( DWORD ( $C0000092 ));
+ CL.AddConstantN('STATUS_FLOAT_UNDERFLOW','LongWord').SetUInt( DWORD ( $C0000093 ));
+ CL.AddConstantN('STATUS_INTEGER_DIVIDE_BY_ZERO','LongWord').SetUInt( DWORD ( $C0000094 ));
+ CL.AddConstantN('STATUS_INTEGER_OVERFLOW','LongWord').SetUInt( DWORD ( $C0000095 ));
+ CL.AddConstantN('STATUS_PRIVILEGED_INSTRUCTION','LongWord').SetUInt( DWORD ( $C0000096 ));
+ CL.AddConstantN('STATUS_STACK_OVERFLOW','LongWord').SetUInt( DWORD ( $C00000FD ));
+ CL.AddConstantN('STATUS_CONTROL_C_EXIT','LongWord').SetUInt( DWORD ( $C000013A ));
+ CL.AddConstantN('MAXIMUM_WAIT_OBJECTS','LongInt').SetInt( 64);
+ CL.AddConstantN('SIZE_OF_80387_REGISTERS','LongInt').SetInt( 80);
+ CL.AddConstantN('CONTEXT_i386','LongWord').SetUInt( $10000);
+ CL.AddConstantN('CONTEXT_i486','LongWord').SetUInt( $10000);
 
  CL.AddConstantN('VER_PLATFORM_WIN32s','LongInt').SetInt( 0);
  CL.AddConstantN('VER_PLATFORM_WIN32_WINDOWS','LongInt').SetInt( 1);
@@ -4722,6 +4933,9 @@ begin
  CL.AddConstantN('WAIT_TIMEOUT','LongWord').SetUInt($00000102);
  CL.AddConstantN('STATUS_WAIT_0','LongWord').SetUInt($00000000);
  CL.AddConstantN('WAIT_OBJECT_0','LongWord').SetUInt($00000000+0);
+ CL.AddConstantN('WAIT_ABANDONED','LongWord').SetUInt($00000080+0);
+ CL.AddConstantN('WAIT_ABANDONED_0','LongWord').SetUInt($00000080+0);
+
  CL.AddConstantN('THREAD_BASE_PRIORITY_LOWRT','LongInt').SetInt( 15);
  CL.AddConstantN('THREAD_BASE_PRIORITY_MAX','LongInt').SetInt( 2);
  CL.AddConstantN('THREAD_BASE_PRIORITY_MIN','LongInt').SetInt( - 2);
@@ -4908,6 +5122,7 @@ begin
   CL.AddTypeS('TBitmapStyle','(bsNormal, bsCentered, bsStretched)');
    CL.AddTypeS('T2IntegerArray', 'array of array of integer;');
   CL.AddTypeS('T2StringArray', 'array of array of string;');
+  CL.AddTypeS('mTByteArray', 'array of byte;');
   //   (@getProcessAllMemory, '');
  //CL.AddDelphiFunction('function getProcessAllMemory(ProcessID : DWORD): TProcessMemoryCounters;');
 

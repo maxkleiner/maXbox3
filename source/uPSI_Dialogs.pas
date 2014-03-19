@@ -660,13 +660,14 @@ begin
  // TMsgDlgBtn = (mbYes, mbNo, mbOK, mbCancel, mbAbort, mbRetry, mbIgnore,
    // mbAll, mbNoToAll, mbYesToAll, mbHelp);
 
-  //CL.AddTypeS('mbYesNoCancel', '(mbYes, mbNo, mbCancel)');
+  //CL.AddTypeS('mbYesNoCancel', 'LongInt.Value.ts32 := ord(mbYes) or ord(mbNo) or ord(mbCancel)');
 
   CL.AddTypeS('TMsgDlgType','( mtWarning, mtError, mtInformation, mtConfirmation, mtCustom )');
   //CL.AddTypeS('TMsgDlgBtn', '( mbYes, mbNo, mbOK, mbCancel, mbAbort, mbRetry, mbIgnore, mbAll, mbNoToAll,'+
    //'mbYesToAll, mbHelp, mbYesNoCancel)'); {11}
   CL.AddTypeS('TMsgDlgBtn', '(mbYes, mbNo, mbOK, mbCancel, mbAbort, mbRetry, mbIgnore, mbAll, mbNoToAll,'+
-   'mbYesToAll, mbHelp,  mbYesNoCancel, mbOKCancel, mbYesOkCancel, mbNoOkCancel, mbYesNoOkCancel, mbAbort)');
+   'mbYesToAll,  mbhelp, mbYesNoCancel,  mbOKCancel, mbYesOkCancel, mbNoOkCancel, mbYesNoOkCancel, mbAbort)');
+  //CL.AddTypeS('mbYesNoCancel', 'LongInt.Value.ts32 := ord(mbYes) or ord(mbNo) or ord(mbCancel)');
 
 
    //mbAbortRetryIgnore,mbYesNo,mbYesNoCancel,mbYesAllNoAllCancel,'+

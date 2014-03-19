@@ -6,6 +6,7 @@ interface
 uses
   uPSRuntime, uPSUtils;
 
+  //REAL
 
 procedure RIRegisterTCUSTOMGROUPBOX(Cl: TPSRuntimeClassImporter);
 procedure RIRegisterTGROUPBOX(Cl: TPSRuntimeClassImporter);
@@ -82,6 +83,9 @@ procedure TCUSTOMLABELCANVAS_R(Self: TCUSTOMLABEL; var T: TCanvas); begin T := S
 procedure TCUSTOMLABELCaption_R(Self: TCUSTOMLABEL; var T: TCaption); begin T := Self.Caption; end;
 procedure TCUSTOMLabelCaption_W(Self: TCUSTOMLabel; T: TCaption); begin Self.Caption:= T; end;
 
+procedure TCUSTOMLABELCaptions_R(Self: TCUSTOMLABEL; var T: string); begin T := Self.Caption; end;
+procedure TCUSTOMLabelCaptions_W(Self: TCUSTOMLabel; T: string); begin Self.Caption:= T; end;
+
 procedure RIRegisterTCUSTOMLABEL(Cl: TPSRuntimeClassImporter);
 begin
   with Cl.Add(TCUSTOMLABEL) do begin
@@ -92,6 +96,8 @@ begin
 {$ENDIF}
     {$ENDIF}
    RegisterPropertyHelper(@TCUSTOMLABELCaption_R,@TCUSTOMLABELCaption_W,'Caption');
+   RegisterPropertyHelper(@TCUSTOMLABELCaptions_R,@TCUSTOMLABELCaptions_W,'Captions');
+
   end;
 end;
 

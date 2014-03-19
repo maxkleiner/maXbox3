@@ -378,6 +378,7 @@ begin
  CL.AddDelphiFunction('procedure New(P: PChar)');
  CL.AddDelphiFunction('procedure Dispose(P: PChar)');
  CL.AddDelphiFunction('procedure GetMemS(var S: String; Size: Integer)');
+ CL.AddDelphiFunction('procedure FreeMemS(var S: String; Size: Integer)');
  CL.AddDelphiFunction('procedure GetMem(var P: PChar; Size: Integer)');
  CL.AddDelphiFunction('procedure GetMemP(var P: ___Pointer; Size: Integer)');
  CL.AddDelphiFunction('procedure FreeMem(P: PChar; Size: Integer)');
@@ -444,6 +445,16 @@ begin
         //cl.add               // getwindowrect
  end;
 
+ procedure getmemA(var P: PChar; Size: Integer);
+ begin
+   getmem(p, size);
+ end;
+procedure freemema(var P: PChar; Size: Integer);
+ begin
+   freemem(p, size);
+ end;
+
+
  procedure getmemp(var p: pointer; size: integer);
  begin
    getmem(p, size);
@@ -452,6 +463,11 @@ begin
  procedure getmems(var p: string; size: integer);
  begin
    getmem(pointer(p), size);
+ end;
+
+ procedure freemems(var p: string; size: integer);
+ begin
+   freemem(pchar(p), size);
  end;
 
  procedure myFillChar(var p: string; count: integer; value: char);
@@ -790,6 +806,11 @@ begin
  S.RegisterDelphiFunction(@Dispose,'Dispose', cdRegister);
  S.RegisterDelphiFunction(@GetMem, 'GetMem', cdRegister);
  S.RegisterDelphiFunction(@FreeMem,'FreeMem', cdRegister);}
+ S.RegisterDelphiFunction(@GetMemA, 'GetMem', cdRegister);
+ S.RegisterDelphiFunction(@GetMemS, 'GetMemS', cdRegister);
+  S.RegisterDelphiFunction(@FreeMemA,'FreeMem', cdRegister);
+  S.RegisterDelphiFunction(@FreeMemS,'FreeMemS', cdRegister);
+
   S.RegisterDelphiFunction(@StrFillChar,'FillCharS', cdRegister);
   S.RegisterDelphiFunction(@StrFillChar,'StrFillChar', cdRegister);
   S.RegisterDelphiFunction(@IntFillChar,'IntFillChar', cdRegister);

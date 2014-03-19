@@ -1474,8 +1474,8 @@ begin
    +'PageFile : DWORD; dwTotalVirtual : DWORD; dwAvailVirtual : DWORD; end');
   //CL.AddTypeS('TMemoryStatus', '_MEMORYSTATUS');
   CL.AddTypeS('MEMORYSTATUS', '_MEMORYSTATUS');
-
-   CL.AddDelphiFunction('Procedure GlobalMemoryStatus( var lpBuffer : TMemoryStatus)');
+  CL.AddDelphiFunction('Function CreateEvent( lpEventAttributes : TObject; bManualReset, bInitialState : BOOL; lpName : PChar) : THandle');
+  CL.AddDelphiFunction('Procedure GlobalMemoryStatus( var lpBuffer : TMemoryStatus)');
   CL.AddDelphiFunction('Function LocalAlloc( uFlags, uBytes : UINT) : HLOCAL');
  CL.AddDelphiFunction('Function LocalReAlloc( hMem : HLOCAL; uBytes, uFlags : UINT) : HLOCAL');
  //CL.AddDelphiFunction('Function LocalLock( hMem : HLOCAL) : Pointer');
@@ -4048,6 +4048,7 @@ S.RegisterDelphiFunction(@KeyboardStateToShiftState2, 'KeyboardStateToShiftState
  S.RegisterDelphiFunction(@GET_KEYSTATE_LPARAM, 'GET_KEYSTATE_LPARAM', cdRegister);
   S.RegisterDelphiFunction(@GlobalMemoryStatus, 'GlobalMemoryStatus', CdStdCall);
  S.RegisterDelphiFunction(@LocalAlloc, 'LocalAlloc', CdStdCall);
+ S.RegisterDelphiFunction(@CreateEvent, 'CreateEvent', CdStdCall);
  S.RegisterDelphiFunction(@LocalReAlloc, 'LocalReAlloc', CdStdCall);
  S.RegisterDelphiFunction(@LocalLock, 'LocalLock', CdStdCall);
  S.RegisterDelphiFunction(@LocalUnlock, 'LocalUnlock', CdStdCall);

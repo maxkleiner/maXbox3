@@ -17,7 +17,7 @@ procedure RIRegisterTGraphicControl(cl: TPSRuntimeClassImporter);
 procedure RIRegisterTCustomControl(cl: TPSRuntimeClassImporter);
 procedure RIRegister_TDragObject(CL: TPSRuntimeClassImporter);
 
-procedure RIRegister_Controls(Cl: TPSRuntimeClassImporter);
+procedure RIRegister_Controls(Cl: TPSRuntimeClassImporter);    //main call
 procedure RIRegister_TImageList(CL: TPSRuntimeClassImporter);      //3.9.3
 procedure RIRegister_TDragImageList(CL: TPSRuntimeClassImporter);
 procedure RIRegister_Controls_Routines(S: TPSExec);
@@ -986,8 +986,7 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TSizeConstraints(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TSizeConstraints) do
-  begin
+  with CL.Add(TSizeConstraints) do begin
     RegisterVirtualConstructor(@TSizeConstraints.Create, 'Create');
     RegisterPropertyHelper(@TSizeConstraintsOnChange_R,@TSizeConstraintsOnChange_W,'OnChange');
     RegisterPropertyHelper(@TSizeConstraintsMaxHeight_R,@TSizeConstraintsMaxHeight_W,'MaxHeight');
@@ -1027,9 +1026,9 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TControlCanvas(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TControlCanvas) do
-  begin
-    RegisterMethod(@TControlCanvas.FreeHandle, 'FreeHandle');
+  with CL.Add(TControlCanvas) do begin
+    RegisterMethod(@TControlCanvas.Destroy, 'Free');
+      RegisterMethod(@TControlCanvas.FreeHandle, 'FreeHandle');
     RegisterMethod(@TControlCanvas.UpdateTextFlags, 'UpdateTextFlags');
     RegisterPropertyHelper(@TControlCanvasControl_R,@TControlCanvasControl_W,'Control');
   end;
@@ -1112,6 +1111,21 @@ begin
   RIRegister_TDragImageList(CL);
   RIRegister_TMouse(CL);
 
+  RIRegister_TPadding(CL);
+  RIRegister_TMargins(CL);
+  RIRegister_TSizeConstraints(CL);
+  RIRegister_TControlActionLink(CL);
+  RIRegister_TControlAction(CL);
+  RIRegister_TCustomControlAction(CL);
+  RIRegister_TControlCanvas(CL);
+  RIRegister_TCustomMultiSelectListControl(CL);
+  RIRegister_TCustomListControl(CL);
+  RIRegister_TCustomPanningWindow(CL);
+  RIRegister_THintWindow(CL);
+  RIRegister_TCustomTransparentControl(CL);
+
+
+  //SIRegister_Controls(Cl: TPSPascalCompiler);         //main call
 
 end;
 

@@ -73,6 +73,136 @@ begin
  CL.AddConstantN('GENERIC_ALL','LongWord').SetUInt( $10000000);
  //getcurrentmodule
 
+ CL.AddConstantN('WS_EX_DLGMODALFRAME','LongInt').SetInt( 1);
+ CL.AddConstantN('WS_EX_NOPARENTNOTIFY','LongInt').SetInt( 4);
+ CL.AddConstantN('WS_EX_TOPMOST','LongInt').SetInt( 8);
+ CL.AddConstantN('WS_EX_ACCEPTFILES','LongWord').SetUInt( $10);
+ CL.AddConstantN('WS_EX_TRANSPARENT','LongWord').SetUInt( $20);
+ CL.AddConstantN('WS_EX_MDICHILD','LongWord').SetUInt( $40);
+ CL.AddConstantN('WS_EX_TOOLWINDOW','LongWord').SetUInt( $80);
+ CL.AddConstantN('WS_EX_WINDOWEDGE','LongWord').SetUInt( $100);
+ CL.AddConstantN('WS_EX_CLIENTEDGE','LongWord').SetUInt( $200);
+ CL.AddConstantN('WS_EX_CONTEXTHELP','LongWord').SetUInt( $400);
+ CL.AddConstantN('WS_EX_RIGHT','LongWord').SetUInt( $1000);
+ CL.AddConstantN('WS_EX_LEFT','LongInt').SetInt( 0);
+ CL.AddConstantN('WS_EX_RTLREADING','LongWord').SetUInt( $2000);
+ CL.AddConstantN('WS_EX_LTRREADING','LongInt').SetInt( 0);
+ CL.AddConstantN('WS_EX_LEFTSCROLLBAR','LongWord').SetUInt( $4000);
+ CL.AddConstantN('WS_EX_RIGHTSCROLLBAR','LongInt').SetInt( 0);
+ CL.AddConstantN('WS_EX_CONTROLPARENT','LongWord').SetUInt( $10000);
+ CL.AddConstantN('WS_EX_STATICEDGE','LongWord').SetUInt( $20000);
+ CL.AddConstantN('WS_EX_APPWINDOW','LongWord').SetUInt( $40000);
+ CL.AddConstantN('WS_EX_LAYERED','LongWord').SetUInt( $00080000);
+ CL.AddConstantN('WS_EX_NOINHERITLAYOUT','LongWord').SetUInt( $00100000);
+ CL.AddConstantN('WS_EX_LAYOUTRTL','LongWord').SetUInt( $00400000);
+ CL.AddConstantN('WS_EX_COMPOSITED','LongWord').SetUInt( $02000000);
+ CL.AddConstantN('WS_EX_NOACTIVATE','LongWord').SetUInt( $08000000);
+ {CL.AddConstantN('CS_VREDRAW','LongInt').SetInt( DWORD ( 1 ));
+ CL.AddConstantN('CS_HREDRAW','LongInt').SetInt( DWORD ( 2 ));
+ CL.AddConstantN('CS_KEYCVTWINDOW','LongInt').SetInt( 4);
+ CL.AddConstantN('CS_DBLCLKS','LongInt').SetInt( 8);
+ CL.AddConstantN('CS_OWNDC','LongWord').SetUInt( $20);
+ CL.AddConstantN('CS_CLASSDC','LongWord').SetUInt( $40);
+ CL.AddConstantN('CS_PARENTDC','LongWord').SetUInt( $80);
+ CL.AddConstantN('CS_NOKEYCVT','LongWord').SetUInt( $100);
+ CL.AddConstantN('CS_NOCLOSE','LongWord').SetUInt( $200);
+ CL.AddConstantN('CS_SAVEBITS','LongWord').SetUInt( $800);
+ CL.AddConstantN('CS_BYTEALIGNCLIENT','LongWord').SetUInt( $1000);
+ CL.AddConstantN('CS_BYTEALIGNWINDOW','LongWord').SetUInt( $2000);
+ CL.AddConstantN('CS_GLOBALCLASS','LongWord').SetUInt( $4000);
+ CL.AddConstantN('CS_IME','LongWord').SetUInt( $10000);
+ CL.AddConstantN('CS_DROPSHADOW','LongWord').SetUInt( $20000);}
+   CL.AddConstantN('SM_CXSCREEN','LongInt').SetInt( 0);
+ CL.AddConstantN('SM_CYSCREEN','LongInt').SetInt( 1);
+ CL.AddConstantN('SM_CXVSCROLL','LongInt').SetInt( 2);
+ CL.AddConstantN('SM_CYHSCROLL','LongInt').SetInt( 3);
+ CL.AddConstantN('SM_CYCAPTION','LongInt').SetInt( 4);
+ CL.AddConstantN('SM_CXBORDER','LongInt').SetInt( 5);
+ CL.AddConstantN('SM_CYBORDER','LongInt').SetInt( 6);
+ CL.AddConstantN('SM_CXDLGFRAME','LongInt').SetInt( 7);
+ CL.AddConstantN('SM_CYDLGFRAME','LongInt').SetInt( 8);
+ CL.AddConstantN('SM_CYVTHUMB','LongInt').SetInt( 9);
+ CL.AddConstantN('SM_CXHTHUMB','LongInt').SetInt( 10);
+ CL.AddConstantN('SM_CXICON','LongInt').SetInt( 11);
+ CL.AddConstantN('SM_CYICON','LongInt').SetInt( 12);
+ CL.AddConstantN('SM_CXCURSOR','LongInt').SetInt( 13);
+ CL.AddConstantN('SM_CYCURSOR','LongInt').SetInt( 14);
+ CL.AddConstantN('SM_CYMENU','LongInt').SetInt( 15);
+ CL.AddConstantN('SM_CXFULLSCREEN','LongWord').SetUInt( $10);
+ CL.AddConstantN('SM_CYFULLSCREEN','LongInt').SetInt( 17);
+ CL.AddConstantN('SM_CYKANJIWINDOW','LongInt').SetInt( 18);
+ CL.AddConstantN('SM_MOUSEPRESENT','LongInt').SetInt( 19);
+ CL.AddConstantN('SM_CYVSCROLL','LongInt').SetInt( 20);
+ CL.AddConstantN('SM_CXHSCROLL','LongInt').SetInt( 21);
+ CL.AddConstantN('SM_DEBUG','LongInt').SetInt( 22);
+ CL.AddConstantN('SM_SWAPBUTTON','LongInt').SetInt( 23);
+ CL.AddConstantN('SM_RESERVED1','LongInt').SetInt( 24);
+ CL.AddConstantN('SM_RESERVED2','LongInt').SetInt( 25);
+ CL.AddConstantN('SM_RESERVED3','LongInt').SetInt( 26);
+ CL.AddConstantN('SM_RESERVED4','LongInt').SetInt( 27);
+ CL.AddConstantN('SM_CXMIN','LongInt').SetInt( 28);
+ CL.AddConstantN('SM_CYMIN','LongInt').SetInt( 29);
+ CL.AddConstantN('SM_CXSIZE','LongInt').SetInt( 30);
+ CL.AddConstantN('SM_CYSIZE','LongInt').SetInt( 31);
+ CL.AddConstantN('SM_CXFRAME','LongWord').SetUInt( $20);
+ CL.AddConstantN('SM_CYFRAME','LongInt').SetInt( 33);
+ CL.AddConstantN('SM_CXMINTRACK','LongInt').SetInt( 34);
+ CL.AddConstantN('SM_CYMINTRACK','LongInt').SetInt( 35);
+ CL.AddConstantN('SM_CXDOUBLECLK','LongInt').SetInt( 36);
+ CL.AddConstantN('SM_CYDOUBLECLK','LongInt').SetInt( 37);
+ CL.AddConstantN('SM_CXICONSPACING','LongInt').SetInt( 38);
+ CL.AddConstantN('SM_CYICONSPACING','LongInt').SetInt( 39);
+ CL.AddConstantN('SM_MENUDROPALIGNMENT','LongInt').SetInt( 40);
+ CL.AddConstantN('SM_PENWINDOWS','LongInt').SetInt( 41);
+ CL.AddConstantN('SM_DBCSENABLED','LongInt').SetInt( 42);
+ CL.AddConstantN('SM_CMOUSEBUTTONS','LongInt').SetInt( 43);
+ //CL.AddConstantN('SM_CXFIXEDFRAME','').SetString( SM_CXDLGFRAME);
+ //CL.AddConstantN('SM_CYFIXEDFRAME','').SetString( SM_CYDLGFRAME);
+ //CL.AddConstantN('SM_CXSIZEFRAME','').SetString( SM_CXFRAME);
+ //CL.AddConstantN('SM_CYSIZEFRAME','').SetString( SM_CYFRAME);
+ CL.AddConstantN('SM_SECURE','LongInt').SetInt( 44);
+ CL.AddConstantN('SM_CXEDGE','LongInt').SetInt( 45);
+ CL.AddConstantN('SM_CYEDGE','LongInt').SetInt( 46);
+ CL.AddConstantN('SM_CXMINSPACING','LongInt').SetInt( 47);
+ CL.AddConstantN('SM_CYMINSPACING','LongInt').SetInt( 48);
+ CL.AddConstantN('SM_CXSMICON','LongInt').SetInt( 49);
+ CL.AddConstantN('SM_CYSMICON','LongInt').SetInt( 50);
+ CL.AddConstantN('SM_CYSMCAPTION','LongInt').SetInt( 51);
+ CL.AddConstantN('SM_CXSMSIZE','LongInt').SetInt( 52);
+ CL.AddConstantN('SM_CYSMSIZE','LongInt').SetInt( 53);
+ CL.AddConstantN('SM_CXMENUSIZE','LongInt').SetInt( 54);
+ CL.AddConstantN('SM_CYMENUSIZE','LongInt').SetInt( 55);
+ CL.AddConstantN('SM_ARRANGE','LongInt').SetInt( 56);
+ CL.AddConstantN('SM_CXMINIMIZED','LongInt').SetInt( 57);
+ CL.AddConstantN('SM_CYMINIMIZED','LongInt').SetInt( 58);
+ CL.AddConstantN('SM_CXMAXTRACK','LongInt').SetInt( 59);
+ CL.AddConstantN('SM_CYMAXTRACK','LongInt').SetInt( 60);
+ CL.AddConstantN('SM_CXMAXIMIZED','LongInt').SetInt( 61);
+ CL.AddConstantN('SM_CYMAXIMIZED','LongInt').SetInt( 62);
+ CL.AddConstantN('SM_NETWORK','LongInt').SetInt( 63);
+ CL.AddConstantN('SM_CLEANBOOT','LongInt').SetInt( 67);
+ CL.AddConstantN('SM_CXDRAG','LongInt').SetInt( 68);
+ CL.AddConstantN('SM_CYDRAG','LongInt').SetInt( 69);
+ CL.AddConstantN('SM_SHOWSOUNDS','LongInt').SetInt( 70);
+ CL.AddConstantN('SM_CXMENUCHECK','LongInt').SetInt( 71);
+ CL.AddConstantN('SM_CYMENUCHECK','LongInt').SetInt( 72);
+ CL.AddConstantN('SM_SLOWMACHINE','LongInt').SetInt( 73);
+ CL.AddConstantN('SM_MIDEASTENABLED','LongInt').SetInt( 74);
+ CL.AddConstantN('SM_MOUSEWHEELPRESENT','LongInt').SetInt( 75);
+ CL.AddConstantN('SM_CMETRICS','LongInt').SetInt( 76);
+ CL.AddConstantN('SM_REMOTESESSION','LongWord').SetUInt( $1000);
+ CL.AddConstantN('SM_XVIRTUALSCREEN','LongInt').SetInt( 76);
+ CL.AddConstantN('SM_YVIRTUALSCREEN','LongInt').SetInt( 77);
+ CL.AddConstantN('SM_CXVIRTUALSCREEN','LongInt').SetInt( 78);
+ CL.AddConstantN('SM_CYVIRTUALSCREEN','LongInt').SetInt( 79);
+ CL.AddConstantN('SM_CMONITORS','LongInt').SetInt( 80);
+ CL.AddConstantN('SM_SAMEDISPLAYFORMAT','LongInt').SetInt( 81);
+ CL.AddConstantN('SM_IMMENABLED','LongInt').SetInt( 82);
+ CL.AddConstantN('SM_CXFOCUSBORDER','LongInt').SetInt( 83);
+ CL.AddConstantN('SM_CYFOCUSBORDER','LongInt').SetInt( 84);
+
+  CL.AddTypeS('TFNTimerProc', 'TObject');
+
 
   //    ACCESS_MASK = DWORD;
   //    REGSAM = ACCESS_MASK;  { Requested Key access mask type. }
@@ -89,6 +219,15 @@ begin
  CL.AddDelphiFunction('Function LongMulDiv( Mult1, Mult2, Div1 : Longint) : Longint');
  CL.AddDelphiFunction('Function afCompareMem( P1, P2 : TObject; Length : Integer) : Boolean');
  CL.AddDelphiFunction('Function AbortSystemShutdown( lpMachineName : PKOLChar) : BOOL');
+
+ CL.AddDelphiFunction('Function SetTimer( hWnd : HWND; nIDEvent, uElapse : UINT; lpTimerFunc : TFNTimerProc) : UINT');
+ CL.AddDelphiFunction('Function KillTimer( hWnd : HWND; uIDEvent : UINT) : BOOL');
+ CL.AddDelphiFunction('Function wIsWindowUnicode( hWnd : HWND) : BOOL');
+ CL.AddDelphiFunction('Function wEnableWindow( hWnd : HWND; bEnable : BOOL) : BOOL');
+ CL.AddDelphiFunction('Function wIsWindowEnabled( hWnd : HWND) : BOOL');
+ CL.AddDelphiFunction('Function GetMenu( hWnd : HWND) : HMENU');
+ CL.AddDelphiFunction('Function SetMenu( hWnd : HWND; hMenu : HMENU) : BOOL');
+
 
  //CL.AddDelphiFunction('Function AccessCheckAndAuditAlarm( SubsystemName : PKOLChar; HandleId : ___Pointer; ObjectTypeName, ObjectName : PKOLChar; SecurityDescriptor : PSecurityDescriptor; DesiredAccess : DWORD; const GenericMapping : TGenericMapping; ObjectCreation : BOOL;'
  //+' var GrantedAccess : DWORD; var AccessStatus, pfGenerateOnClose : BOOL) : BOOL');
@@ -913,6 +1052,15 @@ begin
  S.RegisterDelphiFunction(@UnhookWindowsHookEx, 'UnhookWindowsHookEx', CdStdCall);
  S.RegisterDelphiFunction(@CallNextHookEx, 'CallNextHookEx', CdStdCall);
  S.RegisterDelphiFunction(@DefHookProc, 'DefHookProc', cdRegister);
+ S.RegisterDelphiFunction(@SetTimer, 'SetTimer', CdStdCall);
+ S.RegisterDelphiFunction(@KillTimer, 'KillTimer', CdStdCall);
+ S.RegisterDelphiFunction(@IsWindowUnicode, 'wIsWindowUnicode', CdStdCall);
+ S.RegisterDelphiFunction(@EnableWindow, 'wEnableWindow', CdStdCall);
+ S.RegisterDelphiFunction(@IsWindowEnabled, 'wIsWindowEnabled', CdStdCall);
+ S.RegisterDelphiFunction(@GetMenu, 'GetMenu', CdStdCall);
+ S.RegisterDelphiFunction(@SetMenu, 'SetMenu', CdStdCall);
+
+
 
 end;
 

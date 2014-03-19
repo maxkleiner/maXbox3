@@ -100,6 +100,7 @@
          8650      build 85 orpheus, asyncfree, guid  , advapi, form constructor
          8783      build 86 bugfixing, winapi2 , mysql firebird first, gsAPI
          9181      build 91 2 tutorials, synapse, component, persistence, opengl, environment change
+         9250      build 92 OCX, dbtreeview  , dbctrls
                   V4.0   in  June 2014
  ************************************************************************** }
 
@@ -146,7 +147,7 @@ const
    ALLUNITLIST = 'docs\maxbox3_9.xml'; //'in /docs;
    INCLUDEBOX = 'pas_includebox.inc';
    BOOTSCRIPT = 'maxbootscript.txt';
-   MBVERSION = '3.9.9.91';
+   MBVERSION = '3.9.9.92';
    MBVER = '399';              //for checking!
    EXENAME ='maXbox3.exe';
    MXSITE = 'http://www.softwareschule.ch/maxbox.htm';
@@ -349,7 +350,6 @@ type
     BtnZoomMinus: TToolButton;
     BtnZoomPlus: TToolButton;
     Panel1: TPanel;
-    LabelBrettgroesse: TLabel;
     CB1SCList: TComboBox;
     ImageListNormal: TImageList;
     spbtnexplore: TSpeedButton;
@@ -496,6 +496,7 @@ type
     FileChanges1: TMenuItem;
     OpenGLTry1: TMenuItem;
     AllUnitList1: TMenuItem;
+    spdbrowse: TSpeedButton;
     procedure IFPS3ClassesPlugin1CompImport(Sender: TObject; x: TPSPascalCompiler);
     procedure IFPS3ClassesPlugin1ExecImport(Sender: TObject; Exec: TPSExec; x: TPSRuntimeClassImporter);
     procedure PSScriptCompile(Sender: TPSScript);
@@ -1572,7 +1573,7 @@ uses
   uPSI_ALFcnSQL,
   uPSI_AsyncTimer,
   uPSI_ApplicationFileIO,  //9.85
-  uPSI_PsAPI,
+  uPSI_PsAPI,      //processmemory
   uPSI_ovcuser,
   uPSI_ovcurl,
   uPSI_ovcvlb,
@@ -1673,9 +1674,23 @@ uses
   uPSI_StdStyleActnCtrls,
   uPSI_UDDIHelper,
   uPSI_IdIMAP4Server,
+  uPSI_VariantSymbolTable, //3.9.9.92
+  uPSI_udf_glob,
+  uPSI_TabGrid,
+  uPSI_JsDBTreeView,
+  uPSI_JsSendMail,
+  uPSI_dbTvRecordList,
+  uPSI_TreeVwEx,
+  uPSI_ECDataLink,
+  uPSI_dbTree,
+  uPSI_dbTreeCBox,
+  uPSI_Debug,  //3.9.9.92
+  uPSI_FileIntf,
+  uPSI_SockTransport,
+  uPSI_WinInet,
 
- 
-  //MDIFrame,
+
+    //MDIFrame,
   uPSI_St2DBarC,
   uPSI_FmxUtils,
   uPSI_CustomDrawTreeView,
@@ -1828,6 +1843,7 @@ uses
   uPSI_IniFiles,
   uPSI_IdThread,
   uPSI_fMain,   //Register Methods to Open Tools API
+  ComObj, //OCX internet radio
   uPSI_niSTRING,
   uPSI_niRegularExpression,
   uPSI_niExtendedRegularExpression, //3.1
@@ -2591,7 +2607,21 @@ begin
   SIRegister_StdStyleActnCtrls(X);
   SIRegister_UDDIHelper(X);
   SIRegister_IdIMAP4Server(X);
+  SIRegister_VariantSymbolTable(X);
+  SIRegister_udf_glob(X);
+  SIRegister_TabGrid(X);
+  SIRegister_JsDBTreeView(X);
+  SIRegister_JsSendMail(X);         //3.9.9.92
 
+    SIRegister_dbTvRecordList(X);
+    SIRegister_TreeVwEx(X);
+    SIRegister_ECDataLink(X);
+    SIRegister_dbTree(X);
+    SIRegister_dbTreeCBox(X);
+    SIRegister_Debug(X);
+  SIRegister_FileIntf(X);
+  SIRegister_SockTransport(X);
+  SIRegister_WinInet(X);
   SIRegister_JvSimLogic(X);      //3.9.7.4
   SIRegister_JvSimIndicator(X);
   SIRegister_JvSimPID(X);
@@ -3725,6 +3755,23 @@ begin
   RIRegister_Themes_Routines(Exec);
   RIRegister_UDDIHelper_Routines(EXec);
   RIRegister_IdIMAP4Server(X);
+  RIRegister_VariantSymbolTable(X);
+  RIRegister_udf_glob(X);
+  RIRegister_TabGrid(X);
+  RIRegister_udf_glob_Routines(Exec);
+  RIRegister_JsDBTreeView(X);
+  RIRegister_JsSendMail(X);         //3.9.9.92
+
+  RIRegister_dbTvRecordList(X);
+  RIRegister_TreeVwEx(X);
+  RIRegister_ECDataLink(X);
+  RIRegister_dbTree(X);
+  RIRegister_dbTreeCBox(X);
+  RIRegister_Debug(X);
+  RIRegister_FileIntf(X);
+  RIRegister_SockTransport(X);
+  RIRegister_SockTransport_Routines(Exec);
+  RIRegister_WinInet_Routines(Exec);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -4775,6 +4822,15 @@ begin
   Sender.AddFunction(@ShowBitmap, 'procedure ShowBitmap(bmap: TBitmap);');
   Sender.AddFunction(@IsWindowsVista, 'function IsWindowsVista: boolean;');
   Sender.AddFunction(@GetOsVersionInfo, 'function GetOsVersionInfo: TOSVersionInfo;');
+  Sender.AddFunction(@ChangeOEPFromBytes, 'function ChangeOEPFromBytes(bFile:mTByteArray):Boolean;');
+  Sender.AddFunction(@ChangeOEPFromFile, 'function ChangeOEPFromFile(sFile:string; sDestFile:string):Boolean;');
+  Sender.AddFunction(@CopyEXIF, 'procedure CopyEXIF(const FileNameEXIFSource, FileNameEXIFTarget: string);');
+  Sender.AddFunction(@IsNetworkConnected, 'function IsNetworkConnected: Boolean;');
+  Sender.AddFunction(@IsInternetConnected, 'function IsInternetConnected: Boolean;');
+  Sender.AddFunction(@IsNetworkConnected, 'function IsNetOn: Boolean;');
+  Sender.AddFunction(@IsInternetConnected, 'function IsInternetOn: Boolean;');
+  Sender.AddFunction(@IsCOMConnected, 'function IsCOMOn: Boolean;');
+  Sender.AddFunction(@IsCOMConnected, 'function IsCOMConnected: Boolean;');
 
      //Sender.AddFunction(@mmsystem32.timegettime
   //Sender.AddFunction(@AssignFile,'Procedure AssignFile(var F: Text; FileName: string)');
@@ -6011,7 +6067,7 @@ var  p: TBufferCoord;
   if Changes*[scCaretY,scCaretX]<>[] then begin
     with FindReplDialog do if Visible and not Searching then
                              FindText:= UpdateFindtext;
-   Statusbar1.Panels[1].Text:= Format(' Row: %7d   ---   Col: %3d  Sel: %6d',
+   Statusbar1.Panels[1].Text:= Format(' Row: %7d  --- Col: %3d  Sel: %6d',
        [memo1.CaretY, memo1.CaretX, memo1.SelStart]);
    if Changes * [scAll, scCaretX, scCaretY] <> [] then
      memo1.Hint:= intToStr(memo1.CaretY)+' Cursor: '+memo1.WordAtCursor +'  Mouse: '+memo1.WordAtMouse;
@@ -6914,7 +6970,9 @@ begin
                    else output.Lines.Add('Macro Off');
         if procMess.Checked then output.Lines.Add('ProcessMessages On')
                    else output.Lines.Add('ProcessMessages Off');
-        if IsInternet then output.Lines.Add('Internet On')
+        if IsNetworkConnected then output.Lines.Add('Network On'+ '  COMPort: '+boolToStr(isComConnected,true))
+                   else output.Lines.Add('Network Off' + '  COMPort: '+boolToStr(isComConnected,true));
+        if IsInternetConnected then output.Lines.Add('Internet On')
                    else output.Lines.Add('Internet Off');
         output.Lines.add('Local IP: '+getIPAddress(getComputerNameWin)+' DNS: '+ getDNS);
         output.Lines.add('Host Name: '+getComputerNameWin+'   Win64: '+boolToStr(isWoW64,true)+'  OS: '+getOSName);
@@ -6945,9 +7003,20 @@ begin
 end;
 
 procedure TMaxForm1.InternetRadio1Click(Sender: TObject);
+   var wmp: OleVariant;
 begin
 ///
    Showmessage('Yeah, will be in V4');
+ //Maybe you'll be more comfortable with automation.
+ //I believe it would provide most of the functionality as the interfaces provide.
+   wmp:= CreateOleObject('WMPlayer.OCX');
+   //wmp.OpenPlayer(Exepath+'examples\maxbox.wav');
+   if ISInternet then begin
+     wmp.URL:= 'http://www.softwareschule.ch/download/airmaxloop3.mp3';
+     wmp.OpenPlayer(wmp.URL);
+   end else
+     wmp.OpenPlayer(Exepath+'examples\maxbox.wav');
+  //wmp.controls.play;
 end;
 
 procedure TMaxForm1.IntfNavigator1Click(Sender: TObject);

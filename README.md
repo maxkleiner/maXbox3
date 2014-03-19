@@ -1,6 +1,28 @@
 maXbox
 ======
 
+****************************************************************
+Release Notes maXbox 3.9.9.92 April 2014
+****************************************************************
+1 Report, 15 Units add, DBCtrls, Stream+, IRadio, Wininet
+
+857 uPSI_VariantSymbolTable, //3.9.9.92
+858 uPSI_udf_glob,
+859 uPSI_TabGrid,
+860 uPSI_JsDBTreeView,
+861 uPSI_JsSendMail,
+862 uPSI_dbTvRecordList,
+863 uPSI_TreeVwEx,
+864 uPSI_ECDataLink,
+865 uPSI_dbTree,
+866 uPSI_dbTreeCBox,
+867 unit uPSI_Debug; //TfrmDebug
+868 uPSI_TimeFncs;
+869 uPSI_FileIntf,
+870 uPSI_SockTransport,
+871 unit uPSI_WinInet;
+
+SHA1: Win 3.9.9.92: 61ECB8AF3FA0C72B6AA6DE8DA4A65E1C30F0EE6C
 
 ****************************************************************
 Release Notes maXbox 3.9.9.91 March 2014
@@ -49,5 +71,3 @@ Release Notes maXbox 3.9.9.91 March 2014
 855 unit uPSI_UDDIHelper;
 856 unit uPSI_IdIMAP4Server;
 
-
-SHA1: Win 3.9.9.91: 8099E25F2508B262E909B76EDF7BB301AFFA1864

@@ -283,6 +283,7 @@ begin
     RegisterProperty('PARENTFONT', 'Boolean', iptrw);
      RegisterProperty('CHARCASE', 'TEditCharCase', iptrw);
     RegisterProperty('OEMCONVERT', 'Boolean', iptrw);
+        RegisterProperty('PopupMenu', 'TPopupMenu', iptrw);
     end;
 end;
 
@@ -407,6 +408,7 @@ begin
     RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
     RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
     RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
+     RegisterProperty('PopupMenu', 'TPopupMenu', iptrw);
   end;
 end;
 
@@ -647,6 +649,7 @@ begin
     RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
     RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
     RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
+    RegisterProperty('PopupMenu', 'TPopupMenu', iptrw);
   end;
 end;
 
@@ -769,6 +772,7 @@ begin
   RegisterProperty('OnDblClick', 'TNotifyEvent', iptrw);
   RegisterProperty('OnEnter', 'TNotifyEvent', iptrw);
   RegisterProperty('OnExit', 'TNotifyEvent', iptrw);
+  RegisterProperty('PopupMenu', 'TPopupMenu', iptrw);
   RegisterProperty('ONKEYDOWN', 'TKeyEvent', iptrw);
   RegisterProperty('ONKEYPRESS', 'TKeyPressEvent', iptrw);
   RegisterProperty('ONKEYUP', 'TKeyEvent', iptrw);
@@ -788,7 +792,7 @@ begin
   RegisterProperty('BORDERWidth', 'integer', iptrw);
   RegisterProperty('SortType', 'TSortType', iptrw);
   RegisterProperty('IconOptions', 'TIconOptions', iptrw);
-
+      RegisterProperty('PopupMenu', 'TPopupMenu', iptrw);
   // property IconOptions: TIconOptions read FIconOptions write SetIconOptions;
   //property Items: TListItems read FListItems write SetItems stored AreItemsStored;
    //property Columns: TListColumns read FListColumns write SetListColumns;
@@ -827,6 +831,7 @@ begin
     RegisterMethod('Procedure DeleteSelected');
     RegisterMethod('Procedure SelectAll');
     RegisterProperty('Canvas', 'TCanvas', iptr);
+    RegisterProperty('PopupMenu', 'TPopupMenu', iptrw);
     RegisterProperty('Checkboxes', 'Boolean', iptrw);
     RegisterProperty('Column', 'TListColumn Integer', iptr);
     RegisterProperty('DropTarget', 'TListItem', iptrw);
@@ -960,6 +965,7 @@ begin
     RegisterProperty('SubItems', 'TStrings', iptrw);
     RegisterProperty('SubItemImages', 'Integer Integer', iptrw);
     RegisterProperty('Top', 'Integer', iptrw);
+    RegisterProperty('PopupMenu', 'TPopupMenu', iptrw);
   end;
 end;
 
@@ -1124,6 +1130,7 @@ begin
     RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
     RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
     RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
+    RegisterProperty('PopupMenu', 'TPopupMenu', iptrw);
  end;
 end;
 
@@ -1314,6 +1321,7 @@ begin
     RegisterProperty('BORDERWIDTH', 'Integer', iptrw);
     RegisterProperty('COLOR', 'TColor', iptrw);
     RegisterProperty('FONT', 'TFont', iptrw);
+    RegisterProperty('PopupMenu', 'TPopupMenu', iptrw);
     RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
     RegisterProperty('MAXLENGTH', 'Integer', iptrw);
     RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
@@ -1534,6 +1542,7 @@ begin
     RegisterProperty('OnSectionClick', 'TSectionNotifyEvent', iptrw);
     RegisterProperty('OnSectionResize', 'TSectionNotifyEvent', iptrw);
     RegisterProperty('OnSectionTrack', 'TSectionTrackEvent', iptrw);
+     RegisterProperty('PopupMenu', 'TPopupMenu', iptrw);
   end;
 end;
 
@@ -1613,6 +1622,7 @@ begin
     RegisterProperty('ALIGNMENT', 'TAlignment', iptrw);
     RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
     //RegisterProperty('COLOR', 'TColor', iptrw);
+    RegisterProperty('PopupMenu', 'TPopupMenu', iptrw);
     RegisterProperty('FONT', 'TFont', iptrw);
     RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
     RegisterProperty('MAXLENGTH', 'Integer', iptrw);
@@ -1724,6 +1734,7 @@ begin
     RegisterProperty('Pages', 'TTabSheet Integer', iptr);
     RegisterProperty('ActivePage', 'TTabSheet', iptrw);
    RegisterPublishedProperties;
+       RegisterProperty('PopupMenu', 'TPopupMenu', iptrw);
    RegisterProperty('ONCLICK', 'TNOTIFYEVENT', iptrw);
     RegisterProperty('ONDBLCLICK', 'TNOTIFYEVENT', iptrw);
     RegisterProperty('ONENTER', 'TNOTIFYEVENT', iptrw);
@@ -1882,8 +1893,7 @@ begin
   CL.AddTypeS('TTabChangingEvent', 'Procedure ( Sender : TObject; var AllowChange: Boolean)');
   CL.AddTypeS('TTabPosition', '( tpTop, tpBottom, tpLeft, tpRight )');
   CL.AddTypeS('TTabStyle', '( tsTabs, tsButtons, tsFlatButtons )');
-  CL.AddTypeS('TDrawTabEvent', 'Procedure ( Control : TCustomTabControl; TabInd'
-   +'ex : Integer; const Rect : TRect; Active : Boolean)');
+  CL.AddTypeS('TDrawTabEvent', 'Procedure ( Control : TCustomTabControl; TabIndex: Integer; const Rect : TRect; Active : Boolean)');
   CL.AddTypeS('TTabGetImageEvent', 'Procedure ( Sender : TObject; TabIndex: Integer; var ImageIndex : Integer)');
   CL.AddTypeS('TWidth', 'Integer');
   CL.AddTypeS('_TREEITEM', 'record fake: byte; end;');

@@ -691,13 +691,13 @@ begin
  CL.AddConstantN('ALLUNITLIST','String').SetString( 'docs\maxbox3_9.xml');
  CL.AddConstantN('INCLUDEBOX','String').SetString('pas_includebox.inc');
  CL.AddConstantN('BOOTSCRIPT','String').SetString('maxbootscript.txt');
- CL.AddConstantN('MBVERSION','String').SetString('3.9.9.91');
- CL.AddConstantN('VERSION','String').SetString('3.9.9.91');
+ CL.AddConstantN('MBVERSION','String').SetString('3.9.9.92');
+ CL.AddConstantN('VERSION','String').SetString('3.9.9.92');
  CL.AddConstantN('EXENAME','String').SetString( 'maXbox3.exe');
  CL.AddConstantN('MXINTERNETCHECK','String').SetString( 'www.ask.com');
  CL.AddConstantN('MBVER','String').SetString('399');
  CL.AddConstantN('MBVERI','Integer').SetInt(399);
- CL.AddConstantN('MBVERIALL','Integer').SetInt(39991);
+ CL.AddConstantN('MBVERIALL','Integer').SetInt(39992);
  CL.AddConstantN('MXSITE','String').SetString( 'http://www.softwareschule.ch/maxbox.htm');
  CL.AddConstantN('MXMAIL','String').SetString( 'max@kleiner.com');
  CL.AddConstantN('TAB','Char').SetString( #$09);
@@ -2439,11 +2439,13 @@ Begin T := Self.CB1SCList; end;
 
 (*----------------------------------------------------------------------------*)
 procedure TMaxForm1LabelBrettgroesse_W(Self: TMaxForm1; const T: TLabel);
-Begin Self.LabelBrettgroesse := T; end;
+Begin //Self.LabelBrettgroesse := T;
+end;
 
 (*----------------------------------------------------------------------------*)
 procedure TMaxForm1LabelBrettgroesse_R(Self: TMaxForm1; var T: TLabel);
-Begin T := Self.LabelBrettgroesse; end;
+Begin //T := Self.LabelBrettgroesse;
+end;
 
 (*----------------------------------------------------------------------------*)
 procedure TMaxForm1Panel1_W(Self: TMaxForm1; const T: TPanel);

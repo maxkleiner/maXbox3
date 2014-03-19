@@ -46,7 +46,7 @@ procedure SIRegister_TControlAction(CL: TPSPascalCompiler);
 procedure SIRegister_TCustomControlAction(CL: TPSPascalCompiler);
 procedure SIRegister_TControlCanvas(CL: TPSPascalCompiler);
 
-procedure SIRegister_Controls(Cl: TPSPascalCompiler);
+procedure SIRegister_Controls(Cl: TPSPascalCompiler);         //main call
 procedure SIRegister_TImageList(CL: TPSPascalCompiler);
 procedure SIRegister_TDragImageList(CL: TPSPascalCompiler);
 procedure SIRegister_TMouse(CL: TPSPascalCompiler);
@@ -258,7 +258,8 @@ procedure SIRegister_TControlCanvas(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TCanvas', 'TControlCanvas') do
   with CL.AddClassN(CL.FindClass('TCanvas'),'TControlCanvas') do begin
-    RegisterMethod('Procedure FreeHandle');
+      RegisterMethod('Procedure Free');
+      RegisterMethod('Procedure FreeHandle');
     RegisterMethod('Procedure UpdateTextFlags');
     RegisterProperty('Control', 'TControl', iptrw);
   end;

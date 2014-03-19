@@ -328,6 +328,8 @@ begin
    // RegisterMethod('Function Write( const Buffer, Count : Longint) : Longint');
     RegisterMethod('function Read(Buffer:String;Count:LongInt):LongInt');
     RegisterMethod('function Write(Buffer:String;Count:LongInt):LongInt');
+    RegisterMethod('function ReadInt(Buffer:Integer;Count:LongInt):LongInt');
+    RegisterMethod('function WriteInt(Buffer:Integer;Count:LongInt):LongInt');
 
     RegisterMethod('procedure ReadAB(Buffer: TByteArray;Count:LongInt)');
     RegisterMethod('procedure WriteAB(Buffer: TByteArray;Count:LongInt)');
@@ -341,6 +343,11 @@ begin
     RegisterMethod('function Seek(Offset:LongInt;Origin:Word):LongInt');
     RegisterMethod('procedure ReadBuffer(Buffer:String;Count:LongInt)');
     RegisterMethod('procedure WriteBuffer(Buffer:String;Count:LongInt)');
+    RegisterMethod('procedure ReadBufferInt(Buffer:Integer;Count:LongInt)');
+    RegisterMethod('procedure WriteBufferInt(Buffer:Integer;Count:LongInt)');
+    RegisterMethod('procedure ReadBufferFloat(Buffer:Double;Count:LongInt)');
+    RegisterMethod('procedure WriteBufferFloat(Buffer:Double;Count:LongInt)');
+
     RegisterMethod('procedure ReadBufferAB(Buffer: TByteArray;Count:LongInt)');
     RegisterMethod('procedure WriteBufferAB(Buffer: TByteArray;Count:LongInt)');
     RegisterMethod('procedure ReadBufferABD(Buffer: TByteDynArray;Count:LongInt)');
@@ -388,6 +395,11 @@ begin
     RegisterProperty('Handle', 'Integer', iptr);
     RegisterMethod('function Read(var Buffer; Count: Longint): Longint');
     RegisterMethod('function Write(const Buffer; Count: Longint): Longint');
+    RegisterMethod('function ReadInt(Buffer:Integer;Count:LongInt):LongInt');
+    RegisterMethod('function WriteInt(Buffer:Integer;Count:LongInt):LongInt');
+    RegisterMethod('function ReadString(Buffer:string;Count:LongInt):LongInt');
+    RegisterMethod('function WriteString(Buffer:string;Count:LongInt):LongInt');
+
     RegisterMethod('function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;');
   end;
 end;

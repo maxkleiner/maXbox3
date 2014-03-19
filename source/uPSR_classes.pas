@@ -667,6 +667,11 @@ begin
     RegisterMethod(@TSTREAM.READBUFFER , 'READBUFFERO');
     RegisterMethod(@TSTREAM.WRITEBUFFER, 'WRITEBUFFERO');
 
+    RegisterMethod(@TSTREAM.READBUFFER , 'READBUFFERINT');
+    RegisterMethod(@TSTREAM.WRITEBUFFER, 'WRITEBUFFERINT');
+    RegisterMethod(@TSTREAM.READBUFFER , 'READBUFFERFloat');
+    RegisterMethod(@TSTREAM.WRITEBUFFER, 'WRITEBUFFERFloat');
+
  //     RegisterMethod('procedure ReadBufferO(Buffer: TObject;Count:LongInt)');
  //   RegisterMethod('procedure WriteBufferO(Buffer: TObject;Count:LongInt)');
 
@@ -678,6 +683,8 @@ begin
     RegisterMethod(@TSTREAM.WRITE, 'WRITEAC');
     RegisterMethod(@TSTREAM.READ , 'READACD');
     RegisterMethod(@TSTREAM.WRITE, 'WRITEACD');
+    RegisterMethod(@TSTREAM.READ , 'READInt');
+    RegisterMethod(@TSTREAM.WRITE, 'WRITEInt');
 
     //RegisterMethod('procedure ReadBufferAB(Buffer: array of byte;Count:LongInt)');
     //RegisterMethod('procedure WriteBufferAB(Buffer: array of byte;Count:LongInt)');
@@ -720,7 +727,11 @@ begin
        RegisterMethod(@THandleStream.Read, 'Read');
     RegisterMethod(@THandleStream.Write, 'Write');
     RegisterMethod(@THandleStream.Seek, 'Seek');
-  end;
+       RegisterMethod(@THandleStream.Read, 'ReadInt');
+    RegisterMethod(@THandleStream.Write, 'WriteInt');
+       RegisterMethod(@THandleStream.Read, 'ReadString');
+    RegisterMethod(@THandleStream.Write, 'WriteString');
+   end;
 end;
 
 {$IFDEF FPC}
@@ -751,7 +762,6 @@ begin
     {$ELSE}
     RegisterConstructor(@TFILESTREAM.CREATE, 'CREATE');
     RegisterConstructor(@TFILESTREAMCREATE_P, 'CREATE1');
-
     RegisterMethod(@TFileStream.Destroy, 'Free');
     RegisterPropertyHelper(@TFileStreamfilename_R, nil, 'FileName');
  // RegisterProperty('FileName', 'string', iptr);
