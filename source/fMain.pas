@@ -101,6 +101,7 @@
          8783      build 86 bugfixing, winapi2 , mysql firebird first, gsAPI
          9181      build 91 2 tutorials, synapse, component, persistence, opengl, environment change
          9250      build 92 OCX, dbtreeview  , dbctrls
+         9282      build 94 bigfixing and remote
                   V4.0   in  June 2014
  ************************************************************************** }
 
@@ -147,7 +148,7 @@ const
    ALLUNITLIST = 'docs\maxbox3_9.xml'; //'in /docs;
    INCLUDEBOX = 'pas_includebox.inc';
    BOOTSCRIPT = 'maxbootscript.txt';
-   MBVERSION = '3.9.9.92';
+   MBVERSION = '3.9.9.94';
    MBVER = '399';              //for checking!
    EXENAME ='maXbox3.exe';
    MXSITE = 'http://www.softwareschule.ch/maxbox.htm';
@@ -1688,6 +1689,16 @@ uses
   uPSI_FileIntf,
   uPSI_SockTransport,
   uPSI_WinInet,
+  uPSI_Wwstr,
+  uPSI_DBLookup,
+  uPSI_Printgri,
+  uPSI_Hotspot,
+  uPSI_HList,
+  uPSI_DrTable,
+  uPSI_TConnect,
+  uPSI_DataBkr,
+  //uPSI_HTTPIntr,
+  uPSI_Mathbox,  //3.9.9.94
 
 
     //MDIFrame,
@@ -2612,6 +2623,16 @@ begin
   SIRegister_TabGrid(X);
   SIRegister_JsDBTreeView(X);
   SIRegister_JsSendMail(X);         //3.9.9.92
+  SIRegister_Wwstr(X);
+  SIRegister_dblookup(X);
+  SIRegister_Printgri(X);
+  SIRegister_Hotspot(X);
+  SIRegister_HList(X);
+  SIRegister_TConnect(X);
+  SIRegister_DataBkr(X);
+  SIRegister_DrTable(X);
+  //SIRegister_HTTPIntr(X);   //3.9.9.94
+  SIRegister_Mathbox(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -3761,7 +3782,8 @@ begin
   RIRegister_udf_glob_Routines(Exec);
   RIRegister_JsDBTreeView(X);
   RIRegister_JsSendMail(X);         //3.9.9.92
-
+  RIRegister_Wwstr_Routines(exec);
+  RIRegister_dblookup(X);
   RIRegister_dbTvRecordList(X);
   RIRegister_TreeVwEx(X);
   RIRegister_ECDataLink(X);
@@ -3772,6 +3794,16 @@ begin
   RIRegister_SockTransport(X);
   RIRegister_SockTransport_Routines(Exec);
   RIRegister_WinInet_Routines(Exec);
+  RIRegister_Printgri(X);
+  RIRegister_Hotspot(X);
+  RIRegister_HList(X);
+  RIRegister_TConnect(X);
+  RIRegister_DataBkr(X);
+  RIRegister_DrTable(X);
+  RIRegister_DataBkr_Routines(Exec);
+  //RIRegister_HTTPIntr(X);
+  //RIRegister_HTTPIntr_Routines(Exec);   //3.9.9.94
+  RIRegister_Mathbox_Routines(Exec);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);

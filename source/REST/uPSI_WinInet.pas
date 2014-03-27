@@ -47,7 +47,9 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure SIRegister_WinInet(CL: TPSPascalCompiler);
 begin
-  CL.AddTypeS('HINTERNET', '___Pointer');
+  CL.AddTypeS('HINTERNET1', '___Pointer');
+  CL.AddTypeS('HINTERNET', 'integer');
+
   //CL.AddTypeS('PHINTERNET', '^HINTERNET // will not work');
   //CL.AddTypeS('LPHINTERNET', 'PHINTERNET');
   CL.AddTypeS('INTERNET_PORT', 'Word');

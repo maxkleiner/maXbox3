@@ -463,7 +463,12 @@ end;
 
 function IsCOMConnected: Boolean;
 begin
+  try
   result:= getcomports.Count > 0;
+  except
+    //showmessage('No COM Ports available!');
+    result:= false;
+  end;
 end;
 
 

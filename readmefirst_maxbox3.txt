@@ -1,4 +1,22 @@
 ****************************************************************
+Release Notes maXbox 3.9.9.94 April 2014
+****************************************************************
+1 DLL Report, 9 Units add, DRTable, Remote+
+
+872 unit uPSI_Wwstr;
+873 uPSI_DBLookup,
+874 uPSI_Hotspot,
+875 uPSI_HList; //History List
+876 unit uPSI_DrTable;
+877 uPSI_TConnect,
+978 uPSI_DataBkr,
+979 uPSI_HTTPIntr;
+980 unit uPSI_Mathbox;
+
+SHA1: Win 3.9.9.94: 64A167821033864F9DF3478987B2EE997EF89AC5
+
+
+****************************************************************
 Release Notes maXbox 3.9.9.92 April 2014
 ****************************************************************
 1 Report, 15 Units add, DBCtrls, Stream+, IRadio, Wininet
