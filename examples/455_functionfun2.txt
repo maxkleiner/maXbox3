@@ -2,7 +2,7 @@ Program FunctionFun_Truth;
 
 //#net>D1.40DNS: 192.168.1.1; local IPs: fe80::102b:66c2:9557:7a93%10,fe80::39cb:cc4a:b4e7:9e03%20,fe80::25d2:cdb2:b4d2:1291%21,192.168.1.40,192.168.25.1,192.168.18.1; local IP: 192.168.1.401,2001:0:9d38:6abd:1416:333f:43c2:271a; local IP: 192.168.1.40
 //TODO: just missing a filestream mime file; search and get one
-//TODO: Refactor boolean shorter #locs:361
+//TODO: Refactor boolean shorter #locs:407
 
 {uses
   SysUtils,
@@ -131,9 +131,38 @@ begin
   end
   else
     Result:= '';
+    //MessagePlainText
+    //MessageHtml_Attach
+    ForceDecodeHeader
+    
 end;
 
 //The timing is roughly the same (but using fmOpenWrite if you intend no read might be a slightly bit faster). 
+
+
+function IdHttp_DownloadFile(aSrcUrlFile,aDestFile: String; const OnWorkEvent: TWorkEvent): Boolean;
+var
+  Http: TIdHTTP;
+  MS: TMemoryStream;
+begin
+  Result := false;
+  Http := TIdHTTP.Create(nil);
+  try
+    MS := TMemoryStream.Create;
+    try
+      //if Assigned(OnWorkEvent) then
+        //Http.OnWork := OnWorkEvent;
+      Http.Get1(aSrcUrlFile, MS);
+      MS.SaveToFile(aDestFile);
+      Result := true;
+    finally
+      MS.Free;
+    end;
+  finally
+    Http.Free;
+  end;
+end;
+
 
 function IsNetworkConnected2: Boolean;
 begin
@@ -180,8 +209,11 @@ end;
 const   BufferSize1 = 1024; 
  
 function GetInetFile (const fileURL, FileName: String): boolean;
- var   hSession, hURL: HInternet;   Buffer: array[1..BufferSize] of Byte;   BufferLen1: DWORD;   f: File;   sAppName: string; begin  result := false;  sAppName := ExtractFileName(Application.ExeName) ;  
- //hSession:= InternetOpen(PChar(sAppName),INTERNET_OPEN_TYPE_PRECONFIG,nil,nil,0); 
+ var   hSession, hURL: HInternet;   Buffer: array[1..BufferSize] of Byte;   BufferLen1: DWORD;   f: File;  sAppName: string; begin  result:= false;  sAppName:= ExtractFileName(Application.ExeName) ; //Function InternetOpen(lpszAgent:PChar;dwAccessType:DWORD;lpszProxy,
+//lpszProxBypass:PChar;dwFlags:DWORD):HINTERNET;
+//15165: 
+ InternetOpen(pchar(sAppName),INTERNET_OPEN_TYPE_PRECONFIG,'0','0',0);
+ hSession:= InternetOpen(PChar(sAppName),INTERNET_OPEN_TYPE_PRECONFIG,'0','0',0); 
  { hSession:= InternetOpen(sAppName,INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0) ; 
   try   
  hURL := InternetOpenURL(hSession, PChar(fileURL), nil, 0, 0, 0) ;   try    AssignFile(f, FileName) ;    Rewrite(f,1) ;    repeat     InternetReadFile(hURL, @Buffer, SizeOf(Buffer), BufferLen) ;     BlockWrite(f, Buffer, BufferLen)    until BufferLen = 0;    CloseFile(f) ;    result := True;   finally    InternetCloseHandle(hURL)   end  finally   InternetCloseHandle(hSession)  end} end;
@@ -212,7 +244,7 @@ var
   ErrCode: Integer;
   Temp: Comp;
 begin
-  If Mystring[0] = #0 then result:= 0
+  If Mystring[1] = #0 then result:= 0
   else begin
     //Val(Mystring, Temp, ErrCode);
     //StrtoInt
@@ -233,7 +265,7 @@ Declaration: Str2Pennies(MyString: string)
        Date: 02/17/94	
 Description: Converts a String to a Comp
 -----------------------------------------------------}
-function Str2Pennies(S: String): Comp;
+function Str2PenniesX(S: String): Comp;
  var
   C: Comp;
   i: Integer;
@@ -255,6 +287,7 @@ function Str2Pennies(S: String): Comp;
 end;
 
 procedure wwStrMathBoxTest;
+var hURL: HInternet;
 begin
  //strBreakApart(s: string; delimeter: string; parts: TStrings);
  //strGetToken(s: string; delimeter: string; var APos: integer): string;
@@ -266,6 +299,10 @@ begin
  //strReplaceCharWithStr(str: string; removeChar: char;replaceStr: string): string;
  //wwEqualStr(s1, s2: string): boolean;
  //strCount(s: string; delimeter: char): integer;
+  writeln(inttoStr(strCount(FileToString(exepath+'firstdemo.txt'),'z')));
+  //function CountOfChar(const Ch: Char; const S: string): Integer;
+  writeln(inttoStr(CountOfChar('z',FileToString(exepath+'firstdemo.txt'))));
+ 
  //strWhiteSpace : strCharSet;
  //wwExtractFileNameOnly(const FileName: string): string;
  //wwGetWord(s: string; var APos: integer; Options: TwwGetWordOptions;
@@ -291,6 +328,12 @@ begin
  //Str2Real( MyString : string) : Real');
  //XToTheY( x, y : Real) : Real');
      //Str2Pennies
+   writeln('mXVersion: '+version);  
+   writeln('mXVersion: '+mbversion);
+   //Function InternetCloseHandle( hInet : HINTERNET) : BOOL'); 
+   //InternetOpenURL(hURl, '127.0.0.1', '0', 0, 0, 0)
+   hURL:= InternetOpenURL(hURL, '127.0.0.1', '0', 0, 0, 0) 
+   InternetCloseHandle(hURL);
 end;
 
 
@@ -356,7 +399,10 @@ begin
     writeln(GetIDFromCP(getCurCP));
     writeln('GetDomainName1: '+GetDomainName);
     writeln('GetDomainName2: '+GetDomainName2);
-    
+    wwStrMathBoxTest;
+    writeln(inttoStr(mxStr2Pennies('$234.34')))
+    writeln(inttoStr(Str2PenniesX('$234.34')))
+        
  
 End.  
 

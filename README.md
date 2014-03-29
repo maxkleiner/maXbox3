@@ -4,7 +4,7 @@ maXbox
 ****************************************************************
 Release Notes maXbox 3.9.9.94 April 2014
 ****************************************************************
-1 DLL Report, 9 Units add, DRTable, Remote+
+1 DLL Report, 19 Units add, DRTable, Remote+, Cindy functions!
 
 872 unit uPSI_Wwstr;
 873 uPSI_DBLookup,
@@ -12,11 +12,21 @@ Release Notes maXbox 3.9.9.94 April 2014
 875 uPSI_HList; //History List
 876 unit uPSI_DrTable;
 877 uPSI_TConnect,
-978 uPSI_DataBkr,
-979 uPSI_HTTPIntr;
-980 unit uPSI_Mathbox;
+878 uPSI_DataBkr,
+879 uPSI_HTTPIntr;
+880 unit uPSI_Mathbox;
+881 uPSI_cyIndy,
+882 uPSI_cySysUtils,
+883 uPSI_cyWinUtils,
+884 uPSI_cyStrUtils,
+885 uPSI_cyObjUtils,
+886 uPSI_cyDateUtils,
+887 uPSI_cyBDE,
+888 uPSI_cyClasses,
+889 uPSI_cyGraphics,  //3.9.9.94_2
+890 unit uPSI_cyTypes;
 
-SHA1: Win 3.9.9.94: 64A167821033864F9DF3478987B2EE997EF89AC5
+SHA1: Win 3.9.9.94: 780F1F749EFEFB5C0FAA09C51B6AB048C6A00CC6
 
 ****************************************************************
 Release Notes maXbox 3.9.9.92 April 2014

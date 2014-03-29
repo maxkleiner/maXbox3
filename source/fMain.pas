@@ -101,7 +101,7 @@
          8783      build 86 bugfixing, winapi2 , mysql firebird first, gsAPI
          9181      build 91 2 tutorials, synapse, component, persistence, opengl, environment change
          9250      build 92 OCX, dbtreeview  , dbctrls
-         9282      build 94 bigfixing and remote
+         9314      build 94 bigfixing and remote , cindy
                   V4.0   in  June 2014
  ************************************************************************** }
 
@@ -1699,6 +1699,16 @@ uses
   uPSI_DataBkr,
   //uPSI_HTTPIntr,
   uPSI_Mathbox,  //3.9.9.94
+  uPSI_cyIndy,
+  uPSI_cySysUtils,
+  uPSI_cyWinUtils,
+  uPSI_cyStrUtils,
+  uPSI_cyObjUtils,
+  uPSI_cyDateUtils,
+  uPSI_cyBDE,
+  uPSI_cyClasses,
+  uPSI_cyGraphics,  //3.9.9.94_2
+  uPSI_cyTypes,
 
 
     //MDIFrame,
@@ -2633,6 +2643,16 @@ begin
   SIRegister_DrTable(X);
   //SIRegister_HTTPIntr(X);   //3.9.9.94
   SIRegister_Mathbox(X);
+  SIRegister_cyTypes(X);
+  SIRegister_cyIndy(X);
+  SIRegister_cySysUtils(X);
+  SIRegister_cyWinUtils(X);
+  SIRegister_cyStrUtils(X);
+  SIRegister_cyDateUtils(X);
+  SIRegister_cyObjUtils(X);
+  SIRegister_cyBDE(X);
+  SIRegister_cyClasses(X);
+  SIRegister_cyGraphics(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -3804,6 +3824,18 @@ begin
   //RIRegister_HTTPIntr(X);
   //RIRegister_HTTPIntr_Routines(Exec);   //3.9.9.94
   RIRegister_Mathbox_Routines(Exec);
+
+  RIRegister_cyIndy_Routines(Exec);
+  RIRegister_cySysUtils_Routines(Exec);
+  RIRegister_cyWinUtils_Routines(Exec);
+  RIRegister_cyStrUtils_Routines(Exec);
+  RIRegister_cyDateUtils_Routines(Exec);
+  RIRegister_cyObjUtils_Routines(Exec);
+  RIRegister_cyBDE_Routines(Exec);
+  RIRegister_cyClasses(X);
+  RIRegister_cyClasses_Routines(Exec);
+  RIRegister_cyGraphics_Routines(Exec);
+
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
