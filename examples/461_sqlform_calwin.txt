@@ -1,0 +1,522 @@
+PROGRAM Demo_App_mX;
+
+
+{ ****************************************************************
+  Sourcefile     :  DBopen.PAS
+  Typ            :  Form-Unit
+  Engineer       :  Max Kleiner
+  Erstellt am    :  10.01.1997
+  Compiler       :  Delphi 1.2, Betriebssystem :  Win95
+  Beschreibung   :  Ermöglicht Suche und Oeffnen einer Schatzung
+                    Basiert komplett auf SQL
+  Revisionen     :  25.10.96 Erster dialog zum Oeffnen einer Schatzung
+                    29.10.96 Überarbeitet mit Query
+                    10.01.97 Suchdialog und SQL Editor implementiert
+                    02.04.2014 migrate to maXbox
+ **************************************************************** }
+
+
+//unit DBOPEN1;
+
+{interface
+
+uses
+  SysUtils, WinTypes, WinProcs, Messages, Classes, Graphics, Controls,
+  Forms, Dialogs, StdCtrls, ExtCtrls, Buttons, Grids, DBGrids, DB, DBTables,
+  DBLookup; }
+
+var
+    //TdbOpenDlg: TForm;
+    lblBis: TLabel;
+    lblVon: TLabel;
+    edtEndDate: TEdit;
+    edtBeginDate: TEdit;
+    lblStichtag: TLabel;
+    CalBtnTo: TSpeedButton;
+    Bevel1: TBevel;
+    edtSchSuchen: TEdit;
+    lblTop: TLabel;
+    GrundSource: TDataSource;
+    DBGrid1: TDBGrid;
+    btnCancel: TBitBtn;
+    tblGrund: TQuery;
+    tblGrundSite: TIntegerField;
+    tblGrundSchatzNr: TIntegerField;
+    edtTitel: TEdit;
+    lblObName: TLabel;
+    lblObjadress: TLabel;
+    lblOrt: TLabel;
+    lblEigen: TLabel;
+    lblTitel: TLabel;
+    lblSchNr: TLabel;
+    edtname: TEdit;
+    edtadress: TEdit;
+    edtOrt: TEdit;
+    SQLStatements: TMemo;
+    tblGrundStichtag: TDateTimeField;
+    btnSuchen: TBitBtn;
+    edtArt: TEdit;
+    lblSchArt: TLabel;
+    btnLoad: TBitBtn;
+    CalBtnFrom: TSpeedButton;
+    QueryCount: TQuery;
+    btnSQL: TBitBtn;
+    btnAlle: TBitBtn;
+    tblGrundObjektort: TStringField;
+    tblGrundObjektstrasse: TStringField;
+    tblGrundTitel: TStringField;
+    tblGrundObjektname: TStringField;
+    hlpBitBtn: TBitBtn;
+    dScrAuftrag: TDataSource;
+    tblGrundAuftragNr: TIntegerField;
+    LookupQuery: TQuery;
+    LookupSource: TDataSource;
+    ComboBox1: TComboBox;
+      { procedure CalBtnToClick(Sender: TObject);
+       procedure FormCreate(Sender: TObject);
+       procedure btnCancelClick(Sender: TObject);
+       procedure FormDestroy(Sender: TObject);
+       procedure ShowRecordsClick(Sender: TObject);
+       procedure ShowSQLClick(Sender: TObject);
+       procedure edtSchSuchenExit(Sender: TObject);
+       procedure btnAllClick(Sender: TObject);
+       procedure CalBtnFromClick(Sender: TObject);
+       procedure hlpBitBtnClick(Sender: TObject);
+       procedure DBGrid1DblClick(Sender: TObject);
+       procedure btnLoadClick(Sender: TObject);
+       procedure edtAuftragDblClick(Sender: TObject);
+     //private
+       function GetFromDate: TDateTime;
+       function GetToDate: TDateTime;
+       procedure SetFromDate(NewDate: TDateTime);
+       procedure SetToDate(NewDate: TDateTime);
+       procedure getHausObjekte;
+       function GetSQLRecordCount: integer;
+       function SomeEntries:Boolean;
+     protected
+       procedure BuildSQLString(var TheQuery: TStringList);
+       procedure AddCondition(var TheQuery: TStringList;
+                           const field, comparison, value: String);
+     public }
+       BeginDate: TDateTime;
+    EndDate: TDateTime;
+    modalresult: TModalresult;
+  //end;  
+  
+  type  TdbOpenDlg = TForm;
+
+var
+  dbOpenDlg: TdbOpenDlg;
+
+     function IsDate(Source: TEdit):Boolean; forward;
+     procedure getHausObjekte; forward;
+
+ 
+
+//implementation
+
+//{$R *.DFM}
+
+//uses Pickdate;
+
+procedure TdbOpenDlg_FormCreate(Sender: TObject);
+begin
+  tblGrund.open;
+   beginDate:=StrToDate('01.01.1984');
+  endDate:=Date;
+  {edtAuftrag.LookupDisplay := 'Nachname;FirmenName';}
+  dbOpenDlg.activeControl:=edtSchSuchen;  {first with schatzNr}
+  lblTop.caption:='Mandant suchen und laden';
+  //IntToStr(getSQLRecordCount);
+end;
+
+procedure TdbOpenDlg_FormDestroy(Sender: TObject);
+begin
+
+  tblGrund.close;
+
+end;
+
+procedure TdbOpenDlg_btnCancelClick(Sender: TObject);
+begin
+ {GlobSchatzNr:=tblGrundSchatzNr.value;}             {debug}
+  dbOpenDlg.close;
+end;
+
+
+
+{property Methoden}
+
+procedure TdbOpenDlg_SetFromDate(NewDate: TDateTime);
+begin
+  edtBeginDate.Text:= DateToStr(NewDate);
+end;
+
+procedure TdbOpenDlg_SetToDate(NewDate: TDateTime);
+begin
+  edtEndDate.Text:= DateToStr(NewDate);
+end;
+
+function TdbOpenDlg_GetFromDate: TDateTime;
+begin
+  if edtBeginDate.Text = '' then Result := 0
+  else Result:= StrToDate(edtBeginDate.Text);
+end;
+
+function TdbOpenDlg_GetToDate: TDateTime;
+begin
+  if edtEndDate.Text = '' then Result := 0
+  else Result := StrToDate(edtEndDate.Text);
+end;
+
+var mycal2: TDateTimePicker;
+procedure TestDate;
+begin
+mycal2:= TDateTimePicker.Create(self)
+  with mycal2 do begin
+  //parent:= inFrm;
+    //autocomplete:= true;
+    //SetBounds(LEFTBASE+255, TOPBASE+60, 305, 60);
+    //font.size:= 12; color:= clPurple;
+    //SCROLLWIDTH:= width * 2;
+    checked;
+    date;
+    show;
+    //onclick:= @generalClick;
+    //tag
+   //format:= ;
+   //mycal2.Free;
+   end;
+end;   
+
+
+var brDateForm: TDateTimePicker; //TJvPickdate; //TCalendar; //TBRDateForm
+//var jvpd:   TJVPickdate;
+
+
+procedure TdbOpenDlg_Button1Click(Sender: TObject);
+begin
+  dbOpenDlg.ModalResult:= mrOK;
+end;
+
+procedure TdbOpenDlg_CalBtnFromClick(Sender: TObject);
+begin
+  dbOpenDlg:= TdbOpenDlg.create(self)
+  with dbOpenDlg do begin
+    setbounds(0,0,400,400)
+    //showmodal later
+  end;
+   with TButton.create(dbopenDlg) do begin
+     parent:= dbopenDlg;
+     setbounds(20,200,100,40)
+     caption:= 'OK Date';
+     onclick:= @TdbOpenDlg_Button1Click;
+   end;  
+  try
+   with TDateTimePicker.create(dbopenDlg) do begin
+     parent:= dbopenDlg;
+     SetBounds(20,20,100,100);
+     if dbopenDlg.showModal = mrOK then
+       BeginDate:= Datetime;
+     writeln('date with time: '+datetimetostr(Datetime));
+   end;
+    writeln('get date back '+datetostr(begindate));   //debug
+  finally
+    dbopenDlg.Free;
+  end;
+end;
+
+procedure TdbOpenDlg_CalBtnToClick(Sender: TObject);
+begin
+  try
+    BrDateForm:= TDateTimePicker.create(self);
+    if not (EndDate = 0) then
+    BrDateForm.Datetime:= EndDate;
+    //if BrDateForm.ShowModal = mrOk then
+    EndDate:= BrDateForm.Datetime;
+  finally
+    brDateForm.Free;
+  end;
+end;
+
+
+procedure TdbOpenDlg_AddCondition(var TheQuery: TStringList;
+                        const field, comparison, value: String);
+begin
+  if TheQuery.Count > 2 then
+  {When Count > 2, there is already at least one condition}
+   TheQuery.Add('AND '+field+comparison+value)
+  else
+   TheQuery.Add(field+comparison+value)
+end;
+
+function IsDate(Source: TEdit) :Boolean;
+{This function returns True if a TEdit contains a date}
+begin
+  try
+    StrToDate(TEdit(Source).Text);   {typecast of checking}
+    result := True
+  except
+    result := False;
+  end;
+end;
+
+function TdbOpenDlg_SomeEntries:Boolean;
+begin
+ Result:=
+ not ((edtSchsuchen.text = '') and
+      (edtName.Text = '') and (edtTitel.text = '') and (edtAdress.text = '') and
+      (edtOrt.text = '') and (BeginDate = 0) and (EndDate = 0) and
+      (edtArt.text = '') and (comboBox1.text = ''));
+end;
+
+procedure TdbOpenDlg_BuildSQLString(var TheQuery: TStringList);
+begin
+  if BeginDate <> 0 then
+  if not IsDate(edtBeginDate) then begin
+    edtBeginDate.SetFocus;
+    raise Exception.Create('Date value expected');
+  end;
+  if EndDate <> 0 then
+  if not IsDate(edtEndDate) then begin
+    edtEndDate.SetFocus;
+    raise Exception.Create('Date value expected');
+  end;
+  {if edtEigen.text <> '' then}
+ { theQuery.Add('SELECT * FROM GRUNDDAT G, AUFTRAGG A') else}   {once will be a join}
+  TheQuery.Add('SELECT * FROM GRUNDDAT') ;
+  if TdbOpenDlg_SomeEntries then begin
+    TheQuery.Add('WHERE');
+      TdbOpenDlg_addCondition(theQuery,'Typ','<>','2');
+   (* if edtEigen.text <> '' then                                 {join}
+      addCondition(TheQuery,'A.AuftragNr','=',edtEigen.text);*)
+    if edtSchSuchen.text <> '' then
+      TdbOpenDlg_addCondition(TheQuery,'SchatzNr','=',edtSchSuchen.text);
+    if edtTitel.text <> '' then                    {#39 is '}
+      TdbOpenDlg_addCondition(theQuery,'UPPER'+'('+'Titel'+')',
+                 'LIKE ',#39 + uppercase(edtTitel.text)+'%'#39);
+    if edtName.Text <> '' then
+      TdbOpenDlg_AddCondition(TheQuery,'UPPER'+'('+'Objektname'+')',
+                 'LIKE',#39 + uppercase(edtName.Text)+'%'#39);
+    if edtAdress.text <> '' then
+      TdbOpenDlg_addCondition(theQuery,'UPPER'+'('+'Objektstrasse'+')',
+                    'LIKE',#39 + uppercase(edtAdress.text)+'%'#39);
+    if edtOrt.text <> '' then
+      TdbOpenDlg_addCondition(theQuery,'UPPER'+'('+'Objektort'+')',
+                    'LIKE',#39 + uppercase(edtOrt.text)+'%'#39);
+//    if edtAuftrag.text <> '' then                      {Lookup}
+  //    addCondition(theQuery,'AuftragNr','=',intToStr(tblAuftragAuftragNr.value));
+    if edtArt.text <> '' then
+      TdbOpenDlg_addcondition(theQuery,'UPPER'+'('+'Schatzart'+')',
+                    'LIKE',#39 + uppercase(edtArt.text)+'%'#39);
+    if BeginDate <> 0 then             {because DateTime is not a string}
+        TdbOpenDlg_AddCondition(TheQuery,'Stichtag','>=',
+                       ':BeginDate');
+    if EndDate <> 0 then
+        TdbOpenDlg_AddCondition(TheQuery,'Stichtag','<=',
+                       ':EndDate');
+  end; {if not empty strings}
+end;
+
+procedure TdbOpenDlg_ShowRecordsClick(Sender: TObject);
+var
+  TheQuery: TStringList;
+begin
+  TheQuery := TStringList.Create;
+  theQuery.clear;
+  try                             {ev close clear}
+   if not TdbOpenDlg_someEntries then begin
+    modalresult:= mrOK;
+    Exit;
+   end;
+   TdbOpenDlg_BuildSQLString(TheQuery);
+   {Query is built. Process it dear megamax}
+   screen.cursor:= crSQLWait;
+    with tblGrund do begin
+      Close;
+      SQL.Clear;
+      SQL := TheQuery;
+      if beginDate <> 0 then
+      ParamByName('beginDate').AsDateTime:=beginDate;
+      if endDate <> 0 then
+      ParamByName('endDate').AsDateTime:=endDate;
+      Open;
+    end;
+  finally
+    TheQuery.Free;
+    screen.Cursor:= crDefault;
+  end;
+end;
+
+
+
+
+procedure TdbOpenDlg_ShowSQLClick(Sender: TObject);
+var
+  TheQuery: TStringList;
+begin
+  TheQuery := TStringList.Create;
+  try
+    if (SQLStatements.Lines[1] <> '') then
+    theQuery.assign(SQLStatements.Lines
+    )else begin
+      TdbOpenDlg_BuildSQLString(TheQuery);
+      {Query is built. Process it}
+      SQLStatements.Lines := TheQuery;
+    end;
+    with SQLStatements do begin
+    if (SQLStatements.visible=false) then SQLStatements.visible:= true else
+    SQLStatements.visible:=false;
+  end;
+  finally
+   TheQuery.Free;
+  end;
+end;
+
+
+procedure TdbOpenDlg_edtSchSuchenExit(Sender: TObject);
+begin
+  try
+    TdbOpenDlg_showRecordsClick(sender);
+  except
+    showmessage('schatzung not found');
+    {tblGrund.findNearest([edtSchSuchen]);}
+  end;
+end;
+
+function TdbOpenDlg_GetSQLRecordCount: integer;
+begin
+  with QueryCount do begin
+    try
+      Close; SQL.Clear;
+      SQL.Add('Select Count(*)'+                           { PARAORA}
+              ' from Grunddat where typ <> 2');
+      open;
+      result:=fields[0].asInteger;
+      { SQL.Add('Select Count(*) As Anz'+                   ORA
+              ' from Grunddat where typ <> 2');
+      open;
+      result:=fieldByName('Anz').asInteger;}
+    finally;
+      close;
+    end;
+  end; {with}
+end;
+
+procedure TdbOpenDlg_btnAllClick(Sender: TObject);
+begin
+  try                             {ev close clear}
+    with tblGrund do begin
+      Close;
+      SQL.Clear;
+      SQL.Add('Select Site,SchatzNr,AuftragNr,Titel,Objektname,Objektstrasse,Objektort,Stichtag'+
+              ' from grunddat where typ <> 2'+
+              'order by Site, SchatzNr');
+      Open;
+    end;
+  finally
+    end;
+end;
+
+
+procedure TdbOpenDlg_hlpBitBtnClick(Sender: TObject);
+begin
+ Application.HelpContext(31);
+end;
+
+procedure TdbOpenDlg_DBGrid1DblClick(Sender: TObject);
+begin
+  ModalResult:=mrOK;
+end;
+
+procedure TdbOpenDlg_btnLoadClick(Sender: TObject);
+begin
+ TdbOpenDlg_showRecordsClick(sender);
+end;
+
+procedure TdbOpenDlg_edtAuftragDblClick(Sender: TObject);
+begin
+  getHausObjekte;
+  while not LookupSource.dataSet.EOF do begin
+    combobox1.items.add(lookupSource.dataSet.fieldValues['Objektname']);
+    lookupSource.dataSet.next;
+  end;
+
+end;
+
+procedure getHausObjekte;
+begin
+  with lookupQuery do begin
+      Close;
+      SQL.Clear;
+      SQL.Add('Select Site,SchatzNr,AuftragNr,Titel,Objektname,Objektstrasse,Objektort,Stichtag'+
+              ' from grunddat where typ <> 2'+
+              'order by Site, SchatzNr');
+      Open;
+  end;
+end;
+
+begin //main
+  TdbOpenDlg_CalBtnFromClick(self);
+end.
+
+
+
+
+CONST 
+//<Constant declarations> 
+  TEXTOUT = 'hi world of code rage';
+
+{TYPE 
+<Type declarations>} 
+
+Var 
+//<Variable declarations>
+  i: integer;
+
+//<FUNCTION>
+//<PROCEDURE> 
+
+BEGIN  //Main
+//<Executable statements>
+  for i:= 1 to 3 do 
+    Writeln(TEXTOUT+CRLF);
+  maXcalcF('2^64 /(60*60*24*365)')  
+//<Definitions>  
+END. 
+
+----app_template_loaded_code----
+----File newtemplate.txt not exists - now saved!----
+
+
+ 	
+Umgebungskarte: Bern
+	Bern 	So, 06.07.14 	ab 	07:32 	7 	IC 711
+IC 711 	
+	InterCity
+Richtung: St. Gallen
+Restaurant Minibar Familienwagen mit Spielplatz Reservierung möglich BZ RZ
+Umgebungskarte: Zürich HB
+	Zürich HB 	  	an 	08:28 	11
+  	
+Umgebungskarte: Zürich HB
+	Zürich HB 		ab 	08:40 	8 	EC 163
+EC 163 	
+	EuroCity Transalpin
+Richtung: Graz Hbf
+Restaurant VELOS: Reservierung obligatorisch Reservierung möglich VL
+  	
+Umgebungskarte: Schwarzach-St.Veit
+	Schwarzach-St.Veit 	  	an 	14:48 	2
+  	
+Umgebungskarte: Schwarzach-St.Veit
+	Schwarzach-St.Veit 		ab 	15:11 	3 	EC 113
+EC 113 	
+	EuroCity
+Richtung: Klagenfurt Hbf
+Restaurant VELOS: Reservierung obligatorisch Reservierung möglich RZ VL
+  	
+Umgebungskarte: Pörtschach/Wörther See
+	Pörtschach/Wörther See 	  	an 	17:06 	1
+  	
+Dauer: 9:34; fährt täglich, nicht 23. Apr bis 14. Mai 2014 

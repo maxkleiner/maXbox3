@@ -1,0 +1,582 @@
+Program TopTenFunctions;
+{from mind to motion}
+
+///////////////////////////////////////////////////////////////////////////
+//  #sign:1 PM max: MAXBOX8: 4/1/2014 12:05:12 PM  
+//  Purpose: how to call best functions, on progress with experiments 
+//  #path>C:\maXbook\maxbox3\mX3999\maxbox3\examples\
+//  Lines of Code #locs:265
+///////////////////////////////////////////////////////////////////////////
+//TODO: Save the QRCode to webserver_file, #locs:265
+
+Const
+   UrlGoogleQrCode='http://chart.apis.google.com/chart?chs=%dx%d&cht=qr&chld=%s&chl=%s';
+   AFILENAME= 'mX3QRCode3Googletools.png';
+   AFILENAME2= 'mX3QRCode3Systools.png';
+   QDATA= 'this is maXland mind blowing stuff on a firebox';
+   MEDIAPATH =  'exercices\';
+   KEYPATH = 'crypt\';
+   
+Type
+  TQrImage_ErrCorrLevel=(L,M,Q,H);
+
+
+procedure LetSystools2DBarcode;
+begin
+  with {TStCustom2DBarcode}TStPDF417Barcode.create(self) do begin
+   ECCLevel:= eclevel6;
+   Code:= QDATA;
+   Caption:= QDATA;
+   CaptionLayout;
+   //RelativeBarHeight:= true;
+   //BarHeight:= 500;
+   SaveToFile(ExePath+AFILENAME2);
+   OpenDoc(ExePath+AFILENAME2);
+   free;
+ end;
+ (* with {TStCustom2DBarcode} TStMaxiCodeBarcode.create(self) do begin
+   ECCLevel:= 3;
+   Code:= QDATA; Caption:= QDATA;
+   CaptionLayout;
+   //BarHeight:= 400;
+   SaveToFile(ExePath+AFILENAME);
+   OpenDoc(ExePath+AFILENAME);
+   free;
+ end;*)
+end;   
+
+procedure GetQRCodeDemo;
+begin
+ if IsInternet then begin   //1
+    GetQrCode3(150,150,'Q',QDATA, ExePath+AFILENAME);
+    OpenDoc(ExePath+AFILENAME);
+  end else
+    LetSystools2DBarcode; 
+end;    
+//TODO:#1 Returns the QR Code direct of the last modification of the given File
+
+procedure ChangeFileDemo;
+begin
+   Stringtofile(exepath+'\docs\contain2xml.txt',
+   ReplaceString(fileToString(exepath+'\docs\'+'maxbox3_9.xml'),
+                    '"/> ','"/>'+CRLF),true);   
+   OpenDoc(exepath+'\docs\contain2xml.txt');
+end;   
+
+procedure maxcalc_Demo;
+begin
+  printF('this is %.6f',[maXcalc('ln(2)+fact(388)+2!')]); 
+  printF('this is %.6f',[maXcalc('(4!)^(3!)')]); 
+  printF('this is %.6f',[maXcalc('4!+4!')]); 
+  printF('this is %.6f',[maXcalc('log(22)')]); 
+  printF('this is logN %.6f',[maXcalc('2%256')]);
+  writeln('ln(e): '+floattostr(maXcalc('ln(e)')))
+  maXcalcF('e+10^6');
+  printF('addition theorem %.18f ',[maXcalc('sin(2.5/2)')])
+  printF('addition theorem %.18f ',[maXcalc('sqrt(1/2*(1-cos(2.5)))')])
+  printF('addition theorem2 %22.18f ',[maXcalc('cos(2.5/2)')])
+  printF('addition theorem2 %22.18f ',[maXcalc('sqrt(1/2*(1+cos(2.5)))')])
+  maXcalcF('2%256+2^10');
+end; 
+
+procedure CompressDemo;
+begin
+//Compress a folder and decompress it in /Decompress2
+  Compress(exepath+'examples\earthplay2', exepath+'examples\mXziptest2.zip');
+  DeCompress(exepath+'examples\Decompress2',exepath+'examples\mXziptest2.zip');
+end;  
+
+procedure TimeSetDemo;
+//run the procedure in Admin mode to set the time! 
+var  mySTime: TIdSNTP;
+begin 
+  mySTime:= TIdSNTP.create(self);
+  try
+    mySTime.host:='0.debian.pool.ntp.org'
+    writeln('the internettime: '+datetimetoStr(mystime.datetime));
+    if mySTime.Synctime then
+      writeln('Operating System sync now!');
+  finally
+    Speak('Your system time is now sync with the internet time '
+       +TimeToStr(mystime.datetime))
+    mySTime.free;
+  end
+end;  
+
+procedure OpenFileDemo;
+begin
+  OpenFile(ExePath+'\examples\androidlcl\pascal_gui.jpg');
+end; 
+
+procedure PlayMediaDemo;
+var wmp: Variant; 
+ //Maybe you'll be more comfortable with automation.
+ //It provides most of the functionality as the interfaces provide.
+begin
+   wmp:= CreateOleObject('WMPlayer.OCX');
+   //wmp.OpenPlayer(Exepath+'examples\maxbox.wav');
+   if ISInternet then begin
+     wmp.URL:= 'http://www.softwareschule.ch/download/airmaxloop3.mp3';
+     wmp.OpenPlayer(wmp.URL);
+   end else
+     wmp.OpenPlayer(Exepath+'examples\maxbox.wav');
+   //wmp.controls.play;
+end; 
+
+//To Refactor:
+function IsNetworkConnected3: Boolean;
+begin
+  result:= GetSystemMetrics(SM_NETWORK) and $01 = $01
+end;
+
+function WGetDemo: boolean;
+//Function wGet2(aURL, afile: string): boolean;' //without file open
+begin
+  writeln('WGetDemo:  '+DateTimeToInternetStr(now, true))
+  result:= false;
+  wGet('http://www.softwareschule.ch/download/maxbox_starter4.pdf','mytestpdf.pdf');
+    //[RegEx VX4]
+  result:= true;
+end;    
+
+//set the maildef.ini file first!
+function SendEmailDemo: boolean; 
+begin
+//procedure SendEmail(mFrom,  mTo,  mSubject,  mBody,  mAttachment: variant);
+ result:= false;
+ SendEmail('max@kleiner.ch','max@kleiner.com','this is test399.94','the OpenSSL fox','');
+ result:= true;
+end;
+
+
+var  selectFile,cryptlog,AESpassw: string;
+
+procedure EncryptMediaAES(sender: TObject);
+begin
+  //if AESpassw <> '' then begin
+    AESpassw:= 'maXbox';
+    if PromptForFileName(selectFile,'Files(*.*)|*.*',//others
+                      '', 'Select your file to crypt', MEDIAPATH, False)
+    then begin
+     //Display this full file/path value
+      writeln(ExtractFileName(selectFile)+' encrypt...');
+      Application.ProcessMessages;
+      Screen.Cursor:= crHourglass;
+      with TStopwatch.Create do begin
+        Start;
+        AESSymetricExecute(selectFile, selectFile+'_encrypt',AESpassw);
+        writeln('File Encrypted!');
+        Screen.Cursor:= crDefault;
+        Stop;
+        writeln('Time consuming: ' +GetValueStr +' of: '+
+              inttoStr(getFileSize(selectFile))+' File Size');
+        Free;
+      end;
+      writeln('Crypted file: '+ExtractFileName(selectFile)+'_encrypt');
+      //WriteLog(cryptLog, clstbox.items.text)
+    end;
+  //end else Showmessage('Set your password first!');
+end;
+
+procedure DecryptMediaAES(sender: TObject);
+var clearout: string;
+begin
+  //if AESpassw <> '' then begin
+    AESpassw:= 'maXbox';
+    if PromptForFileName(selectFile,'Files(*_encrypt)|*_encrypt',//others
+                      '', 'Select your file to decrypt', MEDIAPATH, False)
+    then begin
+      // Display this full file/path value
+      writeln(ExtractFileName(selectFile)+' decrypt...');
+      writeln('File to Decrypt: '+ExtractFileName(selectFile));
+      Application.ProcessMessages;
+      Screen.Cursor:= crHourglass;
+      with TStopwatch.Create do begin
+        Start;
+        AESDecryptFile(selectFile+'_decrypt',selectFile,AESpassw);
+        clearout:= selectFile+'_decrypt';
+        Delete(clearout, length(clearout)-15, 8); //-7!
+        RenameFile(selectFile+'_decrypt', clearout);
+        Screen.Cursor:= crDefault;
+        Stop;
+        writeln('Time consuming: ' +GetValueStr +' of: '+
+              intToStr(getFileSize(clearout))+' File Size');
+        Free;
+      end;
+      writeln('File Decrypted!');
+      //WriteLog(cryptLog, clstbox.items.text)
+    end;
+  //end else Showmessage('Set your password first!');
+end;
+
+procedure GetAllFilesofTodayDemo;
+var ml: TStringlist;
+    i: integer;
+begin
+  ml:= TStringlist.create;
+  try
+    ml:= getTodayFiles(Exepath,'*.*'); 
+    for i:= 1 to ml.count-1 do 
+           writeln(ml.strings[i]);
+  finally
+    ml.Free;
+  end;           
+end;  
+
+
+procedure CalcPrecisionDemoTest;
+begin
+  printF('light speed of 2000 meters %.14f',[2000 /MetersPerLightSecond]);
+  printF('light speed test back %.14f',
+                  [(2000 /MetersPerLightSecond)*-(1-MetersPerLightSecond/2000)]);
+  printF('light speed test back %.14f',
+             [(2000 /MetersPerLightSecond)+
+              (2000 /MetersPerLightSecond)*-(1-MetersPerLightSecond/2000)]);
+end; 
+
+begin  //main 
+  Writeln('EXE Date Stamp: '+dateTimeTostr(FileTimeGMT(exepath+'maxbox3.exe')));
+  //GetQrCodeTest(150,150,'Q', 'this is maXland on the maXbox');
+  //call of the Lib Best_of_Box
+  GetQRCodeDemo        //01
+
+  ChangeFileDemo;    //011
+  maxCalcF('SQRT(PI)');
+  maxcalc_Demo;        //02
+  Writeln('thread count: '+inttoStr(NumProcessThreads)); 
+  //CompressDemo;     //03
+  Writeln('thread count: '+inttoStr(NumProcessThreads));
+ 
+   //TimeSetDemo;      //04
+   OpenFileDemo;       //05
+   //PlayMediaDemo;    //06
+  
+  {if WGetDemo then    //07
+     writeln('download success - will open file');}
+  
+  {if SendEmailDemo then    //08
+     writeln('email send success - should open mailbox'); }
+  
+  {EncryptMediaAES(self);   //09
+  DecryptMediaAES(self); }                         
+  
+  GetAllFilesofTodayDemo;   //10
+  CalcPrecisionDemoTest;    //11
+End.  
+
+Doc:
+http://theroadtodelphi.wordpress.com/2010/12/06/generating-qr-codes-with-delphi/
+
+Using the Google Chart Tools / Image Charts (aka Chart API) you can easily generate QR codes, this kind of images are a special type of two-dimensional barcodes. They are also known as hardlinks or physical world hyperlinks.
+
+The QR Codes store up to 4,296 alphanumeric characters of arbitrary text. QR codes can be read by an optical device with the appropriate software. Such devices range from dedicated QR code readers to mobile phones.
+
+Using Delphi there are several ways you can generate QR codes - to encode any text (URL, phone number, simple message). QR Codes store up to 4,296 alphanumeric characters of arbitrary text.
+The 2D Barcode VCL components is a set of components designed for generating and printing barcode symbols in your Delphi or C++ Builder applications. Use the components set like any other VCL components.
+J4L Components includes the QR-code implementation featuring: auto, byte, alpha, numeric and kanji encoding.
+
+The Google Chart Tools (Chart API) also let you generate QR-code images using an HTTP POST or 
+All do you need to generate a QrCode is make a get request to this URI
+
+http://chart.apis.google.com/chart?chs=200x200&cht=qr&chld=M&chl=Go+Delphi+Go
+
+
+QR (Quick Response) codes are starting to pick up steam among the growing smartphone-browsing crowd – a statistic that has marketers brimming with creative ideas and promotions.  Still, no one wants to open their device to a glut of text messages and alerts from codes they’ve scanned.
+
+Fortunately, these companies have found innovative and unique ways to not only get you to scan their code, but boost their brand awareness in the process.  Here are a few of the most memorable ones – and a few examples to get your mind stirring.
+Who’s Using QR Codes?
+
+Nearly half of all smartphone users have used their phones while shopping in brick-and-mortar stores – 40% of them to compare the competition’s prices.  Statistics for who’s scanning QR codes and with what device appear to be mixed, although most data places iPhone users at the top, with the user age range being 25-34.  Japan and the U.S. are currently leaps and bounds ahead of other countries in QR code scans (around 60% approximately) – with Canada and the U.K. trailing dozens of percentage points behind.
+
+Still, QR code creation jumped a whopping 1,253% in 2011, with two million of them created in less than three months. By far, most were used to lead users to a web address, but they can also store vCard details, Google Maps info and even Youtube video links.
+
+
+Action Steps for Working with QR Codes
+
+So how can you take advantage of this growing trend for your business?  Keep in mind that much more than web addresses can be scanned. For example, you could:
+
+   1 Direct employers to your resume, your LinkedIn profile or your Vcard
+   2 Use a QR code in a direct mail piece, business card or postcard to provide a discount
+   3 Give customers an inside look at your new Facebook promotion
+   4 Take them to a page with more detailed information that wouldn’t easily fit in a print ad
+   5 Use them to deliver step-by-step instructional videos or a printable setup sheet
+   6 Have the QR code send a tweet when scanned, or check in with Foursquare
+   7 Let them enroll in an event such as a webinar or teleseminar
+   8 Use the QR code to let customers send themselves a reminder via SMS
+   9 Link them to a special “Exclusive” YouTube video
+
+uses
+ PngImage,
+ HTTPApp,
+ WinInet;
+ 
+type
+TQrImage_ErrCorrLevel=(L,M,Q,H);
+ 
+const
+UrlGoogleQrCode='http://chart.apis.google.com/chart?chs=%dx%d&cht=qr&chld=%s&chl=%s';
+QrImgCorrStr   : array [TQrImage_ErrCorrLevel] of string=('L','M','Q','H');
+ 
+procedure WinInet_HttpGet(const Url: string;Stream:TStream);
+const
+BuffSize = 1024*1024;
+var
+  hInter   : HINTERNET;
+  UrlHandle: HINTERNET;
+  BytesRead: DWORD;
+  Buffer   : Pointer;
+begin
+  hInter := InternetOpen('', INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
+  if Assigned(hInter) then
+  begin
+    Stream.Seek(0,0);
+    GetMem(Buffer,BuffSize);
+    try
+      UrlHandle:= InternetOpenUrl(hInter, PChar(Url), nil, 0, INTERNET_FLAG_RELOAD, 0);
+        if Assigned(UrlHandle) then
+        begin
+          repeat
+            InternetReadFile(UrlHandle, Buffer, BuffSize, BytesRead);
+            if BytesRead>0 then
+             Stream.WriteBuffer(Buffer^,BytesRead);
+          until BytesRead = 0;
+          InternetCloseHandle(UrlHandle);
+        end;
+    finally
+      FreeMem(Buffer);
+    end;
+    InternetCloseHandle(hInter);
+  end
+end;
+ 
+//this function return a Stream (PngImage inside) with a Qr code.
+procedure GetQrCode(Width,Height:Word;Correction_Level:TQrImage_ErrCorrLevel;const Data:string;StreamImage : TMemoryStream);
+Var
+ EncodedURL  : string;
+begin
+  EncodedURL:=Format(UrlGoogleQrCode,[Width,Height,QrImgCorrStr[Correction_Level],HTTPEncode(Data)]);
+  WinInet_HttpGet(EncodedURL,StreamImage);
+end;
+
+http://www.delphi-central.com/callback.aspx
+
+ public
+    { Public-Deklarationen }
+    constructor Create(Owner:TComponent); override;
+    destructor Destroy; override;
+    procedure Assign(Source: TPersistent);override;
+    procedure DrawBarcode(Canvas:TCanvas);
+    procedure DrawText(Canvas:TCanvas);
+    property CanvasHeight :Integer read GetCanvasHeight;
+    property CanvasWidth :Integer read GetCanvasWidth;
+  published
+    { Published-Deklarationen }
+   { Height of Barcode (Pixel)}
+    property Height : integer read FHeight write SetHeight;
+    property Text   : string read FText write SetText;
+    property Top    : Integer read FTop write SetTop;
+    property Left   : Integer read FLeft write SetLeft;
+   { Width of the smallest line in a Barcode }
+    property Modul  : integer read FModul  write SetModul;
+    property Ratio  : Double read FRatio write SetRatio;
+    property Typ    : TBarcodeType read FTyp write SetTyp default bcCode_2_5_interleaved;
+   { build CheckSum ? }
+    property Checksum:boolean read FCheckSum write SetCheckSum default FALSE;
+    property CheckSumMethod:TCheckSumMethod read FCheckSumMethod write FCheckSumMethod default csmModulo10;
+
+   { 0 - 360 degree }
+    property Angle  :double read FAngle write SetAngle;
+    property ShowText:TBarcodeOption read FShowText write SetShowText default bcoNone;
+    property ShowTextFont: TFont read FShowTextFont write SetShowTextFont;
+    property ShowTextPosition: TShowTextPosition read FShowTextPosition write SetShowTextPosition default stpTopLeft;
+    property Width : integer read GetWidth write SetWidth stored False;
+    property Color:TColor read FColor write FColor default clWhite;
+    property ColorBar:TColor read FColorBar write FColorBar default clBlack;
+      property OnChange:TNotifyEvent read FOnChange write FOnChange;
+  end;
+
+function CheckSumModulo10(const data:string):string;
+function ConvertMmToPixelsX(const Value:Double):Integer;
+function ConvertMmToPixelsY(const Value:Double):Integer;
+function ConvertInchToPixelsX(const Value:Double):Integer;
+function ConvertInchToPixelsY(const Value:Double):Integer;
+
+TTarArchive Usage
+-----------------
+- Choose a constructor
+- Make an instance of TTarArchive                  TA := TTarArchive.Create (Filename);
+- Scan through the archive                         TA.Reset;
+                                                   WHILE TA.FindNext (DirRec) DO BEGIN
+- Evaluate the DirRec for each file                  ListBox.Items.Add (DirRec.Name);
+- Read out the current file                          TA.ReadFile (DestFilename);
+  (You can ommit this if you want to
+  read in the directory only)                        END;
+- You're done                                      TA.Free;
+
+
+TTarWriter Usage
+----------------
+- Choose a constructor
+- Make an instance of TTarWriter                   TW := TTarWriter.Create ('my.tar');
+- Add a file to the tar archive                    TW.AddFile ('foobar.txt');
+- Add a string as a file                           TW.AddString (SL.Text, 'joe.txt', Now);
+- Destroy TarWriter instance                       TW.Free;
+- Now your tar file is ready.
+
+
+
+The last slash might be optional. Right?
+How about something like this:
+
+$url =~ m|([^/]+)/?$|;
+my $end_of_url = $1;
+
+The $ on the end anchors the regular expression to the end of the string. The [^/] means anything that's not a slash and the + after means I want one or more things that are not slashes. Notice that this is in a capture group which are marked with parentheses.
+I end the regular expression with /? which means that there may or may not be a slash on the very end of the string. I've put my regular expression between m| and |, so I can use forward slashes without having to constantly escape them.
+
+The last part of the URL is now in $1 and I can set my own scalar variable to save this Result.
+share|improve this answer
+
+  
+procedure GetQrCodeImage(Width,Height: Word; Correct_Level: string;
+           const Data:string; aimage: TImage; apath: string);
+var
+  encodedURL: string;
+  idhttp: TIdHttp;// THTTPSend;
+  pngStream: TMemoryStream;
+begin
+  encodedURL:= Format(UrlGoogleQrCode,[Width,Height, Correct_Level, HTTPEncode(Data)]);
+  //WinInet_HttpGet(EncodedURL,StreamImage);
+  idHTTP:= TIdHTTP.Create(NIL)
+  pngStream:= TMemoryStream.create;
+  with TLinearBitmap.Create do try
+    idHTTP.Get1(EncodedURL, pngStream)
+    pngStream.Position:= 0;
+    LoadFromStream2(pngStream,'PNG');
+    aImage.Picture:= NIL;
+    AssignTo(aimage.picture.bitmap);
+    SaveToFile(apath);
+    //OpenDoc(apath);
+  finally
+    Dispose;
+    Free;
+    idHTTP.Free
+    pngStream.Free;
+  end;
+end;
+
+procedure GetQrCode3(Width,Height: Word; Correct_Level: string;
+           const Data:string; apath: string);
+var
+  encodedURL: string;
+  idhttp: TIdHttp;// THTTPSend;
+  png: TLinearBitmap;//TPNGObject;
+  pngStream: TMemoryStream;
+begin
+  encodedURL:= Format(UrlGoogleQrCode,[Width,Height, Correct_Level, HTTPEncode(Data)]);
+  //WinInet_HttpGet(EncodedURL,StreamImage);
+  idHTTP:= TIdHTTP.Create(NIL)
+  pngStream:= TMemoryStream.create;
+  with TLinearBitmap.Create do try
+    idHTTP.Get1(EncodedURL, pngStream)
+    pngStream.Position:= 0;
+    LoadFromStream2(pngStream,'PNG');
+    //aImage.Picture:= NIL;
+    //AssignTo(aimage.picture.bitmap);
+    SaveToFile(apath);
+    OpenDoc(apath);
+  finally
+    Dispose;
+    Free;
+    idHTTP.Free
+    pngStream.Free;
+  end;
+end;
+
+
+procedure CreateMyFastForm;
+ //diaform:= CreateMessageDialog('my fast form perform',mtconfirmation, []);
+var 
+    //dbform: TForm;
+    ard: TRadioGroup;
+    //mimg: TImage;
+begin
+   dbform:= CreateMessageDialog('My Fast Form Template - FFP',mtwarning,
+                                        [mball, mbyes, mbhelp, mbok]);
+   with dbform do begin
+     font.size:= 12;
+     caption:= 'FFP XML Demo';
+     setBounds(50,50,800,600)
+     FormStyle:= fsStayontop;
+     //Color:= 12234;  //clWebGold;//12234;
+     autoScroll:= true;
+   with TLabel.Create(self) do begin
+     parent:= dbform;
+     SetBounds(400,60,500,600)
+     font.size:= 18;
+     //dblist.Add('All Converted to...XML')
+     caption:= 'QRCode in a Stream Dream...';
+   end;  
+   with TRadioGroup.Create(self) do begin
+     parent:= dbform;
+     top:= 90;
+     left:= 60;
+     items.add('first entry of');
+     items.add('second entry off');
+     items.add('third entry off');
+     ItemIndex:= 2; 
+     //writeln(Items.Strings[ItemIndex]); 
+   end;
+  with TBitBtn.Create(self) do begin
+    Parent:= dbform;
+    setbounds(570, 490,190, 40);
+    caption:= 'File to Barcode';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'TASBARCODE'); 
+    //onclick:= @GetMediaData2;
+  end;
+  with TBitBtn.Create(self) do begin
+    Parent:= dbform;
+    setbounds(570, 320,190, 150);
+    caption:= 'File to Barcode';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'JVGAMMAPANELCOLORS'); 
+    //onclick:= @GetMediaData2;
+  end;
+   Show;
+   Canvas.Draw(400,120,getBitMap(Exepath+'\examples\citymax.bmp'));
+
+  FImage:= TImage.create(self);
+  with FImage do begin
+   parent:= dbform;
+   setbounds(50,210,150,150)
+  end; 
+
+  with Barcode1 do begin
+    Top := 400;
+    Left := 50;
+    Height:= 130;
+    //Barcode1.Width:= 230;
+    //barcode1.assign
+    //Barcode1.Angle := 70;
+    Typ := bcCode_2_5_interleaved;
+    Showtext:= bcoBoth;
+    text:= '0123456789';
+    DrawBarcode(Canvas);
+    Typ := bcCodeEAN128C; //bcCode_2_5_interleaved;
+    Left:= 180;
+    text:= '0123456789';
+    DrawBarcode(Canvas);
+    Typ := bcCode128C; //bcCodePostNet; //,bcCodeEAN128C; //bcCode_2_5_interleaved;
+    Left:= 320;
+    text:= '0123456789';
+    DrawBarcode(Canvas);
+   end;
+    //Barcode1.DrawText(dbform.Canvas);  
+
+  end; //dbform
+   //SelectDirectory
+end;
+
+ 
+----app_template_loaded_code----
