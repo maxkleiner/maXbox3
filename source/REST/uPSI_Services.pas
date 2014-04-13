@@ -1,6 +1,6 @@
 unit uPSI_Services;
 {
-  to more REST
+  to more REST  rename to TMService
 }
 interface
  
@@ -22,11 +22,11 @@ type
  
  
 { compile-time registration functions }
-procedure SIRegister_TService(CL: TPSPascalCompiler);
+procedure SIRegister_TmService(CL: TPSPascalCompiler);
 procedure SIRegister_Services(CL: TPSPascalCompiler);
 
 { run-time registration functions }
-procedure RIRegister_TService(CL: TPSRuntimeClassImporter);
+procedure RIRegister_TmService(CL: TPSRuntimeClassImporter);
 procedure RIRegister_Services(CL: TPSRuntimeClassImporter);
 
 procedure Register;
@@ -47,10 +47,10 @@ end;
 
 (* === compile-time registration functions === *)
 (*----------------------------------------------------------------------------*)
-procedure SIRegister_TService(CL: TPSPascalCompiler);
+procedure SIRegister_TmService(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TOBJECT', 'TService') do
-  with CL.AddClassN(CL.FindClass('TOBJECT'),'TService') do begin
+  with CL.AddClassN(CL.FindClass('TOBJECT'),'TmService') do begin
     RegisterMethod('Constructor Create( ServiceName : string; Description : string)');
     RegisterMethod('Function GetServiceError : integer');
     RegisterMethod('Function GetServiceErrorMessage : string');
@@ -79,70 +79,70 @@ end;
 procedure SIRegister_Services(CL: TPSPascalCompiler);
 begin
   CL.AddTypeS('TEventType', '( EventError, EventWarning, EventInformation )');
-  SIRegister_TService(CL);
+  SIRegister_TmService(CL);
 end;
 
 (* === run-time registration functions === *)
 (*----------------------------------------------------------------------------*)
-procedure TServiceParamCount_R(Self: TService; var T: integer);
+procedure TmServiceParamCount_R(Self: TmService; var T: integer);
 begin T := Self.ParamCount; end;
 
 (*----------------------------------------------------------------------------*)
-procedure TServiceParamStr_R(Self: TService; var T: string);
+procedure TmServiceParamStr_R(Self: TmService; var T: string);
 begin T := Self.ParamStr; end;
 
 (*----------------------------------------------------------------------------*)
-procedure TServiceName_R(Self: TService; var T: string);
+procedure TmServiceName_R(Self: TmService; var T: string);
 begin T := Self.Name; end;
 
 (*----------------------------------------------------------------------------*)
-procedure TServiceExitCode_W(Self: TService; const T: integer);
+procedure TmServiceExitCode_W(Self: TmService; const T: integer);
 begin Self.ExitCode := T; end;
 
 (*----------------------------------------------------------------------------*)
-procedure TServiceExitCode_R(Self: TService; var T: integer);
+procedure TmServiceExitCode_R(Self: TmService; var T: integer);
 begin T := Self.ExitCode; end;
 
 (*----------------------------------------------------------------------------*)
-procedure TServiceTimeout_W(Self: TService; const T: integer);
+procedure TmServiceTimeout_W(Self: TmService; const T: integer);
 begin Self.Timeout := T; end;
 
 (*----------------------------------------------------------------------------*)
-procedure TServiceTimeout_R(Self: TService; var T: integer);
+procedure TmServiceTimeout_R(Self: TmService; var T: integer);
 begin T := Self.Timeout; end;
 
 (*----------------------------------------------------------------------------*)
-procedure RIRegister_TService(CL: TPSRuntimeClassImporter);
+procedure RIRegister_TmService(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TService) do begin
-    RegisterConstructor(@TService.Create, 'Create');
-    RegisterMethod(@TService.GetServiceError, 'GetServiceError');
-    RegisterMethod(@TService.GetServiceErrorMessage, 'GetServiceErrorMessage');
-    RegisterMethod(@TService.GetState, 'GetState');
-    RegisterMethod(@TService.Install, 'Install');
-    RegisterMethod(@TService.Uninstall, 'Uninstall');
-    RegisterMethod(@TService.Insert, 'Insert');
-    RegisterMethod(@TService.Delete, 'Delete');
-    RegisterMethod(@TService.Run, 'Run');
-    RegisterMethod(@TService.Exists, 'Exists');
-    RegisterMethod(@TService.Stop, 'Stop');
-    RegisterMethod(@TService.Start, 'Start');
-    RegisterMethod(@TService.ReportStart, 'ReportStart');
-    RegisterMethod(@TService.ReportStop, 'ReportStop');
-    RegisterMethod(@TService.ReportEventLog, 'ReportEventLog');
-    RegisterMethod(@TService.Reset, 'Reset');
-    RegisterPropertyHelper(@TServiceTimeout_R,@TServiceTimeout_W,'Timeout');
-    RegisterPropertyHelper(@TServiceExitCode_R,@TServiceExitCode_W,'ExitCode');
-    RegisterPropertyHelper(@TServiceName_R,nil,'Name');
-    RegisterPropertyHelper(@TServiceParamStr_R,nil,'ParamStr');
-    RegisterPropertyHelper(@TServiceParamCount_R,nil,'ParamCount');
+  with CL.Add(TmService) do begin
+    RegisterConstructor(@TmService.Create, 'Create');
+    RegisterMethod(@TmService.GeTServiceError, 'GetServiceError');
+    RegisterMethod(@TmService.GetServiceErrorMessage, 'GetServiceErrorMessage');
+    RegisterMethod(@TmService.GetState, 'GetState');
+    RegisterMethod(@TmService.Install, 'Install');
+    RegisterMethod(@TmService.Uninstall, 'Uninstall');
+    RegisterMethod(@TmService.Insert, 'Insert');
+    RegisterMethod(@TmService.Delete, 'Delete');
+    RegisterMethod(@TmService.Run, 'Run');
+    RegisterMethod(@TmService.Exists, 'Exists');
+    RegisterMethod(@TmService.Stop, 'Stop');
+    RegisterMethod(@TmService.Start, 'Start');
+    RegisterMethod(@TmService.ReportStart, 'ReportStart');
+    RegisterMethod(@TmService.ReportStop, 'ReportStop');
+    RegisterMethod(@TmService.ReportEventLog, 'ReportEventLog');
+    RegisterMethod(@TmService.Reset, 'Reset');
+    RegisterPropertyHelper(@TmServiceTimeout_R,@TmServiceTimeout_W,'Timeout');
+    RegisterPropertyHelper(@TmServiceExitCode_R,@TmServiceExitCode_W,'ExitCode');
+    RegisterPropertyHelper(@TmServiceName_R,nil,'Name');
+    RegisterPropertyHelper(@TmServiceParamStr_R,nil,'ParamStr');
+    RegisterPropertyHelper(@TmServiceParamCount_R,nil,'ParamCount');
   end;
 end;
 
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_Services(CL: TPSRuntimeClassImporter);
 begin
-  RIRegister_TService(CL);
+  RIRegister_TmService(CL);
 end;
 
  

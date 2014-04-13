@@ -34,8 +34,11 @@ type
     FBorder: TBorderStyle;
     FHexData: THexStrArray;
     FLineAddr: array[0..15] of char;
+    FShowHex: Boolean;
 
     procedure CalcPaintParams;
+    procedure CalcPaintParamsText;
+
     procedure SetTopLine(Value: Integer);
     procedure SetCurrentLine(Value: Integer);
     procedure SetFileColor(Index: Integer; Value: TColor);
@@ -56,6 +59,7 @@ type
     procedure WMSize(var Message: TWMSize); message WM_SIZE;
     procedure WMVScroll(var Message: TWMVScroll); message WM_VSCROLL;
     procedure WMGetDlgCode(var Message: TWMGetDlgCode); message WM_GETDLGCODE;
+    procedure SetShowHex(const Value: Boolean);
   protected
     procedure CreateParams(var Params: TCreateParams); override;
     procedure Paint; override;
@@ -77,6 +81,7 @@ type
     property TabStop;
     property ShowAddress: Boolean read FShowAddress write SetShowAddress default True;
     property ShowCharacters: Boolean read FShowCharacters write SetShowCharacters default True;
+    property ShowHEX: Boolean read FShowHex write SetShowHex default True;
     property AddressColor: TColor index 0 read GetFileColor write SetFileColor default clBlack;
     property HexDataColor: TColor index 1 read GetFileColor write SetFileColor default clBlack;
     property AnsiCharColor: TColor index 2 read GetFileColor write SetFileColor default clBlack;
@@ -110,6 +115,7 @@ begin
   Color := clWhite;
   FShowAddress := True;
   FShowCharacters := True;
+  FShowHex:= True;
   Width := 300;
   Height := 200;
   FillChar(FHexData, SizeOf(FHexData), #9);
@@ -233,6 +239,32 @@ begin
   FVisibleLines := (ClientHeight div FItemHeight) + 1;
   CharsPerLine := ClientWidth div FItemWidth;
   if FShowAddress then Dec(CharsPerLine, 10);
+  //if not FShowHEX then Dec(CharsPerLine, 50);
+  //if not FShowHEX then FBytesPerLine:= 5;
+
+  FBytesPerLine := CharsPerLine div Divisor[FShowCharacters];
+  //if not FShowHEX then FBytesPerLine:= 50;
+
+  if FBytesPerLine < 1 then
+    FBytesPerLine := 1
+  else if FBytesPerLine > MAXDIGITS then
+    FBytesPerLine := MAXDIGITS;
+  FLineCount := (DataSize div FBytesPerLine);
+  if Boolean(DataSize mod FBytesPerLine) then Inc(FLineCount);
+end;
+
+procedure THexDump.CalcPaintParamsText;
+const
+  Divisor: array[boolean] of Integer = (3,4);
+var
+  CharsPerLine: Integer;
+
+begin
+  FShowAddress:= false;
+  if FItemHeight < 1 then Exit;
+  FVisibleLines := (ClientHeight div FItemHeight) + 1;
+  CharsPerLine := ClientWidth div FItemWidth;
+  if FShowAddress then Dec(CharsPerLine, 10);
   FBytesPerLine := CharsPerLine div Divisor[FShowCharacters];
   if FBytesPerLine < 1 then
     FBytesPerLine := 1
@@ -240,6 +272,7 @@ begin
     FBytesPerLine := MAXDIGITS;
   FLineCount := (DataSize div FBytesPerLine);
   if Boolean(DataSize mod FBytesPerLine) then Inc(FLineCount);
+
 end;
 
 procedure THexDump.AdjustScrollBars;
@@ -427,6 +460,12 @@ begin
     FShowCharacters := Value;
     Invalidate;
   end;
+end;
+
+procedure THexDump.SetShowHex(const Value: Boolean);
+begin
+  FShowHex := Value;
+  Invalidate;
 end;
 
 procedure THexDump.SetFileColor(Index: Integer; Value: TColor);

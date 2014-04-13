@@ -104,6 +104,7 @@ type
 procedure SearchAndReplace(aStrList: TStrings; aSearchStr, aNewStr: string);
 procedure SearchAndCopy(aStrList: TStrings; aSearchStr, aNewStr: string; offset: integer);
 Procedure ExecuteCommand(executeFile, paramstring: string);
+Procedure ShellExecuteAndWait(executeFile, paramstring: string);
 procedure SearchAndOpenDoc(vfilenamepath: string);
 Function GetUserNameWin: string;
 function GetComputerNameWin: string;
@@ -3956,6 +3957,51 @@ var
                                'by setting EXECUTESHELL=N');
  end;
 
+Procedure ShellExecuteAndWait(executeFile, paramstring: string);
+var
+    SEInfo: TShellExecuteInfo;
+    ExitCode: DWORD;
+    //StartInString: string;
+ begin
+    FillChar(SEInfo, SizeOf(SEInfo), 0);
+    with SEInfo do begin
+      fMask:= SEE_MASK_NOCLOSEPROCESS or SEE_MASK_FLAG_DDEWAIT;
+      //Wnd:= Forms.Application.Handle;
+      cbSize:= SizeOf(TShellExecuteInfo) ;
+      Wnd:= GetActiveWindow;
+      lpFile:= PChar(ExecuteFile);
+      SEInfo.lpVerb:= 'open';
+      lpParameters:= PChar(ParamString) ;
+ { StartInString specifies the name of the working directory.
+ If ommited, the current directory is used. }
+ // lpDirectory := PChar(StartInString) ;
+      nShow:= SW_SHOWNORMAL;
+    end;
+    if maxForm1.getSTATExecuteShell then begin
+      if ShellExecuteEx(@SEInfo) then begin
+        ExitCode:= SEInfo.hProcess;
+      end else begin
+        ShowMessage(SysErrorMessage(GetLastError));
+        Exit;
+      end;
+      while WaitForSingleObject(SEInfo.hProcess, 50) <> WAIT_OBJECT_0 do
+                //   	 Forms.Application.Terminated;
+      Forms.Application.ProcessMessages;
+       CloseHandle(ExitCode);
+      //for security reason to control what happens
+     maxForm1.memo2.Lines.Add('Message: Shell Terminated mX3 command at: '+
+                                    DateTimeToStr(Now));
+    end
+     else begin
+        MessageBox(0,pchar('Error Starting Shell'),pchar('mX3 command'),MB_OKCANCEL);
+        maxForm1.memo2.Lines.Add('Error Starting Shell protected in ini-File!'+#13#10+
+                               'by setting EXECUTESHELL=N');
+     end;
+     maxForm1.memo2.Lines.Add('ExecuteShell Command could be protected in ini-File!'+#13#10+
+                               'by setting EXECUTESHELL=N');
+ end;
+
+
 function ExecConsoleApp(const AppName, Parameters: String; AppOutput: TStrings): DWORD;
                         //OnNewLine: TNotifyEvent
 {we assume that child process requires no input. I have not thought about the
@@ -5110,6 +5156,8 @@ begin
  CL.AddDelphiFunction('Function UnhookWindowsHookEx( hhk : HHOOK) : BOOLean');
  CL.AddDelphiFunction('Function CallNextHookEx( hhk : HHOOK; nCode : Integer; wParam : WPARAM; lParam : LPARAM) : LRESULT');
  CL.AddDelphiFunction('Function DefHookProc( nCode : Integer; wParam : WPARAM; lParam : LPARAM; phhk : TObject) : LRESULT');
+  CL.AddDelphiFunction('Function GetClassName( hWnd : HWND; lpClassName : PChar; nMaxCount : Integer) : Integer');
+
   // rest in uPSI_AfUtils !
   CL.AddTypeS('THexArray', 'array[0..15] of char;');
   //CL.AddTypeS('THexSet', 'HexDigits');

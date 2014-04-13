@@ -44,6 +44,23 @@ begin
   RegisterComponents('Pascal Script', [TPSImport_AfUtils]);
 end;
 
+function EnumWindowsProc2(Handle: THandle; LParam: TStrings): Boolean; stdcall;
+var
+  St: array [0..256] of Char;
+  St2: string;
+begin
+  if Windows.IsWindowVisible(Handle) then
+  begin
+    GetWindowText(Handle, St, SizeOf(St));
+    St2 := St;
+    if St2 <> '' then
+      with TStrings(LParam) do
+        AddObject(St2, TObject(Handle));
+  end;
+  Result := True;
+end;
+
+
 (* === compile-time registration functions === *)
 (*----------------------------------------------------------------------------*)
 procedure SIRegister_AfUtils(CL: TPSPascalCompiler);
@@ -53,6 +70,11 @@ begin
    //+'ter; ExceptObject : TObject; ExceptionRecord : PExceptionRecord; end');
   CL.AddTypeS('PKOLChar', 'PChar');
   CL.AddTypeS('KOLChar', 'Char');
+
+  //CL.AddTypeS('TThreadFunction','function: Longint; stdcall)');
+
+  CL.AddTypeS('TFNWndEnumProc','function(Handle: THandle; LParam: TStrings): Boolean; stdcall)');
+
 
 
   CL.AddTypeS('ACCESS_MASK', 'DWORD');
@@ -202,9 +224,15 @@ begin
  CL.AddConstantN('SM_CYFOCUSBORDER','LongInt').SetInt( 84);
 
   CL.AddTypeS('TFNTimerProc', 'TObject');
+ CL.AddConstantN('GW_HWNDFIRST','LongInt').SetInt( 0);
+ CL.AddConstantN('GW_HWNDLAST','LongInt').SetInt( 1);
+ CL.AddConstantN('GW_HWNDNEXT','LongInt').SetInt( 2);
+ CL.AddConstantN('GW_HWNDPREV','LongInt').SetInt( 3);
+ CL.AddConstantN('GW_OWNER','LongInt').SetInt( 4);
+ CL.AddConstantN('GW_CHILD','LongInt').SetInt( 5);
+ CL.AddConstantN('GW_MAX','LongInt').SetInt( 5);
 
-
-  //    ACCESS_MASK = DWORD;
+   //    ACCESS_MASK = DWORD;
   //    REGSAM = ACCESS_MASK;  { Requested Key access mask type. }
 
  CL.AddConstantN('EMR_SETWINDOWEXTEX','LongInt').SetInt( 9);
@@ -227,7 +255,11 @@ begin
  CL.AddDelphiFunction('Function wIsWindowEnabled( hWnd : HWND) : BOOL');
  CL.AddDelphiFunction('Function GetMenu( hWnd : HWND) : HMENU');
  CL.AddDelphiFunction('Function SetMenu( hWnd : HWND; hMenu : HMENU) : BOOL');
-
+ CL.AddDelphiFunction('Function CloseWindowStation( hWinSta : HWINSTA) : BOOL');
+ CL.AddDelphiFunction('Function SetProcessWindowStation( hWinSta : HWINSTA) : BOOL');
+ CL.AddDelphiFunction('Function GetProcessWindowStation : HWINSTA');
+ CL.AddDelphiFunction('Function EnumWindows(lpEnumFunc : TFNWndEnumProc; lParam : LPARAM) : BOOL');
+ CL.AddDelphiFunction('function EnumWindowsProc2(Handle: THandle; LParam: TStrings): Boolean; stdcall;');
 
  //CL.AddDelphiFunction('Function AccessCheckAndAuditAlarm( SubsystemName : PKOLChar; HandleId : ___Pointer; ObjectTypeName, ObjectName : PKOLChar; SecurityDescriptor : PSecurityDescriptor; DesiredAccess : DWORD; const GenericMapping : TGenericMapping; ObjectCreation : BOOL;'
  //+' var GrantedAccess : DWORD; var AccessStatus, pfGenerateOnClose : BOOL) : BOOL');
@@ -662,6 +694,8 @@ begin
  CL.AddDelphiFunction('Function UnlockFile( hFile : THandle; dwFileOffsetLow, dwFileOffsetHigh : DWORD; nNumberOfBytesToUnlockLow, nNumberOfBytesToUnlockHigh : DWORD) : BOOL');
  CL.AddDelphiFunction('Function wLoadResource( hModule : HINST; hResInfo : HRSRC) : HGLOBAL');
  CL.AddDelphiFunction('Function wSizeofResource( hModule : HINST; hResInfo : HRSRC) : DWORD');
+ CL.AddDelphiFunction('Function GetWindowTask( hWnd : HWND) : THandle');
+ CL.AddDelphiFunction('Function GetLastActivePopup( hWnd : HWND) : HWND');
 
 
  end;
@@ -986,7 +1020,12 @@ begin
  S.RegisterDelphiFunction(@LoadString, 'wLoadString', CdStdCall);
  S.RegisterDelphiFunction(@MapVirtualKey, 'wMapVirtualKey', CdStdCall);
  S.RegisterDelphiFunction(@MapVirtualKeyEx, 'wMapVirtualKeyEx', CdStdCall);
- //S.RegisterDelphiFunction(@MessageBox, 'wMessageBox', CdStdCall);     
+ //S.RegisterDelphiFunction(@MessageBox, 'wMessageBox', CdStdCall);
+ S.RegisterDelphiFunction(@CloseWindowStation, 'CloseWindowStation', CdStdCall);
+ S.RegisterDelphiFunction(@SetProcessWindowStation, 'SetProcessWindowStation', CdStdCall);
+ S.RegisterDelphiFunction(@GetProcessWindowStation, 'GetProcessWindowStation', CdStdCall);
+ S.RegisterDelphiFunction(@EnumWindows, 'EnumWindows', CdStdCall);
+ S.RegisterDelphiFunction(@EnumWindowsProc2, 'EnumWindowsProc2', CdStdCall);
 
  S.RegisterDelphiFunction(@ModifyMenu, 'wModifyMenu', CdStdCall);
  S.RegisterDelphiFunction(@OpenDesktop, 'wOpenDesktop', CdStdCall);
@@ -1059,13 +1098,14 @@ begin
  S.RegisterDelphiFunction(@IsWindowEnabled, 'wIsWindowEnabled', CdStdCall);
  S.RegisterDelphiFunction(@GetMenu, 'GetMenu', CdStdCall);
  S.RegisterDelphiFunction(@SetMenu, 'SetMenu', CdStdCall);
-
-
+ S.RegisterDelphiFunction(@GetClassName, 'GetClassName', CdStdCall);
+ S.RegisterDelphiFunction(@GetWindowTask, 'GetWindowTask', cdRegister);
+ S.RegisterDelphiFunction(@GetLastActivePopup, 'GetLastActivePopup', CdStdCall);
 
 end;
 
- 
- 
+
+
 { TPSImport_AfUtils }
 (*----------------------------------------------------------------------------*)
 procedure TPSImport_AfUtils.CompileImport1(CompExec: TPSScript);

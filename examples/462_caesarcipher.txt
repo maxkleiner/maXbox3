@@ -1,0 +1,324 @@
+Program CaesarCipher_Max;          //on progress
+
+//#net>D25.1DNS: ; local IPs: fe80::39cb:cc4a:b4e7:9e03%20,fe80::25d2:cdb2:b4d2:1291%21,192.168.25.1,192.168.18.1; local IP: 192.168.25.15f1:3f57:fed7%12,192.168.1.40,192.168.25.1,192.168.18.1,2001:0:5ef5:79fb:1474:5f1:3f57:fed7; local IP: 192.168.1.40
+//TODO: just missing a filestream mime file; search and get one  SOS save origin source
+//TODO: Refactor boolean shorter #locs:165
+
+{uses
+  SysUtils,
+  Classes;}
+  
+  
+  var  Fn: Byte;
+    FDecoded: string;
+    FEncoded: string;
+    //procedure SetDecoded(St: string);
+    //procedure SetEncoded(St: string);
+    function Crypt(St: string; N: Byte): string; forward;
+    function CryptByte(Ch, N: Byte): Byte; forward;
+   
+
+function CryptByte(Ch, N: Byte): Byte;
+//overflow buffer
+var
+  J: Integer;
+begin
+  J:= Ch + N;
+  if J < 0 then
+    J:= 256 - J
+  else
+    if J > 256 then
+    J:= J - 256;
+  Result:= J;
+end;
+
+function Crypt(St: string; N: Byte): string;
+var
+  I: Integer;
+  B: Byte;
+begin
+  // (rom) optimized for speed
+  SetLength(Result, Length(St));
+  for I := 1 to Length(St) do begin
+    //B:= chartoint(st[I]);
+    Result[I]:= chr(CryptByte(ord(st[I]), N));
+    //write(inttostr(ord(st[i]))+ '  ');
+    //write(INTtostr(CryptByte(chartoint(st[I]), N)));
+    //writeln(Result[I])
+  end;
+    //Result[I]:= chr(CryptByte(byte(St[I]), N));
+end;
+
+procedure TJvCaCipher_SetDecoded(St: string);
+begin
+  FDecoded := St;
+  FEncoded := Crypt(St, Fn);
+end;
+
+procedure TJvCaCipher_SetEncoded(St: string);
+begin
+  FEncoded := St;
+  FDecoded := Crypt(St, -Fn);
+end;
+
+procedure TJvCaCipher_Decode(It: TStrings);
+var
+  I: Integer;
+begin
+  // (rom) fixed loop to start at 0 instead of 1
+  for I := 0 to It.Count-1 do
+    It[I] := Crypt(It[I], -Fn);
+end;
+
+procedure TJvCaCipher_Encode(It: TStrings);
+var
+  I: Integer;
+begin
+  // (rom) fixed loop to start at 0 instead of 1
+  for I := 0 to It.Count - 1 do
+    It[I] := Crypt(It[I], Fn);
+end;
+
+function TJvCaCipher_DecodeStream(Value: TStream): TStream;
+var
+  Buffer: array [0..1024] of Byte;
+  I, Count: Integer;
+begin
+  Result := TMemoryStream.Create;
+  while Value.Position < Value.Size do begin
+    Count:= Value.ReadByteArray((Buffer), 1024);
+    Value.ReadAB(TByteArray(Buffer), 1024);
+  
+    for I := 0 to Count - 1 do
+      Buffer[I] := CryptByte(Buffer[I], -Fn);
+    Result.WriteAB(Buffer, Count);
+  end;
+end;
+
+function TJvCaCipher_EncodeStream(Value: TStream): TStream;
+var
+  //Buffer: array [0..1024] of Byte;
+  I, Count: Integer;
+  buffer: TByteArray;
+begin
+  Result := TMemoryStream.Create;
+  while Value.Position < Value.Size do begin
+    Count:= Value.ReadByteArray(Buffer, 1024);
+    for I := 0 to Count - 1 do
+      Buffer[I] := CryptByte(Buffer[I], Fn);
+    Result.WriteAB(Buffer, Count);
+  end;
+end;
+
+function EnumWindowsProc2(Handle: THandle; LParam: TStrings): Boolean;
+begin
+//
+end;
+
+
+type TFNWndEnumProc2 = function(Handle: THandle; LParam: TStrings): Boolean;
+
+procedure GetVisibleWindows(List: TStrings);
+begin
+  List.BeginUpdate;
+  try
+    List.Clear;
+    //EnumWindows(@EnumWindowsProc2, Integer(List));
+  finally
+    List.EndUpdate;
+  end;
+end;
+
+
+var mystr: string;
+    mm: TStream;
+    List: TStrings;
+
+begin
+  //strtobo
+  writeln('---Origin---');
+  writeln('this is maXbox sox');
+   writeln('---Encode---');
+  writeln(Crypt('this is maXbox sox',5));
+  mystr:= Crypt('this is maXbox sox',5);
+  writeln('---Decode---');
+  writeln(Crypt(mystr,-5));            //decrypt test
+  writeln('-----End Cipher-----');
+  
+  {FN:= 5;
+  mm:= TFileStream.Create(exepath+'firstdemo.txt',fmOpenRead);
+  //mm.loadfromfile
+  //Exception: Abstract Error.
+  try
+    TJvCaCipher_EncodeStream(mm)
+  finally  
+    mm.free;
+  end;} 
+  //enumwindows(@EnumWindowsProc2, List.count);
+  //SetProcessWindowStation
+  //findwindow
+   // getclassname
+     //EnumWindowsProc
+//  CL.AddTypeS('TFNWndEnumProc','function(Handle: THandle; LParam: TStrings): Boolean; stdcall)');
+   //TJvCommStatus
+     //SelectImage
+End.
+
+procedure GetVisibleWindows(List: TStrings);
+begin
+  List.BeginUpdate;
+  try
+    List.Clear;
+    EnumWindows(@EnumWindowsProc, Integer(List));
+  finally
+    List.EndUpdate;
+  end;
+end;
+
+  
+If you specify the fmCreate, the file will always be cleared as empty if created or always exists. In this case, if you specify fmCreate or fmOpenWrite, it is actually the same a fmCreate or fmOpenReadWrite, in such case, you can use ReadBuffer to read the data you have written before (or zero if it has not been written by WriteBuffer).
+
+
+ Urknall: Erster direkter Beweis für kosmologische Inflation
+Meldung vorlesen und MP3-Download
+
+Offenbar ist es gelungen, erstmals direkte Beweise für die kurzzeitige überlichtschnelle Expansion des Universums nach dem Urknall zu finden. Den Nachweis für diese sogenannte Inflation fanden Forscher in der kosmischen Hintergrundstrahlung.
+
+Astronomen ist es mithilfe von Radioteleskopen am Südpol offenbar gelungen, erstmals direkte Beweise für die sogenannte kosmologische Inflation nachzuweisen. Dabei handelt es sich um eine überlichtschnelle Expansion des Universums in einem äußerst kurzen Zeitraum direkt nach dem Urknall, die in Bruchteilen einer Sekunde stattfand.
+
+Die bislang nur in der Theorie beschriebene Inflation erklärt einige Probleme, die sich aus der Beschreibung des Urknalls ergeben hatten, etwa die große Gleichförmigkeit unseres Universums. Nun konnte sie experimentell bestätigt und dabei erstmals auch Bilder sogenannter Gravitationswellen gemacht werden. Die Ergebnisse bestätigen außerdem die enge Verbindung zwischen der Quantenmechanik und der Relativitätstheorie.
+
+
+ Lazarus-IDE für Pascal und Object Pascal in Version 1.2 veröffentlicht
+
+Die freie Entwicklungsumgebung enthält im ersten größeren Release nach etwa anderthalb Jahren unter anderem einen Makro-Recorder, einen verbesserten Debugger und überarbeiteten Compiler-Optionen.
+
+Version 1.2 der integrierten Entwicklungsumgebung Lazarus steht zum Download bereit. Sie ist zum Rapid Application Development (RAD) mit Pascal und Object Pascal gedacht und zu Delphi kompatibel, während andere Pascal-IDEs sich eher an Turbo Pascal anlehnen. Intern kommt der Free-Pascal-Compiler zum Einsatz.
+
+object Form1: TForm1
+  Left = 249
+  Top = 130
+  Width = 672
+  Height = 480
+  Caption = 'Form1'
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -13
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  PixelsPerInch = 120
+  TextHeight = 16
+  object Label1: TLabel
+    Left = 8
+    Top = 56
+    Width = 47
+    Height = 16
+    Caption = 'Part-list:'
+  end
+  object Label2: TLabel
+    Left = 8
+    Top = 192
+    Width = 61
+    Height = 16
+    Caption = 'RAW part:'
+  end
+  object Edit1: TEdit
+    Left = 8
+    Top = 8
+    Width = 553
+    Height = 24
+    TabOrder = 0
+    Text = 'filename'
+  end
+  object Button1: TButton
+    Left = 576
+    Top = 8
+    Width = 75
+    Height = 25
+    Caption = 'Load'
+    TabOrder = 1
+    OnClick = Button1Click
+  end
+  object Memo1: TMemo
+    Left = 8
+    Top = 208
+    Width = 641
+    Height = 193
+    ScrollBars = ssBoth
+    TabOrder = 2
+  end
+  object Button2: TButton
+    Left = 8
+    Top = 416
+    Width = 641
+    Height = 25
+    Caption = 
+      'save selected decoded part to file (default filename is '#39'mimedem' +
+      'o.txt'#39')'
+    TabOrder = 3
+    OnClick = Button2Click
+  end
+  object TreeView1: TTreeView
+    Left = 8
+    Top = 72
+    Width = 641
+    Height = 113
+    ReadOnly = True
+    Indent = 19
+    OnChange = TreeView1Change
+    TabOrder = 4
+  end
+end
+----Simple Browser started----
+
+
+http://sourceforge.net/projects/maxbox/files/maxbox3clx.tar.gz/download
+SHA1 
+15fa2216f84f11433123c2d87cb264fa2e82c466
+
+
+process using. By the way the script you get all this is:
+http://www.softwareschule.ch/examples/440_DL
+L_Tutor2.txt
+
+function
+stdcall external
+( : ): ;
+;
+xFoobox param Integer Integer
+Foobox
+'mytools.dll' name
+' ';
+
+This first script (project)  440_DLL_Tutor2 - script
+
+
+When you call a DLL written in C or C++,
+you have to use the stdcall or cdecl convention.
+External 'GetVersionExA@kernel32.dll cdecl';  cdecl
+
+
+  		jmp	System._AbstractError
+
+
+        WM_DEVICECHANGE = &H219
+Public Enum WM_DEVICECHANGE As Integer
+    [TRUE] = 1
+    BROADCAST_QUERY_DENY = &H424D5144
+End Enum
+Public Enum WM_DEVICECHANGE As Integer
+    DBT_CONFIGCHANGECANCELED = &H19
+    DBT_CONFIGCHANGED = &H18
+    DBT_CUSTOMEVENT = &H8006
+    DBT_DEVICEARRIVAL = &H8000
+    DBT_DEVICEQUERYREMOVE = &H8001
+    DBT_DEVICEQUERYREMOVEFAILED = &H8002
+    DBT_DEVICEREMOVECOMPLETE = &H8004
+    DBT_DEVICEREMOVEPENDING = &H8003
+    DBT_DEVICETYPESPECIFIC = &H8005
+    DBT_DEVNODES_CHANGED = &H7
+    DBT_QUERYCHANGECONFIG = &H17
+    DBT_USERDEFINED = &HFFFF
+End Enum

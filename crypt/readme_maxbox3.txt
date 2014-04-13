@@ -1,7 +1,7 @@
 ****************************************************************
 Release Notes maXbox 3.9.9.94 April 2014
 ****************************************************************
-1 DLL Report, 19 Units add, DRTable, Remote+, Cindy functions!
+DLL Report, UML Tutor, 33 Units add, DRTable, Remote+, Cindy functions!
 
 872 unit uPSI_Wwstr;
 873 uPSI_DBLookup,
@@ -22,8 +22,21 @@ Release Notes maXbox 3.9.9.94 April 2014
 888 uPSI_cyClasses,
 889 uPSI_cyGraphics,  //3.9.9.94_2
 890 unit uPSI_cyTypes;
+891 uPSI_JvDateTimePicker,                     
+892 uPSI_JvCreateProcess,                      
+893 uPSI_JvEasterEgg,                          
+894 uPSI_WinSvc,  //3.9.9.94_3                 
+895 uPSI_SvcMgr                                
+896 unit uPSI_JvPickDate;
+897 unit uPSI_JvNotify;
+898 uPSI_JvStrHlder
+899 unit uPSI_JclNTFS2;
+900 uPSI_Jcl8087 //math coprocessor
+901 uPSI_JvAddPrinter
+902 uPSI_JvCabFile
+903 unit uPSI_JvDataEmbedded;
 
-SHA1: Win 3.9.9.94: 780F1F749EFEFB5C0FAA09C51B6AB048C6A00CC6
+SHA1: Win 3.9.9.94: 746418954E790A1713A93FF786ABCB50097FCB59
 
 
 ****************************************************************

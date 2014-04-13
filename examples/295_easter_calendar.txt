@@ -64,6 +64,23 @@ BEGIN
   Result:= EncodeDate(aYear, vMonth, vDay);
 END;
 
+FUNCTION CalcEasterSunday(aYear: Word): TDateTime;  
+//year > 1900 and < 2099
+VAR
+  springmoon: TDatetime;
+  j,m: integer;
+BEGIN
+  if (ayear < 1900) or (ayear > 2099) then begin
+    raise Exception.create('Eastersunday Year is invalid');
+  end;
+  J:= aYear MOD 19;
+  M:= (19 * J + 24) MOD 30;
+  M:= M - M DIV 28;   //days after spring start
+  springmoon:= EncodeDate(aYear, 3, 21)+M;
+  Result:= springmoon+8 - DayofWeek(springmoon);
+END;
+
+
 //Event Handler - Closure *************************************** 
 Procedure GetMediaData(self: TObject);
 begin
@@ -144,8 +161,29 @@ begin
     font.color:= clpurple;
     font.style:= [fsitalic];
     caption:= atxt;
-  end;  
+  end; 
+  //TServiceType', '( stWin32, stDevice, stFileSystem )');
+  //TCurrentStatus', '( csStopped, csStartPending, csStopPending, cs'
+   //+'Running, csContinuePending, csPausePending, csPaused )');
+  //TErrorSeverity', '( esIgnore, esNormal, esSevere, esCritical )');
+  //TStartType', '( stBoot, stSystem, stAuto, stManual, stDisabled )');
+  //TServiceEvent', 'Procedure ( Sender : TService)');
+  //TContinueEvent', 'Procedure ( Sender : TService; var Continued : Boolean)');
+  //TPauseEvent', 'Procedure ( Sender : TService; var Paused : Boolean)');
+  //(TStartEvent', 'Procedure ( Sender : TService; var Started : Boolean)');
+  //TmStopEvent', 'Procedure ( Sender : TService; var Stopped : Boolean)');
+  
 end; 
+
+procedure getRCData;
+var stream: TResourceStream;
+begin
+  //Stream:= TResourceStream.Create(hinstance, 'BACK', 'RT_RCDATA');
+  Stream:= TResourceStream.Create(hinstance, 'INFO', 'RCDATA');
+
+    //SetLength(ms, Size);
+ stream.Free;   
+end;
 
 //***********************Form Builder*********************************
 procedure SetForm;
@@ -275,9 +313,12 @@ begin
     parent:= inFrm;
     stat.SimplePanel:= true;
   end;
-end; 
+end;
+
+//var E: Exception; 
 
 begin
+  //E:= Exception.create('');
   memo2.font.size:= 14;
   SetForm;
   mymemo.lines.text:= getRandomText;
@@ -290,7 +331,44 @@ begin
   //ExecuteCommand('cmd','/k FC /L /N C:\maxbook\maxbox3\maxboxdef1.ini c:\maxbook\maxbox3\maxboxdef2.ini')
   writeln('HEXtester '+#65+' '+chr($41)+' '+chr(65))
   if IsMultiThread then writeln('is multithread');
+  writeln(datetostr(CalcEasterSunday(2012)));
+  writeln(datetostr(CalcEasterSunday(2013)));
+  writeln(datetostr(CalcEasterSunday(2014)));
+  //try
+  //writeln(datetostr(CalcEasterSunday(1014)));
+  //except
+    //writeln(E.message);
+  //end;
+  //getRCData;
+   // IncColor
+   //IsItAFilledBitmap
+    //TServiceType
+      //TService
+      //TEventLogger
+        //TDependency
+          //TServiceThread
+    // Procedure SetupPopupCalendar( PopupCalendar : TWinControl; AStartOfWeek : TDayOfWeekName; AWeekends : TDaysOfWeek; AWeekendColor : TColor; BtnHints : TStrings; FourDigitYear : Boolean; MinDate : TDateTime; MaxDate : TDateTime)');
+      
+  //SetupPopupCalendar(TWinControl(inFrm),TDayOfWeekName(NIL),[], clred,'', true,now, now);       
+    
+    //TJvMacros    
+    //TJvCreateProcess    
+      //TJclFileSummary
+      //NtfsGetCompression
+      
+      
 End.
+
+
+procedure SIRegister_JvPickDate(CL: TPSPascalCompiler);
+begin
+ Function SelectDate( Sender : TWinControl; var Date : TDateTime; const DlgCaption : TCaption; AStartOfWeek : TDayOfWeekName; AWeekends : TDaysOfWeek; AWeekendColor : TColor; BtnHints : TStrings; MinDate : TDateTime; MaxDate : TDateTime) : Boolean');
+ Function SelectDateStr( Sender : TWinControl; var StrDate : string; const DlgCaption : TCaption; AStartOfWeek : TDayOfWeekName; AWeekends : TDaysOfWeek; AWeekendColor : TColor; BtnHints : TStrings; MinDate : TDateTime; MaxDate : TDateTime) : Boolean');
+ Function PopupDate( var Date : TDateTime; Edit : TWinControl; MinDate : TDateTime; MaxDate : TDateTime) : Boolean');
+ Function CreatePopupCalendar( AOwner : TComponent; ABiDiMode : TBiDiMode; MinDate : TDateTime; MaxDate : TDateTime) : TWinControl');
+ Procedure SetupPopupCalendar( PopupCalendar : TWinControl; AStartOfWeek : TDayOfWeekName; AWeekends : TDaysOfWeek; AWeekendColor : TColor; BtnHints : TStrings; FourDigitYear : Boolean; MinDate : TDateTime; MaxDate : TDateTime)');
+end;
+
 
 //-------------------------------------------------
 

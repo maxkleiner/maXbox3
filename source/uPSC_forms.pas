@@ -385,9 +385,9 @@ begin
   //TMessageEvent = procedure(var Msg: TMsg; var Handled: Boolean) of object;
   //TExceptionEvent = procedure (Sender: TObject; E: Exception) of object;
   //                    exception
-  Cl.AddTypeS('TMessageEvent', 'procedure(var Msg: TMsg; var Handled: Boolean)');
-  Cl.AddTypeS('TExceptionEvent', 'procedure (Sender: TObject; E: Exception)');
-  Cl.AddTypeS('TIdleEvent', 'procedure (Sender: TObject; var Done: Boolean)');
+  Cl.AddTypeS('TMessageEvent', 'procedure(var Msg: TMsg; var Handled: Boolean) of object');
+  Cl.AddTypeS('TExceptionEvent', 'procedure (Sender: TObject; E: Exception) of object');
+  Cl.AddTypeS('TIdleEvent', 'procedure (Sender: TObject; var Done: Boolean) of object');
   cl.AddTypeS('TScrollBarKind', '(sbHorizontal, sbVertical)');
   cl.AddTypeS('TScrollBarInc', 'SmallInt');
   cl.AddTypeS('TFormBorderStyle', '(bsNone, bsSingle, bsSizeable, bsDialog, bsToolWindow, bsSizeToolWin)');

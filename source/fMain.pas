@@ -101,7 +101,7 @@
          8783      build 86 bugfixing, winapi2 , mysql firebird first, gsAPI
          9181      build 91 2 tutorials, synapse, component, persistence, opengl, environment change
          9250      build 92 OCX, dbtreeview  , dbctrls
-         9314      build 94 bigfixing and remote , cindy
+         9370      build 94 //3.9.9.94_3   bigfixing and remote , cindy, jv
                   V4.0   in  June 2014
  ************************************************************************** }
 
@@ -498,6 +498,8 @@ type
     OpenGLTry1: TMenuItem;
     AllUnitList1: TMenuItem;
     spdbrowse: TSpeedButton;
+    Tutorial29UML: TMenuItem;
+    CreateHeader1: TMenuItem;
     procedure IFPS3ClassesPlugin1CompImport(Sender: TObject; x: TPSPascalCompiler);
     procedure IFPS3ClassesPlugin1ExecImport(Sender: TObject; Exec: TPSExec; x: TPSRuntimeClassImporter);
     procedure PSScriptCompile(Sender: TPSScript);
@@ -747,6 +749,8 @@ type
     procedure FileChanges1Click(Sender: TObject);
     procedure OpenGLTry1Click(Sender: TObject);
     procedure AllUnitList1Click(Sender: TObject);
+    procedure Tutorial29UMLClick(Sender: TObject);
+    procedure CreateHeader1Click(Sender: TObject);
     //procedure Memo1DropFiles(Sender: TObject; X,Y: Integer; AFiles: TStrings);
   private
     STATSavebefore: boolean;
@@ -1556,7 +1560,7 @@ uses
   uPSI_ovctimer,
   uPSI_ovcintl,
   uPSI_AfCircularBuffer,
-  uPSI_AfUtils,         //regopenkey advapi_ADVAPI32.DLL  wGetClassName , hooks
+  uPSI_AfUtils,         //regopenkey advapi_ADVAPI32.DLL  wGetClassName , hooks   API
   uPSI_AfSafeSync,
   uPSI_AfComPortCore,
   uPSI_AfComPort,
@@ -1709,7 +1713,20 @@ uses
   uPSI_cyClasses,
   uPSI_cyGraphics,  //3.9.9.94_2
   uPSI_cyTypes,
-
+  uPSI_JvDateTimePicker,
+  uPSI_JvCreateProcess,
+  uPSI_JvEasterEgg,
+  //uPSI_JvDatePickerEdit,
+  uPSI_WinSvc,
+  uPSI_SvcMgr,
+  uPSI_JvPickDate,
+  uPSI_JvNotify,
+  uPSI_JvStrHlder,
+  uPSI_JclNTFS2,
+  uPSI_Jcl8087, //3.9.9.94_3
+  uPSI_JvAddPrinter,
+  uPSI_JvCabFile,
+  uPSI_JvDataEmbedded,
 
     //MDIFrame,
   uPSI_St2DBarC,
@@ -2653,6 +2670,19 @@ begin
   SIRegister_cyBDE(X);
   SIRegister_cyClasses(X);
   SIRegister_cyGraphics(X);
+  SIRegister_JvDateTimePicker(X);
+  SIRegister_JvEasterEgg(X);
+  SIRegister_JvCreateProcess(X);
+  SIRegister_WinSvc(X);
+  SIRegister_SvcMgr(X);
+  SIRegister_JvPickDate(X);
+ SIRegister_JvStrHlder(X);
+ SIRegister_JvNotify(X);
+ SIRegister_JclNTFS2(X);
+ SIRegister_Jcl8087(X);
+ SIRegister_JvAddPrinter(X);
+ SIRegister_JvCabFile(X);
+ SIRegister_JvDataEmbedded(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -3835,7 +3865,20 @@ begin
   RIRegister_cyClasses(X);
   RIRegister_cyClasses_Routines(Exec);
   RIRegister_cyGraphics_Routines(Exec);
-
+  RIRegister_JvDateTimePicker(X);
+  RIRegister_JvEasterEgg(X);
+  RIRegister_JvCreateProcess(X);
+  RIRegister_WinSvc_Routines(Exec);
+  RIRegister_SvcMgr(X);
+  RIRegister_JvPickDate_Routines(Exec);
+  RIRegister_JvStrHlder(X);
+  RIRegister_JvNotify(X);
+  RIRegister_JvNotify_Routines(Exec);
+  RIRegister_JclNTFS2_Routines(Exec);
+  RIRegister_Jcl8087_Routines(Exec);
+  RIRegister_JvAddPrinter(X);
+  RIRegister_JvCabFile(X);      //3.9.9.94_3
+  RIRegister_JvDataEmbedded(X);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -4013,9 +4056,10 @@ begin
       last_fName6:= 'PRELAST_FILE6';
       last_fName7:= 'PRELAST_FILE7';
       last_fName8:= 'PRELAST_FILE8';        //3.9.8.6
-      last_fName8:= 'PRELAST_FILE9';        //3.9.9.88
-      last_fName8:= 'PRELAST_FILE10';
+      last_fName9:= 'PRELAST_FILE9';        //3.9.9.88
+      last_fName10:= 'PRELAST_FILE10';
       last_fontsize:= 11;
+
       IPPORT:= 8080;
       IPHOST:= '127.0.0.1';
       COMPORT:= 3;
@@ -4173,13 +4217,11 @@ begin
 end;
 
 procedure TMaxForm1.FormMarkup(Sender: TObject);
-
 //var
   //SynMarkup: TSynEditMarkupHighlightAllCaret;
 begin
   {SynMarkup := TSynEditMarkupHighlightAllCaret(SynEdit1.MarkupByClass[TSynEditMarkupHighlightAllCaret]);
-
-  SynMarkup.MarkupInfo.FrameColor := clSilver;
+   SynMarkup.MarkupInfo.FrameColor := clSilver;
   SynMarkup.MarkupInfo.Background := clGray;
   SynMarkup.WaitTime := 100; // millisec
   SynMarkup.Trim := True;     // no spaces, if using selection
@@ -4668,9 +4710,9 @@ begin
   Sender.AddFunction(@searchAndOpenDoc, 'procedure SearchAndOpenFile(vfilenamepath: string)');
   Sender.AddFunction(@searchAndOpenDoc, 'procedure OpenFile(vfilenamepath: string)');
   Sender.AddFunction(@searchAndOpenDoc, 'procedure OpenDoc(vfilenamepath: string)');
-
   Sender.AddFunction(@ExecuteCommand, 'Procedure ExecuteCommand(executeFile, paramstring: string)');
   Sender.AddFunction(@ExecuteCommand, 'Procedure ExecuteShell(executeFile, paramstring: string)');
+  Sender.AddFunction(@ShellExecuteAndWait, 'Procedure ShellExecuteAndWait(executeFile, paramstring: string)');
   Sender.AddFunction(@ExecConsoleApp,'function ExecConsoleApp(const AppName, Parameters: String; AppOutput: TStrings): boolean;');
   Sender.AddFunction(@myGetDriveType,'function GetDriveType(rootpath: pchar): cardinal;');
   Sender.AddFunction(@myprocMessOFF, 'procedure ProcessMessagesOff;');
@@ -5536,6 +5578,15 @@ begin
  //bold
  CreateGUID(Guid);
    memo2.Lines.add(GUIDToString(GUID));
+end;
+
+procedure TMaxForm1.CreateHeader1Click(Sender: TObject);
+begin
+  if fileExists(ExtractFilePath(ParamStr(0))+ CODECOMPLETION) then
+       maxForm1.fAutoComplete.ExecuteCompletion('header',memo1) else
+      showMessage('The file '+CODECOMPLETION+' is missing');
+    statusBar1.panels[0].text:= 'Header Template loaded: '+inttoStr(memo1.LinesInWindow-1);
+ // is in file template
 end;
 
 procedure TMaxForm1.CryptoBox1Click(Sender: TObject);
@@ -7034,8 +7085,8 @@ begin
                    else output.Lines.Add('Macro Off');
         if procMess.Checked then output.Lines.Add('ProcessMessages On')
                    else output.Lines.Add('ProcessMessages Off');
-        if IsNetworkConnected then output.Lines.Add('Network On'+ '  COMPort: '+boolToStr(isComConnected,true))
-                   else output.Lines.Add('Network Off' + '  COMPort: '+boolToStr(isComConnected,true));
+        if IsNetworkConnected then output.Lines.Add('Network On'+ '  COMPort: ')
+                   else output.Lines.Add('Network Off' + '  COMPort: false');
         if IsInternetConnected then output.Lines.Add('Internet On')
                    else output.Lines.Add('Internet Off');
         output.Lines.add('Local IP: '+getIPAddress(getComputerNameWin)+' DNS: '+ getDNS);
@@ -7218,6 +7269,11 @@ end;
 procedure TMaxForm1.Tutorial28DLL1Click(Sender: TObject);
 begin
   searchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter28.pdf');
+end;
+
+procedure TMaxForm1.Tutorial29UMLClick(Sender: TObject);
+begin
+  searchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter29.pdf');
 end;
 
 procedure TMaxForm1.Tutorial19COMArduino1Click(Sender: TObject);
@@ -9156,7 +9212,6 @@ begin
       XMLSyntax1.Caption:= 'XML Syntax';
       STATOtherHL:= false;
     end;
-// this is SQL
 end;
 
 procedure TMaxForm1.JavaScriptSyntax1Click(Sender: TObject);
@@ -9306,6 +9361,7 @@ begin
   end;
 end;
 
+    //to set to late
    { RegisterMethod('Constructor Create(AOwner: TComponent)');
     RegisterConstructor(@TJvMail.Create, 'Create');
      RegisterMethod('Procedure Free');

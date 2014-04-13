@@ -330,6 +330,8 @@ begin
     RegisterMethod('function Write(Buffer:String;Count:LongInt):LongInt');
     RegisterMethod('function ReadInt(Buffer:Integer;Count:LongInt):LongInt');
     RegisterMethod('function WriteInt(Buffer:Integer;Count:LongInt):LongInt');
+    RegisterMethod('function ReadByteArray(Buffer:TByteArray;Count:LongInt):LongInt');
+    RegisterMethod('function WriteByteArray(Buffer:TByteArray;Count:LongInt):LongInt');
 
     RegisterMethod('procedure ReadAB(Buffer: TByteArray;Count:LongInt)');
     RegisterMethod('procedure WriteAB(Buffer: TByteArray;Count:LongInt)');
@@ -399,6 +401,8 @@ begin
     RegisterMethod('function WriteInt(Buffer:Integer;Count:LongInt):LongInt');
     RegisterMethod('function ReadString(Buffer:string;Count:LongInt):LongInt');
     RegisterMethod('function WriteString(Buffer:string;Count:LongInt):LongInt');
+    RegisterMethod('function ReadByteArray(Buffer:TByteArray;Count:LongInt):LongInt');
+    RegisterMethod('function WriteByteArray(Buffer:TByteArray;Count:LongInt):LongInt');
 
     RegisterMethod('function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;');
   end;
@@ -415,6 +419,8 @@ begin
     RegisterMethod('procedure SetSize(NewSize:LongInt)');
     RegisterMethod('function InstanceSize: Longint');
     RegisterMethod('function Write(const Buffer; Count: Longint): Longint;');
+    RegisterMethod('function WriteByteArray(Buffer:TByteArray;Count:LongInt):LongInt');
+
    //RegisterMethod('procedure ReadBufferAB(Buffer: array of byte;Count:LongInt)');
     //RegisterMethod('procedure WriteBufferAB(Buffer: array of byte;Count:LongInt)');
 
@@ -446,8 +452,8 @@ begin
     RegisterProperty('Memory', 'TObject', iptr);
     RegisterMethod('function Read(var Buffer; Count: Longint): Longint');
     RegisterMethod('function Seek(Offset: Longint; Origin: Word): Longint;');
-
-    //property Memory: Pointer read FMemory;
+    RegisterMethod('function ReadByteArray(Buffer:TByteArray;Count:LongInt):LongInt');
+       //property Memory: Pointer read FMemory;
  end;
 end;
 

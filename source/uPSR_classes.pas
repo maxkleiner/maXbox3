@@ -685,6 +685,8 @@ begin
     RegisterMethod(@TSTREAM.WRITE, 'WRITEACD');
     RegisterMethod(@TSTREAM.READ , 'READInt');
     RegisterMethod(@TSTREAM.WRITE, 'WRITEInt');
+    RegisterMethod(@TSTREAM.READ, 'READBYTEArray');
+    RegisterMethod(@TSTREAM.WRITE, 'WRITEByteArray');
 
     //RegisterMethod('procedure ReadBufferAB(Buffer: array of byte;Count:LongInt)');
     //RegisterMethod('procedure WriteBufferAB(Buffer: array of byte;Count:LongInt)');
@@ -731,6 +733,11 @@ begin
     RegisterMethod(@THandleStream.Write, 'WriteInt');
        RegisterMethod(@THandleStream.Read, 'ReadString');
     RegisterMethod(@THandleStream.Write, 'WriteString');
+       RegisterMethod(@THandleStream.Read, 'ReadByteArray');
+    RegisterMethod(@THandleStream.Write, 'WriteByteArray');
+    {RegisterMethod('function ReadByteArray(Buffer:TByteArray;Count:LongInt):LongInt');
+    RegisterMethod('function WriteByteArray(Buffer:TByteArray;Count:LongInt):LongInt');}
+
    end;
 end;
 
@@ -777,6 +784,7 @@ begin
     RegisterMethod(@TCUSTOMMEMORYSTREAM.SAVETOSTREAM, 'SAVETOSTREAM');
     RegisterMethod(@TCUSTOMMEMORYSTREAM.SAVETOFILE, 'SAVETOFILE');
     RegisterMethod(@TCUSTOMMEMORYSTREAM.Read, 'Read');
+    RegisterMethod(@TCUSTOMMEMORYSTREAM.Read, 'ReadByteArray');
     RegisterMethod(@TCUSTOMMEMORYSTREAM.Seek, 'Seek');
     RegisterPropertyHelper(@TCUSTOMMEMORYSTREAMMemory_R, nil, 'Memory');
   end;
@@ -794,6 +802,8 @@ begin
     RegisterMethod(@TMEMORYSTREAM.SETSIZE, 'SETSIZE');
     RegisterMethod(@TMemoryStream.InstanceSize, 'InstanceSize');
     RegisterMethod(@TMemoryStream.Write, 'Write');
+    RegisterMethod(@TMemoryStream.Write, 'WriteByteArray');
+
     //RegisterMethod(@TMEMORYSTREAM.READBUFFER, 'READBUFFERAB');
     //RegisterMethod(@TMEMORYSTREAM.WRITEBUFFER, 'WRITEBUFFERAB');
   end;

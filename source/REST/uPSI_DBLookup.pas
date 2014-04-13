@@ -142,7 +142,7 @@ begin
   //with RegClassS(CL,'TCustomEdit', 'TDBLookupCombo') do
   with CL.AddClassN(CL.FindClass('TCustomEdit'),'TDBLookupCombo') do begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
-           RegisterMethod('Procedure Free');
+     RegisterMethod('Procedure Free');
       RegisterMethod('Procedure DropDown');
     RegisterMethod('Procedure CloseUp');
     RegisterProperty('Value', 'string', iptrw);
