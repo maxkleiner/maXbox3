@@ -1,4 +1,20 @@
 ****************************************************************
+Release Notes maXbox 3.9.9.95 Mai 2014
+****************************************************************
+Oscilloscope V4, Mixer, 7 Units add, URLMon, Form properties+
+
+904 unit uPSI_U_HexView;
+905 uPSI_UWavein4,
+906 uPSI_AMixer,
+907 uPSI_JvaScrollText,
+908 uPSI_JvArrow,
+909 unit uPSI_UrlMon;
+910 unit U_Oscilloscope4;  //U_FFT
+
+SHA1: Win 3.9.9.95: 10150C934566C42058BFC93FB50A7C53085D8FB5
+
+
+****************************************************************
 Release Notes maXbox 3.9.9.94 April 2014
 ****************************************************************
 DLL Report, UML Tutor, 33 Units add, DRTable, Remote+, Cindy functions!

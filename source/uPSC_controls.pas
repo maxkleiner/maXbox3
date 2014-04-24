@@ -396,7 +396,7 @@ begin
     RegisterMethod('function FOCUSED:BOOLEAN');
     RegisterProperty('CONTROLS', 'TCONTROL INTEGER', iptr);
     RegisterProperty('CONTROLCOUNT', 'INTEGER', iptr);
-    RegisterProperty('DoubleBuffered', 'Boolean', iptr);
+    RegisterProperty('DoubleBuffered', 'Boolean', iptrw);
     RegisterProperty('DockClientCount', 'Integer', iptr);
     RegisterProperty('DockClients', 'TControl Integer', iptr);
     RegisterProperty('DockSite', 'Boolean', iptrw);

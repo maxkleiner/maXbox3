@@ -35,8 +35,7 @@ implementation
 
 uses
    Windows
-  ,AfUtils, wiwin32
-  ;
+  ,AfUtils, wiwin32, REGiSTRY ;
 
 
 procedure Register;
@@ -60,6 +59,26 @@ begin
   Result := True;
 end;
 
+ function GetMDACVersion2: string;
+ var
+  reg: TRegistry;
+ begin
+   reg := TRegistry.Create;
+   try
+    reg.Rootkey:= HKEY_LOCAL_MACHINE;
+    reg.Access:= KEY_READ;            //least privilege !
+    if not reg.OpenKeyReadOnly('Software\Microsoft\DataAccess') then
+    //if not reg.OpenKey('Software\Microsoft\DataAccess',false) then
+      //Exit;
+      //writeln('exit of openkey');
+    result:= reg.ReadString('FullInstallVer');
+  finally
+    reg.CloseKey;
+    reg.free;
+  end;
+ end;
+
+     //UrlDownloadToFile
 
 (* === compile-time registration functions === *)
 (*----------------------------------------------------------------------------*)
@@ -75,11 +94,48 @@ begin
 
   CL.AddTypeS('TFNWndEnumProc','function(Handle: THandle; LParam: TStrings): Boolean; stdcall)');
 
+  //    wm_devicechange    WM_DEVICECHANGE = &H219
+ CL.AddConstantN('WM_DEVICECHANGE','LongInt').SetInt($219);
+ CL.AddConstantN('WM_COPYDATA','LongInt').SetInt($004A);
 
+(* tagCOPYDATASTRUCT = packed record
+    dwData: DWORD;
+    cbData: DWORD;
+    lpData: Pointer;
+  end;
+  TCopyDataStruct = tagCOPYDATASTRUCT;
+
+ TCopyDataStruct*)
+ //WM_COPYDATA     #define WM_COPYDATA                     0x004A
+
+//   CL.AddTypeS('TCopyDataStruct', 'ACCESS_MASK');
+ CL.AddTypeS('tagCOPYDATASTRUCT', 'record dwData : DWORD; cbData : DWORD; lpData : TObject; end');
+
+  CL.AddTypeS('TCopyDataStruct', 'tagCOPYDATASTRUCT');
+  CL.AddTypeS('COPYDATASTRUCT', 'tagCOPYDATASTRUCT');
+  CL.AddTypeS('tagMINMAXINFO', 'record ptReserved : TPoint; ptMaxSize : TPoint;'
+   +' ptMaxPosition : TPoint; ptMinTrackSize : TPoint; ptMaxTrackSize : TPoint; end');
+  CL.AddTypeS('TMinMaxInfo', 'tagMINMAXINFO');
+  CL.AddTypeS('MINMAXINFO', 'tagMINMAXINFO');
+   CL.AddTypeS('tagWINDOWPOS', 'record hwnd : HWND; hwndInsertAfter : HWND; x : '
+   +'Integer; y : Integer; cx : Integer; cy : Integer; flags : UINT; end');
+  CL.AddTypeS('TWindowPos', 'tagWINDOWPOS');
+  CL.AddTypeS('WINDOWPOS', 'tagWINDOWPOS');
+  CL.AddTypeS('tagNMHDR', 'record hwndFrom : HWND; idFrom : UINT; code : Integer; end');
+  CL.AddTypeS('TNMHdr', 'tagNMHDR');
+  CL.AddTypeS('NMHDR', 'tagNMHDR');
+  CL.AddTypeS('tagWINDOWPLACEMENT', 'record length : UINT; flags : UINT; showCm'
+   +'d : UINT; ptMinPosition : TPoint; ptMaxPosition : TPoint; rcNormalPosition: TRect; end');
+  CL.AddTypeS('TWindowPlacement', 'tagWINDOWPLACEMENT');
+  CL.AddTypeS('WINDOWPLACEMENT', 'tagWINDOWPLACEMENT');
+
+  CL.AddConstantN('UNICODE_NOCHAR','LongWord').SetUInt( $FFFF);
 
   CL.AddTypeS('ACCESS_MASK', 'DWORD');
   CL.AddTypeS('REGSAM', 'ACCESS_MASK');
   CL.AddConstantN('READ_CONTROL','LongWord').SetUInt( $00020000);
+  CL.AddConstantN('KEY_READ','LongWord').SetUInt( $20019);
+  //const KEY_READ = $20019;
  CL.AddConstantN('WRITE_DAC','LongWord').SetUInt( $00040000);
  CL.AddConstantN('WRITE_OWNER','LongWord').SetUInt( $00080000);
  CL.AddConstantN('STANDARD_RIGHTS_READ','LongWord').SetUint($00020000);
@@ -247,6 +303,10 @@ begin
  CL.AddDelphiFunction('Function LongMulDiv( Mult1, Mult2, Div1 : Longint) : Longint');
  CL.AddDelphiFunction('Function afCompareMem( P1, P2 : TObject; Length : Integer) : Boolean');
  CL.AddDelphiFunction('Function AbortSystemShutdown( lpMachineName : PKOLChar) : BOOL');
+ CL.AddDelphiFunction('Function RegisterWindowMessage( lpString : PChar) : UINT');
+ //CL.AddDelphiFunction('Function DrawEdge( hdc : HDC; var qrc : TRect; edge : UINT; grfFlags : UINT) : BOOL');
+  //CL.AddDelphiFunction('Function DrawFrameControl( DC : HDC; const Rect : TRect; uType, uState : UINT) : BOOL');
+
 
  CL.AddDelphiFunction('Function SetTimer( hWnd : HWND; nIDEvent, uElapse : UINT; lpTimerFunc : TFNTimerProc) : UINT');
  CL.AddDelphiFunction('Function KillTimer( hWnd : HWND; uIDEvent : UINT) : BOOL');
@@ -696,6 +756,8 @@ begin
  CL.AddDelphiFunction('Function wSizeofResource( hModule : HINST; hResInfo : HRSRC) : DWORD');
  CL.AddDelphiFunction('Function GetWindowTask( hWnd : HWND) : THandle');
  CL.AddDelphiFunction('Function GetLastActivePopup( hWnd : HWND) : HWND');
+ CL.AddDelphiFunction('function GetMDACVersion2: string;');
+
 
 
  end;
@@ -1101,6 +1163,8 @@ begin
  S.RegisterDelphiFunction(@GetClassName, 'GetClassName', CdStdCall);
  S.RegisterDelphiFunction(@GetWindowTask, 'GetWindowTask', cdRegister);
  S.RegisterDelphiFunction(@GetLastActivePopup, 'GetLastActivePopup', CdStdCall);
+ S.RegisterDelphiFunction(@GetMDACVersion2, 'GetMDACVersion2', CdStdCall);
+  S.RegisterDelphiFunction(@RegisterWindowMessage, 'RegisterWindowMessage', CdStdCall);
 
 end;
 
@@ -1119,6 +1183,6 @@ begin
   RIRegister_AfUtils_Routines(CompExec.Exec); // comment it if no routines
 end;
 (*----------------------------------------------------------------------------*)
- 
- 
+
+
 end.

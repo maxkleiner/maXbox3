@@ -49,12 +49,27 @@ uses
 
 begin
 
-  if ParamCount=1 then begin
+  if ParamCount=10 then begin
   //for i := 1 to ParamCount do
     //ShellExecute(0, nil, PChar(ParamStr(0)), PChar('"'+ParamStr(i)+'"'),
     ShellExecute(0,NIL,PChar(ParamStr(0)), PChar('"'+ParamStr(1)+'"'), NIL, 1); //SW_SHOWDEFAULT
-    EXIT; //patch in EXE
+    Exit;
   end;
+  (*if (ParamStr(1) <> '') then begin
+     {act_Filename:= ParamStr(1);
+     memo1.Lines.LoadFromFile(act_Filename);
+     memo2.Lines.Add(Act_Filename + CLIFILELOAD);
+     CB1SCList.Items.Add((Act_Filename));   //3.9 wb  bugfix 3.9.3.6
+     CB1SCList.ItemIndex:= CB1SCList.Items.Count-1;
+     Compile1Click(self);}
+    ShellExecute(0,NIL,PChar(ParamStr(0)), PChar('"'+ParamStr(1)+'"'), NIL, 1); //SW_SHOWDEFAULT
+      Exit;
+     if (ParamStr(2) = 'm') then begin
+       //Compile1Click(self);!
+       Application.Minimize;
+     end;
+  end; *)
+
 
   Application.Initialize;
   Application.Title := 'Pascal_maXbox';

@@ -48,7 +48,7 @@ procedure RIRegister_Classes(Cl: TPSRuntimeClassImporter; Streams: Boolean{$IFDE
 
 implementation
 uses
-  Classes;
+  Classes, Sysutils;
 
 procedure TStringsCountR(Self: TStrings; var T: Longint); begin T := Self.Count; end;
 
@@ -683,8 +683,8 @@ begin
     RegisterMethod(@TSTREAM.WRITE, 'WRITEAC');
     RegisterMethod(@TSTREAM.READ , 'READACD');
     RegisterMethod(@TSTREAM.WRITE, 'WRITEACD');
-    RegisterMethod(@TSTREAM.READ , 'READInt');
-    RegisterMethod(@TSTREAM.WRITE, 'WRITEInt');
+    //RegisterMethod(@TSTREAM.READ , 'READInt');
+    //RegisterMethod(@TSTREAM.WRITE, 'WRITEInt');
     RegisterMethod(@TSTREAM.READ, 'READBYTEArray');
     RegisterMethod(@TSTREAM.WRITE, 'WRITEByteArray');
 
@@ -719,6 +719,32 @@ begin
   end;
 end;
 
+
+  //RegisterMethod('function ReadInt(Buffer:Integer;Count:LongInt):LongInt');
+    //RegisterMethod('function WriteInt(Buffer:Integer;Count:LongInt):LongInt');
+
+//function THANDLESTREAMWriteInt(Buffer:Integer;Count:LongInt):LongInt;
+//begin
+  //THandleStream.Write(buffer, count);
+//end;
+
+//Procedure THANDLESTREAMWriteInt(Self: THandleStream; const aBuffer: integer; Count:LongInt; var T: Longint);
+Function THANDLESTREAMWriteInt(Self: THandleStream; const aBuffer: integer; Count: integer): integer;
+Begin
+ result:= Self.Write(aBuffer, count);
+// T:= Self.Write(aBuffer, count);
+//  T:= SysUtils.FileWrite(Self.Handle, Buffer, Count);
+  //if Result = -1 then Result := 0;
+
+END;
+
+function THANDLESTREAMReadInt(Self: THandleStream; var Buffer: integer; Count:LongInt): Longint;
+Begin
+  result:= Self.Read(Buffer, count);
+  //buffer:= buffer;
+END;
+
+
 procedure THANDLESTREAMHANDLE_R(Self: THANDLESTREAM; var T: INTEGER); begin T := Self.HANDLE; end;
 
 procedure RIRegisterTHANDLESTREAM(Cl: TPSRuntimeClassImporter);
@@ -729,12 +755,14 @@ begin
        RegisterMethod(@THandleStream.Read, 'Read');
     RegisterMethod(@THandleStream.Write, 'Write');
     RegisterMethod(@THandleStream.Seek, 'Seek');
-       RegisterMethod(@THandleStream.Read, 'ReadInt');
-    RegisterMethod(@THandleStream.Write, 'WriteInt');
+       RegisterMethod(@THandleStreamReadInt, 'ReadInt');
+    RegisterMethod(@THandleStreamWriteInt, 'WriteInt');
        RegisterMethod(@THandleStream.Read, 'ReadString');
     RegisterMethod(@THandleStream.Write, 'WriteString');
-       RegisterMethod(@THandleStream.Read, 'ReadByteArray');
-    RegisterMethod(@THandleStream.Write, 'WriteByteArray');
+    //   RegisterMethod(@THandleStream.Read, 'ReadByteArray');
+    //RegisterMethod(@THandleStream.Write, 'WriteByteArray');
+    RegisterPropertyHelper(@THANDLESTREAMHANDLE_R, nil, 'HANDLE');
+
     {RegisterMethod('function ReadByteArray(Buffer:TByteArray;Count:LongInt):LongInt');
     RegisterMethod('function WriteByteArray(Buffer:TByteArray;Count:LongInt):LongInt');}
 
@@ -751,13 +779,43 @@ end;
 
 
 Procedure TFILESTREAMCREATE_P(Self: TFileStream;  FileName:String;Mode:Word;Rights: Cardinal);
-Begin Self.Create(Filename, mode, rights); END;
+Begin
+   Self.Create(Filename, mode, rights);
+ END;
 
 
 procedure TFileStreamfilename_R(Self: TFileSTREAM; var T: string);
  begin
    t:= Self.FileName;
   end;
+
+Procedure TFileSTREAMWriteInt(Self: TFileStream; const Buffer: integer; Count:integer; var T: integer);
+//Procedure TFileSTREAMWriteInt(const Buffer: integer; Count:integer);
+Begin
+  T:= Self.Write(Buffer, count);
+END;
+
+Procedure TFileSTREAMReadInt(Self: TFileStream; var Buffer: integer; Count:LongInt; var T: Longint);
+Begin T:= Self.Read(integer(Buffer), count); END;
+
+
+function TFileSTREAMWriteBA(Self: TFileStream; const Buffer: TByteArray; Count:integer): integer;
+//Procedure TFileSTREAMWriteInt(const Buffer: integer; Count:integer);
+Begin
+  result:= Self.Write(Buffer, count);
+END;
+
+function TFileSTREAMReadBA(Self: TFileStream; var Buffer: TByteArray; Count:integer): integer;
+Begin
+  result:= Self.Read(Buffer, count);
+END;
+
+//Procedure TFileSTREAMTestInt(Self: TFileStream; aint: integer; T: integer);
+function TFileSTREAMTestInt(Self: TFileStream; aint: integer): integer;
+Begin
+  //T:= Self.Handle;
+  result:= aint;
+END;
 
 
 
@@ -771,6 +829,12 @@ begin
     RegisterConstructor(@TFILESTREAMCREATE_P, 'CREATE1');
     RegisterMethod(@TFileStream.Destroy, 'Free');
     RegisterPropertyHelper(@TFileStreamfilename_R, nil, 'FileName');
+    //RegisterMethod(@TFileStreamReadInt, 'ReadInt');
+    //RegisterMethod(@TFileStreamWriteInt, 'WriteInt');
+    RegisterMethod(@TFileStreamReadBA, 'ReadByteArray');
+    RegisterMethod(@TFileStreamWriteBA, 'WriteByteArray');
+    RegisterMethod(@TFileStreamTestInt, 'TestInt');
+
  // RegisterProperty('FileName', 'string', iptr);
 
     {$ENDIF}

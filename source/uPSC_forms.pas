@@ -7,7 +7,7 @@
 // bugfix application.showexception
 // add TMonitor                            3.9.9
 //  RegisterMethod('constructor Create(AOwner: TComponent);');
-  //    RegisterMethod('Procedure Free');   in TForm -- 3.9.9.85   more form props
+  //    RegisterMethod('Procedure Free');   in TForm -- 3.9.9.85 /95   more form props
 
 
 unit uPSC_forms;
@@ -186,11 +186,13 @@ begin
     RegisterProperty('ONKEYPRESS', 'TKEYPRESSEVENT', iptrw);
     RegisterProperty('ONKEYUP', 'TKEYEVENT', iptrw);
     RegisterProperty('ONRESIZE', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONCANRESIZE', 'TCanResizeEvent', iptrw);
     RegisterProperty('ONSHOW', 'TNOTIFYEVENT', iptrw);
     RegisterProperty('DOUBLEBUFFERED', 'BOOLEAN', iptrw);
-                            //tkeyevent
+    RegisterProperty('OnConstrainedResize', 'TConstrainedResizeEvent', iptrw);
 
-    {$IFNDEF PS_MINIVCL}
+                             //tkeyevent
+       {$IFNDEF PS_MINIVCL}
     {$IFNDEF CLX}
     RegisterMethod('procedure ARRANGEICONS');
     RegisterMethod('function GETFORMIMAGE:TBITMAP');
@@ -237,6 +239,14 @@ begin
     RegisterProperty('ONMOUSEUP', 'TMOUSEEVENT', iptrw);
     RegisterProperty('ONPAINT', 'TNOTIFYEVENT', iptrw);
     RegisterProperty('ONMINIMIZE', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('OldCreateOrder', 'Boolean', iptrw);
+    RegisterProperty('TransparentColor', 'Boolean', iptrw);
+ RegisterProperty('TransparentColorValue', 'TColor', iptrw);
+ RegisterProperty('AlphaBlend', 'Boolean', iptrw);
+ RegisterProperty('AlphaBlendValue', 'Byte', iptrw);
+ RegisterProperty('VertScrollBar', 'TControlScrollBar', iptrw);
+ RegisterProperty('HorzScrollBar', 'TControlScrollBar', iptrw);
+
 
     {$ENDIF}
   end;
@@ -408,6 +418,8 @@ begin
   cl.AddTypeS('TDefaultMonitor', '(dmDesktop, dmPrimary, dmMainForm, dmActiveForm);');
   cl.AddTypeS('TTileMode', '(tbHorizontal, tbVertical);');
   cl.AddTypeS('TPopupMode', '(pmNone, pmAuto, pmExplicit);');
+  cl.AddTypeS('TCanResizeEvent' ,'procedure(Sender: TObject; var NewWidth, NewHeight: Integer; var Resize: Boolean) of object;');
+  cl.AddTypeS('TConstrainedResizeEvent' ,'procedure(Sender: TObject; var MinWidth, MinHeight, MaxWidth, MaxHeight: Integer) of object;');
 
     //TFormState = set of (fsCreating, fsVisible, fsShowing, fsModal,
     //fsCreatedMDIChild, fsActivated);

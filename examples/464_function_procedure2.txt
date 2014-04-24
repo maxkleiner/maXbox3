@@ -1,0 +1,762 @@
+Program Function_versus_Procedure;
+
+///////////////////////////////////////////////////////////////////////////
+//  #sign:Administrator: PC08: 23/04/2014 02:56:23 PM 
+//  Purpose: shows the diff between function or procedure 
+//  #path>les\E:\maxbox3\mXGit39988\maxbox3\examples\
+//  Lines of Code #locs:350
+///////////////////////////////////////////////////////////////////////////
+//TODO: find out the performance of func or proc, #locs:350
+
+Function OpenProcess2(dwDesiredAccess: DWORD; bInheritHandle:BOOL;
+     dwProcessId:DWORD): THandle; 
+          External 'OpenProcess@kernel32.dll stdcall';
+   
+Const  
+      SW = 'SW_SHOW';
+      BITMAP = 'examples\citymax.bmp';
+     
+var
+  year1, month1, day1: word;
+  dbform: TForm;  
+  //myappevent: TApplicationEvents;
+   
+  //var nullstr: string;
+    function LoadFile(const FileName: TFileName): string; 
+    var anullstr: string;
+     begin 
+      with TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite) do begin 
+        try 
+          SetLength(Result, Size); 
+          Read(result, Size); 
+          anullstr:= '0^';
+         //Write(Pointer(content)^, Length(content));    //test write
+        except 
+          Result := '';  // Deallocates memory 
+          Free; 
+          //raise; 
+          raiseLastWin32error;
+        end; 
+        Free; 
+      end; 
+    end; 
+    
+    procedure SaveFile(const FileName: TFileName; const acontent: string); 
+    begin 
+      with TFileStream.Create(FileName, fmCreate) do 
+        try 
+          Write(acontent, Length(acontent));
+          Seek(0, soBeginning);  
+        finally 
+          Free; 
+        end; 
+    end; 
+
+    procedure SaveIntStream(const aFileName: TFileName; const acontent: integer); 
+    var ret, retres, retres2: longint;
+    begin 
+     //     writeln('Testint '+inttoStr(Testint(123456789)))
+     
+      with TFileStream.Create(aFileName, fmCreate or fmopenread) do 
+          //WriteInt(acontent, Length(acontent));
+        try 
+          //WriteInt(acontent, Length(acontent));
+          ret:= WriteInt(integer(acontent), 8);
+          retres:= ReadInt(retres2, 8);
+          
+          //ret:= WriteInt(integer(acontent), length(acontent));
+          //ret:= WriteInt(1234, 4);
+          //ret:= WriteInt(12345678, 4);
+          writeln('back: '+inttostr(ret))
+          writeln('backres: '+inttostr(retres2))
+        
+          Seek(0, soBeginning);  
+          writeln(filename)
+          writeln(inttostr(handle))
+          writeln('Testint '+inttoStr(Testint(1234567890)))
+       
+          //CopyFrom(TmemoryStream.create, 0)
+        finally 
+          Free; 
+        end; 
+        Openfile(Exepath+'filestream.txt');
+    end; 
+
+ procedure ProcedureSolution;    
+ var mystrings: TStrings;
+ begin
+   mystrings:= TStringlist.Create;
+   getVisibleWindows(mystrings)
+   showMessage(mystrings.text)
+   mystrings.Free;
+ end;
+    
+ function FunctionSolution: TStrings;    
+ begin
+   result:= getVisibleWindowsF(TStringlist.Create)
+ end;
+ 
+ 
+ procedure TKeyPairGenerator_Create;
+var
+  TmpDir: string;
+  TmpFile: TSearchRec;
+     fKeyLength: word;
+    fPassword: string;
+    fPrivateKeyFile, fPublicKeyFile: TFileName;
+    fSeedFile: TFileName;
+ 
+begin
+  fKeyLength:= 1024;
+  fPassword:= '';
+  TmpDir:= GetEnvironmentVariable('TEMP');
+  if FindFirst(TmpDir + '\*', faReadOnly and faHidden and faSysFile
+    and faArchive) = 0 then
+     // fSeedFile := TmpFile.Name;
+     fSeedFile:= searchrecName;
+  writeln('fseedfile is: '+fseedfile)
+  FindClose;
+end;
+
+ function CheckFiletype2(const extension, filetype, description,
+  verb, serverapp: string): boolean;
+ var
+  reg: TRegistry;
+  keystring: string;
+  regdfile: string;
+ begin
+  reg := TRegistry.Create;
+  try
+    Result := False;
+    reg.Rootkey := HKEY_CLASSES_ROOT;
+    if not reg.OpenKey(extension, False) then
+      Exit;
+    reg.CloseKey;
+    if not reg.OpenKey(filetype, False) then
+      Exit;
+    reg.closekey;
+    keystring := Format('%s\shell\%s\command', [filetype, verb]);
+    if not reg.OpenKey(keystring, False) then
+      Exit;
+    regdfile := reg.ReadString('');
+    reg.CloseKey;
+    if CompareText(regdfile, serverapp) <> 0 then
+      Exit;
+    Result := True;
+  finally
+    reg.free;
+  end;
+ end;
+ 
+ //const KEY_READ = $20019;
+
+ function GetMDACVersion3: string;
+ var
+  reg: TRegistry;
+ begin
+   reg := TRegistry.Create;
+   try
+    reg.Rootkey:= HKEY_LOCAL_MACHINE;
+    reg.Access:= KEY_READ;            //least privilege !
+    if not reg.OpenKeyReadOnly('Software\Microsoft\DataAccess') then
+    //if not reg.OpenKey('Software\Microsoft\DataAccess',false) then
+      //Exit;
+      writeln('exit of openkey');
+    result:= reg.ReadString('FullInstallVer');
+  finally
+    reg.CloseKey;
+    reg.free;
+  end;
+ end;
+ 
+ function ggTRec(x, y: Integer): Integer;
+begin
+  if y > x then Result:= ggTRec(y, x)
+  else if y = 0 then Result:= x
+  else 
+    Result:= ggTRec(y, x mod y);
+end;
+ 
+ 
+// .write a transparent Text on a TImage?
+
+var image1: TImage;
+    bitimage: Tbitmap;
+ procedure TForm1_TranspImage(Sender: TObject);
+//var transparent: integer;
+begin
+  with Image1.Picture.Bitmap.Canvas do begin
+    Font.Color  := clBlue;
+    Brush.Style := bsclear;
+    Font.Size   := 13;
+    TextOut(10, 10, 'Transparent Text!!');
+  end;
+end;
+
+{**** Or / Oder ****}
+ procedure TForm1_TranspImage2(Sender: TObject);
+ var
+  OldBkMode: integer;
+  mainwnd: THandle;
+  mainwnd2: HWND;
+  ak: PKOLChar;
+ 
+  //TC: TCopyDataStruct;
+ begin
+  with Image1.Picture.Bitmap do begin
+    Canvas.Font.Color := clBlue;
+    OldBkMode         := SetBkMode(Canvas.Handle, Ord(TRANSPARENT));
+    Canvas.Font.Size  := 13;
+    Canvas.TextOut(10, 10, 'Transparent Text!!');
+    SetBkMode(Canvas.Handle, OldBkMode);
+  end;
+  //debug
+  ak:= '0rt';
+  ak:= 'maxform1';
+  
+  bitImage.loadFromResourceName(Hinstance,'BACK');
+  mainwnd2:= wFindWindow(ak, ak);
+  mainwnd:= FindWindow('TMaxForm1','');
+  //mainwnd2:= FindWindow(NIL, 'maxform1');
+  
+  //7SendMessage(mainwnd, WM_COPYDATA, Handle, Integer(@42));
+  //wSendMessage(mainwnd2, WM_COPYDATA, Handle, 42);
+  //wSetWindowText(mainwnd2, 'WM_COPYDATA');
+  //ak:= 'thest'+#0;
+  booleantoString(wSetWindowText(mainwnd, 'NIL'));
+    wSetWindowText(mainwnd, ak);
+
+end;
+
+
+//unit U_PiCalc1;
+ 
+ Var
+  inpond, totshots:integer;  {Number in pond}
+ Const radius2 = 0.25; {for radius squared}
+
+   Procedure showPIstats;
+   var r: single;
+   begin
+     writeln('Pond Hits: '+inttostr(inpond));
+     writeln(' Total shots: '+inttostr(totshots));
+     if totshots>0 then r:= inpond/totshots else r:=0;
+     writeln('Ratio of Pond hits to shots '+floattostr(r));
+     writeln('PI estimate: '+ floattostr(4*r));
+   end;
+
+
+//Pythagorean theorem for distance,x2+y2=d2, so point is in pond if x2+y2<.25.
+   Procedure TFrm_PIShootBtnClick(Sender: TObject);
+   var i: integer;
+       x,y: double;
+   begin
+   //if strtoint(shotsEdt.text)<high(i) then
+     if 50000<high(i) then   
+     for i:= 1 to 50000 do Begin
+       x:= frandom- 0.5;  {get random numbers in range -0.5 to + 0.5}
+       y:= frandom- 0.5;
+       if x*x+y*y < radius2 then inc(inpond); {distance from center is < 0.5}
+       {Note: no need to take square root, just compare dist squared to 0.25}
+       inc(totshots);
+     end else showMessage('Max shots exceeded');
+     showPIstats;
+   end;
+   
+   procedure TFrm_PIResetBtnClick(Sender: TObject);
+   begin
+     inpond:= 0;  {Number in pond}
+     totshots:= 0; {Total number}
+     Randomize;
+     //ShowPIstats;
+   end;
+   
+
+
+//main script app
+  var  i, streamin: integer;
+  md: TDynCardinalArray;
+  //amix: TAudioMixer;
+  //ain: TWaveIn; 
+begin
+  //the the date from now to compare with file date
+  decodeDate(date, year1, month1, day1) 
+  Beep;
+  Writeln('Diff of Function or Procedure - silent except out of scope');
+  
+   // ProcedureSolution; 
+    
+   // ShowMessage(FunctionSolution.text);
+  
+   // ShowMessage(GetVisibleWindowsF(TStringlist.Create).text);
+    
+    //GEO Stationary Satellite
+    //geostationary satellite
+    maxCalcF('((1/27.5)^2)^(1/3)*384E3-6371');
+    //shorten test
+    maxCalcF('SQRT(1/27.5)/2*(384E3-6371)');
+    //more precise
+    maxCalcF('((1/27.32)^2)^(1/3)*384E3-6371');
+    //just the track
+    maxCalcF('((1/27.32)^2)^(1/3)*3.8E8');
+    
+    //RS3 = [3.8x108]3/27.32 = 7.36x1022 and so:
+    //RS = 4.19x107 m = 41 900 km 
+    maxCalcF('((1/27.32)^2)^(1/3)*3.8E8');
+  
+    {if FileExists(Exepath+'Examples\geosatellite.png') then
+      OpenDoc(Exepath+'Examples\geosatellite.png');}
+      
+      //GetEnvironmentVariable
+      TKeyPairGenerator_Create;
+    // writeln(GetEnvironmentString)
+    //95313dab22bdf89886df1ddf61c7ad2c4379f627
+    {writeln('sha1 of zip: '+ sha1('C:\maXbook\maxbox3\mX3999\maxbox3.zip'));
+    writeln('sha1 of exe: '+ sha1('C:\maXbook\maxbox3\mX3999\maxbox3.exe'));}
+    //writeln('GetMDACVersion2 '+GetMDACVersion2);
+    writeln('GetMDACVersion3 '+GetMDACVersion3);
+     writeln('GetMDACVersion '+GetMDACVersion);
+    writeln('GetDCOMVersion '+GetDCOMVersion);
+    
+    TFrm_PIResetBtnClick(self);
+    TFrm_PIShootBtnClick(self);
+     maxCalcF('PI*(0.5^2)');
+     maxCalcF('PI*0.25');
+    
+    writeln(inttoStr(ggTRec(20,30)))
+    writeln(inttoStr(ggTRec(12,18)))
+    writeln(inttoStr(ggTRec(120,900)))
+    md:= PrimeFactors(120) 
+  for i:= 0 to length(md)-1  do
+         write(inttostr(md[i])+': ');
+    md:= PrimeFactors(900) 
+  for i:= 0 to length(md)-1  do
+         write(inttostr(md[i])+': ');
+  
+  // GetDCOMVersion  
+    streamin:= 4242;
+    SaveIntStream(exepath+'filestream.txt', streamin); 
+    //TMixerControls
+    //TAudioMixer;
+    //TMixerConnection
+    //TAudioMixer 
+    //TPointerList
+    //TMixerDestination
+    //RealFFT2
+      //TWaveIn 
+      playMP3(maXpath+'examples\maxbox.mp3');
+      //BINDSTATUS_CONTENTDISPOSITIONATTACH
+  
+End.
+
+ref:
+http://www.delphiforfun.org/Programs/oscilloscope.htm
+
+A geostationary satellite is an earth-orbiting satellite, placed at an altitude of approximately
+  35,800 kilometers (22,300 miles) directly over the equator, that revolves in the same direction the earth rotates (west to east). At this altitude, one orbit takes 24 hours, the same length of time as the earth requires to rotate once on its axis. The term geostationary comes from the fact that such a satellite appears nearly stationary in the sky as seen by a ground-based observer. BGAN, the new global mobile communications network, uses geostationary satellites.
+  
+  A Geosynchonous Orbit (GEO) takes a satellite around the Earth at a rate of once per day, keeping it roughly in the same area over the ground. 
+A Geostationary Orbit (GSO) is a geosynchronous orbit with an inclination of zero, meaning, it lies on the equator.
+
+All geostationary satellites are geosynchronous. Not all geosynchronous satellites are geostationary.
+
+Example problems
+The Moon has an orbit radius of 3.8x108 m and a period of 27.3 days. Use this information to calculate the radius (RS) of the orbit of a geostationary satellite.
+Use: T2/R3 = constant      Period of satellite = 1 day      therefore:
+
+RS3 = [3.8x108]3/27.32 = 7.36x1022 and so:
+RS = 4.19x107 m = 41 900 km 
+
+
+Hab ich das was entdeckt oder gibt es diese Formel schon:
+ 
+Sie berechnet als 3. keplersche Gesetz die Höhe eines geostationären Satelliten:
+ 
+(1/27.5)^2 = (x/384000)^3       ca. 42000 km - 6300 ~ 36000 km
+ 
+die Idee ist den Mond als Bezugsgrösse zu nehmen und ihn 1/27 als Stationär in Relation zum unbekannten x zu nehmen
+ 
+und dann in der maXbox auflösen
+ 
+maxCalcF('((1/27.32)^2)^(1/3)*384E3-6371');
+ 
+>>>35961.8421987704
+
+
+
+Doc:
+Functional programming
+
+From Wikipedia, the free encyclopedia
+For subroutine-oriented programming, see Procedural programming.
+Programming paradigms
+
+    Action
+    Agent-oriented
+    Aspect-oriented
+    Automata-based
+    Concurrent computing
+        Relativistic programming
+    Data-driven
+    Declarative (contrast: Imperative)
+        Constraint
+        Dataflow
+            Flow-based
+            Cell-oriented (spreadsheets)
+            Reactive
+        Functional
+            Functional logic
+        Logic
+            Abductive logic
+            Answer set
+            Constraint logic
+            Functional logic
+            Inductive logic
+    End-user programming
+    Event-driven
+        Service-oriented
+        Time-driven
+    Expression-oriented
+    Feature-oriented
+    Function-level (contrast: Value-level)
+    Generic
+    Imperative (contrast: Declarative)
+        Procedural
+    Language-oriented
+        Natural language programming
+        Discipline-specific
+        Domain-specific
+        Grammar-oriented
+            Dialecting
+        Intentional
+    Metaprogramming
+        Automatic
+        Reflective
+            Attribute-oriented
+        Homoiconic
+        Template
+            Policy-based
+    Non-structured (contrast: Structured)
+        Array
+    Nondeterministic
+    Parallel computing
+        Process-oriented
+    Point-free style
+        Concatenative
+    Semantic
+    Structured (contrast: Non-structured)
+        Block-structured
+        Modular (contrast: Monolithic)
+        Object-oriented (OOP)
+            By separation of concerns:
+                Aspect-oriented
+                Role-oriented
+                Subject-oriented
+            Class-based
+            Prototype-based
+        Recursive
+    Value-level (contrast: Function-level)
+    Probabilistic
+    Concept
+
+In computer science, functional programming is a programming paradigm, a style of building the structure and elements of computer programs, that treats computation as the evaluation of mathematical functions and avoids state and mutable data. Functional programming emphasizes functions that produce results that depend only on their inputs and not on the program state—i.e. pure mathematical functions. It is a declarative programming paradigm, which means programming is done with expressions. In functional code, the output value of a function depends only on the arguments that are input to the function, so calling a function f twice with the same value for an argument x will produce the same result f(x) both times. Eliminating side effects, i.e. changes in state that do not depend on the function inputs, can make it much easier to understand and predict the behavior of a program, which is one of the key motivations for the development of functional programming.
+
+Functional programming has its roots in lambda calculus, a formal system developed in the 1930s to investigate computability, the Entscheidungsproblem, function definition, function application, and recursion. Many functional programming languages can be viewed as elaborations on the lambda calculus, where computation is treated as the evaluation of mathematical functions and avoids state and mutable data. In the other well known declarative programming paradigm, logic programming, relations are at the base of respective languages.[1] 
+
+// code snippets
+
+
+procedure TGraphic.LoadFromFile(const Filename: string);
+var
+  Stream: TStream;
+begin
+  Stream := TFileStream.Create(Filename, fmOpenRead or fmShareDenyWrite);
+  try
+    LoadFromStream(Stream); //virtual abstract
+  finally
+    Stream.Free;
+  end;
+end;
+
+procedure TBitmap.LoadFromStream(Stream: TStream);
+begin
+  ReadStream(Stream, Stream.Size - Stream.Position);
+end;
+
+
+procedure TBitmap.ReadStream(Stream: TStream; Size: Longint);
+var
+  Bmf: TBitmapFileHeader;
+  DIB: TDIBSection;
+begin
+  FreeContext;
+  if Size = 0 then
+  begin
+    FillChar(DIB, sizeof(DIB), 0);
+    NewImage(0, 0, DIB, False);
+  end
+  else
+  begin
+    Stream.ReadBuffer(Bmf, sizeof(Bmf));
+    if Bmf.bfType <> $4D42 then InvalidBitmap;
+    ReadDIB(Stream, Size - sizeof(Bmf), @Bmf);
+  end;
+end;
+procedure InvalidGraphic(Str: PResStringRec);
+begin
+  raise EInvalidGraphic.CreateRes(Str);
+end;
+
+procedure InvalidBitmap; 
+begin
+  InvalidGraphic(@SInvalidBitmap);
+end;
+
+//sysutils!
+{ Raise abort exception }
+
+procedure Abort;
+
+  function ReturnAddr: Pointer;
+  asm
+          MOV     EAX,[EBP + 4]
+  end;
+
+begin
+  raise EAbort.CreateRes(@SOperationAborted) at ReturnAddr;
+end;
+
+  SOperationAborted = 'Operation aborted';
+
+{ Raise out of memory exception }
+
+procedure OutOfMemoryError;
+begin
+  raise OutOfMemory;
+end;
+
+{ Exception class }
+
+constructor Exception.Create(const Msg: string);
+begin
+  FMessage := Msg;
+end;
+
+
+http://pages.cs.wisc.edu/~rkennedy/exception-messages
+Why do I continue getting error messages even after I have written an exception handler?
+
+
+In its default settings, the Delphi IDE
+notifies you whenever an exception occurs in your program, as in Figure
+1. What’s important to realize is that at that point, none
+of your program’s exception-handling code has run yet. It’s
+all Delphi itself; its special status as a debugger allows it to get
+first notification of any exception in your program, even before your
+program knows about it.
+
+  Exception
+  
+    Exception = class(TObject)
+  private
+    FMessage: string;
+    FHelpContext: Integer;
+  public
+    constructor Create(const Msg: string);
+    constructor CreateFmt(const Msg: string; const Args: array of const);
+    constructor CreateRes(Ident: Integer); overload;
+    constructor CreateRes(ResStringRec: PResStringRec); overload;
+    constructor CreateResFmt(Ident: Integer; const Args: array of const); overload;
+    constructor CreateResFmt(ResStringRec: PResStringRec; const Args: array of const); overload;
+    constructor CreateHelp(const Msg: string; AHelpContext: Integer);
+    constructor CreateFmtHelp(const Msg: string; const Args: array of const;
+      AHelpContext: Integer);
+    constructor CreateResHelp(Ident: Integer; AHelpContext: Integer); overload;
+    constructor CreateResHelp(ResStringRec: PResStringRec; AHelpContext: Integer); overload;
+    constructor CreateResFmtHelp(ResStringRec: PResStringRec; const Args: array of const;
+      AHelpContext: Integer); overload;
+    constructor CreateResFmtHelp(Ident: Integer; const Args: array of const;
+      AHelpContext: Integer); overload;
+    property HelpContext: Integer read FHelpContext write FHelpContext;
+    property Message: string read FMessage write FMessage;
+  end;
+
+
+  {$IFDEF MSWINDOWS}
+  { TIniFile - Encapsulates the Windows INI file interface
+    (Get/SetPrivateProfileXXX functions) }
+
+  TIniFile = class(TCustomIniFile)
+  public
+    destructor Destroy; override;
+    function ReadString(const Section, Ident, Default: string): string; override;
+    procedure WriteString(const Section, Ident, Value: String); override;
+    procedure ReadSection(const Section: string; Strings: TStrings); override;
+    procedure ReadSections(Strings: TStrings); override;
+    procedure ReadSectionValues(const Section: string; Strings: TStrings); override;
+    procedure EraseSection(const Section: string); override;
+    procedure DeleteKey(const Section, Ident: String); override;
+    procedure UpdateFile; override;
+  end;
+{$ELSE}
+    TIniFile = class(TMemIniFile)
+    public
+      destructor Destroy; override;
+    end;
+{$ENDIF}
+
+ with TColorDialog.Create(self) do try
+    execute;
+  finally
+    free;
+  end;    
+ 
+Scan report of: 119439-maxbox3.zip
+
+Ahnlab -
+Avast -
+AVG -
+Avira -
+Bitdefender -
+Command W32/Hupigon.C.gen!Eldorado
+Command (Online) W32/Hupigon.C.gen!Eldorado
+Dr.Web -
+Eset Nod32 -
+Fortinet -
+F-Prot W32/Hupigon.C.gen!Eldorado
+G Data -
+Ikarus -
+K7 Computing -
+Kaspersky -
+Kaspersky (Online) -
+McAfee -
+McAfee (BETA) -
+McAfee (Online) -
+McAfee GW Edition (Online) -
+Microsoft -
+Norman -
+Panda -
+Panda (Online) -
+QuickHeal Suspicious (warning)
+Rising -
+Sophos -
+Sophos (Online) -
+Symantec -
+Symantec (BETA) -
+ThreatTrack -
+Total Defense -
+Trend Micro -
+Trend Micro (Cons.) -
+Trend Micro (CPR) -
+VBA32 -
+VirusBuster -
+
+
+chines signs of I-king als schnüre
+fire water earth and air
+
+___    - -   - -   ___
+- -    ___   - -   ___
+___    - -   - -   ___
+
+
+
+The Future of" zeigt einen Ausblick wie sich alle Bereiche unseres Lebens und Wirtschaften durch neue Technologien entwickeln werden. Die Inspirations-Konferenz zeigt die Herausforderungen und Chancen auf die wir uns einzustellen haben.
+09.00-09.40	Enhanced Human Devices - wie wir unsere Limiten überwinden
+Daniel Niklaus, CEO, Netlive IT AG
+09.40-10.15	Konsumverhalten in der Zukunft
+Michael Konitzer, Publizist, Internet- & Medienberater
+10.15-10.35	Kooperationsmodelle - ihre Organisation wird agil
+Mirko Kleiner,Vice President Delivery, youngulture AG
+11.00-11.30	Wenn Produkte zu Diensten werden
+Stefan Zanetti, CEO qipp ag
+11.30-12.00	Vertical Commerce - Wenn der Handel eliminiert und der Konsument zum Produzenten wird
+Roger Basler, CEO, Unternehmens-Architekt.ch
+13.15-13.40	Nanotechnologie: Vielmehr als nur ein nächster Schritt in der Miniaturisierung 
+Dr. Pierangelo Gröning, Leiter Department „Moderne Materialien und Oberflächen“, Empa, Materials Science and Technology
+13.40-14.00	Innovationsmotor Nanotechnologie
+Prof. Dr. André Bernard, Institutsleiter MNT, Interstaatliche Hochschule für Technik Buchs NTB
+14.10-15.00	Vom Schachcomputer und Routenplaner zur Personalisierten Medizin 
+Dr. Eberhard Scheuer,CEO, eHealth Consulting GmbH und Dr. Sibylle Peuker, Senior User Experience Architect, Zeix AG
+15.00-15.20	Energyie Tatsachen, Technologien, Lösungen
+Dr. Henrik Nordborg, , Professor für Physik, HSR Hochschule für Technik Rapperswil
+15.20-16.00	Technologien und Visionen für die Zukunft der Energie
+Andreas Uthmann, Innovations- und Technologiemanager für Energielösungen
+16.20-16.40	Neurone Netzwerke, wenn Computer wie unser Hirn denken
+Ercüment Sönmez, Intelligence AG
+16.40-17.10	Werden wir uns noch etwas zu sagen haben?
+Dr. Christopher H. Müller, CEO, Die Ergonomen Usability AG
+
+KEY_CREATE_LINK (0x0020)
+	
+
+Reserved for system use.
+
+KEY_CREATE_SUB_KEY (0x0004)
+	
+
+Required to create a subkey of a registry key.
+
+KEY_ENUMERATE_SUB_KEYS (0x0008)
+	
+
+Required to enumerate the subkeys of a registry key.
+
+KEY_EXECUTE (0x20019)
+	
+
+Equivalent to KEY_READ.
+
+KEY_NOTIFY (0x0010)
+	
+
+Required to request change notifications for a registry key or for subkeys of a registry key.
+
+KEY_QUERY_VALUE (0x0001)
+	
+
+Required to query the values of a registry key.
+
+KEY_READ (0x20019)
+	
+
+Combines the STANDARD_RIGHTS_READ, KEY_QUERY_VALUE, KEY_ENUMERATE_SUB_KEYS, and KEY_NOTIFY values.
+
+KEY_SET_VALUE (0x0002)
+	
+
+Required to create, delete, or set a registry value.
+
+KEY_WOW64_32KEY (0x0200)
+	
+
+Indicates that an application on 64-bit Windows should operate on the 32-bit registry view. This flag is ignored by 32-bit Windows. For more information, see Accessing an Alternate Registry View.
+
+This flag must be combined using the OR operator with the other flags in this table that either query or access registry values.
+
+Windows 2000:  This flag is not supported.
+
+KEY_WOW64_64KEY (0x0100)
+	
+
+Indicates that an application on 64-bit Windows should operate on the 64-bit registry view. This flag is ignored by 32-bit Windows. For more information, see Accessing an Alternate Registry View.
+
+This flag must be combined using the OR operator with the other flags in this table that either query or access registry values.
+
+Windows 2000:  This flag is not supported.
+
+KEY_WRITE (0x20006)
+	
+
+Combines the STANDARD_RIGHTS_WRITE, KEY_SET_VALUE, and KEY_CREATE_SUB_KEY access rights.
+
+
+Background & Techniques
+
+If we assume that the square is 1 mile on a side and the pond is 1 mile across, then the area of the square is 1 square mile.  The radius of the pond is  1/2 mile and its area is Pi*R2 or  0.25Pi.  If the shots are uniformly distributed over the area of the field then the ratio of shots in the pond to shots in the field is approximately the same as the ratio of the two areas (.25Pi/1 or just Pi/4).  So the best estimate of Pi is simply 4 times this ratio.    
+
+The plan is to generate random numbers inside the field, and increment the inpond count if it is within 1/2 mile of the center of the pond. We can use the Pythagorean theorem to calculate the distance of our random points from the center of the field.
+
+Computationally, we use the randomize function to start generating random numbers with different random values for each run.  Without randomize, the numbers generated will be random (actually called pseudo-random), but would be repeatable from run to run.  The random function returns a random number between 0 and 1 if called without parameters.  If we assume a coordinate system with origin at the center the field, we can subtract 1/2 from the random points and end up up x and y values between -1/2 and +1/2.  By the Pythagorean theorem for  distance, x2+y2=d2, so the point is in the pond if x2+y2<.25.
+
+That's about it.  I initialized the two count fields using the constant declaration feature of Delphi, added a reset button to reset the counters at any time.  This allows multiple clicks on the Shoot! button to produce cumulative results - we should be able to see the estimates get close to Pi as the number of shots increases.

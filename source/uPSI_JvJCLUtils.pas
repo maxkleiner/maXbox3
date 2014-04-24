@@ -1,6 +1,6 @@
 unit uPSI_JvJCLUtils;
 {
-  in line with JvUtils; experimental mash up
+  in line with JvUtils and jVFunctions_max; experimental mash up
   integerlist with count!
 }
 interface
@@ -430,6 +430,7 @@ begin
  CL.AddDelphiFunction('Procedure LowPower');
  CL.AddDelphiFunction('Function SendKey( const AppName : string; Key : Char) : Boolean');
  CL.AddDelphiFunction('Procedure GetVisibleWindows( List : TStrings)');
+ CL.AddDelphiFunction('Function GetVisibleWindowsF( List : TStrings):TStrings');
  CL.AddDelphiFunction('Procedure AssociateExtension( const IconPath, ProgramName, Path, Extension : string)');
  CL.AddDelphiFunction('Procedure AddToRecentDocs( const FileName : string)');
  CL.AddDelphiFunction('Function GetRecentDocs : TStringList');
@@ -446,6 +447,8 @@ begin
  CL.AddDelphiFunction('Function PreformatDateString( Ps : string) : string');
  CL.AddDelphiFunction('Function BooleanToInteger( const B : Boolean) : Integer');
  CL.AddDelphiFunction('Function StringToBoolean( const Ps : string) : Boolean');
+ CL.AddDelphiFunction('Function StrToBo( const Ps : string) : Boolean');
+ CL.AddDelphiFunction('Function BoToStr(const B: boolean) : String');
  CL.AddDelphiFunction('Function BoolToStrJ(const B: boolean) : String');
  CL.AddDelphiFunction('Function SafeStrToDateTime( const Ps : string) : TDateTime');
  CL.AddDelphiFunction('Function SafeStrToDate( const Ps : string) : TDateTime');
@@ -752,9 +755,13 @@ begin
  //S.RegisterDelphiFunction(@ColorToPrettyName, 'ColorToPrettyName', cdRegister);
  //S.RegisterDelphiFunction(@PrettyNameToColor, 'PrettyNameToColor', cdRegister);
  S.RegisterDelphiFunction(@SwapInt, 'SwapIntJ', cdRegister);
+ //S.RegisterDelphiFunction(@SwapInt, 'SwapInt2', cdRegister);
  S.RegisterDelphiFunction(@IntPower, 'IntPowerJ', cdRegister);
  S.RegisterDelphiFunction(@ChangeTopException, 'ChangeTopException', cdRegister);
  S.RegisterDelphiFunction(@StrToBool, 'StrToBoolJ', cdRegister);
+ S.RegisterDelphiFunction(@StrToBool, 'StrToBo', cdRegister);
+ S.RegisterDelphiFunction(@BoolToStrJ, 'BoToStr', cdRegister);
+
  S.RegisterDelphiFunction(@Var2Type, 'Var2Type', cdRegister);
  S.RegisterDelphiFunction(@VarToInt, 'VarToInt', cdRegister);
  S.RegisterDelphiFunction(@VarToFloat, 'VarToFloat', cdRegister);
@@ -962,6 +969,7 @@ begin
  S.RegisterDelphiFunction(@LowPower, 'LowPower', cdRegister);
  S.RegisterDelphiFunction(@SendKey, 'SendKey', cdRegister);
  S.RegisterDelphiFunction(@GetVisibleWindows, 'GetVisibleWindows', cdRegister);
+ S.RegisterDelphiFunction(@GetVisibleWindowsF, 'GetVisibleWindowsF', cdRegister);
  S.RegisterDelphiFunction(@AssociateExtension, 'AssociateExtension', cdRegister);
  S.RegisterDelphiFunction(@AddToRecentDocs, 'AddToRecentDocs', cdRegister);
  S.RegisterDelphiFunction(@GetRecentDocs, 'GetRecentDocs', cdRegister);
@@ -978,6 +986,7 @@ begin
  S.RegisterDelphiFunction(@PreformatDateString, 'PreformatDateString', cdRegister);
  S.RegisterDelphiFunction(@BooleanToInteger, 'BooleanToInteger', cdRegister);
  S.RegisterDelphiFunction(@StringToBoolean, 'StringToBoolean', cdRegister);
+ S.RegisterDelphiFunction(@StringToBoolean, 'StrToBo', cdRegister);
  S.RegisterDelphiFunction(@SafeStrToDateTime, 'SafeStrToDateTime', cdRegister);
  S.RegisterDelphiFunction(@SafeStrToDate, 'SafeStrToDate', cdRegister);
  S.RegisterDelphiFunction(@SafeStrToTime, 'SafeStrToTime', cdRegister);

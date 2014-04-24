@@ -328,8 +328,8 @@ begin
    // RegisterMethod('Function Write( const Buffer, Count : Longint) : Longint');
     RegisterMethod('function Read(Buffer:String;Count:LongInt):LongInt');
     RegisterMethod('function Write(Buffer:String;Count:LongInt):LongInt');
-    RegisterMethod('function ReadInt(Buffer:Integer;Count:LongInt):LongInt');
-    RegisterMethod('function WriteInt(Buffer:Integer;Count:LongInt):LongInt');
+    RegisterMethod('function ReadInt(var Buffer:Integer;Count:LongInt):LongInt');
+    RegisterMethod('function WriteInt(const Buffer:Integer;Count:LongInt):LongInt');
     RegisterMethod('function ReadByteArray(Buffer:TByteArray;Count:LongInt):LongInt');
     RegisterMethod('function WriteByteArray(Buffer:TByteArray;Count:LongInt):LongInt');
 
@@ -397,12 +397,12 @@ begin
     RegisterProperty('Handle', 'Integer', iptr);
     RegisterMethod('function Read(var Buffer; Count: Longint): Longint');
     RegisterMethod('function Write(const Buffer; Count: Longint): Longint');
-    RegisterMethod('function ReadInt(Buffer:Integer;Count:LongInt):LongInt');
-    RegisterMethod('function WriteInt(Buffer:Integer;Count:LongInt):LongInt');
+    RegisterMethod('function ReadInt(var Buffer:Integer;Count:LongInt):LongInt');
+    RegisterMethod('function WriteInt(const aBuffer:Integer;Count:integer): integer');
     RegisterMethod('function ReadString(Buffer:string;Count:LongInt):LongInt');
     RegisterMethod('function WriteString(Buffer:string;Count:LongInt):LongInt');
-    RegisterMethod('function ReadByteArray(Buffer:TByteArray;Count:LongInt):LongInt');
-    RegisterMethod('function WriteByteArray(Buffer:TByteArray;Count:LongInt):LongInt');
+    RegisterMethod('function ReadByteArray(var Buffer:TByteArray;Count:LongInt):LongInt');
+    RegisterMethod('function WriteByteArray(const Buffer:TByteArray;Count:LongInt):LongInt');
 
     RegisterMethod('function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;');
   end;
@@ -420,14 +420,11 @@ begin
     RegisterMethod('function InstanceSize: Longint');
     RegisterMethod('function Write(const Buffer; Count: Longint): Longint;');
     RegisterMethod('function WriteByteArray(Buffer:TByteArray;Count:LongInt):LongInt');
-
-   //RegisterMethod('procedure ReadBufferAB(Buffer: array of byte;Count:LongInt)');
+     //RegisterMethod('procedure ReadBufferAB(Buffer: array of byte;Count:LongInt)');
     //RegisterMethod('procedure WriteBufferAB(Buffer: array of byte;Count:LongInt)');
-
-  end;
+   end;
 end;
 {$ENDIF}
-
 
 
 procedure SIRegisterTFILESTREAM(Cl: TPSPascalCompiler);
@@ -436,6 +433,12 @@ begin
     RegisterMethod('constructor Create(FileName:String;Mode:Word)');
     RegisterMethod('constructor Create1(FileName:String;Mode:Word;Rights: Cardinal)');
  // constructor Create(const AFileName: string; Mode: Word; Rights: Cardinal); overload;
+    //RegisterMethod('function ReadInt(var Buffer;Count:LongInt):LongInt');
+    //RegisterMethod('function WriteInt(const Buffer: integer;Count:integer):integer');
+    RegisterMethod('function WriteByteArray(const Buffer:TByteArray;Count:LongInt):LongInt');
+    RegisterMethod('function ReadByteArray(var Buffer: TByteArray;Count:LongInt):LongInt');
+    RegisterMethod('function Testint(aint: integer): integer');
+
     RegisterMethod('Procedure Free');
     RegisterProperty('FileName', 'string', iptr);
     //property FileName: string read FFileName;

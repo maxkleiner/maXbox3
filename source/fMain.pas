@@ -102,6 +102,7 @@
          9181      build 91 2 tutorials, synapse, component, persistence, opengl, environment change
          9250      build 92 OCX, dbtreeview  , dbctrls
          9370      build 94 //3.9.9.94_3   bigfixing and remote , cindy, jv
+         9410       build 95 oscilloscope, hexview, mixer, wininet
                   V4.0   in  June 2014
  ************************************************************************** }
 
@@ -148,7 +149,7 @@ const
    ALLUNITLIST = 'docs\maxbox3_9.xml'; //'in /docs;
    INCLUDEBOX = 'pas_includebox.inc';
    BOOTSCRIPT = 'maxbootscript.txt';
-   MBVERSION = '3.9.9.94';
+   MBVERSION = '3.9.9.95';
    MBVER = '399';              //for checking!
    EXENAME ='maXbox3.exe';
    MXSITE = 'http://www.softwareschule.ch/maxbox.htm';
@@ -500,6 +501,7 @@ type
     spdbrowse: TSpeedButton;
     Tutorial29UML: TMenuItem;
     CreateHeader1: TMenuItem;
+    Oscilloscope1: TMenuItem;
     procedure IFPS3ClassesPlugin1CompImport(Sender: TObject; x: TPSPascalCompiler);
     procedure IFPS3ClassesPlugin1ExecImport(Sender: TObject; Exec: TPSExec; x: TPSRuntimeClassImporter);
     procedure PSScriptCompile(Sender: TPSScript);
@@ -751,6 +753,7 @@ type
     procedure AllUnitList1Click(Sender: TObject);
     procedure Tutorial29UMLClick(Sender: TObject);
     procedure CreateHeader1Click(Sender: TObject);
+    procedure Oscilloscope1Click(Sender: TObject);
     //procedure Memo1DropFiles(Sender: TObject; X,Y: Integer; AFiles: TStrings);
   private
     STATSavebefore: boolean;
@@ -878,7 +881,7 @@ uses
   uPSC_std,
   uPSR_stdctrls,
   uPSC_stdctrls,    //listbox   , memo
-  uPSC_classes,
+  uPSC_classes,   //memory stream
   uPSR_classes,
   uPSR_forms,
   uPSC_forms,
@@ -1687,7 +1690,7 @@ uses
   uPSI_dbTvRecordList,
   uPSI_TreeVwEx,
   uPSI_ECDataLink,
-  uPSI_dbTree,
+  uPSI_dbTree,      //properties
   uPSI_dbTreeCBox,
   uPSI_Debug,  //3.9.9.92
   uPSI_FileIntf,
@@ -1727,6 +1730,16 @@ uses
   uPSI_JvAddPrinter,
   uPSI_JvCabFile,
   uPSI_JvDataEmbedded,
+  U_HexView,
+  uPSI_U_HexView,
+  uPSI_UWavein4,
+  uPSI_AMixer,
+  U_Oscilloscope4, //in 'U_Oscilloscope4.pas' {frmMain},
+  U_Spectrum4, // in 'U_Spectrum4.pas' {Form2},
+  //uPSI_JvBoxProcs,
+  uPSI_JvaScrollText,
+  uPSI_JvArrow,    //3.9.9.95
+  uPSI_UrlMon,
 
     //MDIFrame,
   uPSI_St2DBarC,
@@ -2683,6 +2696,12 @@ begin
  SIRegister_JvAddPrinter(X);
  SIRegister_JvCabFile(X);
  SIRegister_JvDataEmbedded(X);
+ SIRegister_U_HexView(X);
+ SIRegister_UWavein4(X);
+ SIRegister_AMixer(X);
+ SIRegister_JvArrow(X);
+ SIRegister_JvaScrollText(X);
+ SIRegister_UrlMon(X);  //types also in wininet
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -3854,7 +3873,7 @@ begin
   //RIRegister_HTTPIntr(X);
   //RIRegister_HTTPIntr_Routines(Exec);   //3.9.9.94
   RIRegister_Mathbox_Routines(Exec);
-
+  RIRegister_UrlMon_Routines(Exec);
   RIRegister_cyIndy_Routines(Exec);
   RIRegister_cySysUtils_Routines(Exec);
   RIRegister_cyWinUtils_Routines(Exec);
@@ -3879,6 +3898,11 @@ begin
   RIRegister_JvAddPrinter(X);
   RIRegister_JvCabFile(X);      //3.9.9.94_3
   RIRegister_JvDataEmbedded(X);
+  RIRegister_U_HexView(X);
+  RIRegister_UWavein4(X);
+  RIRegister_AMixer(X);
+  RIRegister_JvArrow(X);
+  RIRegister_JvaScrollText(X);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -4058,6 +4082,8 @@ begin
       last_fName8:= 'PRELAST_FILE8';        //3.9.8.6
       last_fName9:= 'PRELAST_FILE9';        //3.9.9.88
       last_fName10:= 'PRELAST_FILE10';
+      //last_fName10:= 'PRELAST_FILE11';
+
       last_fontsize:= 11;
 
       IPPORT:= 8080;
@@ -4158,6 +4184,7 @@ begin
   end;
  try
   if (ParamStr(1) <> '') then begin
+     //showmessage('this is param debug');
      act_Filename:= ParamStr(1);
      memo1.Lines.LoadFromFile(act_Filename);
      memo2.Lines.Add(Act_Filename + CLIFILELOAD);
@@ -9011,6 +9038,14 @@ begin
     showMessage('No ..\exercices\model\*.* Data found...');
 end;
 
+procedure TMaxForm1.Oscilloscope1Click(Sender: TObject);
+begin
+  Application.CreateForm(TfrmMain, frmMain);
+  frmMain.Show;
+  Application.CreateForm(TForm2, Form2);
+  //Form2.Show;
+end;
+
 procedure TMaxForm1.procMessClick(Sender: TObject);
 begin
    procMess.Checked:= not procMess.Checked;
@@ -9082,16 +9117,21 @@ end;
 procedure TMaxForm1.HEXEditor1Click(Sender: TObject);
 begin
   Showmessage('available V4 but you find one in ..\maxbox3\source\Hex_Editor_MX');
+  //Application.CreateForm(THexForm2, HexForm2);
 end;
 
 procedure TMaxForm1.HEXEditor2Click(Sender: TObject);
 begin
-  Showmessage('available in V4');
+  Showmessage('available in V4 you find one in ..\maxbox3\source\Hex_Editor_MX');
+  Application.CreateForm(THexForm2, HexForm2);
+  HexForm2.Show;
 end;
 
 procedure TMaxForm1.HEXView1Click(Sender: TObject);
 begin
-   Showmessage('available in V4');
+   Showmessage('available in V4 you find one in ..\maxbox3\source\Hex_Editor_MX');
+  Application.CreateForm(THexForm2, HexForm2);
+  HexForm2.Show;
   {HexDump := CreateHexDump(TWinControl(NoteBook.Pages.Objects[3]));
   FileOpenDialog.Filter := SOpenFilter;
   FileSaveDialog.Filter := SSaveFilter;

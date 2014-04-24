@@ -526,6 +526,8 @@ begin
   system.Str(aint,astr);
 end;
 
+
+
 // CL.AddDelphiFunction('Procedure CloseFile(var F: Text);');
 
 procedure WriteObjectResourceHeader(ObjStream, Output: TStream);

@@ -76,12 +76,16 @@ begin
          lblVersion.Top:= 213;
          lblVersion.Left:= 380;
          lblVersion.Color:= clRed;
+         //lblVersion.Color:= clBlue;
+         panel1.Color:= clBlue;
         lblhash.Caption:= 'SHA1: '+SHA1(Application.ExeName);
        end else
          image1.Visible:= true;
      end;
      lblhash.Caption:= 'SHA1: '+SHA1(Application.ExeName);
+     lblhash.Font.Color:= clRed;
      FormStyle:= fsstayontop;
+     panel1.Color:= clNavy;
      ShowModal;
 
     end;
@@ -102,12 +106,18 @@ procedure TAboutBox.hyperLinkCreate;
       left:= 12;
       top:= 65;
       caption:= rsKLink;
-      //onClick:= startBrowserInfo;
+      //font.color:= clRed;
+      hyperlinkcolor:= clRed;
+      font.color:= clTeal;
+     //onClick:= startBrowserInfo;
     end;
     with myhyperlabel2 do begin
       parent:= Panel1;
       left:= 12;
       top:= 80;
+      color:= clRed;
+      hyperlinkcolor:= clRed;
+      font.color:= clTeal;
       caption:= rsKEmail;
     end;
     with myhyperlabel3 do begin
@@ -115,6 +125,9 @@ procedure TAboutBox.hyperLinkCreate;
       font.Size:= 18;
       left:= 12;
       top:= 08;
+      color:= clRed;
+      hyperlinkcolor:= clRed;
+      font.color:= clTeal;
       caption:= rsMBLink;
     end;
  end;

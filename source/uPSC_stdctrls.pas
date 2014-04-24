@@ -75,15 +75,33 @@ begin
   with CL.AddClassN(CL.FindClass('TCustomStaticText'),'TStaticText') do begin
   RegisterPublishedProperties;
    RegisterProperty('ALIGN', 'TALIGN', iptrw);
-      RegisterProperty('CAPTION', 'String', iptrw);
+     RegisterProperty('ALIGNMENT', 'TAlignment', iptrw);
+    RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
+    RegisterProperty('ShowButtons', 'Boolean', iptrw);
+    RegisterProperty('BorderStyle', 'TBorderStyle', iptrw);
+    RegisterProperty('ShowLines', 'Boolean', iptrw);
+    RegisterProperty('ShowRoot', 'Boolean', iptrw);
+    RegisterProperty('BORDERWIDTH', 'Integer', iptrw);
     RegisterProperty('COLOR', 'TColor', iptrw);
     RegisterProperty('FONT', 'TFont', iptrw);
+    RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
+    RegisterProperty('MAXLENGTH', 'Integer', iptrw);
     RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
     RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+    RegisterProperty('READONLY', 'Boolean', iptrw);
+    RegisterProperty('SCROLLBARS', 'TScrollStyle', iptrw);
+    RegisterProperty('ONCHANGE', 'TNotifyEvent', iptrw);
     RegisterProperty('ONCLICK', 'TNotifyEvent', iptrw);
     RegisterProperty('ONDBLCLICK', 'TNotifyEvent', iptrw);
     RegisterProperty('ONENTER', 'TNotifyEvent', iptrw);
     RegisterProperty('ONEXIT', 'TNotifyEvent', iptrw);
+    RegisterProperty('ONKEYDOWN', 'TKeyEvent', iptrw);
+    RegisterProperty('ONKEYPRESS', 'TKeyPressEvent', iptrw);
+    RegisterProperty('ONKEYUP', 'TKeyEvent', iptrw);
+    RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
+    RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
+    RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
+    RegisterProperty('CAPTION', 'String', iptrw);
 
   end;
 end;
@@ -218,7 +236,12 @@ procedure SIRegisterTEDIT(Cl: TPSPascalCompiler);
 begin
   with Cl.AddClassN(cl.FindClass('TCUSTOMEDIT'), 'TEDIT') do begin
     RegisterPublishedProperties;
-    RegisterProperty('AUTOSELECT', 'Boolean', iptrw);
+      RegisterProperty('ALIGN', 'TALIGN', iptrw);
+      RegisterProperty('ALIGNMENT', 'TAlignment', iptrw);
+    RegisterProperty('AUTOSIZE', 'Boolean', iptrw);
+    RegisterProperty('CAPTION', 'String', iptrw);
+    RegisterProperty('COLOR', 'TColor', iptrw);
+     RegisterProperty('AUTOSELECT', 'Boolean', iptrw);
     RegisterProperty('AUTOSIZE', 'Boolean', iptrw);
     RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
     RegisterProperty('CHARCASE', 'TEditCharCase', iptrw);
@@ -585,7 +608,11 @@ begin
     //RegisterProperty('Style', 'TListboxStyle', iptrw);
     RegisterProperty('AutoComplete', 'boolean', iptrw);
     RegisterProperty('AutoCompleteDelay', 'integer', iptrw);
-    RegisterProperty('COLOR', 'TColor', iptrw);
+      RegisterProperty('ALIGN', 'TALIGN', iptrw);
+      RegisterProperty('ALIGNMENT', 'TAlignment', iptrw);
+    RegisterProperty('AUTOSIZE', 'Boolean', iptrw);
+    RegisterProperty('CAPTION', 'String', iptrw);
+       RegisterProperty('COLOR', 'TColor', iptrw);
     RegisterProperty('FONT', 'TFont', iptrw);
     RegisterProperty('MULTISELECT', 'Boolean', iptrw);
     RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);

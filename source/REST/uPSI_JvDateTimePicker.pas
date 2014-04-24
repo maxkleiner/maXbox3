@@ -58,6 +58,7 @@ begin
   //with CL.AddClassN(CL.FindClass('TJvExDateTimePicker'),'TJvDateTimePicker') do begin
   with CL.AddClassN(CL.FindClass('TDateTimePicker'),'TJvDateTimePicker') do begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
+    RegisterMethod('Procedure Free');
     RegisterProperty('DropDownDate', 'TDate', iptrw);
     RegisterProperty('NullDate', 'TDateTime', iptrw);
     RegisterProperty('NullText', 'string', iptrw);
@@ -153,10 +154,10 @@ END;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TJvDateTimePicker(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TJvDateTimePicker) do
-  begin
+  with CL.Add(TJvDateTimePicker) do begin
     RegisterConstructor(@TJvDateTimePicker.Create, 'Create');
-    RegisterPropertyHelper(@TJvDateTimePickerDropDownDate_R,@TJvDateTimePickerDropDownDate_W,'DropDownDate');
+      RegisterMethod(@TJvDateTimePicker.Destroy, 'Free');
+      RegisterPropertyHelper(@TJvDateTimePickerDropDownDate_R,@TJvDateTimePickerDropDownDate_W,'DropDownDate');
     RegisterPropertyHelper(@TJvDateTimePickerNullDate_R,@TJvDateTimePickerNullDate_W,'NullDate');
     RegisterPropertyHelper(@TJvDateTimePickerNullText_R,@TJvDateTimePickerNullText_W,'NullText');
     RegisterPropertyHelper(@TJvDateTimePickerWeekNumbers_R,@TJvDateTimePickerWeekNumbers_W,'WeekNumbers');

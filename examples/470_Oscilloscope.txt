@@ -1,0 +1,115 @@
+PROGRAM Oscilloscope_URLMon_Demo2;
+
+///////////////////////////////////////////////////////////////////////////
+//  #sign:Administrator: PC08: 24/04/2014 12:18:08 AM 
+//  Purpose: how to get, run and store a file from internet direct and WGet! 
+//  #path>E:\maxbox3\mXGit39988\maxbox3\examples\
+//  Lines of Code #locs:080
+///////////////////////////////////////////////////////////////////////////
+//TODO: Compare with wGet() for performance and safety
+
+Const 
+  // URL Location path
+  //SourceFile = 'http://www.softwareschule.ch/images/maxbox_logo3.png';
+  SourceFile = 'http://www.delphiforfun.org/Programs/images/Oscilloscope-Full.jpg';
+  // Where to save the file
+  //DestFile = 'C:\temp\maxbox_logo3.png';
+  DestFile = 'C:\temp\Oscilloscope_Full.jpg';
+  
+  
+function WGetDemo: boolean;
+//Function wGet2(aURL, afile: string): boolean;' //without file open
+begin
+  writeln('WGetDemo:  '+DateTimeToInternetStr(now, true))
+  result:= false;
+  wGet('http://www.softwareschule.ch/download/maxbox_starter4.pdf','mytestpdf.pdf');
+    //[RegEx VX4]
+  result:= true;
+end;    
+  
+
+function DownloadFile(SourceFile, DestFile: string): Boolean;
+begin
+  //TCIPStatus
+  //TUrlZone
+  //TBindStatus
+  //TUrlTemplate
+  //TUrlZoneReg   of URLMon
+  try
+    Result:= UrlDownloadToFile(Nil,PChar(SourceFile),PChar(DestFile),0,Nil) = 0;
+  except
+    Result:= False;
+  end;
+end;
+
+
+procedure TForm1_DownloadTest;
+begin
+  if DownloadFile(SourceFile, DestFile) then begin
+    ShowMessage('mX Download succesful!');
+    // Show downloaded image in your browser
+    //ShellExecute(Application.Handle, PChar('open'), PChar(DestFile),
+      //PChar(''), nil, SW_NORMAL)
+      openfile(DestFile)
+  end
+  else
+    ShowMessage('Error while downloading ' + SourceFile)
+end;
+
+  
+//main function_p call  URLMon API
+BEGIN
+  //calls the proc with a function var
+
+      if isInternet then
+        TForm1_DownloadTest;   
+      
+      {WGetDemo;}
+      
+      //TfrmMain
+      
+      maXform1.Oscilloscope1Click(Self);
+
+      writeln(mbversion)      
+      writeln(inttostr(mbveriall+1))  
+      
+     { with THexForm2.create(self) do begin
+        ShowModal;
+        Free;
+      end;}      
+End.
+
+
+Doc: URLDownloadToFile function
+31 out of 51 rated this helpful - Rate this topic
+
+Downloads bits from the Internet and saves them to a file.
+Syntax
+
+Ref: 
+HRESULT URLDownloadToFile(
+  LPUNKNOWN pCaller,
+  LPCTSTR szURL,
+  LPCTSTR szFileName,
+  _Reserved_  DWORD dwReserved,
+  LPBINDSTATUSCALLBACK lpfnCB
+);
+
+
+Parameters
+
+pCaller
+
+    A pointer to the controlling IUnknown interface of the calling ActiveX component, if the caller is an ActiveX component. If the calling application is not an ActiveX component, this value can be set to NULL. Otherwise, the caller is a COM object that is contained in another component, such as an ActiveX control in the context of an HTML page. This parameter represents the outermost IUnknown of the calling component. The function attempts the download in the context of the ActiveX client framework, and allows the caller container to receive callbacks on the progress of the download.
+szURL
+
+    A pointer to a string value that contains the URL to download. Cannot be set to NULL. If the URL is invalid, INET_E_DOWNLOAD_FAILURE is returned.
+szFileName
+
+    A pointer to a string value containing the name or full path of the file to create for the download. If szFileName includes a path, the target directory must already exist.
+dwReserved
+
+    Reserved. Must be set to 0.
+lpfnCB
+
+    A pointer to the IBindStatusCallback interface of the caller. By using IBindStatusCallback::OnProgress, a caller can receive download status. URLDownloadToFile calls the IBindStatusCallback::OnProgress and IBindStatusCallback::OnDataAvailable methods as data is received. The download operation can be canceled by returning E_ABORT from any callback. This parameter can be set to NULL if status is not required.

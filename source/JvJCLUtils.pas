@@ -770,6 +770,8 @@ function SendKey(const AppName: string; Key: Char): Boolean;
 
 // returns a list of all windows currently visible, the Objects property is filled with their window handle
 procedure GetVisibleWindows(List: TStrings);
+function GetVisibleWindowsF(List: TStrings): TStrings;
+
 // associates an extension to a specific program
 procedure AssociateExtension(const IconPath, ProgramName, Path, Extension: string);
 
@@ -6870,6 +6872,19 @@ begin
     List.EndUpdate;
   end;
 end;
+
+function GetVisibleWindowsF(List: TStrings): TStrings;
+begin
+  List.BeginUpdate;
+  try
+    List.Clear;
+    EnumWindows(@EnumWindowsProc, Integer(List));
+  finally
+    List.EndUpdate;
+  end;
+  result:= list;
+end;
+
 
 {$ENDIF MSWINDOWS}
 // from JvComponentFunctions
