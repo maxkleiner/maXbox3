@@ -102,7 +102,7 @@
          9181      build 91 2 tutorials, synapse, component, persistence, opengl, environment change
          9250      build 92 OCX, dbtreeview  , dbctrls
          9370      build 94 //3.9.9.94_3   bigfixing and remote , cindy, jv
-         9410       build 95 oscilloscope, hexview, mixer, wininet
+         9444       build 95 oscilloscope, hexview, mixer, wininet
                   V4.0   in  June 2014
  ************************************************************************** }
 
@@ -1740,6 +1740,16 @@ uses
   uPSI_JvaScrollText,
   uPSI_JvArrow,    //3.9.9.95
   uPSI_UrlMon,
+  uPSI_U_Oscilloscope4,
+  uPSI_DFFUtils,
+  uPSI_MathsLib,
+  uPSI_UIntList,
+  //uPSI_UGetParens, in DFFUtils
+  uPSI_UGeometry,
+  uPSI_UAstronomy, //3.9.9.95
+  uPSI_UCardComponentV2,
+  uPSI_UTGraphSearch,
+  uPSI_UParser10,
 
     //MDIFrame,
   uPSI_St2DBarC,
@@ -2702,6 +2712,16 @@ begin
  SIRegister_JvArrow(X);
  SIRegister_JvaScrollText(X);
  SIRegister_UrlMon(X);  //types also in wininet
+ SIRegister_U_Oscilloscope4(X);
+ SIRegister_DFFUtils(X);
+ SIRegister_MathsLib(X);
+ //SIRegister_UGetParens(X);
+ SIRegister_UIntList(X);
+ SIRegister_UGeometry(X);
+ SIRegister_UAstronomy(X);
+ SIRegister_UCardComponentV2(X);
+ SIRegister_UTGraphSearch(X);
+ SIRegister_UParser10(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -3903,6 +3923,18 @@ begin
   RIRegister_AMixer(X);
   RIRegister_JvArrow(X);
   RIRegister_JvaScrollText(X);
+  RIRegister_U_Oscilloscope4(X);
+  RIRegister_DFFUtils_Routines(Exec);
+  RIRegister_TPrimes(X);
+  RIRegister_MathsLib_Routines(Exec);
+  //RIRegister_UGetParens_Routines(Exec);
+  RIRegister_UIntList(X);
+  RIRegister_UGeometry_Routines(EXec);
+  RIRegister_UAstronomy(X);
+  RIRegister_UAstronomy_Routines(Exec);  //3.9.9.95_1
+  RIRegister_UCardComponentV2(X);
+  RIRegister_UTGraphSearch(X);
+  RIRegister_UParser10(X);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -8002,6 +8034,8 @@ var
       //width:= (memo1.Width-600);
       //showmessage(inttostr(memo1.Width)+' '+inttostr(memo1.RightEdge));
       //scrollbars:= ssboth;
+      if width < 200 then width:= 200;  //bug 3.9.9.95
+      
       autoscroll:= true;
       Font.Size:= last_fontsize-2;
       onDblClick:= ClickinListbox;
@@ -9040,8 +9074,8 @@ end;
 
 procedure TMaxForm1.Oscilloscope1Click(Sender: TObject);
 begin
-  Application.CreateForm(TfrmMain, frmMain);
-  frmMain.Show;
+  Application.CreateForm(TOscfrmMain, oscfrmMain);
+  oscfrmMain.Show;
   Application.CreateForm(TForm2, Form2);
   //Form2.Show;
 end;

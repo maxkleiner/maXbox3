@@ -156,6 +156,7 @@ procedure TControlParentW(Self: TControl; T: TWinControl); begin Self.Parent:= T
 
 procedure TBitmapCanvas_R(Self: TStringGrid; var T: TCanvas); begin T:= Self.Canvas; end;
 
+procedure TBitmapCanvas2_R(Self: TCustomDrawGrid; var T: TCanvas); begin T:= Self.Canvas; end;
 
 procedure TDrawGridCols_W(Self: TDrawGrid; const T: integer; const t1: Integer);
 begin Self.ColWidths[t1]:= T; end;
@@ -181,6 +182,13 @@ begin Self.Row:= T; end;
 
 procedure TDrawGridRow_R(Self: TDrawGrid; var T: integer);
 begin T:= Self.Row; end;
+
+procedure TCustomDrawGridEM_W(Self: TCustomDrawGrid; const T: boolean);
+begin Self.EditorMode:= T; end;
+
+procedure TCustomDrawGridEM_R(Self: TCustomDrawGrid; var T: boolean);
+begin T:= Self.EditorMode; end;
+
 
 procedure TDrawGridWidth_R(Self: TDrawGrid; var T: integer);
 begin T:= Self.GridWidth; end;
@@ -258,13 +266,13 @@ begin
     RegisterMethod(@TStringGrid.Destroy, 'Free');
     RegisterMethod(@TStringGrid.Repaint, 'Repaint');
     RegisterMethod(@TStringGrid.MouseCoord, 'MouseCoord');
-
+    RegisterVirtualMethod(@TStringGrid.SetBounds, 'SETBOUNDS');
     RegisterPropertyHelper(@TStringGridCells_R,@TStringGridCells_W,'Cells');
     RegisterPropertyHelper(@TStringGridCols_R,@TStringGridCols_W,'Cols');
     RegisterPropertyHelper(@TStringGridCol_R,@TStringGridCol_W,'Col');
     RegisterPropertyHelper(@TStringGridRow_R,@TStringGridRow_W,'Row');
     RegisterPropertyHelper(@TStringGridColwidths_R,@TStringGridColwidths_W,'ColWidths');
-    RegisterPropertyHelper(@TStringGridRowheights_R,@TStringGridRowheights_W,'RowHeigths');
+    RegisterPropertyHelper(@TStringGridRowheights_R,@TStringGridRowheights_W,'RowHeights');
     RegisterPropertyHelper(@TStringGridSelection_R,@TStringGridSelection_W,'Selection');
     RegisterPropertyHelper(@TStringGridObjects_R,@TStringGridObjects_W,'Objects');
     RegisterPropertyHelper(@TStringGridRows_R,@TStringGridRows_W,'Rows');
@@ -296,21 +304,22 @@ begin
     RegisterConstructor(@TDrawGrid.Create, 'Create');
     RegisterMethod(@TDrawGrid.Destroy, 'Free');
     RegisterMethod(@TDrawGrid.Repaint, 'Repaint');
-
+    RegisterMethod(@TDrawGrid.Invalidate, 'Invalidate');
+    RegisterVirtualMethod(@TDrawGrid.SetBounds, 'SETBOUNDS');
     RegisterPropertyHelper(@TControlParentR, @TControlParentW, 'PARENT');
     RegisterPropertyHelper(@TBitmapCanvas_R,NIL,'Canvas');
     //RegisterPropertyHelper(@TDrawGridCells_R,@TDrawGridCells_W,'Cells');
     RegisterPropertyHelper(@TDrawGridCols_R,@TDrawGridCols_W,'ColWidths');
     RegisterPropertyHelper(@TDrawGridCol_R,@TDrawGridCol_W,'Col');
     RegisterPropertyHelper(@TDrawGridRow_R,@TDrawGridRow_W,'Row');
-    RegisterPropertyHelper(@TDrawGridRows_R,@TDrawGridRows_W,'RowHeigths');
+    RegisterPropertyHelper(@TDrawGridRows_R,@TDrawGridRows_W,'RowHeights');
     RegisterPropertyHelper(@TDrawGridWidth_R,NIL,'GridWidth');
     RegisterPropertyHelper(@TDrawGridHeight_R,NIL,'GridHeight');
    // property GridHeight;
    // property GridWidth;
     RegisterPropertyHelper(@TStringGridObjects_R,@TStringGridObjects_W,'Objects');
     //RegisterPropertyHelper(@TStringGridObjects_R,@TStringGridObjects_W,'Objects');
-    RegisterPropertyHelper(@TDrawGridTop_R,@TDrawGridTop_W,'RowHeigths');
+    RegisterPropertyHelper(@TDrawGridTop_R,@TDrawGridTop_W,'RowHeights');
     RegisterPropertyHelper(@TDrawGridEditmode_R,@TDrawGridEditmode_W,'EditorMode');
     RegisterPropertyHelper(@TDrawGridleftcol_R,@TDrawGridleftcol_W,'LeftCol');
     RegisterPropertyHelper(@TDrawGridtaborder_R,@TDrawGridtaborder_W,'Taborder');
@@ -326,7 +335,12 @@ begin
     RegisterMethod(@TCustomDrawGrid.CellRect, 'CellRect');
     RegisterMethod(@TCustomDrawGrid.MouseToCell, 'MouseToCell');
     RegisterMethod(@TCustomDrawGrid.Destroy, 'Free');
-    RegisterPropertyHelper(@TDrawGridRow_R,@TDrawGridRow_W,'Row');
+    // RegisterMethod(@TCustomDrawGrid.Invalidate, 'Invalidate');
+     RegisterPropertyHelper(@TDrawGridRow_R,@TDrawGridRow_W,'Row');
+     RegisterPropertyHelper(@TCustomDrawGridEM_R,@TCustomDrawGridEM_W,'EditorMode');
+
+    RegisterPropertyHelper(@TBitmapCanvas2_R,NIL,'Canvas');
+
 
   end;
 end;
@@ -335,6 +349,7 @@ procedure RIRegister_TCustomGrid(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TCustomGrid) do begin
     RegisterMethod(@TCustomGrid.Destroy, 'Free');
+    RegisterConstructor(@TCustomGrid.Create, 'Create');
     RegisterMethod(@TCustomGrid.MouseCoord, 'MouseCoord');
   end;
 end;
@@ -343,6 +358,7 @@ procedure RIRegister_TInplaceEdit(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TInplaceEdit) do begin
     RegisterMethod(@TInplaceEdit.Deselect, 'Deselect');
+    RegisterConstructor(@TInplaceEdit.Create, 'Create');
     RegisterMethod(@TInplaceEdit.Hide, 'Hide');
     RegisterMethod(@TInplaceEdit.Invalidate, 'Invalidate');
     RegisterMethod(@TInplaceEdit.Move, 'Move');

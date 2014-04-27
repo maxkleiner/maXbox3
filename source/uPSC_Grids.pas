@@ -1,7 +1,7 @@
 unit uPSC_Grids;
 {
 code implementing the class wrapper is taken from Carlo Kok's conv utility
-   canvas and parent and more properties in    mX3.1
+   canvas and parent and more properties in    mX3.1  EditorMode
 }
 interface
 Uses uPSCompiler;
@@ -46,7 +46,7 @@ begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
     RegisterMethod('Procedure Free;');
     RegisterMethod('Procedure Repaint;');
-
+    RegisterMethod('procedure SetBounds(x,y,w,h: Integer);virtual;');
     RegisterMethod('function MouseCoord(X, Y: Integer): TGridCoord;');
     RegisterMethod('Function CellRect( ACol, ARow : Longint) : TRect');
     RegisterMethod('Procedure MouseToCell( X, Y : Integer; var ACol, ARow : Longint)');
@@ -59,7 +59,7 @@ begin
     RegisterProperty('Parent', 'TWinControl', iptRW);
     RegisterProperty('Canvas', 'TCanvas', iptr);
     RegisterProperty('ColWidths', 'Integer Integer', iptrw);
-    RegisterProperty('RowHeigths', 'Integer Integer', iptrw);
+    RegisterProperty('RowHeights', 'Integer Integer', iptrw);
     RegisterProperty('Selection', 'TGridRect', iptrw);
     RegisterProperty('GridHeight', 'Integer', iptr);
     RegisterProperty('GridWidth', 'Integer', iptr);
@@ -92,6 +92,8 @@ begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
     RegisterMethod('Procedure Free;');
     RegisterMethod('Procedure Repaint;');
+    RegisterMethod('procedure SetBounds(x,y,w,h: Integer);virtual;');
+    RegisterMethod('Procedure Invalidate');
     RegisterProperty('Parent', 'TWinControl', iptRW);
     RegisterProperty('Canvas', 'TCanvas', iptr);
     //RegisterProperty('Cells', 'string Integer Integer', iptrw);
@@ -99,7 +101,7 @@ begin
     RegisterProperty('Col', 'Integer', iptrw);
     RegisterProperty('Row', 'Integer', iptrw);
     RegisterProperty('Objects', 'TObject Integer Integer', iptrw);
-    RegisterProperty('RowHeigths', 'Integer Integer', iptrw);
+    RegisterProperty('RowHeights', 'Integer Integer', iptrw);
     RegisterProperty('GridHeight', 'Integer', iptr);
     RegisterProperty('GridWidth', 'Integer', iptr);
     //RegisterProperty('GridWidth', 'Integer', iptr);
@@ -109,6 +111,15 @@ begin
     RegisterProperty('EditorMode','boolean',iptrw);
     RegisterProperty('LeftCol','integer',iptrw);
     RegisterProperty('Taborder','integer',iptrw);
+    RegisterProperty('Color', 'TColor', iptrw);
+    RegisterProperty('FixedColor', 'TColor', iptrw);
+     RegisterProperty('FixedCols', 'integer', iptrw);
+     RegisterProperty('FixedRows', 'integer', iptrw);
+
+   { property RowCount;
+    property Font;
+    property GridLineWidth;}
+
 
     //RegisterProperty('ONDrawCell', 'TNOTIFYEVENT', iptrw);
    end;
@@ -117,10 +128,28 @@ end;
 procedure SIRegister_TCustomDrawGrid(CL: TPSPascalCompiler);
 begin
   with CL.AddClass(CL.FindClass('TCustomGrid'),TCustomDrawGrid) do begin
-    RegisterPublishedProperties;
+   // RegisterPublishedProperties;
     RegisterMethod('Procedure Free;');
     RegisterMethod('Function CellRect( ACol, ARow : Longint) : TRect');
     RegisterMethod('Procedure MouseToCell( X, Y : Integer; var ACol, ARow : Longint)');
+    RegisterPublishedProperties;
+    RegisterProperty('Canvas', 'TCanvas', iptr);
+    RegisterProperty('EditorMode', 'boolean', iptrw);
+
+
+   { property Canvas;
+    property Col;
+    property ColWidths;
+    property EditorMode;
+    property GridHeight;
+    property GridWidth;
+    property LeftCol;
+    property Selection;
+    property Row;
+    property RowHeights;
+    property TabStops;
+    property TopRow;   }
+
   end;
 end;
 
@@ -128,11 +157,14 @@ procedure SIRegister_TCustomGrid(CL: TPSPascalCompiler);
 begin
   with CL.AddClass(CL.FindClass('TCustomControl'),TCustomGrid) do begin
     RegisterPublishedProperties;
+  //      property TabStop default True;
+    RegisterProperty('TabStop','boolean',iptrw);
     RegisterProperty('BorderStyle','TBorderStyle',iptrw);
     RegisterProperty('Options','TGridOptions',iptrw);
     //RegisterProperty('TabStops','integer boolean',iptrw);
     RegisterMethod('Function MouseCoord( X, Y : Integer) : TGridCoord');
     RegisterMethod('Procedure Free');
+    RegisterMethod('Constructor CREATE(AOWNER : TCOMPONENT)');
   end;
 end;
 
@@ -140,6 +172,7 @@ procedure SIRegister_TInplaceEdit(CL: TPSPascalCompiler);
 begin
   with CL.AddClass(CL.FindClass('TCustomMaskEdit'),TInplaceEdit) do begin
     RegisterPublishedProperties;
+    RegisterMethod('Constructor CREATE( AOWNER : TCOMPONENT)');
     RegisterMethod('Procedure Deselect');
     RegisterMethod('Procedure Hide');
     RegisterMethod('Procedure Invalidate');
@@ -166,8 +199,7 @@ begin
   SIRegister_TInplaceEdit(CL);
   CL.AddTypeS('TGridOption', '( goFixedVertLine, goFixedHorzLine, goVertLine, g'
    +'oHorzLine, goRangeSelect, goDrawFocusSelected, goRowSizing, goColSizing, g'
-   +'oRowMoving, goColMoving, goEditing, goTabs, goRowSelect, goAlwaysShowEdito'
-   +'r, goThumbTracking )');
+   +'oRowMoving, goColMoving, goEditing, goTabs, goRowSelect, goAlwaysShowEditor, goThumbTracking )');
   CL.AddTypeS('TGridOptions', 'set of TGridOption');
   CL.AddTypeS('TGridDrawStates', '( gdSelected, gdFocused, gdFixed )');
    CL.AddTypeS('TGridDrawState', 'set of TGridDrawStates');

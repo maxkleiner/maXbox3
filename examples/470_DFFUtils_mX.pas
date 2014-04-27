@@ -2,7 +2,7 @@ unit DFFUtils;
 
 //http://www.delphiforfun.org/Programs/Library/Default.htm
 //#locs:417
-//#sign:Administrator: PC08: 23/04/2014 09:28:19 PM 
+//#sign:Administrator: PC08: 26/04/2014 09:55:30 PM 
 
 
 interface
@@ -194,10 +194,10 @@ begin
     width:=w;
     repeat width:=width+1 until fixedcols+visiblecolcount=colcount;
     h:=0;
-    //for i:=0 to rowcount-1 do h:=h+rowheights[i];             add in mX!
+    for i:=0 to rowcount-1 do h:=h+rowheights[i];             //add in mX!
     height:=h;
     repeat height:=height+1 until fixedrows+visiblerowcount=rowcount;
-    //invalidate;
+      invalidate;
   end;
 end;
 

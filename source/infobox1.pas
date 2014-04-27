@@ -108,7 +108,7 @@ procedure TAboutBox.hyperLinkCreate;
       caption:= rsKLink;
       //font.color:= clRed;
       hyperlinkcolor:= clRed;
-      font.color:= clTeal;
+      font.color:= clskyblue;
      //onClick:= startBrowserInfo;
     end;
     with myhyperlabel2 do begin
@@ -117,7 +117,7 @@ procedure TAboutBox.hyperLinkCreate;
       top:= 80;
       color:= clRed;
       hyperlinkcolor:= clRed;
-      font.color:= clTeal;
+      font.color:= clskyblue;
       caption:= rsKEmail;
     end;
     with myhyperlabel3 do begin
@@ -127,7 +127,7 @@ procedure TAboutBox.hyperLinkCreate;
       top:= 08;
       color:= clRed;
       hyperlinkcolor:= clRed;
-      font.color:= clTeal;
+      font.color:= clskyblue;
       caption:= rsMBLink;
     end;
  end;

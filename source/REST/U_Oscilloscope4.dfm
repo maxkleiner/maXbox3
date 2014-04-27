@@ -1,4 +1,4 @@
-object frmMain: TfrmMain
+object OscfrmMain: TOscfrmMain
   Left = 603
   Top = 169
   Caption = 'mX Dual Trace Oscilloscope Ver 4.2.3'

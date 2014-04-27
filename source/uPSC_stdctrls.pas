@@ -611,7 +611,7 @@ begin
       RegisterProperty('ALIGN', 'TALIGN', iptrw);
       RegisterProperty('ALIGNMENT', 'TAlignment', iptrw);
     RegisterProperty('AUTOSIZE', 'Boolean', iptrw);
-    RegisterProperty('CAPTION', 'String', iptrw);
+    //RegisterProperty('CAPTION', 'String', iptrw);
        RegisterProperty('COLOR', 'TColor', iptrw);
     RegisterProperty('FONT', 'TFont', iptrw);
     RegisterProperty('MULTISELECT', 'Boolean', iptrw);

@@ -42,7 +42,7 @@ uses
 
 type
   PBufArray=PByteARRAY;
-  TfrmMain = class(TForm)
+  TOscfrmMain = class(TForm)
     Label2: TLabel;
     SweepEdt: TEdit;
     SweepUD: TUpDown;
@@ -230,7 +230,7 @@ type
     procedure SetOscState;
   end;
 
-var frmMain: TfrmMain;
+var OscfrmMain: TOscfrmMain;
 
 implementation
 
@@ -245,7 +245,7 @@ const
   nbrHLines = 10;
 
 {********************* FormCreate ************}
-procedure TfrmMain.FormCreate(Sender: TObject);
+procedure TOscfrmMain.FormCreate(Sender: TObject);
 begin
   doublebuffered := true;
  // origbufsize    := framesperbuffer*image1.width;
@@ -272,13 +272,13 @@ begin
 
 end;
 
-procedure TfrmMain.FormActivate(Sender: TObject);
+procedure TOscfrmMain.FormActivate(Sender: TObject);
 begin
  // windowstate:=wsmaximized;
   SetButtonState;
 end;
 
-procedure TfrmMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+procedure TOscfrmMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 { Stop the recorder first}
 begin
   if assigned(wavein) then
@@ -296,7 +296,7 @@ end;
 
 
   {***************** Setup ****************}
-procedure TfrmMain.setup;
+procedure TOscfrmMain.setup;
 {Initialize the TWaveIn class and initial the image area}
 begin
   errcount := 0;
@@ -369,7 +369,7 @@ begin
   setlength(savedframedata,0); {forget about any saved data}
 end;
 
-procedure TfrmMain.ShowScaleValue;
+procedure TOscfrmMain.ShowScaleValue;
 begin
   if btnDual.Down then
     scalelbl.caption := format('Scale: %5.2f ms/div',[hinc*1000/xinc/2 ])
@@ -377,7 +377,7 @@ begin
     scalelbl.caption := format('Scale: %5.2f ms/div',[hinc*1000/xinc ]);
 end;
 
-procedure TfrmMain.btnRunClick(Sender: TObject);
+procedure TOscfrmMain.btnRunClick(Sender: TObject);
 begin
   Recalc;
 
@@ -392,7 +392,7 @@ begin
   SetButtonstate;
 end;
 
-procedure TfrmMain.Recalc;
+procedure TOscfrmMain.Recalc;
 begin
 
   if btnDual.Down then
@@ -414,7 +414,7 @@ begin
 end;
 
 
-Procedure TfrmMain.Start; {Start the recorder}
+Procedure TOscfrmMain.Start; {Start the recorder}
 begin
   memo1.color:=clWindow;
   memo1.Clear;
@@ -436,7 +436,7 @@ begin
 end;
 
 
-procedure TfrmMain.Stop;
+procedure TOscfrmMain.Stop;
 begin
   if assigned(wavein) then
     Wavein.StopInput;
@@ -445,7 +445,7 @@ begin
 end;
 
 {************** OneFrameBtnClick ***********}
-procedure TfrmMain.BtnOneFrameClick(Sender: TObject);
+procedure TOscfrmMain.BtnOneFrameClick(Sender: TObject);
 begin
 
   if BtnOneFrame.Down then
@@ -498,7 +498,7 @@ end;
 {**********************************************}
 {****************** BufferFull ****************}
 {**********************************************}
-procedure TfrmMain.Bufferfull(var Message: TMessage);
+procedure TOscfrmMain.Bufferfull(var Message: TMessage);
 {Called when a buffer fills (a MM_WIN_DATA mesage is received)}
 var
   i:integer;
@@ -755,7 +755,7 @@ end;
 
 
 {**************** PostError *************}
-Procedure TfrmMain.PostError(s:string);
+Procedure TOscfrmMain.PostError(s:string);
 {Called by Wavein when error in encountered }
 begin
   inc(errcount);
@@ -777,7 +777,7 @@ begin
 end;
 
 {*********************** SetMaxPtsToAvg ************}
-Procedure TfrmMain.setmaxPtsToAvg;
+Procedure TOscfrmMain.setmaxPtsToAvg;
 {set the maximum number of points to average for each plotted point}
 {set to ensure that each buffer draws at least one full trace}
 {call when bufsize, or xinc changes}
@@ -816,7 +816,7 @@ end;
 
 
 {******************* SweepEdtChange *************}
-procedure TfrmMain.SweepEdtChange(Sender: TObject);
+procedure TOscfrmMain.SweepEdtChange(Sender: TObject);
 begin
   xinc := SweepUD.position;
   SetMaxPtstoavg;
@@ -856,7 +856,7 @@ begin
 end;
  *)
 
-procedure TfrmMain.SaveImage;
+procedure TOscfrmMain.SaveImage;
 {save scope image}
 var
   i:integer;
@@ -885,7 +885,7 @@ end;
 
 
 {************** TrigLevelBarChange ************}
-procedure TfrmMain.TrigLevelBarChange(Sender: TObject);
+procedure TOscfrmMain.TrigLevelBarChange(Sender: TObject);
 {Trigger level changed by user, change trigger level display}
 {Kind of tricky here, we want reset the trigger level bar, but
    the trigger level change tries to reset the trigger sign radiogroup
@@ -930,21 +930,21 @@ end;
 
 
 {*********** CalibrateBtnClick ***********}
-procedure TfrmMain.CalibrateBtnClick(Sender: TObject);
+procedure TOscfrmMain.CalibrateBtnClick(Sender: TObject);
 {Set flag to cause recalculation  of vertical offset}
 begin
   calibrate := true;
 end;
 
 {************** StaticText1Click ************}
-procedure TfrmMain.StaticText1Click(Sender: TObject);
+procedure TOscfrmMain.StaticText1Click(Sender: TObject);
 begin
    ShellExecute(Handle, 'open', 'http://www.delphiforfun.org/',
                nil, nil, SW_SHOWNORMAL);
 end;
 
 {************ SpectrumBtnClick *************}
-procedure TfrmMain.SpectrumBtnClick(Sender: TObject);
+procedure TOscfrmMain.SpectrumBtnClick(Sender: TObject);
 var
   i,oldlen,n:integer;
   //,pwr:integer;
@@ -989,7 +989,7 @@ begin
 end;
 
 {*************** RateGrpClick **********}
-procedure TfrmMain.ChangeSampleRate;
+procedure TOscfrmMain.ChangeSampleRate;
 {Sampling rate changed, reset everything}
 begin
   if assigned(wavein) then
@@ -1006,7 +1006,7 @@ begin
 end;
 
 //Dual input
-procedure TfrmMain.btnDualClick(Sender: TObject);
+procedure TOscfrmMain.btnDualClick(Sender: TObject);
 begin
   if not btnDual.Down then
     OnCh1Box.checked := true;
@@ -1020,55 +1020,55 @@ begin
 end;
 
 //Trigger on/off
-procedure TfrmMain.btnTrigerOnClick(Sender: TObject);
+procedure TOscfrmMain.btnTrigerOnClick(Sender: TObject);
 begin
   SetButtonstate;
 end;
 
 // Input Gain
-procedure TfrmMain.edtGainCh1Change(Sender: TObject);
+procedure TOscfrmMain.edtGainCh1Change(Sender: TObject);
 begin
   Ch1Gain := upGainCh1.Position;
 end;
 
-procedure TfrmMain.edtGainCh2Change(Sender: TObject);
+procedure TOscfrmMain.edtGainCh2Change(Sender: TObject);
 begin
   Ch2Gain := upGainCh2.Position;
 end;
 
 // Input Y ofset
-procedure TfrmMain.trOfsCh1Change(Sender: TObject);
+procedure TOscfrmMain.trOfsCh1Change(Sender: TObject);
 begin
   SetOscState;
   ShowStored;
 end;
 
-procedure TfrmMain.trOfsCh2Change(Sender: TObject);
+procedure TOscfrmMain.trOfsCh2Change(Sender: TObject);
 begin
   SetOscState;
   ShowStored;
 end;
 
 // <-- X --> ofset
-procedure TfrmMain.trStartPosChange(Sender: TObject);
+procedure TOscfrmMain.trStartPosChange(Sender: TObject);
 begin
   ShowStored;
 end;
 
 // Screen controls
-procedure TfrmMain.upFocusClick(Sender: TObject; Button: TUDBtnType);
+procedure TOscfrmMain.upFocusClick(Sender: TObject; Button: TUDBtnType);
 begin
   SetOscState;
   ShowStored;
 end;
 
-procedure TfrmMain.upBeamLightClick(Sender: TObject; Button: TUDBtnType);
+procedure TOscfrmMain.upBeamLightClick(Sender: TObject; Button: TUDBtnType);
 begin
   SetOscState;
   ShowStored;
 end;
 
-procedure TfrmMain.UpScaleLightChanging(Sender: TObject;
+procedure TOscfrmMain.UpScaleLightChanging(Sender: TObject;
   var AllowChange: Boolean);
 begin
   SetOscState;
@@ -1076,30 +1076,30 @@ begin
 end;
 
 //Input sample
-procedure TfrmMain.sp11025SampleClick(Sender: TObject);
+procedure TOscfrmMain.sp11025SampleClick(Sender: TObject);
 begin
   ChangeSampleRate;
 end;
 
-procedure TfrmMain.sp22050SampleClick(Sender: TObject);
+procedure TOscfrmMain.sp22050SampleClick(Sender: TObject);
 begin
   ChangeSampleRate;
 end;
 
-procedure TfrmMain.sp44100SampleClick(Sender: TObject);
+procedure TOscfrmMain.sp44100SampleClick(Sender: TObject);
 begin
   ChangeSampleRate;
 end;
 
 //Input on/off
-procedure TfrmMain.btnCh2OnClick(Sender: TObject);
+procedure TOscfrmMain.btnCh2OnClick(Sender: TObject);
 begin
   SetButtonstate;
   SetOscState;
   ShowStored;
 end;
 
-procedure TfrmMain.btnCh1OnClick(Sender: TObject);
+procedure TOscfrmMain.btnCh1OnClick(Sender: TObject);
 begin
   SetButtonstate;
   SetOscState;
@@ -1107,42 +1107,42 @@ begin
 end;
 
 //Input grounded
-procedure TfrmMain.btnCH1GndClick(Sender: TObject);
+procedure TOscfrmMain.btnCH1GndClick(Sender: TObject);
 begin
   SetOscState;
   ShowStored;
 end;
 
-procedure TfrmMain.btnCH2GndClick(Sender: TObject);
+procedure TOscfrmMain.btnCH2GndClick(Sender: TObject);
 begin
   SetOscState;
   ShowStored;
 end;
 
 // Menu functions-----------------------
-procedure TfrmMain.menuExitClick(Sender: TObject);
+procedure TOscfrmMain.menuExitClick(Sender: TObject);
 begin
   Close;
 end;
 
-procedure TfrmMain.menuSaveImage1Click(Sender: TObject);
+procedure TOscfrmMain.menuSaveImage1Click(Sender: TObject);
 begin
   SaveImage;
 end;
 
-procedure TfrmMain.MenuGreenClick(Sender: TObject);
+procedure TOscfrmMain.MenuGreenClick(Sender: TObject);
 begin
   frmOscilloscope1.ScreenColor := clGreen;
   ShowStored;
 end;
 
-procedure TfrmMain.menuBlackClick(Sender: TObject);
+procedure TOscfrmMain.menuBlackClick(Sender: TObject);
 begin
   frmOscilloscope1.ScreenColor := clBlack;
   ShowStored;
 end;
 
-procedure TfrmMain.MenuData_TimeClick(Sender: TObject);
+procedure TOscfrmMain.MenuData_TimeClick(Sender: TObject);
 begin
   menuData_Time.Checked := not menuData_Time.Checked;
   SetOscState;
@@ -1150,7 +1150,7 @@ begin
 end;
 
 //Change the expansion of an capure frame
-procedure TfrmMain.btnExpand1Click(Sender: TObject);
+procedure TOscfrmMain.btnExpand1Click(Sender: TObject);
 begin
   CenterAdjust;
   trStartPos.Max := 400;
@@ -1158,7 +1158,7 @@ begin
   ShowStored;
 end;
 
-procedure TfrmMain.btnExpand2Click(Sender: TObject);
+procedure TOscfrmMain.btnExpand2Click(Sender: TObject);
 begin
   CenterAdjust;
   trStartPos.Max := 200;
@@ -1166,7 +1166,7 @@ begin
   ShowStored;
 end;
 
-procedure TfrmMain.btnExpand4Click(Sender: TObject);
+procedure TOscfrmMain.btnExpand4Click(Sender: TObject);
 begin
   CenterAdjust;
   trStartPos.Max := 100;
@@ -1174,7 +1174,7 @@ begin
   ShowStored;
 end;
 
-procedure TfrmMain.btnExpand8Click(Sender: TObject);
+procedure TOscfrmMain.btnExpand8Click(Sender: TObject);
 begin
   CenterAdjust;
   trStartPos.Max := 50;
@@ -1184,26 +1184,26 @@ end;
 
 //Change the gain of an capure frame
 {******* btnGain0Click *********}
-procedure TfrmMain.btnGain0Click(Sender: TObject);
+procedure TOscfrmMain.btnGain0Click(Sender: TObject);
 begin
   ShowStored;
 end;
 
 {******* btnGain1Click *********}
-procedure TfrmMain.btnGain1Click(Sender: TObject);
+procedure TOscfrmMain.btnGain1Click(Sender: TObject);
 begin
   ShowStored;
 end;
 
 {********** btnGain2Click ***********}
-procedure TfrmMain.btnGain2Click(Sender: TObject);
+procedure TOscfrmMain.btnGain2Click(Sender: TObject);
 begin
   ShowStored;
 end;
 
 //--------------------------------------------------------------------
 {********* SetButtonState ***********}
-procedure TfrmMain.SetButtonstate;
+procedure TOscfrmMain.SetButtonstate;
 begin
 
   btnRun.Enabled := not BtnOneFrame.Down;
@@ -1282,7 +1282,7 @@ end;
 *)
 
 {********** SetOscState ********}
-procedure TfrmMain.SetOscState;
+procedure TOscfrmMain.SetOscState;
 begin
   frmOscilloscope1.ScaleLight := UpScaleLight.Position;
   frmOscilloscope1.BeamLight  := upBeamLight.Position;
@@ -1296,7 +1296,7 @@ end;
 
 //Draw text at the oscilloscope screen
 {********* DoDrawBeamtext ************}
-procedure TfrmMain.DoDrawBeamText(Sender: Tobject);
+procedure TOscfrmMain.DoDrawBeamText(Sender: Tobject);
 var
   s:string;
   Expand:integer;
@@ -1322,7 +1322,7 @@ end;
 
 // show captured frame
 {******** ShowStored ********}
-procedure TfrmMain.ShowStored;
+procedure TOscfrmMain.ShowStored;
 var
   myBeamA: array of TPoint;
   myBeamB: array of TPoint;
@@ -1373,7 +1373,7 @@ begin
 end;
 
 {********* GetExpand *********}
-function TfrmMain.GetExpand:integer ;
+function TOscfrmMain.GetExpand:integer ;
 begin
   Result :=0;
 
@@ -1388,7 +1388,7 @@ begin
 end;
 
 {******** GetGain **********}
-function TfrmMain.GetGain:double ;
+function TOscfrmMain.GetGain:double ;
 begin
   Result :=1;
 
@@ -1401,7 +1401,7 @@ begin
 end;
 
 {********** CenterAdjust *********}
-procedure TfrmMain.CenterAdjust;
+procedure TOscfrmMain.CenterAdjust;
 var
   NewExpand:integer;
   myPos:integer;
@@ -1416,7 +1416,7 @@ begin
 end;
 
 
-procedure TfrmMain.Label12DblClick(Sender: TObject);
+procedure TOscfrmMain.Label12DblClick(Sender: TObject);
 begin
   trStartPos.Position := 0;
 
