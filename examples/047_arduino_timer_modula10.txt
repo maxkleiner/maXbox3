@@ -1,0 +1,547 @@
+PROGRAM Arduino_Time_Modula;
+//_47, locs=74
+
+
+var ComFile: THandle;
+     ser: TSerial;
+                       
+
+function modula10(zahl: Int64): Int64;
+{   Nach diesem Verfahren werden z.B. die Prüfziffern
+    von EAN-Codes (immer die ganz rechte Stelle) berechnet.
+    Das System funktioniert wie folgt:
+    Angenommener Code 4205 4504 (Camel Filter)
+    Die letzte Stelle wollen wir berechnen, diese
+    wird also nicht mit einbezogen.
+    Die einzelen Stellen werden abwechselnd mit
+    3 und 1 multipliziert wobei rechts immer mit
+    3 begonnen wird. Die Summe der Produkte wird
+    durch 10 (dem Modul) geteilt, der Rest wird von
+    10 abgezogen. Sollte hierbei 10 übrigbleiben
+    ist die Prüfziffer 0. Hier das Beispiel:
+
+    Stelle      Wert    Wichtung    Produkt
+      1           4   *    3          12
+      2           2   *    1           2
+      3           0   *    3           0
+      4           5   *    1           5
+      5           4   *    3          12
+      6           5   *    1           5
+      7           0   *    3           0
+                                    -------
+    Summe                             36
+
+    Summe / 10(Modul) = 3 Rest 6
+    10(Modul) - 6(Rest) = 4  <- Die Prüfziffer
+    Wenn der Rest 0 ist wäre die Prüfziffer also 10.
+    Da aber nur eine Stelle zur Verfügung steht,
+    wird die Prüfziffer 0.     }
+    
+var 
+  wert: Longint;
+  multi: Word;
+begin
+  //Rechte Stelle wird immer mit 3 multipliziert
+  multi := 3;
+  wert  := 0;
+  repeat
+    //Wert erhöhen um den Wert der letzten Stelle * Multiplikator
+    wert := wert + (zahl - trunc(zahl / 10) * 10) * multi;
+    //Multiplikator ist abwechselnd 3 und 1
+    if multi = 3 then multi := 1 
+    else 
+      multi := 3;
+    //Letzte Stelle der Zahl abschneiden
+    zahl := trunc(zahl / 10);
+  until zahl = 0;
+  //Prüfziffer ermitteln
+  Result := 10 - (wert - trunc(wert / 10) * 10);
+  //Wenn
+  if Result = 10 then Result := 0;
+end;
+
+function ismodula10(zahl: Int64): Boolean;
+  //Prüft mit Hilfe von "modula10", ob die letzte
+  //(rechte) Stelle als Prüfziffer korrekt ist.
+begin
+  //letzte Stelle Abschneiden und Prüfziffer errechnen,
+  //dann mit letzter Stelle der übergebenen Zahl vergleichen
+  if modula10(trunc(zahl / 10)) = zahl - (trunc(zahl / 10) * 10) then
+    Result := True 
+  else 
+    Result := False;
+end;
+
+var FComPort: TAfComPort;
+procedure AFComPortInit;
+begin
+   FComPort:= TAfComPort.Create(self);
+   with FcomPort do begin
+    BaudRate:= br9600;
+    //OpenComPort(5);
+    ComNumber:= 5;
+    //Parity:= paNone;
+    StopBits:= sbOneStopBit;
+    DataBits:= dbEight;
+ 
+    autoopen:= true;
+   // OnDataRecived:= @TPortForm1_AfComPort1DataRecived;
+  end;
+end;
+
+procedure SetArduinoTime2(Sender: TObject);
+var arduinoTime,aout: string;
+
+begin
+  //arduinoTime:= FormatDatetime('0:HHmmssddMMyy',Now)//+intToStr(DayOfWeek(Now-1)); 
+   arduinoTime:= FormatDatetime('HHmmssddMMyyyy',Now)//+intToStr(DayOfWeek(Now-1)); 
+    //formatdatetime('"stop is:" hh:mm:ss:zzz', time)) 
+   WriteLn(arduinoTime);
+     //pass the time to COM port
+   //FComPort.ExecuteConfigDialog
+   //FComPort.Open;     missing!
+   
+   FComPort.Active:= true;  
+   
+   FComPort.WriteString(arduinoTime)
+   //while (true) do 
+      repeat
+        //aout:='';
+        aout:= FComPort.ReadString;
+            //if aout <> '' then
+        WriteLn('From Arduino: ' + aout);
+        sleep(1000)
+      until iskeyPressed;  
+   //FComPort.Close;    
+   FComPort.Free;    
+end;       
+
+
+
+const COMPORT ='COM5';
+var cPort: TComPort;
+
+procedure InitCreateComPort(Sender: TObject);
+begin
+  cPort:= TComPort.Create(self);
+  with cPort do begin
+    BaudRate:= br9600;
+    Port:= COMPORT;
+    Parity.Bits:= prNone;
+    StopBits:= sbOneStopBit;
+    DataBits:= dbEight;
+  end;
+end; 
+
+procedure SetArduinoTime(Sender: TObject);
+var arduinoTime,aout: shortstring;
+
+begin
+  //arduinoTime:= FormatDatetime('0:HHmmssddMMyy',Now)//+intToStr(DayOfWeek(Now-1)); 
+   arduinoTime:= FormatDatetime('HHmmssddMMyyyy',Now)//+intToStr(DayOfWeek(Now-1)); 
+    //formatdatetime('"stop is:" hh:mm:ss:zzz', time)) 
+   WriteLn(arduinoTime);
+     //pass the time to COM port
+   try
+     cPort.Open;
+   except 
+     writeln(' no com port found ');
+      //cPort.Free;
+   end;      
+     cPort.WriteStr(arduinoTime)
+   //while (true) do 
+      repeat
+        aout:='';
+        cport.ReadStr(aout, 21)
+            //if aout <> '' then
+        WriteLn('From Arduino: ' + aout);
+        sleep(1000)
+      until iskeyPressed;  
+   cPort.Close;    
+   cPort.Free;    
+end; 
+
+
+//const GENERIC_READ= $80000000;
+  //    GENERIC_WRITE = $40000000;      
+ 
+
+function OpenCOMPort: Boolean;
+var
+  DeviceName: array[0..80] of Char;
+  ComFile: THandle;
+  DeviceNames: string;
+begin
+   { First step is to open the communications device for read/write.
+     This is achieved using the Win32 'CreateFile' function.
+     If it fails, the function returns false.
+
+     Wir versuchen, COM1 zu öffnen.
+     Sollte dies fehlschlagen, gibt die Funktion false zurück.
+   }
+  //StrPCopy(DeviceName, 'COM1:');
+  {      HANDLE WINAPI CreateFile(
+  _In_      LPCTSTR lpFileName,
+  _In_      DWORD dwDesiredAccess,
+  _In_      DWORD dwShareMode,
+  _In_opt_  LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+  _In_      DWORD dwCreationDisposition,
+  _In_      DWORD dwFlagsAndAttributes,
+  _In_opt_  HANDLE hTemplateFile
+);  }
+ { ComFile := WCreateFile(pchar(DeviceNames),
+    GENERIC_READ or GENERIC_WRITE, 0, NIL,
+    OPEN_EXISTING,
+    FILE_ATTRIBUTE_NORMAL, 0);}
+
+  if ComFile = INVALID_HANDLE_VALUE then
+    Result := False
+  else
+    Result := True;
+end;
+
+
+//http://www.luisdigital.com/programacion/fpc/serial.pp
+function SerOpen(const DeviceName: String): THandle;
+begin
+  {Result:= wCreateFile(PChar('\\.\' + DeviceName),
+                       GENERIC_READ or GENERIC_WRITE,
+                       0,
+                       Nil,
+                       OPEN_EXISTING,
+                       FILE_ATTRIBUTE_NORMAL,
+                       0); }
+end;
+
+
+begin
+
+  maxform1.console1click(self);
+  if ismodula10(42054504) then writeln('EAN Mod10 correct') else
+                                 writeln('Mod10 false'); 
+  
+  //cCOM
+  InitCreateComPort(self)
+  SetArduinoTime(self);
+  
+  //Async Free Pro
+  {AFComPortInit;
+  SetArduinoTime2(self);}
+  
+  //ComFile:= wCreateFile(
+  
+                         
+End.
+
+http://www.pjrc.com/teensy/td_libs_Time.html
+
+//****************************************************
+
+/*
+ * Arduino als Uhr
+ * Weiterentwicklung des mit der Time Library mitgelieferten Beispiels
+ * Autorin: Silvia Rothen, rothen ecotronics, Bern, Switzerland
+ * http://ecotronics.ch.honorius.sui-inter.net/wordpress/2012/arduino-als-uhr/
+ *
+ */
+ 
+#include <Time.h>
+char incoming[15] = {}; //wegen Endzeichen
+int led = 13;
+ 
+void setup() {
+  Serial.begin(9600);
+}
+ 
+void loop() {
+  int i = 0;
+  
+  //Zeit aus der seriellen Schnittstelle auslesen
+  if (Serial.available() > 0) {
+    //Array of Char leeren
+    memset(incoming, 0, sizeof(incoming));
+    //Zeit wird geliefert als HHmmssddMMyyyy, z.B. 23120027112012
+    while (Serial.available() > 0 && i < sizeof(incoming) - 1) {
+      incoming[i] = Serial.read();
+      i++;
+      delay(3);
+    }
+     
+    //in Zeit umwandeln
+    char hr[3] = {};
+    char min[3] = {};
+    char sec[3] = {};
+    char day[3] = {};
+    char month[3] = {};
+    char yr[5] = {};
+    hr[0] = incoming[0];
+    hr[1] = incoming[1];
+    min[0] = incoming[2];
+    min[1] = incoming[3];
+    sec[0] = incoming[4];
+    sec[1] = incoming[5];
+    day[0] = incoming[6];
+    day[1] = incoming[7];
+    month[0] = incoming[8];
+    month[1] = incoming[9];
+    yr[0] = incoming[10];
+    yr[1] = incoming[11];
+    yr[2] = incoming[12];
+    yr[3] = incoming[13];
+    setTime(atoi(hr), atoi(min), atoi(sec),
+      atoi(day), atoi(month), atoi(yr));
+    Serial.println("!new Time set");
+  }
+  
+  //Zeit anzeigen
+  digitalClockDisplay();
+  //1 Sekunde warten
+  delay(1000);
+}
+ 
+void digitalClockDisplay(){
+  // Digitalanzeige der Zeit
+  printDigits(hour(), "");
+  printDigits(minute(), ":");
+  printDigits(second(), ":");
+  printDigits(day(), " ");
+  printDigits(month(), ".");
+  Serial.print(".");
+  Serial.print(year());
+  Serial.println();
+}
+ 
+void printDigits(int digits, char trennzeichen[2] ){
+  // Hilfsfunktion zur Uhrendarstellung: Gibt vorstehenden Doppelpunkt und führende 0 aus
+  Serial.print(trennzeichen);
+  if(digits < 10) {
+    Serial.print('0');
+  }
+  Serial.print(digits);
+}
+      
+      
+Vielen Dank für Ihre Nachricht. Sie können mir den Betrag (Fr. 81.--) auf mein Postkono 87-234019-1 überweisen. Ich werde die Bogen heute Mittwoch per A-Post an Sie verschicken.
+
+Mit den besten Grüssen
+
+Adrian Morgenthaler
+
+
+function OpenCOMPort: Boolean;
+var
+  DeviceName: array[0..80] of Char;
+  ComFile: THandle;
+begin
+   { First step is to open the communications device for read/write.
+     This is achieved using the Win32 'CreateFile' function.
+     If it fails, the function returns false.
+
+     Wir versuchen, COM1 zu öffnen.
+     Sollte dies fehlschlagen, gibt die Funktion false zurück.
+   }
+  StrPCopy(DeviceName, 'COM1:');
+
+  ComFile := CreateFile(DeviceName,
+    GENERIC_READ or GENERIC_WRITE,
+    0,
+    nil,
+    OPEN_EXISTING,
+    FILE_ATTRIBUTE_NORMAL,
+    0);
+
+  if ComFile = INVALID_HANDLE_VALUE then
+    Result := False
+  else
+    Result := True;
+end;
+
+
+function SetupCOMPort: Boolean;
+const
+  RxBufferSize = 256;
+  TxBufferSize = 256;
+var
+  DCB: TDCB;
+  Config: string;
+  CommTimeouts: TCommTimeouts;
+begin
+   { We assume that the setup to configure the setup works fine.
+     Otherwise the function returns false.
+
+     wir gehen davon aus das das Einstellen des COM Ports funktioniert.
+     sollte dies fehlschlagen wird der Rückgabewert auf "FALSE" gesetzt.
+   }
+
+  Result := True;
+
+  if not SetupComm(ComFile, RxBufferSize, TxBufferSize) then
+    Result := False;
+
+  if not GetCommState(ComFile, DCB) then
+    Result := False;
+
+  // define the baudrate, parity,...
+  // hier die Baudrate, Parität usw. konfigurieren
+   
+  Config := 'baud=9600 parity=n data=8 stop=1';
+
+  if not BuildCommDCB(@Config[1], DCB) then
+    Result := False;
+
+  if not SetCommState(ComFile, DCB) then
+    Result := False;
+
+  with CommTimeouts do
+  begin
+    ReadIntervalTimeout         := 0;
+    ReadTotalTimeoutMultiplier  := 0;
+    ReadTotalTimeoutConstant    := 1000;
+    WriteTotalTimeoutMultiplier := 0;
+    WriteTotalTimeoutConstant   := 1000;
+  end;
+
+  if not SetCommTimeouts(ComFile, CommTimeouts) then
+    Result := False;
+end;
+
+
+{
+  The following is an example of using the 'WriteFile' function
+  to write data to the serial port.
+
+  Folgendes Beispiel verwendet die 'WriteFile' Funktion, um Daten
+  auf den seriellen Port zu schreiben.
+}
+
+
+procedure SendText(s: string);
+var
+  BytesWritten: DWORD;
+begin
+   {
+     Add a word-wrap (#13 + #10) to the string
+
+     An den übergebenen String einen Zeilenumbruch (#13 + #10) hängen
+   }
+  s := s + #13 + #10;
+  WriteFile(ComFile, s[1], Length(s), BytesWritten, nil);
+end;
+
+
+{
+  The following is an example of using the 'ReadFile' function to read
+  data from the serial port.
+  
+  Folgendes Beispiel verwendet die 'ReadFile' Funktion, um Daten
+  vom seriellen Port zu lesen.
+}
+
+
+procedure ReadText: string;
+var
+  d: array[1..80] of Char;
+  s: string;
+  BytesRead, i: Integer;
+begin
+  Result := '';
+  if not ReadFile(ComFile, d, SizeOf(d), BytesRead, nil) then
+  begin
+    { Raise an exception }
+  end;
+  s := '';
+  for i := 1 to BytesRead do s := s + d[I];
+  Result := s;
+end;
+
+
+procedure CloseCOMPort;
+begin
+  // finally close the COM Port!
+  // nicht vergessen den COM Port wieder zu schliessen!
+  CloseHandle(ComFile);
+end;
+
+
+http://www.jbox.dk/sanos/source/include/win32.h.html
+
+with Tcolordialog.create(self) do begin
+    try 
+      execute;
+    finally
+      free
+    end
+  end;    
+  
+           
+           
+           Basic
+           Android
+           Session 
+           To 
+           Arduino
+           
+           
+           
+           
+           
+           if (Console.ReadKey().KeyChar == 'Q')                      
+                       Console.WriteLine("out box");
+****************************************
+ArduinoTimeSetter.cs                       
+using System;
+using System.Collections.Generic;
+using System.IO.Ports;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Configuration;
+//using System.Apparduino.config;
+//using apparduino.config.Properties;
+
+//using ch.maxbox.arduino.time.Properties;
+
+//namespace ConsoleApplication2
+  namespace ch.maxbox.arduino.time  {
+     class ArduinoTimeSetter {  
+         static void Main(string[] args) { 
+             //Settings settings = new Settings();
+              //SerialPort port = new SerialPort(settings.port,9600);
+             SerialPort port = new SerialPort("COM5", 9600);
+          
+             DateTime now = DateTime.Now;
+             try
+             {
+                 port.Open();
+             }
+             catch (System.IO.IOException e)
+             {
+                 if (e.Source != null)
+                     Console.WriteLine("IOException no Port found: {0}", e.Source);
+                 //throw;
+                 Environment.Exit(0); 
+             }
+
+             //time formatting, be aware new format (incl weekdays) for DS1307
+             String arduinoTime = String.Format("{0:HHmmssddMMyy}", DateTime.Now);
+                                                        //+((int)DateTime.Now.DayOfWeek); 
+              Console.WriteLine(arduinoTime);
+              //pass the time to COM port
+              port.Write(arduinoTime);
+              
+              while (true) {
+                 Console.WriteLine("Time From Arduino: " + port.ReadLine());
+                 if (Console.ReadKey().KeyChar == 'Q')
+                 {
+                     Console.WriteLine("close from out of box: ");
+                     Environment.Exit(0);
+                     port.Close();
+                 }
+                 else continue;
+              }
+          port.Close();   //unreachable C has to be set with consoleexit
+        } 
+       
+     } 
+  }
+                        

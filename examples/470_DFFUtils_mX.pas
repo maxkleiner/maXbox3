@@ -1,8 +1,9 @@
 unit DFFUtils;
 
 //http://www.delphiforfun.org/Programs/Library/Default.htm
-//#locs:417
-//#sign:Administrator: PC08: 26/04/2014 09:55:30 PM 
+//#locs:420
+//#sign:Administrator: PC08: 27/04/2014 02:18:00 PM 
+//http://projecteuler.net/
 
 
 interface
@@ -413,6 +414,8 @@ function getfilesize(f:TSearchrec):int64;
       m:= m+1;
       result:=fszhi*m+fszlo;
     end;
+    
+    //writeln(sha1('E:\maxbox3\mXGit39991\maxbox3 - Kopie.zip'));
 
 end.
 
