@@ -1,7 +1,29 @@
 ****************************************************************
+Release Notes maXbox 3.9.9.96 June 2014
+****************************************************************
+SendBuffer, Color+Caption hack, ComboSet,SetPrivilege, WakeOnLAN
+ParaDice 3D Cube Polygraph, OCR, GPS, 12 Units add
+
+921 unit uPSI_cyIEUtils;
+922 unit uPSI_UcomboV2;
+923 uPSI_cyBaseComm,
+924 uPSI_cyAppInstances,
+925 uPSI_cyAttract,
+926 uPSI_cyDERUtils
+927 unit uPSI_cyDocER;
+928 unit uPSI_ODBC;
+929 unit uPSI_AssocExec;
+930 uPSI_cyBaseCommRoomConnector,
+931 uPSI_cyCommRoomConnector,
+932 uPSI_cyCommunicate,
+
+SHA1: Win 3.9.9.96: 9A91FEE9024DA10425E9C7B65ADDF93E819B63DB
+
+
+****************************************************************
 Release Notes maXbox 3.9.9.95 Mai 2014
 ****************************************************************
-Oscilloscope V4, Mixer, 7 Units add, URLMon, Form properties+
+Oscilloscope V4, Mixer, 17 Units add, URLMon, Form properties+, mathmax
 
 904 unit uPSI_U_HexView;
 905 uPSI_UWavein4,
@@ -10,8 +32,18 @@ Oscilloscope V4, Mixer, 7 Units add, URLMon, Form properties+
 908 uPSI_JvArrow,
 909 unit uPSI_UrlMon;
 910 unit U_Oscilloscope4;  //U_FFT
+911 unit uPSI_U_Oscilloscope4; //TOscfrmMain;
+912 unit uPSI_DFFUtils;  //DFF
+913 unit uPSI_MathsLib;  
+914 uPSI_UIntList;
+915 uPSI_UGetParens;
+916 unit uPSI_UGeometry;
+917 unit uPSI_UAstronomy;
+918 unit uPSI_UCardComponentV2;
+919 unit uPSI_UTGraphSearch;
+920 unit uPSI_UParser10;
 
-SHA1: Win 3.9.9.95: 10150C934566C42058BFC93FB50A7C53085D8FB5
+SHA1: Win 3.9.9.95: A8BE7AD5B70ECAF9797C5C9E42A3CD40E903145F
 
 
 ****************************************************************

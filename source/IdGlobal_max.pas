@@ -76,6 +76,11 @@ type
 
   //TIdStrings
 
+  EIdException = class(Exception);
+  TClassIdException = class of EIdException;
+    //used for index out of range
+  EIdRangeException = class(EIdException);
+
 const
   IdTimeoutDefault = -1;
   IdTimeoutInfinite = -2;
@@ -394,6 +399,8 @@ type
   function iif(ATest: Boolean; const ATrue: Integer; const AFalse: Integer): Integer; overload;
   function iif(ATest: Boolean; const ATrue: string;  const AFalse: string): string; overload;
   function iif(ATest: Boolean; const ATrue: Boolean; const AFalse: Boolean): Boolean; overload;
+  function iif(ATest: Boolean; const ATrue: double; const AFalse: double): double; overload;
+
   function IncludeTrailingSlash(const APath: string): string;
   function IntToBin(Value: cardinal): string;
   function IndyGetHostName: string;
@@ -2931,6 +2938,15 @@ begin
   end;
 end;
 
+function iif(ATest: Boolean; const ATrue: double; const AFalse: double): double;
+begin
+  if ATest then begin
+    Result := ATrue;
+  end else begin
+    Result := AFalse;
+  end;
+end;
+
 { TIdReadMemoryStream }
 
 procedure TIdReadMemoryStream.SetPointer(Ptr: Pointer; Size: Integer);
@@ -3294,21 +3310,21 @@ procedure CopyBytesToHostWord(const ASource : TIdBytes; const ASourceIndex: Inte
   var VDest : Word);
 begin
   VDest := IdGlobal_max.BytesToWord(ASource, ASourceIndex);
-  VDest := GStack.NetworkToHost(VDest);
+  //VDest := GStack.NetworkToHost(VDest);
 end;
 
 procedure CopyBytesToHostCardinal(const ASource : TIdBytes; const ASourceIndex: Integer;
   var VDest : Cardinal);
 begin
   VDest := IdGlobal_max.BytesToCardinal(ASource, ASourceIndex);
-  VDest := GStack.NetworkToHost(VDest);
+  //VDest := GStack.NetworkToHost(VDest);
 end;
 
 procedure CopyTIdNetworkWord(const ASource: Word;
     var VDest: TIdBytes; const ADestIndex: Integer);
 var LWord : Word;
 begin
-  LWord := GStack.HostToNetwork(ASource);
+  //LWord := GStack.HostToNetwork(ASource);
   CopyTIdWord(LWord,VDest,ADestIndex);
 end;
 
@@ -3316,7 +3332,7 @@ procedure CopyTIdNetworkCardinal(const ASource: Cardinal;
     var VDest: TIdBytes; const ADestIndex: Integer);
 var LCard : Cardinal;
 begin
-  LCard := GStack.HostToNetwork(ASource);
+  //LCard := GStack.HostToNetwork(ASource);
   CopyTIdCardinal(LCard,VDest,ADestIndex);
 end;
 
@@ -3919,7 +3935,7 @@ end;
 function BytesToString(ABytes: TIdBytes; AStartIndex: Integer; AMaxCount: Integer): string;
 begin
   if ((Length(ABytes) > 0) or (AStartIndex <> 0)) then begin
-    IdException.EIdRangeException.Create('Index out of bounds.'); {do not localize}
+    EIdRangeException.Create('Index out of bounds.'); {do not localize}
   end;
   AMaxCount := Min(Length(ABytes) - AStartIndex, AMaxCount);
   // For VCL we just do a byte to byte copy with no translation. VCL uses ANSI or MBCS.

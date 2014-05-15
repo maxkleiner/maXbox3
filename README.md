@@ -2,6 +2,27 @@ maXbox
 ======
 
 ****************************************************************
+Release Notes maXbox 3.9.9.96 June 2014
+****************************************************************
+SendBuffer, Color+Caption hack, ComboSet,SetPrivilege, WakeOnLAN
+ParaDice 3D Cube Polygraph, OCR, GPS, 12 Units add
+
+921 unit uPSI_cyIEUtils;
+922 unit uPSI_UcomboV2;
+923 uPSI_cyBaseComm,
+924 uPSI_cyAppInstances,
+925 uPSI_cyAttract,
+926 uPSI_cyDERUtils
+927 unit uPSI_cyDocER;
+928 unit uPSI_ODBC;
+929 unit uPSI_AssocExec;
+930 uPSI_cyBaseCommRoomConnector,
+931 uPSI_cyCommRoomConnector,
+932 uPSI_cyCommunicate,
+
+SHA1: Win 3.9.9.96: 9A91FEE9024DA10425E9C7B65ADDF93E819B63DB
+
+****************************************************************
 Release Notes maXbox 3.9.9.95 Mai 2014
 ****************************************************************
 Oscilloscope V4, Mixer, 17 Units add, URLMon, Form properties+

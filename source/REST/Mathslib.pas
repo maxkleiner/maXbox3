@@ -128,9 +128,10 @@ var
 {******** 64 bit Random Routines ********}
 //{$IF compilerversion>15}
   //RandSeed64 : UInt64 ;
-  //function Random64(const UI64 : UInt64) : UInt64 ; overload ;
-{//$ELSE}
   RandSeed64:Int64;
+
+ function Random64(const UI64 : UInt64) : UInt64 ; overload ;
+{//$ELSE}
   //function Random64(const N:Int64) : Int64 ; overload ;
 //{$IFEND}
 
@@ -1785,10 +1786,10 @@ begin
   Result := RandSeed64*HalfTo64 ;
   end {Random64} ;
 
-(*{function Random64(const UI64 : UInt64) : UInt64 ; overload ;
+function Random64(const UI64 : UInt64) : UInt64 ; overload ;
 begin
   Result := Trunc((Random64)*UI64)
-end {Random64} ;   }*)
+end {Random64} ;
 
 //{$ELSE}
  {64 bit RNG for Delphi 7 or earlier}

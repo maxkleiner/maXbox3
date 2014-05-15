@@ -101,6 +101,7 @@ begin
   //with RegClassS(CL,'TWinControl', 'TCustomControl') do
   with CL.AddClassN(CL.FindClass('TWinControl'),'TCustomControl') do begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
+       RegisterMethod('Procedure Free');
   end;
 end;
 
@@ -310,7 +311,8 @@ begin
     RegisterProperty('Anchors', 'TAnchors', iptRW);
     RegisterProperty('BidiMode', 'TBiDiMode', iptr);
     RegisterProperty('BoundsRect', 'TRect', iptr);
-    //RegisterProperty('Color', 'TColor', iptr);
+    RegisterProperty('Color', 'TColor', iptr);      //hack
+    RegisterProperty('Caption', 'TCaption', iptr);  //hack
 
     //RegisterProperty('ClientWidth', 'Integer', iptrw);
     RegisterProperty('Constraints', 'TSizeConstraints', iptrw);

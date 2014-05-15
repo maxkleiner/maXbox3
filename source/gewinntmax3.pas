@@ -108,6 +108,7 @@ Const { maximale Bewertung }
     procedure plaYList;
     procedure checkBoxClick(Sender: TObject);
     procedure GetMediaData(sender: TObject);
+    procedure CloseMediaData(sender: TObject);
     procedure StoreSonglist(Sender: TObject);
     procedure LoadSonglist(Sender: TObject);
     procedure ProgresTimerTimer(Sender: TObject);
@@ -375,6 +376,11 @@ begin
    end;
 end;
 
+procedure TMP3Player.CloseMediaData(sender: TObject);
+begin
+   lstbox.items.clear;
+end;
+
 procedure TMP3Player.StoreSonglist(Sender: TObject);
 begin
 selectFile:= 'mp3Songlist.txt';
@@ -475,7 +481,7 @@ begin
       caption:= '********MediaPlayer3************';
       Formstyle:= fsStayontop;
       height:= 650;
-      width:= 700;
+      width:= 750;
       //color:= clred;
       Position:= poScreenCenter;
       onClose:= pform2.FormCloseClick;
@@ -501,6 +507,10 @@ begin
     onDblClick:= pform2.ChangeSong;
     //popupmenu
   end;
+
+  // lstbox.items.clear;
+
+
   mButton:= TBitBtn.Create(pform2);
   with mButton do begin
     Parent:= pform2;
@@ -513,6 +523,17 @@ begin
     onclick:= pform2.GetMediaData;
   end;
 
+  with TBitBtn.Create(pform2) do begin
+    Parent:= pform2;
+    setbounds(560,480,150, 40);
+    caption:= 'Clear List';
+    font.size:= 12;
+    glyph.LoadFromResourceName(HINSTANCE,'CLOSEDFOLDER');
+    //mXButton(0,0,width, height,12,12,handle);
+    //event handler
+    onclick:= pform2.CloseMediaData;
+  end;
+
   with TJvAnalogClock.Create(pform2) do begin  //widgets set
     parent:= pform2;
     //bevelwidth:= 0;
@@ -522,7 +543,7 @@ begin
     //WidthHandHr:= 1;
     ColorHandHr:= clRed;
     ColorHandMin:= clRed;
-    setBounds(565,5,100,100);
+    setBounds(585,55,100,100);
     //centercol:= clyellow; //cldarkblue32; //clwebgold;
     //centersize:= 8;
   end;
@@ -530,11 +551,11 @@ begin
     parent:= pform2;
     stars:= 250;
     maxSpeed:= 12;
-    setBounds(565,150,100,100);
+    setBounds(585,195,100,100);
     active:= true;
   end;
   with TJvDice.create(pform2) do begin
-    setbounds(565,295,100,105);
+    setbounds(585,325,100,105);
     parent:= pform2;
     interval:= 500;
     RandomValue;

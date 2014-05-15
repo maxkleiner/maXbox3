@@ -1,11 +1,23 @@
-PROGRAM Statistic_Class_Grid;
+PROGRAM Statistic_Class_Grid_SETTEST;
 //shows lotto tips and all the binominal coefficients  
+
+
+Type 
+
+    TSysteminfo = record
+        dwNumberOfProcessors: word;
+        wProcessorArchitecture: word; 
+      end;  
+
+   procedure GetSystemInfo(lpSystemInfo: TSysteminfo); 
+          External 'GetSystemInfo@kernel32.dll stdcall';
+
 
 Const
    CROW = 5;
    CCOL = 10;
    LotNR = 6;
-   LotRANGE = 45;
+   LotRANGE = 45;                                                
 
 Type 
    TLottolist = array[1..lotNR] of byte;
@@ -210,18 +222,145 @@ end;
     result:= Application is TApplication;
   end;  
 
-  function isApplication: boolean;
-  begin
-    result:= Application is TApplication;
-  end;  
-
   //SM_REMOTESESSION = $1000
   
   function isTerminalSession: boolean;
   begin
     result:= GetSystemMetrics(SM_REMOTESESSION) > 0;
   end;  
+  
+  function ExeFileIsRunning(ExeFile: string): boolean;
+      var
+      H:word;
+      begin
+      H:= CreateFile(PChar(ExeFile), GENERIC_READ,
+      0, 0, OPEN_EXISTING, 0, 0);
+      Result:= (H >= 65535);
+      CloseHandle(H);
+   end;
+   
+   function GetNumberOfProcessors: longint;
+   var
+   SystemInfo: TSystemInfo;
+   begin
+     GetSystemInfo(SystemInfo);
+     Result:= SystemInfo.dwNumberOfProcessors;
+     Result:= SystemInfo.wProcessorArchitecture; 
+    end;
+    
+    procedure TForm1_StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
+                                                   Rect: TRect; State: TGridDrawState);
+   var stringgrid1: TStringGrid;
+       image1: TImage;
+ 
+   begin
+   if ARow = 0 then
+     StringGrid1.Canvas.Draw(Rect.Left,Rect.Top, Image1.Picture.Bitmap);
+   end;
+   
+   function GetURLByIndy(const AURL: String): String;
+   var
+     IdHTTP: TIdHTTP;
+   begin
+     IdHTTP:= TIdHTTP.Create(nil);
+   try
+     Result:= IdHTTP.Get(AURL);
+   finally
+     IdHTTP.Free;
+   end;
+   end;
+   
+   function GetFolderDate(Folder: String) : TDateTime;
+    var
+      Rec: TSearchRec;
+      Found: integer;
+      Date: TDateTime;
+      begin
+        if Folder[length(folder)]= '\' then
+        Delete(Folder, length(folder), 1);
+        Result:= 0;
+        Found:= FindFirst(Folder, faDirectory);
+      try
+      if Found = 0 then begin
+         Date:= FileDateToDateTime(searchRecTime);
+         result:= Date;
+      end;
+      finally
+         FindClose;
+      end;
+      end;
+      
+      Function TForm1_getFileCount: integer;
+      var
+        DOSerr: integer;
+        fsrch: TsearchRec;
+      begin
+        result:= 0;
+        doserr:= FindFirst('*.*',faAnyFile);
+      if (DOSerr = 0) then begin
+        while (DOSerr = 0) do begin
+           if (searchrecattr and faDirectory) = 0 then inc(result);
+        DOSerr:= findnext;
+      end;
+      findClose;
+      end;
+      end;
+      
+   function getWinProcessList2:TStringList;
+   var
+     ContinueLoop: boolean;
+     FSnapshotHandle: THandle;
+     FProcessEntry32: TProcessEntry32;
+     resultstring : string;
+     UserName, Domain: AnsiString;
+   begin
+     Result:=TStringList.Create;
+     FSnapshotHandle := CreateToolhelp32Snapshot (TH32CS_SNAPPROCESS, 0);
+     FProcessEntry32.dwSize := Sizeof(FProcessEntry32);
+     ContinueLoop := Process32First(FSnapshotHandle, FProcessEntry32);
+     while ContinueLoop do begin
+       resultstring := '';
+       UserName := '';
+       domain :='';
+       writeln((FProcessEntry32.szExeFile[10]))  //szExeFile[MAX_PATH-1]));
+   
+       resultstring:= FProcessEntry32.szExeFile[10]+';'
+               +IntToStr(FProcessEntry32.th32ProcessID)+';';
+       if  GetProcessUserBypid(FProcessEntry32.th32ProcessID,UserName, Domain) then
+             resultstring :=  resultstring + Domain+'\'+UserName;
+       Result.add(resultstring);
+       ContinueLoop := Process32Next(FSnapshotHandle, FProcessEntry32);
+     end;
+     CloseHandle(FSnapshotHandle);
+   end;
+   
+      
+   procedure TestListView;
+   var lsvProcess: TListView;
+       FSnapshotHandle: THandle;
+       Te32: TTHREADENTRY32;
+       FProcessEntry32: TProcessEntry32;//TTHREADENTRY32;
+       ContinueLoop: boolean;
+       NewItem : TListItem; 
+      begin
+      lsvProcess.Items.Clear;
+      FSnapshotHandle:= CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS,0);
+      //Delphi OS Training 2004
+      //http://max.kleiner.com 3
+      FProcessEntry32.dwSize:= Sizeof(FProcessEntry32);
+      ContinueLoop:=Process32First(FSnapshotHandle,FProcessEntry32);
+      
+      while integer(ContinueLoop)<>0 do begin
+        NewItem:= lsvProcess.Items.add;
+        NewItem.Caption:= ExtractFileName(FProcessEntry32.szExeFile[MAX_PATH]);
+        NewItem.subItems.Add(FProcessEntry32.szExeFile[MAX_PATH]);
+        ContinueLoop:= Process32Next(FSnapshotHandle,FProcessEntry32);
+      end;
+      CloseHandle(FSnapshotHandle);   
+    end;
 
+
+   var dat_e: TDateTime;
  
 BEGIN  //Main
 //<Executable statements>
@@ -255,15 +394,39 @@ BEGIN  //Main
     setPrivilege; 
     writeln('isService: '+BoToStr(isService)); 
     writeln('isNotService: '+BoToStr(isNotService)); 
-    writeln('isApp: '+BoToStr(isApplication)); 
     writeln('isTerminalSession '+BoToStr(isTerminalSession)); 
     
     writeln(inttoStr(ackermann(3,4)));
-    maXbox
-      
+    //ExeFileIsRunning(exepath+'maxbox3.exe');
+    writeln(inttostr(GetNumberOfProcessors));
+    //Memo2.Lines.Text:= GetURLByIndy('http://www.kleiner.ch');
+    writeln(datetimetoStr(GetFolderDate(exepath)))
+    dat_e:= GetFolderDate(exepath)
+    ShowMessage(FormatDateTime('dddd, d. mmmm yyyy, hh:mm:ss', dat_e));
+    writeln('TForm1_getFileCount: '+inttoStr(TForm1_getFileCount))
+   
+    {writeln(inttoStr(getWinProcessList.count)) 
+    writeln((getWinProcessList.strings[2])); 
+    writeln(getWinProcessList.text)} 
+     writeln(getprocesslist.text)
+     
 End. 
 
 doc:
+
+  typedef struct tagPROCESSENTRY32 {
+  DWORD     dwSize;
+  DWORD     cntUsage;
+  DWORD     th32ProcessID;
+  ULONG_PTR th32DefaultHeapID;
+  DWORD     th32ModuleID;
+  DWORD     cntThreads;
+  DWORD     th32ParentProcessID;
+  LONG      pcPriClassBase;
+  DWORD     dwFlags;
+  TCHAR     szExeFile[MAX_PATH];
+} PROCESSENTRY32, *PPROCESSENTRY32;
+
 
 forget the FormatMessage() take the sysErrorMessage!
 Convert the OS Error Code into a User Friendly Message
@@ -402,3 +565,37 @@ After:
 Sketch uses 72,984 bytes (226%) of program storage space. Maximum is 32,256 bytes.
 Global variables use 1,222 bytes (59%) of dynamic memory, leaving 826 bytes for local variables. Maximum is 2,048 bytes.
 
+
+typedef struct tagPROCESSENTRY32 {
+Members
+
+dwSize
+
+    The size of the structure, in bytes. Before calling the Process32First function, set this member to sizeof(PROCESSENTRY32). If you do not initialize dwSize, Process32First fails.
+cntUsage
+
+    This member is no longer used and is always set to zero.
+th32ProcessID
+
+    The process identifier.
+th32DefaultHeapID
+
+    This member is no longer used and is always set to zero.
+th32ModuleID
+
+    This member is no longer used and is always set to zero.
+cntThreads
+
+    The number of execution threads started by the process.
+th32ParentProcessID
+
+    The identifier of the process that created this process (its parent process).
+pcPriClassBase
+
+    The base priority of any threads created by this process.
+dwFlags
+
+    This member is no longer used, and is always set to zero.
+szExeFile
+
+    The name of the executable file for the process. To retrieve the full path to the executable file, call the Module32First function and check the szExePath member of the MODULEENTRY32 structure that is returned. However, if the calling process is a 32-bit process, you must call the QueryFullProcessImageName function to retrieve the full path of the executable file for a 64-bit process.

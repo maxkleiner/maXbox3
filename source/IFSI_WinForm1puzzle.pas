@@ -353,6 +353,8 @@ function GetOsVersionInfo: TOSVersionInfo;      //thx to wischnewski
 function CreateDBGridForm(dblist: TStringList): TListbox;
 
 
+
+
 //function getProcessAllMemory(ProcessID : DWORD): TProcessMemoryCounters;
 
 {*
@@ -369,7 +371,10 @@ procedure CopyEXIF(const FileNameEXIFSource, FileNameEXIFTarget: string);
 function IsNetworkConnected: Boolean;
 function IsInternetConnected: Boolean;
 function IsCOMConnected: Boolean;
-
+ function isService: boolean;
+  function isApplication: boolean;
+  function isTerminalSession: boolean;
+  function SetPrivilege(privilegeName: string; enable: boolean): boolean;
 
 
 
@@ -471,6 +476,48 @@ begin
     result:= false;
   end;
 end;
+
+ function isService: boolean;
+  begin
+    result:= NOT(Forms.Application is TApplication);
+    {result:= Application is TServiceApplication;}
+  end;
+  function isApplication: boolean;
+  begin
+    result:= Forms.Application is TApplication;
+  end;
+  //SM_REMOTESESSION = $1000
+  function isTerminalSession: boolean;
+  begin
+    result:= GetSystemMetrics(SM_REMOTESESSION) > 0;
+  end;
+
+function SetPrivilege(privilegeName: string; enable: boolean): boolean;
+var
+  tpPrev,
+  tp         : TTokenPrivileges;
+  token      : THandle;
+  dwRetLen   : DWord;
+begin
+  result := False;
+
+  OpenProcessToken(GetCurrentProcess, TOKEN_ADJUST_PRIVILEGES or TOKEN_QUERY, token);
+
+  tp.PrivilegeCount := 1;
+  if LookupPrivilegeValue(nil, pchar(privilegeName), tp.Privileges[0].LUID) then
+  begin
+    if enable then
+      tp.Privileges[0].Attributes := SE_PRIVILEGE_ENABLED
+    else
+      tp.Privileges[0].Attributes := 0;
+
+    dwRetLen := 0;
+    result := AdjustTokenPrivileges(token, False, tp, SizeOf(tpPrev), tpPrev, dwRetLen);
+  end;
+  CloseHandle(token);
+end;
+
+
 
 
 {function IsInternetConnected: Boolean;

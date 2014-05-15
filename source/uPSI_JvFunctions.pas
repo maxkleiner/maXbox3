@@ -102,6 +102,7 @@ begin
  CL.AddDelphiFunction('Procedure MonitorOff');
  CL.AddDelphiFunction('Procedure LowPower');
  CL.AddDelphiFunction('Procedure ConvertImage(source, destination: string)');
+ CL.AddDelphiFunction('Procedure ConvertBitmap(source, destination: string)');
  CL.AddDelphiFunction('function getBitMapObject(const bitmappath: string): TBitmap');
 
  CL.AddDelphiFunction('Function SendKey( AppName : string; Key : Char) : Boolean');
@@ -183,6 +184,7 @@ begin
  S.RegisterDelphiFunction(@CaptureScreenPNG, 'CaptureScreenPNG', cdRegister);
  S.RegisterDelphiFunction(@CaptureScreenFormat, 'CaptureScreenFormat',cdRegister);
  S.RegisterDelphiFunction(@ConvertImage, 'ConvertImage',cdRegister);
+ S.RegisterDelphiFunction(@ConvertImage, 'ConvertBitmap',cdRegister);
  S.RegisterDelphiFunction(@OpenCdDrive, 'OpenCdDrive', cdRegister);
  S.RegisterDelphiFunction(@CloseCdDrive, 'CloseCdDrive', cdRegister);
  S.RegisterDelphiFunction(@GetRBitmap, 'GetRBitmap', cdRegister);

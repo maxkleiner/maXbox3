@@ -1,6 +1,6 @@
 unit uPSI_IdUDPClient;
 {
-  for FTP
+  for FTP  sendbuffer 3.99.96
 }
 interface
  
@@ -52,6 +52,9 @@ begin
   //with RegClassS(CL,'TIdUDPBase', 'TIdUDPClient') do
   with CL.AddClassN(CL.FindClass('TIdUDPBase'),'TIdUDPClient') do begin
     RegisterMethod('Procedure Send( AData : string);');
+    RegisterMethod('procedure SendBuffer(var ABuffer: string; const AByteCount: integer);');
+    RegisterMethod('procedure SendBufferAB(var ABuffer: array of Byte; const AByteCount: integer);');
+   //     procedure SendBuffer(var ABuffer; const AByteCount: integer); overload;
     RegisterProperty('Host', 'string', iptrw);
     RegisterProperty('Port', 'Integer', iptrw);
   end;
@@ -84,12 +87,22 @@ begin T := Self.Host; end;
 Procedure TIdUDPClientSend_P(Self: TIdUDPClient;  AData : string);
 Begin Self.Send(AData); END;
 
+Procedure TIdUDPClientSendBufferAB(Self: TIdUDPClient;  var AData: array of byte; const AByteCount: integer);
+//Procedure TIdUDPClientSendBufferAB(Self: TIdUDPBase;  var AData: array of byte; const AByteCount: integer);
+Begin
+    Self.SendBuffer(AData, AByteCount);
+    //Self.SendBuffer(self.Host, self.Port,AData);
+ END;
+
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TIdUDPClient(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TIdUDPClient) do
-  begin
+  with CL.Add(TIdUDPClient) do begin
     RegisterMethod(@TIdUDPClientSend_P, 'Send');
+    RegisterMethod(@TIdUDPClient.sendBuffer, 'SendbUFFER');
+    RegisterMethod(@TIdUDPClientsendBufferAB, 'SendBufferAB');
+    //RegisterMethod(@TIdUDPClient.sendBuffer, 'SendBufferAB');
+
     RegisterPropertyHelper(@TIdUDPClientHost_R,@TIdUDPClientHost_W,'Host');
     RegisterPropertyHelper(@TIdUDPClientPort_R,@TIdUDPClientPort_W,'Port');
   end;

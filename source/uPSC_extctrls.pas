@@ -204,8 +204,8 @@ begin
     RegisterProperty('BEVELWIDTH', 'TBevelWidth', iptrw);
     RegisterProperty('BORDERWIDTH', 'TBorderWidth', iptrw);
     RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
-    RegisterProperty('CAPTION', 'String', iptrw);
-    RegisterProperty('COLOR', 'TColor', iptrw);
+    //RegisterProperty('CAPTION', 'String', iptrw);
+    //RegisterProperty('COLOR', 'TColor', iptrw);
     RegisterProperty('FONT', 'TFont', iptrw);
     RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
     RegisterProperty('PARENTFONT', 'Boolean', iptrw);

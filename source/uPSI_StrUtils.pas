@@ -132,6 +132,12 @@ begin
  CL.AddDelphiFunction('Function StuffString( const AText : string; AStart, ALength : Cardinal; const ASubText : string) : string');
  CL.AddDelphiFunction('Function RandomFrom( const AValues : array of string) : string;');
  CL.AddDelphiFunction('Function IfThen( AValue : Boolean; const ATrue : string; AFalse : string) : string;');
+// CL.AddDelphiFunction('Function IfThenInt( AValue : Boolean; const ATrue : integer; AFalse : integer): integer;');
+// CL.AddDelphiFunction('Function IfThenDouble( AValue : Boolean; const ATrue : double; AFalse : double): double;');
+// CL.AddDelphiFunction('Function IfThenBool( AValue : Boolean; const ATrue : boolean; AFalse : boolean): boolean;');
+
+ //Function iif1( ATest : Boolean; const ATrue : Integer; const AFalse : Integer) : Integer;
+
  CL.AddDelphiFunction('Function LeftStr( const AText : AnsiString; const ACount : Integer) : AnsiString;');
  CL.AddDelphiFunction('Function LeftStr2( const AText : WideString; const ACount : Integer) : WideString;');
  CL.AddDelphiFunction('Function RightStr( const AText : AnsiString; const ACount : Integer) : AnsiString;');
@@ -615,6 +621,8 @@ begin
  //S.RegisterDelphiFunction(@RandomFrom, 'RandomFrom', cdRegister);
  S.RegisterDelphiFunction(@RandomFrom1_P, 'RandomFrom', cdRegister);
  S.RegisterDelphiFunction(@IfThen1_P, 'IfThen', cdRegister);
+
+
  S.RegisterDelphiFunction(@LeftStr1_P, 'LeftStr', cdRegister);
  S.RegisterDelphiFunction(@LeftStr2_P, 'LeftStr2', cdRegister);
  S.RegisterDelphiFunction(@RightStr1_P, 'RightStr', cdRegister);

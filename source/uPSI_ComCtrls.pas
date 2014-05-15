@@ -1087,7 +1087,7 @@ begin
     RegisterProperty('PARENTFONT', 'Boolean', iptrw);
      RegisterProperty('CHARCASE', 'TEditCharCase', iptrw);
     RegisterProperty('OEMCONVERT', 'Boolean', iptrw);
-
+      RegisterProperty('Position', 'Integer', iptrw);
   end;
 end;
 

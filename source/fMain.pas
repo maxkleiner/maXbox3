@@ -103,7 +103,8 @@
          9250      build 92 OCX, dbtreeview  , dbctrls
          9370      build 94 //3.9.9.94_3   bigfixing and remote , cindy, jv
          9444       build 95 oscilloscope, hexview, mixer, wininet
-                  V4.0   in  June 2014
+         9496      build 96 wot, color - caption hack, wake on lan , basecomm
+                  V4.0   in  June 2015
  ************************************************************************** }
 
 unit fMain;
@@ -149,7 +150,7 @@ const
    ALLUNITLIST = 'docs\maxbox3_9.xml'; //'in /docs;
    INCLUDEBOX = 'pas_includebox.inc';
    BOOTSCRIPT = 'maxbootscript.txt';
-   MBVERSION = '3.9.9.95';
+   MBVERSION = '3.9.9.96';
    MBVER = '399';              //for checking!
    EXENAME ='maXbox3.exe';
    MXSITE = 'http://www.softwareschule.ch/maxbox.htm';
@@ -502,6 +503,7 @@ type
     Tutorial29UML: TMenuItem;
     CreateHeader1: TMenuItem;
     Oscilloscope1: TMenuItem;
+    Tutorial30WOT1: TMenuItem;
     procedure IFPS3ClassesPlugin1CompImport(Sender: TObject; x: TPSPascalCompiler);
     procedure IFPS3ClassesPlugin1ExecImport(Sender: TObject; Exec: TPSExec; x: TPSRuntimeClassImporter);
     procedure PSScriptCompile(Sender: TPSScript);
@@ -754,6 +756,7 @@ type
     procedure Tutorial29UMLClick(Sender: TObject);
     procedure CreateHeader1Click(Sender: TObject);
     procedure Oscilloscope1Click(Sender: TObject);
+    procedure Tutorial30WOT1Click(Sender: TObject);
     //procedure Memo1DropFiles(Sender: TObject; X,Y: Integer; AFiles: TStrings);
   private
     STATSavebefore: boolean;
@@ -1208,7 +1211,7 @@ uses
   //HttpRESTConnectionIndy,
   uPSI_HttpRESTConnectionIndy,
   //uPSI_JvXmlDatabase,
-  uPSI_WinAPI,
+  uPSI_WinAPI,    //register simple upsi_windows
   uPSI_HyperLabel,
   uPSI_MultilangTranslator,
   uPSI_TomDBQue,
@@ -1750,6 +1753,18 @@ uses
   uPSI_UCardComponentV2,
   uPSI_UTGraphSearch,
   uPSI_UParser10,
+  uPSI_cyIEUtils,
+  uPSI_UcomboV2,   //3.9.9.96
+  uPSI_cyBaseComm,
+  uPSI_cyAppInstances,
+  uPSI_cyAttract,
+  uPSI_cyDERUtils,
+  uPSI_cyDocER,  //3.9.9.96
+  uPSI_ODBC,
+  uPSI_AssocExec,
+  uPSI_cyBaseCommRoomConnector,
+  uPSI_cyCommRoomConnector,
+  uPSI_cyCommunicate,
 
     //MDIFrame,
   uPSI_St2DBarC,
@@ -2722,6 +2737,18 @@ begin
  SIRegister_UCardComponentV2(X);
  SIRegister_UTGraphSearch(X);
  SIRegister_UParser10(X);
+ SIRegister_cyIEUtils(X);
+ SIRegister_UcomboV2(X);
+ SIRegister_cyBaseComm(X);
+ SIRegister_cyAppInstances(X);
+ SIRegister_cyAttract(X);
+ SIRegister_cyDERUtils(X);
+ SIRegister_cyDocER(X);
+ SIRegister_ODBC(X);
+ SIRegister_AssocExec(X);
+ SIRegister_cyBaseCommRoomConnector(X);
+ SIRegister_cyCommRoomConnector(X);
+ SIRegister_cyCommunicate(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -3935,6 +3962,19 @@ begin
   RIRegister_UCardComponentV2(X);
   RIRegister_UTGraphSearch(X);
   RIRegister_UParser10(X);
+  RIRegister_cyIEUtils_Routines(Exec);
+  RIRegister_UcomboV2(X);           //3.9.9.96
+  RIRegister_cyBaseComm(X);
+  RIRegister_cyBaseComm_Routines(Exec);
+  RIRegister_cyAppInstances(X);
+  RIRegister_cyAttract(X);
+  RIRegister_cyDERUtils_Routines(eXec);
+  RIRegister_cyDocER(X);
+  RIRegister_ODBC(X);
+  RIRegister_AssocExec(X);
+  RIRegister_cyBaseCommRoomConnector(X);
+  RIRegister_cyCommRoomConnector(X);
+  RIRegister_cyCommunicate(X);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -4123,8 +4163,10 @@ begin
       COMPORT:= 3;
       //NAVWIDTH:= 100; min
       lbintflistwidth:= 350;
-  if fileexists(DEFINIFILE) then LoadFileNameFromIni;  //script file
-  DefFileread;
+  // if (ParamStr(1) = '') then begin   //bug
+    if fileexists(DEFINIFILE) then LoadFileNameFromIni;  //script file
+    DefFileread;
+  // end;
   PSScript.UsePreProcessor:= true;
   dlgPrintFont1.Font.Size:= 7;      //Default 3.8
   dlgPrintFont1.Font.Name:= RCPRINTFONT;
@@ -4996,7 +5038,12 @@ begin
   Sender.AddFunction(@IsInternetConnected, 'function IsInternetOn: Boolean;');
   Sender.AddFunction(@IsCOMConnected, 'function IsCOMOn: Boolean;');
   Sender.AddFunction(@IsCOMConnected, 'function IsCOMConnected: Boolean;');
-
+  Sender.AddFunction(@IsCOMConnected, 'function IsCOMPort: Boolean;');
+  Sender.AddFunction(@IsService, 'function IsService: Boolean;');
+  Sender.AddFunction(@IsApplication, 'function IsApplication: Boolean;');
+  Sender.AddFunction(@IsTerminalSession, 'function IsTerminalSession: Boolean;');
+  Sender.AddFunction(@SetPrivilege, 'function SetPrivilege(privilegeName: string; enable: boolean): boolean;');
+ 
      //Sender.AddFunction(@mmsystem32.timegettime
   //Sender.AddFunction(@AssignFile,'Procedure AssignFile(var F: Text; FileName: string)');
   //Sender.AddFunction(@CloseFile,'Procedure CloseFile(var F: Text);');
@@ -6282,7 +6329,7 @@ end;
 
 procedure TMaxForm1.Minesweeper1Click(Sender: TObject);
 begin
-  ShowMessage('Add On available in V4')
+  ShowMessage('Add On available in V4 - start script 285_minesweeper2.TXT')
 end;
 
 procedure TMaxForm1.WordWrap1Click(Sender: TObject);
@@ -7333,6 +7380,11 @@ end;
 procedure TMaxForm1.Tutorial29UMLClick(Sender: TObject);
 begin
   searchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter29.pdf');
+end;
+
+procedure TMaxForm1.Tutorial30WOT1Click(Sender: TObject);
+begin
+  searchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter30.pdf');
 end;
 
 procedure TMaxForm1.Tutorial19COMArduino1Click(Sender: TObject);

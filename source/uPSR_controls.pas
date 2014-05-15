@@ -94,9 +94,21 @@ procedure TControlBiDiModeW(Self: TControl; T: TBiDiMode); begin Self.BiDiMode:=
 procedure TControlBoundsRectR(Self: TControl; var T: TRect); begin T := Self.BoundsRect; end;
 procedure TControlBoundsRectW(Self: TControl; T: TRect); begin Self.BoundsRect:= T; end;
 
-//procedure TControlColorW(Self: TWinControl; T: TColor); begin Self.Color:= T; end;
-//procedure TControlColorR(Self: TControl; var T: TColor); begin T := Self.Color; end;
+//procedure TControlColorW(Self: TControl; T: TRect); begin Self.BoundsRect:= T; end;
 
+type THackControl = class(TControl);
+
+procedure TControlColorW(Self: TControl; T: TColor);
+//type tmycontrol: TControl
+begin THackControl(Self).Color:= T;
+end;
+procedure TControlColorR(Self: TControl; var T: TColor); begin T := THackControl(Self).Color; end;
+
+procedure TControlCaptionW(Self: TControl; T: TCaption);
+//type tmycontrol: TControl
+begin THackControl(Self).Caption:= T;
+end;
+procedure TControlCaptionR(Self: TControl; var T: TCaption); begin T := THackControl(Self).Caption; end;
 
 (*----------------------------------------------------------------------------*)
 procedure TControlConstraints_W(Self: TControl; const T: TSizeConstraints);
@@ -392,6 +404,8 @@ begin
     RegisterPropertyHelper(@TControlAnchorsR, @TControlAnchorsW, 'Anchors');
     RegisterPropertyHelper(@TControlBidiModeR, @TControlBidiModeW, 'BidiMode');
     RegisterPropertyHelper(@TControlBoundsRectR, @TControlBoundsRectW, 'BoundsRect');
+    RegisterPropertyHelper(@TControlColorR, @TControlColorW, 'Color');    //hack
+    RegisterPropertyHelper(@TControlCaptionR, @TControlCaptionW, 'Caption');    //hack
 
     {$IFNDEF PS_MINIVCL}
     RegisterMethod(@TControl.Dragging, 'DRAGGING');

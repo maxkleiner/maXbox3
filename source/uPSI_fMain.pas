@@ -6,7 +6,7 @@ as an OpenToolsAPI to modify the maXbox GUI - V3.5 -V3.8.6 , version check
    actual 3.9.8 , new ipport, comport, iphost, appname, open examples, intflist
    locs=   1624   , last is gotoline, intfnavlist, configfileclick
   DoEditorExecuteCommand(EditorCommand: word);
-  Updated to 3.9.9.85 /80/82/91/94/95 , locs=3710, MBVERIALL, ResetKeyPressed;
+  Updated to 3.9.9.85 /80/82/91/94/95/96 , locs=3712, MBVERIALL, ResetKeyPressed;
 }
 
 interface
@@ -665,7 +665,7 @@ begin
     RegisterMethod('procedure Tutorial29UMLClick(Sender: TObject);');
     RegisterMethod('procedure CreateHeader1Click(Sender: TObject);');
     RegisterMethod('procedure Oscilloscope1Click(Sender: TObject);');
-
+    RegisterMethod('procedure Tutorial30WOT1Click(Sender: TObject);');
 
    //RegisterMethod('procedure defFilereadUpdate;');
       //  procedure defFilereadUpdate;
@@ -693,13 +693,14 @@ begin
  CL.AddConstantN('ALLUNITLIST','String').SetString( 'docs\maxbox3_9.xml');
  CL.AddConstantN('INCLUDEBOX','String').SetString('pas_includebox.inc');
  CL.AddConstantN('BOOTSCRIPT','String').SetString('maxbootscript.txt');
- CL.AddConstantN('MBVERSION','String').SetString('3.9.9.95');
- CL.AddConstantN('VERSION','String').SetString('3.9.9.95');
+ CL.AddConstantN('MBVERSION','String').SetString('3.9.9.96');
+ CL.AddConstantN('VERSION','String').SetString('3.9.9.96');
+ CL.AddConstantN('MBVERIALL','Integer').SetInt(39996);
  CL.AddConstantN('EXENAME','String').SetString( 'maXbox3.exe');
  CL.AddConstantN('MXINTERNETCHECK','String').SetString( 'www.ask.com');
  CL.AddConstantN('MBVER','String').SetString('399');
  CL.AddConstantN('MBVERI','Integer').SetInt(399);
- CL.AddConstantN('MBVERIALL','Integer').SetInt(39995);
+ //CL.AddConstantN('MBVERIALL','Integer').SetInt(39996);
  CL.AddConstantN('MXSITE','String').SetString( 'http://www.softwareschule.ch/maxbox.htm');
  CL.AddConstantN('MXMAIL','String').SetString( 'max@kleiner.com');
  CL.AddConstantN('TAB','Char').SetString( #$09);
@@ -3684,6 +3685,7 @@ begin
     RegisterMethod(@TMaxForm1.CreateHeader1Click, 'CreateHeader1Click');
     RegisterMethod(@TMaxForm1.Tutorial29UMLClick, 'Tutorial29UMLClick');
     RegisterMethod(@TMaxForm1.Oscilloscope1Click, 'Oscilloscope1Click');
+    RegisterMethod(@TMaxForm1.Tutorial30WOT1Click, 'Tutorial30WOT1Click');
 
    end;
 end;
