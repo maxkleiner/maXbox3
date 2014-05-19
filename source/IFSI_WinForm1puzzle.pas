@@ -375,9 +375,11 @@ function IsCOMConnected: Boolean;
   function isApplication: boolean;
   function isTerminalSession: boolean;
   function SetPrivilege(privilegeName: string; enable: boolean): boolean;
+  procedure getScriptandRunAsk;
+  procedure getScriptandRun(ascript: string);
+  function VersionCheckAct: string;
 
-
-
+  
 implementation
 
 uses
@@ -418,7 +420,7 @@ uses
   ,ExtCtrls
   ,IdcoderMime
   ,SvcMgr ,WinSvc, ScktCnst, ScktMain
-   ,WinInet, winsock, Cport;
+   ,WinInet, winsock, Cport, gsUtils, lazFileUtils;
 
   //,Registry
   //,Grids
@@ -518,6 +520,60 @@ begin
 end;
 
 
+procedure getScriptandRunAsk;
+  var getstr, ascript: string;
+  begin
+   if IsInternet then begin
+   ascript:= 'http://www.softwareschule.ch/examples/demoscript.txt';
+   if InputQuery('Get Web Script','Please enter the script path:',ascript) then
+     begin
+     //writeln('you entered: '+(string(ascript)));
+    // wGet(ascript,'scriptdemo.txt');
+     //writeln(ExtractFileNameOnly(ascript))
+     //laz files
+     getstr:= ExtractFileNameOnly(ascript)+'.txt';
+
+     wGet(ascript,getstr);
+
+    if MessageDlg('You want to run this script?'+#13#10+ascript+#13#10+#13#10+
+                   'Runs a second instance of maXbox!',
+            mtConfirmation,[mbYes,mbNo],0)=mrYes
+    then begin
+       //ShellExecute3
+        S_ShellExecute(ExePath+'maxbox3.exe',getstr,seCmdOpen);
+        maxForm1.statusBar1.SimpleText:= ' Web Script started: '+getStr;
+        maxForm1.memo2.lines.Add(' Web Script started: '+getStr);
+        //statusline
+    end else
+      showmessage('script start halted!');
+     //www.softwareschule.ch/examples/demoscript.txt
+    end;
+   end else
+         showmessage('No Web Connection available!');
+
+  end;
+
+  procedure getScriptandRun(ascript: string);
+  var str3, getstr: string;
+  begin
+   //if InputQuery('Script please','please enter a script path', str3) then
+     //writeln('you entered: '+(string(str3)));
+     //writeln(floatToStr(single(PI)))
+    // wGet(ascript,'scriptdemo.txt');
+     //writeln(ExtractFileNameOnly(ascript))
+     //laz files
+     getstr:= ExtractFileNameOnly(ascript)+'.txt';
+     wGet(ascript,getstr);
+    if MessageDlg('You want to run this script?'+#13#10+ascript+#13#10+#13#10+
+                   'Runs a second instance of maXbox!',
+            mtConfirmation,[mbYes,mbNo],0)=mrYes
+    then begin
+        S_ShellExecute(ExePath+'maxbox3.exe',getstr,seCmdOpen);
+        maxForm1.memo2.lines.Add(' Web Script started: '+getStr);
+    end else
+     showmessage('script start halted!');
+     //www.softwareschule.ch/examples/demoscript.txt
+  end;
 
 
 {function IsInternetConnected: Boolean;
@@ -2889,6 +2945,23 @@ var idHTTP: TIDHTTP;
      result:= true;
    end;
  end;
+
+function VersionCheckAct: string;
+var idHTTP: TIDHTTP;
+ begin
+   result:= 'version not found';
+   if IsInternet then begin
+     idHTTP:= TIdHTTP.Create(NIL);
+   try
+     result:= idHTTP.Get(MXVERSIONFILE2);
+    // actVersion:= vstring;
+    //idhttp.get2('http://www.softwareschule.ch/maxbox.htm')
+   finally
+     idHTTP.Free
+   end;
+ end;
+ end;
+
 
 function wget(aURL, afile: string): boolean;
 var  idHTTP: TIDHTTP;

@@ -2,7 +2,7 @@ unit GPSUtils_Demo;
 
 //http://www.eye4software.com/products/gpstoolkit/source/delphi/nmea0183/
 //#locs:182
-//#sign:Administrator: PC08: 15/05/2014 11:51:41 AM 
+//#sign:Administrator: PC08: 15/05/2014 06:02:13 PM 
 //http://projecteuler.net/
 
 
@@ -185,4 +185,26 @@ end.
 
   //maXbox converted by mX
   
+
+ {Delphi component for easy interface to your GPS receiver.
+TGPS is an interface to a GPS receiver. TGPS can be used with all GPS receiver that sends NMEA 0183 data, and that can be connected to a COM port on the computer.
+With TGPS you will:
+
+    Have access to position, time, speed, heading, bearings, waypoints, routes and more. (This may however vary depending on what data the connected GPS receiver delivers.)
+    Also included are two components that gives a graphical picture of satellite positions and signal strength.
+    Autodetect method for easy COM port setup
+
+TGPS is tested with Delphi 3.0, 4.0, 6.0 and 7.0
+TGPS comes with an exe-demo that let you easily test your receiver with the component. All you have to do is to click Auto Detect, and then the component will detect the GPS. Please note that the receiver must be set to transmitting NMEA data. The default setting for many receivers is a propriarity format.
+
+If you register TGPS, you will have these benefits:
+
+    Rights to use TGPS commercially.
+    Receive full source code.
+    The unregistered version will only send all data for 60 minutes. After that it will only send positions.
+    Fast and efficient support.
+    
+    function  MyGetTickCount: Longint;
+       external 'GetTickCount@kernel32.dll stdcall';  }
+       
 

@@ -379,6 +379,7 @@ end;
 procedure TMP3Player.CloseMediaData(sender: TObject);
 begin
    lstbox.items.clear;
+   loadlist.Clear;
 end;
 
 procedure TMP3Player.StoreSonglist(Sender: TObject);

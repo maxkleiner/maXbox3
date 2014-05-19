@@ -104,6 +104,7 @@
          9370      build 94 //3.9.9.94_3   bigfixing and remote , cindy, jv
          9444       build 95 oscilloscope, hexview, mixer, wininet
          9496      build 96 wot, color - caption hack, wake on lan , basecomm
+         9526          build 96_1 getwebscript, cycontainer
                   V4.0   in  June 2015
  ************************************************************************** }
 
@@ -128,7 +129,8 @@ uses
   SynHighlighterPython, SynHighlighterJScript, SynHighlighterRuby,
   SynHighlighterUNIXShellScript, SynEditPrintPreview, SynEditPrintTypes,
   SynHighlighterURI, SynURIOpener, SynHighlighterMulti, SynExportRTF, SynHighlighterCSS,
-  SynHighlighterEiffel, SynHighlighterAsm, SynHighlighterDfm, SynHighlighterVB
+  SynHighlighterEiffel, SynHighlighterAsm, SynHighlighterDfm, SynHighlighterVB,
+  SynHighlighterIni
   {,IWBaseControl,IWBaseHTMLControl}; //, jpeg;
 
 const
@@ -155,6 +157,7 @@ const
    EXENAME ='maXbox3.exe';
    MXSITE = 'http://www.softwareschule.ch/maxbox.htm';
    MXVERSIONFILE = 'http://www.softwareschule.ch/maxvfile.txt';
+   MXVERSIONFILE2 = 'http://www.softwareschule.ch/maxvfile2.txt';
    MXINTERNETCHECK = 'www.ask.com';
    MXMAIL = 'max@kleiner.com';
    TAB = #$09;
@@ -504,6 +507,8 @@ type
     CreateHeader1: TMenuItem;
     Oscilloscope1: TMenuItem;
     Tutorial30WOT1: TMenuItem;
+    SynIniSyn1: TSynIniSyn;
+    GetWebScript1: TMenuItem;
     procedure IFPS3ClassesPlugin1CompImport(Sender: TObject; x: TPSPascalCompiler);
     procedure IFPS3ClassesPlugin1ExecImport(Sender: TObject; Exec: TPSExec; x: TPSRuntimeClassImporter);
     procedure PSScriptCompile(Sender: TPSScript);
@@ -757,6 +762,7 @@ type
     procedure CreateHeader1Click(Sender: TObject);
     procedure Oscilloscope1Click(Sender: TObject);
     procedure Tutorial30WOT1Click(Sender: TObject);
+    procedure GetWebScript1Click(Sender: TObject);
     //procedure Memo1DropFiles(Sender: TObject; X,Y: Integer; AFiles: TStrings);
   private
     STATSavebefore: boolean;
@@ -1765,6 +1771,10 @@ uses
   uPSI_cyBaseCommRoomConnector,
   uPSI_cyCommRoomConnector,
   uPSI_cyCommunicate,
+  uPSI_cyImage,
+  uPSI_cyBaseContainer,
+  uPSI_cyModalContainer,
+  uPSI_cyFlyingContainer,  //3.9.9.96_1
 
     //MDIFrame,
   uPSI_St2DBarC,
@@ -2749,6 +2759,10 @@ begin
  SIRegister_cyBaseCommRoomConnector(X);
  SIRegister_cyCommRoomConnector(X);
  SIRegister_cyCommunicate(X);
+ SIRegister_cyImage(X);
+ SIRegister_cyBaseContainer(X);
+ SIRegister_cyModalContainer(X);
+ SIRegister_cyFlyingContainer(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -3975,6 +3989,10 @@ begin
   RIRegister_cyBaseCommRoomConnector(X);
   RIRegister_cyCommRoomConnector(X);
   RIRegister_cyCommunicate(X);
+  RIRegister_cyImage_Routines(eXec);
+  RIRegister_cyBaseContainer(X);
+  RIRegister_cyModalContainer(X);
+  RIRegister_cyFlyingContainer(X);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -5043,7 +5061,12 @@ begin
   Sender.AddFunction(@IsApplication, 'function IsApplication: Boolean;');
   Sender.AddFunction(@IsTerminalSession, 'function IsTerminalSession: Boolean;');
   Sender.AddFunction(@SetPrivilege, 'function SetPrivilege(privilegeName: string; enable: boolean): boolean;');
- 
+  Sender.AddFunction(@getScriptandRun, 'procedure getScriptandRun(ascript: string);');
+  Sender.AddFunction(@getScriptandRunAsk, 'procedure getScriptandRunAsk;');
+  Sender.AddFunction(@getScriptandRun, 'procedure getScript(ascript: string);');
+  Sender.AddFunction(@getScriptandRun, 'procedure getWebScript(ascript: string);');
+  Sender.AddFunction(@versionCheckAct, 'function VersionCheckAct: string;');
+
      //Sender.AddFunction(@mmsystem32.timegettime
   //Sender.AddFunction(@AssignFile,'Procedure AssignFile(var F: Text; FileName: string)');
   //Sender.AddFunction(@CloseFile,'Procedure CloseFile(var F: Text);');
@@ -6265,6 +6288,7 @@ begin
   statusBar1.Font.color:= clblue;
   statusBar1.panels[0].text:= MXSITE +' ***\News and Updates/*** '+MXMAIL;
   //showmessage('Updater at V3.5, now go to: www.softwareschule.ch/maxbox.htm');
+  memo2.lines.Add(' Actual Version is: '+VersionCheckAct);
 end;
 
 procedure TMaxForm1.Memo1ReplaceText(Sender: TObject; const ASearch,
@@ -8163,6 +8187,12 @@ end;
 Function TMaxForm1.GetStatExecuteShell: boolean;
 begin
   result:= StatExecuteShell;
+end;
+
+procedure TMaxForm1.GetWebScript1Click(Sender: TObject);
+begin
+  //this is srvice in winformpuzzle
+  getScriptandRunAsk;
 end;
 
 procedure TMaxForm1.GetWidth(sender: TObject);
