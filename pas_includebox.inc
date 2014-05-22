@@ -1,15 +1,15 @@
 (*{****************************************************************
  *
  * Project  : Base Include RunTime Lib for maXbox
- * Name     : pas_includebox.inc  - 3.9.9.18
+ * Name     : pas_includebox.inc  - 3.9.9.96
  * Purpose  : function module to include in apps
- * Date     : 09/29/2012 -  19:38:56, #locs:736
- * Sign     : #sign:max: APSN21: 09.12.2013 17:16:16 
+ * Date     : 09/29/2012 -  19:38:56, #locs:782
+ * Sign     : #sign:Administrator: PC08: 22/05/2014 08:28:37 AM 
  * Example  : {$I ..\maxbox3\pas_includebox.inc}
  * History  : translate and integrate to maXbox June 2009
  *          : binLib with hex&bin, showinterfaces extended 2010
  *          : CheckStringSum, SaveCanvas2, ShowGraphic, Polygon, typecheck, Regression,
-            :  StrToBytes, HideWindowforSeconds
+            :  StrToBytes, HideWindowforSeconds, getScript, predicate template
  ****************************************************************}*)
 // include it with {$I ..\maxbox3\pas_includebox.inc}
 // corr. of function BinToInt(Binary: String): Integer; (IntToBin)
@@ -77,6 +77,8 @@ procedure GetQrCodeInet(Width,Height: Word; C_Level,apath: string; const Data: s
 Function RGB(R,G,B: Byte): TColor;
 Procedure HideWindowForSeconds(secs: integer);   //3 seconds
 function GetFileDate2(aFile:string; aWithTime:Boolean):string;
+procedure getScriptandRunAsk;
+procedure ShowHourGlass(aProc: TProc2);
 
 
 }
@@ -732,6 +734,50 @@ function RotateLeft1Bit_u32( Value: integer): integer;
 begin
   result:= (Value shl 1) or (Value shr 31)
 end;
+
+procedure getScriptandRunAsk;
+  var getstr, ascript: string;
+  begin
+   ascript:= 'http://www.softwareschule.ch/examples/demoscript.txt';
+   if InputQuery('Get Web Script','Please enter the script path:',ascript) then
+     begin
+     //writeln('you entered: '+(string(ascript)));
+    // wGet(ascript,'scriptdemo.txt');
+     //writeln(ExtractFileNameOnly(ascript))
+     //laz files
+     getstr:= ExtractFileNameOnly(ascript)+'.txt';
+     wGet(ascript,getstr);
+    if MessageDlg('You want to run this script?'+#13#10+ascript+#13#10+#13#10+
+                   'Runs a second instance of maXbox!',
+            mtConfirmation,[mbYes,mbNo],0)=mrYes
+    then begin
+        ShellExecute3(ExePath+'maxbox3.exe',getstr,seCmdOpen)
+        //statusline
+    end else   
+      showmessage('script start halted!');
+     //www.softwareschule.ch/examples/demoscript.txt
+    end;
+  end;
+
+//closure template  
+type TProc = procedure(VAR x: single);
+     TProc2 = procedure();
+     TPredicate = function(const x: integer): bool; 
+
+procedure ShowHourGlass(aProc: TProc2);
+ var OldCursor: TCursor; 
+ begin 
+ OldCursor:= Screen.Cursor; 
+ Screen.Cursor:= crHourGlass; 
+ try 
+   //aProc(x); 
+    aProc(); 
+    showmessage('^fct2 after closure invoke');
+ finally 
+   Screen.Cursor := OldCursor 
+ end; 
+end;
+
 
 //(/end.
 //begin

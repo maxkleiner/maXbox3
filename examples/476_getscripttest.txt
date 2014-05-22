@@ -2,9 +2,9 @@ PROGRAM GetScript_Tester;
 
 //(Fast) binominal search coefficient computing of the class TMyBigInt with format
 // --------------------------------------------------------
-//#sign:Administrator: PC08: 19/05/2014 08:14:33 PM 
-//full retrieval #tech>2 PM perf:  threads: 4 192.168.1.40 08:14:33 PM 3.9.9.963.9.9.96
-//uses TSearchRec, Recursion, Sysutils, MyBigInt; #locs=219
+//#sign:Administrator: PC08: 22/05/2014 06:45:48 PM 
+//full retrieval #tech>9.96perf: 0:0:9.193 threads: 8 192.168.1.40 06:45:48 PM 3.9.9.96
+//uses TSearchRec, Recursion, Sysutils, MyBigInt; #locs=250
 //Procedure StartFileFinder3
 
 //uses JCLUnit;
@@ -131,6 +131,37 @@ end;
   //BitmapSaveToJpegFile( Bmp : TBitmap; FileName : String; QualityPercent : Word)');
   //JpegSaveToBitmapFile( JPEG : TJPEGImage; FileName : String)');
 end;
+
+
+  const PathSep1 = '/';
+  const PathSep2 = '\';
+  
+
+type AllowDirectorySeparators = (pathsep1,pathsep2);
+//type AllowDirectorySeparators = [pathsep1,pathsep2];
+
+  //const AllowDirectorySeparators = ['\', '/'];
+  //const PathSeparator = ':';
+
+function ExtractFileNameOnly2(const AFilename: string): string;
+var
+  StartPos: Integer;
+  ExtPos: Integer;
+  AllowDirectorySeparators1 : set of AllowDirectorySeparators;  //('/','\');
+begin
+  StartPos:=length(AFilename)+1;
+  while (StartPos>1)
+  and not (AFilename[StartPos-1] in [AllowDirectorySeparators1])
+  {$IFDEF Windows}and (AFilename[StartPos-1]<>':'){$ENDIF}
+  do
+    dec(StartPos);
+  ExtPos:=length(AFilename);
+  while (ExtPos>=StartPos) and (AFilename[ExtPos]<>'.') do
+    dec(ExtPos);
+  if (ExtPos<StartPos) then ExtPos:=length(AFilename)+1;
+  Result:=copy(AFilename,StartPos,ExtPos-StartPos);
+end;
+
 
 
 BEGIN  //Main

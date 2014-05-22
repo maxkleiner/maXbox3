@@ -2,7 +2,7 @@
 Release Notes maXbox 3.9.9.96 June 2014
 ****************************************************************
 SendBuffer, Color+Caption hack, ComboSet,SetPrivilege, WakeOnLAN
-ParaDice 3D Cube Polygraph, OCR, GPS, 12 Units add
+ParaDice 3D Cube Polygraph, OCR, GPS, 20 Units add, getWebScript
 
 921 unit uPSI_cyIEUtils;
 922 unit uPSI_UcomboV2;
@@ -16,8 +16,17 @@ ParaDice 3D Cube Polygraph, OCR, GPS, 12 Units add
 930 uPSI_cyBaseCommRoomConnector,
 931 uPSI_cyCommRoomConnector,
 932 uPSI_cyCommunicate,
+933 uPSI_cyImage;
+934 uPSI_cyBaseContainer
+935 uPSI_cyModalContainer,
+936 uPSI_cyFlyingContainer;
+937 uPSI_RegStr,
+938 uPSI_HtmlHelpViewer;
+939 unit uPSI_cyIniForm
+940 unit uPSI_cyVirtualGrid;
 
-SHA1: Win 3.9.9.96: 9A91FEE9024DA10425E9C7B65ADDF93E819B63DB
+
+SHA1: Win 3.9.9.96: EDD7FC051FF703851938AA33B4FBACCBA2552F1C
 
 
 ****************************************************************
