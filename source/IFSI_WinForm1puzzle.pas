@@ -3,7 +3,7 @@ unit IFSI_WinForm1puzzle;
 //Contains most of the win32 specific functions and test functions,  by mX3
 //procedure TMyLabel.setLabelEvent(labelclick: TLabel; eventclick: TNotifyEvent);
 //more various functions for mainroutine and script language locs=2903
-// forms.application namespace! for find component
+// forms.application namespace! for find component, getbox
 }
 {$I PascalScript.inc}
 interface
@@ -352,11 +352,7 @@ function IsWindowsVista: boolean;
 function GetOsVersionInfo: TOSVersionInfo;      //thx to wischnewski
 function CreateDBGridForm(dblist: TStringList): TListbox;
 
-
-
-
 //function getProcessAllMemory(ProcessID : DWORD): TProcessMemoryCounters;
-
 {*
 	index means:
 	0 - FreeBytesAvailable
@@ -378,6 +374,9 @@ function IsCOMConnected: Boolean;
   procedure getScriptandRunAsk;
   procedure getScriptandRun(ascript: string);
   function VersionCheckAct: string;
+  procedure getBox(aurl, extension: string);
+  function CheckBox: string;
+  function isNTFS: boolean;
 
   
 implementation
@@ -420,7 +419,7 @@ uses
   ,ExtCtrls
   ,IdcoderMime
   ,SvcMgr ,WinSvc, ScktCnst, ScktMain
-   ,WinInet, winsock, Cport, gsUtils, lazFileUtils;
+   ,WinInet, winsock, Cport, gsUtils, lazFileUtils, JvStrUtils, JCLNTFS2;
 
   //,Registry
   //,Grids
@@ -463,6 +462,12 @@ begin
     Result := False;
   end;
 end;
+
+function isNTFS: boolean; 
+ begin
+   result:= NtfsReparsePointsSupported(Extractfiledrive('C')+'\')
+ end;
+
 
 function IsInternetConnected: Boolean;
 begin
@@ -525,14 +530,13 @@ procedure getScriptandRunAsk;
   begin
    if IsInternet then begin
    ascript:= 'http://www.softwareschule.ch/examples/demoscript.txt';
-   if InputQuery('Get Web Script','Please enter the script path:',ascript) then
+   if InputQuery('Get Web Script','Please enter a script path:',ascript) then
      begin
      //writeln('you entered: '+(string(ascript)));
     // wGet(ascript,'scriptdemo.txt');
      //writeln(ExtractFileNameOnly(ascript))
      //laz files
      getstr:= ExtractFileNameOnly(ascript)+'.txt';
-
      wGet(ascript,getstr);
 
     if MessageDlg('You want to run this script?'+#13#10+ascript+#13#10+#13#10+
@@ -540,9 +544,10 @@ procedure getScriptandRunAsk;
             mtConfirmation,[mbYes,mbNo],0)=mrYes
     then begin
        //ShellExecute3
+        maxForm1.memo2.lines.Add(' Web Script started: '+getStr+ ' at: '+timetostr(time));
         S_ShellExecute(ExePath+'maxbox3.exe',getstr,seCmdOpen);
-        maxForm1.statusBar1.SimpleText:= ' Web Script started: '+getStr;
-        maxForm1.memo2.lines.Add(' Web Script started: '+getStr);
+        maxForm1.statusBar1.SimpleText:= ' Web Script finished: '+getStr;
+        maxForm1.memo2.lines.Add(' Web Script finished: '+getStr+ ' at: '+timetostr(time));
         //statusline
     end else
       showmessage('script start halted!');
@@ -568,10 +573,34 @@ procedure getScriptandRunAsk;
                    'Runs a second instance of maXbox!',
             mtConfirmation,[mbYes,mbNo],0)=mrYes
     then begin
+        maxForm1.memo2.lines.Add(' Code Web Script started: '+getStr);
         S_ShellExecute(ExePath+'maxbox3.exe',getstr,seCmdOpen);
-        maxForm1.memo2.lines.Add(' Web Script started: '+getStr);
+        maxForm1.memo2.lines.Add(' Code Web Script finished: '+getStr);
     end else
      showmessage('script start halted!');
+     //www.softwareschule.ch/examples/demoscript.txt
+  end;
+
+  procedure getBox(aurl, extension: string);
+  var str3, getstr: string;
+  begin
+   //if InputQuery('Script please','please enter a script path', str3) then
+     //writeln('you entered: '+(string(str3)));
+     //writeln(floatToStr(single(PI)))
+    // wGet(ascript,'scriptdemo.txt');
+     //writeln(ExtractFileNameOnly(ascript))
+     //laz files
+     getstr:= ExtractFileNameOnly(aurl)+'.'+extension;
+     wGet2(aurl,getstr);
+    if MessageDlg('You want to run this Release?'+#13#10+aurl+#13#10+#13#10+
+                   'Opens a file '+extension+ '  process instance of maXbox!',
+            mtConfirmation,[mbYes,mbNo],0)=mrYes
+    then begin
+        maxForm1.memo2.lines.Add(' maXbox Release started: '+getStr);
+        SearchAndOpenDoc(getstr);
+        maxForm1.memo2.lines.Add(' maXbox Release finished: '+getStr);
+    end else
+     showmessage('version script start halted!');
      //www.softwareschule.ch/examples/demoscript.txt
   end;
 
@@ -751,10 +780,72 @@ begin
 end;
 
 
+type
+   TDBEventHandlers = class // create a dummy class
+       class procedure ClickinListbox(Sender: TObject) ;
+   end;
+
+
+class procedure TDBEventHandlers.ClickinListbox(sender: TObject);
+var idx: integer;
+    FileName, getStr, firsts: string;
+    //lstbox: TListBox;
+begin
+  idx:= TListbox(sender).itemindex;
+  //memo2.lines.add(lbintflist.items[idx]); debug
+  TListbox(sender).hint:= TListbox(sender).Items[idx];
+  TListbox(sender).showhint:= true;
+    FileName:= TListbox(sender).Items[idx];
+    {delete(Filename,1,3);
+    delete(filename,pos('.',filename)+4,22);
+     if pos(' ',filename) > 0 then
+        delete(filename,1,1);}
+
+     firsts:= Copy2SymbDel(filename, ' ');
+     //writeln(checkstr);
+     filename:= Copy2SymbDel(filename, ' ');
+     //writeln(seconds);
+
+  //showmessage(extractfilepath(filename));
+    //   getstr:= ExtractFileNameOnly(ascript)+'.txt';
+  //showmessage(extractfilenameonly(filename));
+ //if fileexists(TListbox(sender).Items[idx]) then begin
+ if fileexists(filename) then begin
+    //FileName:= TListbox(sender).Items[idx];
+    //showmessage(extractfilepath(filename));
+    ShellAPI.ShellExecute(HInstance, NIL, pchar(FileName), NIL, NIL, sw_ShowNormal);
+  end else
+    Showmessage('Sorry, filepath to '+Filename+' is missing')
+  //memo1.SetFocus;
+  //listbox1.items[idx]:= temp;
+  //listbox1.ItemIndex:= idx;
+end;
+
+
+
 function CreateDBGridForm(dblist: TStringList): TListBox;
 var
    dbform: TForm;
   alistView: TListBox;
+
+{  procedure TDBEventHandlers.ClickinListbox;
+var idx: integer;
+    FileName: string;
+    //lstbox: TListBox;
+begin
+  idx:= alistView.itemindex;
+  //memo2.lines.add(lbintflist.items[idx]); debug
+  alistView.hint:= alistView.Items[idx];
+  alistView.showhint:= true;
+ if fileexists(alistView.Items[idx]) then begin
+    FileName:= alistView.Items[idx];
+    ShellAPI.ShellExecute(HInstance, NIL, pchar(FileName), NIL, NIL, sw_ShowNormal);
+  end else
+    Showmessage('Sorry, filepath to '+filename+' is missing')
+  //memo1.SetFocus;
+  //listbox1.items[idx]:= temp;
+  //listbox1.ItemIndex:= idx;
+end; }
 
   begin
    dbform:= CreateMessageDialog('My Fast Form File Finder Converter - FFC',mtwarning,
@@ -779,13 +870,16 @@ var
      font.size:= 12;
      scrollWidth:= 1400;
      //ondblclick:= CopytoFile;
-     // items.savetofile(exepath+'mXfileChangeToday_list.txt');
+     //onDblClick:=  TNotifyEvent(ClickinListbox);
+     onDblClick:=  TDBEventHandlers.ClickinListbox;
+      // items.savetofile(exepath+'mXfileChangeToday_list.txt');
      SetBounds(40,155,900,592)
    end;
    result:= alistView;
    dbform.Show;
    //searchAndOpenDoc(ExePath+'mXfileChangeToday_list.txt');
    //dbform.Free;
+   //Tdataset
 end;
 
 
@@ -2954,6 +3048,28 @@ var idHTTP: TIDHTTP;
      idHTTP:= TIdHTTP.Create(NIL);
    try
      result:= idHTTP.Get(MXVERSIONFILE2);
+    // actVersion:= vstring;
+    //idhttp.get2('http://www.softwareschule.ch/maxbox.htm')
+   finally
+     idHTTP.Free
+   end;
+ end;
+ end;
+
+function CheckBox: string;
+var idHTTP: TIDHTTP;
+ begin
+   result:= 'version not found';
+   if IsInternet then begin
+     idHTTP:= TIdHTTP.Create(NIL);
+   try
+     result:= idHTTP.Get(MXVERSIONFILE2);
+     result:= result[1]+result[2]+result[3]+result[4]+result[5];
+     if result = MBVER2 then begin
+       //output.Font.Style:= [fsbold];
+     //Speak(' A new Version '+vstr+' of max box is available! ');
+     result:= ('!!! OK. You have the latest Version: '+result+' available at '+MXSITE);
+    end;
     // actVersion:= vstring;
     //idhttp.get2('http://www.softwareschule.ch/maxbox.htm')
    finally

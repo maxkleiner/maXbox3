@@ -236,11 +236,11 @@ begin
     RegisterProperty('Handle', 'Integer', iptRw);
 {$ENDIF}
     RegisterProperty('Pixels', 'Integer Integer Integer', iptRW);
-    RegisterProperty('Brush', 'TBrush', iptR);
+    RegisterProperty('Brush', 'TBrush', iptRw);
     //RegisterProperty('CopyMode', 'Byte', iptRw);
-    RegisterProperty('Font', 'TFont', iptR);
-    RegisterProperty('Pen', 'TPen', iptR);
-    RegisterProperty('ClipRect','TRect', iptR);
+    RegisterProperty('Font', 'TFont', iptRw);
+    RegisterProperty('Pen', 'TPen', iptRw);
+    RegisterProperty('ClipRect','TRect', iptRw);
     //3.6
     RegisterProperty('LockCount', 'Integer', iptr);
     RegisterProperty('CanvasOrientation', 'TCanvasOrientation', iptr);

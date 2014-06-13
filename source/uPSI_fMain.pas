@@ -6,7 +6,7 @@ as an OpenToolsAPI to modify the maXbox GUI - V3.5 -V3.8.6 , version check
    actual 3.9.8 , new ipport, comport, iphost, appname, open examples, intflist
    locs=   1624   , last is gotoline, intfnavlist, configfileclick
   DoEditorExecuteCommand(EditorCommand: word);
-  Updated to 3.9.9.85 /80/82/91/94/95/96 , locs=3717, MBVERIALL, ResetKeyPressed;
+  Updated to 3.9.9.85 /80/82/91/94/95/96 , locs=3722, MBVERIALL, ResetKeyPressed;
 }
 
 interface
@@ -667,6 +667,7 @@ begin
     RegisterMethod('procedure Oscilloscope1Click(Sender: TObject);');
     RegisterMethod('procedure Tutorial30WOT1Click(Sender: TObject);');
     RegisterMethod('procedure GetWebScript1Click(Sender: TObject);');
+    RegisterMethod('procedure Checkers1Click(Sender: TObject);');
 
    //RegisterMethod('procedure defFilereadUpdate;');
       //  procedure defFilereadUpdate;
@@ -697,12 +698,14 @@ begin
  CL.AddConstantN('MBVERSION','String').SetString('3.9.9.96');
  CL.AddConstantN('VERSION','String').SetString('3.9.9.96');
  CL.AddConstantN('MBVERIALL','Integer').SetInt(39996);
+ CL.AddConstantN('MBVER2','String').SetString('39996');
  CL.AddConstantN('EXENAME','String').SetString( 'maXbox3.exe');
  CL.AddConstantN('MXINTERNETCHECK','String').SetString( 'www.ask.com');
  CL.AddConstantN('MBVER','String').SetString('399');
  CL.AddConstantN('MBVERI','Integer').SetInt(399);
  CL.AddConstantN('MXVERSIONFILE','String').SetString('http://www.softwareschule.ch/maxvfile.txt');
-// MXVERSIONFILE = 'http://www.softwareschule.ch/maxvfile.txt';
+ CL.AddConstantN('MXVERSIONFILE2','String').SetString('http://www.softwareschule.ch/maxvfile2.txt');
+ // MXVERSIONFILE = 'http://www.softwareschule.ch/maxvfile.txt';
   // MXVERSIONFILE2 = 'http://www.softwareschule.ch/maxvfile2.txt';
   //CL.AddConstantN('MBVERIALL','Integer').SetInt(39996);
  CL.AddConstantN('MXSITE','String').SetString( 'http://www.softwareschule.ch/maxbox.htm');
@@ -3691,6 +3694,8 @@ begin
     RegisterMethod(@TMaxForm1.Oscilloscope1Click, 'Oscilloscope1Click');
     RegisterMethod(@TMaxForm1.Tutorial30WOT1Click, 'Tutorial30WOT1Click');
     RegisterMethod(@TMaxForm1.GetWebScript1Click, 'GetWebScript1Click');
+    RegisterMethod(@TMaxForm1.Checkers1Click, 'Checkers1Click');
+
     //  GetWebScript1Click
    end;
 end;

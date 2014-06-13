@@ -2299,7 +2299,8 @@ CL.AddDelphiFunction('Function GetSystemMetrics( nIndex : Integer) : Integer');
  CL.AddDelphiFunction('function IdentToCursor(const Ident: string; var Cursor: Longint): Boolean;');
  CL.AddDelphiFunction('Procedure PerformEraseBackground(Control: TControl; DC: HDC);');
  CL.AddDelphiFunction('procedure ChangeBiDiModeAlignment(var Alignment: TAlignment);');
-
+ //CL.AddDelphiFunction('Function SendMessageTimeout( hWnd : HWND; Msg : UINT; wParam : WPARAM; lParam : LPARAM; fuFlags, uTimeout : UINT; var lpdwResult : DWORD) : LRESULT');
+ //CL.AddDelphiFunction('Function SendMessageCallback( hWnd : HWND; Msg : UINT; wParam : WPARAM; lParam : LPARAM; lpResultCallBack : TFNSendAsyncProc; dwData : DWORD) : BOOL');
  CL.AddDelphiFunction('Function SendMessage( hWnd : HWND; Msg : UINT; wParam : WPARAM; lParam : LPARAM) : LRESULT');
  CL.AddDelphiFunction('function SendMessage2(hWnd: HWND; Msg: longword; wParam: pchar; lParam: pchar): Boolean;');
  //CL.AddDelphiFunction('function PostMessage(hWnd: HWND; Msg: longword; wParam: longint; lParam: longint): Boolean;');
@@ -2311,7 +2312,13 @@ CL.AddDelphiFunction('Function GetSystemMetrics( nIndex : Integer) : Integer');
  CL.AddDelphiFunction('function QueryPerformanceCounter(var lcount: Int64): Boolean; stdcall;');
  CL.AddDelphiFunction('procedure QueryPerformanceCounter1(var aC: Int64);');
  CL.AddDelphiFunction('function QueryPerformanceFrequency1(var freq: int64): boolean;');
-
+ {CL.AddDelphiFunction('Function OpenProcessToken( ProcessHandle : THandle; DesiredAccess : DWORD; var TokenHandle : THandle) : BOOL');
+ CL.AddDelphiFunction('Function OpenThreadToken( ThreadHandle : THandle; DesiredAccess : DWORD; OpenAsSelf : BOOL; var TokenHandle : THandle) : BOOL');
+ CL.AddDelphiFunction('Function PrivilegeCheck( ClientToken : THandle; const RequiredPrivileges : TPrivilegeSet; var pfResult : BOOL) : BOOL');
+ CL.AddDelphiFunction('Procedure SetFileApisToOEM');
+ CL.AddDelphiFunction('Procedure SetFileApisToANSI');
+ CL.AddDelphiFunction('Function AreFileApisANSI : BOOL');
+ CL.AddDelphiFunction('Function RevertToSelf : BOOL');}
  //CL.AddDelphiFunction('Function QueryPerformanceCounter( var lpPerformanceCount : TLargeInteger) : BOOLEAN');
  CL.AddDelphiFunction('function IsAssembly(const FileName: string): Boolean;');
  CL.AddDelphiFunction('function GetModuleFileName(Module: Integer; Filename: PChar;Size: Integer): Integer; stdcall;');
@@ -3703,7 +3710,6 @@ S.RegisterDelphiFunction(@Set8087CW,'Set8087CW', cdRegister); //Win
 S.RegisterDelphiFunction(@Get8087CW,'Get8087CW', cdRegister);
 S.RegisterDelphiFunction(@WideStringToUCS4String,'WideStringToUCS4String', cdRegister); //Win
 S.RegisterDelphiFunction(@UCS4StringToWideString,'UCS4StringToWideString', cdRegister);
-
 S.RegisterDelphiFunction(@UTF8Encode,'UTF8Encode', cdRegister); //Win
 S.RegisterDelphiFunction(@UTF8Decode,'UTF8Decode', cdRegister);
 S.RegisterDelphiFunction(@AnsiToUtf8,'AnsiToUtf8', cdRegister); //Win
@@ -3767,6 +3773,18 @@ S.RegisterDelphiFunction(@SendMessage, 'SendMessage', CdStdCall);
 S.RegisterDelphiFunction(@SendMessage, 'SendMessage2', cdRegister);
 S.RegisterDelphiFunction(@PostMessage, 'PostMessage', CdStdCall);
 S.RegisterDelphiFunction(@FloatToDecimal, 'FloatToDecimal', cdRegister);
+// S.RegisterDelphiFunction(@SendMessageTimeout, 'SendMessageTimeout', CdStdCall);
+// S.RegisterDelphiFunction(@SendMessageCallback, 'SendMessageCallback', CdStdCall);
+ {S.RegisterDelphiFunction(@OpenProcessToken, 'OpenProcessToken', CdStdCall);
+ S.RegisterDelphiFunction(@OpenThreadToken, 'OpenThreadToken', CdStdCall);
+ S.RegisterDelphiFunction(@PrivilegeCheck, 'PrivilegeCheck', CdStdCall);
+ S.RegisterDelphiFunction(@RevertToSelf, 'RevertToSelf', CdStdCall);
+ //S.RegisterDelphiFunction(@SetThreadToken, 'SetThreadToken', CdStdCall);
+ //S.RegisterDelphiFunction(@AccessCheck, 'AccessCheck', CdStdCall);
+ S.RegisterDelphiFunction(@SetFileApisToOEM, 'SetFileApisToOEM', CdStdCall);
+ S.RegisterDelphiFunction(@SetFileApisToANSI, 'SetFileApisToANSI', CdStdCall);
+ S.RegisterDelphiFunction(@AreFileApisANSI, 'AreFileApisANSI', CdStdCall);}
+
 //S.RegisterDelphiFunction(@LoadLibrary, 'LoadLibrary', CdStdCall);
 //S.RegisterDelphiFunction(@FreeLibrary, 'FreeLibrary', CdStdCall);
 S.RegisterDelphiFunction(@queryPerformanceCounter, 'queryPerformanceCounter',CdStdCall);

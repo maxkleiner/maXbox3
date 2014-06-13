@@ -21,7 +21,7 @@ object winFormp: TwinFormp
   object Splitter1: TSplitter
     Left = 0
     Top = 255
-    Width = 900
+    Width = 892
     Height = 12
     Cursor = crVSplit
     Align = alTop
@@ -31,14 +31,16 @@ object winFormp: TwinFormp
   object Panel1: TPanel
     Left = 0
     Top = 267
-    Width = 900
-    Height = 441
+    Width = 892
+    Height = 430
     Align = alClient
     TabOrder = 3
+    ExplicitWidth = 900
+    ExplicitHeight = 441
     object Label2: TLabel
       Left = 11
       Top = 250
-      Width = 356
+      Width = 354
       Height = 55
       Caption = 'FullTextFinder3'
       Font.Charset = ANSI_CHARSET
@@ -177,11 +179,13 @@ object winFormp: TwinFormp
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 708
-    Width = 900
+    Top = 697
+    Width = 892
     Height = 30
     Panels = <>
     SimplePanel = True
+    ExplicitTop = 708
+    ExplicitWidth = 900
   end
   object DirectoryListBox1: TDirectoryListBox
     Left = 10
@@ -203,9 +207,10 @@ object winFormp: TwinFormp
   object Panel2: TPanel
     Left = 0
     Top = 0
-    Width = 900
+    Width = 892
     Height = 255
     Align = alTop
     TabOrder = 4
+    ExplicitWidth = 900
   end
 end

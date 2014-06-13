@@ -141,7 +141,7 @@ BEGIN
         //dflistview.Columns:= 3;
         //dflistView.TabWith:= 50;
         //dflistView.Items.add(outPutStr +^I+ lenStr);  // ^I is the Tab char
-        dflistView.Items.Insert(0, format('%d: %-80s %10s -%5s',
+        dflistView.Items.Insert(0, format('%d:  %-80s %10s -%5s',
            [fcounter, outPutStr, lenStr, inttoStr(aHour)+':'+inttoStr(aMin)]));
      END;
   END;

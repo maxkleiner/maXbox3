@@ -160,6 +160,7 @@ type
       mylabel: Tmylabel;
       cfFrm: TForm;     //fractalform
       anotherfractal, matrixfractal, bifurcfractal, onefractal, onefractal1: boolean;
+      wscnt: integer;
       //mFrac2: TMenuItem;
 
 
@@ -632,6 +633,7 @@ begin
       //RespInf.ResponseText + '</ul></body></html>';
      //writeln('my site');
     // end;
+    inc(wscnt);
   maxform1.memo2.lines.add(Format('Command %s %s at %-10s received from %s:%d',[ReqInf.Command, ReqInf.Document,
                        DateTimeToStr(Now),aThr.Connection.socket.binding.PeerIP,
                        aThr.Connection.socket.binding.PeerPort]));
@@ -644,9 +646,9 @@ begin
   RespInf.ContentType:= GetMIMEType(LocalDoc);
   if FileExists(localDoc) then begin
     ByteSent:= HTTPServer.ServeFile(AThr, RespInf, LocalDoc);
-    maxform1.memo2.lines.add(Format('Serving file %s (%d bytes/ %d bytes sent) to %s:%d at %s',
+    maxform1.memo2.lines.add(Format('Serv file %s (%d bytes/ %d bytes sent) to %s:%d at %s of %d',
           [LocalDoc,ByteSent,FileSizeByName(LocalDoc), aThr.Connection.Socket.Binding.PeerIP,
-           aThr.Connection.Socket.Binding.PeerPort, dateTimeToStr(now)]));
+           aThr.Connection.Socket.Binding.PeerPort, dateTimeToStr(now), wscnt]));
   end
   else begin
     RespInf.ResponseNo:= 404; //Not found RFC
@@ -660,6 +662,7 @@ end;
 
 procedure HTTPServerStartExecute(Sender: TObject);
 begin
+  wscnt:= 0;
   HTTPServer:= TIdCustomHTTPServer.Create(NIL);
   with HTTPServer do begin
     if Active then Free;

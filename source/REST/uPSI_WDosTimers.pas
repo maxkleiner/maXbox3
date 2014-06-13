@@ -158,6 +158,7 @@ begin
   SIRegister_TRtcIntTimer(CL);
  CL.AddDelphiFunction('Function RealNow : TDateTime');
  CL.AddDelphiFunction('Function MsToDateTime( MilliSecond : LongInt) : TDateTime');
+ CL.AddDelphiFunction('Function milliToDateTime( MilliSecond : LongInt) : TDateTime');
  CL.AddDelphiFunction('Function DateTimeToMs( Time : TDateTime) : LongInt');
 end;
 
@@ -244,6 +245,7 @@ begin
  //S.RegisterDelphiFunction(@RealNow, 'RealNow', cdRegister);
  S.RegisterDelphiFunction(@MsToDateTime, 'MsToDateTime', cdRegister);
  S.RegisterDelphiFunction(@DateTimeToMs, 'DateTimeToMs', cdRegister);
+ S.RegisterDelphiFunction(@MsToDateTime, 'millitoDateTime', cdRegister);
 end;
 
 (*----------------------------------------------------------------------------*)

@@ -104,7 +104,10 @@
          9370      build 94 //3.9.9.94_3   bigfixing and remote , cindy, jv
          9444       build 95 oscilloscope, hexview, mixer, wininet
          9496      build 96 wot, color - caption hack, wake on lan , basecomm
-         9526          build 96_1 getwebscript, cycontainer
+         9527       build 96_1 getwebscript, cycontainer
+         9544       build 96_2 backgroundcolor themes fix, backgroundparent, fixing
+         9580       build 96_3 5 units, fixing, checkers. DOS syntax
+
                   V4.0   in  June 2015
  ************************************************************************** }
 
@@ -130,7 +133,7 @@ uses
   SynHighlighterUNIXShellScript, SynEditPrintPreview, SynEditPrintTypes,
   SynHighlighterURI, SynURIOpener, SynHighlighterMulti, SynExportRTF, SynHighlighterCSS,
   SynHighlighterEiffel, SynHighlighterAsm, SynHighlighterDfm, SynHighlighterVB,
-  SynHighlighterIni
+  SynHighlighterIni, SynHighlighterBat
   {,IWBaseControl,IWBaseHTMLControl}; //, jpeg;
 
 const
@@ -154,6 +157,7 @@ const
    BOOTSCRIPT = 'maxbootscript.txt';
    MBVERSION = '3.9.9.96';
    MBVER = '399';              //for checking!
+   MBVER2 = '39996';              //for checking!
    EXENAME ='maXbox3.exe';
    MXSITE = 'http://www.softwareschule.ch/maxbox.htm';
    MXVERSIONFILE = 'http://www.softwareschule.ch/maxvfile.txt';
@@ -509,6 +513,8 @@ type
     Tutorial30WOT1: TMenuItem;
     SynIniSyn1: TSynIniSyn;
     GetWebScript1: TMenuItem;
+    SynBatSyn1: TSynBatSyn;
+    Checkers1: TMenuItem;
     procedure IFPS3ClassesPlugin1CompImport(Sender: TObject; x: TPSPascalCompiler);
     procedure IFPS3ClassesPlugin1ExecImport(Sender: TObject; Exec: TPSExec; x: TPSRuntimeClassImporter);
     procedure PSScriptCompile(Sender: TPSScript);
@@ -763,6 +769,7 @@ type
     procedure Oscilloscope1Click(Sender: TObject);
     procedure Tutorial30WOT1Click(Sender: TObject);
     procedure GetWebScript1Click(Sender: TObject);
+    procedure Checkers1Click(Sender: TObject);
     //procedure Memo1DropFiles(Sender: TObject; X,Y: Integer; AFiles: TStrings);
   private
     STATSavebefore: boolean;
@@ -1750,7 +1757,7 @@ uses
   uPSI_JvArrow,    //3.9.9.95
   uPSI_UrlMon,
   uPSI_U_Oscilloscope4,
-  uPSI_DFFUtils,
+  uPSI_DFFUtils,       //regexpathfinder
   uPSI_MathsLib,
   uPSI_UIntList,
   //uPSI_UGetParens, in DFFUtils
@@ -1775,6 +1782,17 @@ uses
   uPSI_cyBaseContainer,
   uPSI_cyModalContainer,
   uPSI_cyFlyingContainer,  //3.9.9.96_1
+  uPSI_RegStr,
+  uPSI_HtmlHelpViewer,     ////3.9.9.96_2
+  uPSI_cyIniForm,
+  uPSI_cyVirtualGrid,
+  uPSI_Profiler,
+  uPSI_BackgroundWorker,
+  uPSI_WavePlay,
+  uPSI_WaveTimer,
+  uPSI_WaveUtils,  ////3.9.9.96_3
+  dlgMain,  //CHECKERS GAME
+
 
     //MDIFrame,
   uPSI_St2DBarC,
@@ -2763,6 +2781,15 @@ begin
  SIRegister_cyBaseContainer(X);
  SIRegister_cyModalContainer(X);
  SIRegister_cyFlyingContainer(X);
+ SIRegister_RegStr(X);          //just consts
+ SIRegister_HtmlHelpViewer(X);  //just intf
+ SIRegister_cyIniForm(X);
+ SIRegister_cyVirtualGrid(X);
+ SIRegister_Profiler(X);
+ SIRegister_BackgroundWorker(X);
+ SIRegister_WavePlay(X);
+ SIRegister_WaveTimer(X);
+ SIRegister_WaveUtils(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -3992,7 +4019,16 @@ begin
   RIRegister_cyImage_Routines(eXec);
   RIRegister_cyBaseContainer(X);
   RIRegister_cyModalContainer(X);
+  RIRegister_cyModalContainer_Routines(Exec);
   RIRegister_cyFlyingContainer(X);
+  RIRegister_cyIniForm(X);
+  RIRegister_cyVirtualGrid(X);
+  RIRegister_Profiler(X);
+  RIRegister_BackgroundWorker(X);
+  RIRegister_WavePlay(X);
+  RIRegister_WaveTimer(X);
+  RIRegister_WaveUtils(X);     //3.9.9.96_3
+  RIRegister_WaveUtils_Routines(Exec);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -4777,6 +4813,7 @@ begin
       'Operation, FileName, Parameters,Directory: string; ShowCmd: Integer): integer; stdcall;');
   Sender.AddFunction(@myShellExecute2,'function Shellexecute2(hwnd: HWND; const FileName: string):integer; stdcall;');
   Sender.AddFunction(@myBeep2, 'function beep2(dwFreq, dwDuration: integer): boolean;');
+  Sender.AddFunction(@myBeep2, 'function tone(dwFreq, dwDuration: integer): boolean;');
   Sender.AddFunction(@myWinExec, 'function winexec(FileName: pchar; showCmd: integer): integer;');
   Sender.AddFunction(@myAssert,'procedure Assert2(expr : Boolean; const msg: string);');
   Sender.AddFunction(@ExtractFileName,'function ExtractFileName(const filename: string):string;');
@@ -5058,6 +5095,8 @@ begin
   Sender.AddFunction(@IsCOMConnected, 'function IsCOMConnected: Boolean;');
   Sender.AddFunction(@IsCOMConnected, 'function IsCOMPort: Boolean;');
   Sender.AddFunction(@IsService, 'function IsService: Boolean;');
+  Sender.AddFunction(@IsNTFS, 'function IsNTFS: Boolean;');
+
   Sender.AddFunction(@IsApplication, 'function IsApplication: Boolean;');
   Sender.AddFunction(@IsTerminalSession, 'function IsTerminalSession: Boolean;');
   Sender.AddFunction(@SetPrivilege, 'function SetPrivilege(privilegeName: string; enable: boolean): boolean;');
@@ -5066,8 +5105,10 @@ begin
   Sender.AddFunction(@getScriptandRun, 'procedure getScript(ascript: string);');
   Sender.AddFunction(@getScriptandRun, 'procedure getWebScript(ascript: string);');
   Sender.AddFunction(@versionCheckAct, 'function VersionCheckAct: string;');
+  Sender.AddFunction(@getBox, 'procedure getBox(aurl, extension: string);');
+  Sender.AddFunction(@checkBox, 'function CheckBox: string;');
 
-     //Sender.AddFunction(@mmsystem32.timegettime
+       //Sender.AddFunction(@mmsystem32.timegettime
   //Sender.AddFunction(@AssignFile,'Procedure AssignFile(var F: Text; FileName: string)');
   //Sender.AddFunction(@CloseFile,'Procedure CloseFile(var F: Text);');
   Sender.AddRegisteredVariable('Application', 'TApplication');
@@ -5519,6 +5560,7 @@ end;
 procedure TMaxForm1.WebServer1Click(Sender: TObject);
 begin
   HTTPServerStartExecute(self);
+  //add seq in 3.9.9.96
   //ShowMessage('https server available in V4'+#13#10+
     //            'first example in: ..\examples\303_webserver');
  //start to webserver2
@@ -5684,6 +5726,15 @@ begin
    winformp.Height:= 740;
    winformp.finderactive:= true;
    //StartFileFinder;     //Full Text Finder
+end;
+
+procedure TMaxForm1.Checkers1Click(Sender: TObject);
+begin
+  // fplotForm1.show;
+  //checkers gamer 
+  Application.CreateForm(TchkMainForm, chkMainForm);
+  chkMainForm.Show
+  //Application.Run;
 end;
 
 procedure TMaxForm1.CipherFile1Click(Sender: TObject);
@@ -6284,11 +6335,14 @@ end;
 procedure TMaxForm1.UpdateService1Click(Sender: TObject);
 begin
     //if MBVER < MBVER then getfileversion//get from internet text file
+  screen.cursor:=crHourglass;
   ShowinfoBox('Get the last Update and News ', RCSTRMB,(MBVERSION), false);
+  screen.cursor:=crDefault;
   statusBar1.Font.color:= clblue;
   statusBar1.panels[0].text:= MXSITE +' ***\News and Updates/*** '+MXMAIL;
   //showmessage('Updater at V3.5, now go to: www.softwareschule.ch/maxbox.htm');
   memo2.lines.Add(' Actual Version is: '+VersionCheckAct);
+  memo2.lines.Add(' Checked Version: '+checkBox);
 end;
 
 procedure TMaxForm1.Memo1ReplaceText(Sender: TObject; const ASearch,

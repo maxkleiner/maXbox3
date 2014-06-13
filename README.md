@@ -2,10 +2,11 @@ maXbox
 ======
 
 ****************************************************************
-Release Notes maXbox 3.9.9.96 June 2014
+Release Notes maXbox 3.9.9.96 July 2014
 ****************************************************************
 SendBuffer, Color+Caption hack, ComboSet,SetPrivilege, WakeOnLAN
 ParaDice 3D Cube Polygraph, OCR, GPS, 16 Units add, getWebScript
+Error Helper, Profiler, Checkers
 
 921 unit uPSI_cyIEUtils;
 922 unit uPSI_UcomboV2;
@@ -27,9 +28,13 @@ ParaDice 3D Cube Polygraph, OCR, GPS, 16 Units add, getWebScript
 938 uPSI_HtmlHelpViewer;
 939 unit uPSI_cyIniForm
 940 unit uPSI_cyVirtualGrid;
+941 uPSI_Profiler,
+942 uPSI_BackgroundWorker,
+943 uPSI_WavePlay,
+944 uPSI_WaveTimer,
+945 uPSI_WaveUtils;
 
-SHA1: Win 3.9.9.96: EDD7FC051FF703851938AA33B4FBACCBA2552F1C
-
+SHA1: Win 3.9.9.96: 6DF0415E1645C98C2298DA0A3F613A016AD72EEE
 
 ****************************************************************
 Release Notes maXbox 3.9.9.95 Mai 2014
