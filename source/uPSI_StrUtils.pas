@@ -732,6 +732,7 @@ begin
   S.RegisterDelphiFunction(@ExtractShortPathName,'ExtractShortPathName', cdRegister);
   S.RegisterDelphiFunction(@ExtractRelativePath,'ExtractRelativePath', cdRegister);
  S.RegisterDelphiFunction(@AdjustLineBreaks,'AdjustLineBreaks', cdRegister);
+ S.RegisterDelphiFunction(@AdjustLineBreaks,'AdjustLineBreaksS', cdRegister);
  S.RegisterDelphiFunction(@AnsiCompareFileName,'AnsiCompareFileName', cdRegister);
  S.RegisterDelphiFunction(@AnsiCompareStr,'AnsiCompareStr', cdRegister);
  S.RegisterDelphiFunction(@AnsiCompareText,'AnsiCompareText', cdRegister);

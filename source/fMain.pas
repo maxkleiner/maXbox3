@@ -107,6 +107,7 @@
          9527       build 96_1 getwebscript, cycontainer
          9544       build 96_2 backgroundcolor themes fix, backgroundparent, fixing
          9580       build 96_3 5 units, fixing, checkers. DOS syntax
+         9608       build 98  toolbox units,  regex2 
 
                   V4.0   in  June 2015
  ************************************************************************** }
@@ -155,9 +156,9 @@ const
    ALLUNITLIST = 'docs\maxbox3_9.xml'; //'in /docs;
    INCLUDEBOX = 'pas_includebox.inc';
    BOOTSCRIPT = 'maxbootscript.txt';
-   MBVERSION = '3.9.9.96';
+   MBVERSION = '3.9.9.98';
    MBVER = '399';              //for checking!
-   MBVER2 = '39996';              //for checking!
+   MBVER2 = '39998';              //for checking!
    EXENAME ='maXbox3.exe';
    MXSITE = 'http://www.softwareschule.ch/maxbox.htm';
    MXVERSIONFILE = 'http://www.softwareschule.ch/maxvfile.txt';
@@ -1792,6 +1793,14 @@ uses
   uPSI_WaveTimer,
   uPSI_WaveUtils,  ////3.9.9.96_3
   dlgMain,  //CHECKERS GAME
+  uPSI_NamedPipes,
+  uPSI_NamedPipeServer,
+  uPSI_process,
+  uPSI_DPUtils,
+  uPSI_CommonTools,
+  uPSI_DataSendToWeb,
+  uPSI_StarCalc,
+  uPSI_D2_VistaHelperU,   ////3.9.9.98
 
 
     //MDIFrame,
@@ -2790,6 +2799,14 @@ begin
  SIRegister_WavePlay(X);
  SIRegister_WaveTimer(X);
  SIRegister_WaveUtils(X);
+ SIRegister_NamedPipes(X);
+ SIRegister_NamedPipeServer(X);
+ SIRegister_process(X);
+ SIRegister_DPUtils(X);
+ SIRegister_CommonTools(X);
+ SIRegister_DataSendToWeb(X);
+ SIRegister_StarCalc(X);
+ SIRegister_D2_VistaHelperU(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4029,6 +4046,17 @@ begin
   RIRegister_WaveTimer(X);
   RIRegister_WaveUtils(X);     //3.9.9.96_3
   RIRegister_WaveUtils_Routines(Exec);
+  RIRegister_NamedPipes(X);
+  RIRegister_NamedPipes_Routines(Exec);
+  RIRegister_NamedPipeServer(X);
+  RIRegister_process(X);
+  RIRegister_DPUtils_Routines(Exec);
+  RIRegister_DPUtils(X);
+  RIRegister_CommonTools_Routines(Exec);
+  RIRegister_CommonTools(X);
+  RIRegister_DataSendToWeb(X);
+  RIRegister_StarCalc(X);
+  RIRegister_D2_VistaHelperU_Routines(Exec); //3.9.9.98
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);

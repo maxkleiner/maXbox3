@@ -2,7 +2,7 @@ unit GPSUtils_Demo;
 
 //http://www.eye4software.com/products/gpstoolkit/source/delphi/nmea0183/
 //#locs:182
-//#sign:Administrator: PC08: 15/05/2014 06:02:13 PM 
+//#sign:Administrator: PC08: 13/06/2014 11:55:14 PM 
 //http://projecteuler.net/
 
 

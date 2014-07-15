@@ -378,6 +378,10 @@ function IsCOMConnected: Boolean;
   function CheckBox: string;
   function isNTFS: boolean;
 
+  //function RoundTo(const AValue: Extended;
+    //             const ADigit: TRoundToEXRangeExtended): Extended;
+
+
   
 implementation
 
@@ -3065,11 +3069,12 @@ var idHTTP: TIDHTTP;
    try
      result:= idHTTP.Get(MXVERSIONFILE2);
      result:= result[1]+result[2]+result[3]+result[4]+result[5];
-     if result = MBVER2 then begin
+     if result = MBVER2 then //begin
        //output.Font.Style:= [fsbold];
      //Speak(' A new Version '+vstr+' of max box is available! ');
-     result:= ('!!! OK. You have the latest Version: '+result+' available at '+MXSITE);
-    end;
+     result:= ('!!! OK. You have the latest Version: '+result+' available at '+MXSITE)
+     else result:= ('!!! NO. You dont have the latest Version: '+result+' available at '+MXSITE);
+    //end;
     // actVersion:= vstring;
     //idhttp.get2('http://www.softwareschule.ch/maxbox.htm')
    finally

@@ -1,0 +1,308 @@
+(******************************************************************************)
+(*                                                                            *)
+(*   StringGrid-Tools                                                         *)
+(*                                                                            *)
+(*   (c) 2006 Rainer Reusch & Toolbox Verlag                                  *)
+(*                                                                            *)
+(*   Borland Delphi                                                           *)
+(*                                                                            *)
+(******************************************************************************)
+
+{
+Es genügt, die Prozedur StringGridAssign aufzurufen, damit das angegebene
+StringGrid die neuen Features annimmt. Die folgenden Eigenschaften werden
+im angegebenen StringGrid verändert:
+- OnDrawCell
+- DefaultDrawing
+- Options.goDrawFocusSelected
+}
+
+unit StringGridTools;
+
+interface
+
+//uses
+  //Windows, Graphics, Grids;
+
+type
+  TStringGridExt = TStringGrid;
+  //public
+    procedure _StringGridDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
+  //end;
+
+function Darker(AColor : TColor) : TColor;
+// dunklere Farbe
+
+function Lighter(AColor : TColor) : TColor;
+// hellere Farbe
+
+procedure StringGridAssign(AStringGrid : TStringGrid);
+// Durchführung notwendiger Initialisierungen
+
+var
+  StringGridExt : TStringGridExt;
+  
+procedure PrecCount(var t : int64);
+{ Erfassen des Zählerstandes }
+
+function DeltaPrecCount(var t1, t2 : int64) : longint;
+{ Liefert die Differenz t2-t1 aus zwei Zählerständen
+  Hinweis: Das Funktionsergebnis ist "nur" 32 Bit breit }
+
+function DeltaPrecTime(var t1, t2 : int64) : longint;
+{ Liefert die Differenz t2-t1 aus zwei Zählerständen
+  als Ergebnis in Mikrosekunden
+  Hinweis: Das Funktionsergebnis ist "nur" 32 Bit breit }
+
+procedure PrecDelay(MicroSeconds : longint);
+{ Verzögerungsroutine
+  mit einer Auflösung in Mikrosekunden
+  MicroSeconds darf nicht größer als 1799798562
+  (eine knappe halbe Stunde) sein!
+  Weiterhin kann sie Zeitangaben unterhalb DelayMinTime nicht umsetzen
+  (Verzögerungszeit ist mind. DelayMinTime) }
+
+procedure GetDelayMinTime;
+{ Ermittlung der Eigenzeit der PrecDelay-Routine aus 16 Delay-Durchläufen
+  (wird automatisch ausgeführt) }
+
+var
+  DelayMinTime : longint;   { Nur lesen! Eigenzeit der Delay-Routine
+                              in Mikrosekunden. Verzögerungen der PrecDelay-
+                              Routine unterhalb dieses Wertes sind nicht
+                              möglich. Wert ist rechnerabhängig. }
+  
+
+implementation
+
+function Darker(AColor : TColor) : TColor;
+// dunklere Farbe
+var
+  r, g, b : TColor;
+begin
+  if cardinal(AColor)>$7FFFFFFF then
+    //AColor:=GetSysColor(AColor and $00FFFFFF);
+  r:=(AColor and $FF) div 2;
+  g:=((AColor shr 8) and $FF) div 2;
+  b:=((AColor shr 16) and $FF) div 2;
+  Result:=(b shl 16) or (g shl 8) or r;
+end;
+
+function Lighter(AColor : TColor) : TColor;
+// hellere Farbe
+var
+  r, g, b : TColor;
+begin
+  if cardinal(AColor)>$7FFFFFFF then
+   // AColor:=GetSysColor(AColor and $00FFFFFF);
+  r:=$FF-(($FF-(AColor and $FF)) div 2);
+  g:=$FF-(($FF-((AColor shr 8) and $FF)) div 2);
+  b:=$FF-(($FF-((AColor shr 16) and $FF)) div 2);
+  Result:=(b shl 16) or (g shl 8) or r;
+end;
+
+procedure StringGridAssign(AStringGrid : TStringGrid);
+// Durchführung notwendiger Initialisierungen
+begin
+  with AStringGrid do begin
+    AStringGrid.OnDrawCell:= @_StringGridDrawCell;
+    DefaultDrawing:= false;
+    Options:= Options-[goDrawFocusSelected];
+  end;
+end;
+
+procedure _StringGridDrawCell(Sender: TObject; ACol, ARow: Integer;
+  Rect: TRect; State: TGridDrawState);
+// Behandlung für das Ereignis OnDrawCell
+var
+  c : TColor;
+begin
+  if State=[gdFixed] then c:=TStringGrid(Sender).FixedColor
+                     else c:=TStringGrid(Sender).Color;
+  with TStringGrid(Sender).Canvas do begin
+    // Hintergrund
+    Pen.Color:=c;
+    Pen.Style:=psSolid;
+    Brush.Color:=c;
+    Brush.Style:=bsSolid;
+    Rectangle(rect.left, rect.top, rect.right, rect.bottom);
+    if State=[gdFixed] then begin  // 3D-Effekt für feste Zellen
+      Pen.Color:=clWhite;
+      MoveTo(Rect.Left,Rect.Bottom-1);
+      LineTo(Rect.Left,Rect.Top);
+      LineTo(Rect.Right,Rect.Top);
+      Pen.Color:=Lighter(c);
+      MoveTo(Rect.Left+1,Rect.Bottom-2);
+      LineTo(Rect.Left+1,Rect.Top+1);
+      LineTo(Rect.Right-1,Rect.Top+1);
+      Pen.Color:=Darker(c);
+      MoveTo(Rect.Left+1,Rect.Bottom-1);
+      LineTo(Rect.Right-1,Rect.Bottom-1);
+      LineTo(Rect.Right-1,Rect.Top+1);
+    end;
+    // Ausgabe des Inhalts
+    Font.Assign(TStringGrid(Sender).Font);
+    TextOut(Rect.Left+2,Rect.Top+(Rect.Bottom-Rect.Top-TextHeight('Äg')) div 2,
+      TStringGrid(Sender).Cells[ACol,ARow]);
+  end;
+end;
+
+var
+  k : int64;  // Quarzfrequenz des Timers (1193180Hz)
+
+procedure PrecCount(var t : int64);
+begin
+  QueryPerformanceCounter(t);
+end;
+
+function DeltaPrecCount(var t1, t2 : int64) : longint;
+begin
+  result:= t2-t1;
+end;
+
+function DeltaPrecTime(var t1, t2 : int64) : longint;
+var
+  D : extended;
+begin
+  D:=t2-t1;
+  result:= round(1000000*D/k);
+end;
+
+procedure PrecDelay(MicroSeconds : longint);
+var
+  n, t1, t2 : int64;
+begin
+  if MicroSeconds>DelayMinTime then MicroSeconds:=MicroSeconds-DelayMinTime
+                               else MicroSeconds:=0;
+  if MicroSeconds>0 then begin
+    n:=round((k/1000000)*MicroSeconds);
+    PrecCount(t1);
+    repeat
+      PrecCount(t2);
+    until (t2-t1)>=n;
+  end;
+end;
+
+procedure GetDelayMinTime;
+{ Ermittlung der Eigenzeit der PrecDelay-Routine aus 16 Delay-Durchläufen }
+var
+  i : word;
+  t : longint;
+  TP1, TP2 : int64;
+begin
+  DelayMinTime:=0;
+  PrecDelay(2);
+  t:=0;
+  for i:=0 to 15 do begin
+    PrecCount(TP1);
+    PrecDelay(2);
+    PrecCount(TP2);
+    t:=t+DeltaPrecTime(TP1,TP2);
+  end;
+  DelayMinTime:=(t div 16)-2;
+end;
+
+
+initialization
+  StringGridExt:=TStringGridExt.Create(self);
+
+finalization
+  StringGridExt.Free;
+  
+begin
+  writeln('Extended 3D StringGrid');
+ // writeln(sha1('E:\maxbox3\mXGit39991\maxbox3 - Kopie.zip'));
+  QueryPerformanceFrequency(k);
+  GetDelayMinTime;
+  PrecDelay(500000); //half second
+  
+end;
+
+end.
+
+
+ {-------O B S E R V E R  Pattern ------------------------}
+ type
+   TStObserverAction = procedure(aInputData : TObject) of object;
+ 
+ TStObserver = class
+     private
+       FEventTable : TList;
+     protected
+       function  GetObserver(Index : Integer) : TStObserverAction;
+       procedure SetObserver(Index : Integer; InObserver : TStObserverAction);
+       function  GetCount : Integer;
+     public
+       constructor Create;
+       destructor  Destroy; override;
+       procedure Add(aHandler : TStObserverAction);
+       procedure Remove(aIndex : Integer);
+       procedure Notify(aInputData : TObject);
+       property  Handler[aIndex : Integer] : TStObserverAction
+                    read GetObserver write SetObserver;
+       property  Count : Integer read GetCount;
+   end;
+   
+     
+   {------- C H A I N -Pattern--------------------------------}
+   type
+     TStChainAction = procedure(aInputData, aResultData : TObject; var aStopNow : boolean) of object;
+   
+     TStChain = class
+       private
+         FEventTable : TList;
+       protected
+         function  GetHandler(Index : Integer) : TStChainAction;
+         procedure SetHandler(Index : Integer; InHandler : TStChainAction);
+         function  GetCount : Integer;
+   
+       public
+         constructor Create;
+         destructor  Destroy; override;
+   
+         procedure Add(aHandler : TStChainAction);
+         procedure Remove(aIndex : Integer);
+         procedure Handle(aInputData, aResultData : TObject);
+         procedure Insert(aIndex : Integer; aHandler : TStChainAction);
+         property Handler[aIndex : Integer] : TStChainAction
+                     read GetHandler write SetHandler;
+         property  Count : Integer read GetCount;
+     end;
+   
+     
+  {------ S I N G L E T O N ---------------------}
+  type
+    TStSingleton = class(TObject)
+      private
+        FRefCount: integer;
+      protected
+      public
+        class function NewInstance : TObject; override;
+        procedure FreeInstance; override;
+  
+        procedure AllocResources; virtual;
+        procedure FreeResources; virtual;
+    end;
+    
+    {------ M E D I A T O R ------------------------}
+    type
+      TStMediatorAction = procedure(aInputData, aResultData : TObject) of object;
+    
+      TStMediator = class
+        private
+          FEventTable: TStringList;
+        protected
+          function  GetCount: Integer;
+        public
+          constructor Create;
+          destructor  Destroy; override;
+    
+          procedure Add(const aEventName : string; aHandler : TStMediatorAction);
+          procedure Remove(const aEventName : string);
+          procedure Handle(const aEventName : string; aInputData, aResultData : TObject);
+          function  IsHandled(const aEventName : string) : boolean;
+          property  Count: Integer read GetCount;
+      end;
+      
+    

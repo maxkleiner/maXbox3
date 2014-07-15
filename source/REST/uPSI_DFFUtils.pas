@@ -183,6 +183,115 @@ begin
 end;
 
 
+Procedure regExPathfinder2(Pathin, fileout, firstp, aregex,
+                                    ext: string; asort, acopy: boolean);
+//Find all directories above and including the current one
+var
+  dirList, rlist, linelst: TStringList;
+  i, fhandle, cntr, ftot, offset, linecnt: integer;
+  fstr: string;
+begin
+  screen.cursor:= CRhourglass;
+  dirList:= TStringList.Create;
+  ftot:= 0;
+  offset:= 0;
+   if not FileExists(fileout) then begin
+      fhandle:= FileCreate(fileout);
+      FileClose(fhandle)
+   end;
+   if not DirectoryExists(fileout) then begin
+      CreateDir(extractfilepath(fileout))
+      //FileClose(fhandle)
+   end;
+  try
+    //FindDirectories(dirList, ExePath);
+    GetDirList(pathin,dirlist,true);
+    rlist:= TStringlist.create;
+    rlist.add('mX RegEx SONAR Code Pattern Search2 in '+pathin);
+    rlist.add(S_RepeatChar(90,'*'));
+    rlist.add('dir list '+inttostr(dirlist.count));
+
+  for i:= 0 to dirlist.count-1 do begin     //dir list 25873
+  //for i:= 0 to 100-1 do begin     //dir list 25873
+   // for i:= 0 to 10 - 1 do begin
+   //fstr:= loadFileasString(dirlist[i]);
+//fstr:= loadFileasString('C:\maXbook\maxbox3\mX3999\maxbox3\source\JCL\source\JclGraphics_test.pas');
+    //{extback:= PathFindExtension(dirlist[i]);
+      //S_ShellExecute(exepath+'maxbox3.exe',dirlist[i],seCMDOpen);
+   linecnt:= 0;
+   cntr:= 0;
+   if Uppercase(ExtractFileExt(dirlist[i])) = uppercase(ext) then 
+     with TRegExpr.Create do try 
+      try
+        fstr:= loadFileasString(dirlist[i]);
+        linelst:= TStringlist.create;
+        linelst.loadfromfile(dirlist[i]);
+        linecnt:= linelst.count-1;
+        linelst.Free;
+      except
+        showmessage('ERROR: The filename or extension is too long.');
+      end;  
+      //gstr2:= ' CheckId, Status, Created' 'implements'; 
+      modifierS:= false; //!non greedy  code around clock
+      modifierI:= true;  //case insens
+      //Expression:= gstr+'.*([\d]+,[\d]).*?'; //array
+      //Expression:= '.*([\d]+).*?';     //all numb
+      //Expression:= '.*([\d],).*?';     //all numbs and signs
+      //Expression:= '.*[a-zA-Z_]\(\w[\d]+\)*?';  //numbs in name (X1)
+      //Expression:= '.*\([\d]\).*?';     //numbs just one parameter!
+      //Expression:= '.*\([\d]+\)*?';     //magic numbs after (
+      //Expression:= '.*\([\d]+,[\d]\)*?';     //more than one in para
+      //Expression:= '.*[a-zA-Z_]\([\w][\d]+\)*?';   //magic numbs with X1)
+      //Expression:= gstr+'.*[a-zA-Z_]\([*,\d]+\)'+gstr2+'*?';//mn allwith N(d(d))
+      Expression:= firstp+aregex;  //mnumbs allwith N(d(d))
+      //cntr:= 0;
+      if asort then
+        rlist.Sorted:= true;   //before dup!
+        rlist.duplicates:= dupAccept; //true; //false is dupIgnore; ?
+      //rlist.Add(Format(inttoStr(i)+' Fileto: %s ',[dirlist[i]]));
+      //TODO: count files which has regex found! change savestring
+       
+      if Exec(fstr) then 
+       try //save console out count categories
+           rlist.Add(Format(inttoStr(i+offset)+' filein: %s ',[dirlist[i]]));
+         if acopy then
+            savestring(extractfilepath(fileout)+inttostr(i+offset)+'_'
+                     +extractfilename(dirlist[i])+'.txt',fstr);
+         Repeat 
+           rlist.add(Match[0]); 
+           inc(cntr);
+         Until Not ExecNext; 
+           inc(ftot);
+           rlist.Add(Format('SortMetrics: %d found %d of tot %d',
+                                            [cntr,ftot, rlist.count-2]));
+       except
+         showmessage('''Exception in regex Review svnnavi'')');
+         //writeln('''Exception in regex Review svnnavi'')');
+
+       end;    
+    finally 
+      Free;
+    end; //with try
+    //S_ShellExecute(exepath+'maxbox3.exe',dirlist[i],seCMDOpen);
+      //writeln(inttostr(cntr)+ ' search total of '+gstr+' '+gstr2);
+     maxForm1.memo2.lines.add(Format('SearchMetrics: %d of lines %d from %s to %s of %s',
+                   [cntr, linecnt, firstp,aregex , extractfilename(dirlist[i])]));
+  end; //for dirlist loop
+    rlist.add(maxForm1.memo2.text);
+    rlist.SavetoFile(fileout);
+   // writeln('File Saved at: '+fileout+' of total '+inttostr(i)+' files');
+    maxForm1.memo2.lines.Add('File Saved at: '+fileout+' of total '+inttostr(i)+' files');
+  finally
+    dirList.Free;
+    rlist.Free;
+    screen.cursor:= CRdefault;
+    SearchandOpenDoc(fileout);
+  end;//for
+end;  
+
+
+
+
 
 (* === compile-time registration functions === *)
 (*----------------------------------------------------------------------------*)
@@ -217,6 +326,7 @@ begin
  CL.AddDelphiFunction('Procedure GetParens( Variables : string; OpChar : char; var list : TStringlist)');
  CL.AddDelphiFunction('procedure WriteDataSetToCSV(DataSet: TDataSet; FileName: String)');
  CL.AddDelphiFunction('Procedure regExPathfinder(Pathin, fileout, firstp, aregex, ext: string; asort: boolean)');
+ CL.AddDelphiFunction('Procedure regExPathfinder2(Pathin, fileout, firstp, aregex, ext: string; asort: boolean)');
 
 
 
@@ -277,13 +387,14 @@ begin
  S.RegisterDelphiFunction(@GetParens, 'GetParens', cdRegister);
  S.RegisterDelphiFunction(@WriteDataSetToCSV, 'WriteDataSetToCSV', cdRegister);
  S.RegisterDelphiFunction(@regExPathfinder, 'regExPathfinder', cdRegister);
+ S.RegisterDelphiFunction(@regExPathfinder2, 'regExPathfinder2', cdRegister);
 
 
 
 end;
 
- 
- 
+
+
 { TPSImport_DFFUtils }
 (*----------------------------------------------------------------------------*)
 procedure TPSImport_DFFUtils.CompileImport1(CompExec: TPSScript);

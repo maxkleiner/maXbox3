@@ -6,11 +6,11 @@ as an OpenToolsAPI to modify the maXbox GUI - V3.5 -V3.8.6 , version check
    actual 3.9.8 , new ipport, comport, iphost, appname, open examples, intflist
    locs=   1624   , last is gotoline, intfnavlist, configfileclick
   DoEditorExecuteCommand(EditorCommand: word);
-  Updated to 3.9.9.85 /80/82/91/94/95/96 , locs=3722, MBVERIALL, ResetKeyPressed;
+  Updated to 3.9.9.85 /80/82/91/94/95/96/98 , locs=3722, MBVERIALL, ResetKeyPressed;
 }
 
 interface
- 
+
 uses
    SysUtils
   ,Classes
@@ -18,16 +18,16 @@ uses
   ,uPSRuntime
   ,uPSCompiler
   ;
- 
-type 
+
+type
 (*----------------------------------------------------------------------------*)
   TPSImport_fMain = class(TPSPlugin)
   protected
     procedure CompileImport1(CompExec: TPSScript); override;
     procedure ExecImport1(CompExec: TPSScript; const ri: TPSRuntimeClassImporter); override;
   end;
- 
- 
+
+
 { compile-time registration functions }
 procedure SIRegister_TMaxForm1(CL: TPSPascalCompiler);
 procedure SIRegister_fMain(CL: TPSPascalCompiler);
@@ -695,10 +695,10 @@ begin
  CL.AddConstantN('ALLUNITLIST','String').SetString( 'docs\maxbox3_9.xml');
  CL.AddConstantN('INCLUDEBOX','String').SetString('pas_includebox.inc');
  CL.AddConstantN('BOOTSCRIPT','String').SetString('maxbootscript.txt');
- CL.AddConstantN('MBVERSION','String').SetString('3.9.9.96');
- CL.AddConstantN('VERSION','String').SetString('3.9.9.96');
- CL.AddConstantN('MBVERIALL','Integer').SetInt(39996);
- CL.AddConstantN('MBVER2','String').SetString('39996');
+ CL.AddConstantN('MBVERSION','String').SetString('3.9.9.98');
+ CL.AddConstantN('VERSION','String').SetString('3.9.9.98');
+ CL.AddConstantN('MBVERIALL','Integer').SetInt(39998);
+ CL.AddConstantN('MBVER2','String').SetString('39998');
  CL.AddConstantN('EXENAME','String').SetString( 'maXbox3.exe');
  CL.AddConstantN('MXINTERNETCHECK','String').SetString( 'www.ask.com');
  CL.AddConstantN('MBVER','String').SetString('399');

@@ -139,6 +139,7 @@ begin
     RegisterProperty('SUBMENUIMAGES', 'TCUSTOMIMAGELIST', iptrw);
     RegisterProperty('DEFAULT', 'BOOLEAN', iptrw);
     RegisterProperty('ENABLED', 'BOOLEAN', iptrw);
+    RegisterProperty('Autocheck', 'BOOLEAN', iptrw);
     RegisterProperty('GROUPINDEX', 'BYTE', iptrw);
     RegisterProperty('HELPCONTEXT', 'THELPCONTEXT', iptrw);
     RegisterProperty('HINT', 'String', iptrw);

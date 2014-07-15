@@ -36,9 +36,15 @@ procedure Register;
 
 implementation
 
-
 uses
    Types, MathMax, JCLMath_max;
+
+
+type
+  TRoundToRange = -37..37;
+
+type
+ TRoundToEXRangeExtended = -20..20;
 
 
 procedure Register;
@@ -119,6 +125,65 @@ begin
   //Result := IntToHex(Overlay[2], 8) + IntToHex(Overlay[1], 8);
 end;
 
+ //function RoundTo(const AValue: Extended;
+    //             const ADigit: TRoundToEXRangeExtended): Extended;
+
+procedure RoundExError;
+begin
+  raise Exception.Create('SVarInvalid');
+end;
+
+
+function RoundTo(const AValue: Extended;
+                 const ADigit: TRoundToEXRangeExtended): Extended;
+type
+  TFactors = array[1..2] of Extended;
+const
+  CW8087X : Word = 4978;
+  LFactorArray : array[-20..20] of TFactors = (
+    (1E-20, 1E20), (1E-19, 1E19), (1E-18, 1E18), (1E-17, 1E17), (1E-16, 1E16),
+    (1E-15, 1E15), (1E-14, 1E14), (1E-13, 1E13), (1E-12, 1E12), (1E-11, 1E11),
+    (1E-10, 1E10), (1E-09, 1E09), (1E-08, 1E08), (1E-07, 1E07), (1E-06, 1E06),
+    (1E-05, 1E05), (1E-04, 1E04), (1E-03, 1E03), (1E-02, 1E02), (1E-01, 1E01),
+    (1, 1),
+    (1E01, 1E-01), (1E02, 1E-02), (1E03, 1E-03), (1E04, 1E-04), (1E05, 1E-05),
+    (1E06, 1E-06), (1E07, 1E-07), (1E08, 1E-08), (1E09, 1E-09), (1E10, 1E-10),
+    (1E11, 1E-11), (1E12, 1E-12), (1E13, 1E-13), (1E14, 1E-14), (1E15, 1E-15),
+    (1E16, 1E-16), (1E17, 1E-17), (1E18, 1E-18), (1E19, 1E-19), (1E20, 1E-20));
+asm
+  movsx   eax,al
+  cmp     eax, 20
+  jg      RoundExError
+  cmp     eax, -20
+  jl      RoundExError
+  sub     esp, 4
+  fstcw   word ptr [esp]
+  fldcw   word ptr [CW8087X]
+  lea     eax, [eax+eax*4]
+  lea     eax, [eax*4 + LFactorArray + 20*20]
+  fld     tbyte ptr [eax]
+  fld     tbyte ptr [eax+10]
+  fld     AValue
+  fmulp
+  frndint
+  fmulp
+  fldcw   word ptr [esp]
+  wait
+  pop     eax {Restore Stack}
+end;
+
+function SimpleRoundTo(const AValue: Extended; const ADigit: TRoundToRange = -2): Extended;
+var
+  LFactor: Extended;
+begin
+  LFactor := IntPower(10, ADigit);
+  if AValue < 0 then
+    Result := Trunc((AValue / LFactor) - 0.5) * LFactor
+  else
+    Result := Trunc((AValue / LFactor) + 0.5) * LFactor;
+end;
+
+
 (*----------------------------------------------------------------------------*)
 procedure SIRegister_MathMax(CL: TPSPascalCompiler);
 begin
@@ -196,6 +261,14 @@ begin
    CL.AddTypeS('TDynCardinalArray', 'array of Cardinal');
    CL.AddTypeS('TFloatingPointClass', '( fpZero, fpNormal, fpDenormal, fpInfinit'
    +'e, fpNaN, fpInvalid, fpEmpty )');
+   // CL.AddTypeS('TRoundToEXRangeExtended', '(-20..20)');
+    CL.AddTypeS('TRoundToEXRangeExtended', 'INTEGER');
+    CL.AddTypeS('TRoundToRange', 'INTEGER');
+
+    //TRoundToRange
+
+   //type TRoundToEXRangeExtended = -20..20;
+
 
  // TDynCardinalArray = array of Cardinal;
  CL.AddConstantN('Crc16PolynomCCITT','LongWord').SetUInt( $1021);
@@ -465,6 +538,16 @@ begin
  CL.AddDelphiFunction('function MinValue(const Data: array of Double): Double)');
  CL.AddDelphiFunction('Function Round64(e: extended): Int64;');
  CL.AddDelphiFunction('Function Trunc64(e: extended): Int64;');
+
+  CL.AddDelphiFunction('function RoundTo(const AValue: Extended; const ADigit: TRoundToEXRangeExtended): Extended;');
+ CL.AddDelphiFunction('function SimpleRoundTo(const AValue: Extended; const ADigit: TRoundToRange): Extended;');
+
+
+{ This variation of the RoundTo function follows the asymmetric arithmetic
+  rounding algorithm (if Frac(X) < .5 then return X else return X + 1).  This
+  function defaults to rounding to the hundredth's place (cents). }
+//function SimpleRoundTo(const AValue: Extended; const ADigit: TRoundToRange = -2): Extended;
+
 
   SIRegister_EInvalidArgument(CL);
 end;
@@ -881,6 +964,12 @@ begin
  S.RegisterDelphiFunction(@MaxValue, 'MaxValue', cdRegister);
  S.RegisterDelphiFunction(@MinIntValue, 'MinIntValue', cdRegister);
  S.RegisterDelphiFunction(@MinIntValue, 'MinIntValue', cdRegister);
+ S.RegisterDelphiFunction(@RoundTo, 'RoundTo', cdRegister);
+ S.RegisterDelphiFunction(@SimpleRoundTo, 'SimpleRoundTo', cdRegister);
+
+
+ // CL.AddDelphiFunction('function RoundTo(const AValue: Extended; const ADigit: TRoundToEXRangeExtended): Extended;');
+ //CL.AddDelphiFunction('function SimpleRoundTo(const AValue: Extended): Extended;');
 
  //RIRegister_EInvalidArgument(S);
 end;

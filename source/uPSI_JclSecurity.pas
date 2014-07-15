@@ -52,6 +52,7 @@ begin
  //CL.AddDelphiFunction('Function CreateNullDacl( var Sa : TSecurityAttributes; const Inheritable : Boolean) : PSecurityAttributes');
  //CL.AddDelphiFunction('Function CreateInheritable( var Sa : TSecurityAttributes) : PSecurityAttributes');
  CL.AddDelphiFunction('Function IsAdministrator : Boolean');
+ CL.AddDelphiFunction('Function IsAdmin: Boolean');
  CL.AddDelphiFunction('Function EnableProcessPrivilege( const Enable : Boolean; const Privilege : string) : Boolean');
  CL.AddDelphiFunction('Function EnableThreadPrivilege( const Enable : Boolean; const Privilege : string) : Boolean');
  CL.AddDelphiFunction('Function IsPrivilegeEnabled( const Privilege : string) : Boolean');
@@ -71,6 +72,7 @@ begin
  S.RegisterDelphiFunction(@CreateNullDacl, 'CreateNullDacl', cdRegister);
  S.RegisterDelphiFunction(@CreateInheritable, 'CreateInheritable', cdRegister);
  S.RegisterDelphiFunction(@IsAdministrator, 'IsAdministrator', cdRegister);
+ S.RegisterDelphiFunction(@IsAdministrator, 'IsAdmin', cdRegister);
  S.RegisterDelphiFunction(@EnableProcessPrivilege, 'EnableProcessPrivilege', cdRegister);
  S.RegisterDelphiFunction(@EnableThreadPrivilege, 'EnableThreadPrivilege', cdRegister);
  S.RegisterDelphiFunction(@IsPrivilegeEnabled, 'IsPrivilegeEnabled', cdRegister);

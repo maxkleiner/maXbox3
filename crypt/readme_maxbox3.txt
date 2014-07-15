@@ -1,4 +1,23 @@
 ****************************************************************
+Release Notes maXbox 3.9.9.98 August 2014
+****************************************************************
+Add 10 Units, Wav resources, RoundTo, OpenOffice, Pipes
+
+946 uPSI_NamedPipes,
+947 uPSI_NamedPipeServer,
+948 unit uPSI_process,
+949 unit uPSI_DPUtils;
+950 unit uPSI_CommonTools;
+951 uPSI_DataSendToWeb,
+952 uPSI_StarCalc,
+953 uPSI_D2_XPVistaHelperU
+954 unit uPSI_NetTools
+955 unit uPSI_Pipes_Prectime
+
+SHA1: Win 3.9.9.98 EF3D49A159B008E5FAD63527ED907EC10790DA0C
+
+
+****************************************************************
 Release Notes maXbox 3.9.9.96 July 2014
 ****************************************************************
 SendBuffer, Color+Caption hack, ComboSet,SetPrivilege, WakeOnLAN

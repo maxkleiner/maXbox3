@@ -1,7 +1,432 @@
 ****************************************************************
+Release Notes maXbox 3.9.9.98 August 2014
+****************************************************************
+Add 10 Units, Wav resources, RoundTo, OpenOffice, Pipes
+
+946 uPSI_NamedPipes,
+947 uPSI_NamedPipeServer,
+948 unit uPSI_process,
+949 unit uPSI_DPUtils;
+950 unit uPSI_CommonTools;
+951 uPSI_DataSendToWeb,
+952 uPSI_StarCalc,
+953 uPSI_D2_XPVistaHelperU
+954 unit uPSI_NetTools
+955 unit uPSI_Pipes_Prectime
+
+SHA1: Win 3.9.9.98 EF3D49A159B008E5FAD63527ED907EC10790DA0C
+
+
+****************************************************************
+Release Notes maXbox 3.9.9.96 July 2014
+****************************************************************
+SendBuffer, Color+Caption hack, ComboSet,SetPrivilege, WakeOnLAN
+ParaDice 3D Cube Polygraph, OCR, GPS, 20 Units add, getWebScript
+Error Helper, Profiler, Checkers
+
+921 unit uPSI_cyIEUtils;
+922 unit uPSI_UcomboV2;
+923 uPSI_cyBaseComm,
+924 uPSI_cyAppInstances,
+925 uPSI_cyAttract,
+926 uPSI_cyDERUtils
+927 unit uPSI_cyDocER;
+928 unit uPSI_ODBC;
+929 unit uPSI_AssocExec;
+930 uPSI_cyBaseCommRoomConnector,
+931 uPSI_cyCommRoomConnector,
+932 uPSI_cyCommunicate,
+933 uPSI_cyImage;
+934 uPSI_cyBaseContainer
+935 uPSI_cyModalContainer,
+936 uPSI_cyFlyingContainer;
+937 uPSI_RegStr,
+938 uPSI_HtmlHelpViewer;
+939 unit uPSI_cyIniForm
+940 unit uPSI_cyVirtualGrid;
+941 uPSI_Profiler,
+942 uPSI_BackgroundWorker,
+943 uPSI_WavePlay,
+944 uPSI_WaveTimer,
+945 uPSI_WaveUtils;
+
+SHA1: Win 3.9.9.96: 6DF0415E1645C98C2298DA0A3F613A016AD72EEE
+
+
+****************************************************************
+Release Notes maXbox 3.9.9.95 Mai 2014
+****************************************************************
+Oscilloscope V4, Mixer, 17 Units add, URLMon, Form properties+, mathmax
+
+904 unit uPSI_U_HexView;
+905 uPSI_UWavein4,
+906 uPSI_AMixer,
+907 uPSI_JvaScrollText,
+908 uPSI_JvArrow,
+909 unit uPSI_UrlMon;
+910 unit U_Oscilloscope4;  //U_FFT
+911 unit uPSI_U_Oscilloscope4; //TOscfrmMain;
+912 unit uPSI_DFFUtils;  //DFF
+913 unit uPSI_MathsLib;  
+914 uPSI_UIntList;
+915 uPSI_UGetParens;
+916 unit uPSI_UGeometry;
+917 unit uPSI_UAstronomy;
+918 unit uPSI_UCardComponentV2;
+919 unit uPSI_UTGraphSearch;
+920 unit uPSI_UParser10;
+
+SHA1: Win 3.9.9.95: A8BE7AD5B70ECAF9797C5C9E42A3CD40E903145F
+
+
+****************************************************************
+Release Notes maXbox 3.9.9.94 April 2014
+****************************************************************
+DLL Report, UML Tutor, 33 Units add, DRTable, Remote+, Cindy functions!
+
+872 unit uPSI_Wwstr;
+873 uPSI_DBLookup,
+874 uPSI_Hotspot,
+875 uPSI_HList; //History List
+876 unit uPSI_DrTable;
+877 uPSI_TConnect,
+878 uPSI_DataBkr,
+879 uPSI_HTTPIntr;
+880 unit uPSI_Mathbox;
+881 uPSI_cyIndy,
+882 uPSI_cySysUtils,
+883 uPSI_cyWinUtils,
+884 uPSI_cyStrUtils,
+885 uPSI_cyObjUtils,
+886 uPSI_cyDateUtils,
+887 uPSI_cyBDE,
+888 uPSI_cyClasses,
+889 uPSI_cyGraphics,  //3.9.9.94_2
+890 unit uPSI_cyTypes;
+891 uPSI_JvDateTimePicker,                     
+892 uPSI_JvCreateProcess,                      
+893 uPSI_JvEasterEgg,                          
+894 uPSI_WinSvc,  //3.9.9.94_3                 
+895 uPSI_SvcMgr                                
+896 unit uPSI_JvPickDate;
+897 unit uPSI_JvNotify;
+898 uPSI_JvStrHlder
+899 unit uPSI_JclNTFS2;
+900 uPSI_Jcl8087 //math coprocessor
+901 uPSI_JvAddPrinter
+902 uPSI_JvCabFile
+903 unit uPSI_JvDataEmbedded;
+
+
+SHA1: Win 3.9.9.94: 746418954E790A1713A93FF786ABCB50097FCB59
+
+
+****************************************************************
+Release Notes maXbox 3.9.9.92 April 2014
+****************************************************************
+1 Report, 15 Units add, DBCtrls, Stream+, IRadio, Wininet
+
+857 uPSI_VariantSymbolTable, //3.9.9.92
+858 uPSI_udf_glob,
+859 uPSI_TabGrid,
+860 uPSI_JsDBTreeView,
+861 uPSI_JsSendMail,
+862 uPSI_dbTvRecordList,
+863 uPSI_TreeVwEx,
+864 uPSI_ECDataLink,
+865 uPSI_dbTree,
+866 uPSI_dbTreeCBox,
+867 unit uPSI_Debug; //TfrmDebug
+868 uPSI_TimeFncs;
+869 uPSI_FileIntf,
+870 uPSI_SockTransport,
+871 unit uPSI_WinInet;
+
+SHA1: Win 3.9.9.92: 61ECB8AF3FA0C72B6AA6DE8DA4A65E1C30F0EE6C
+
+
+****************************************************************
+Release Notes maXbox 3.9.9.91 March 2014
+****************************************************************
+2 Tutorials, 42 Units add, Synapse V40, LDAP, OpenSSL, AVScan
+
+816 uPSI_TabNotBk;
+817 uPSI_udwsfiler;
+818 uPSI_synaip; //iputils
+819 uPSI_synacode;
+820 uPSI_synachar;
+821 uPSI_synamisc;
+822 uPSI_synaser;
+823 uPSI_synaicnv;
+824 uPSI_tlntsend;
+825 uPSI_pingsend;
+826 uPSI_blcksock;
+827 uPSI_asn1util; //V2
+828 uPSI_dnssend;
+829 uPSI_clamsend;
+830 uPSI_ldapsend;
+831 uPSI_mimemess;
+832 uPSI_slogsend;
+833 uPSI_mimepart;
+834 uPSI_mimeinln;
+835 uPSI_ftpsend;
+836 uPSI_ftptsend;
+837 uPSI_httpsend;
+838 uPSI_sntpsend;
+839 uPSI_smtpsend;
+840 uPSI_snmpsend;
+841 uPSI_imapsend;
+842 uPSI_pop3send;
+843 uPSI_nntpsend;
+844 uPSI_ssl_cryptlib;
+845 uPSI_ssl_openssl;
+846 uPSI_synhttp_daemon;
+847 uPSI_NetWork;
+848 uPSI_PingThread;
+849 uPSI_JvThreadTimer;
+850 unit uPSI_wwSystem;
+851 unit uPSI_IdComponent;
+852 unit uPSI_IdIOHandlerThrottle;
+853 unit uPSI_Themes;
+854 uPSI_StdStyleActnCtrls;
+855 unit uPSI_UDDIHelper;
+856 unit uPSI_IdIMAP4Server;
+
+
+SHA1: Win 3.9.9.91: 8099E25F2508B262E909B76EDF7BB301AFFA1864
+
+
+****************************************************************
+Release Notes maXbox 3.9.9.88 March 2014
+****************************************************************
+2 Tutorials 30 Units add, VCL constructors, controls+, unit list
+
+786 uPSI_FileUtil;
+787 uPSI_changefind;
+788 uPSI_cmdIntf;
+789 uPSI_fservice;
+790 uPSI_Keyboard;
+791 uPSI_VRMLParser,
+792 uPSI_GLFileVRML,
+793 uPSI_Octree;
+794 uPSI_GLPolyhedron,
+795 uPSI_GLCrossPlatform;
+796 uPSI_GLParticles;
+797 uPSI_GLNavigator;
+798 uPSI_GLStarRecord;
+799 uPSI_TGA;
+800 uPSI_GLCanvas;
+801 uPSI_GeometryBB;
+802 uPSI_GeometryCoordinates;
+803 uPSI_VectorGeometry;
+804 uPSI_BumpMapping;
+805 uPSI_GLTextureCombiners;
+806 uPSI_GLVectorFileObjects;
+807 uPSI_IMM;
+808 uPSI_CategoryButtons;
+809 uPSI_ButtonGroup;
+810 uPSI_DbExcept;
+811 uPSI_AxCtrls;
+812 uPSI_GL_actorUnit1;
+813 uPSI_StdVCL;
+814 unit CurvesAndSurfaces;
+815 uPSI_DataAwareMain;
+
+SHA1: Win 3.9.9.88: 119533C0725A9B9B2919849759AA2F6298EBFF28
+
+
+****************************************************************
+Release Notes maXbox 3.9.9.86 February 2014
+****************************************************************
+PEP - Pascal Educ Program , FBX Lib, psAPI, SMS Cell Module, OpenGL, Borland Tools
+
+751 unit uPSI_PsAPI;
+752 uPSI_ovcuser;
+753 uPSI_ovcurl;
+754 uPSI_ovcvlb;
+755 uPSI_ovccolor;
+756 uPSI_ALFBXLib,
+757 uPSI_ovcmeter;
+758 uPSI_ovcpeakm;
+759 uPSI_O32BGSty;
+760 uPSI_ovcBidi;
+761 uPSI_ovctcary;
+762 uPSI_DXPUtils;
+763 uPSI_ALMultiPartBaseParser;
+764 uPSI_ALMultiPartAlternativeParser;
+765 uPSI_ALPOP3Client;
+766 uPSI_SmallUtils;
+767 uPSI_MakeApp;
+768 uPSI_O32MouseMon;
+769 uPSI_OvcCache;
+770 unit uPSI_ovccalc;  //widget
+771 uPSI_Joystick,
+772 uPSI_ScreenSaver;
+773 uPSI_XCollection,
+774 uPSI_Polynomials,
+775 uPSI_PersistentClasses, //9.86
+776 uPSI_VectorLists;
+777 uPSI_XOpenGL,
+778 uPSI_MeshUtils;
+779 unit uPSI_JclSysUtils;
+780 unit uPSI_JclBorlandTools;
+781 unit JclFileUtils_max;
+782 uPSI_AfDataControls,
+783 uPSI_GLSilhouette,
+784 uPSI_JclSysUtils_class;
+785 uPSI_JclFileUtils_class;
+
+SHA1: Win 3.9.9.86: D44BBA8FA3AA1A6B1BF498DCEFE2068C685DBFC6
+
+****************************************************************
+Release Notes maXbox 3.9.9.85 January 2014
+****************************************************************
+PEP - Pascal Education Program , GSM Module, CGI, PHP Runner
+add 42 + 30  (72 units), memcached database, autobookmark, Alcinoe PAC, IPC Lib 
+Orpheus PAC, AsyncFree Library, advapi32 samples, FirebirdExp+MySQL units
+
+676 uPSI_DepWalkUtils;
+677 uPSI_OptionsFrm;
+678 unit yuvconverts;
+679 uPSI_JvPropAutoSave;
+680 uPSI_AclAPI;
+681 uPSI_AviCap;
+682 uPSI_ALAVLBinaryTree;
+683 uPSI_ALFcnMisc;
+684 uPSI_ALStringList;
+685 uPSI_ALQuickSortList;
+686 uPSI_ALStaticText;
+687 uPSI_ALJSONDoc;
+688 uPSI_ALGSMComm;
+689 uPSI_ALWindows;
+690 uPSI_ALMultiPartFormDataParser;
+691 uPSI_ALHttpCommon;
+692 uPSI_ALWebSpider,
+693 uPSI_ALHttpClient;
+694 uPSI_ALFcnHTML;
+695 uPSI_ALFTPClient;
+696 uPSI_ALInternetMessageCommon;
+697 uPSI_ALWininetHttpClient;
+698 uPSI_ALWinInetFTPClient;
+699 uPSI_ALWinHttpWrapper;
+700 uPSI_ALWinHttpClient;
+701 uPSI_ALFcnWinSock;
+702 uPSI_ALFcnSQL;
+703 uPSI_ALFcnCGI;
+704 uPSI_ALFcnExecute;
+705 uPSI_ALFcnFile;
+706 uPSI_ALFcnMime;
+707 uPSI_ALPhpRunner;
+708 uPSI_ALGraphic;
+709 uPSI_ALIniFiles;
+710 uPSI_ALMemCachedClient;
+711 unit uPSI_MyGrids;
+712 uPSI_ALMultiPartMixedParser,
+713 uPSI_ALSMTPClient,
+714 uPSI_ALNNTPClient;
+715 uPSI_ALHintBalloon;
+716 uPSI_ALXmlDoc;
+717 uPSI_IPCThrd;
+718 uPSI_MonForm;
+719 unit uPSI_TeCanvas;
+720 unit uPSI_Ovcmisc;
+721 unit uPSI_ovcfiler;
+722 unit uPSI_ovcstate;
+723 unit uPSI_ovccoco;
+724 unit uPSI_ovcrvexp;
+725 unit uPSI_OvcFormatSettings;
+726 unit uPSI_OvcUtils;
+727 unit uPSI_ovcstore;
+728 unit uPSI_ovcstr;
+729 unit uPSI_ovcmru;
+730 unit uPSI_ovccmd;
+731 unit uPSI_ovctimer;
+732 unit uPSI_ovcintl;
+733 uPSI_AfCircularBuffer;
+734 uPSI_AfUtils;
+735 uPSI_AfSafeSync;
+736 uPSI_AfComPortCore;
+737 uPSI_AfComPort;
+738 uPSI_AfPortControls;
+739 uPSI_AfDataDispatcher;
+740 uPSI_AfViewers;
+741 uPSI_AfDataTerminal;
+742 uPSI_SimplePortMain;
+743 unit uPSI_ovcclock;
+744 unit uPSI_o32intlst;
+745 unit uPSI_o32ledlabel;
+746 unit uPSI_AlMySqlClient;
+747 unit uPSI_ALFBXClient;
+748 unit uPSI_ALFcnSQL;
+749 unit uPSI_AsyncTimer;
+750 unit uPSI_ApplicationFileIO;
+
+SHA1: Win 3.9.9.85: E559F32B41320182CF44AC4DBAFF6F9B9579B120
+
+****************************************************************
+Release Notes maXbox 3.9.9.82 January 2014
+****************************************************************
+IBUtils Refactor, InterBase Package, DotNet Routines (JvExControls)
+add 31 units, mX4 Introduction Paper, more Socket&Streams, ShortString Routines
+7% performance gain (hot spot profiling), Perpetual Logger, Pure Code Add
+
+645  uPSI_IBX;
+646  uPSI_IWDBCommon;
+647  uPSI_SortGrid;
+648  uPSI_IB;
+649  uPSI_IBScript;
+650  uPSI_JvCSVBaseControls;
+651  uPSI_Jvg3DColors;
+652  uPSI_JvHLEditor;  //beta
+653  uPSI_JvShellHook;
+654  uPSI_DBCommon2
+655  uPSI_JvSHFileOperation;
+656  uPSI_uFilexport;
+657  uPSI_JvDialogs;
+658  uPSI_JvDBTreeView;
+659  uPSI_JvDBUltimGrid;
+660  uPSI_JvDBQueryParamsForm;
+661  uPSI_JvExControls;
+662  uPSI_JvBDEMemTable;
+663  uPSI_JvCommStatus;
+664  uPSI_JvMailSlots2;
+665  uPSI_JvgWinMask;
+666  uPSI_StEclpse;
+667  uPSI_StMime;
+668  uPSI_StList;
+669  uPSI_StMerge;
+670  uPSI_StStrS;
+671 uPSI_StTree,
+672 uPSI_StVArr;
+673 uPSI_StRegIni;
+674 unit uPSI_urkf;
+675 unit uPSI_usvd;
+
+SHA1: Win 3.9.9.82: A8D32978AD68F73EE3B7D688EFD3915E69FBAD77
+
+****************************************************************
+Release Notes maXbox 3.9.9.81 December 2013
+****************************************************************
+Reversi, GOL, bugfixing, 8 more units, Tutorial 24 Clean Code
+Tutorial 18_3 RGB LED, OpenGL Geometry, maxpix, statictext
+OpenGL Game Demo: ..Options/Add Ons/Reversi   
+
+637  uPSI_DbxSocketChannelNative,
+638  uPSI_DbxDataGenerator,
+639  uPSI_DBXClient;
+640  uPSI_IdLogEvent;
+641  uPSI_Reversi;
+642  uPSI_Geometry;
+643  uPSI_IdSMTPServer;
+644  uPSI_Textures;
+
+SHA1 Win 3.9.9.81: FFF0205DEF64C8F7F714C1DAF382F2E12522BC83
+
+****************************************************************
 Release Notes maXbox 3.9.9.80 November 2013
 ****************************************************************
-SPS Utils WDOS, Plc BitBus (PetriNet), 40 more units
+SPS Utils WDOS, Plc BitBus (PetriNet), 54 more units
+maXbox the script studio, WebUtils, Pipes&Filters 
 emax layers: system-package-component-unit-class-function-block
 HighPrecision Timers,  Indy Package6, AutoDetect, UltraForms
 
@@ -44,8 +469,24 @@ HighPrecision Timers,  Indy Package6, AutoDetect, UltraForms
 618 unit uPSI_delphi_arduino_Unit1;
 619 unit uPSI_DTDSchema2;
 620 unit uPSI_fplotMain;
+621 unit uPSI_FindFileIter;
+622 unit uPSI_PppState;  (JclStrHashMap)
+623 unit uPSI_PppParser;
+624 unit uPSI_PppLexer;
+625 unit uPSI_PCharUtils;
+626 unit uPSI_uJSON;
+627 unit uPSI_JclStrHashMap;
+628 unit uPSI_JclHookExcept;
+629 unit uPSI_EncdDecd;
+630 unit uPSI_SockAppReg;
+631 unit uPSI_PJFileHandle;
+632 unit uPSI_PJEnvVars;
+633 unit uPSI_PJPipe;
+634 unit uPSI_PJPipeFilters;
+635 unit uPSI_PJConsoleApp;
+636 unit uPSI_UConsoleAppEx;
 
-SHA1 Win 3.9.9.80: ADEB3B3F764F75D98F6CBD51642320BED4C6B7E2
+SHA1 Win 3.9.9.80: 654D46E6146CA04AFE2575B77FE2E51F6618BE9F
 
 ****************************************************************
 Release Notes maXbox 3.9.9.60 November 2013
@@ -1603,3 +2044,171 @@ This is most probably a false alarm. Therefore we are nevertheless offering the 
 Greetings,
 your heise software team
 
+Object Based Scripting Tool
+maXbox is a free scripter tool with an inbuilt delphi engine in one exe! It is designed for teaching, develop, test and analyzing apps and algorithms and runs under Windows and Linux (CLX) to set Delphi in a box without installation and no administration. The tool is based on an educational program with examples and exercises (from biorhythm, form building to how encryption works). Units are precompiled and objects invokable! With a 28 part tutorial for coders.
+00095A1C1454FFE78D1BDC76DD943EAADDAA4447
+
+
+[50128C3F]{vcl120.bpl  } Graphics.OutOfResources (Line 4155, "Graphics.pas" + 1) + $1C
+[50128CE2]{vcl120.bpl  } Graphics.GDIError (Line 4181, "Graphics.pas" + 13) + $0
+[501C9CE7]{vcl120.bpl  } Controls.TWinControl.WndProc (Line 9336, "Controls.pas" + 136) + $6
+[501CCD0C]{vcl120.bpl  } Controls.TWinControl.GetClientOrigin (Line 11377, "Controls.pas" + 3) + $9
+[50048010]{rtl120.bpl  } Classes.TThreadList.UnlockList (Line 3751, "Classes.pas" + 0) + $4
+[5012C914]{vcl120.bpl  } Graphics.FreeMemoryContexts (Line 6829, "Graphics.pas" + 12) + $5
+[501C9400]{vcl120.bpl  } Controls.TWinControl.MainWndProc (Line 9065, "Controls.pas" + 3) + $6
+[501C9415]{vcl120.bpl  } Controls.TWinControl.MainWndProc (Line 9068, "Controls.pas" + 6) + $0
+[50128D13]{vcl120.bpl  } Graphics.GDICheck (Line 4186, "Graphics.pas" + 1) + $4
+[5012D2C6]{vcl120.bpl  } Graphics.CopyBitmap (Line 7384, "Graphics.pas" + 19) + $7
+[500072AC]{rtl120.bpl  } System.TMonitor.Destroy (Line 10699, "System.pas" + 0) + $0
+[50006CAF]{rtl120.bpl  } System.TObject.CleanupInstance (Line 9940, "System.pas" + 17) + $0
+[50003FD0]{rtl120.bpl  } System.@FreeMem (Line 3457, "System.pas" + 2) + $0
+[50006BEC]{rtl120.bpl  } System.TObject.FreeInstance (Line 9810, "System.pas" + 2) + $2
+[500071FA]{rtl120.bpl  } System.@ClassDestroy (Line 10632, "System.pas" + 0) + $2
+[5012CC3E]{vcl120.bpl  } Graphics.TBitmapImage.Destroy (Line 7052, "Graphics.pas" + 16) + $6
+[5012EDBE]{vcl120.bpl  } Graphics.TBitmap.NewImage (Line 8688, "Graphics.pas" + 36) + $5
+[5012DD23]{vcl120.bpl  } Graphics.TBitmap.CopyImage (Line 7747, "Graphics.pas" + 13) + $F
+[5012FDA3]{vcl120.bpl  } Graphics.TBitmap.SetSize (Line 9495, "Graphics.pas" + 10) + $9
+[5012F60F]{vcl120.bpl  } Graphics.TBitmap.SetHeight (Line 9089, "Graphics.pas" + 1) + $A
+[502375A8]{vcl120.bpl  } CaptionedDockTree.DrawIcon (Line 602, "CaptionedDockTree.pas" + 21) + $8
+[50128245]{vcl120.bpl  } Graphics.TCanvas.Polyline (Line 3723, "Graphics.pas" + 6) + $7
+[502379CE]{vcl120.bpl  } CaptionedDockTree.TDockCaptionDrawer.DrawDockCaption (Line 679, "CaptionedDockTree.pas" + 50) + $1
+[50133198]{vcl120.bpl  } GraphUtil.ColorAdjustLuma (Line 465, "GraphUtil.pas" + 9) + $0
+[50236BA8]{vcl120.bpl  } CaptionedDockTree.TCaptionedDockTree.PaintDockFrame (Line 210, "CaptionedDockTree.pas" + 1) + $29
+[501D095B]{vcl120.bpl  } Controls.TDockTree.PaintSite (Line 13795, "Controls.pas" + 16) + $D
+[501CA027]{vcl120.bpl  } Controls.TWinControl.PaintControls (Line 9467, "Controls.pas" + 2) + $E
+[501287F2]{vcl120.bpl  } Graphics.TCanvas.Unlock (Line 3909, "Graphics.pas" + 7) + $5
+[501CF00C]{vcl120.bpl  } Controls.TCustomControl.PaintWindow (Line 12740, "Controls.pas" + 11) + $9
+[501C9F79]{vcl120.bpl  } Controls.TWinControl.PaintHandler (Line 9440, "Controls.pas" + 24) + $8
+[501C9CE7]{vcl120.bpl  } Controls.TWinControl.WndProc (Line 9336, "Controls.pas" + 136) + $6
+[5012C914]{vcl120.bpl  } Graphics.FreeMemoryContexts (Line 6829, "Graphics.pas" + 12) + $5
+[501C9400]{vcl120.bpl  } Controls.TWinControl.MainWndProc (Line 9065, "Controls.pas" + 3) + $6
+[501C9415]{vcl120.bpl  } Controls.TWinControl.MainWndProc (Line 9068, "Controls.pas" + 6) + $0
+[501CA670]{vcl120.bpl  } Controls.TWinControl.WMPaint (Line 9619, "Controls.pas" + 6) + $5
+[501C565A]{vcl120.bpl  } Controls.TControl.WndProc (Line 6642, "Controls.pas" + 91) + $6
+[50236BFB]{vcl120.bpl  } CaptionedDockTree.TCaptionedDockTree.WndProc (Line 249, "CaptionedDockTree.pas" + 28) + $0
+[501D15B4]{vcl120.bpl  } Controls.TDockTree.WindowProc (Line 14220, "Controls.pas" + 1) + $6
+[501C5280]{vcl120.bpl  } Controls.TControl.Perform (Line 6420, "Controls.pas" + 10) + $8
+[501CA7F5]{vcl120.bpl  } Controls.TWinControl.WMPaint (Line 9653, "Controls.pas" + 40) + $5
+[501CEF64]{vcl120.bpl  } Controls.TCustomControl.WMPaint (Line 12724, "Controls.pas" + 2) + $4
+[501C565A]{vcl120.bpl  } Controls.TControl.WndProc (Line 6642, "Controls.pas" + 91) + $6
+[501C9CE7]{vcl120.bpl  } Controls.TWinControl.WndProc (Line 9336, "Controls.pas" + 136) + $6
+[501D1CCA]{vcl120.bpl  } Controls.TDockTree.WndProc (Line 14476, "Controls.pas" + 74) + $5
+[50236BFB]{vcl120.bpl  } CaptionedDockTree.TCaptionedDockTree.WndProc (Line 249, "CaptionedDockTree.pas" + 28) + $0
+[501D15B4]{vcl120.bpl  } Controls.TDockTree.WindowProc (Line 14220, "Controls.pas" + 1) + $6
+[501C9400]{vcl120.bpl  } Controls.TWinControl.MainWndProc (Line 9065, "Controls.pas" + 3) + $6
+[500591DC]{rtl120.bpl  } Classes.StdWndProc (Line 12703, "Classes.pas" + 8) + $0
+[501C03E2]{vcl120.bpl  } Controls.FindControl (Line 2999, "Controls.pas" + 6) + $9
+[501EEABD]{vcl120.bpl  } Forms.TApplication.ProcessMessage (Line 9660, "Forms.pas" + 30) + $1
+[501EEB02]{vcl120.bpl  } Forms.TApplication.HandleMessage (Line 9690, "Forms.pas" + 1) + $4
+[501EEE2D]{vcl120.bpl  } Forms.TApplication.Run (Line 9827, "Forms.pas" + 26) + $3
+[004259E6]{bds.exe     } bds.bds (Line 198, "" + 8) + $FFFB
+
+https://github.com/maxkleiner/maXbox3.git
+
+
+http://downloads.sourceforge.net/project/maxbox/maxbox3clx.tar.gz
+
+
+http://de.sourceforge.jp/projects/sfnet_maxbox/downloads/maxbox3clx.tar.gz/
+http://www.mirrorservice.org/sites/downloads.sourceforge.net/m/ma/maxbox/maxbox3clx.tar.gz
+http://www.mirrorservice.org/sites/downloads.sourceforge.net/m/ma/maxbox/
+
+This is the detailed report:
+
+============================================================
+
+Scan report of: 114461-maxbox3.zip
+
+Ahnlab -
+Avast -
+AVG -
+Avira -
+Bitdefender -
+Command W32/Hupigon.C.gen!Eldorado
+Command (Online) W32/Hupigon.C.gen!Eldorado
+Dr.Web -
+Eset Nod32 -
+Fortinet -
+F-Prot W32/Hupigon.C.gen!Eldorado
+G Data -
+Ikarus -
+K7 Computing -
+Kaspersky -
+Kaspersky (Online) -
+McAfee -
+McAfee (BETA) -
+McAfee (Online) -
+McAfee GW Edition (Online) -
+Microsoft -
+Norman -
+Panda -
+Panda (Online) -
+QuickHeal BAT.MouseDis
+Rising -
+Sophos -
+Sophos (Online) -
+Symantec -
+Symantec (BETA) -
+ThreatTrack -
+Total Defense -
+Trend Micro -
+Trend Micro (Cons.) -
+Trend Micro (CPR) -
+VBA32 -
+VirusBuster -
+
+============================================================
+
+The following updates have been used for the test (all times in UTC):
+
+Ahnlab sdscan-console.zip 2014-02-12 08:45
+Avast av5stream.zip 2014-02-12 13:15
+AVG avg10cmd1191a6547.zip 2014-02-12 12:20
+Avira vdf_fusebundle.zip 2014-02-12 11:00
+Bitdefender bdc.zip 2014-02-12 12:45
+Command antivir-v2-z-201402121102.zip 2014-02-12 13:00
+Command (Online) antivir-v2-z-201402121102.zip 2014-02-12 13:00
+Dr.Web drweb-500-wcl.zip 2014-01-22 21:45
+Eset Nod32 minnt3.exe 2014-02-12 12:05
+Fortinet vir_high 2014-02-12 12:30
+F-Prot antivir.def 2014-02-11 10:20
+G Data bd.zip 2014-02-12 12:30
+Ikarus t3sigs.vdb 2014-02-12 09:40
+K7 Computing K7Cmdline.zip 2014-02-11 13:20
+Kaspersky kdb-i386-cumul.zip 2014-02-12 04:45
+Kaspersky (Online) kdb-i386-cumul.zip 2014-02-12 04:45
+McAfee avvdat-7346.zip 2014-02-11 16:50
+McAfee (BETA) avvwin_netware_betadat.zip 2014-02-12 13:15
+McAfee (Online) avvdat-7346.zip 2014-02-11 16:50
+McAfee GW Edition (Online) mfegw-cmd-scanner-windows.zip 2014-02-12 01:20
+Microsoft mpam-fe.exe 2014-02-12 12:30
+Norman nse7legacy.zip 2014-02-12 05:45
+Panda pav.zip 2014-02-12 09:35
+Panda (Online) pav.zip 2014-02-12 09:35
+QuickHeal qhadvdef.zip 2014-02-12 11:50
+Rising RavDef.zip 2014-01-28 01:45
+Sophos ides.zip 2014-02-12 09:55
+Sophos (Online) ides.zip 2014-02-12 09:55
+Symantec streamset.zip 2014-02-12 13:15
+Symantec (BETA) symrapidreleasedefsv5i32.exe 2014-02-12 12:25
+ThreatTrack CSE39VT-EN-26384-F.sbr.sgn 2014-02-12 12:40
+Total Defense fv_nt86.exe 2014-02-11 20:15
+Trend Micro itbl1408601200.zip 2014-02-12 12:40
+Trend Micro (Cons.) hcoth1059995.zip 2014-02-11 13:35
+Trend Micro (CPR) lpt602.zip 2014-02-12 11:25
+VBA32 vba32w-latest.rar 2014-02-12 11:50
+VirusBuster vdb.zip 2014-02-11 12:00
+
+
+We will recheck your software. In the meantime it will not be available on our download servers.
+
+Greetings,
+your heise software team
+
+
+
+
+
+httpde.sourceforge.jp%2Fprojects%2Fsfnet_maxbox%2Fdownloads%2Fmaxbox3clx.tar.gz%2F&ei=iir5UunlHYWxywO17YLYAg&usg=AFQjCNHecwAFuIbxLJ8nKZ2_NLcdAZpfpg
+
+http://www.google.de/url?sa=t&rct=j&q=&esrc=s&source=web&cd=4&cad=rja&ved=0CE4QFjAD&url=http%3A%2F%2Fde.sourceforge.jp%2Fprojects%2Fsfnet_maxbox%2Fdownloads%2Fmaxbox3clx.tar.gz%2F&ei=iir5UunlHYWxywO17YLYAg&usg=AFQjCNHecwAFuIbxLJ8nKZ2_NLcdAZpfp

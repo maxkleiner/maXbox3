@@ -1,0 +1,500 @@
+//*************************************************************************
+//Example of PCRE RegEx load and save capabilities of the VCL
+//Task: Code the button with Open a Video!
+//Get the text and write your sinmemo memories, #locs=357
+//#perf>9140:0:23.72
+//#head@.txt max: MAXBOX8: 7/5/2014 9:43:02 PM C:\maXbook\maxbox3\mX3999\rblexe32\480_regex_pathfinder.txt   
+//*************************************************************************
+
+program RegEX_PathFinder_Demo;
+
+const LEFTBASE = 20;
+      TOPBASE = 25; 
+      MEDIAPATH =  '..\maxbox3\examples\mymemomemoire.txt';
+
+var 
+  mymemo: TSynMemo;
+  Lstbox: TListbox;
+  stat: TStatusbar;
+  selectedFile: string;
+
+  
+Function getRandomText: string;
+var i, getback: integer;
+begin
+  for i:= 1 to 1400 do begin
+    getback:=  random(58)+65
+    if (getback < 91) OR (getback > 96) then
+      result:= result + Chr(getback) +Chr(32)
+  end;
+end;  
+
+function GetPart(const part, input, aformat: string): string;
+var
+  I: Integer;
+begin
+  for I := 1 to Length(aformat) do
+    if Uppercase(aformat[I]) = Uppercase(part) then
+      Result := Result + input[I];
+end;
+
+function GetDay(const input, aformat: string): string;
+begin
+  Result := GetPart('d', input, aformat);
+  //Format('0%0:s', [Result]);
+  if Length(Result) = 1 then 
+     Result:= Format('0%0:s', [Result]);
+end;
+
+function GetMonth(const input, aformat: string): string;
+begin
+  Result := GetPart('m', input, aformat);
+  if Length(Result) = 1 then Result := Format('0%0:s', [Result]);
+end;
+
+function GetYear(const input, aformat: string): string;
+begin
+  Result := GetPart('y', input, aformat);
+end;
+
+function ConvertToMyLocalSettings(const input, aformat: string): string;
+begin
+  Result := Format('%0:s/%1:s/%2:s', 
+  [GetDay(input, aformat), GetMonth(input, aformat), GetYear(input, aformat)]);
+end;
+
+
+//Event Handler - Closure  
+Procedure GetMediaData(self: TObject);
+begin
+  //memocaretpos(
+  if PromptForFileName(selectedFile,
+                       'Text files (*.txt)|*.txt',
+                       '',
+                       'Select your mX3 test file',
+                       ExePath+'examples\', False)  // Means not a Save dialog !
+   then begin
+     // Display this full file/path value
+     ShowMessage('Selected file = '+selectedFile);
+     Stat.simpletext:= selectedFile;
+     mymemo.lines.LoadFromFile(selectedFile);
+     // Split this full file/path value into its constituent parts
+     //writeln('PromptForFileName_28: Res of processpath '+tmp)
+   end;
+end;  
+  
+//Event Handler - Closure
+Procedure memoCaretPos(memo: TMemo; var col, row: integer);
+var i: integer;
+begin
+  //mymemo.lines.savetofile(ExePath+'\examples\mymemomemoire.txt');
+  row:= sendMessage(memo.handle, EM_LINEFROMCHAR, -1, 0);
+  col:= memo.selstart;
+  if row> 0 then
+   for i:= 0 to row-1 do
+     col:= col - length(memo.lines[i])-2;
+  //mymemo.lines.SaveToFile(selectedFile);
+  Stat.simpletext:= selectedFile+ ' caret has been saved' ;
+end; 
+
+(*float convertToF(float temperatureC)
+35 {
+36 return (temperatureC * 9.0 / 5.0) + 32.0;
+37 }*)
+
+ function getfiletimestamp(afile: string): string;
+ var handle: integer;
+ begin
+  //seterrormode();
+   result:= '';
+   handle:= fileopen(afile,0)
+   try
+     result:= datetimetostr(filedatetodatetime(filegetdate(handle)));
+   finally
+     fileclose(handle)
+   end;  
+ end;
+
+ function convertToF(temperatureC: float): float;
+ begin
+   result:= (temperatureC * 9.0 / 5.0) + 32.0;
+ end;
+
+ procedure mywait(waitms: integer);
+ var t: integer;
+ begin  
+   t:= getTickCount;
+    repeat
+      //writeln('this is escape mywait');
+      application.processmessages;
+      //sleep(1000);
+    until getTickCount >= (t+waitms);
+  end;
+
+ function isNTFS: boolean; 
+ begin
+   result:= NtfsReparsePointsSupported(Extractfiledrive('C')+'\')
+ end;
+
+
+Procedure regExPathfinder2(Pathin, fileout, firstp, aregex,
+                                    ext: string; asort, acopy: boolean);
+//Find all directories above and including the current one
+var
+  dirList, rlist, linelst: TStringList;
+  i, fhandle, cntr, ftot, offset, linecnt: integer;
+  fstr: string;
+begin
+  screen.cursor:= CRhourglass;
+  dirList:= TStringList.Create;
+  ftot:= 0;
+  offset:= 0;
+   if not FileExists(fileout) then begin
+      fhandle:= FileCreate(fileout)
+      FileClose(fhandle)
+   end;
+   if not DirExists(fileout) then begin
+      CreateDir(fileout)
+      //FileClose(fhandle)
+   end;
+  try
+    //FindDirectories(dirList, ExePath);
+    GetDirList(pathin,dirlist,true)
+    rlist:= TStringlist.create;
+    rlist.add('mX RegEx SONAR Code Pattern Search2 in '+pathin); 
+    rlist.add(S_RepeatChar(90,'*')); 
+       
+  for i:= 0 to dirlist.count-1 do begin
+   // for i:= 0 to 10 - 1 do begin
+   //fstr:= loadFileasString(dirlist[i]);
+//fstr:= loadFileasString('C:\maXbook\maxbox3\mX3999\maxbox3\source\JCL\source\JclGraphics_test.pas'); 
+    //{extback:= PathFindExtension(dirlist[i]);
+      //S_ShellExecute(exepath+'maxbox3.exe',dirlist[i],seCMDOpen);
+   linecnt:= 0;
+   cntr:= 0;
+   if Uppercase(ExtractFileExt(dirlist[i])) = uppercase(ext) then 
+     with TRegExpr.Create do try 
+      fstr:= loadFileasString(dirlist[i]);
+      linelst:= TStringlist.create;
+      linelst.loadfromfile(dirlist[i]);
+      linecnt:= linelst.count-1;
+      linelst.Free;
+      //firstp; //'extends';  //public
+      //gstr2:= ' CheckId, Status, Created' 'implements'; 
+      modifierS:= false; //!non greedy  code around clock
+      modifierI:= true;  //case insens
+      //Expression:= gstr+'.*([\d]+,[\d]).*?'; //array
+      //Expression:= '.*([\d]+).*?';     //all numb
+      //Expression:= '.*([\d],).*?';     //all numbs and signs
+      //Expression:= '.*[a-zA-Z_]\(\w[\d]+\)*?';  //numbs in name (X1)
+      //Expression:= '.*\([\d]\).*?';     //numbs just one parameter!
+      //Expression:= '.*\([\d]+\)*?';     //magic numbs after (
+      //Expression:= '.*\([\d]+,[\d]\)*?';     //more than one in para
+      //Expression:= '.*[a-zA-Z_]\([\w][\d]+\)*?';   //magic numbs with X1)
+      //Expression:= gstr+'.*[a-zA-Z_]\([*,\d]+\)'+gstr2+'*?';//mn allwith N(d(d))
+      Expression:= firstp+aregex;  //mnumbs allwith N(d(d))
+      //cntr:= 0;
+      if asort then
+        rlist.Sorted:= true;   //before dup!
+        rlist.duplicates:= true; //false is dupIgnore; ?
+      //rlist.Add(Format(inttoStr(i)+' Fileto: %s ',[dirlist[i]]));
+      //TODO: count files which has regex found! change savestring
+       
+      if Exec(fstr) then 
+       try //save console out count categories
+           rlist.Add(Format(inttoStr(i+offset)+' filein: %s ',[dirlist[i]]));
+         if acopy then
+            savestring(extractfilepath(fileout)+inttostr(i+offset)+'_'
+                     +extractfilename(dirlist[i])+'.txt',fstr);
+         Repeat 
+           rlist.add(Match[0]); 
+           inc(cntr);
+         Until Not ExecNext; 
+           inc(ftot);
+           rlist.Add(Format('SortMetrics: %d found %d of tot %d',
+                                              [cntr,ftot, rlist.count-2]));
+       except
+         showmessage('''Exception in regex Review svnnavi'')');
+       end;    
+    finally 
+      Free;
+    end; //with try
+    //S_ShellExecute(exepath+'maxbox3.exe',dirlist[i],seCMDOpen);
+    //writeln('*************** open '+dirlist[i]);
+      //writeln(inttostr(cntr)+ ' search total of '+gstr+' '+gstr2);
+     PrintF('Search Metrics: %d of lines %d from %s to %s of %s',
+                   [cntr, linecnt, firstp,aregex , extractfilename(dirlist[i])])
+  end; //for dirlist loop
+    rlist.add(memo2.text);
+    rlist.SavetoFile(fileout);
+    writeln('File Saved at: '+fileout+' of total '+inttostr(i)+' files');
+  finally 
+    dirList.Free;
+    rlist.Free;
+    screen.cursor:= CRdefault;
+    SearchandOpenDoc(fileout);
+  end;//for
+end;  
+
+
+procedure WriteDataSetToCSV(DataSet: TDataSet; FileName: String);
+var
+  List: TStringList;
+  S: String;
+  I: Integer;
+begin
+  List := TStringList.Create;
+  try
+    DataSet.First;
+    while not DataSet.Eof do begin
+      S := '';
+      for I := 0 to DataSet.FieldCount - 1 do begin
+        if S > '' then
+          S := S + ',';
+        S := S + '"' + DataSet.Fields[I].AsString + '"';
+      end;
+      List.Add(S);
+      DataSet.Next;
+    end;
+  finally
+    List.SaveToFile(FileName);
+    List.Free;
+  end;
+end;
+
+
+ var mystr, path_in, file_out, gstr2, theregex, checkstr: string;
+          firsts, seconds: string;
+ 
+begin
+  memo2.font.size:= 14;
+  //mymemo.lines.text:= getRandomText;
+  //SearchAndOpenDoc(ExePath+MEDIAPATH)
+  //mylistview:= TFormListView.Create(self);
+  maxform1.color:= clsilver;
+  Writeln(ConvertToMyLocalSettings('05/04/2010', 'dd/mm/yyyy'));
+  Writeln(ConvertToMyLocalSettings('05-04-2010', 'dd-mm-yyyy'));
+  Writeln(ConvertToMyLocalSettings('5-4-2010', 'd-m-yyyy'));
+  Writeln(ConvertToMyLocalSettings('4-5-2010', 'm-d-yyyy'));
+  Writeln(ConvertToMyLocalSettings('4-07-2010', 'm-dd-yyyy'));
+  Writeln(ConvertToMyLocalSettings('06/04/2010', 'dd/MM/yyyy'));
+  {repeat 
+  beep;  until isKeypressed;  }
+  
+  mystr:= 'this is the m@x that rocks';
+  writeln('Copy2SymbDel1: '+Copy2SymbDel(mystr, '@'));
+  writeln('Copy2SymbDel2: '+mystr);
+  // news to 3.9.9.97
+  //makeresult is NTFS
+  
+  if NtfsReparsePointsSupported(Extractfiledrive('C')+'\') then 
+    writeln('NTFS supported');
+    
+    if isNTFS then
+      writeln('NTFS supported');
+    
+    with TSerial.create(self) do begin
+      rectimeout:= 3000;
+      free;
+    end;
+    
+    //if getkeystate
+    {repeat
+    if getasynckeystate(VK_ESCAPE And $01) = $01 then 
+      writeln('this is escape') else writeln('no escape ');
+      application.processmessages;
+      sleep(1000);
+    until iskeypressed;}  
+    
+    writeln('file stamp '+getfiletimestamp(exepath+'maxbox3.exe'));
+    
+    //if openprocesstoken
+    //sendmessagetimeout
+    writeln(timetostr(time))
+    mywait(3000);
+    writeln(timetostr(time))
+    
+    //path_in:= 'C:\maXbook\maxbox3\mX3999\maxbox3\source\JCL\source\';
+    //file_out:= 'C:\maXbook\maxbox3\mX3999\SWS2014\regexout2.txt';
+
+    path_in:=  Exepath+'exercices\';
+    file_out:= Exepath+'examples\units\regexout3.txt';
+
+    gstr2:= ''
+    //theregex:= '.*[a-zA-Z_]\([*,\d]+\)'+gstr2+'*?'
+    theregex:= '.*[:digit:]'+gstr2+'?'
+   
+    //findSVNDirFilesRegExCheckandOpen2(pstring, '', theregex,'.pas', false);
+  
+    regExPathfinder2(path_in, file_out, '', theregex,'.pas',
+                 false, false);  //sort = true, filescopy = true
+
+    //ParseDelphiDeclaration
+
+// mX3 executed: 6/15/2014 8:33:26 PM  Runtime: 0:1:1.760  Memoryload: 52% use
+// mX3 executed: 6/15/2014 8:38:20 PM  Runtime: 0:1:1.589  Memoryload: 52% use
+// mX3 executed: 6/17/2014 9:14:36 PM  Runtime: 0:0:26.619  Memoryload: 66% use
+
+      //TBackgroundWorker
+      //TProfiler
+      //TWavePlayer
+      
+     checkstr:= '2: C:\maXbook\maxbox3\mXfileChangeToday_list.txt  414 - 9:14';
+     //writeln('Copy2Symbpath: '+Copy2SymbDel(checkstr, '.'));
+    
+    //for file change today 
+     firsts:= Copy2SymbDel(checkstr, ' ');
+     writeln(checkstr);
+     seconds:= Copy2SymbDel(checkstr, ' ');
+     writeln(seconds);
+     //-------------------------
+     
+     writeln('Copy2Symbpath space : '+Copy2SymbDel(checkstr, ' '));
+    
+     writeln(ReplaceRegExpr('([ ]+)',checkstr,'',true)); //show only last extract
+     writeln(ReplaceRegExpr('([^/]+)?/',checkstr,'',true)); //show only last extract
+     writeln(getHostIP)
+End.
+
+//-------------------------------------------------
+
+
+     Zieh := random(48
+       write('             ',chr(201
+       delay(100
+       
+        QC:=7.7E-4*SIN(4
+            QA:=3.13E-3*CoS(2*
+           
+
+source is tlistview
+target is tform
+
+Procedure TfMerit.SourceLVStartDrag(Sender: TObject;
+var DragObject: TDragObject);
+var TargetLV:TListView;
+begin
+// TargetLV:=nejak urcit dle potreby
+  TargetLV.BeginDrag(True)
+end;
+
+Procedure TfMerit.SourceLVMouseDown(Sender: TObject;
+Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+MouseIsDown:=True;
+end;
+
+Procedure TfMerit.SourceLVMouseUp(Sender: TObject; Button: TMouseButton;
+Shift: TShiftState; X, Y: Integer);
+begin
+MouseIsDown:=False;
+if (Sender as TListView).Dragging then
+(Sender as TListView).EndDrag(False);
+end;
+
+Procedure TfMerit.SourceLVMouseMove(Sender: TObject; Shift: TShiftState;
+X, Y: Integer);
+begin
+if (Sender.ClassNameIs('TListView')) then
+begin
+if MouseIsDown and ((Sender as TListView).SelCount>0) then
+(Sender as TListView).BeginDrag(True);
+end;
+end;
+
+
+Procedure TfMerit.TargetLVDragOver(Sender, Source: TObject; X,
+Y: Integer; State: TDragState; var Accept: Boolean);
+var T:TListView;
+begin
+T:=Sender as TListView;
+Accept:=Assigned(T.GetItemAt(X,Y));
+end;
+
+
+Procedure TfMerit.TargetLVDragDrop(Sender, Source: TObject; X,
+Y: Integer);
+var It:TListItem;
+LV1,LV2:TListView;
+begin
+LV1:=Source as TListView;
+LV2:=Sender as TListview;
+
+It:=LV2.GetItemAt(X,Y);
+if Assigned(It) then
+begin
+// zpracuj polozku ze zdrojoveho listview
+end;
+end;
+
+
+Procedure TControlParentR(Self: TControl; var T:TWinControl); begin T:= Self.Parent; end;
+Procedure TControlParentW(Self: TControl; T: TWinControl); begin Self.Parent:= T; end;
+    RegisterPropertyHelper(@TControlParentR, @TControlParentW, 'PARENT');
+    RegisterProperty('Parent', 'TWinControl', iptRW);
+
+Procedure TTXPTool.LVPFFDblClick(Sender: TObject);
+var
+tmpList : TListItem;
+fn ; string;
+ft : integer;
+fs : integer;
+begin
+tmpList := LVPFF.Selected;
+if tmplist<>nil then
+begin
+  fn := tmpList.Caption
+  ft := tmpList.SubItems.Strings[1];
+  fs := tmpList.SubItems.Strings[3];
+  if pos('Wave', ft)>0 then
+    PlayThisOne1Click(nil);
+  if pos('Jpg', ft)>0 then
+    ShowJpg1Click(nil);
+  if pos('Targa', ft)>0 then
+    ShowTga1Click(nil);
+  if pos('Pcx', ft)>0 then
+    ShowPcx1Click(nil);
+  if pos('Mission Sound Collection', ft)>0 then
+    ShowPwf1Click(nil);
+end;
+end;
+
+
+  #date-PM7/5/2014 9:43:02 PM
+  date-01.06.2013 10:20:08
+  
+Topic:
+SynEdit change markers (yellow or green line on gutter)
+
+does anyone know how to add "change markers" functionality to SynEdit? I mean those lines, green for modified & saved, yellow for modified & unsaved parts of document... here is an example from other
+
+Yes, I've added it to my copy of SynEdit. I originally snagged the code from another project.
+
+It is broken across (at least) two different units IIRC.
+
+You need to modify SynEditTextBuffer.pas as well as SynEdit.pas.
+
+The code is rather complex because you need to modify several spots in SynEditTextBuffer.pas as well as 1 or 2 spots in SynEdit.pas.
+
+The original project I snagged the code from was being very ambitious in that they were trying to develop code folding and line blocking (as shown in your image) as well.
+
+I couldn't get the code folding to work reliably so I dropped that mod and just used the line change code. I believe that dropping the code folding also dropped the line blocking.
+
+The name of that project is SynEditSudio, it from a Chinese website, but I believe the Firefox translator plugins work pretty well in converting it.
+
+I decided to have a concerted effort to get the excellent DWScript (Delph Web Script DWS) integrated into a simple IDE using SynEdit. DWScript is currently being agressively developed and has a number of advantages over other Pascal Script libraries, however it does not contain an editor or any IDE example beyond a simple memo control to prove execution capability. It does contain a number of hooks for editor / debugger integration and in fact when DWS was reawakened a while ago, releases did contain an example of a SynEdit / DWS2 (as it was then) integration. An example can be found in the file dws2src20-20030907.zip in the \dws2rel\dwstools\idedialog\source where there is a 'mini-IDE' with editor window, call stack, breakpoint window etc. Really nice. I did get this working some months ago using an old SynEdit and the DWS2 that was included in this file.
+
+So, I have now tried achieve this (or a similar) ide using the latest SynEdit (downloaded from SVN) and the latest DWScript (also from the SVN). Both libraries are installed fine into XE and their demos run fine. I then tried taking the ide example from the old "\dws2rel\dwstools\idedialog\source" and updating the code but much has changed. Frustratingly, not so much has changed that I gave up quickly - I tried searching for the various 'old' type definitions in old source and matching them up with 'new' definitions. Finally though, after several hours mired in code I decided that someone, somewhere must surely have been down this route?
+
+Has anyone got an example of a DWScript - SynEdit integration using recent DWScript code please? I'm very happy with something simple that I can learn / build upon. Thanks
+
+Moderne Informationstechnik ist aus der modernen Welt nicht mehr wegzudenken. Der Wissenschafts-Journalist Ranga Yogeshwar will mit einem Projekt eine Initiative anstoßen, die Begeisterung für die IT wecken und die Mündigkeit der Nutzer stärken will.
+
+Informatiker und IT-Fachleute werden in Deutschland dringend gesucht, aber mit dem Nachwuchs hapert es trotz zahlreicher Bemühungen. Mit der Initiative "Jeder kann programmieren" wollen das Fraunhofer IUK und der Wissenschaftsjournalist Ranga Yogeshwar nun einen Aufruf starten, die digitale Gesellschaft aktiv mitzugestalten.
+
+Die Initiative will eine Plattform für Projekte, neue Ideen und den Erfahrungsaustausch in Deutschland bieten. Die Aufforderung, Programmiersprachen zu erlernen, richte sich nicht nur an eine kleine Gruppe von Nerds, sagte Bundeswirtschaftsminister Sigmar Gabriel (SPD) am Dienstag in Berlin. Es gehe auch darum, wie wir mit den neuen Möglichkeiten in der digitalen Welt umgehen und sie nutzen, aber auch die Risiken in den neuen Technologien erkennen. Daran werde sich entscheiden, wie wir in der Zukunft als mündige Bürger leben und unsere Wirtschaft wettbewerbsfähig halten.
+
+Es komme heute kaum eine Branche hierzulande noch ohne die Kernkompetenz der Informatik und IT aus, sagte Volker Smid, Digital-Chef der Holtzbrinck Publishing Group. Nach Angaben des Bitkom sind rund Zweidrittel der Informatiker hierzulande außerhalb von IT-Unternehmen tätig. Für diese Themenfelder müsse die Neugier geweckt werden. "Das ist eine einmalige Chance."
+"Förster, Pastoren und Nonnen"
+
+Deutschland ist ein Land fähiger Ingenieure, sagte Martin Hofmann, Technik-Chef der Volkswagen AG. "Wir haben es über Jahrzehnte hinweg geschafft, für den Maschinenbau Begeisterung über Spielzeug wie Märklin und Fischertechnik zu wecken." Das müsse heute auch für die Informatik gelingen. Dabei könne die Industrie, aber auch die Verbände unterstützend wirken.
