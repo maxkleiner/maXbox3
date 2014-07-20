@@ -77,6 +77,26 @@ begin
  CL.AddConstantN('PRODUCT_SERVER_FOR_SMALLBUSINESS','LongWord').SetUInt( $00000018);
  CL.AddConstantN('PRODUCT_SMALLBUSINESS_SERVER_PREMIUM','LongWord').SetUInt( $00000019);
  CL.AddConstantN('PRODUCT_UNLICENSED','LongWord').SetUInt( $ABCDABCD);
+ CL.AddConstantN('PM_NOREMOVE','LongInt').SetInt( 0);
+ CL.AddConstantN('PM_REMOVE','LongInt').SetInt( 1);
+ CL.AddConstantN('PM_NOYIELD','LongInt').SetInt( 2);
+ CL.AddTypeS('tagCOMPAREITEMSTRUCT', 'record CtlType : UINT; CtlID : UINT; hwn'
+   +'dItem : HWND; itemID1 : UINT; itemData1 : DWORD; itemID2 : UINT; itemData2'
+   +' : DWORD; dwLocaleId : DWORD; end');
+  CL.AddTypeS('TCompareItemStruct', 'tagCOMPAREITEMSTRUCT');
+  CL.AddTypeS('COMPAREITEMSTRUCT', 'tagCOMPAREITEMSTRUCT');
+   CL.AddTypeS('tagSTYLESTRUCT', 'record styleOld : DWORD; styleNew : DWORD; end');
+  CL.AddTypeS('TStyleStruct', 'tagSTYLESTRUCT');
+  CL.AddTypeS('STYLESTRUCT', 'tagSTYLESTRUCT');
+  CL.AddConstantN('MOD_ALT','LongInt').SetInt( 1);
+ CL.AddConstantN('MOD_CONTROL','LongInt').SetInt( 2);
+ CL.AddConstantN('MOD_SHIFT','LongInt').SetInt( 4);
+ CL.AddConstantN('MOD_WIN','LongInt').SetInt( 8);
+ CL.AddConstantN('IDHOT_SNAPWINDOW','LongInt').SetInt( - 1);
+ CL.AddConstantN('IDHOT_SNAPDESKTOP','LongInt').SetInt( - 2);
+
+
+
   //CL.AddTypeS('OSVERSIONINFOEXA', '_OSVERSIONINFOEXA');
   //CL.AddTypeS('TOSVersionInfoExA', '_OSVERSIONINFOEXA');
   CL.AddTypeS('TOSVersionInfoEx', 'TOSVersionInfo');

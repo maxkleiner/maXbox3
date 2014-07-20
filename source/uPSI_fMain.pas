@@ -668,6 +668,7 @@ begin
     RegisterMethod('procedure Tutorial30WOT1Click(Sender: TObject);');
     RegisterMethod('procedure GetWebScript1Click(Sender: TObject);');
     RegisterMethod('procedure Checkers1Click(Sender: TObject);');
+    RegisterMethod('procedure TaskMgr1Click(Sender: TObject);');
 
    //RegisterMethod('procedure defFilereadUpdate;');
       //  procedure defFilereadUpdate;
@@ -3695,6 +3696,7 @@ begin
     RegisterMethod(@TMaxForm1.Tutorial30WOT1Click, 'Tutorial30WOT1Click');
     RegisterMethod(@TMaxForm1.GetWebScript1Click, 'GetWebScript1Click');
     RegisterMethod(@TMaxForm1.Checkers1Click, 'Checkers1Click');
+    RegisterMethod(@TMaxForm1.TaskMgr1Click, 'TaskMgr1Click');
 
     //  GetWebScript1Click
    end;

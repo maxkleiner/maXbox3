@@ -53,6 +53,19 @@ begin
   RegisterComponents('Pascal Script', [TPSImport_DPUtils]);
 end;
 
+ function JustName(PathName : string) : string;
+    {-Return just the name (no extension, no path) of a pathname}
+  var
+    DotPos : Byte;
+  begin
+    PathName := ExtractFileName(PathName);
+    DotPos := Pos('.', PathName);
+    if DotPos > 0 then
+      PathName := Copy(PathName, 1, DotPos-1);
+    Result := PathName;
+  end;
+
+
 (* === compile-time registration functions === *)
 (*----------------------------------------------------------------------------*)
 procedure SIRegister_TThumbData(CL: TPSPascalCompiler);
@@ -96,7 +109,9 @@ begin
  CL.AddDelphiFunction('Function LetParentPath( path : string) : string');
  CL.AddDelphiFunction('Function AddBackSlash( path : string) : string');
  CL.AddDelphiFunction('Function CutBackSlash( path : string) : string');
-end;
+  CL.AddDelphiFunction('function JustName(PathName : string) : string;');
+
+ end;
 
 (* === run-time registration functions === *)
 (*----------------------------------------------------------------------------*)
@@ -135,6 +150,8 @@ begin
  S.RegisterDelphiFunction(@ParentPath, 'LetParentPath', cdRegister);
  S.RegisterDelphiFunction(@AddBackSlash, 'AddBackSlash', cdRegister);
  S.RegisterDelphiFunction(@CutBackSlash, 'CutBackSlash', cdRegister);
+ S.RegisterDelphiFunction(@JustName, 'JustName', cdRegister);
+
 end;
 
 (*----------------------------------------------------------------------------*)

@@ -1,0 +1,233 @@
+unit MainUnit;
+
+{  Coder: Counterstrikewi
+   Compiled: Delphi 2007
+   Website: www.delphibasics.info
+}
+
+interface
+
+//7uses
+  //Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  //Dialogs, StdCtrls, ComCtrls, Menus,
+
+  //ProcessUnit;
+
+//type
+  //TFormMain = class(TForm)
+    var 
+    PM : TProcessManager;
+      LV: TListView;
+    Popup: TPopupMenu;
+    afrm: TForm;
+    KillProcessbyName1: TMenuItem;
+    KillProcessbyPID1: TMenuItem;
+    RefreshProcessList1: TMenuItem;
+    procedure FormCreate(Sender: TObject);
+    procedure KillProcessbyName1Click(Sender: TObject);
+    procedure KillProcessbyPID1Click(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure RefreshProcessList1Click(Sender: TObject);
+  //private
+    procedure ListProcesses;
+  //public
+    { Public declarations }
+  //end;
+
+//var
+  //FormMain: TFormMain;
+
+implementation
+
+//{$R *.dfm}
+
+procedure createProcessForm;
+var nc: TListColumn;
+    mt: TMainMenu;
+begin
+afrm:= TForm.create(self);
+with afrm do begin
+  Left:= 0
+  Top:= 0
+  Caption:= 'Aphex ProcessUnit Example by maXbox Counterstrikewi'
+  ClientHeight:= 271
+  ClientWidth:= 634
+  Color:= clBtnFace
+  Font.Charset:= DEFAULT_CHARSET
+  Font.Color:= clWindowText
+  Font.Height:= -11
+  Font.Name:= 'Tahoma'
+  Font.Style:= []
+  OldCreateOrder:= False
+  //OnCreate = FormCreate
+  //OnDestroy = FormDestroy
+  PixelsPerInch:= 96
+  //TextHeight:= 13
+  popupmenu:= popup;
+  Show;
+  end;
+  Popup:= TPopupMenu.create(afrm)
+ 
+  LV:= TListView.create(self);
+  with lv do begin
+    parent:= afrm;
+    Left:= 0
+    Top:= 0
+    Width:= 634
+    Height:= 271
+    Align:= alClient
+    nc:= columns.add
+        nc.Caption:= 'EXE'
+        nc.Width:= 400
+    nc:= columns.add
+        nc.Caption:= 'PID'
+        nc.Width:= 70
+    nc:= columns.add
+        nc.Caption:= 'Thread'
+        nc.Width:= 70
+    nc:= columns.add
+        nc.Caption:= 'Priority'
+        nc.Width:= 70
+    
+    RowSelect:= True
+    PopupMenu:= Popup
+    SortType:= stText
+    TabOrder:= 0
+    gridlines:= true;
+    ViewStyle:= vsReport
+    Show;
+  end;
+  //Popup:= TPopupMenu.create(afrm)
+  // mt:= TMainMenu.Create(afrm)
+  //popup.show;
+  //Popup.parent:= afrm;
+  //with popup do begin
+    //Left:= 8
+    //Top:= 24
+    //object RefreshProcessList1: TMenuItem
+    RefreshProcessList1:= TMenuItem.Create(popup)
+      //with TMenuItem.create(popup) do begin
+      with RefreshProcessList1 do begin
+
+      //parent:= popup;
+      popup.Items.Add(RefreshProcessList1);
+      //mt.Items.Add(RefreshProcessList1);
+    
+      Caption:= 'Refresh Process List'
+      OnClick:= @RefreshProcessList1Click
+      //show;
+      end;
+    //end;
+   KillProcessbyName1:= TMenuItem.create(popup)
+      with KillProcessbyName1 do begin
+      popup.Items.Add(KillProcessbyName1);
+    
+      Caption:= 'Kill Process by Name'
+      OnClick:= @KillProcessbyName1Click
+      end;
+    //object KillProcessbyPID1: TMenuItem
+      with TMenuItem.create(self) do begin
+    
+      Caption:= 'Kill Process by PID'
+      OnClick:= @KillProcessbyPID1Click
+      end
+    end;
+
+procedure ListProcesses;
+var
+  C : Integer;
+  CD: TStringArray;
+begin
+  LV.Clear;
+  PM.Free;
+  PM := TProcessManager.Create;
+  PM.ListProcesses;
+  //cd[1]:= 'fff';
+  for C := 0 to PM.Count do begin
+    with LV.Items.Add do begin
+      CD:= PM.ExePathList;
+      Caption := CD[C];
+      CD:= PM.PIDList;
+      SubItems.Add(CD[C]);
+      CD:= PM.ThreadList;
+      SubItems.Add(CD[C]);
+      CD:= PM.PriorityList;
+      SubItems.Add(CD[C]);
+    
+      //SubItems.Add(PM.PIDList[C]);
+      //SubItems.Add(PM.ThreadList[C]);
+      //SubItems.Add(PM.PriorityList[C]);
+    end;
+  end;
+   { with LV.Items.Add do begin
+      Caption := 'PM.ExePathList[C]';
+      SubItems.Add('PM.PIDList[C]');
+      SubItems.Add('PM.ThreadList[C]');
+      SubItems.Add('PM.PriorityList[C]');
+    end;}
+  
+end;
+
+procedure FormCreate(Sender: TObject);
+begin
+  PM:= TProcessManager.Create;
+  ListProcesses;
+end;
+
+procedure FormDestroy(Sender: TObject);
+begin
+  //PM.Free;
+end;
+
+procedure KillProcessbyName1Click(Sender: TObject);
+begin
+  PM.KillProcessByExePath(LV.Selected.Caption);
+  ListProcesses;
+end;
+
+procedure KillProcessbyPID1Click(Sender: TObject);
+begin
+  PM.KillProcessByPID(LV.Selected.SubItems[0]);
+  ListProcesses;
+end;
+
+procedure RefreshProcessList1Click(Sender: TObject);
+begin
+  ListProcesses;
+  writeln('Refresh ListProcesses')
+end;
+
+begin
+  createProcessForm;
+  FormCreate(self);
+  writeln(botostr(IsPortAvailable(1)));
+  
+  with TComSelectForm.Create(self) do begin
+    Showmodal;
+    free;
+   end; 
+end.
+
+//Doc
+
+//Ref closure
+
+   {Columns = <  item
+        Caption = 'EXE'
+        Width = 400
+      end
+      item
+        Caption = 'PID'
+        Width = 70
+      end
+      item
+        Caption = 'Thread'
+        Width = 70
+      end
+      item
+        Caption = 'Priority'
+        Width = 70
+      end:>}
+ 
+
+//RapidShareMP3.com

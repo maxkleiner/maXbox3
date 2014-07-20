@@ -1,7 +1,8 @@
 ****************************************************************
 Release Notes maXbox 3.9.9.98 August 2014
 ****************************************************************
-Add 10 Units, Wav resources, RoundTo, OpenOffice, Pipes
+Add 18 Units, Wav res, RoundTo, OpenOffice, Pipes, GSM2
+TFixedCriticalSection, XPlatform beta, GCC Command Pipe
 
 946 uPSI_NamedPipes,
 947 uPSI_NamedPipeServer,
@@ -12,9 +13,17 @@ Add 10 Units, Wav resources, RoundTo, OpenOffice, Pipes
 952 uPSI_StarCalc,
 953 uPSI_D2_XPVistaHelperU
 954 unit uPSI_NetTools
-955 unit uPSI_Pipes_Prectime
+955 unit uPSI_Pipes_Prectime, 
+956 uPSI_ProcessUnit,
+957 uPSI_adGSM,
+958 unit uPSI_BetterADODataSet;
+959 uPSI_AdSelCom; //FTT
+960 unit uPSI_dwsXPlatform;
+961 uPSI_AdSocket;
+962 uPSI_AdPacket;
+963 uPSI_AdPort;
 
-SHA1: Win 3.9.9.98 EF3D49A159B008E5FAD63527ED907EC10790DA0C
+SHA1: Win 3.9.9.98 9764925702B8BAAE9BD3C86E4495E5A29BD58D95
 
 
 ****************************************************************

@@ -108,6 +108,7 @@
          9544       build 96_2 backgroundcolor themes fix, backgroundparent, fixing
          9580       build 96_3 5 units, fixing, checkers. DOS syntax
          9608       build 98  toolbox units,  regex2 
+         9650       build 98_1  processlist,  pipes, GSM, BetterADO 
 
                   V4.0   in  June 2015
  ************************************************************************** }
@@ -516,6 +517,7 @@ type
     GetWebScript1: TMenuItem;
     SynBatSyn1: TSynBatSyn;
     Checkers1: TMenuItem;
+    TaskMgr1: TMenuItem;
     procedure IFPS3ClassesPlugin1CompImport(Sender: TObject; x: TPSPascalCompiler);
     procedure IFPS3ClassesPlugin1ExecImport(Sender: TObject; Exec: TPSExec; x: TPSRuntimeClassImporter);
     procedure PSScriptCompile(Sender: TPSScript);
@@ -771,6 +773,7 @@ type
     procedure Tutorial30WOT1Click(Sender: TObject);
     procedure GetWebScript1Click(Sender: TObject);
     procedure Checkers1Click(Sender: TObject);
+    procedure TaskMgr1Click(Sender: TObject);
     //procedure Memo1DropFiles(Sender: TObject; X,Y: Integer; AFiles: TStrings);
   private
     STATSavebefore: boolean;
@@ -1801,9 +1804,17 @@ uses
   uPSI_DataSendToWeb,
   uPSI_StarCalc,
   uPSI_D2_VistaHelperU,   ////3.9.9.98
+  uPSI_ProcessUnit,
+  uPSI_pipes,
+  uPSI_adgsm,
+  uPSI_BetterADODataSet,
+  uPSI_AdSelCom,      ////3.9.9.98_1
+  uPSI_dwsXPlatform,
+  uPSI_AdSocket,
+  uPSI_AdPacket,
+  uPSI_AdPort,   ////3.9.9.98_1
 
-
-    //MDIFrame,
+  //MDIFrame,
   uPSI_St2DBarC,
   uPSI_FmxUtils,
   uPSI_CustomDrawTreeView,
@@ -2801,12 +2812,23 @@ begin
  SIRegister_WaveUtils(X);
  SIRegister_NamedPipes(X);
  SIRegister_NamedPipeServer(X);
+ SIRegister_pipes(X);
  SIRegister_process(X);
  SIRegister_DPUtils(X);
  SIRegister_CommonTools(X);
  SIRegister_DataSendToWeb(X);
  SIRegister_StarCalc(X);
  SIRegister_D2_VistaHelperU(X);
+ SIRegister_ProcessUnit(X);
+// SIRegister_adgsm(X);
+ SIRegister_BetterADODataSet(X);
+ SIRegister_AdSelCom(X);
+ SIRegister_dwsXPlatform(X);
+ SIRegister_AdSocket(X);
+ //SIRegister_AdPacket(X);
+ SIRegister_AdPort(X);
+ SIRegister_AdPacket(X);
+ SIRegister_adgsm(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4057,6 +4079,20 @@ begin
   RIRegister_DataSendToWeb(X);
   RIRegister_StarCalc(X);
   RIRegister_D2_VistaHelperU_Routines(Exec); //3.9.9.98
+  RIRegister_pipes_Routines(Exec);
+  RIRegister_pipes(X);
+  RIRegister_ProcessUnit(X);
+  RIRegister_adgsm_Routines(Exec);
+  //RIRegister_BetterADODataSet_Routines(Exec);
+  RIRegister_BetterADODataSet(X);
+  RIRegister_AdSelCom_Routines(Exec);
+  RIRegister_AdSelCom(X);
+  RIRegister_dwsXPlatform_Routines(Exec);
+  RIRegister_dwsXPlatform(X);
+  RIRegister_AdSocket(X);
+  RIRegister_AdPacket(X);
+  RIRegister_AdPort(X);
+  RIRegister_AdPort_Routines(Exec);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -4423,6 +4459,12 @@ begin
   ShowMessage('Arduino HexDump to Flash in uC available in V4'+#13#10+
                 'first example in: ..\examples\arduino_examples'+#13#10+
                 'tests with AVRDUDE to get the flash on a shell with success');
+end;
+
+procedure TMaxForm1.TaskMgr1Click(Sender: TObject);
+begin
+   S_ShellExecute('taskmgr','',seCMDOpen);
+    statusbar1.panels.items[0].TEXT:= statusbar1.simpletext +' Task Manager started';
 end;
 
 procedure TMaxForm1.AutoDetectSyntax1Click(Sender: TObject);

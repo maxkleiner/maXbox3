@@ -274,6 +274,11 @@ begin T := Self.ACTION; end;
 procedure TMENUITEMPARENT_R(Self: TMENUITEM; var T: TMENUITEM);
 begin T := Self.PARENT; end;
 
+procedure TMENUITEMPARENT_W(Self: TMENUITEM; var T: TMENUITEM);
+begin
+//Self.PARENT:= T;
+end;
+
 procedure TMENUITEMMENUINDEX_W(Self: TMENUITEM; const T: INTEGER);
 begin Self.MENUINDEX := T; end;
 
@@ -436,7 +441,7 @@ begin
 		RegisterPropertyHelper(@TMENUITEMCOUNT_R,nil,'COUNT');
 		RegisterPropertyHelper(@TMENUITEMITEMS_R,nil,'ITEMS');
 		RegisterPropertyHelper(@TMENUITEMMENUINDEX_R,@TMENUITEMMENUINDEX_W,'MENUINDEX');
-		RegisterPropertyHelper(@TMENUITEMPARENT_R,nil,'PARENT');
+		RegisterPropertyHelper(@TMENUITEMPARENT_R,@TMENUITEMPARENT_W,'PARENT');
 		RegisterPropertyHelper(@TMENUITEMACTION_R,@TMENUITEMACTION_W,'ACTION');
 		RegisterPropertyHelper(@TMENUITEMBITMAP_R,@TMENUITEMBITMAP_W,'BITMAP');
 		RegisterPropertyHelper(@TMENUITEMCAPTION_R,@TMENUITEMCAPTION_W,'CAPTION');

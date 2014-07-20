@@ -56,6 +56,8 @@ begin
     RegisterProperty('MENUANIMATION', 'TMENUANIMATION', iptrw);
     RegisterProperty('TRACKBUTTON', 'TTRACKBUTTON', iptrw);
     RegisterProperty('ONPOPUP', 'TNOTIFYEVENT', iptrw);
+    //RegisterProperty('PARENT', 'TMENUITEM', iptrw);
+
   end;
 end;
 
@@ -126,7 +128,7 @@ begin
     RegisterProperty('COUNT', 'INTEGER', iptr);
     RegisterProperty('ITEMS', 'TMENUITEM INTEGER', iptr);
     RegisterProperty('MENUINDEX', 'INTEGER', iptrw);
-    RegisterProperty('PARENT', 'TMENUITEM', iptr);
+    RegisterProperty('PARENT', 'TMENUITEM', iptrw);
     {$IFDEF DELPHI5UP}
     RegisterProperty('ACTION', 'TBASICACTION', iptrw);
     {$ENDIF}
