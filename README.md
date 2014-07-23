@@ -25,8 +25,11 @@ TFixedCriticalSection, XPlatform beta, GCC Command Pipe
 961 uPSI_AdSocket;
 962 uPSI_AdPacket;
 963 uPSI_AdPort;
+964 uPSI_PathFunc;
+965 uPSI_CmnFunc;
+966 uPSI_CmnFunc2; //Inno Setup
 
-SHA1: Win 3.9.9.98 9764925702B8BAAE9BD3C86E4495E5A29BD58D95
+SHA1: Exe Win 3.9.9.98 2B7D1EBFB07DB9B0660F857320C44D70CAA1C717
 
 ****************************************************************
 Release Notes maXbox 3.9.9.96 July 2014

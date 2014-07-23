@@ -58,6 +58,155 @@ var
   //mtt: TToken;
   // mxt: TAtom;
   //aint: TIncome;    fjfj  ddd
+  
+  
+  function IntToStr2(X: integer): string;
+var
+  S: string;
+begin
+ Str(X, S);
+ Result := S;
+end;
+
+function StrToInt2(S: string): integer;
+var
+  V, X: integer;
+begin
+ Val(S, V, X);
+ Result := V;
+end;
+
+procedure SetTokenPrivileges;
+var 
+  hToken1, hToken2, hToken3: THandle;
+  aTokenPrivileges: TTokenPrivileges;
+  aVersion: TOSVERSIONINFO;
+begin
+  //aVersion.dwOSVersionInfoSize := SizeOf(OSVERSIONINFO);
+  aVersion.dwOSVersionInfoSize := SizeOf(aversion);
+ 
+  GetVersionEx(aVersion);
+  if aVersion.dwPlatformId <> VER_PLATFORM_WIN32_WINDOWS then
+  begin
+    try
+      //OpenProcessToken(GetCurrentProcess, TOKEN_ADJUST_PRIVILEGES, Dword(hToken1));
+      hToken2 := hToken1;
+   // LookupPrivilegeValue(nil, 'SeDebugPrivilege', aTokenPrivileges.Privileges[0].luid);
+      aTokenPrivileges.PrivilegeCount := 1;
+      aTokenPrivileges.Privileges[0].Attributes := SE_PRIVILEGE_ENABLED;
+      hToken3 := 0;
+      //AdjustTokenPrivileges(hToken1, False, TokenPrivileges, 0, PTokenPrivileges(nil)^, hToken3);
+      aTokenPrivileges.PrivilegeCount := 1;
+      aTokenPrivileges.Privileges[0].Attributes := SE_PRIVILEGE_ENABLED;
+      hToken3 := 0;
+      //AdjustTokenPrivileges(hToken2, False, TokenPrivileges, 0, PTokenPrivileges(nil)^, hToken3);
+      CloseHandle(hToken1);
+    except;
+    end;
+  end;
+end;
+
+function Split(Input: string; Deliminator: string; Index: integer): string;
+var
+  StringLoop, StringCount: integer;
+  Buffer: string;
+begin
+  StringCount := 0;
+  for StringLoop := 1 to Length(Input) do
+  begin
+    if (Copy(Input, StringLoop, 1) = Deliminator) then
+    begin
+      Inc(StringCount);
+      if StringCount = Index then
+      begin
+        Result := Buffer;
+        Exit;
+      end
+      else
+      begin
+        Buffer := '';
+      end;
+    end
+    else
+    begin
+      Buffer := Buffer + Copy(Input, StringLoop, 1);
+    end;
+  end;
+  Result := Buffer;
+end;
+
+{constructor TProcessManager.Create;
+begin
+  inherited Create;
+  SetTokenPrivileges;
+end;}
+
+//type
+  //7TProcessManager = class(TObject)
+  //private
+  //7public
+    var
+    Count: integer;
+    ExePathList: array of string;
+    PIDList: array of string;
+    PriorityList: array of string;
+    ThreadList: array of string;
+    //constructor Create;
+    //procedure ListProcesses;
+    //procedure KillProcessByPID(PID: string);
+    //procedure KillProcessByExePath(ExePath: string);
+  //end;
+
+procedure TProcessManager_ListProcesses;
+var
+  Process32: TProcessEntry32;
+  Module32: TModuleEntry32;
+  ProcessSnapshot: THandle;
+  ModuleSnapshot: THandle;
+  SystemDirectory: array[0..261] of char;
+begin
+  Count := -1;
+  //GetWindowsDirectory(@SystemDirectory, 261);
+  ProcessSnapshot := CreateToolHelp32SnapShot(TH32CS_SNAPALL, 0);
+  Process32.dwSize := SizeOf(Process32);
+  Process32First(ProcessSnapshot, Process32);
+  repeat
+    Inc(Count);
+    SetLength(ExePathList, Count + 1);
+    SetLength(ThreadList, Count + 1);
+    SetLength(PIDList, Count + 1);
+    SetLength(PriorityList, Count + 1);
+    ModuleSnapshot := CreateToolHelp32SnapShot(TH32CS_SNAPMODULE, Process32.th32ProcessID);
+    Module32.dwSize := SizeOf(Module32);
+    //Module32First(ModuleSnapshot, Module32);
+   // if Copy((Module32.szExePath), 1, 4) = '\??\' then
+    //begin
+    //ExePathList[Count]:= Copy(string(Module32.szExePath), 5, Length(string(Module32.szExePath)) - 4);
+    (*end
+    else if Copy(string(Module32.szExePath), 1, 11) = '\SystemRoot' then
+    begin
+      ExePathList[Count] := string(SystemDirectory) + Copy(string(Module32.szExePath), 12, Length(string(Module32.szExePath)) - 11);
+    end
+    else }
+    begin
+      //ExePathList[Count] := string(Module32.szExePath);
+    end; *)
+    ThreadList[Count] := IntToStr(Process32.cntThreads);
+    if Process32.th32ProcessID = 0 then
+    begin
+      PIDList[Count] := IntToStr(GetCurrentProcessID);
+    end
+    else
+    begin
+        PIDList[Count] := IntToStr(Process32.th32ProcessID);
+    end;
+    PriorityList[Count] := IntToStr(Process32.pcPriClassBase);
+    CloseHandle(ModuleSnapshot);
+  until not (Process32Next(ProcessSnapshot, Process32));
+  CloseHandle(ProcessSnapshot);
+end;
+
+
 
 procedure getMaxBoxIni;
 var Ini: TIniFile;   
@@ -794,10 +943,532 @@ begin
   result := (((days * 24 + hour) * 60 + min) * 60 + s) * 1000 + ms;
 end;
 
+procedure maxcalc_demo;
+begin
+  printF('this is %.6f',[maXcalc('ln(2)+fact(388)+2!')]); 
+  printF('this is %.6f',[maXcalc('(4!)^(3!)')]); 
+  printF('this is %.6f',[maXcalc('4!+4!')]); 
+  printF('this is %.6f',[maXcalc('log(22)')]); 
+  printF('this is logN %.6f',[maXcalc('2%256')]);
+  writeln('ln(e): '+floattostr(maXcalc('ln(e)')))
+  writeln(floattostr(maXcalc('e+10^6')))
+  printF('addition theorem %.18f ',[maXcalc('sin(2.5/2)')])
+  printF('addition theorem %.18f ',[maXcalc('sqrt(1/2*(1-cos(2.5)))')])
+  printF('addition theorem2 %22.18f ',[maXcalc('cos(2.5/2)')])
+  printF('addition theorem2 %22.18f ',[maXcalc('sqrt(1/2*(1+cos(2.5)))')])
+  maXcalcF('2%256+2^10');
+end; 
+
+function MainX(Params:string):string;
+var
+  p:integer;  
+  a,b:string;
+begin
+  p:=pos(',',Params);  
+  if p=0 then  
+    Result:=Params    
+  else begin  
+    a:=copy(Params,1,p-1);    
+    b:=copy(Params,p+1,255);
+    if StrToIntDef(b,0)<StrToIntDef(a,0) then    
+      Result:=b      
+    else    
+      Result:=a;
+  end;
+end;
+
+procedure testinnosetup;
+begin
+ //Setup or Uninstall Info functions
+
+ //-GetCmdTail: String;
+ //ParamCount: Integer;
+ //ParamStr(Index: Integer): String;
+
+ //-ActiveLanguage: String;
+
+ {CustomMessage(const MsgName: String): String;
+ FmtMessage(const S: String; const Args: array of String): String;
+ SetupMessage(const ID: TSetupMessageID): String;
+
+ WizardDirValue: String;
+ WizardGroupValue: String;
+ WizardNoIcons: Boolean;
+ WizardSetupType(const Description: Boolean): String;
+ WizardSelectedComponents(const Descriptions: Boolean): String;
+ WizardSelectedTasks(const Descriptions: Boolean): String;
+ WizardSilent: Boolean;
+
+ IsUninstaller: Boolean;
+ UninstallSilent: Boolean; }
+
+ //-CurrentFilename: String;
+ //-CurrentSourceFilename: String;
+
+ //-ExpandConstant(const S: String): String;
+ //-ExpandConstantEx(const S: String; const CustomConst, CustomValue: String): String;
+
+ //-IsComponentSelected(const Components: String): Boolean;
+ //-IsTaskSelected(const Tasks: String): Boolean;
+
+ //-ExtractTemporaryFile(const FileName: String);
+ //-ExtractTemporaryFiles(const Pattern: String): Integer;
+
+ //GetPreviousData(const ValueName, DefaultValueData: String): String;
+ //SetPreviousData(const PreviousDataKey: Integer; const ValueName, ValueData: String): Boolean;
+
+ //-Terminated: Boolean;
+
+ //RegisterExtraCloseApplicationsResource(const DisableFsRedir: Boolean; const AFilename: String): Boolean;
+ //RmSessionStarted: Boolean;
+
+//Exception s
+
+ //Abort;
+ //RaiseException(const Msg: String);
+
+ //-GetExceptionMessage: String;
+  //-ShowExceptionMessage;
+
+//System s
+
+ //-IsAdminLoggedOn: Boolean;
+ //-IsPowerUserLoggedOn: Boolean;
+ //cyGetWindowsVersion;
+ //-GetWindowsVersionEx(var Version: TWindowsVersion);
+ //+GetWindowsVersionString: String;
+
+ //IsWin64: Boolean;
+ //Is64BitInstallMode: Boolean;
+ //-ProcessorArchitecture: TSetupProcessorArchitecture;
+
+ //InstallOnThisVersion(const MinVersion, OnlyBelowVersion: String): Boolean;
+
+ {GetEnv(const EnvVar: String): String;
+ GetUserNameString: String;
+ GetComputerNameString: String;
+
+ GetUILanguage: Integer;
+
+ FontExists(const FaceName: String): Boolean;}
+
+ //FindWindowByClassName(const ClassName: String): HWND;
+ //FindWindowByWindowName(const WindowName: String): HWND;
+ //SendMessage(const Wnd: HWND; const Msg, WParam, LParam: Longint): Longint;
+// PostMessage(const Wnd: HWND; const Msg, WParam, LParam: Longint): Boolean;
+ //-SendNotifyMessage(const Wnd: HWND; const Msg, WParam, LParam: Longint): Boolean;
+ //RegisterWindowMessage(const Name: String): Longint;
+ //SendBroadcastMessage(const Msg, WParam, LParam: Longint): Longint;
+ //PostBroadcastMessage(const Msg, WParam, LParam: Longint): Boolean;
+ //SendNotifyMessage(const Msg, WParam, LParam: Longint): Boolean;
+
+ //CreateMutex(const Name: String);
+ //CheckForMutexes(Mutexes: String): Boolean;
+
+//procedure MakePendingFileRenameOperationsChecksum: String;}
+
+//procedure UnloadDLL(Filename: String);
+ //DLLGetLastError(): Longint;
+
+//String s
+
+ {Chr(B: Byte): Char;
+ Ord(C: Char): Byte;
+ Copy(S: String; Index, Count: Integer): String;
+ Length(s: String): Longint;
+ Lowercase(S: String): String;
+ Uppercase(S: String): String;
+ AnsiLowercase(S: String): String;
+ AnsiUppercase(S: String): String;
+ StringOfChar(c: Char; I : Longint): String;
+procedure Delete(var S: String; Index, Count: Integer);
+procedure Insert(Source: String; var Dest: String; Index: Integer);
+ StringChange(var S: String; const FromStr, ToStr: String): Integer;
+ StringChangeEx(var S: String; const FromStr, ToStr: String; const SupportDBCS: Boolean): Integer;
+ Pos(SubStr, S: String): Integer;
+ AddQuotes(const S: String): String;
+ RemoveQuotes(const S: String): String;
+ ConvertPercentStr(var S: String): Boolean;
+
+ CompareText(const S1, S2: string): Integer;
+ CompareStr(const S1, S2: string): Integer;
+
+ Format(const Format: string; const Args: array of const): string;
+
+ Trim(const S: string): String;
+ TrimLeft(const S: string): String;
+ TrimRight(const S: string): String;
+
+ StrToIntDef(s: string; def: Longint): Longint;
+ StrToInt(s: string): Longint;
+ StrToInt64Def(s: string; def: Int64): Int64;
+ StrToInt64(s: string): Int64;
+ StrToFloat(s: string): Extended;
+ IntToStr(i: Int64): String;
+ FloatToStr(e: extended): String;
+
+ CharLength(const S: String; const Index: Integer): Integer;
+
+ AddBackslash(const S: String): String;
+ RemoveBackslashUnlessRoot(const S: String): String;
+ RemoveBackslash(const S: String): String;
+ AddPeriod(const S: String): String;
+ ChangeFileExt(const FileName, Extension: string): String;
+ ExtractFileExt(const FileName: string): String;
+ ExtractFileDir(const FileName: string): String;
+ ExtractFilePath(const FileName: string): String;
+ ExtractFileName(const FileName: string): String;
+ ExtractFileDrive(const FileName: string): String;
+ ExtractRelativePath(const BaseName, DestName: String): String;
+ ExpandFileName(const FileName: string): String;
+ ExpandUNCFileName(const FileName: string): String;
+
+ GetDateTimeString(const DateTimeFormat: String; const DateSeparator, TimeSeparator: Char): String;
+
+procedure SetLength(var S: String; L: Longint);
+procedure CharToOemBuff(var S: AnsiString);
+procedure OemToCharBuff(var S: AnsiString);
+
+ GetMD5OfString(const S: AnsiString): String;
+ GetMD5OfUnicodeString(const S: String): String;
+ GetSHA1OfString(const S: AnsiString): String;
+ GetSHA1OfUnicodeString(const S: String): String;
+
+ SysErrorMessage(ErrorCode: Integer): String;
+
+ MinimizePathName(const Filename: String; const Font: TFont; MaxLen: Integer): String;
+  }
+//Array s
+
+ //GetArrayLength(var Arr: Array): Longint;
+  //SetArrayLength(var Arr: Array; I: Longint);
+
+//Variant s
+
+ //Null: Variant;
+ //Unassigned: Variant;
+
+ //VarIsEmpty(const V: Variant): Boolean;
+ //VarIsNull(const V: Variant): Boolean;
+ //VarType(const V: Variant): TVarType;
+
+//File System s
+
+ //DirExists(const Name: String): Boolean;
+ //7FileExists(const Name: String): Boolean;
+ //FileOrDirExists(const Name: String): Boolean;
+ {FileSize(const Name: String; var Size: Integer): Boolean;
+ GetSpaceOnDisk(const Path: String; const InMegabytes: Boolean; var Free, Total: Cardinal): Boolean;
+ GetSpaceOnDisk64(const Path: String; var Free, Total: Int64): Boolean;
+
+ FileSearch(const Name, DirList: string): String;
+ FindFirst(const FileName: String; var FindRec: TFindRec): Boolean;
+ FindNext(var FindRec: TFindRec): Boolean;
+procedure FindClose(var FindRec: TFindRec);
+
+ GetCurrentDir: String;
+ SetCurrentDir(const Dir: string): Boolean;
+ GetWinDir: String;
+ GetSystemDir: String;
+ GetSysWow64Dir: String;
+ GetTempDir: String;
+ GetShellFolder(Common: Boolean; const ID: TShellFolderID): String;
+ GetShellFolderByCSIDL(const Folder: Integer; const Create: Boolean): String;
+
+ GetShortName(const LongName: String): String;
+ GenerateUniqueName(Path: String; const Extension: String): String;
+
+ GetVersionNumbers(const Filename: String; var VersionMS, VersionLS: Cardinal): Boolean;
+ GetVersionNumbersString(const Filename: String; var Version: String): Boolean;
+
+ IsProtectedSystemFile(const Filename: String): Boolean;
+
+ GetMD5OfFile(const Filename: String): String;
+ GetSHA1OfFile(const Filename: String): String;
+
+ EnableFsRedirection(const Enable: Boolean): Boolean;
+
+File s
+
+ Exec(const Filename, Params, WorkingDir: String; const ShowCmd: Integer; const Wait: TExecWait; var ResultCode: Integer): Boolean;
+ ExecAsOriginalUser(const Filename, Params, WorkingDir: String; const ShowCmd: Integer; const Wait: TExecWait; var ResultCode: Integer): Boolean;
+ ShellExec(const Verb, Filename, Params, WorkingDir: String; const ShowCmd: Integer; const Wait: TExecWait; var ErrorCode: Integer): Boolean;
+ ShellExecAsOriginalUser(const Verb, Filename, Params, WorkingDir: String; const ShowCmd: Integer; const Wait: TExecWait; var ErrorCode: Integer): Boolean;
+
+ RenameFile(const OldName, NewName: string): Boolean;
+ FileCopy(const ExistingFile, NewFile: String; const FailIfExists: Boolean): Boolean;
+ DeleteFile(const FileName: string): Boolean;
+procedure DelayDeleteFile(const Filename: String; const Tries: Integer);
+ SetNTFSCompression(const FileOrDir: String; Compress: Boolean): Boolean;
+
+ LoadStringFromFile(const FileName: String; var S: AnsiString): Boolean;
+ LoadStringsFromFile(const FileName: String; var S: TArrayOfString): Boolean;
+ SaveStringToFile(const FileName: String; const S: AnsiString; const Append: Boolean): Boolean;
+ SaveStringsToFile(const FileName: String; const S: TArrayOfString; const Append: Boolean): Boolean;
+ SaveStringsToUTF8File(const FileName: String; const S: TArrayOfString; const Append: Boolean): Boolean;
+
+ CreateDir(const Dir: string): Boolean;
+ ForceDirectories(Dir: string): Boolean;
+ RemoveDir(const Dir: string): Boolean;
+ DelTree(const Path: String; const IsDir, DeleteFiles, DeleteSubdirsAlso: Boolean): Boolean;
+
+ CreateShellLink(const Filename, Description, ShortcutTo, Parameters, WorkingDir, IconFilename: String; const IconIndex, ShowCmd: Integer): String;
+
+procedure RegisterServer(const Is64Bit: Boolean; const Filename: String; const FailCriticalErrors: Boolean);
+ UnregisterServer(const Is64Bit: Boolean; const Filename: String; const FailCriticalErrors: Boolean): Boolean;
+procedure RegisterTypeLibrary(const Is64Bit: Boolean; const Filename: String);
+ UnregisterTypeLibrary(const Is64Bit: Boolean; const Filename: String): Boolean
+procedure IncrementSharedCount(const Is64Bit: Boolean; const Filename: String; const AlreadyExisted: Boolean);
+ DecrementSharedCount(const Is64Bit: Boolean; const Filename: String): Boolean;
+procedure RestartReplace(const TempFile, DestFile: String);
+procedure UnregisterFont(const FontName, FontFilename: String);
+ ModifyPifFile(const Filename: String; const CloseOnExit: Boolean): Boolean;
+
+Registry s
+
+ RegKeyExists(const RootKey: Integer; const SubKeyName: String): Boolean;
+ RegValueExists(const RootKey: Integer; const SubKeyName, ValueName: String): Boolean;
+
+ RegGetSubkeyNames(const RootKey: Integer; const SubKeyName: String; var Names: TArrayOfString): Boolean;
+ RegGetValueNames(const RootKey: Integer; const SubKeyName: String; var Names: TArrayOfString): Boolean;
+
+ RegQueryStringValue(const RootKey: Integer; const SubKeyName, ValueName: String; var ResultStr: String): Boolean;
+ RegQueryMultiStringValue(const RootKey: Integer; const SubKeyName, ValueName: String; var ResultStr: String): Boolean;
+ RegQueryDWordValue(const RootKey: Integer; const SubKeyName, ValueName: String; var ResultDWord: Cardinal): Boolean;
+ RegQueryBinaryValue(const RootKey: Integer; const SubKeyName, ValueName: String; var ResultStr: AnsiString): Boolean;
+
+ RegWriteStringValue(const RootKey: Integer; const SubKeyName, ValueName, Data: String): Boolean;
+ RegWriteExpandStringValue(const RootKey: Integer; const SubKeyName, ValueName, Data: String): Boolean;
+ RegWriteMultiStringValue(const RootKey: Integer; const SubKeyName, ValueName, Data: String): Boolean;
+ RegWriteDWordValue(const RootKey: Integer; const SubKeyName, ValueName: String; const Data: Cardinal): Boolean;
+ RegWriteBinaryValue(const RootKey: Integer; const SubKeyName, ValueName: String; const Data: AnsiString): Boolean;
+
+ RegDeleteKeyIncludingSubkeys(const RootKey: Integer; const SubkeyName: String): Boolean;
+ RegDeleteKeyIfEmpty(const RootKey: Integer; const SubkeyName: String): Boolean;
+ RegDeleteValue(const RootKey: Integer; const SubKeyName, ValueName: String): Boolean;
+  }
+//INI File s
+
+ //IniKeyExists(const Section, Key, Filename: String): Boolean;
+ //IsIniSectionEmpty(const Section, Filename: String): Boolean;
+
+ {GetIniBool(const Section, Key: String; const Default: Boolean; const Filename: String): Boolean
+ GetIniInt(const Section, Key: String; const Default, Min, Max: Longint; const Filename: String): Longint;
+ GetIniString(const Section, Key, Default, Filename: String): String;
+
+ SetIniBool(const Section, Key: String; const Value: Boolean; const Filename: String): Boolean;
+ SetIniInt(const Section, Key: String; const Value: Longint; const Filename: String): Boolean;
+ SetIniString(const Section, Key, Value, Filename: String): Boolean;
+
+procedure DeleteIniSection(const Section, Filename: String);
+procedure DeleteIniEntry(const Section, Key, Filename: String);
+
+Custom Setup Wizard Page s
+
+ CreateInputQueryPage(const AfterID: Integer; const ACaption, ADescription, ASubCaption: String): TInputQueryWizardPage;
+ CreateInputOptionPage(const AfterID: Integer; const ACaption, ADescription, ASubCaption: String; Exclusive, ListBox: Boolean): TInputOptionWizardPage;
+ CreateInputDirPage(const AfterID: Integer; const ACaption, ADescription, ASubCaption: String; AAppendDir: Boolean; ANewFolderName: String): TInputDirWizardPage;
+ CreateInputFilePage(const AfterID: Integer; const ACaption, ADescription, ASubCaption: String): TInputFileWizardPage;
+ CreateOutputMsgPage(const AfterID: Integer; const ACaption, ADescription, AMsg: String): TOutputMsgWizardPage;
+ CreateOutputMsgMemoPage(const AfterID: Integer; const ACaption, ADescription, ASubCaption: String; const AMsg: AnsiString): TOutputMsgMemoWizardPage;
+ CreateOutputProgressPage(const ACaption, ADescription: String): TOutputProgressWizardPage;
+ CreateCustomPage(const AfterID: Integer; const ACaption, ADescription: String): TWizardPage;
+
+ CreateCustomForm: TSetupForm;
+
+ PageFromID(const ID: Integer): TWizardPage;
+ PageIndexFromID(const ID: Integer): Integer;
+ ScaleX(X: Integer): Integer;
+ ScaleY(Y: Integer): Integer;
+
+Dialog s
+
+ MsgBox(const Text: String; const Typ: TMsgBoxType; const Buttons: Integer): Integer;
+ SuppressibleMsgBox(const Text: String; const Typ: TMsgBoxType; const Buttons, Default: Integer): Integer;
+ GetOpenFileName(const Prompt: String; var FileName: String; const InitialDirectory, Filter, DefaultExtension: String): Boolean;
+ GetSaveFileName(const Prompt: String; var FileName: String; const InitialDirectory, Filter, DefaultExtension: String): Boolean;
+ BrowseForFolder(const Prompt: String; var Directory: String; const NewFolderButton: Boolean): Boolean;
+ ExitSetupMsgBox: Boolean;       }
+
+//COM Automation objects support s
+
+ //CreateOleObject(const ClassName: string): Variant;
+ //GetActiveOleObject(const ClassName: string): Variant;
+ //IDispatchInvoke(Self: IDispatch; PropertySet: Boolean; const Name: String; Par: array of Variant): Variant;
+ //-!CreateComObject(const ClassID: TGUID): IUnknown;
+// StringToGUID(const S: String): TGUID;
+{procedure OleCheck(Result: HResult);
+procedure CoFreeUnusedLibraries;
+
+Setup Logging s
+
+procedure Log(const S: String);
+
+Other s   }
+
+{procedure Sleep(const Milliseconds: LongInt);
+ Random(const Range: Integer): Integer;
+procedure Beep;
+
+procedure BringToFrontAndRestore;
+
+Deprecated s
+
+ LoadDLL(const DLLName: String; var ErrorCode: Integer): Longint;
+ CallDLLProc(const DLLHandle: Longint; const ProcName: String; const Param1, Param2: Longint; var Result: Longint): Boolean;
+ FreeDLL(const DLLHandle: Longint): Boolean;
+
+ CastStringToInteger(var S: String): Longint;
+ CastIntegerToString(const L: Longint): String; }
+ 
+ //real  func of innno
+ 
+    //NewFileExists(const Name: String): Boolean;
+    //inDirExists(const Name: String): Boolean;
+    //FileOrDirExists(const Name: String): Boolean;
+    //IsDirectoryAndNotReparsePoint(const Name: String): Boolean;
+    //GetIniString(const Section, Key: String; Default: String; const Filename: String): String;
+    //GetIniInt(const Section, Key: String; const Default, Min, Max: Longint; const Filename: String): Longint;
+    //GetIniBool(const Section, Key: String; const Default: Boolean; const Filename: String): Boolean;
+    //IniKeyExists(const Section, Key, Filename: String): Boolean;
+    //IsIniSectionEmpty(const Section, Filename: String): Boolean;
+    //SetIniString(const Section, Key, Value, Filename: String): Boolean;
+    //SetIniInt(const Section, Key: String; const Value: Longint; const Filename: String): Boolean;
+    //SetIniBool(const Section, Key: String; const Value: Boolean; const Filename: String): Boolean;
+ //DeleteIniEntry(const Section, Key, Filename: String);
+ //DeleteIniSection(const Section, Filename: String);
+    //GetEnv(const EnvVar: String): String;
+    //GetCmdTail: String;
+    //GetCmdTailEx(StartIndex: Integer): String;
+    //NewParamCount: Integer;
+    //NewParamStr(Index: Integer): string;
+    //AddQuotes(const S: String): String;
+    //RemoveQuotes(const S: String): String;
+    //inGetShortName(const LongName: String): String;
+    //inGetWinDir: String;
+    //inGetSystemDir: String;
+    //GetSysWow64Dir: String;
+    //GetSysNativeDir(const IsWin64: Boolean): String;
+    //inGetTempDir: String;
+    //StringChange(var S: String; const FromStr, ToStr: String): Integer;
+    //StringChangeEx(var S: String; const FromStr, ToStr: String;
+  //const SupportDBCS: Boolean): Integer;
+    //AdjustLength(var S: String; const Res: Cardinal): Boolean;
+    //UsingWinNT: Boolean;
+    //ConvertConstPercentStr(var S: String): Boolean;
+    //ConvertPercentStr(var S: String): Boolean;
+    //ConstPos(const Ch: Char; const S: String): Integer;
+    //SkipPastConst(const S: String; const Start: Integer): Integer;
+    //RegQueryStringValue(H: HKEY; Name: PChar; var ResultStr: String): Boolean;
+    //RegQueryMultiStringValue(H: HKEY; Name: PChar; var ResultStr: String): Boolean;
+    //RegValueExists(H: HKEY; Name: PChar): Boolean;
+    //RegCreateKeyExView(const RegView: TRegView; hKey: HKEY; lpSubKey: PChar;
+  {Reserved: DWORD; lpClass: PChar; dwOptions: DWORD; samDesired: REGSAM;
+  lpSecurityAttributes: PSecurityAttributes; var phkResult: HKEY;
+  lpdwDisposition: PDWORD): Longint;}
+    //RegOpenKeyExView(const RegView: TRegView; hKey: HKEY; lpSubKey: PChar;
+  {ulOptions: DWORD; samDesired: REGSAM; var phkResult: HKEY): Longint;
+    RegDeleteKeyView(const RegView: TRegView; const Key: HKEY; const Name: PChar): Longint;
+    RegDeleteKeyIncludingSubkeys(const RegView: TRegView; const Key: HKEY; const Name: PChar): Longint; }
+    //RegDeleteKeyIfEmpty(const RegView: TRegView; const RootKey: HKEY; const SubkeyName: PChar): Longint;
+    //GetShellFolderPath(const FolderID: Integer): String;
+    //IsAdminLoggedOn: Boolean;
+    //IsPowerUserLoggedOn: Boolean;
+    //IsMultiByteString(const S: AnsiString): Boolean;
+    //FontExists(const FaceName: String): Boolean;
+{$IFNDEF IS_D5}
+//procedure FreeAndNil(var Obj);
+    //SafeLoadLibrary(const Filename: String; ErrorMode: UINT): HMODULE;
+{$ENDIF}
+    //GetUILanguage: LANGID;
+    //RemoveAccelChar(const S: String): String;
+    //GetTextWidth(const DC: HDC; S: String; const Prefix: Boolean): Integer;
+    //AddPeriod(const S: String): String;
+    //GetExceptMessage: String;
+    //GetPreferredUIFont: String;
+    //IsWildcard(const Pattern: String): Boolean;
+    //WildcardMatch(const Text, Pattern: PChar): Boolean;
+    //IntMax(const A, B: Integer): Integer;
+    //Win32ErrorString(ErrorCode: Integer): String;
+{$IFNDEF UNICODE}
+ //GetLeadBytes(var ALeadBytes: TLeadByteSet);
+{$ENDIF}
+{$IFNDEF IS_D3}
+    //inCompareMem(P1, P2: Pointer; Length: Integer): Boolean;
+{$ENDIF}
+    //DeleteDirTree(const Dir: String): Boolean;
+    //SetNTFSCompression(const FileOrDir: String; Compress: Boolean): Boolean;
+    //AddToWindowMessageFilterEx(const Wnd: HWND; const Msg: UINT);
+{$IFNDEF UNICODE}
+//type
+  //TSysCharSet = set of AnsiChar;
+    //inCharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean;
+{$ENDIF}
+    //ShutdownBlockReasonCreate(Wnd: HWND; const Reason: String): Boolean;
+    //ShutdownBlockReasonDestroy(Wnd: HWND): Boolean;
+    //TryStrToBoolean(const S: String; var BoolResult: Boolean): Boolean;
+    //WaitMessageWithTimeout(const Milliseconds: DWORD);
+    //MoveFileReplace(const ExistingFileName, NewFileName: String): Boolean;
+    //TryEnableAutoCompleteFileSystem(Wnd: HWND);
+    
+    // inAddBackslash(const S: String): String;
+    //PathChangeExt(const Filename, Extension: String): String;
+    //PathCharCompare(const S1, S2: PChar): Boolean;
+    //PathCharIsSlash(const C: Char): Boolean;
+    //PathCharIsTrailByte(const S: String; const Index: Integer): Boolean;
+    //PathCharLength(const S: String; const Index: Integer): Integer;
+    //inPathCombine(const Dir, Filename: String): String;
+    //PathCompare(const S1, S2: String): Integer;
+    //PathDrivePartLength(const Filename: String): Integer;
+    //PathDrivePartLengthEx(const Filename: String; const IncludeSignificantSlash: Boolean): Integer;
+    //inPathExpand(const Filename: String): String;
+    //PathExtensionPos(const Filename: String): Integer;
+    //PathExtractDir(const Filename: String): String;
+    //PathExtractDrive(const Filename: String): String;
+    //PathExtractExt(const Filename: String): String;
+    //PathExtractName(const Filename: String): String;
+    //PathExtractPath(const Filename: String): String;
+    //PathIsRooted(const Filename: String): Boolean;
+    //PathLastChar(const S: String): PChar;
+    //PathLastDelimiter(const Delimiters, S: string): Integer;
+    //PathLowercase(const S: String): String;
+    //PathNormalizeSlashes(const S: String): String;
+    //PathPathPartLength(const Filename: String; const IncludeSlashesAfterPath: Boolean): Integer;
+    //PathPos(Ch: Char; const S: String): Integer;
+    //PathStartsWith(const S, AStartsWith: String): Boolean;
+    //PathStrNextChar(const S: PChar): PChar;
+    //PathStrPrevChar(const Start, Current: PChar): PChar;
+    //PathStrScan(const S: PChar; const C: Char): PChar;
+    //inRemoveBackslash(const S: String): String;
+    //RemoveBackslashUnlessRoot(const S: String): String;
+    //TWindowDisabler
+     //UpdateHorizontalExtent(const ListBox: TCustomListBox);
+ //MinimizePathName(const Filename: String; const Font: TFont; MaxLen: Integer): String;
+  //AppMessageBox(const Text, Caption: PChar; Flags: Longint): Integer;
+  //MsgBoxP(const Text, Caption: PChar; const Typ: TMsgBoxType;
+  //const Buttons: Cardinal): Integer;
+  //inMsgBox(const Text, Caption: String; const Typ: TMsgBoxType;
+  //const Buttons: Cardinal): Integer;
+  //MsgBoxFmt(const Text: String; const Args: array of const;
+  //const Caption: String; const Typ: TMsgBoxType; const Buttons: Cardinal): Integer;
+  //ReactivateTopWindow;
+  //SetMessageBoxCaption(const Typ: TMsgBoxType; const NewCaption: PChar);
+  //SetMessageBoxRightToLeft(const ARightToLeft: Boolean);
+  //SetMessageBoxCallbackFunc(const AFunc: TMsgBoxCallbackFunc; const AParam: LongInt);
+
+
+
+end;
+
+
+
  
  var    myus: TUserfunction;
         aobj: TObject;
         //mylog: TFoLog;
+        mst: shortstring;
+        //mst2: s8;
+        i: integer;
         bitstyle: TBitmapstyle;
         UserSpaceAvail, TotalSpaceAvail, DiskSize: Comp; {disk size}
 
@@ -858,7 +1529,10 @@ begin   //main of animationbox
     with TComport.Create(self) do begin
       //cleanupinstance;
       //classname
-      open;
+      try
+        open;
+      except
+      end  
       writeln('com handle '+inttostr(handle));
       codepage;
       buffer;
@@ -1083,8 +1757,68 @@ begin   //main of animationbox
  //WriteVolumeLabel(const VolName : AnsiString; Drive : AnsiChar) : Cardinal;
 {-Sets the volume label for the specified drive.}
   //DataSetSortedSearch
-
+  
+    writeln(inttostr2(23));
+   // writeln(strtoint2('23'));
+   
+   maxcalc_demo;
+   
+   maXcalcF('ln(e)');
+   //dpGetTempFolder
+   //GetTempFile
+   
+//function GetSomeFileInfo( aFile : string; aWhatInfo : TSomeFileInfo) : string');
+    writeln(GetSomeFileInfo(exepath+'maxbox3.exe', fi_DisplayType));
+    writeln(TBGetTempFolder+' '+TBGetTempFile+' '
+           +TBGetModuleFilename+inttostr(TBGetFileSize(exepath+'maxbox3.exe',1)));
+    
+    for i:= 1 to 255 do 
+      mst:= mst + 'a';
+      writeln(mst)
+    //mst:=' this is short';
+    writeln(mst[250]);
+    //{$H-}
+    //     writeln('just '+shortstring(JustExtensionS(exepath+'maxbox3.exe')));
+    
+    ActivatePrevInstance('maxform1','maxbox3');
+    //TrimCharsS('jk','fgg');
+    //XorString('tz','this is short');
+    //ScrambleS('this is short','tz');
+    //FloatToStringS
+    //FastValPrep('this is short');
+    //writeln(HexLS(1001));
+    //DegsMin(1.345);
+      //CharToHex('k','A');
+     { with TJvAnimation.create do begin
+      free
+      end;}
+      
+      // CreateShellLink
+      //         DelTree
+       //IsProtectedSystemFile
+       //Null
+       
+      // TIBDATASET
+     // TIBCUSTOMDATASET
+      // nativestring
+      //THitTest
+    writeln(mainX('this is exe with a large path of it ,this is path as a second')) 
+      writeln(windir)
+    //ExpandMacro('%WINDIR%\Media\notify.wav');
+    if PlaySound(windir+'\Media\notify.wav', 0, SND_FILENAME or SND_SYNC) then
+    writeln('sound');
+    // then     ScriptResult:=SCRIPT_OK  
+      //TFile 
+      {with TMemoryFile.create('myfile.txt') do begin
+      free
+      end;}
+      
+      //TFindRec
+      //TOneShotTimer
+      
 End.   
+
+http://www.be-precision.com/products/precision-builder/express/webhelp/en/topics/PSSyntax.htm
 
 ------------------------------------------------
 Windows crashed again. I am the Blue Screen of Death. No one hears your screams.
@@ -1531,3 +2265,11 @@ Second we produce a simple XML file like a configuration file:
 please download the file: http://max.kleiner.com/myconfig.xml 
 ****************************************************************************** 
 ----Simple Browser started----
+
+// Run asynchronously (wait for process to exit) and use pipes so we can read the output pipe
+  hProcess.Options := hProcess.Options + [poWaitOnExit, poUsePipes];
+  // Now run:
+  
+  http://www.delphibasics.info/home/delphibasicssnippets/processunitbyaphexwithexample
+  
+  http://www.jrsoftware.org/ishelp/index.php?topic=scriptfunctions

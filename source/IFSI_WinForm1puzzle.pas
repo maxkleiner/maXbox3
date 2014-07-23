@@ -232,7 +232,7 @@ FUNCTION FormatInt64(i: int64): STRING;
 FUNCTION FormatInt(i: integer): STRING;
 FUNCTION FormatBigInt(s: string): STRING;
 Function GetHexArray(ahexdig: THexArray): THexArray;
-Function CharToHex(const APrefix: String; const cc: Char): shortstring;
+Function CharToHex(const APrefix: String; const cc: Char): string;
 //Function CharToHex(const APrefix: String; const cc: AnsiChar): shortstring;
 function GetMultiN(aval: integer): string;
 function PowerBig(aval,n: integer): string;
@@ -3325,7 +3325,7 @@ begin
   end;
 end;
 
-Function CharToHex(const APrefix : String; const cc : Char): shortstring;
+Function CharToHex(const APrefix : String; const cc : Char): string;
 begin
   SetLength(Result,2);
   Result[1]:= Hexdigits[ord(cc) shr 4];
@@ -5406,7 +5406,7 @@ begin
    // HexDigits: array [0..15] of Char = '0123456789ABCDEF';    {Do not Localize}
   CL.AddTypeS('TFloatPoint2', 'record X, Y: Double; end');
   //CL.AddTypeS('TPointArray', 'array of TPoint;');
-  CL.AddTypeS('shortstring', 'string[0..255];');
+  CL.AddTypeS('shortstring', 'string[255];');
   CL.AddTypeS('Float', 'Double;');
   CL.AddTypeS('Real', 'Double;');
   //CL.AddTypeS('Int', 'Integer;');

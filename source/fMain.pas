@@ -109,7 +109,7 @@
          9580       build 96_3 5 units, fixing, checkers. DOS syntax
          9608       build 98  toolbox units,  regex2 
          9650       build 98_1  processlist,  pipes, GSM, BetterADO 
-
+         9661       build 98_2  inno setup functions 
                   V4.0   in  June 2015
  ************************************************************************** }
 
@@ -1813,8 +1813,11 @@ uses
   uPSI_AdSocket,
   uPSI_AdPacket,
   uPSI_AdPort,   ////3.9.9.98_1
+  uPSI_PathFunc,
+  uPSI_CmnFunc2,
+  uPSI_CmnFunc,  ////3.9.9.98_2
 
-  //MDIFrame,
+    //MDIFrame,
   uPSI_St2DBarC,
   uPSI_FmxUtils,
   uPSI_CustomDrawTreeView,
@@ -2829,6 +2832,9 @@ begin
  SIRegister_AdPort(X);
  SIRegister_AdPacket(X);
  SIRegister_adgsm(X);
+ SIRegister_PathFunc(X);
+ SIRegister_CmnFunc2(X);
+ SIRegister_CmnFunc(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4093,6 +4099,11 @@ begin
   RIRegister_AdPacket(X);
   RIRegister_AdPort(X);
   RIRegister_AdPort_Routines(Exec);
+  RIRegister_PathFunc_Routines(Exec);
+  RIRegister_CmnFunc2_Routines(Exec);
+  RIRegister_CmnFunc2(X);
+  RIRegister_CmnFunc_Routines(Exec);
+  RIRegister_CmnFunc(X);   //3.9.9.98_2
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);

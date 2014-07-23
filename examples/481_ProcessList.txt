@@ -1,7 +1,7 @@
 unit ProcessListUnitApp;
 
-{  Coder: Counterstrikewi , by maXbox 2014 - #locs:170
-   Compiled: Delphi 2007 , #sign:max: MAXBOX8: 7/19/2014 10:17:44 PM 
+{  Coder: Counterstrikewi , by maXbox 2014 - #locs:243
+   Compiled: Delphi 2007 , #sign:Administrator: PC08: 22/07/2014 11:28:48 PM 
    Website: www.delphibasics.info   }
 
 interface
@@ -158,6 +158,68 @@ begin
   writeln('Refresh ListProcesses')
 end;
 
+function PathCharIsSlash(const C: Char): Boolean;
+{ Returns True if C is a backslash or slash. }
+begin
+  Result := (C = '\') or (C = '/');
+end;
+
+type
+  TOSVersionInfoEx2 = record
+    dwOSVersionInfoSize: DWORD;
+    dwMajorVersion: DWORD;
+    dwMinorVersion: DWORD;
+    dwBuildNumber: DWORD;
+    dwPlatformId: DWORD;
+    szCSDVersion: array[0..127] of AnsiChar;
+    wServicePackMajor: WORD;
+    wServicePackMinor: WORD;
+    wSuiteMask: WORD;
+    wProductType: Byte;
+    wReserved: Byte;
+  end;
+  
+ (* typedef struct tagMODULEENTRY32 {
+  DWORD dwSize;
+  DWORD th32ModuleID;
+  DWORD th32ProcessID;
+  DWORD GlblcntUsage;
+  DWORD ProccntUsage;
+  BYTE *modBaseAddr;
+  DWORD modBaseSize;
+  HMODULE hModule;
+  TCHAR szModule[MAX_PATH];
+  TCHAR szExePath[MAX_PATH];
+  DWORD dwFlags;
+} MODULEEN     *)
+
+function NeedWin2kFix: Boolean;
+var
+  aInfo: TOSVersionInfo;
+begin
+  Result := False;
+  aInfo.dwOSVersionInfoSize := SizeOf(aInfo);
+  if GetVersionEx((aInfo)) then
+    if (aInfo.dwMajorVersion = 5) and (aInfo.dwMinorVersion = 0) then {and}
+       //(aInfo.wServicePackMajor < 4) then
+      Result := True;
+end;
+
+function InternalGetFileAttr(const Name: String): Integer;
+begin
+  Result := GetFileAttributes(PChar(RemoveBackslashUnlessRoot(Name)));
+end;
+
+function GetCmdTail: String;
+{ Returns all command line parameters passed to the process as a single
+  string. }
+var
+  S: String;
+begin
+  //Result:= GetParamStr(GetCommandLine, S);
+end;
+
+
 begin
   createProcessForm;
   FormCreate(self);
@@ -167,6 +229,17 @@ begin
     Showmodal;
     free;
    end; 
+    writeln(inttostr(ord(cyGetWindowsVersion)));
+    writeln(inttostr(ord(GetWindowsVersion)));
+    //SendNotifyMessage
+    //SendMessageCallback
+    //SetMessageExtraInfo
+      //createmutex
+      //openmutex
+      //TMsgBoxType
+      //TRegView
+   PathFuncRunTests(false);   
+     
 end.
 
 //Doc
