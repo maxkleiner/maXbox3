@@ -350,6 +350,7 @@ function getHostIP: string;
 procedure ShowBitmap(bmap: TBitmap);
 function IsWindowsVista: boolean;
 function GetOsVersionInfo: TOSVersionInfo;      //thx to wischnewski
+//function GetOsVersionInfoEx: TOSVersionInfo;      //thx to wischnewski
 function CreateDBGridForm(dblist: TStringList): TListbox;
 
 //function getProcessAllMemory(ProcessID : DWORD): TProcessMemoryCounters;
@@ -554,7 +555,7 @@ procedure getScriptandRunAsk;
         maxForm1.memo2.lines.Add(' Web Script finished: '+getStr+ ' at: '+timetostr(time));
         //statusline
     end else
-      showmessage('script start halted!');
+      showmessage('Script start halted!');
      //www.softwareschule.ch/examples/demoscript.txt
     end;
    end else
@@ -581,7 +582,7 @@ procedure getScriptandRunAsk;
         S_ShellExecute(ExePath+'maxbox3.exe',getstr,seCmdOpen);
         maxForm1.memo2.lines.Add(' Code Web Script finished: '+getStr);
     end else
-     showmessage('script start halted!');
+     showmessage('Script start halted!');
      //www.softwareschule.ch/examples/demoscript.txt
   end;
 
@@ -604,7 +605,7 @@ procedure getScriptandRunAsk;
         SearchAndOpenDoc(getstr);
         maxForm1.memo2.lines.Add(' maXbox Release finished: '+getStr);
     end else
-     showmessage('version script start halted!');
+     showmessage('Version script run start halted!');
      //www.softwareschule.ch/examples/demoscript.txt
   end;
 

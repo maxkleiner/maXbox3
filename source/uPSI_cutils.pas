@@ -116,6 +116,8 @@ begin
 
  CL.AddDelphiFunction('Function Atoi(const aStr: string): integer');
  CL.AddDelphiFunction('Function Itoa(const aint: integer): string');
+ CL.AddDelphiFunction('Function Atof(const aStr: string): double');
+ CL.AddDelphiFunction('Function Atol(const aStr: string): longint');
 
 end;
 
@@ -189,6 +191,8 @@ begin
  S.RegisterDelphiFunction(@GetAssociatedProgram, 'cGetAssociatedProgram', cdRegister);
  S.RegisterDelphiFunction(@StrtoInt, 'Atoi', cdRegister);
  S.RegisterDelphiFunction(@IntToStr, 'Itoa', cdRegister);
+ S.RegisterDelphiFunction(@StrtoFloat, 'Atof', cdRegister);
+ S.RegisterDelphiFunction(@StrtoInt64, 'Atol', cdRegister);
 
 end;
 

@@ -1,10 +1,10 @@
 PROGRAM DLL_Tutor_2;
 
 ///////////////////////////////////////////////////////////////////////////
-//  #sign:Administrator: PC08: 27/04/2014 08:07:23 PM 
+//  #sign:Administrator: PC08: 28/07/2014 05:59:14 PM 
 //  Purpose: how to call a dll function, still on progress with lots of experiments 
 //  #path>ples\E:\maxbox3\mXGit39988\maxbox3\examples\                    
-//  Lines of Code #locs:369
+//  Lines of Code #locs:401
 ///////////////////////////////////////////////////////////////////////////
 
 Const TEXTOUT = 'hi world of dll func in opcode ';
@@ -53,6 +53,13 @@ Const TEXTOUT = 'hi world of dll func in opcode ';
 
  procedure GetVersionEx3(out verinfo: TOSVersionInfo);    //var verinfo: TOSVersionInfo
      External  'GetVersionExA@kernel32.dll stdcall';
+
+ function GetVersionEx4(out verinfo: TOSVersionInfoEx): boolean;    //var verinfo: TOSVersionInfo
+     External  'GetVersionExA@kernel32.dll stdcall';
+
+  { BOOL WINAPI GetVersionEx(
+  _Inout_  LPOSVERSIONINFO lpVersionInfo
+); }
 
 {TYPE <Type declarations>} 
   var FWait, switch: Boolean;
@@ -254,6 +261,31 @@ begin
   result:= Verinfo;
 end; 
 
+function GetOsVersionInfo4: TOSVersionInfoEx; 
+var
+  verInfo: TOSVersionInfoEx;
+begin
+  verinfo.dwOSVersionInfoSize:= sizeof(verinfo);
+  GetVersionEx4(Verinfo);
+  result:= Verinfo;
+end; 
+
+function NeedWin2kFix: Boolean;
+var
+  aInfo: TOSVersionInfoEx;
+begin
+  Result := False;
+  aInfo.dwOSVersionInfoSize := SizeOf(aInfo);
+  if GetVersionEx4(aInfo) then
+    if (aInfo.dwMajorVersion = 5) and (aInfo.dwMinorVersion = 0) and
+       (aInfo.wServicePackMajor < 4) then
+      Result:= True;
+    writeln('SP: '+itoa(aInfo.wServicePackMajor))
+    
+end;
+
+
+
 function IsWindowsVista: boolean;
 var
   verInfo: TOSVersionInfo;
@@ -364,7 +396,7 @@ Begin  //Main
   
   //filestr:= loadfileasstring(exepath+'maxbox3_9.exe');
   //writeln(synsha1(filestr));
-
+    writeln('NeedWin2kFix '+botostr(NeedWin2kFix));
 
 End. 
 

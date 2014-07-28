@@ -560,6 +560,7 @@ begin
   CL.AddTypeS('TFontCharset', 'Integer');
   //CL.AddTypeS('TFontStyle', '( fsBold, fsItalic, fsUnderline, fsStrikeOut )');
   //CL.AddTypeS('TFontStyles', 'set of TFontStyle');
+    CL.AddTypeS('TSize', 'record cx: Longint; cy: Longint; end');   //also in JvVCLUtils
 
    CL.AddTypeS('TFillStyle', '( fsSurface, fsBorder )');
   CL.AddTypeS('TFillMode', '( fmAlternate, fmWinding )');

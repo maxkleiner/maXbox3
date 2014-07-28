@@ -61,6 +61,14 @@ begin
 end;
 
 
+procedure RaiseException3(const Msg: string);
+begin
+  { Exception mit Meldung auslösen }
+  raise Exception.Create(Msg);
+end;
+
+
+
 
 (* === compile-time registration functions === *)
 (*----------------------------------------------------------------------------*)
@@ -138,6 +146,7 @@ begin
 
  //Function iif1( ATest : Boolean; const ATrue : Integer; const AFalse : Integer) : Integer;
 
+ CL.AddDelphiFunction('procedure RaiseException3(const Msg: string);');
  CL.AddDelphiFunction('Function LeftStr( const AText : AnsiString; const ACount : Integer) : AnsiString;');
  CL.AddDelphiFunction('Function LeftStr2( const AText : WideString; const ACount : Integer) : WideString;');
  CL.AddDelphiFunction('Function RightStr( const AText : AnsiString; const ACount : Integer) : AnsiString;');
@@ -171,11 +180,37 @@ begin
   CL.AddTypeS('TFileTime', '_FILETIME');
   CL.AddTypeS('FILETIME', '_FILETIME');
 
+  {TCreateParams = record
+    Caption: PChar;
+    Style: DWORD;
+    ExStyle: DWORD;
+    X, Y: Integer;
+    Width, Height: Integer;
+    WndParent: HWnd;
+    Param: Pointer;
+    WindowClass: TWndClass;
+    WinClassName: array[0..63] of Char;
+  end;}
+
+   CL.AddTypeS('TCreateParams',
+    'record' +
+    '  caption: PChar;' +
+    '  Style: DWord;' +
+    '  ExStyle: DWord;' +
+    '  X,Y: Integer;' +
+    '  Width, Height: Integer;' +
+    '  WndParent: HWnd;' +
+    '  Param: ___Pointer;' +
+    '  WindowClass: TObject;' +
+    '  WinClassName: array[0..63] of Char;' +
+    'end');
+
+
 //  CL.AddTypeS('TWin32FindData', 'record dwFileAttributes: LongWord; ftCreationTime,ftLastAccessTime,ftLastWriteTime: TFileTime;'
  // +'nFileSizeHigh,nFileSizeLow,dwReserved0,dwReserved1: LongWORD; cFileName: array[0..259] of WideChar; cAlternateFileName: array[0..13] of WideChar; end');
 
   CL.AddTypeS('_WIN32_FIND_DATAA', 'record dwFileAttributes: DWord; ftCreationTime: TFileTime; ftLastAccessTime: TFileTime; ftLastWriteTime: TFileTime;'
-  +'nFileSizeHigh: DWord; nFileSizeLow: DWORD; dwReserved0: DWORD; dwReserved1: DWORD; cFileName: array[0..260-1] of Char; cAlternateFileName: array[0..13] of Char; end;');
+  +'nFileSizeHigh: DWord; nFileSizeLow: DWORD; dwReserved0: DWORD; dwReserved1: DWORD; cFileName: array[0..260-1] of Char; cAlternateFileName: array[0..13] of Char; end');
 
   { _WIN32_FIND_DATAA = record
     dwFileAttributes: DWORD;
@@ -196,6 +231,8 @@ begin
   //CL.AddTypeS('TWin32FindDataW', '_WIN32_FIND_DATAW');
   CL.AddTypeS('TWin32FindData', 'TWin32FindDataA');
 
+   //CL.AddTypeS('mlongword', 'btU32');
+
    CL.AddTypeS('TFormatSettings', 'record CurrencyFormat: Byte; NegCurrFormat: Byte;'
    +'ThousandSeparator: Char; DecimalSeparator: Char; CurrencyDecimals: Byte; DateSeparator: Char;'
    +'TimeSeparator: Char; ListSeparator: Char; CurrencyString: string; ShortDateFormat: string; LongDateFormat: string;'
@@ -205,6 +242,20 @@ begin
 
 //   CL.AddTypeS('TSearchRec', 'record Time: Integer; Size: Int64; Attr: Integer;'
   //+'Name: TFileName; ExcludeAttr: Integer; FindHandle: THandle; FindData: TWin32FindData; end');
+
+  CL.AddTypeS('TFindRec',
+    'record' +
+    '  Name: String;' +
+    '  Attributes: LongWord;' +
+    '  SizeHigh: LongWord;' +
+    '  SizeLow: LongWord;' +
+    '  CreationTime: TFileTime;' +
+    '  LastAccessTime: TFileTime;' +
+    '  LastWriteTime: TFileTime;' +
+    '  AlternateName: String;' +
+    '  FindHandle: THandle;' +
+    'end');
+
 
    CL.AddTypeS('TSearchRec', 'record Time: Integer; Size: Int64; Attr: Integer;'
     +'Name: TFileName; ExcludeAttr: Integer; FindHandle: THandle; FindData: TWin32FindData; end;');
@@ -829,6 +880,10 @@ begin
 
  //S.RegisterDelphiFunction(@Concat,'Concat', cdRegister);
  S.RegisterDelphiFunction(@GetMemP, 'GetMemP', cdRegister);
+ S.RegisterDelphiFunction(@RaiseException3, 'RaiseException3', cdRegister);
+ S.RegisterDelphiFunction(@RaiseException3, 'RaiseExcept', cdRegister);
+
+// procedure RaiseException3(const Msg: string);
 end;
 
 

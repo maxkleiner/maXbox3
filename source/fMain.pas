@@ -109,8 +109,10 @@
          9580       build 96_3 5 units, fixing, checkers. DOS syntax
          9608       build 98  toolbox units,  regex2 
          9650       build 98_1  processlist,  pipes, GSM, BetterADO 
-         9661       build 98_2  inno setup functions 
-                  V4.0   in  June 2015
+         9661       build 98_2  inno setup functions
+         9705       build 98_3 more inno functions, video grabber, 32 units add
+                  [the last one before V4 in 2015]
+                   V4.0   in  June 2015
  ************************************************************************** }
 
 unit fMain;
@@ -1816,6 +1818,19 @@ uses
   uPSI_PathFunc,
   uPSI_CmnFunc2,
   uPSI_CmnFunc,  ////3.9.9.98_2
+  uPSI_BitmapImage,
+  uPSI_ImageGrabber,
+  uPSI_SecurityFunc,
+  uPSI_RedirFunc,
+  uPSI_FIFO,
+  uPSI_Int64Em,
+  uPSI_InstFunc,
+  uPSI_ScriptFunc_R,  //findfirst tester
+  uPSI_LibFusion,
+  uPSI_SimpleExpression,
+  uPSI_unitResourceDetails,
+  uPSI_unitResFile,     ////3.9.9.98_3
+
 
     //MDIFrame,
   uPSI_St2DBarC,
@@ -2835,6 +2850,18 @@ begin
  SIRegister_PathFunc(X);
  SIRegister_CmnFunc2(X);
  SIRegister_CmnFunc(X);
+ SIRegister_BitmapImage(X);
+ SIRegister_ImageGrabber(X);
+ SIRegister_SecurityFunc(X);
+ SIRegister_RedirFunc(X);
+ SIRegister_FIFO(X);
+ SIRegister_Int64Em(X);
+ SIRegister_InstFunc(X);
+ SIRegister_ScriptFunc_R(X);
+ SIRegister_LibFusion(X);
+ SIRegister_SimpleExpression(X);
+ SIRegister_unitResourceDetails(X);
+ SIRegister_unitResFile(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4104,6 +4131,22 @@ begin
   RIRegister_CmnFunc2(X);
   RIRegister_CmnFunc_Routines(Exec);
   RIRegister_CmnFunc(X);   //3.9.9.98_2
+  RIRegister_BitmapImage(X);
+  RIRegister_ImageGrabber(X);
+  RIRegister_RedirFunc_Routines(Exec);
+  RIRegister_TFileRedir(X);
+  RIRegister_SecurityFunc_Routines(Exec);
+  RIRegister_FIFO(X);
+  RIRegister_Int64Em_Routines(EXec);
+  RIRegister_InstFunc(X);
+  RIRegister_InstFunc_Routines(Exec);
+  RIRegister_ScriptFunc_R_Routines(Exec);
+  RIRegister_LibFusion_Routines(Exec);
+  RIRegister_LibFusion(X);
+  RIRegister_SimpleExpression(X);
+  RIRegister_unitResourceDetails(X);
+  RIRegister_unitResFile(X);
+  RIRegister_unitResourceDetails_Routines(Exec);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -4365,7 +4408,8 @@ begin
     CB1SCList.Items.Add(last_fName2);
    CB1SCList.Items.Add(last_fName1);
     CB1SCList.Items.Add(last_fName);
-  CB1SCList.Items.Add((Act_Filename));
+    if Act_Filename <> '' then
+    CB1SCList.Items.Add(Act_Filename);
   CB1SCList.ItemIndex:= CB1SCList.Items.Count-1;
   //if STATVERSIONCHECK then
     //if VersionCheck then memo2.Lines.Add('Version on Internet Checked!') else

@@ -1,18 +1,22 @@
 (*{****************************************************************
  *
  * Project  : Base Include RunTime Lib for maXbox
- * Name     : pas_includebox.inc  - 3.9.9.96
+ * Name     : pas_includebox.inc  - 3.9.9.98
  * Purpose  : function module to include in apps
- * Date     : 09/29/2012 -  19:38:56, #locs:782
- * Sign     : #sign:Administrator: PC08: 22/05/2014 08:28:37 AM 
+ * Date     : first: 09/29/2012 -  19:38:56, #locs:821
+ * Sign     : #sign:Administrator: PC08: 26/07/2014 10:18:58 AM 
  * Example  : {$I ..\maxbox3\pas_includebox.inc}
  * History  : translate and integrate to maXbox June 2009
  *          : binLib with hex&bin, showinterfaces extended 2010
  *          : CheckStringSum, SaveCanvas2, ShowGraphic, Polygon, typecheck, Regression,
-            :  StrToBytes, HideWindowforSeconds, getScript, predicate template
+            :  StrToBytes, HideWindowforSeconds, getScript, predicate template, outputmsg
  ****************************************************************}*)
 // include it with {$I ..\maxbox3\pas_includebox.inc}
 // corr. of function BinToInt(Binary: String): Integer; (IntToBin)
+//  #path>E:\maxbox3\mXGit39991\maxbox3\
+//  Lines of Code #locs:821
+///////////////////////////////////////////////////////////////////////////
+//TODO: Save the QRCode to webserver_file, #locs:821
 
 //const hValue = '010310260002'; 
 //var myCRC: string;
@@ -79,7 +83,8 @@ Procedure HideWindowForSeconds(secs: integer);   //3 seconds
 function GetFileDate2(aFile:string; aWithTime:Boolean):string;
 procedure getScriptandRunAsk;
 procedure ShowHourGlass(aProc: TProc2);
-
+procedure TMainForm_OutputMessage(const Msg: string);
+function IntToHexStr8(I: Integer): String;
 
 }
 
@@ -777,6 +782,40 @@ procedure ShowHourGlass(aProc: TProc2);
    Screen.Cursor := OldCursor 
  end; 
 end;
+
+
+procedure TMainForm_OutputMessage(const Msg: string);
+var messagememo: TMemo;
+begin
+  messagememo:= memo2;
+  { prüfen, ob noch keine Zeile vorliegt }
+  if MessageMemo.Lines.Count = 0 then
+    { Meldung als Text übernehmen }
+    MessageMemo.SelText:= Msg
+  else begin
+    { teilweises Auffrischen des TMemo-Objekts verhindern }
+    MessageMemo.Lines.BeginUpdate;
+    { bei mehr als 100 Zeilen, obere Zeilen löschen }
+    while MessageMemo.Lines.Count > 100 do begin
+      MessageMemo.SelStart:= 0;
+      MessageMemo.SelLength:= Length(MessageMemo.Lines[0]) + 2;
+      MessageMemo.SelText:= '';
+    end;
+    { neue Zeile einschließlich der Steuerzeichen für Wagenrücklauf }
+    { und Zeilenvorschub hinzufügen }
+    MessageMemo.SelStart:= Length(MessageMemo.Text);
+    MessageMemo.SelText:= #$d + #$a + Msg;
+    { TMemo-Objekt auffrischen und zur hinzugefügten Zeile scrollen }
+    MessageMemo.Lines.EndUpdate;
+    MessageMemo.Perform(EM_SCROLLCARET, 0, 0);
+  end;
+end;
+
+function IntToHexStr8(I: Integer): String;
+begin
+  FmtStr(Result, '0x%.8x', [I]);
+end;
+
 
 
 //(/end.

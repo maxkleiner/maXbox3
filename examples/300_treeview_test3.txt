@@ -500,6 +500,28 @@ begin
   end ;
 end;
 
+procedure TerminateApp;
+begin
+  { Work around shell32 bug: Don't use PostQuitMessage/Application.Terminate
+    here.
+    When ShellExecute is called with the name of a folder, it internally
+    creates a window used for DDE communication with Windows Explorer. After
+    ShellExecute returns, this window eventually receives a posted WM_DDE_ACK
+    message back from the DDE server (Windows Explorer), and in response, it
+    tries to flush the queue of DDE messages by using a PeekMessage loop.
+    Problem is, PeekMessage will return WM_QUIT messages posted with
+    PostQuitMessage regardless of the message range specified, and the loop was
+    not written with this in mind.
+    In previous IS versions, this was causing our WM_QUIT message to be eaten
+    if Application.Terminate was called very shortly after a shellexec [Run]
+    entry was processed (e.g. if DisableFinishedPage=yes).
+    A WM_QUIT message posted with PostMessage instead of PostQuitMessage will
+    not be returned by a GetMessage/PeekMessage call with a message range that
+    does not include WM_QUIT. }
+  PostMessage(0, WM_QUIT, 0, 0);
+end;
+
+
 
 
 
@@ -775,6 +797,11 @@ begin
    canvas.draw(300,200, getbitmapObject2(Exepath+'\examples\citymax.bmp'));
    //Show;
  end;
+ 
+ bfrm.canvas.stretchdraw(rect(0,0,bfrm.width,bfrm.height), 
+             getbitmap(Exepath+'\examples\brightfullmoon.bmp'));
+   bfrm.canvas.draw(300,200, getbitmapObject2(Exepath+'\examples\citymax.bmp'));
+   
 
   tv1:= TTreeView.Create(NIL);
   with tv1 do begin
@@ -1461,6 +1488,27 @@ Deprecated s
 end;
 
 
+{const
+  IDTRYAGAIN = 10;
+  IDCONTINUE = 11;}
+
+function GetMessageBoxResultText(const AResult: Integer): String;
+begin
+  case AResult of
+    IDOK: Result := 'OK';
+    IDCANCEL: Result := 'Cancel';
+    IDABORT: Result := 'Abort';
+    IDRETRY: Result := 'Retry';
+    IDIGNORE: Result := 'Ignore';
+    IDYES: Result := 'Yes';
+    IDNO: Result := 'No';
+    IDTRYAGAIN: Result := 'Try Again';
+    IDCONTINUE: Result := 'Continue';
+  else
+    Result := IntToStr(AResult);
+  end;
+  //TSimpleExpression
+end;
 
  
  var    myus: TUserfunction;
@@ -1471,6 +1519,7 @@ end;
         i: integer;
         bitstyle: TBitmapstyle;
         UserSpaceAvail, TotalSpaceAvail, DiskSize: Comp; {disk size}
+        shdig: TSHA1Digest;
 
 begin   //main of animationbox
    //InifileRead;
@@ -1815,6 +1864,22 @@ begin   //main of animationbox
       
       //TFindRec
       //TOneShotTimer
+      
+    writeln(itoa(ComputeFileCRC32(exepath+'\maxbox3.exe')));
+    //writeln(itoa(CRC32(exepath+'\maxbox3.exe')));
+    writeln(itoa(Crc32OfFile(exepath+'\maxbox3.exe')));
+    writeln(inttohex(109410193,2));
+    writeln(IntToHex(CRC32OfFile(exepath+'\maxbox3.exe'),4));
+    // CL.AddTypeS('TMD5Digest', 'array[0..15] of Byte;');
+     //CL.AddTypeS('TSHA1Digest', 'array[0..19] of Byte;');
+    writeln(sha1(exepath+'\maxbox3.exe'))
+    shdig:= GetSHA1OfFile(false,exepath+'\maxbox3.exe'); 
+    //for i:= 0 to 19 do write(itoa(shdig[i])+' '); 
+    //writeln('');
+    for i:= 0 to 19 do write(bytetohex(shdig[i])); 
+    //Initole //CoInitialize
+    //GetParamString
+    writeln(inttoStr(ResourceNameToInt('BEACH')));
       
 End.   
 

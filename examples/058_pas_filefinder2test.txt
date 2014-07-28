@@ -1,0 +1,162 @@
+program ZukoFileSearch;
+
+// complex filefunctions in directories and subdirectories
+// has findfirst with a TSearchRec structure, loc's = 68, _58
+
+{Start NotePad and load a file (the system "knows" the location of NotePad.exe, therefore we don't have to specify the full path):
+ShellExecute(Handle, 'open', PChar('notepad'), PChar('c:\test\readme.txt'), nil, SW_SHOW);}
+
+const ext = 'txt';
+      sw = 'SW_SHOW';
+      //faDirectory = $00000010;
+      //faAnyFile   = $0000003F;
+      
+  var cnt: integer;
+  
+  
+  (*ScriptCompiler.AddTypeS('TFindRec',
+    'record' +
+    '  Name: String;' +
+    '  Attributes: LongWord;' +
+    '  SizeHigh: LongWord;' +
+    '  SizeLow: LongWord;' +
+    '  CreationTime: TFileTime;' +
+    '  LastAccessTime: TFileTime;' +
+    '  LastWriteTime: TFileTime;' +
+    '  AlternateName: String;' +
+    '  FindHandle: THandle;' +
+    'end');   *)
+
+procedure FindAllFiles3(FilesList: TStringList; StartDir, FileMask: string);
+var
+  SR: TFindRec;
+  DirList: TStringList;
+  IsFound: Boolean;
+  i: integer;
+begin
+  if StartDir[length(StartDir)] <> '\' then
+                       StartDir:= StartDir + '\';
+  { Build a list of the files in directory StartDir (not the directories!)}
+  IsFound:= FindFirst3(StartDir+FileMask,SR);
+  while IsFound do begin
+   inc(cnt)
+      FilesList.Add(inttostr(cnt)+ ' '+StartDir + SR.name);
+    IsFound:= FindNext3(SR);
+  end;
+  FindClose3(SR);
+  //Build a list of subdirectories
+  DirList:= TStringList.Create;
+    IsFound:= FindFirst3(StartDir+'*.*',SR);
+    while IsFound do begin
+      //inc(cnt)
+      if ((SR.Attributes and faDirectory) <> 0) and
+         (SR.Name[1] <> '.') then
+           //DirList.Add(inttostr(cnt)+ ' '+StartDir + searchrecName);
+           DirList.Add(StartDir + SR.Name);
+       IsFound:= FindNext3(SR);
+    end;
+    FindClose3(SR);
+  //Scan the list of subdirectories recursive!
+  for i:= 0 to DirList.Count - 1 do
+    FindAllFiles3(FilesList, DirList[i], FileMask);
+  DirList.Free;
+end;
+
+      
+procedure FindAllFiles2(FilesList: TStringList; StartDir, FileMask: string);
+var
+  SR: TSearchRec;
+  DirList: TStringList;
+  IsFound: Boolean;
+  i: integer;
+begin
+  if StartDir[length(StartDir)] <> '\' then
+                       StartDir:= StartDir + '\';
+  { Build a list of the files in directory StartDir (not the directories!)}
+  IsFound:= FindFirst2(StartDir+FileMask, faAnyFile-faDirectory,SR) = 0;
+  while IsFound do begin
+   inc(cnt)
+      FilesList.Add(inttostr(cnt)+ ' '+StartDir + SR.name);
+    IsFound:= FindNext2(SR) = 0;
+  end;
+  FindClose2(SR);
+  //Build a list of subdirectories
+  DirList:= TStringList.Create;
+    IsFound:= FindFirst2(StartDir+'*.*', faAnyFile,SR) = 0;
+    while IsFound do begin
+      //inc(cnt)
+      if ((SR.Attr and faDirectory) <> 0) and
+         (SR.Name[1] <> '.') then
+           //DirList.Add(inttostr(cnt)+ ' '+StartDir + searchrecName);
+           DirList.Add(StartDir + SR.Name);
+       IsFound:= FindNext2(SR) = 0;
+    end;
+    FindClose2(SR);
+  //Scan the list of subdirectories recursive!
+  for i:= 0 to DirList.Count - 1 do
+    FindAllFiles2(FilesList, DirList[i], FileMask);
+  DirList.Free;
+end;
+
+  
+procedure FindAllFiles(FilesList: TStringList; StartDir, FileMask: string);
+var
+  //SR: TSearchRec;
+  DirList: TStringList;
+  IsFound: Boolean;
+  i: integer;
+begin
+  if StartDir[length(StartDir)] <> '\' then
+                       StartDir:= StartDir + '\';
+  { Build a list of the files in directory StartDir (not the directories!)}
+  IsFound:= FindFirst(StartDir+FileMask, faAnyFile-faDirectory) = 0;
+  while IsFound do begin
+   inc(cnt)
+     
+    FilesList.Add(inttostr(cnt)+ ' '+StartDir + searchrecName);
+    IsFound:= FindNext = 0;
+  end;
+  FindClose;
+  //Build a list of subdirectories
+  DirList:= TStringList.Create;
+    IsFound:= FindFirst(StartDir+'*.*', faAnyFile) = 0;
+    while IsFound do begin
+      //inc(cnt)
+      if ((searchrecAttr and faDirectory) <> 0) and
+         (searchrecName[1] <> '.') then
+           //DirList.Add(inttostr(cnt)+ ' '+StartDir + searchrecName);
+           DirList.Add(StartDir + searchrecName);
+ 
+      IsFound:= FindNext = 0;
+    end;
+    FindClose;
+  //Scan the list of subdirectories recursive!
+  for i:= 0 to DirList.Count - 1 do
+    FindAllFiles(FilesList, DirList[i], FileMask);
+  DirList.Free;
+end;
+
+procedure StartFileFinder;
+var
+  FilesList: TStringList;
+begin
+  FilesList:= TStringList.Create;
+  try
+    //FindAllFiles(FilesList, ExePath+'examples', '*.*');
+    FindAllFiles3(FilesList, ExePath, '*.*');
+    fileslist.saveToFile(ExePath+'examples\rec_files.txt');
+  finally 
+    FilesList.Free;
+  end;
+end;
+
+//main script
+begin
+  //mysearch;
+  beep;
+  cnt:= 0;
+  StartFileFinder;
+  SearchAndOpenDoc(ExePath+'examples\rec_files.txt')
+  //shellexecute(0, 'open', 'notepad', 'rec_files.txt', '', 2)
+  //orthogonal and idempotent
+end.

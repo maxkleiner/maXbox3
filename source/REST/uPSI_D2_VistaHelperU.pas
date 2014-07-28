@@ -40,11 +40,32 @@ uses
   ,XPVistaHelperU
   ;
 
+//    function GetVersionEx3(out verinfo: TOSVersionInfoEx): boolean;
+  //var verinfo: TOSVersionInfo
+  //   External  'GetVersionExA@kernel32.dll stdcall';
+
+  function GetVersionEx3(out verinfo: TOSVersionInfoEx): boolean; stdcall;
+                                    //cb: DWORD): BOOL; //stdcall;
+     external 'kernel32.dll' name 'GetVersionExA';
+
+
 
 procedure Register;
 begin
   RegisterComponents('Pascal Script', [TPSImport_D2_VistaHelperU]);
 end;
+
+
+function getVersionInfoEx3: TOSVersionInfoEx;
+var
+  aInfo: TOSVersionInfoEx;
+begin
+  //Result:= 0;
+  aInfo.dwOSVersionInfoSize:= SizeOf(aInfo);
+  if GetVersionEx3(aInfo) then
+    Result:= aInfo;
+end;
+
 
 (* === compile-time registration functions === *)
 (*----------------------------------------------------------------------------*)
@@ -94,12 +115,100 @@ begin
  CL.AddConstantN('MOD_WIN','LongInt').SetInt( 8);
  CL.AddConstantN('IDHOT_SNAPWINDOW','LongInt').SetInt( - 1);
  CL.AddConstantN('IDHOT_SNAPDESKTOP','LongInt').SetInt( - 2);
+  CL.AddConstantN('WAIT_FAILED','LongWord').SetUInt( DWORD ( $FFFFFFFF ));
+ CL.AddConstantN('WAIT_TIMEOUT','longword').SetUint( $00000102);
+ CL.AddConstantN('WAIT_IO_COMPLETION','longword').SetUint($000000C0);
+ CL.AddConstantN('STILL_ACTIVE','longword').Setuint($00000103);
+ CL.AddConstantN('EXCEPTION_ACCESS_VIOLATION','longword').Setuint($C0000005);
+  CL.AddConstantN('BDR_RAISEDOUTER','LongInt').SetInt( 1);
+ CL.AddConstantN('BDR_SUNKENOUTER','LongInt').SetInt( 2);
+ CL.AddConstantN('BDR_RAISEDINNER','LongInt').SetInt( 4);
+ CL.AddConstantN('BDR_SUNKENINNER','LongInt').SetInt( 8);
+ CL.AddConstantN('BDR_OUTER','LongInt').SetInt( 3);
+ CL.AddConstantN('BDR_INNER','LongInt').SetInt( 12);
+ CL.AddConstantN('BDR_RAISED','LongInt').SetInt( 5);
+ CL.AddConstantN('BDR_SUNKEN','LongInt').SetInt( 10);
+ CL.AddConstantN('BF_LEFT','LongInt').SetInt( 1);
+ CL.AddConstantN('BF_TOP','LongInt').SetInt( 2);
+ CL.AddConstantN('BF_RIGHT','LongInt').SetInt( 4);
+ CL.AddConstantN('BF_BOTTOM','LongInt').SetInt( 8);
+ CL.AddConstantN('BF_DIAGONAL','LongWord').SetUInt( $10);
+ CL.AddConstantN('BF_MIDDLE','LongWord').SetUInt( $800);
+ CL.AddConstantN('BF_SOFT','LongWord').SetUInt( $1000);
+ CL.AddConstantN('BF_ADJUST','LongWord').SetUInt( $2000);
+ CL.AddConstantN('BF_FLAT','LongWord').SetUInt( $4000);
+ CL.AddConstantN('BF_MONO','LongWord').SetUInt( $8000);
+
+ CL.AddConstantN('IDOK','LongInt').SetInt( 1);
+ CL.AddConstantN('IDCANCEL','LongInt').SetInt( 2);
+ CL.AddConstantN('IDABORT','LongInt').SetInt( 3);
+ CL.AddConstantN('IDRETRY','LongInt').SetInt( 4);
+ CL.AddConstantN('IDIGNORE','LongInt').SetInt( 5);
+ CL.AddConstantN('IDYES','LongInt').SetInt( 6);
+ CL.AddConstantN('IDNO','LongInt').SetInt( 7);
+ CL.AddConstantN('IDCLOSE','LongInt').SetInt( 8);
+ CL.AddConstantN('IDHELP','LongInt').SetInt( 9);
+ CL.AddConstantN('IDTRYAGAIN','LongInt').SetInt( 10);
+ CL.AddConstantN('IDCONTINUE','LongInt').SetInt(11);
 
 
+ (* {$EXTERNALSYM IDHELP}
+  IDHELP = 9;        ID_HELP = IDHELP;
+  {$EXTERNALSYM IDTRYAGAIN}
+  IDTRYAGAIN = 10;
+  {$EXTERNALSYM IDCONTINUE}
+  IDCONTINUE = 11; *)
 
-  //CL.AddTypeS('OSVERSIONINFOEXA', '_OSVERSIONINFOEXA');
-  //CL.AddTypeS('TOSVersionInfoExA', '_OSVERSIONINFOEXA');
-  CL.AddTypeS('TOSVersionInfoEx', 'TOSVersionInfo');
+  CL.AddTypeS('tagACCEL', 'record fVirt : Word; key : Word; cmd : Word; end');
+  CL.AddTypeS('TAccel', 'tagACCEL');
+  CL.AddTypeS('ACCEL', 'tagACCEL');
+
+  CL.AddTypeS('_FINDEX_INFO_LEVELS', '( FindExInfoStandard, FindExInfoMaxInfoLevel )');
+  CL.AddTypeS('TFindexInfoLevels', '_FINDEX_INFO_LEVELS');
+  CL.AddTypeS('FINDEX_INFO_LEVELS', '_FINDEX_INFO_LEVELS');
+  CL.AddTypeS('_FINDEX_SEARCH_OPS', '( FindExSearchNameMatch, FindExSearchLimit'
+   +'ToDirectories, FindExSearchLimitToDevices, FindExSearchMaxSearchOp )');
+  CL.AddTypeS('TFindexSearchOps', '_FINDEX_SEARCH_OPS');
+  CL.AddTypeS('FINDEX_SEARCH_OPS', '_FINDEX_SEARCH_OPS');
+ CL.AddConstantN('FIND_FIRST_EX_CASE_SENSITIVE','LongWord').SetUInt( $00000001);
+ CL.AddDelphiFunction('Function FindFirstFileEx( lpFileName : PChar; fInfoLevelId : TFindexInfoLevels; lpFindFileData : ___Pointer; fSearchOp : TFindexSearchOps; lpSearchFilter : ___Pointer; dwAdditionalFlags : DWORD) : BOOL');
+ //CL.AddDelphiFunction('Function FindFirstFileExA( lpFileName : PAnsiChar; fInfoLevelId : TFindexInfoLevels; lpFindFileData : Pointer; fSearchOp : TFindexSearchOps; lpSearchFilter : Pointer; dwAdditionalFlags : DWORD) : BOOL');
+ //CL.AddDelphiFunction('Function FindFirstFileExW( lpFileName : PWideChar; fInfoLevelId : TFindexInfoLevels; lpFindFileData : Pointer; fSearchOp : TFindexSearchOps; lpSearchFilter : Pointer; dwAdditionalFlags : DWORD) : BOOL');
+ CL.AddDelphiFunction('Function FindFirstFile( lpFileName : PChar; var lpFindFileData : TWIN32FindData) : THandle');
+ //CL.AddDelphiFunction('Function FindFirstFileA( lpFileName : PAnsiChar; var lpFindFileData : TWIN32FindDataA) : THandle');
+ //CL.AddDelphiFunction('Function FindFirstFileW( lpFileName : PWideChar; var lpFindFileData : TWIN32FindDataW) : THandle');
+ CL.AddDelphiFunction('Function FindNextFile( hFindFile : THandle; var lpFindFileData : TWIN32FindData) : BOOL');
+// CL.AddDelphiFunction('Function FindNextFileA( hFindFile : THandle; var lpFindFileData : TWIN32FindDataA) : BOOL');
+ //CL.AddDelphiFunction('Function FindNextFileW( hFindFile : THandle; var lpFindFileData : TWIN32FindDataW) : BOOL');
+ CL.AddDelphiFunction('Function SearchPathW( lpPath, lpFileName, lpExtension : PChar; nBufferLength : DWORD; lpBuffer : PChar; var lpFilePart : PChar) : DWORD');
+ CL.AddTypeS('_GET_FILEEX_INFO_LEVELS', '( GetFileExInfoStandard, GetFileExMax,InfoLevel )');
+  CL.AddTypeS('TGetFileExInfoLevels', '_GET_FILEEX_INFO_LEVELS');
+  CL.AddTypeS('GET_FILEEX_INFO_LEVELS', '_GET_FILEEX_INFO_LEVELS');
+ CL.AddDelphiFunction('Function GetFileAttributesEx( lpFileName : PChar; fInfoLevelId : TGetFileExInfoLevels; lpFileInformation : ___Pointer) : BOOL');
+
+ CL.AddTypeS('_OSVERSIONINFOEXA', 'record dwOSVersionInfoSize: DWORD; dwMajorVersion: DWORD; dwMinorVersion: DWORD; dwBuildNumber: DWORD; '+
+              'dwPlatformId: DWORD; szCSDVersion: array[0..127] of Char; wServicePackMajor: Word;' +
+              'wServicePackMinor: WORD; wSuiteMask: WORD; wProductType: Byte; wReserved: Byte; end');
+
+
+ { TOSVersionInfoEx2 = record
+    dwOSVersionInfoSize: DWORD;
+    dwMajorVersion: DWORD;
+    dwMinorVersion: DWORD;
+    dwBuildNumber: DWORD;
+    dwPlatformId: DWORD;
+    szCSDVersion: array[0..127] of AnsiChar;
+    wServicePackMajor: WORD;
+    wServicePackMinor: WORD;
+    wSuiteMask: WORD;
+    wProductType: Byte;
+    wReserved: Byte;
+  end; }
+
+
+  CL.AddTypeS('OSVERSIONINFOEXA', '_OSVERSIONINFOEXA');
+  CL.AddTypeS('TOSVersionInfoExA', '_OSVERSIONINFOEXA');
+  CL.AddTypeS('TOSVersionInfoEx', '_OSVERSIONINFOEXA');
   CL.AddTypeS('TDrivesProperty', 'array[1..26] of boolean;');
 
   //TDrivesProperty = array['A'..'Z'] of boolean;
@@ -124,6 +233,19 @@ begin
  CL.AddDelphiFunction('Function lstrlen( lpString : PChar) : Integer');
  CL.AddDelphiFunction('Function GetTokenInformation( TokenHandle : THandle; TokenInformationClass : TTokenInformationClass; TokenInformation : ___Pointer; TokenInformationLength : DWORD; var ReturnLength : DWORD) : BOOL');
  CL.AddDelphiFunction('Function SetTokenInformation( TokenHandle : THandle; TokenInformationClass : TTokenInformationClass; TokenInformation : ___Pointer; TokenInformationLength : DWORD) : BOOL');
+ CL.AddDelphiFunction('Function SendNotifyMessage( hWnd : HWND; Msg : UINT; wParam : WPARAM; lParam : LPARAM) : BOOL');
+ CL.AddDelphiFunction('Function CreateMutex( lpMutexAttributes : PSecurityAttributes; bInitialOwner : BOOL; lpName : PChar) : THandle');
+ //CL.AddDelphiFunction('Function CreateMutexW( lpMutexAttributes : PSecurityAttributes; bInitialOwner : BOOL; lpName : PWideChar) : THandle');
+ CL.AddDelphiFunction('Function OpenMutex( dwDesiredAccess : DWORD; bInheritHandle : BOOL; lpName : PChar) : THandle');
+ CL.AddDelphiFunction('Function CreateEvent( lpEventAttributes : PSecurityAttributes; bManualReset, bInitialState : BOOL; lpName : PChar) : THandle');
+ CL.AddDelphiFunction('Function OpenEvent( dwDesiredAccess : DWORD; bInheritHandle : BOOL; lpName : PChar) : THandle');
+ CL.AddDelphiFunction('Function CreateSemaphore( lpSemaphoreAttributes : PSecurityAttributes; lInitialCount, lMaximumCount : Longint; lpName : PChar) : THandle');
+ CL.AddDelphiFunction('Function OpenSemaphore( dwDesiredAccess : DWORD; bInheritHandle : BOOL; lpName : PChar) : THandle');
+ //S.RegisterDelphiFunction(@GetFileAttributesEx, 'GetFileAttributesEx', CdStdCall);
+ CL.AddDelphiFunction('function getVersionInfoEx3: TOSVersionInfoEx;');
+ CL.AddDelphiFunction('Function GetVersionEx3(out verinfo: TOSVersionInfoEx): boolean;');
+
+
 
 
 end;
@@ -152,7 +274,22 @@ begin
  S.RegisterDelphiFunction(@lstrlen, 'lstrlen', CdStdCall);
  S.RegisterDelphiFunction(@GetTokenInformation, 'GetTokenInformation', CdStdCall);
  S.RegisterDelphiFunction(@SetTokenInformation, 'SetTokenInformation', CdStdCall);
-
+ S.RegisterDelphiFunction(@SendNotifyMessage, 'SendNotifyMessage', CdStdCall);
+  S.RegisterDelphiFunction(@CreateMutex, 'CreateMutex', CdStdCall);
+ //S.RegisterDelphiFunction(@CreateMutexA, 'CreateMutexA', CdStdCall);
+ //S.RegisterDelphiFunction(@CreateMutexW, 'CreateMutexW', CdStdCall);
+ S.RegisterDelphiFunction(@OpenMutex, 'OpenMutex', CdStdCall);
+  S.RegisterDelphiFunction(@CreateEvent, 'CreateEvent', CdStdCall);
+ S.RegisterDelphiFunction(@OpenEvent, 'OpenEvent', CdStdCall);
+ S.RegisterDelphiFunction(@CreateSemaphore, 'CreateSemaphore', CdStdCall);
+ S.RegisterDelphiFunction(@OpenSemaphore, 'OpenSemaphore', CdStdCall);
+ S.RegisterDelphiFunction(@GetFileAttributesEx, 'GetFileAttributesEx', CdStdCall);
+ S.RegisterDelphiFunction(@FindFirstFileEx, 'FindFirstFileEx', CdStdCall);
+ S.RegisterDelphiFunction(@FindFirstFile, 'FindFirstFile', CdStdCall);
+ S.RegisterDelphiFunction(@FindNextFile, 'FindNextFile', CdStdCall);
+ S.RegisterDelphiFunction(@SearchPath, 'SearchPathW', CdStdCall);
+ S.RegisterDelphiFunction(@getVersionInfoEx3, 'getVersionInfoEx3', CdStdCall);
+ S.RegisterDelphiFunction(@GetVersionEx3, 'GetVersionEx3', CdStdCall);
 
 end;
 
