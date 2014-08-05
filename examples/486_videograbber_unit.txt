@@ -1,0 +1,1148 @@
+unit VideoMain;
+
+interface
+
+{uses
+  Windows, Messages, SysUtils, ExtCtrls, StdCtrls, ComCtrls, Controls,
+  Classes, Forms, Graphics, JPEG, MMSystem, WinSock, ImageGrabber,
+  MiniInterface, FIFO, LEDBitmaps;}
+
+const
+
+  { Konstanten für Client und Server }
+
+  drOpenDoorCommandCode = 0;
+  drRequestImageCommandCode = 1;
+  drDoorBellCommandCode = 0;
+  drReceiveImageCommandCode = 1;
+
+type
+
+  { Typen für TClient }
+
+  TReceiving = (recCommand, recVideoQuality);
+
+  { TClient-Klasse }
+  Type TClient = TStrings;
+
+  //TClient = class
+  //private
+    var
+    SocketHandle: TSocket;
+    IP: Integer;
+    Port: Word;
+    SendFIFO: TFIFO;
+    Receiving: TReceiving;
+    function GetIPStr: string;
+    function GetPortStr: string;
+  //public
+    //constructor Create;
+    //7destructor Destroy; override;
+  //end;
+
+  { TMainForm-Klasse }
+
+  //TMainForm = class(TForm)
+  var  
+    VideoGroupBox: TGroupBox;
+    PaintBox: TPaintBox;
+    CaptureDriverLabel: TLabel;
+    CaptureDriverComboBox: TComboBox;
+    ConnectVideoButton: TButton;
+    DisconnectVideoButton: TButton;
+    VideoFormatButton: TButton;
+    VideoSourceButton: TButton;
+    GrabButton: TButton;
+    MiniInterfaceGroupBox: TGroupBox;
+    ComPortLabel: TLabel;
+    ComPortComboBox: TComboBox;
+    ConnectInterfaceButton: TButton;
+    DisconnectInterfaceButton: TButton;
+    Bevel: TBevel;
+    DoorbellLabel: TLabel;
+    DoorbellLED: TImage;
+    OpenerLabel: TLabel;
+    OpenerLED: TImage;
+    ServerGroupBox: TGroupBox;
+    PortLabel: TLabel;
+    PortEdit: TEdit;
+    StartButton: TButton;
+    StopButton: TButton;
+    ClientsListView: TListView;
+    MessageGroupBox: TGroupBox;
+    MessageMemo: TMemo;
+    DoorBellTimer: TTimer;
+    OpenDoorTimer: TTimer;
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure PaintBoxPaint(Sender: TObject);
+    procedure DoorBellTimerTimer(Sender: TObject);
+    procedure OpenDoorTimerTimer(Sender: TObject);
+    procedure ConnectVideoButtonClick(Sender: TObject);
+    procedure DisconnectVideoButtonClick(Sender: TObject);
+    procedure VideoFormatButtonClick(Sender: TObject);
+    procedure VideoSourceButtonClick(Sender: TObject);
+    procedure GrabButtonClick(Sender: TObject);
+    procedure ConnectInterfaceButtonClick(Sender: TObject);
+    procedure DisconnectInterfaceButtonClick(Sender: TObject);
+    procedure StartButtonClick(Sender: TObject);
+    procedure StopButtonClick(Sender: TObject);
+  //private
+    var
+    ImageGrabber: TImageGrabber;
+    MiniInterface: TComPort;   //MiniInterface;
+    Clients: TStrings; //TList;
+    ListeningSocketHandle: TSocket;
+    VideoImage: TBitmap;
+    WinSockRunning: Boolean;
+    ServerRunning: Boolean;
+    LastDoorBellState: Boolean;
+    procedure WMUser(var Message: TMessage); //message WM_USER;
+    procedure AppException(Sender: TObject; E: Exception);
+    procedure ProcessImageRequest(Client: TClient; VideoQuality: Byte);
+    procedure SendData(Client: TClient);
+    function GetClientBySocketHandle(SocketHandle: TSocket): TClient;
+    procedure GrabVideoImage;
+    procedure OpenDoor(Client: TClient);
+    procedure EnableControls;
+    procedure AdjustControls;
+    procedure UpdateClientsListView;
+    procedure UpdateLEDs;
+    procedure OutputMessage(const Msg: string);
+    procedure RaiseUnsupportedVideoFormatException;
+    procedure RaiseLastWinSockErrorException;
+    procedure RaiseWinSockErrorException(Error: Integer);
+    procedure RaiseException(const Msg: string);
+    function GetWinSockErrorText(Error: Integer): string;
+    procedure FreeVideoImage;
+  //end;
+
+//var
+  //MainForm: TMainForm;
+
+implementation
+
+//{$R *.DFM}
+
+{ TClient }
+
+(*constructor TClient.Create;
+begin
+  { geerbten Konstruktor aufrufen }
+  inherited;
+
+  { Sende-FIFO erzeugen }
+  SendFIFO := TFIFO.Create;
+end;
+
+destructor TClient.Destroy;
+begin
+  { Sende-FIFO freigeben }
+  SendFIFO.Free;
+
+  { geerbten Destruktor aufrufen }
+  inherited Destroy;
+end; *)
+
+function GetIPStr: string;
+begin
+  { IP-Adresse als Zeichenkette zurückliefern }
+  //Result := inet_ntoa(in_addr(IP));
+end;
+
+function GetPortStr: string;
+begin
+  { Port-Nummer als Zeichenkette zurückliefern }
+  Result := IntToStr(Port);
+end;
+
+{ TMainForm }
+
+procedure FormCreate(Sender: TObject);
+var
+  //Data: TWSADATA;
+  aError, Counter: Integer;
+begin
+  { Exception-Behandlung auf eigene Methode (Ausgabe im }
+  { MessageMemo-Objekt) umleiten }
+  Application.OnException := @AppException;
+
+  { ImageGrabber-Objekt erzeugen }
+  ImageGrabber := TImageGrabber.Create;
+
+  { verfügbare Video-Aufnahmetreiber in das das Kombinationsfeld }
+  { CaptureDriverComboBox eintragen }
+  for Counter := 0 to ImageGrabber.CaptureDrivers.Count - 1 do
+  begin
+    CaptureDriverComboBox.Items.Add(
+      ImageGrabber.CaptureDrivers[Counter].Name);
+    if ImageGrabber.CaptureDrivers[Counter].Selected then
+      CaptureDriverComboBox.ItemIndex := Counter;
+  end;
+
+  { MiniInterface-Objekt erzeugen }
+  MiniInterface := TComPort.Create(self);
+
+  { freie Schnittstellen in das Kombinationsfeld ComPortComboBox }
+  { eintragen }
+  for Counter := 0 to GetComPorts.Count - 1 do
+  begin
+    ComPortComboBox.Items.Add(GetComports[Counter]);
+    //if MiniInterface.ComPorts[Counter].Selected then
+      //ComPortComboBox.ItemIndex := Counter;
+  end;
+
+  { Liste für Clients anlegen }
+  Clients := TStrings.create; //TList.Create;
+
+  { Flimmern des Videobildes bei Änderung verhindern }
+  PaintBox.ControlStyle := PaintBox.ControlStyle + [csOpaque];
+
+  { Flimmern der LEDs verhindern }
+  MiniInterfaceGroupBox.DoubleBuffered := True;
+
+  { WinSock initialisieren }
+  //aError := WSAStartup(MakeWord(1, 1), Data);
+  WinSockRunning := aError = 0;
+  if WinSockRunning then
+    OutputMessage('WinSock wurde initialisiert.')
+  else
+    OutputMessage('WinSock konnte nicht initialisiert werden und ' +
+      'lieferte den Fehler ' + GetWinSockErrorText(aError) +
+      ' zurück.');
+
+  { Steuerelemente aktivieren/deaktivieren und Größe einstellen }
+  EnableControls;
+  AdjustControls;
+
+  { LEDs auffrischen }
+  UpdateLEDs;
+end;
+
+procedure FormDestroy(Sender: TObject);
+var
+  Client: TClient;
+  Counter: Integer;
+begin
+  { prüfen, ob der Server noch läuft }
+  if ServerRunning then
+  begin
+    { Listening-Socket freigeben }
+    //closesocket(ListeningSocketHandle);
+
+    { Sockets der laufenden Verbindungen freigeben }
+    for Counter := 0 to Clients.Count - 1 do
+    begin
+      { Client aus der Client-Liste lesen }
+      Client := tstrings(Clients.objects[Counter]);
+
+      { Socket der Verbindung freigeben  }
+      //closesocket(Client.SocketHandle);
+    end;
+  end;
+
+  { WinSock deinitialisieren, wenn nötig }
+  if WinSockRunning then
+    //WSACleanup;
+
+  { ImageGrabber-Objekt freigeben }
+  ImageGrabber.Free;
+
+  { MiniInterface-Objekt freigeben }
+  MiniInterface.Free;
+
+  { noch vorhandene Client-Objekte löschen und Liste freigeben }
+  for Counter := 0 to Clients.Count - 1 do
+    TClient(Clients.objects[Counter]).Free;
+  Clients.Free;
+end;
+const
+  NotAvailableText = 'nicht verfügbar';
+
+procedure PaintBoxPaint(Sender: TObject);
+var
+  Rect: TRect;
+  TextSize: TSize;
+begin
+  { Rahmen zeichnen }
+  Rect := PaintBox.ClientRect;
+  DrawEdge(PaintBox.Canvas.Handle, Rect, BDR_SUNKENOUTER, BF_ADJUST or
+    BF_LEFT);
+
+  { prüfen, ob ein Videobild ausgegeben werden kann }
+  if Assigned(VideoImage) then
+    { Videobild ausgeben }
+    PaintBox.Canvas.Draw(Rect.Left, Rect.Top, VideoImage)
+  else
+  begin
+    { Hintergrund zeichnen }
+    PaintBox.Canvas.Brush.Color := clBtnFace;
+    PaintBox.Canvas.FillRect(Rect);
+
+    { "nicht verfügbar"-Text ausgeben }
+    TextSize := PaintBox.Canvas.TextExtent(NotAvailableText);
+    PaintBox.Canvas.TextOut((PaintBox.Width - TextSize.cx) div 2,
+      (PaintBox.Height - TextSize.cy) div 2, NotAvailableText);
+  end;
+end;
+
+
+procedure RaiseUnsupportedVideoFormatException2;
+begin
+  { Exception auslösen }
+  RaiseException('Für das Videoformat ' + ImageGrabber.VideoFormat +
+    ' ist kein Decoder installiert. Bitte wählen Sie ein anderes ' +
+    'Videoformat oder Sie installieren einen entsprechenden Decoder.');
+end;
+
+procedure DoorBellTimerTimer(Sender: TObject);
+var
+  Client: TClient;
+  Counter: Integer;
+  Command: Byte;
+begin
+  { Eingabeleitungen lesen }
+  //MiniInterface.UpdateInputLines;
+
+  { prüfen, ob sich der Zustand der Eingabeleitung für die Klingel }
+  { vom vorherigen Zustand unterscheidet }
+  (*if MiniInterface.InputLines[0] <> LastDoorBellState then
+  begin
+
+    { prüfen, ob Klingel betätigt wurde }
+    if MiniInterface.InputLines[0] then
+    begin
+      { WAV-Datei abspielen }
+      SndPlaySound('Doorbell.wav', SND_ASYNC);
+
+      { prüfen, ob der Server läuft und Clients verbunden sind }
+      if ServerRunning and (Clients.Count > 0) then
+      begin
+        { Befehlscode in Command laden }
+        Command := drDoorBellCommandCode;
+
+        { Schleife für alle Clients durchlaufen }
+        for Counter := 0 to Clients.Count - 1 do
+        begin
+          { Client aus der Client-Liste lesen }
+          Client := Clients[Counter];
+
+          { Befehlscode in den Sende-FIFO schreiben }
+          Client.SendFIFO.WriteData(Command, SizeOf(Command));
+
+          { Befehlscode senden }
+          SendData(Client);
+        end;
+
+        { Meldung ausgeben }
+        OutputMessage('Die Clients werden benachrichtigt, dass die ' +
+          'Türklingel betätigt wurde.');
+      end
+      else
+        { Meldung ausgeben }
+        OutputMessage('Die Türklingel wurde betätigt.');
+    end;
+
+    { aktuellen Zustand der Eingabeleitung speichern }
+    LastDoorBellState := MiniInterface.InputLines[0];
+
+    { LEDs auffrischen }
+    UpdateLEDs;
+  end; *)
+end;
+
+procedure OpenDoorTimerTimer(Sender: TObject);
+begin
+  { Türöffner-Timer abschalten }
+  OpenDoorTimer.Enabled := False;
+   //BaudRateToStr
+  { Ausgabeleitung für den Türöffner deaktivieren }
+  MiniInterface.Buffer.inputsize; //[0] := False;
+  //MiniInterface.UpdateOutputLines;
+
+  { LEDs auffrischen }
+  UpdateLEDs;
+end;
+
+procedure ConnectVideoButtonClick(Sender: TObject);
+begin
+  { zum ausgewählten Aufnahmetreiber verbinden }
+  ImageGrabber.CaptureDrivers[CaptureDriverComboBox.ItemIndex].Select;
+  ImageGrabber.Connect;
+
+  { Steuerelemente aktivieren/deaktivieren und Größe einstellen }
+  EnableControls;
+  AdjustControls;
+
+  { Meldung ausgeben }
+  OutputMessage('Es wurde eine Verbindung zum ' +
+    'Video-Aufnahmetreiber aufgebaut.');
+
+  { Exception auslösen, falls das das aktuelle Videoformat nicht }
+  { unterstützt wird }
+  if not ImageGrabber.VideoFormatSupported then
+    RaiseUnsupportedVideoFormatException;
+
+  { Videobild holen und darstellen }
+  GrabVideoImage
+end;
+
+procedure DisconnectVideoButtonClick(Sender: TObject);
+begin
+  { Verbindung zum Aufnahmetreiber beenden }
+  ImageGrabber.Disconnect;
+
+  { aktuelles Videobild freigeben }
+  FreeVideoImage;
+
+  { Steuerelemente aktivieren/deaktivieren und Größe einstellen }
+  EnableControls;
+  AdjustControls;
+
+  { Meldung ausgeben }
+  OutputMessage('Die Verbindung zum Video-Aufnahmetreiber wurde ' +
+    'beendet.');
+end;
+
+var enabled: boolean;
+
+procedure VideoFormatButtonClick(Sender: TObject);
+begin
+  try
+    { Hauptfenster deaktivieren }
+    Enabled := False;
+
+    { Videoformatdialog öffnen }
+    ImageGrabber.OpenDialog(cddFormat);
+  finally
+    { Steuerelemente aktivieren/deaktivieren und Größe einstellen }
+    EnableControls;
+    AdjustControls;
+
+    { Hauptfenster wieder aktivieren und in den Vordergrund bringen }
+    Enabled := True;
+    self.BringToFront;
+  end;
+
+  if not ImageGrabber.VideoFormatSupported then
+  begin
+    { aktuelles Videobild freigeben }
+    FreeVideoImage;
+
+    { Exception auslösen }
+    RaiseUnsupportedVideoFormatException;
+  end;
+
+  { Videobild holen und darstellen }
+  GrabVideoImage
+end;
+
+procedure VideoSourceButtonClick(Sender: TObject);
+begin
+  try
+    { Hauptfenster deaktivieren }
+    Enabled:=False;
+
+    { Videoquellendialog öffnen }
+    ImageGrabber.OpenDialog(cddSource);
+  finally
+    { Hauptfenster wieder aktivieren und in den Vordergrund bringen }
+    Enabled := True;
+    self.BringToFront;
+  end;
+end;
+
+procedure GrabButtonClick(Sender: TObject);
+begin
+  { neues Videobild holen und darstellen }
+  GrabVideoImage;
+
+ { Meldung ausgeben }
+ OutputMessage('Es wurde ein Bild aufgenommen.');
+end;
+
+procedure ConnectInterfaceButtonClick(Sender: TObject);
+begin
+ (* { ausgewählte Schnittstelle verwenden und Verbindung zum }
+  { Umweltspion aufbauen }
+  MiniInterface.ComPorts[ComPortComboBox.ItemIndex].Select;
+  MiniInterface.Connect;
+
+  { Eingabeleitungen lesen }
+  MiniInterface.UpdateInputLines;
+
+  { Timer zum Überprüfen der Klingel einschalten und Hilfsvariable }
+  { initialisieren }
+  DoorBellTimer.Enabled := True;
+  LastDoorBellState := MiniInterface.InputLines[0];
+
+  { LEDs auffrischen und Steuerelemente aktivieren/deaktivieren }
+  UpdateLEDs;
+  EnableControls;  *)
+
+  { Meldung ausgeben }
+  OutputMessage('Es wurde eine Verbindung zum Interface aufgebaut.');
+end;
+
+procedure DisconnectInterfaceButtonClick(Sender: TObject);
+begin
+  { Timer abschalten }
+  DoorBellTimer.Enabled := False;
+  OpenDoorTimer.Enabled := False;
+
+  { Verbindung zum Interface beenden }
+  //MiniInterface.Disconnect;
+
+  { LEDs auffrischen und Steuerelemente aktivieren/deaktivieren }
+  UpdateLEDs;
+  EnableControls;
+
+  { Meldung ausgeben }
+  OutputMessage('Die Verbindung zum Interface wurde beendet.');
+end;
+
+procedure StartButtonClick(Sender: TObject);
+var
+  //Address: TSockAddr;
+  Port, aError: Integer;
+begin
+ (* { PortEdit-Objekt für die Port-Nummer auswerten }
+  Port := StrToIntDef(PortEdit.Text, 0);
+  if (Port < 1024) or (Port > 49151) then
+    RaiseException('Es wurde keine gültige Port-Nummer ' +
+      '(1024-49151) angegeben.');
+
+  { Socket erzeugen }
+  ListeningSocketHandle := socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  if ListeningSocketHandle = INVALID_SOCKET then
+    RaiseLastWinSockErrorException;
+
+  try
+    { Benachrichtigung für den Socket einschalten }
+    Error := WSAAsyncSelect(ListeningSocketHandle, Handle, WM_USER,
+      FD_ACCEPT);
+    if Error = SOCKET_ERROR then
+      RaiseLastWinSockErrorException;
+
+    { Port des Sockets festlegen }
+    FillChar(Address, SizeOf(Address), 0);
+    Address.sin_family := AF_INET;
+    Address.sin_port := Port;
+    Error := bind(ListeningSocketHandle, Address, SizeOf(Address));
+    if Error = SOCKET_ERROR then
+      RaiseLastWinSockErrorException;
+
+    { Empfang von Verbindungsanforderungen ermöglichen }
+    Error := listen(ListeningSocketHandle, SOMAXCONN);
+    if Error = SOCKET_ERROR then
+      RaiseLastWinSockErrorException;
+
+    { signalisieren, dass der Server läuft }
+    ServerRunning := True;
+
+    { Steuerelemente aktivieren/deaktivieren }
+    EnableControls;
+
+    { Meldung ausgeben }
+    OutputMessage('Der Server wurde gestartet.');
+  except
+    { Listening-Socket freigeben }
+    closesocket(ListeningSocketHandle);
+
+    { Exception erneuern }
+    raise;
+  end; *)
+end;
+
+procedure StopButtonClick(Sender: TObject);
+var
+  Client: TClient;
+  aError, Counter: Integer;
+begin
+  { Listening-Socket freigeben }
+ (* Error := closesocket(ListeningSocketHandle);
+  if Error = SOCKET_ERROR then
+    RaiseLastWinSockErrorException;
+
+  { Schließen der laufenden Verbindungen einleiten }
+  for Counter := 0 to Clients.Count - 1 do
+  begin
+    { Client aus der Client-Liste lesen }
+    Client := Clients[Counter];
+
+    { Schließen der Verbindung einleiten }
+    Error := shutdown(Client.SocketHandle, 1);
+    if Error = SOCKET_ERROR then
+      RaiseLastWinSockErrorException;
+  end;
+
+  { signalisieren, dass der Server nicht mehr läuft }
+  ServerRunning := False;
+
+  { Steuerelemente aktivieren/deaktivieren }
+  EnableControls; *)
+
+  { Meldung ausgeben }
+  OutputMessage('Der Server wurde angehalten.');
+end;
+
+procedure WMUser(var Message: TMessage);
+var
+  Client: TClient;
+  EventSocketHandle, AcceptedSocketHandle: TSocket;
+  //7Address: TSockAddr;
+  ReceivedData: ___Pointer;
+  SizeOfAddress, aError, AvailableDataSize, ReceivedDataSize,
+    ReceivedDataIndex: Integer;
+  Event: Word;
+  DataByte: Byte;
+begin
+  { Handle des Sockets aus den Nachrichtenparametern lesen, der das }
+  { Ereignis ausgelöst hat }
+(*  EventSocketHandle := TSocket(Message.WParam);
+
+  { Art des Ereignisses aus den Nachrichtenparametern lesen }
+  Event := WSAGetSelectEvent(Message.LParam);
+
+  { Ereignisse behandeln }
+  case Event of
+    FD_ACCEPT:
+      begin
+        { Verbindung annehmen }
+        SizeOfAddress := SizeOf(Address);
+        AcceptedSocketHandle := accept(EventSocketHandle, @Address,
+          @SizeOfAddress);
+        if AcceptedSocketHandle = INVALID_SOCKET then
+          RaiseLastWinSockErrorException;
+
+        { Benachrichtigung für den Socket einschalten }
+        Error := WSAAsyncSelect(AcceptedSocketHandle, Handle, WM_USER,
+          FD_READ or FD_WRITE or FD_CLOSE);
+        if Error = SOCKET_ERROR then
+        begin
+          Error := WSAGetLastError;
+          closesocket(AcceptedSocketHandle);
+          RaiseWinSockErrorException(Error);
+        end;
+
+        { neues Client-Objekt erzeugen, Informationen eintragen und }
+        { der Liste hinzufügen }
+        Client := TClient.Create;
+        with Client do
+        begin
+          SocketHandle := AcceptedSocketHandle;
+          IP := Cardinal(Address.sin_addr.S_addr);
+          Port := Address.sin_port;
+          Receiving := recCommand;
+        end;
+        Clients.Add(Client);
+
+        { ClientsListView-Objekt auffrischen }
+        UpdateClientsListView;
+
+        { Meldung ausgeben }
+        OutputMessage('Der Client mit der IP ' + Client.GetIPStr +
+          ' und dem Port ' + Client.GetPortStr +
+          ' hat eine Verbindung aufgebaut.');
+      end;
+    FD_READ:
+      begin
+        { Client-Objekt aus der Client-Liste suchen }
+        Client := GetClientBySocketHandle(EventSocketHandle);
+
+        { Größe der verfügbaren Daten ermitteln }
+        Error := ioctlsocket(EventSocketHandle, FIONREAD,
+          AvailableDataSize);
+        if Error = SOCKET_ERROR then
+          RaiseLastWinSockErrorException;
+
+        { Speicher zum Aufnehmen der Daten anfordern }
+        GetMem(ReceivedData, AvailableDataSize);
+
+        try
+          { Daten lesen }
+          ReceivedDataSize := recv(EventSocketHandle, ReceivedData^,
+            AvailableDataSize, 0);
+          if ReceivedDataSize = SOCKET_ERROR then
+          begin
+            Error := WSAGetLastError;
+            if Error = WSAEWOULDBLOCK then
+              ReceivedDataSize := 0
+            else
+              RaiseWinSockErrorException(Error);
+          end;
+
+          { Indexvariable initialisieren }
+          ReceivedDataIndex := 0;
+
+          { Schleife für alle Bytes in den empfangenen Daten }
+          { durchlaufen }
+          while ReceivedDataIndex < ReceivedDataSize do
+          begin
+            { Byte aus den Daten lesen }
+            DataByte := PByteArray(ReceivedData)^[ReceivedDataIndex];
+
+            { Auswertroutine für die im Augenblick zu empfangenden }
+            { Daten ausführen }
+            case Client.Receiving of
+              recCommand:
+                  { Befehl ausführen, wenn der Befehlscode existiert }
+                  { sonst Fehlermeldung ausgeben }
+                  case DataByte of
+                    drOpenDoorCommandCode:
+                      { Tür öffnen }
+                      OpenDoor(Client);
+                    drRequestImageCommandCode:
+                      { signalisieren, dass als nächstes die Videoqualität }
+                      { empfangen werden soll }
+                      Client.Receiving := recVideoQuality;
+                  else
+                    { Meldung ausgeben }
+                    OutputMessage('Vom Client mit der IP ' +
+                      Client.GetIPStr + ' und dem Port ' +
+                      Client.GetPortStr +
+                      ' wurde ein ungültiger Befehl empfangen.');
+                  end;
+              recVideoQuality:
+                begin
+                  { Anfrage nach dem Videobild bearbeiten }
+                  ProcessImageRequest(Client, DataByte);
+
+                  { signalisieren, dass als nächstes ein Befehl empfangen }
+                  { werden soll }
+                  Client.Receiving := recCommand;
+                end;
+            end;
+
+            { Indexvariable für nächsten Schleifendurchlauf erhöhen }
+            Inc(ReceivedDataIndex);
+          end;
+        finally
+          { Speicher wieder freigeben }
+          FreeMem(ReceivedData);
+        end;
+      end;
+    FD_WRITE:
+      begin
+        { Client-Objekt aus der Client-Liste suchen }
+        Client := GetClientBySocketHandle(EventSocketHandle);
+
+        { Daten senden }
+        SendData(Client);
+      end;
+    FD_CLOSE:
+      begin
+        { Socket freigeben }
+        Error := closesocket(EventSocketHandle);
+        if Error = SOCKET_ERROR then
+          RaiseLastWinSockErrorException;
+
+        { Client-Objekt aus der Client-Liste suchen }
+        Client := GetClientBySocketHandle(EventSocketHandle);
+
+        { Meldung ausgeben }
+        OutputMessage('Die Verbindung zum Client mit der IP ' +
+          Client.GetIPStr + ' und dem Port ' + Client.GetPortStr +
+          ' wurde beendet.');
+
+        { Client-Objekt aus der Client-Liste löschen und freigeben }
+        Clients.Remove(Client);
+        Client.Free;
+
+        { ClientsListView-Objekt auffrischen }
+        UpdateClientsListView;
+      end;
+  end; *)
+end;
+
+procedure AppException(Sender: TObject; E: Exception);
+begin
+  { Text der Exception als Meldung ausgeben }
+  OutputMessage(E.Message);
+end;
+
+procedure ProcessImageRequest(Client: TClient; VideoQuality:
+  Byte);
+var
+  Stream: TMemoryStream;
+  JPEGImage: TJPEGImage;
+  VideoDataToSend: Cardinal;
+  Command: Byte;
+begin
+  { neues Videobild holen und darstellen }
+  GrabVideoImage;
+
+  { Speicher-Stream erzeugen }
+  Stream := TMemoryStream.Create;
+
+  { Videoqualität wenn nötig korrigieren }
+  if VideoQuality < 1 then
+   VideoQuality := 5;
+  if VideoQuality > 100 then
+   VideoQuality := 100;
+
+  { das Videobild mit Hilfe eines JPEGImage-Objekts komprimieren }
+  { und Bilddaten in den Speicher-Stream schreiben }
+  JPEGImage := TJPEGImage.Create;
+  JPEGImage.Assign(VideoImage);
+  JPEGImage.CompressionQuality := VideoQuality;
+  JPEGImage.SaveToStream(Stream);
+  JPEGImage.Free;
+
+  { Befehl zum Empfangen eines Bildes, Größe der Bilddaten und }
+  { Bilddaten aus dem Speicher-Stream in den Sende-FIFO schreiben }
+  Command := drReceiveImageCommandCode;
+  VideoDataToSend := Stream.Size;
+  //Client.SendFIFO.WriteData(Command, SizeOf(Command));
+  //Client.SendFIFO.WriteData(VideoDataToSend, SizeOf(VideoDataToSend));
+  //Client.SendFIFO.WriteData(Stream.Memory^, Stream.Size);
+
+  { Speicher-Stream freigeben }
+  Stream.Free;
+
+  { Daten senden }
+  SendData(Client);
+
+  { Meldung ausgeben }
+  OutputMessage('Der Client mit der IP ' + GetIPStr +
+    ' und dem Port ' + GetPortStr +
+    ' hat ein Videobild mit der Qualität ' + IntToStr(VideoQuality) +
+    ' angefordert. Es wurde ein Bild aufgenommen und komprimiert ' +
+    'und die Bilddaten (' + IntToStr(VideoDataToSend) +
+    ' Bytes) werden gesendet.');
+end;
+
+procedure SendData(Client: TClient);
+var
+  aError: Integer;
+begin
+  { prüfen, ob zu sendende Daten vorliegen }
+(*  if Client.SendFIFO.Size > 0 then
+  begin
+    { Daten aus dem Sende-FIFO des Client-Objekts senden }
+    Error := send(Client.SocketHandle, Client.SendFIFO.Data^,
+      Client.SendFIFO.Size, 0);
+
+    { prüfen, ob ein Fehler aufgetreten ist }
+    if Error = SOCKET_ERROR then
+    begin
+      { Fehlercode ermitteln }
+      Error := WSAGetLastError;
+
+      { falls ein echter Fehler aufgetreten ist, Exception auslösen }
+      if Error <> WSAEWOULDBLOCK then
+        RaiseWinSockErrorException(Error);
+    end
+    else
+      { gesendete Daten aus dem Sende-FIFO des Client-Objekts }
+      { entfernen }
+      Client.SendFIFO.RemoveData(Error);
+  end; *)
+end;
+
+function GetClientBySocketHandle(SocketHandle: TSocket):
+  TClient;
+var
+  Client: TClient;
+  Counter: Integer;
+begin
+  { Ergebnis und Zählvariable initialisieren }
+  Result := nil;
+  Counter := 0;
+
+  { Schleife solange wiederholen, bis alle Client-Objekte in der }
+  { Client-Liste untersucht wurden oder ein Client gefunden wurde }
+  while (Counter < Clients.Count) and not Assigned(Result) do
+  begin
+    { Client aus der Client-liste lesen }
+    Client := TStrings(Clients.objects[Counter]);
+
+    { bei Gleichheit der Socket-Handles Client als Ergebnis }
+    { übernehmen }
+    //if Client.SocketHandle = SocketHandle then
+      //Result := Client;
+
+    { Zählvariable erhöhen }
+    Inc(Counter);
+  end;
+
+  { Exception auslösen, falls kein Client-Objekt gefunden wurde }
+  if not Assigned(Result) then
+    RaiseException('Es ist ein interner Fehler aufgetreten.');
+end;
+
+procedure GrabVideoImage;
+begin
+  { altes Videobild freigeben }
+  FreeVideoImage;
+
+  { neues Videobild holen }
+  VideoImage := ImageGrabber.Grab;
+
+  { Neuzeichnen des Bildbereichs veranlassen }
+  PaintBox.Invalidate;
+end;
+
+procedure OpenDoor(Client: TClient);
+begin
+  { Ausgabeleitung für den Türöffner aktivieren }
+ (* MiniInterface.OutputLines[0] := True;
+  MiniInterface.UpdateOutputLines;
+
+  { Türöffner-Timer einschalten bzw. zurücksetzen, wenn eingeschaltet }
+  OpenDoorTimer.Enabled := False;
+  OpenDoorTimer.Enabled := True;
+
+  { LEDs auffrischen }
+  UpdateLEDs;
+
+  { Meldung ausgeben }
+  OutputMessage('Der Client mit der IP ' + Client.GetIPStr +
+    ' und dem Port ' + Client.GetPortStr +
+    ' hat das Betätigen des Türöffners veranlasst.');*)
+end;
+
+procedure EnableControls;
+begin
+  { Steuerelemente je nach Zustand der Applikation aktivieren oder }
+  { deaktivieren }
+  CaptureDriverComboBox.Enabled := not ImageGrabber.Connected;
+  ConnectVideoButton.Enabled := (CaptureDriverComboBox.ItemIndex >= 0)
+    and not ImageGrabber.Connected;
+  DisconnectVideoButton.Enabled:=ImageGrabber.Connected and not
+    ServerRunning;
+  VideoFormatButton.Enabled := ImageGrabber.Connected and
+    (cddFormat in ImageGrabber.SupportedDialogs);
+  VideoSourceButton.Enabled := ImageGrabber.Connected and
+    (cddSource in ImageGrabber.SupportedDialogs);
+  GrabButton.Enabled := ImageGrabber.Connected and
+    ImageGrabber.VideoFormatSupported;
+  ComPortComboBox.Enabled := not MiniInterface.Connected;
+  ConnectInterfaceButton.Enabled := (ComPortComboBox.ItemIndex >= 0)
+    and not MiniInterface.Connected;
+  DisconnectInterfaceButton.Enabled := MiniInterface.Connected and not
+    ServerRunning;
+  PortEdit.Enabled := not ServerRunning;
+  StartButton.Enabled := WinSockRunning and ImageGrabber.Connected and
+    MiniInterface.Connected and not ServerRunning;
+  StopButton.Enabled := ServerRunning;
+end;
+
+procedure AdjustControls;
+var
+  WidthNeeded: Integer;
+begin
+  { prüfen, ob das ImageGrabber-Objekt mit einem Aufnahmetreiber }
+  { verbunden ist }
+  if ImageGrabber.Connected then
+  begin
+    { Größe des PaintBox-Objekts an die Größe des Videobilds anpassen }
+    PaintBox.Width := ImageGrabber.Width + 2;
+    PaintBox.Height := ImageGrabber.Height + 2;
+  end
+  else
+  begin
+    { Standardgröße für das PaintBox-Objekt einstellen }
+    PaintBox.Width := 105;
+    PaintBox.Height := 105;
+  end;
+
+  { Größe des VideoGroupBox-Objekts an die Größe des }
+  { PaintBox-Objekts anpassen }
+  WidthNeeded := PaintBox.Width + 20;
+  if WidthNeeded > 410 then
+    VideoGroupBox.Width := WidthNeeded
+  else
+    VideoGroupBox.Width := 410;
+  VideoGroupBox.Height := PaintBox.Height + 96;
+
+  { Größe und Position des InterfaceGroupBox-Objekts einstellen }
+  //MiniInterfaceGroupBox.Top := VideoGroupBox.BoundsRect.Bottom + 5;
+  MiniInterfaceGroupBox.Width := VideoGroupBox.Width;
+
+  { Größe und Position des ServerGroupBox-Objekts einstellen }
+//  ServerGroupBox.Top := MiniInterfaceGroupBox.BoundsRect.Bottom + 5;
+  ServerGroupBox.Width := VideoGroupBox.Width;
+
+  { Größe und Position des MessageGroupBox-Objekts einstellen }
+  //MessageGroupBox.Top := ServerGroupBox.BoundsRect.Bottom + 5;
+  MessageGroupBox.Width := VideoGroupBox.Width;
+
+  { Größe des Client-Bereichs des Hauptfensters anpassen }
+  self.ClientWidth := VideoGroupBox.Width + 10;
+  //ClientHeight := MessageGroupBox.BoundsRect.Bottom + 5;
+end;
+
+procedure UpdateClientsListView;
+var
+  Counter: Integer;
+begin
+  { teilweises Auffrischen des ClientsListView-Objekts verhindern }
+  ClientsListView.Items.BeginUpdate;
+
+  { alle alten Einträge löschen }
+  ClientsListView.Items.Clear;
+
+  { neue Einträge aus der Client-Liste erzeugen }
+  for Counter := 0 to Clients.Count - 1 do
+    with TClient(TStrings(Clients.objects[Counter])), ClientsListView.Items.Add do
+    begin
+      Caption := GetIPStr;
+      SubItems.Add(GetPortStr);
+    end;
+
+  { ClientsListView-Objekt auffrischen }
+  ClientsListView.Items.EndUpdate;
+end;
+
+procedure UpdateLEDs;
+begin
+  { LED für die Türklingel auffrischen }
+ (* if MiniInterface.Connected {and MiniInterface.InputLinesValid} then
+    DoorBellLED.Picture.Bitmap.Handle := GetLEDBitmapHandle(ledcGreen,
+      MiniInterface.InputLines[0])
+  else
+    DoorBellLED.Picture.Bitmap.Handle := GetLEDBitmapHandle(ledcGray,
+      False);
+
+  { LED für den Türöffner auffrischen }
+  if MiniInterface.Connected then
+    OpenerLED.Picture.Bitmap.Handle := GetLEDBitmapHandle(ledcRed,
+      MiniInterface.OutputLines[0])
+  else
+    OpenerLED.Picture.Bitmap.Handle := GetLEDBitmapHandle(ledcGray,
+      False);   *)
+end;
+
+procedure OutputMessage(const Msg: string);
+begin
+  { prüfen, ob noch keine Zeile vorliegt }
+  if MessageMemo.Lines.Count = 0 then
+    { Meldung als Text übernehmen }
+    MessageMemo.SelText := Msg
+  else
+  begin
+    { teilweises Auffrischen des TMemo-Objekts verhindern }
+    MessageMemo.Lines.BeginUpdate;
+
+    { bei mehr als 100 Zeilen, obere Zeilen löschen }
+    while MessageMemo.Lines.Count > 100 do
+    begin
+      MessageMemo.SelStart := 0;
+      MessageMemo.SelLength := Length(MessageMemo.Lines[0]) + 2;
+      MessageMemo.SelText := '';
+    end;
+
+    { neue Zeile einschließlich der Steuerzeichen für Wagenrücklauf }
+    { und Zeilenvorschub hinzufügen }
+    MessageMemo.SelStart := Length(MessageMemo.Text);
+    MessageMemo.SelText := #$d + #$a + Msg;
+
+    { TMemo-Objekt auffrischen und zur hinzugefügten Zeile scrollen }
+    MessageMemo.Lines.EndUpdate;
+    MessageMemo.Perform(EM_SCROLLCARET, 0, 0);
+  end;
+end;
+
+procedure RaiseUnsupportedVideoFormatException;
+begin
+  { Exception auslösen }
+  RaiseException('Für das Videoformat ' + ImageGrabber.VideoFormat +
+    ' ist kein Decoder installiert. Bitte wählen Sie ein anderes ' +
+    'Videoformat oder Sie installieren einen entsprechenden Decoder.');
+end;
+
+procedure RaiseLastWinSockErrorException;
+begin
+  { letzten WinSock-Fehler ermitteln und Exception auslösen }
+  //RaiseWinSockErrorException(WSAGetLastError);
+end;
+
+procedure RaiseWinSockErrorException(Error: Integer);
+begin
+  { Exception mit Meldung für WinSock-Fehler auslösen }
+  RaiseException('Es ist der folgende WinSock-Fehler aufgetreten: ' +
+    GetWinSockErrorText(Error));
+end;
+
+procedure RaiseException(const Msg: string);
+begin
+  { Exception mit Meldung auslösen }
+  raise Exception.Create(Msg);
+end;
+
+function GetWinSockErrorText(Error: Integer): string;
+begin
+  { korrekten Fehlertext heraussuchen, wenn vorhanden }
+  (*case Error of
+    WSAEINTR           : Result := 'WSAEINTR';
+    WSAEBADF           : Result := 'WSAEBADF';
+    WSAEACCES          : Result := 'WSAEACCES';
+    WSAEFAULT          : Result := 'WSAEFAULT';
+    WSAEINVAL          : Result := 'WSAEINVAL';
+    WSAEMFILE          : Result := 'WSAEMFILE';
+    WSAEWOULDBLOCK     : Result := 'WSAEWOULDBLOCK';
+    WSAEINPROGRESS     : Result := 'WSAEINPROGRESS';
+    WSAEALREADY        : Result := 'WSAEALREADY';
+    WSAENOTSOCK        : Result := 'WSAENOTSOCK';
+    WSAEDESTADDRREQ    : Result := 'WSAEDESTADDRREQ';
+    WSAEMSGSIZE        : Result := 'WSAEMSGSIZE';
+    WSAEPROTOTYPE      : Result := 'WSAEPROTOTYPE';
+    WSAENOPROTOOPT     : Result := 'WSAENOPROTOOPT';
+    WSAEPROTONOSUPPORT : Result := 'WSAEPROTONOSUPPORT';
+    WSAESOCKTNOSUPPORT : Result := 'WSAESOCKTNOSUPPORT';
+    WSAEOPNOTSUPP      : Result := 'WSAEOPNOTSUPP';
+    WSAEPFNOSUPPORT    : Result := 'WSAEPFNOSUPPORT';
+    WSAEAFNOSUPPORT    : Result := 'WSAEAFNOSUPPORT';
+    WSAEADDRINUSE      : Result := 'WSAEADDRINUSE';
+    WSAEADDRNOTAVAIL   : Result := 'WSAEADDRNOTAVAIL';
+    WSAENETDOWN        : Result := 'WSAENETDOWN';
+    WSAENETUNREACH     : Result := 'WSAENETUNREACH';
+    WSAENETRESET       : Result := 'WSAENETRESET';
+    WSAECONNABORTED    : Result := 'WSAECONNABORTED';
+    WSAECONNRESET      : Result := 'WSAECONNRESET';
+    WSAENOBUFS         : Result := 'WSAENOBUFS';
+    WSAEISCONN         : Result := 'WSAEISCONN';
+    WSAENOTCONN        : Result := 'WSAENOTCONN';
+    WSAESHUTDOWN       : Result := 'WSAESHUTDOWN';
+    WSAETOOMANYREFS    : Result := 'WSAETOOMANYREFS';
+    WSAETIMEDOUT       : Result := 'WSAETIMEDOUT';
+    WSAECONNREFUSED    : Result := 'WSAECONNREFUSED';
+    WSAELOOP           : Result := 'WSAELOOP';
+    WSAENAMETOOLONG    : Result := 'WSAENAMETOOLONG';
+    WSAEHOSTDOWN       : Result := 'WSAEHOSTDOWN';
+    WSAEHOSTUNREACH    : Result := 'WSAEHOSTUNREACH';
+    WSAENOTEMPTY       : Result := 'WSAENOTEMPTY';
+    WSAEPROCLIM        : Result := 'WSAEPROCLIM';
+    WSAEUSERS          : Result := 'WSAEUSERS';
+    WSAEDQUOT          : Result := 'WSAEDQUOT';
+    WSAESTALE          : Result := 'WSAESTALE';
+    WSAEREMOTE         : Result := 'WSAEREMOTE';
+    WSASYSNOTREADY     : Result := 'WSASYSNOTREADY';
+    WSAVERNOTSUPPORTED : Result := 'WSAVERNOTSUPPORTED';
+    WSANOTINITIALISED  : Result := 'WSANOTINITIALISED';
+    WSAHOST_NOT_FOUND  : Result := 'WSAHOST_NOT_FOUND';
+    WSATRY_AGAIN       : Result := 'WSATRY_AGAIN';
+    WSANO_RECOVERY     : Result := 'WSANO_RECOVERY';
+    WSANO_DATA         : Result := 'WSANO_DATA';
+  else
+    Result := 'unbekannter Fehler';
+  end; *)
+end;
+
+procedure FreeVideoImage;
+begin
+  { prüfen, ob ein Videobild vorliegt }
+  if Assigned(VideoImage) then
+  begin
+    { Videobild freigeben }
+    VideoImage.Free;
+    VideoImage := nil;
+
+    { Neuzeichnen des Bildbereichs veranlassen }
+    PaintBox.Invalidate;
+  end;
+end;
+
+end.
+

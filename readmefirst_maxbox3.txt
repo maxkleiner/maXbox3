@@ -38,8 +38,8 @@ VfW (Video), FindFirst3, ResFiler, AssemblyCache, maXring
 976 uPSI_unitResourceDetails,
 977 uPSI_unitResFile,
 
-SHA1: Win 3.9.9.98 693C7F691584E518E87CF5BFFC315A5442777781
-CRC32: 6857791
+SHA1: maXbox3.exe 693C7F691584E518E87CF5BFFC315A5442777781
+CRC32: maXbox3.exe 6857791
 
 
 ****************************************************************

@@ -1,0 +1,155 @@
+program Quote_HTTP_PNG_Streamer;
+// DEMO for mX3ß  maXbox3 !! _1
+// gets a PNG graphic from an URL, stored in Stream, converts to jpg and saved
+// shows new section 101 - 120 http/internet examples, loc's=79 
+
+var 
+  IdQOTD1: TIdQOTD;
+
+function FileSizeByName2(const AFilename: string): longint;
+begin
+  with TFileStream.Create(AFilename, fmOpenRead or fmShareDenyWrite) do
+  try
+    Result:= Size;
+  finally
+    Free;
+  end;
+end;
+
+procedure TForm1_IdQOTDServer1CommandQOTD({AContext: TIdContext;}
+  var AQuote: string);
+var
+  RegRdr: TRegistry;
+  AExcptMsg: PChar;
+  ALog: PChar;
+  E: Exception;
+begin
+  try
+    // Another way to be thread safe is to read the quote from
+    // the registry.
+    RegRdr := TRegistry.Create;
+    try
+      // Read the quote
+      RegRdr.OpenKey('CPWilkerson\QOTD', True);
+      // Assign it so that it will be sent out
+      AQuote := RegRdr.ReadString('TheQuote');
+
+      // DBug message that will be "posted" to the main form
+      //ALog := StrNew(PChar('We have a quote request from '
+        //                    + {AContext.}Connection.Socket.Binding.IP));
+      //PostMessage(self, WM_AMSG, 0, integer(ALog));
+    finally
+      RegRdr.Free;
+    end;
+  except
+    //on E: Exception do
+    begin
+      AExcptMsg := StrNew(PChar('ERROR: TForm1.IdQOTDServer1CommandQOTD '
+                                + 'E.name' + ' ' + E.Message ));
+      //PostMessage(Handle, WM_AMSG, 0, integer(AExcptMsg));
+    end;
+  end;
+end;
+
+
+procedure TForm2_Timer1Timer(Sender: TObject);
+var
+  index: integer;
+      CheckBox1: TCheckBox;
+    Label1: TLabel;
+    Timer1: TTimer;
+    RadioGroup1: TRadioGroup;
+    IdTCPClient1: TIdTCPClient;
+
+begin
+  Timer1.Enabled := False;
+  try
+    if IdTCPClient1.Connected then
+    begin
+      IdTCPClient1.Writeln('HEARTBEAT');
+      try
+        for index := 1 to 2 do
+          Memo2.Lines.Add(IdTCPClient1.{IOHandler.}ReadLnWait(10));
+      except
+      end;
+    end;
+  finally
+    Timer1.Enabled := True;
+  end;
+end;
+
+procedure GetQuoteDirect;
+var Qtd: TIdQOTD;
+begin
+  Qtd:= TIdQOTD.Create(self);
+    Qtd.Host:= 'qotd.nngn.net';
+    Qtd.ConnectAndGetAll;
+    writeln(Qtd.Quote);
+    TIdTCPClient(QTd).Disconnect;
+    Qtd.Free
+end;
+
+ 
+procedure GetQuote;
+var
+  AQuote: string;
+begin
+  IdQOTD1:= TIdQOTD.Create(self);
+  //IdQOTD1.Host := 'http://www.brainyquote.com/'
+  //IdQOTD1.Host:= 'http://zytugadgets.googlepages.com'
+  //IdQOTD1.Host:= 'alpha.mike-r.com'
+  //IdQOTD1.Host:= 'qotd.atheistwisdom.com';
+  IdQOTD1.Host:= 'qotd.nngn.net';
+  IdQOTD1.ConnectAndGetAll;
+  AQuote := IdQOTD1.Quote;
+  //IdQOTD1.Disconnect;
+  writeln(AQuote)
+  ShowMessageBig('QUOTE: ' + AQuote);
+  IdQOTD1.Free;
+end;
+
+
+begin
+  GetQuotedirect;
+
+end.
+
+      <script src="http://www.gmodules.com/gadgets/ifr?url=http://zytugadgets.googlepages.com/einstein.xml&amp;synd=open&amp;w=320&amp;h=200&amp;title=Albert+Einstein+quotes&amp;border=%23ffffff%7C0px%2C1px+solid+%2382CAFA%7C0px%2C2px+solid+%23BDEDFF%7C0px%2C3px+solid+%23E0FFFF&amp;output=js"></script>
+
+    "I've seen things you people wouldn't believe. Attack ships on fire off the shoulder of Orion. I watched C-beams glitter in the dark near the Tannhauser gate. All those moments will be lost in time... like tears in rain... Time to die."
+ Roy Batty, Blade Runner
+
+
+A nice feature in many software applications is the Help Quote that comes up whenever you start the software.  The number of features or how extensive the documentation is for the application will have a direct effect on how many different help topics are covered.  However, what if that content did not have to remain static?  What if there was a way to have a special kind of server setup to deliver the Quote of the Day?  With Indy, there is.  The TidQOTDServer handles the standard Quote of the Day protocol.  Basically this is just another example of how Indy has implemented pretty much every standard protocol.  
+
+
+//**************************************************program HTTP_PNG_Streamer;
+//**************************************************
+
+
+
+Here's the constant that is used to build the HTML…
+  WEB_PAGE = '<html>' + #13#10 +
+            '<head>' + #13#10 +
+            '<title>The Amazing HTTP Server</title>' + #13#10 +
+            '</head>' + #13#10 +
+            '<body>' + #13#10 +
+            '<p align="center"><font face="Arial" size="5"><i><b>' +
+            'The color of your magnificent Indy based HTTP ' +
+            'Server is...</b></i></font></p>' + #13#10 +
+            '<p align="center"><i><b><font face="Arial" ' +
+            'color="%s" size="6">%s</font></b></i></p>' + #13#10 +
+            '<p align="center"><font face="Arial" size="5"><i><b>' +
+            'Please pick a color for the HTTP Server:</b></i>' +
+            '</font></p>' + #13#10 + '<p align="center"><i><b>' +
+            '<a href="http://127.0.0.1/blue.htm"><font ' +
+            'face="Arial" size="5" color="#0000FF">BLUE</font>' +
+            '</a></b></i></p>' + #13#10 + '<p align="center">' +
+            '<i><b><a href="http://127.0.0.1/red.htm">' +
+            '<font face="Arial" size="5" color="#FF0000">RED' +
+            '</font></a></b></i></p>' + #13#10 + '<p align="center">' +
+            '<i><b><a href="http://127.0.0.1/yellow.htm">' +
+            '<font face="Arial" size="5" color="#FFFF00">YELLOW' +
+            '</font></a></b></i></p>' + #13#10 + '</body>' + #13#10 +
+            '</html>' + #13#10;
+
