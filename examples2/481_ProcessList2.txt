@@ -1,0 +1,426 @@
+unit ProcessListUnitApp;
+
+{  Coder: Counterstrikewi , by maXbox 2014 - #locs:357
+   Compiled: Delphi 2007 , #sign:Administrator: PC08: 29/07/2014 04:18:51 PM 
+   Website: www.delphibasics.info   }
+   
+ 
+interface
+//7uses
+  //Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  //Dialogs, StdCtrls, ComCtrls, Menus, ProcessUnit;
+  
+  function GetVersionEx32(out verinfo: TOSVersionInfoEx): boolean; 
+  //var verinfo: TOSVersionInfo
+     External  'GetVersionExA@kernel32.dll stdcall';
+
+
+//type
+  //TFormMain = class(TForm)
+  var 
+    PM : TProcessManager;
+    LV: TListView;
+    afrm: TForm;
+    KillProcessbyName1: TMenuItem;
+    KillProcessbyPID1: TMenuItem;
+    RefreshProcessList1: TMenuItem;
+       procedure FormCreate(Sender: TObject);
+       procedure KillProcessbyName1Click(Sender: TObject);
+       procedure KillProcessbyPID1Click(Sender: TObject);
+       procedure FormDestroy(Sender: TObject);
+       procedure RefreshProcessList1Click(Sender: TObject);
+      //private
+       procedure ListProcesses;
+ { Public declarations }
+  //end;
+//var
+  //FormMain: TFormMain;
+
+implementation
+//{$R *.dfm}
+
+procedure createProcessForm;
+var nc: TListColumn;
+    mt: TMainMenu;
+    Popup: TPopupMenu;
+begin
+  afrm:= TForm.create(self);
+  with afrm do begin
+     Left:= 0; Top:= 0;
+     Caption:= 'Aphex ProcessUnit Example by maXbox strikewi'
+     ClientHeight:= 271
+     ClientWidth:= 634
+     Color:= clBtnFace
+     Font.Charset:= DEFAULT_CHARSET
+     Font.Color:= clWindowText
+     Font.Height:= -11
+     Font.Name:= 'Tahoma'
+     Font.Style:= []
+     OldCreateOrder:= False
+     //OnCreate:= @FormCreate;
+     OnDestroy:= @FormDestroy;
+     PixelsPerInch:= 96
+     Show;
+  end;
+  Popup:= TPopupMenu.create(afrm)
+  LV:= TListView.create(self);
+  with lv do begin
+    parent:= afrm;
+    SetBounds(0,0,634,271)
+    Align:= alClient
+      nc:= columns.add
+        nc.Caption:= 'EXE Path'
+        nc.Width:= 400
+      nc:= columns.add
+        nc.Caption:= 'PID'
+        nc.Width:= 70
+      nc:= columns.add
+        nc.Caption:= 'Thread'
+        nc.Width:= 70
+      nc:= columns.add
+        nc.Caption:= 'Priority'
+        nc.Width:= 70
+    RowSelect:= True
+    PopupMenu:= Popup
+    SortType:= stText
+    gridlines:= true;
+    ViewStyle:= vsReport
+    Show;
+  end;
+  //mt:= TMainMenu.Create(afrm)
+  //Popup.parent:= afrm;
+    RefreshProcessList1:= TMenuItem.Create(popup)
+    with RefreshProcessList1 do begin
+      //parent;
+      popup.Items.Add(RefreshProcessList1);
+      Caption:= 'Refresh Process List'
+      OnClick:= @RefreshProcessList1Click
+    end;
+    KillProcessbyName1:= TMenuItem.create(popup)
+    with KillProcessbyName1 do begin
+      popup.Items.Add(KillProcessbyName1);
+      Caption:= 'Kill Process by Name'
+      OnClick:= @KillProcessbyName1Click
+    end;
+    KillProcessbyPID1:= TMenuItem.create(popup)
+    with KillProcessbyPID1 do begin
+      popup.Items.Add(KillProcessbyPID1);
+      Caption:= 'Kill Process by PID'
+      OnClick:= @KillProcessbyPID1Click
+    end
+ end;
+
+procedure ListProcesses;
+var C : Integer;
+    CD: TStringArray;
+begin
+  LV.Clear;
+  PM.Free;
+  PM:= TProcessManager.Create;
+  PM.ListProcesses;
+  for C:= 0 to PM.Count do begin
+    with LV.Items.Add do begin
+      CD:= PM.ExePathList;
+      Caption:= CD[C];
+      CD:= PM.PIDList;
+      SubItems.Add(CD[C]);
+      CD:= PM.ThreadList;
+      SubItems.Add(CD[C]);
+      CD:= PM.PriorityList;
+      SubItems.Add(CD[C]);
+      //SubItems.Add(PM.PIDList[C]);
+      //SubItems.Add(PM.ThreadList[C]);
+      //SubItems.Add(PM.PriorityList[C]);
+    end;
+  end;
+end;
+
+procedure FormCreate(Sender: TObject);
+begin
+  PM:= TProcessManager.Create;
+  ListProcesses;
+end;
+
+procedure FormDestroy(Sender: TObject);
+begin
+  PM.Free;
+end;
+
+procedure KillProcessbyName1Click(Sender: TObject);
+begin
+  PM.KillProcessByExePath(LV.Selected.Caption);
+  ListProcesses;
+end;
+
+procedure KillProcessbyPID1Click(Sender: TObject);
+begin
+  PM.KillProcessByPID(LV.Selected.SubItems[0]);
+  ListProcesses;
+end;
+
+procedure RefreshProcessList1Click(Sender: TObject);
+begin
+  ListProcesses;
+  writeln('Refresh ListProcesses')
+end;
+
+function PathCharIsSlash(const C: Char): Boolean;
+{ Returns True if C is a backslash or slash. }
+begin
+  Result:= (C = '\') or (C = '/');
+end;
+
+type  //dwOSVersionInfoSize 156
+  TOSVersionInfoEx2 = record
+    dwOSVersionInfoSize: DWORD;
+    dwMajorVersion: DWORD;
+    dwMinorVersion: DWORD;
+    dwBuildNumber: DWORD;
+    dwPlatformId: DWORD;
+    szCSDVersion: array[0..127] of AnsiChar;
+    wServicePackMajor: WORD;
+    wServicePackMinor: WORD;
+    wSuiteMask: WORD;
+    wProductType: Byte;
+    wReserved: Byte;
+  end;
+  
+ (* typedef struct tagMODULEENTRY32 {
+  DWORD dwSize;
+  DWORD th32ModuleID;
+  DWORD th32ProcessID;
+  DWORD GlblcntUsage;
+  DWORD ProccntUsage;
+  BYTE *modBaseAddr;
+  DWORD modBaseSize;
+  HMODULE hModule;
+  TCHAR szModule[MAX_PATH];
+  TCHAR szExePath[MAX_PATH];
+  DWORD dwFlags;
+} MODULEEN     *)
+
+function NeedWin2kFix: Boolean;
+var
+  aInfo: TOSVersionInfoEx;
+begin
+  Result := False;
+  aInfo.dwOSVersionInfoSize := SizeOf(aInfo);
+  if GetVersionEx3((aInfo)) then
+    if (aInfo.dwMajorVersion = 5) and (aInfo.dwMinorVersion = 0) and
+       (aInfo.wServicePackMajor < 4) then
+      Result:= True;
+end;
+
+function getVersionInfoEx3: TOSVersionInfoEx;
+var
+  aInfo: TOSVersionInfoEx;
+begin
+  //Result:= 0;
+  aInfo.dwOSVersionInfoSize:= SizeOf(aInfo);
+  // now internal
+  if GetVersionEx3((aInfo)) then
+    Result:= aInfo;
+end;  
+
+function InternalGetFileAttr(const Name: String): Integer;
+begin
+  Result:= GetFileAttributes(PChar(RemoveBackslashUnlessRoot(Name)));
+end;
+
+function GetCmdTail: String;
+{ Returns all command line parameters passed to process as a single string.}
+var S: String;
+begin
+  Result:= ParamStr(strtoint(GetCommandLine));
+end;
+
+procedure TBitmapImage_Create(AOwner: TComponent);
+begin
+  //inherited Create(AOwner);
+  self.ControlStyle := self.ControlStyle + [csReplicatable];
+  {FBackColor := clBtnFace;
+  FBitmap := TBitmap.Create;
+  FBitmap.OnChange := BitmapChanged;
+  FReplaceColor := clNone;
+  FReplaceWithColor := clNone;
+  FStretchedBitmap := TBitmap.Create;
+  Height := 105; Width := 105; }
+end;
+
+type {[const}
+  Table = array[0..31] of Char; // = '0123456789ABCDEFGHIJKLMNOPQRSTUV';
+
+function IntToBase32(Number: Longint): String;
+var
+  I: Integer;
+  att: Table;
+begin
+//StrScan
+  Result := '';
+  for I := 0 to 4 do begin
+  //TTTable[Number and 31];
+    Insert(att[Number and 31], Result, 1);
+    Number := Number shr 5;
+  end;
+end;
+
+function FmtMessage(S: PChar; const Args: array of String): String;
+var
+  P: PChar;
+  Z: String;
+begin
+  Result := '';
+  if S = nil then Exit;
+  while True do begin
+    P := StrScan(S, '%');
+    if P = nil then begin
+      Result := Result + S;
+      Break;
+    end;
+    if P <> S then begin
+      //SetString(Z, S, P - S);
+      Result := Result + Z;
+      S := P;
+    end;
+    Inc(P);
+    //if CharInSet(P^, ['1'..'9']) and (Ord(P^) - Ord('1') <= High(Args)) then begin //Result := Result + Args[Ord(P^) - Ord('1')];
+      //Inc(S, 2);
+    //end
+    //else begin
+      {Result := Result + '%';
+      Inc(S);
+      if P^ = '%' then
+        Inc(S);
+    end;}
+  end;
+end;
+
+function IntToHexStr8(I: Integer): String;
+begin
+  FmtStr(Result, '0x%.8x', [I]);
+end;
+
+function GetFileDateTime(const DisableFsRedir: Boolean; const Filename: String;
+  var DateTime: TFileTime): Boolean;
+var
+  Handle: THandle;
+  FindData: TWin32FindData;
+begin
+  //Handle := FindFirstFileRedir(DisableFsRedir, Filename, FindData);
+  if Handle <> INVALID_HANDLE_VALUE then begin
+    {Windows.}FindCloseW(Handle);
+    if FindData.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY = 0 then begin
+      DateTime := FindData.ftLastWriteTime;
+      Result := True;
+      Exit;
+    end;
+  end;
+  Result := False;
+  DateTime.dwLowDateTime := 0;
+  DateTime.dwHighDateTime := 0;
+end;
+
+
+
+begin
+  createProcessForm;
+  FormCreate(self);
+  writeln(botostr(IsPortAvailable(1)));
+  //test bed
+  with TComSelectForm.Create(self) do begin
+    Showmodal;
+    try
+      writeln('SelectedComNum: '+inttostr(SelectedComNum))
+    except
+      writeln('no com found')
+    end;
+    free;
+   end; 
+    writeln(inttostr(ord(cyGetWindowsVersion)));
+    writeln(inttostr(ord(GetWindowsVersion)));
+    writeln('dwMajorVersion '+inttostr(getVersionInfoEx3.dwMajorVersion))
+    writeln('dwMinorVersion '+inttostr(getVersionInfoEx3.dwMinorVersion))
+    writeln('dwOSVersionInfoSize '+inttostr(getVersionInfoEx3.dwOSVersionInfoSize))
+    writeln('InternalGetFileAttr '+inttostr(InternalGetFileAttr(exepath+'maxbox3.exe')));
+    //function GetIniString(const Section, Key, Default, Filename: String): String;
+     //LoadDLL
+     //CallDLLProc
+     //FreeDll
+     //TBitmapImage
+    writeln(GetIniString('web', 'scert', 'default',exepath+'maxboxdef.ini'))
+    writeln(IntToHexStr8(1001))
+    writeln(IntToHex(1001,8))
+    //TResourceList
+      //TResModule
+      //CompareDetails
+      
+End.
+
+//Doc
+
+//Ref closure
+   {Columns = <  item
+        Caption = 'EXE'
+        Width = 400
+      end
+      item
+        Caption = 'PID'
+        Width = 70
+      end
+      item
+        Caption = 'Thread'
+        Width = 70
+      end
+      item
+        Caption = 'Priority'
+        Width = 70
+      end:>}
+      
+     
+  ///////////////////////////////////////////////////////////////////////////
+  //  #sign:Administrator: PC08: 29/07/2014 04:18:51 PM 
+  //  Purpose: how to call best functions, on progress with experiments 
+  //  #path>ples\E:\maxbox3\mXGit39988\maxbox3\examples\
+  //  Lines of Code #locs:357
+  ///////////////////////////////////////////////////////////////////////////
+  //TODO: Save the QRCode to webserver_file, #locs:357
+     
+{     TGraphic =  class(TPersistent)
+       procedure LoadFromFile(const Filename: String);
+       procedure SaveToFile(const Filename: String);
+       property Empty: Boolean; read write;
+       property Height: Integer; read write;
+       property Modified: Boolean; read write;
+       property Width: Integer; read write;
+       property OnChange: TNotifyEvent; read write;
+     end;
+      
+      TBitmap =  class(TGraphic)
+        procedure LoadFromStream(Stream: TStream);
+        procedure SaveToStream(Stream: TStream);
+        property Canvas: TCanvas; read write;
+        property Handle: HBITMAP; read write;
+      end;  
+       
+      
+      TBitmap =  class(TGraphic)
+        procedure LoadFromStream(Stream: TStream);
+        procedure SaveToStream(Stream: TStream);
+        property Canvas: TCanvas; read write;
+        property Handle: HBITMAP; read write;
+      end;         }
+      
+      //https://lists.jrsoftware.org/mailman/options/innosetup-announce/max%40kleiner.ch
+       
+ 
+   {TNotifyEvent = procedure(Sender: TObject);
+   
+   tcanvas
+   
+   TBitmap =  class(TGraphic)
+     procedure LoadFromStream(Stream: TStream);
+     procedure SaveToStream(Stream: TStream);
+     property Canvas: TCanvas; read write;
+     property Handle: HBITMAP; read write;
+   end;}  
+    

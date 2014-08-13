@@ -1,0 +1,441 @@
+PROGRAM HeartBeatPlot_FunctionPlotter;
+//shows structure of procedure types, max@kleiner.com
+//compilerswitch $N+ turns the coprocessor on, loc's =238
+//preconditions: file ...examples\ecg2.csv
+
+//{$I ..\maxbox3\pas_includebox.inc}
+
+const 
+ DIM = 5100;
+ PI2 = 5.1415926535897932384626433832795;
+   E = 2.718281828459;
+
+type
+  TSinglePoint1 = record
+    X,Y: single;
+  end; 
+  
+  TMath_Func = PROCEDURE (var x: single);
+  TXYVector1 = array of TSinglePoint1; 
+
+var 
+  fct1x, fct3x, fct4x: TMath_Func;
+  cFrm: TForm;
+  dlist: TStringlist;
+  zoom: boolean;
+  
+  {Procedure fct_table2(start, amp, zoom, color: integer; FCT: TXYVector1;
+                                        fct_name: string); forward; }
+ procedure letHeartBeatPlot(zoom: boolean); forward;
+                                     
+
+procedure drawChart(vPoints: TXYVector1; cFrm: TForm; vcolor: integer);
+var
+  i, hsize: integer;
+begin
+  with cFrm.canvas do begin
+    hsize:= cFrm.Height-1 div 2;
+    Pen.Color:= vcolor;
+    MoveTo(0, hsize-((round(vPoints[0].Y))));
+    for i:= 0 to DIM do
+      LineTo(i, round(vPoints[i].Y));
+  end;
+end;  
+
+procedure PaintBox1Paint(sender: TObject);
+begin
+  //DrawChart(hPoints, cFrm, clred);
+  letHeartBeatPlot(true);
+end; 
+  
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  with cFrm do begin
+    caption:= 'maXFunCPlotter HeartBeatPlot(((((\*/)))))';  
+    BorderStyle:= bsSizeable;
+    height:= 600 ;
+    width:= 1000;
+    color:= clblack;
+    onResize:= @PaintBox1Paint;
+    Show;
+  end  
+end;
+
+//-------------------------ADD math functions-------------------------------  
+procedure fct4e(var x: single);
+begin
+   x:= power(E, -x);
+end;
+
+procedure fct3eSin(var x: single);
+begin
+  //power() means e^-x
+   x:= power(E, -x) * (sin(pi2 * x));
+end;
+
+PROCEDURE fct1sin(var x: single);
+BEGIN
+   x:= Sin(pi*x);  //Cos(pi2*x);
+END;
+  
+PROCEDURE fct2cos(var x: single);
+var y: single;
+BEGIN
+  Y:= 0.05;
+  //x:= -x*y/(power(x,2) + power(y,2));
+  x:= Cos(pi2*x);
+END;
+
+PROCEDURE fctheart(var x: single);
+BEGIN
+  //x:= hpoints[i].x;
+END;
+
+  
+PROCEDURE fct_table(start, amp, freq, color: integer; FCT: TMath_Func;
+                                         fct_name: string);
+var x: single;
+    origy, i: Integer;
+    fPoints: array[0..DIM] of TSinglePoint1;
+BEGIN
+  Writeln('x   |   ' + fct_name);
+  origy:= cFrm.Height div 2;
+  x:= start;
+  for i:= 0 to (DIM) do begin
+    x:= i/freq
+    FCT(x);
+    fPoints[i].Y:= origy+ (x * amp);
+    //Writeln(floatToStr(x) +' | '+ floatToStr((tempx)));
+    dlist.add(floattostr(x));
+  end;
+  DrawChart(fPoints, cFrm, color)
+END;
+
+PROCEDURE fct_table2(start,amp,zoom,color: integer; FCT: TXYVector1;
+                                         fct_name: string);
+var x: single;
+    origy,i,a: Integer;
+BEGIN
+  Writeln('x   |   ' + fct_name);
+  origy:= cFrm.Height div 2;
+  x:= start;
+  a:= 0;
+  for i:= 0 to (DIM) div 2 do begin
+    //x:= i/freq;
+    if zoom = 1 then begin
+      fCT[i].y:= fCT[a].y*x+amp ; //(x*amp);
+      a:= a+2
+    end else  
+      fCT[i].y:= fCT[i].y*x+amp ; 
+    //Writeln(floatToStr(hpoints[i+2].y));
+  end;
+  DrawChart(fCT, cFrm, color)
+END;
+
+
+procedure letHeartBeatPlot(zoom: boolean);
+var i: integer;
+    temp: ansistring;
+    hdat: single;
+    hPoints: array[0..DIM] of TSinglePoint1;
+begin
+  i:= 0;
+  temp:= loadFileasString(exepath+'examples\ecg2.csv');
+  repeat 
+    try
+      hdat:= stringtofloat(getString(temp,';'));
+    except
+      writeln('hdat exception...');
+    end;
+    Delete(temp,1,pos(temp,';'))
+    hpoints[i].y:= hdat;
+    inc(i);
+    //until pos(temp,';') <> 0;
+  until temp = '';
+  writeln('heart dat size '+inttoStr(i));
+  //(start, amp, zoom, color, func, title);
+  fct_table2(-90, 220, integer(zoom), clred, hpoints, 'heartCos(x)');
+end;
+
+
+{ type TAxis = record        //{ Coordinate axis 
+    Scale : TScale;
+    Min   : Float;
+    Max   : Float;
+    Step  : Float;
+  end;
+
+procedure InitScale;
+var   MaxCurv : Byte;
+  XminPixel : Integer; 
+  XmaxPixel : Integer; 
+  YminPixel : Integer; 
+  YmaxPixel : Integer; 
+  //XminPixel := 0;
+  XAxis: TAxis; 
+  YAxis: TAxis; 
+begin
+   Xaxis.Scale:= LinScale;
+   Xaxis.Min:= 0.0;
+   Xaxis.Max:= 1.0;
+   Xaxis.Step:= 0.2;  
+   yaxis.Scale:= LinScale;
+   Yaxis.Min:= 0.0;
+   Yaxis.Max:= 1.0;
+   Yaxis.Step:= 0.2;  
+   MaxCurv:= 0;
+   XminPixel:= 0;
+   XmaxPixel:= 100;
+   YminPixel:= 0;
+   YmaxPixel:= 100;
+//   = (Scale : LinScale; Min : 0.0; Max : 1.0; Step : 0.2);
+end;  }
+
+procedure maskPlotGrid;
+begin
+  if not InitGraphics(cFrm.Width, cFrm.Height) then Exit;
+  //InitScale;
+  SetWindow(cFrm.Canvas, 9,90,10,60, True);
+  cfrm.Canvas.Pen.Color:= clGreen;
+  PlotOxAxis(cFrm.Canvas);
+  PlotOyAxis(cFrm.Canvas);
+   // cfrm.Canvas.Pen.Color:= clwhite;
+  PlotGrid(cFrm.Canvas, BothGrid);
+  {Npts := 120;
+  Color := clBlue; }
+  SetLineParam(1, psSolid, 50, clWhite);
+end;  
+
+procedure makeSoundTest;
+var   freqlist: TStringlist;
+
+begin
+ MakeSound(440, 1000, 60,'');
+  // MakeSound(440, 1000, 60,Exepath+'examples/kammertontest.wav');
+   
+   // procedure MakeComplexSound(N:integer {stream # to use}; freqlist:TStrings; Duration{mSec}: Integer;
+   //                         pinknoise: boolean; Volume: TVolumeLevel);
+
+  //procedure SetComplexSoundElements(freqedt,Phaseedt,AmpEdt,WaveGrp:integer);
+   SetComplexSoundElements(500,90,60,1);
+   //Procedure AddComplexSoundObjectToList(newf,newp,newa,news:integer; freqlist: TStrings);');
+   
+  //if listbox1.items.count=0 then AddObjectToList(440,0,500,0); {no entry, make one}
+  
+   freqlist:=TStringlist.create;
+
+   AddComplexSoundObjectToList(440,0,500,0,freqlist);
+  
+    //nextstream:=(streaminuse+1) mod 2;
+    //MakeComplexSound(0, freqlist, 1000, true, 60); //just in progress!
+
+    freqlist.Free;
+    
+    //Voice(powerBig(2,50));     //Async with Voice2()
+end;
+
+function BoldCaseIndependentPos2(const Substr, S: string): Integer;
+var
+  SubstrLen: integer;
+begin
+  SubStrLen := Length(Substr);
+  if SubstrLen > Length(S) then
+    Result := 0
+  else
+  begin
+    Result := Pos(Substr, S);
+    if (Result = 0) or (Result > SubStrLen) then
+      Result := Pos(UpperCase(Substr), UpperCase(S));
+  end;
+end;
+
+function BoldSeparateStringList2(strings: TStringList; const Separator, PreString, PostString: String): String;
+var
+  i: integer;
+
+begin
+  result := '';
+  if strings.Count > 0 then begin
+    for i := 0 to strings.Count-2 do
+      result := result + Strings[i] + Separator;
+    result := result + Strings[Strings.Count - 1]
+  end
+  else
+    result := '';
+  if strings.Count > 0 then
+    result := PreString + result +PostString;
+end;
+
+  {const BOLDESC         = #27;
+  BOLDNULL        = #0;
+  BOLDCRLF        = #13+#10;
+  BOLDCR          = #13;
+  BOLDLF          = #10;}
+
+procedure BoldAppendTostrings2(Strings: TStrings; const aString: string; const ForceNewLine: Boolean);
+var
+  StrCount: integer;
+  i: integer;
+  TempStr: String;
+  SplitterPos: Integer;
+begin
+  Strings.BeginUpdate;
+  try
+    TempStr := aString;
+    for i := 1 to length(TempStr) do
+      if TempStr[i] in [BOLDLF, BOLDCR] then
+        TempStr[i] := ' ';
+    StrCount := Pred(Strings.Count);
+    if (StrCount = -1) or ForceNewLine then begin
+      Strings.Add('');
+      Inc(StrCount);
+    end;
+    Strings[StrCount] := Strings[StrCount] + TempStr;
+    while length(Strings[StrCount]) > 80 do begin
+      SplitterPos := 80;
+      while not (Strings[StrCount][SplitterPos] in [' ', ',', '=']) and (SplitterPos > 1) do
+        Dec(SplitterPos);
+      Strings.Add(Copy(Strings[StrCount], SplitterPos + 1, 65536));
+      Strings[Strcount] := Copy(Strings[StrCount], 1, SplitterPos);
+      Inc(StrCount);
+    end;
+  finally
+    Strings.EndUpdate;
+  end;
+end;
+
+function BoldTrim2(const S: string): string;
+var
+  I, L, OldL: Integer;
+  //axc: PChararr;
+  //ad: TMonths; //TDays;
+begin
+  L := Length(S);
+  OldL := L;
+  I := 1;
+  while (I <= L) and (S[I] <= ' ') do
+    Inc(I);
+  if I > L then
+    Result := ''
+  else begin
+    while S[L] <= ' ' do
+      Dec(L);
+    if (I > 1) or (L < OldL) then
+      Result := Copy(S, I, L - I + 1)
+    else
+      Result := S;
+  end;
+  //GetHighlighters
+  //GetHighlightersFilter
+  //stringrefcount
+  //QUERYUSER
+  //postquitmessage
+end;
+
+
+
+//main function_p call 
+var amp, freq: byte;
+
+BEGIN
+  //calls the proc with a function var
+  IncludeOFF;
+  amp:= 40;
+  freq:= 440;   //default
+  loadForm
+  maskPlotGrid;
+  fct1x:= @fct1sin
+  fct3x:= @fct3eSin
+  fct4x:= @fct4e;
+  dlist:= TStringlist.create;
+ 
+  {CSVtoTags(slist,dlist) 
+  for i:= 0 to dlist.count-1 do 
+    writeln(dlist[i]); }
+    //with JVcsvParse.create do begin
+  letHeartBeatPlot(true);      //zoom fix
+  
+   //until last is 1.223
+  dlist.free;
+  //maxform1.memo1.name:= clblue;
+  fct_table(230, amp, freq, clblue, fct1x, 'Sin(x)');
+  fct_table(50, amp, freq, clyellow, @fct2cos, 'Cos(x)');
+  //fct_table(30, amp, freq, cllime, fct3x, 'ESin(x)');
+  //fct_table(30, amp, freq, clblue, fct4x, 'E(x)');
+  
+  makeSoundTest;
+  //boldtrim
+  //charcount
+  //iptostr
+  //tiprec
+End.
+
+http://www.nzz.ch/aktuell/digital/die-totale-selbstbespiegelung-1.18057629
+
+
+Hoi Max
+
+Es sind immer 10s. Das heisst es sind 500Hz (sonst geht es nicht auf mit den Samples) , puls ist 90!
+
+Das Wave tönt noch lustig, fast ein wenig musikalisch. 
+
+Genf (awp) - Addex Therapeutics ist mit den Vorbereitungen für Phase-II-Studien des Produktkandidaten Dipraglurant zur Therapie von seltenen Formen von Dystonie auf Kurs. Die vorklinischen Daten des mGlu5 negativen allosterischen Modulators seien positiv ausgefallen, teilt das Unternehmen am Donnerstag mit.
+
+Zusammen mit bereits zuvor erzielten, ebenfalls präklinischen Ergebnissen und klinischen Daten Beobachtungen aus einer Phase-IIa-Studie habe sich das Potenzial von Dipraglurant zur Dystonie-Behandlung erhärtet. Die neuen vorklinischen Ergebnisse sollen an einer Dystonie-Konferenz in Rom vorgestellt werden, die vom 31. Mai bis 1. Juni stattfindet. Mit den Phase-II-Tests bei Dystonie soll noch in der ersten Jahreshälfte 2013 begonnen werden.
+
+Dipraglurant wird derzeit in Phase-II-Studien auch zur Therapie von durch Levodopa ausgelöste Dyskinesie bei Parkinson-Patienten erprobt.
+
+rt/cf
+
+18-04-2013 08:05  Addex: le Dipraglurant avance comme prévu pour la phase II lors de dystonie
+Name 	Letzter 	Veränderung
+ ADDEX N   	 6.50  	
+0.21 (3.34 %)
+
+Genève (awp) - Addex Therapeutics est sur la voie pour l'étude phase II de son produit Dipraglurant destiné à soigner des formes rares de dystonie (trouble moteur). Les données précliniques du modulateur allostérique négatif mGlu5 se sont révélées positives, a indiqué jeudi la société biopharma dans un communiqué.
+
+Avec des résultats précliniques déjà atteints et des données d'observation clinique d'une étude phase IIa, le potentiel de Dipraglurant pour traiter la dystonie s'est confirmé. Les nouveaux résultats précliniques doivent être présentés à à Rome lors d'une conférence sur la dystonie qui se déroulera du 31 mai au 1er juin. Les tests phase II lors de dystonie doivent commencer encore ce premier semestre 2013, précise le communiqué.
+
+Le Dipraglurant est actuellement également à l'essai en étude phase II pour la thérapie de la dyskinésie provoquée par Levodopa chez les patients atteints de la maladie de Parkinson.
+
+rt/cf/fah/rp
+
+Reklamation Nr : 9643
+Rechnungsnummer: 2136598
+Artikelnummer  : 6508
+
+Produkt        : Digitales Labornetzgerät QJ3005EIII
+
+Wahrscheinlich ist die Sicherung durchgebrannt. Diese finden Sie auf der Rückseite des Geräts neben dem Netzstecker. Sie können auch eine stärkere Sicherung einbauen, bis max. 5,5A.
+
+Das Netzgerät hat einen Ringkerntrafo, der einen geringen Widerstand hat und deshalb beim Einschalten einen hohen Strom zieht. Je nach Hausinstallation kann deshalb die Sicherung auslösen.
+
+
+Mit freundlichem Gruß
+Robert Daut
+Hi everyone,
+
+what do you think of the idea to overload the print and println methods with a format-string as second parameter?
+The format-string would be printf-like, it would be very usefull for some outputs, (fixed digits, trailing zeros, etc..)
+
+Examples:
+Serial.print(0x012a, "%04x") -> "012a"
+Serial.print(0xab, "%02X") -> "AB"
+Serial.print(3.14159265, "%.4f") -> "3.1416"
+Serial.print("ab", "%5s") -> " ab"
+Serial.print(0x1e, "%08b") -> "00011110"
+
+It would be also possible to add some text:
+Serial.print(12.344, "Voltage: %.1f V") -> "Voltage: 12.3 V"
+
+If you think that it would be good, I could do the implementation (without the use of the printf-function-family ;-) ).
+
+Best regards,
+Nils
+
+
+
+
+
+----code_cleared_checked----

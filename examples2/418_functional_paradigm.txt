@@ -1,0 +1,184 @@
+PROGRAM Functionals;
+
+//////////////////////////////////////////////////////////////////////
+//  #sign:max: APSN21: 13.01.2014 18:17:22 
+//  Purpose: shows functions without state or vars,  no sideeffects //
+//  #path>ples\E:\maxbox\maxbox3\examples\                          //
+//  Lines of Code #locs:146
+//////////////////////////////////////////////////////////////////////
+
+Const TEXTOUT = 'hi world of code coverage with cover age functions';
+
+{TYPE 
+<Type declarations>} 
+//<FUNCTION>
+//<PROCEDURE> 
+
+
+function CheckIEStartCommand: string;
+begin
+  Application.ProcessMessages;
+  with TRegistry.Create do try
+     rootkey:= HKey_Classes_Root;
+     OpenKey('\htmlfile\shell\open\command',false);
+     try 
+       result:= ReadString('');
+     except
+       result:= ''; 
+     end;
+     CloseKey;
+  finally
+     Free;
+  end;
+end;
+
+
+//TODO: no functional function, does have vars
+function SplitToken(const Text: string; SplitChar: Char;
+                            var First, Last: string): Boolean;
+var SplitPos: Integer;
+begin
+  Result:= False;
+  SplitPos:= Pos(SplitChar, Text);
+  if SplitPos = 0 then Exit;
+  First:= Trim(Copy(Text, 1, SplitPos -1));
+  Last:= Trim(Copy(Text, SplitPos +1, Length(Text) -SplitPos));
+  Result:= (First <>'') and (Last <>'');
+end;
+
+Procedure HideWindowForSecondsT(secs: integer);   
+Var T : tdateTime;
+begin
+  ShowWindow(Self.Handle, SW_Hide);
+  ShowWindow(Application.Handle, SW_Hide);
+  T:= Time;
+  Repeat
+    Application.ProcessMessages;
+  Until Time - T > secs / 24 / 3600;
+  ShowWindow(Self.Handle, SW_Show);
+  ShowWindow(Application.Handle, SW_Show);
+end;
+
+
+procedure Functional_1;
+var i: longint;
+begin
+  for i:= 0 to getFilelist(TStringlist.create,Exepath+'crypt\*.*').count-1 do  
+  //proc block
+     writeln(getFilelist(TStringlist.create,Exepath+'crypt\*.*').strings[i]); 
+end;        
+
+procedure Functional_2;
+var i: longint;
+begin
+  for i:= 0 to getFilelist1(Exepath+'crypt\*.*').count-1 do  
+  //func block
+     writeln(getFilelist1(Exepath+'crypt\*.*').strings[i]); 
+end;        
+
+procedure Functional_3;
+begin
+  //func block direct
+  Writeln(getFilelist1(Exepath+'crypt\*.*').Strings[2]); 
+end;        
+
+procedure Functional_4;
+begin
+  //func block direct
+  try
+    Writeln(getComPorts.Strings[0]);
+  except
+    showmessageBig('no_comports found'); 
+  end  
+end;   
+
+procedure Functional_5;
+var i: integer;
+begin
+ writeln(mbversion)
+ if mbverI >= 399 then
+ for i:= 0 to ALGetLocalIPs.Count-1 do 
+    PrintF('ipname2 of %-20s is: %s',[ALgetLocalIPs[i],
+                      ALIPAddrToName(ALgetLocalIPs[i])]);
+end;
+
+     
+
+
+BEGIN  //Main
+//<Executable statements>
+  //TOutlookExport_Spy;
+  Writeln('');
+  Writeln('Start Command of IE: '+CheckIEStartCommand);  
+//<Definitions>  
+
+  //ares:= TResolver.create;
+ { with TResolver.create do begin
+    writeln(inttostr(GetHostByName(gethostname)));
+   end;  }
+  
+   Writeln('*****************');
+   Functional_1;
+   Writeln('*****************');
+   Functional_2;
+   Writeln('*****************');
+   Functional_3;
+   Writeln('*****************');
+   Functional_4;
+   Writeln('*****************');
+   Functional_5;
+   Writeln('*****************');
+   
+  { with TLEDForm.Create(self) do begin
+     showmodal;
+     free;
+   end;} 
+   
+   with TfplotForm1.Create(self) do begin
+     BtnPlotClick(self);
+     //HideWindowForSecondsT(3);
+     showmodal;
+     free;
+   end; 
+   
+   //HideWindowForSecondsT(3);
+    
+End. 
+
+
+More Items:
+
+       aContactItem.Categories:='Kunde'; // neu
+       aContactItem.FirstName:=KundeName1.AsString;
+       aContactItem.LastName:=KundeName2.AsString;
+       aContactItem.FileAs:=KundeSuchbegriff.AsString;
+       aContactItem.CompanyName:=KundeSuchbegriff.AsString;
+       aContactItem.CustomerID:=KundeKundenNr.AsString;
+       aContactItem.Account:=KundeFibuNr.AsString; // neu
+       aContactItem.Body:=KundeAnsprechpartner.AsString;
+       aContactItem.BusinessAddressStreet:=KundeStrasse.AsString;
+       aContactItem.BusinessAddressPostalCode:=KundePLZ.AsString;
+       aContactItem.BusinessAddressPostOfficeBox:=KundePostfach.AsString;
+       aContactItem.BusinessAddressCity:=KundeOrt.AsString;
+//         aContactItem.BusinessAddressCountry:=KundeLand.AsString; // neu
+       aContactItem.OrganizationalIDNumber:=KundeUStIdNr.AsString; // neu
+//         aContactItem.GovernmentIDNumber:=''
+       aContactItem.BusinessTelephoneNumber:=KundeTelefon1.AsString;
+       aContactItem.BusinessFaxNumber:=KundeFax.AsString;
+       aContactItem.MobileTelephoneNumber:=KundeTelefon2.AsString;
+       aContactItem.Email1Address:=KundeEMail.AsString;
+       aContactItem.WebPage:=KundeHomepage.AsString;
+       aContactItem.Save;
+ 
+  http://i1-win.softpedia-static.com/screenshots/maXbox_5.png?1381322021
+  
+    RegisterMethod('Constructor Create(AOwner: TComponent)');
+    RegisterConstructor(@TJvMail.Create, 'Create');
+  
+  
+   RegisterMethod('Procedure Free');
+   RegisterMethod(@TJvMail.Destroy, 'Free');
+   
+
+
+----app_template_loaded_code----

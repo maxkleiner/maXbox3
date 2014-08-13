@@ -1,0 +1,874 @@
+//EKON Code Review Project Game of Life GOL 3
+{***************************************************************
+ *            LED SONAR bITbox GOL
+ * Project  : Game of Life
+ * Unit Name: #file:423_game_of_life3.TXT
+ * Purpose  : Game of Life with StringGrid logic
+ * Date     : 18/02/2013  -  14:38:56, loc's=466, 4 intf
+ * Release  : check all conversion
+            : open StringGrid
+            : keyword check on all files with regEx
+            : auto mode of GOL and first configuration
+ * last changed 25.11.2013  - 11:03:2013, max, #locs=434
+ * #sign:0:44 max: APSN21: 28.11.2013 12:52:30  41:51 
+ * #path\E:\maxbox\maxbox3\examples\
+ * The simplest version of Conway's Life "game"
+ * http://www.delphiforfun.org/Programs/Conways_Life.htm
+ * add auto mode to run forever - the grand design
+ ****************************************************************}
+ //TODO: transfer the App to a LED Matrix on Arduino ex. I^2C Adafruit Shield!!
+
+
+
+Const AWORKPATH = 'D:\tzpas\review\';
+      FIREFOXPATH = 'C:\Program Files (x86)\Mozilla Firefox\firefox.exe';
+      AWORKPATHNET = '\\172.31.40.110\general\PasReview\codereview2013_sonar_start.TXT';
+
+Const codestr1 ='2001, 2002, 200001, 2004, 1000000';
+      FBOX = 4;
+      QB = FBOX*FBOX;
+      GPIC = 'examples\citymax.bmp';
+      boardsize=25;  {height and width of board}
+
+Type 
+    TField2 = array[0..5] of String;
+    TField1 = array[0..5] of TField2;
+    TDir2 = array[1..2] of smallint;
+    TBoardsize = array [0..boardsize-1] of boolean;
+
+var
+  frmMon: TForm;
+  frmsg, golstg: TStringGrid;
+  stat: TStatusbar;
+  panstep: TPanel;
+  Progress: TProgressBar;
+  //StaticText1: TStaticText;
+  FAuto: boolean;
+  cntr: integer;
+  Currentgrid,NextGrid: array[0..boardsize-1] of TBoardsize;
+
+
+procedure openSonarWebStart(aport: string);
+  var idHTTP: TIDHTTP;
+      S_SonarServer: boolean;
+  begin
+    idHTTP:= TIdHTTP.create(NIL)
+  try
+    //memo2.lines.text:= idhttp.get2('http://www.softwareschule.ch/maxbox.htm')
+    if (isValidIP('127.0.0.1') and (S_SonarServer = true)) then
+    //memo2.lines.text:= 
+    //sonar default port:9000
+    idhttp.get2('http://localhost:'+aport);
+    //idhttp.get2('http://www.softwareschule.ch')
+    ShellExecute3('http://127.0.0.1:'+aport+'/dashboard','',seCMDOPen)
+  finally
+    idHTTP.Free
+    S_SonarServer:= false;
+    //maxform1.color:= clyellow; 
+  end;
+ end;     
+ 
+function Head(Str: string; SubStr: string; var TailStr: string): string;
+var I: Integer;
+begin
+  I:= Pos(SubStr, Str);
+  if I = 0 then begin
+    Result:= Str;
+    TailStr:= '';
+  end else begin
+    TailStr:= Str;
+    Delete(TailStr, 1, I + Length(SubStr) - 1);
+    Delete(Str, I, Length(Str));
+    Result:= Str;
+  end;
+end;
+
+
+//****************************** GOL Begin *************************
+function CountPrevNeighbors(const i,j:integer):integer;
+  {local function to count the number of neighbors}
+  var
+    L,R,U,D:integer;  {Left, Right, Up, Down offsets for neighbors}
+  begin
+    result:=0;
+    if i>0 then L:=i-1 else L:= boardsize-1; {counters loop around as if the }
+    if j>0 then U:=j-1 else U:= boardsize-1; {board is a closed torus (a doughnut)}
+    if i<boardsize-1 then R:=i+1 else R:=0;
+    if j<boardsize-1 then D:=j+1 else D:=0;
+    {check all 8 neightbors}
+    if Currentgrid[L][j] then inc(result);  {left}
+    if Currentgrid[i][U] then inc(result);  {up}
+    if Currentgrid[R][j] then inc(result);  {right}
+    if Currentgrid[i][D] then inc(result);  {down}
+    if Currentgrid[L][U] then inc(result);  {left & up}
+    if Currentgrid[R][U] then inc(result);  {right & up}
+    if Currentgrid[L][D] then inc(result);  {left & down }
+    if Currentgrid[R][D] then inc(result);  {right & down}
+  end;
+
+
+{************** MakeStep *************}
+Procedure TFrm_makestep;
+{The kern of the program - create next generation, return true if pattern changed}
+  var
+    i,j, n:integer;   {n is neighbor count}
+    livecell:boolean;
+  begin
+    for i:=0 to boardsize-1 do
+    for j:=0 to boardsize-1 do begin
+      Nextgrid[i][j]:=Currentgrid[i][j];
+       {copy old new in case no change for next generation}
+      Livecell:=Currentgrid[i][j];  {state of the cell being tested}
+      n:=countprevNeighbors(i,j);  {count the neighbors}
+      {rules: 1.Any live cell with fewer than two or more than 3 live neighbors dies.
+              2.Any dead cell with exactly three live neighbors comes to life.  }
+      if Livecell then begin
+        if ((n<2) or (n>3)) then begin   {Rule 1}
+          nextgrid[i][j]:=false;
+          golstg.cells[i,j]:='';
+        end;
+      end
+      else {check dead cell}
+      if n=3 then begin  {Rule 2}
+        Nextgrid[i][j]:=true;
+        golstg.cells[i,j]:='1';
+      end;
+    end;
+    {make the new (next) grid the current grid}
+    for i:=0 to boardsize-1 do
+    for j:= 0 to boardsize-1 do
+    Currentgrid[i][j]:=NextGrid[i][j];
+  end;
+
+
+procedure btnCloseClick(Sender: TObject);
+begin
+  stat.SimpleText:= 'Closed Clicked Event';
+  frmMon.Close;
+end;
+
+procedure CloseClick(Sender: TObject; var action: TCloseAction);
+begin
+   //if MessageDlg('Wanna Leave?',mtConfirmation,[mbYes, mbNo],0)= mrYes then begin
+   //form1.Free; //bmp.Free;
+   action:= caFree;
+   writeln('Free Game and Closer test finished');
+     //Action:= caNone;
+end;
+
+{************** StartBtnClick ***********}
+procedure TFrm_StartBtnClick(Sender: TObject);
+begin
+  Tfrm_makestep;
+end;
+
+{************** StartBtnNext ***********}
+procedure Tfrm_StartBtnNext(Sender: TObject);
+begin
+  FAuto:= NOT FAuto;
+  if FAuto then begin
+    TBitBtn(sender).caption:= 'Stop'
+    TBitBtn(sender).glyph.LoadFromRes(getHINSTANCE,'CL_MPSTOP'); 
+    if FAuto then begin
+      writeln('game of life demo go forever mode...');
+      repeat
+        Tfrm_makestep;
+        Sleep(1000);
+        inc(cntr);
+        panstep.caption:= inttoStr(cntr)+' % step'; 
+        application.ProcessMessages;
+      until NOT FAuto; 
+    end;
+  end else begin
+    TBitBtn(sender).caption:= 'Go Loop'
+    TBitBtn(sender).glyph.LoadFromRes(getHINSTANCE,'CL_MPNEXT'); 
+    writeln('GOL demo stopped');
+  end;
+end;
+
+
+{************ StringGrid1Click ***********}
+procedure Tfrm_StringGrid1Click(Sender: TObject);
+{Set up a board, switch state of clicked cell}
+begin
+  with golstg do
+  if cells[col,row]='' then begin  {make "live" }
+    cells[col,row]:='1';
+    currentgrid[col][row]:=true;
+    writeln(inttostr(col)+' pos: '+ inttostr(row));
+  end
+  else begin  {make "not alive"}
+    cells[col,row]:='';
+    currentgrid[col][row]:=false;
+  end;
+end;
+
+{************ StringgridDrawCell **************}
+procedure Tfrm_StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
+  Rect: TRect; State: TGridDrawState);
+  {OnDrawCell exit updates the board image cell by cell as it is drawn }
+begin
+  with golstg do begin
+     if cells[acol,arow]<>'' then canvas.brush.color:=clred 
+          else canvas.brush.color:= clwhite;
+     canvas.fillrect(rect);
+   end;
+end;
+
+
+{************** FormActivate ***********}
+procedure Tfrm_FormActivate(Sender: TObject);
+var
+  i,j:integer;
+begin  {Initialize the active grid}
+  for i:=0 to high(Currentgrid) do
+    for j:=0 to high(Currentgrid) do Currentgrid[i][j]:= false;
+  FAuto:= false;
+  cntr:= 0;
+end;
+
+{************** New Game Reset ***********}
+procedure Tfrm_btnNewClick(Sender: TObject);
+var
+  i,j:integer;
+begin  {Initialize grid and vector}
+  for i:=0 to high(Currentgrid) do
+    for j:=0 to high(Currentgrid) do begin
+      Currentgrid[i][j]:= false;
+      golstg.cells[i+5,j+1]:= '';
+    end;  
+  FAuto:= false;
+  cntr:= 0;
+end;
+
+
+{************** FormActivate ***********}
+procedure SetFirstForm;
+begin  {Initialize the active grid}
+  with golstg do begin
+    cells[14,13]:= '1'  {make "first form" }
+    cells[13,13]:= '1'  
+    cells[12,13]:= '1'  
+    cells[12,14]:= '1'  
+    cells[12,15]:= '1'  
+    cells[13,12]:= '1'  
+    //cells[col,row]:='1';
+    currentgrid[14][13]:=true;
+    currentgrid[13][13]:=true;
+    currentgrid[12][13]:=true;
+    currentgrid[12][14]:=true;
+    currentgrid[12][15]:=true;
+    currentgrid[13][12]:=true;
+  end;
+   //repaint;
+end;
+
+
+procedure InitCreateForms;
+var panImg, panR: TPanel;
+    bmp: TBitmap;
+begin
+ // seq --> panel-image-drawgrid-bitmap
+ //for i:= 1 to QB+1 do bArr[i]:= TBitMap.Create;
+ //HideGridCursor(frmsg);
+ frmMon:= TForm.Create(self);
+ with frmMon do begin
+   //FormStyle := fsStayOnTop;
+   Position:= poScreenCenter;
+   BorderIcons:= [biSystemMenu, biMinimize];
+   BorderStyle:= bsSingle;
+   PixelsPerInch:= 96;
+   //caption:='PascalPicturePuzzle of BITMAX';
+   Caption:= 'Conway'#39's Game of Life   V1.3 by maXbox';
+   color:= clBtnFace;
+   width:= 1000;
+   height:= 600;
+   Show;
+   onClose:= @CloseClick;
+ end;
+ // golstg:= TStringGrid.Create(frmMon);
+ Tfrm_FormActivate(self);
+
+ panImg:= TPanel.Create(frmMon)
+   with panImg do begin
+    parent:= frmMon;
+    setBounds(8,8,751,531)
+    BevelOuter:= bvLowered
+    //DoubleBuffered:= true;
+   end; 
+   PanR:= TPanel.create(frmMon);
+    with PanR do begin
+      parent:= frmMon;
+      setBounds(772,8,155,531);
+      BevelOuter:= bvLowered
+      TabOrder:= 1
+    end;
+    with TBitBtn.Create(frmMon) do begin
+      Parent:= frmMon;        
+      SetBounds(788,30,121,30)        //30
+      Caption:= 'Load GOL'
+      Hint:= 'Load your own game of life!';
+      ShowHint:= true;
+      glyph.LoadFromResourceName(getHINSTANCE,'CL_MPEJECT'); 
+      //OnClick:= @BtnPictureLoad;
+    end;
+    with TBitBtn.Create(frmMon) do begin
+      Parent:= frmMon;        
+      SetBounds(788,68,121,30)       //68
+      glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTEP'); 
+      Caption:= 'Start GOL'
+      //Enabled:= False
+      //TabOrder = 7
+      OnClick:= @Tfrm_StartBtnClick;
+    end;
+    with TBitBtn.Create(frmMon) do begin
+      Parent:= frmMon;        
+      SetBounds(788,166,121,30)       //68
+      glyph.LoadFromResourceName(getHINSTANCE,'CL_MPNEXT'); 
+      Caption:= 'Run Loop GOL'
+      //Enabled:= False
+      //TabOrder = 7
+      OnClick:= @Tfrm_StartBtnNext;
+    end;
+    with TBitBtn.Create(frmMon) do begin
+      Parent:= frmMon;        
+      SetBounds(788,420,121,30)
+      glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP'); 
+      Caption:= 'Close'
+      OnClick:= @btnCloseClick
+    end;
+    with TBitBtn.Create(frmMon) do begin
+      Parent:= frmMon;        
+      SetBounds(788,230,121,30)
+      glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPLAY'); 
+      Caption:= 'New Evolution'
+      OnClick:= @Tfrm_btnNewClick;
+    end;
+    panstep:= TPanel.Create(frmMon); 
+    with panstep do begin
+      Parent:= frmMon;        
+      SetBounds(788,120,121,25)
+      BevelOuter:= bvLowered
+      Caption:= '0 %'
+      Color:= clyellow;//$30809000;
+      //Color:= 8404992
+    end;
+   frmsg:= TStringGrid.Create(frmMon);
+   with frmsg do begin
+    //SetBounds(512,320,79,79)  
+     parent:= frmMon;
+     Left:= 810; Top:= 320;
+     Width:= 79; Height:= 79;
+     ColCount:= 4
+     DefaultColWidth:= 18
+     DefaultRowHeight:= 18
+     FixedCols:= 0
+     RowCount:= 4
+     FixedRows:= 0
+   end;
+   golstg:= TStringGrid.Create(frmMon);
+   with golstg do begin
+    Left:= 100;  Top:= 30;
+    Width:= 550; Height:= 446;
+    parent:= frmMon;
+    Anchors:= [akLeft, akTop, akRight, akBottom]
+    ColCount:= 32
+    DefaultColWidth:= 16
+    DefaultRowHeight:= 16
+    DefaultDrawing:= False
+    FixedCols:= 0
+    RowCount:= 26
+    FixedRows:= 0
+    OnClick:= @Tfrm_StringGrid1Click; 
+    OnDrawCell:= @Tfrm_StringGrid1DrawCell;
+  end;
+  SetFirstForm;
+  
+  Bmp:= TBitmap.Create;
+  try
+    Bmp.LoadFromFile(Exepath+'/examples/mxlogoball.bmp');
+    golstg.Canvas.Draw(18,18, Bmp);
+  finally
+    Bmp.Free;
+  end;
+  stat:= TStatusbar.Create(FrmMon);
+   with Stat do begin
+     parent:= frmMon;
+     stat.SimplePanel:= true;
+     simpletext:= datetimetostr(now) +'    Set a few boxes in the grid to start...'; 
+   end;
+ end;  
+   
+
+procedure testdecimal;
+// collection-list-vector-stack (list, map, set)
+var tf: extended;
+begin                       
+  tf:= 0.99999999999999999;
+  tf:= 10.0 * tf;
+  printF('more prec %.18f ',[tf]);
+  writeln(floattoStr(tf))
+  writeln('total qual: '+floatToStr(maxCalc('100 - (225/6790*100)')));
+end;  
+  
+procedure listAllWinProcesses;
+var myproclist: TStringlist;
+     i: integer;
+begin
+    myProclist:= TStringList.Create;
+    GetApplicationsRunning(myProclist);     //Jedi
+    for i:= 1 to myProclist.count - 1 do 
+       Writeln(inttoStr(i)+' '+myProclist[i]);
+    myProclist.Free; 
+end;
+
+
+Begin  //GOL main app
+  ProcessmessagesON;
+  if iswin64  then writeln(' is win64 machine: '+ gethostname);
+  listAllWinProcesses;
+  
+  InitCreateForms;
+    // ant maven jenkins reinstall
+  Testdecimal;
+End.
+
+
+
+http://www.delphiforfun.org/Programs/Conways_Life.htm
+
+
+unit U_ConwaysLife1;
+{Copyright © 2007, Gary Darby,  www.DelphiForFun.org
+ This program may be used or modified for any non-commercial purpose
+ so long as this original notice remains in place.
+ All other rights are reserved
+ }
+
+{The simplest version of Conway's Life "game"}
+
+interface
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  Grids, StdCtrls, ExtCtrls, shellAPI;
+
+const boardsize=25;  {The height and width of the board}
+type
+  TForm1 = class(TForm)
+    StringGrid1: TStringGrid;
+    StartBtn: TButton;
+    Memo1: TMemo;
+    StaticText1: TStaticText;
+    procedure StringGrid1Click(Sender: TObject);
+    procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
+    procedure StartBtnClick(Sender: TObject);
+    procedure FormActivate(Sender: TObject);
+    procedure StaticText1Click(Sender: TObject);
+  public
+    {CurrentGrid and NextGrid are 2-dimensional arrays defining two boards, the
+     current and next generations}
+    Currentgrid,NextGrid:array [0..boardsize-1, 0..boardsize-1] of boolean;
+    Procedure makestep;  {Procedure  to generate the next generation grid}
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+//{$R *.DFM}
+
+{************ StringGrid1Click ***********}
+procedure TForm1.StringGrid1Click(Sender: TObject);
+{Set up a board, switch state of clicked cell}
+begin
+  with stringgrid1 do
+  if cells[col,row]='' then
+  begin  {make "live" }
+    cells[col,row]:='1';
+    currentgrid[col,row]:=true;
+  end
+  else
+  begin  {make "dead"}
+    cells[col,row]:='';
+    currentgrid[col,row]:=false;
+  end;
+end;
+
+{************ StringgridDrawCell **************}
+procedure TForm1.StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
+  Rect: TRect; State: TGridDrawState);
+  {OnDrawCell exit updates the board image cell by cell as it is drawn }
+begin
+  with stringgrid1,canvas do
+   begin
+     if cells[acol,arow]<>'' then brush.color:=clblack else brush.color:=clwhite;
+     fillrect(rect);
+   end;
+end;
+
+
+{************** MakeStep *************}
+Procedure TForm1.makestep;
+{The meat of the program - create next generation, return true if pattern changed}
+
+  function CountPrevNeighbors(const i,j:integer):integer;
+  {local function to count the number of neighbors}
+  var
+    L,R,U,D:integer;  {Left, Right, Up, Down offsets for neighbors}
+  begin
+    result:=0;
+    if i>0 then L:=i-1 else L:=boardsize-1; {counters loop around as if the }
+    if j>0 then U:=j-1 else U:=boardsize-1; {board were a closed torus (a doughnut)}
+    if i<boardsize-1 then R:=i+1 else R:=0;
+    if j<boardsize-1 then D:=j+1 else D:=0;
+    {check all 8 neightbors}
+    if Currentgrid[L,j] then inc(result);  {left}
+    if Currentgrid[i,U] then inc(result);  {up}
+    if Currentgrid[R,j] then inc(result);  {right}
+    if Currentgrid[i,D] then inc(result);  {down}
+    if Currentgrid[L,U] then inc(result);  {left & up}
+    if Currentgrid[R,U] then inc(result);  {right & up}
+    if Currentgrid[L,D] then inc(result);  {left & down }
+    if Currentgrid[R,D] then inc(result);  {right & down}
+  end;
+
+  var
+    i,j:integer;
+    n:integer; {neighbor count}
+    livecell:boolean;
+  begin
+    for i:=0 to boardsize-1 do
+    for j:=0 to boardsize-1 do
+    begin
+      Nextgrid[i,j]:=Currentgrid[i,j]; {copy old to new in case no change for next generation}
+      Livecell:=Currentgrid[i,j];  {state of the cell being tested}
+      n:=countprevNeighbors(i,j);  {count the neighbors}
+      {rules: 1.Any live cell with fewer than two or more than 3 live neighbors dies.
+              2.Any dead cell with exactly three live neighbors comes to life.  }
+      if Livecell then
+      begin
+        if ((n<2) or (n>3)) then    {Rule 1}
+        begin
+          nextgrid[i,j]:=false;
+          stringgrid1.cells[i,j]:='';
+        end;
+      end
+      else {check dead cell}
+      if n=3 then   {Rule 2}
+      begin
+        Nextgrid[i,j]:=true;
+        stringgrid1.cells[i,j]:='1';
+      end;
+    end;
+    {make the new (next) grid the current grid}
+    for i:=0 to boardsize-1 do
+    for j:= 0 to boardsize-1 do
+    Currentgrid[i,j]:=NextGrid[i,j];
+  end;
+
+{************** FormActivate ***********}
+procedure TForm1.FormActivate(Sender: TObject);
+var
+  i,j:integer;
+begin  {Initialize the active grid}
+  for i:=0 to high(Currentgrid) do
+  for j:=0 to high(Currentgrid) do Currentgrid[i,j]:=false;
+end;
+
+{************** StartBtnClick ***********}
+procedure TForm1.StartBtnClick(Sender: TObject);
+begin
+  makestep;
+end;
+
+procedure TForm1.StaticText1Click(Sender: TObject);
+begin {link to delphiforfun when text is clicked}
+  ShellExecute(Handle, 'open', 'http://www.delphiforfun.org/',
+  nil, nil, SW_SHOWNORMAL) ;
+end;
+
+end.
+
+
+object Form1: TForm1
+  Left = 192
+  Top = 122
+  Width = 930
+  Height = 600
+  Caption = 'Conway'#39's Game of Life   V1.0'
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  OldCreateOrder = False
+  OnActivate = FormActivate
+  PixelsPerInch = 96
+  TextHeight = 13
+  object StringGrid1: TStringGrid
+    Left = 448
+    Top = 8
+    Width = 433
+    Height = 433
+    Anchors = [akLeft, akTop, akRight, akBottom]
+    ColCount = 25
+    DefaultColWidth = 16
+    DefaultRowHeight = 16
+    DefaultDrawing = False
+    FixedCols = 0
+    RowCount = 25
+    FixedRows = 0
+    TabOrder = 0
+    OnClick = StringGrid1Click
+    OnDrawCell = StringGrid1DrawCell
+  end
+  object StartBtn: TButton
+    Left = 456
+    Top = 456
+    Width = 129
+    Height = 25
+    Caption = 'Step'
+    TabOrder = 1
+    OnClick = StartBtnClick
+  end
+  object Memo1: TMemo
+    Left = 24
+    Top = 24
+    Width = 409
+    Height = 385
+    Lines.Strings = (
+      
+        'This is the simplest version of Conway'#39's Game of Life that I cou' +
+        'ld come up with.'
+      ''
+      'From the Wikipedia entry for Conway'#39's Life":'
+      '--------------------------'
+      
+        'The Game of Life is a cellular automaton devised by the British ' +
+        'mathematician John '
+      
+        'Horton Conway in 1970. It is the best-known example of a cellula' +
+        'r automaton.'
+      ''
+      
+        'The "game" is actually a zero-player game, meaning that its evol' +
+        'ution is determined '
+      
+        'by its initial state, needing no input from human players. One i' +
+        'nteracts with the Game '
+      
+        'of Life by creating an initial configuration and observing how i' +
+        't evolves.'
+      '--------------------------'
+      ''
+      
+        'From each board there are two basic rules for forming the next g' +
+        'eneration:'
+      ''
+      
+        'For each square, count the "neighbors", number of adjoining sqau' +
+        'res (in all 8 '
+      'directions) that are occupied.'
+      ''
+      
+        'Rule 1: If an occupied square has less than 2 or more than 3 nei' +
+        'ghbors, it "dies" (the '
+      'square becomes unoccupied).'
+      ''
+      
+        'Rule 2: if an unoccupied square has exactly 3 neighbors, a "birt' +
+        'h" occurs (it becomes '
+      'occupied).'
+      ''
+      
+        'Click a square to switch its state.  Click the "Step" button to ' +
+        'see the next generation.'
+      ''
+      '')
+    TabOrder = 2
+  end
+  object StaticText1: TStaticText
+    Left = 0
+    Top = 540
+    Width = 914
+    Height = 24
+    Cursor = crHandPoint
+    Align = alBottom
+    Alignment = taCenter
+    Caption = 'Copyright © 2007, Gary Darby,  www.DelphiForFun.org'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlue
+    Font.Height = -16
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsUnderline]
+    ParentFont = False
+    TabOrder = 3
+    OnClick = StaticText1Click
+  end
+end
+
+
+
+Background & Techniques
+
+Every puzzle and game programmer's portfolio should include two standards, John Conway's Game of Life and Fractals, neither one of which currently appears here on DFF.  Today's posting will fill one of those gaps.   I decided to do it while searching for a beginner's level program since I have been neglecting them recently.     The problem is, I now serve two masters - programmers interested in the code and real people who are interested in running the code for some entertainment, educational, or practical purpose.   And most beginner level programs are not likely to be very interesting to users. So here are two versions; one as simple as possible for the beginning Delphian and one that that builds on the simple version.
+
+Mathematician John Conway designed the game in 1970 based on two simple rules.  The board is a rectangular grid of cells each of which is either occupied or empty.   After setting an initial starting set of occupied cells, we move to the next generation according to rules about the the state of the neighbors, the 8 cells which surround it.
+
+Rule 1:  If an occupied cell has two or three neighbors, it is happy and remains unchanged.  Otherwise it is too lonely or too crowded and dies (cell becomes unoccupied).
+
+Rule 2:  If an empty cell has exactly 3 neighbors, a birth occurs and the cell becomes occupied.  Don't ask me what kind of life form requires 3 parents for a birth - I didn't make the rules!
+
+That's it.  Search the web for Conway's Life and you'll find many, many pages of sample patterns, an entire lexicography of named terms for patterns and behaviors, and  a number of other programs including one written in Delphi which handles board sizes up to 1 million x 1 million cells!    And lots of discussions of gliders, sliders, boats, guns, spaceships and oscillators just to name a few. 
+
+The simple version, V1,   changes the state of each cell that gets a mouse click for setting up a pattern.  The Step button creates the next generation.  The board is 25x25 cells.  That's about it. 
+
+Version 2 adds the ability to load and save  pattern  files, automatically moves from generation to generation at a user specified rate, and allows board  to be set to 25x25, 50x50, or 100x100 cells.   I have included a few sample pattern files as a starter set.    You can find hundreds more at  http://www.argentum.freeserve.co.uk/lex.htm.   Simply copy and paste a pattern into a text file to load and run it.   The files are the simplest possible format, a  text file array of '.' and 'O' characters define the pattern ('O' = 'Occupied').  The array is centered on am empty grid when loaded into the program. 
+
+ For either version, patterns that expand beyond the limits of the grid "wrap around"  as if the first column was to the right of the last column and the top row was below the bottom row.  Topologically its as if the board was printed on a cylinder whose ends were then joined together to make doughnut (Ok, a torus, if you want to be technical)..
+
+Non-programmers are welcome to read on, but may want to skip to the bottom of this page to download executable version of Version 2 of the program.
+Notes for Programmers
+
+Version 1 uses two 2-dimensional  arrays of Boolean (true/false) variables, CurrentGrid and NextGrid, to hold the current and the next generation configurations, (True for occupied, False for empty). The new generation depends on the old generation neighbor counts before any updating occurs, thus the need for two grids. A TStringrid control, Stringgrid1,  provides the visual picture of the current configuration.   The MakeStep procedure generates each new generation by counting the neighbors for each cell and applying the rules described above to set the cell value in NextGrid and StringGrid1.  After all cells have been checked, NextGrid is copied to CurrentGrid.  
+
+MakeStep contains about half of the 100 user written instructions in the program.  The other routines are event exits which are called automatically when certain events occur:
+bullet	 Form1Activate is an OnActivate exit which initializes CurrentGrid with False values at startup time.
+bullet	StringGrid1DrawCell is an OnDrawCell exit for Stringgrid1 which is called when windows wants to write each cell.  It fills the cell with a black or white rectangle depending on whether cell text is empty or contains a value.
+bullet	StringGrid1Click responds to user clicks on Sringgrid1 (an OnClick event exit) to change the cell value from empty to '1' or from '1' to empty.  
+
+
+
+Process ID: 4424
+MemoryLoad: 36% used
+Free Mem: -1614880MB
+
+
+11.2.2013
+Source has been set in SVN Turtoise
+31301 add file, 1.525 GByte, transfer 7 min. at revision 211
+
+Total Files Listed:
+      23205 File(s)  3'519'959'913 bytes
+      24287 Dir(s)  53'073'997'824 bytes free
+
+
+
+Set up for SONAR Java, C#, PL/SQL
+
+Link StartSonar - Shortcut
+D:\software\sonar-3.4.1\bin\windows-x86-32\StartSonar.bat
+add rule checked exceptions
+add path to sonar runner in environment variables
+//C:\maXbox\sonar-3.4.1\bin\windows-x86-64\StartSonar.bat
+C:\maXbox\sonar-3.4.1\sonar_runner_home\sonar-runner.bat
+
+http://www.ifunky.net/Blog/post/Install-and-Configure-Sonar-on-Windows-2008.aspx
+
+I'm currently looking at integrating Sonar into our build environment which intially didn't go too well interms of installation so I thought I'd document what I did and what was required for future reference.  In this first part I will show you how to configure Sonar to run with a basic out of the box setup that uses the inbuilt Derby database, localhost web and Core/Squid C# plugins.
+
+PREREQUISITES - VERY IMPORTANT!
+
+    Download Java JDK, it's works with 1.5+ but I installed 1.7.  
+    http://www.oracle.com/technetwork/java/javase/downloads/java-se-jdk-7-download-432154.html
+
+INSTALL SONAR
+
+    Download Sonar:
+    http://sonar.codehaus.org/downloads/
+    Extract to a directory i.e. c:\Sonar
+    Run \bin\windows-x86-32\StartSonar.bat or \bin\windows-x86-64\StartSonar.bat depending on your OS
+    Navigate to http://localhost:9000 to view the default console
+
+    At this point Sonar is configured to use the default database.
+
+CONFIGURE SONAR WITH VS2010
+
+    Download the "C# Plugins Ecosystem" 
+    - Version 1.0 http://docs.codehaus.org/download/attachments/201228384/CSharpPluginsEcosystem-1.0-RC2.zip
+    (Lastest version can be found on the top right here: http://docs.codehaus.org/display/SONAR/C-Sharp+Plugins+Ecosystem)
+    Extract to the plugins directory C:\Sonar\sonar-2.9\extensions\plugins
+
+
+INSTALL JAVA RUNNER
+
+Rather than using Mavern it's much easier to to use the Java Runner to kick off Sonar.
+
+    Download the Java Runner: http://docs.codehaus.org/display/SONAR/Analyse+with+a+simple+Java+Runner#AnalysewithasimpleJavaRunner-Installation
+    Extract to dir i.e. c:\Sonar\sonar-runner-1.1
+    Modify C:\Sonar\sonar-runner-1.1\conf\sonar-runner.properties to enble the default site and Derby DB
+    My modifed file looks like this:
+
+     #----- Default directory layout  
+     sources=src/main/java  
+     tests=src/test/java  
+     binaries=target/classes  
+     sonar.sourceEncoding=UTF-8  
+     #----- Default Sonar server  
+     sonar.host.url=http://localhost:9000  
+     #----- Global database settings  
+     sonar.jdbc.username=sonar  
+     sonar.jdbc.password=sonar  
+
+    Make sure you have the following environment varaibles:
+    JAVA_HOME = C:\Program Files\Java\jdk1.6.0_23
+    SONAR_RUNNER_HOME = C:\Sonar\sonar-runner-1.1
+    Add the sonar runner bin path to your PATH environment (for my install this is C:\Sonar\sonar-runner-1.1\bin)
+    There are two ways to tell Sonar where your .sln file is located
+    a) You can create a sonar-project.properties file in the same directory as your solution file, Sonar will find it OR
+    b) Create a sonar-project.properties file but use the sonar.dotnet.visualstudio.solution.file property to specify the path (this is my prefered option)
+    Create a file called "sonar-project.properties" as descrivbed in the above step (literally as it is don't replace project with your project name!) placing it 
+    Here's my sample properties file located on the root of my application:
+
+    AppName
+    ---->BuildTools
+    ---->Lib
+    ---->src
+    --------->AppName.sln
+    build.proj
+    sonar-project.properties
+
+       
+     # Project identification  
+     sonar.projectKey=DMG:AppName
+     sonar.projectVersion=1.0-SNAPSHOT  
+     sonar.projectName=AppName
+       
+     # Info required for Sonar  
+     sources=.  
+     sonar.language=cs  
+       
+     #Core C# Settings  
+     sonar.dotnet.visualstudio.solution.file=\src\\AppName.sln  
+       
+     #Gendarme  
+     sonar.gendarme.assemblies=\build\\DmgTech*.*  
+     sonar.gendarme.mode=skip  
+       
+     # Gallio  
+     sonar.gallio.mode=skip  
+       
+     # FXCop  
+     sonar.fxcop.mode=skip  
+       
+     #StyleCop  
+     sonar.stylecop.mode=skip  
+       
+
+    To run Sonar-Runner against your project
+    - Shell out to DOS
+    - Change directory to the location of your "sonar-project.properties" file
+    - Execute "sonar-runner"
+    View your reports at http://localhost:9000
+
+
+Troubleshooting
+
+    If you receive something like: Fail to connect to database: undefined method `getActiveRecordDialectCode' for nil
+    Check the JDK version you are running
+    If you receive a maintenance warning then try http://localhost:9000\setup
+    View the logs \logs\sonar.log
+    If you receive the following error make sure the path to Java is in the environment path (I had to put C:\Program Files\Java\jdk1.7.0\bin).  To test head to DOS and type java

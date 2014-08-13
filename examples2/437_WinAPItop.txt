@@ -1,0 +1,666 @@
+Program API_ZEOS_TestDemo; //in progress
+
+//////////////////////////////////////////////////////////////////////
+//  Get several functions of ZEOS utilities to test                 //
+//  #sign:Administrator: PC08: 20/03/2014 08:36:37 AM 
+//  Purpose: checks convert and SQL  controls                       //
+//  #path>ples\E:\maxbox3\mXGit39988\maxbox3\examples\              //
+//  2 func, 0 proc: Lines of Code #locs:663
+//////////////////////////////////////////////////////////////////////
+
+{unit uPSI_ZSysUtils; }
+
+//uPSI_uLkJSON.pas, uPSI_HotLog; IndyPac3}
+//TODO: find an example for all functions
+//TODO: Save image to webserver_file, turn procedure [DownloadJPEGTo..] to function
+
+Const
+   UrlGoogleQrCode= 'http://chart.apis.google.com/chart?chs=%dx%d&cht=qr&chld=%s&chl=%s';
+   AFILENAME= 'mX3QRCode3.png';
+   QDATA= 'this is maXland on a maXbox stream dream firebox';
+  
+type
+  TQrImage_ErrCorrLevel=(L,M,Q,H);
+
+var
+  js:TlkJSONobject;
+  xs:TlkJSONbase;
+  
+// i improve test for version 0.94 - add random part to names of fields;
+// it smaller decrease speed of generation, but much better for testing
+// Leon, 27/03/2007
+{.$define usefastmm}
+
+ procedure TForm1_ButtonLoadXmlWithALXmlDocumentClick(Sender: TObject);
+Var aALXMLDocument: TALXmlDocument;
+    aNodeCount: Integer;
+    MemoryUsage: DWORD;
+    aStartDate: cardinal;
+    MemoLoadXmlWithALXmlDocument: TMemo;
+    E: Exception;
+begin
+  If {MainOpenDialog.Execute} true then begin
+
+    //MemoLoadXmlWithALXmlDocument.Lines.Clear;
+    //MemoryUsage := ProcessMemoryUsage(GetCurrentProcessID);
+    Try
+
+     aALXMLDocument:= TALXmlDocument.Create;
+      Try
+        aStartDate := GetTickCount;
+        //aALXMLDocument.LoadFromFile(AnsiString(MainOpenDialog.FileName));
+        //aNodeCount := TForm1_scrollAllNode(aALXMLDocument.Node);
+//        MemoLoadXmlWithALXmlDocument.Lines.Add('Memory used: ' + FormatFloat('0,',(ProcessMemoryUsage(GetCurrentProcessID) - MemoryUsage)) + ' bytes');
+        MemoLoadXmlWithALXmlDocument.Lines.Add('Number of nodes created: ' + IntToStr(aNodeCount));
+        MemoLoadXmlWithALXmlDocument.Lines.Add('Time to load and scroll all nodes: ' + IntToStr(GetTickCount - aStartDate) + ' ms');
+        aStartDate := GetTickCount;
+        aALXMLDocument.SaveToFile(ALGetModulePath + 'sample.xml');
+        MemoLoadXmlWithALXmlDocument.Lines.Add('Time to save the xml to disk: ' + IntToStr(GetTickCount - aStartDate) + ' ms');
+        ALDeleteFile(ALGetModulePath + 'sample.xml');
+      finally
+        aALXMLDocument.Free;
+      end;
+
+    except
+      //on E: Exception do
+        MemoLoadXmlWithALXmlDocument.Lines.Add('Error: ' + E.Message);
+    end;
+
+  end;
+
+end;
+
+function RoundDownToPowerOf2(value : Integer) : Integer;
+begin
+   if value>0 then begin
+      Result:=1 shl 30;
+      while Result>value do Result:=Result shr 1;
+   end else Result:=1;
+end;
+
+
+function RoundUpToPowerOf2(value : Integer) : Integer;
+begin
+   Result:=1;
+   while (Result<value) do Result:=Result shl 1;
+end;
+
+
+// IsPowerOf2
+//
+function IsPowerOf2(value : Integer) : Boolean;
+begin
+   Result:=(RoundUpToPowerOf2(value)=value);
+end;
+
+// ReadCRLFString
+//
+function ReadCRLFString(aStream : TStream) : String;
+var
+   c : Char;
+begin
+   Result:='';
+   while Copy(Result, Length(Result)-1, 2)<>#13#10 do begin
+      aStream.Read(c, 1);
+      Result:=Result+c;
+   end;
+   Result:=Copy(Result, 1, Length(Result)-2);
+end;
+
+// WriteCRLFString
+//
+const
+   //cCRLF : Integer = $0A0D;
+   cCRLF = $0A0D;
+
+procedure WriteCRLFString(aStream : TStream; const aString : String);
+begin
+   with aStream do begin
+      Write(aString[1], Length(aString));
+      //Write(cCRLF, 2);
+   end;
+end;
+
+// TryStrToFloat
+//
+function TryStrToFloat(const strValue : String; var val : Extended): Boolean;
+var
+   i, j, divider, lLen, exponent : Integer;
+   c : Char;
+   v : Extended;
+begin
+   if strValue='' then begin
+      Result:=False;
+      Exit;
+   end else v:=0;
+   lLen:=Length(strValue);
+   while (lLen>0) and (strValue[lLen]=' ') do Dec(lLen);
+   divider:=lLen+1;
+   exponent:=0;
+	for i:=1 to lLen do begin
+      c:=strValue[i];
+      case c of
+         ' ' : if v<>0 then begin
+            Result:=False;
+            Exit;
+         end;
+         '0'..'9' : v:=(v*10)+strtoint(c)-strtoint('0');
+         ',', '.' : begin
+            if (divider>lLen) then
+               divider:=i+1
+            else begin
+               Result:=False;
+               Exit;
+            end;
+         end;
+         '-', '+' : if i>1 then begin
+            Result:=False;
+            Exit;
+         end;
+         'e', 'E' : begin
+            if i+1>lLen then begin
+               Result:=False;
+               Exit;
+            end;
+            for j:=i+1 to lLen do begin
+               c:=strValue[j];
+               case c of
+                  '-', '+' : if j<>i+1 then begin
+         				Result:=False;
+                     Exit;
+                  end;
+                  '0'..'9' : exponent:=(exponent*10)+strtoint(c)-strtoint('0');
+               else
+                  Result:=False;
+                  //Exit;
+               end;
+            end;
+            if strValue[i+1]<>'-' then
+               exponent:=-exponent;
+            exponent:=exponent-1;
+            lLen:=i;
+            if divider>lLen then
+               divider:=lLen;
+            Break;
+         end;
+		else
+         Result:=False;
+         //Exit;
+      end;
+   end;
+   divider:=lLen-divider+exponent+1;
+   if strValue[1]='-' then begin
+      v:=-v;
+   end;
+   if divider<>0 then
+      v:=v*Exp(-divider*Ln(10));
+   val:=v;
+   Result:=True;
+end;
+
+// StrToFloatDef
+//
+function StrToFloatDef(const strValue : String; defValue : Extended) : Extended;
+begin
+   if not TryStrToFloat(strValue, Result) then
+      result:=defValue;
+end;
+
+// ParseInteger
+//
+function ParseInteger(var p : PChar) : Integer;
+var
+   neg : Boolean;
+   c : Char;
+begin
+   Result:=0;
+   if p=nil then Exit;
+   neg:=False;
+   // skip non-numerics
+   //while not (p^ in [#0, '0'..'9', '+', '-']) do Inc(p);
+   //c:=p^;
+   if c='+' then
+      Inc(p)
+   else if c='-' then begin
+      neg:=True;
+      Inc(p);
+   end;
+   // Parse numerics
+   while True do begin
+      //c:=p^;
+      //if not (c in ['0'..'9']) then Break;
+      Result:=Result*10+strtoint(c)-strtoint('0');
+      Inc(p);
+   end;
+   if neg then
+      Result:=-Result;
+end;
+
+
+// SaveStringToFile
+//
+procedure SaveStringToFile(const fileName, data : String);
+var
+   n : Cardinal;
+	fs : TStream;
+begin
+	fs:=CreateFileStream(fileName, fmCreate);
+   try
+      n:=Length(data);
+      if n>0 then
+      	fs.Write(data[1], n);
+   finally
+   	fs.Free;
+   end;
+end;
+
+// LoadStringFromFile
+//
+function LoadStringFromFile(const fileName : String) : String;
+var
+   n : Cardinal;
+	fs : TStream;
+begin
+   if FileExists(fileName) then begin
+   	fs:=CreateFileStream(fileName, fmOpenRead+fmShareDenyNone);
+      try
+         n:=fs.Size;
+   	   SetLength(Result, n);
+         if n>0 then
+         	fs.Read(Result[1], n);
+      finally
+   	   fs.Free;
+      end;
+   end else Result:='';
+end;
+
+// SizeOfFile
+//
+function SizeOfFile(const fileName : String) : Int64;
+var
+	fs : TStream;
+begin
+   if FileExists(fileName) then begin
+   	fs:=CreateFileStream(fileName, fmOpenRead+fmShareDenyNone);
+      try
+         Result:=fs.Size;
+      finally
+   	   fs.Free;
+      end;
+   end else Result:=0;
+end;
+
+
+function PathEllipsis2(const S : string; MaxWidth : Integer) : string;
+  { PathEllipsis function. Trims a path down to the      }
+  { specified number of pixels. For example,             }
+  { 'd:\program files\my stuff\some long document.txt'   }
+  { becomes 'd:\...\some long...' or a variation thereof }
+  { depending on the value of MaxWidth.                  }
+var
+  R       : TRect;
+  BM      : TBitmap;
+  NCM     : TNonClientMetrics;
+begin
+  if MaxWidth = 0 then begin
+    Result := S;
+    Exit;
+  end;
+  NCM.cbSize := SizeOf(NCM);
+  SystemParametersInfoNCM(
+    SPI_GETNONCLIENTMETRICS, NCM.cbSize, NCM, 0);
+  BM := TBitmap.Create;
+  try
+    BM.Canvas.Font.Handle := CreateFontIndirect(NCM.lfMenuFont);
+    if BM.Canvas.TextWidth(S) < MaxWidth then begin
+      Result := S;
+      Exit;
+    end;
+    Result := ExtractFilePath(S);
+    Delete(Result, Length(Result), 1);
+    while BM.Canvas.TextWidth(Result + '\...\' + ExtractFileName(S)) > MaxWidth do begin
+      { Start trimming the path, working backwards }
+      Result := ExtractFilePath(Result);
+      Delete(Result, Length(Result), 1);
+      { Only drive letter left so break out of loop. }
+      if Length(Result) = 2 then
+        Break;
+    end;
+    { Add the filename back onto the modified path. }
+    Result := Result + '\...\' + ExtractFileName(S);
+    { Still too long? }
+    if BM.Canvas.TextWidth(Result) > MaxWidth then begin
+      R := Rect(0, 0, MaxWidth, 0);
+      DrawText(BM.Canvas.Handle, PChar(Result), -1,
+        R, DT_SINGLELINE or DT_END_ELLIPSIS or DT_MODIFYSTRING or DT_CALCRECT);
+    end;
+  finally
+    BM.Free;
+  end;
+end;
+
+
+const
+  ROP_DSPDxax = $00E20746;
+
+function CreateDisabledBitmap2(FOriginal : TBitmap; OutlineColor : TColor) : TBitmap;
+  {-create TBitmap object with disabled glyph}
+var
+  MonoBmp : TBitmap;
+  IRect   : TRect;
+begin
+  IRect := Rect(0, 0, FOriginal.Width, FOriginal.Height);
+  Result := TBitmap.Create;
+  try
+    Result.Width := FOriginal.Width;
+    Result.Height := FOriginal.Height;
+    MonoBmp := TBitmap.Create;
+    try
+      with MonoBmp do begin
+        Assign(FOriginal);
+        HandleType := bmDDB;
+        Canvas.Brush.Color := OutlineColor;
+        if Monochrome then begin
+          Canvas.Font.Color := clWhite;
+          Monochrome := False;
+          Canvas.Brush.Color := clWhite;
+        end;
+        Monochrome := True;
+      end;
+      with Result.Canvas do begin
+        Brush.Color := clBtnFace;
+        FillRect(IRect);
+        Brush.Color := clBtnHighlight;
+        SetTextColor(Handle, clBlack);
+        SetBkColor(Handle, clWhite);
+        BitBlt(Handle, 1, 1, WidthOf(IRect), HeightOf(IRect),
+          MonoBmp.Canvas.Handle, 0, 0, ROP_DSPDxax);
+        Brush.Color := clBtnShadow;
+        SetTextColor(Handle, clBlack);
+        SetBkColor(Handle, clWhite);
+        BitBlt(Handle, 0, 0, WidthOf(IRect), HeightOf(IRect),
+          MonoBmp.Canvas.Handle, 0, 0, ROP_DSPDxax);
+      end;
+    finally
+      MonoBmp.Free;
+    end;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+type
+  TParentControl = TWinControl;
+
+
+procedure CopyParentImage2(Control : TControl; Dest : TCanvas);
+var
+  I     : Integer;
+  Count : Integer;
+  X, Y  : Integer;
+  OldDC : Integer;
+  DC    : hDC;
+  R     : TRect;
+  SelfR : TRect;
+  CtlR  : TRect;
+begin
+  if Control.Parent = nil then
+    Exit;
+   Count := Control.Parent.ControlCount;
+  DC := Dest.Handle;
+  SelfR := Bounds(Control.Left, Control.Top, Control.Width, Control.Height);
+  X := -Control.Left; Y := -Control.Top;
+   {copy parent control image}
+  OldDC := SaveDC(DC);
+  SetViewportOrgEx(DC, X, Y, '');
+  IntersectClipRect(DC, 0, 0, Control.Parent.ClientWidth, Control.Parent.ClientHeight);
+  //TParentControl(Control.Parent).PaintWindow(DC);
+  RestoreDC(DC, OldDC);
+  //GetTemporaryFilesPath 
+
+  {copy images of graphic controls}
+  for I := 0 to Count - 1 do begin
+    if (Control.Parent.Controls[I] <> nil) and
+      not (Control.Parent.Controls[I] is TWinControl) then begin
+      if Control.Parent.Controls[I] = Control then
+        Break;
+      with Control.Parent.Controls[I] do begin
+        CtlR := Bounds(Left, Top, Width, Height);
+        if {bool}IntersectRect(R, SelfR, CtlR) and Visible then begin
+          OldDC := SaveDC(DC);
+          SetViewportOrgEx(DC, Left + X, Top + Y, '');
+          IntersectClipRect(DC, 0, 0, Width, Height);
+          Perform(WM_PAINT, DC, 0);
+          RestoreDC(DC, OldDC);
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure DrawTransparentBitmap2(Dest : TCanvas; X, Y, W, H : Integer;
+  Rect : TRect; Bitmap : TBitmap; TransparentColor : TColor);
+var
+  MemImage : TBitmap;
+  R        : TRect;
+begin
+  MemImage := TBitmap.Create;
+  try
+    R := Bounds(0, 0, Bitmap.Width, Bitmap.Height);
+    if TransparentColor = clNone then begin
+      if (WidthOf(Rect) <> 0) and (HeightOf(Rect) <> 0) then
+        R := Rect;
+      MemImage.Width := WidthOf(R);
+      MemImage.Height := HeightOf(R);
+      MemImage.Canvas.CopyRect(Bounds(0, 0, MemImage.Width, MemImage.Height),
+        Bitmap.Canvas, R);
+
+      if (W = 0) or (H = 0) then
+        Dest.Draw(X, Y, MemImage)
+      else
+        Dest.StretchDraw(Bounds(X, Y, W, H), MemImage);
+     end else  begin
+      MemImage.Width := WidthOf(R);
+      MemImage.Height := HeightOf(R);
+      MemImage.Canvas.CopyRect(R, Bitmap.Canvas, R);
+      if TransparentColor = clDefault then
+        TransparentColor := MemImage.Canvas.Pixels[0, MemImage.Height - 1];
+      DrawTransparentBitmapPrim(Dest.Handle, MemImage.Handle, X, Y, W, H,
+        Rect, ColorToRGB(TransparentColor and not $02000000));
+    end;
+  finally
+    MemImage.Free;
+  end;
+end;
+
+  
+function DownloadJPGToBitmap(const URL : string; ABitmap: TBitmap): Boolean;
+var
+  idHttp: TIdHTTP;
+  ImgStream: TMemoryStream;
+  JpgImage: TJPEGImage;
+begin
+  Result:= False;
+  ImgStream:= TMemoryStream.Create;
+  try
+    idHttp:= TIdHTTP.Create(nil);
+    try
+      idHttp.Get1(URL, ImgStream);
+    finally
+      idHttp.Free;
+    end;
+    ImgStream.Position:= 0;
+    JpgImage:= TJPEGImage.Create;
+    try
+      JpgImage.LoadFromStream(ImgStream);
+      ABitmap.Assign(JpgImage);
+    finally
+      Result:= True;
+      JpgImage.Free;
+    end;
+  finally
+    ImgStream.Free;
+  end;
+end;
+
+function ProcessMemoryUsage(ProcessID : DWORD): DWORD;
+var ProcessHandle : THandle;
+    MemCounters   : TProcessMemoryCounters;
+begin
+  Result:= 0;
+  ProcessHandle:= OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                               false, ProcessID);
+  try
+    if GetProcessMemoryInfo(ProcessHandle,
+                            MemCounters,
+                            sizeof(MemCounters))
+    then Result:= MemCounters.WorkingSetSize;
+  finally
+    CloseHandle(ProcessHandle);
+  end;
+end;
+
+
+
+//TODO:#1 Returns the QR Code direct of the last modification of the given File
+
+ var image2: TImage;
+    asiz: dword;
+    lib : TALFBXLibrary;
+    //lib2 : TALMySqlLibrary;
+
+begin
+  Writeln(datetimetostr(FileTimeGMT(exepath+'maxbox3.exe')));
+  //call of the script
+  //GetQrCodeIndy(150,150,'Q',ExePath+AFILENAME, QData);
+  //call of the Lib
+  //GetQrCode2(150,150,'Q',QDATA, ExePath+AFILENAME);
+  //http://entwickler-konferenz.de/
+  //http://www.softwareschule.ch/images/Ekon17_2013.jpg
+  
+  image2:= TImage.create(self); 
+  if isInternet then
+    DownloadJPGToBitmap('http://www.softwareschule.ch/images/Ekon17_2013.jpg',
+                              Image2.Picture.Bitmap);
+    
+    with TCustomDrawForm.create(self) do begin
+       width:=820;
+       height:=820;
+       image1.height:= 600; //add properties
+       image1.picture.bitmap:= image2.picture.bitmap;
+       //SelectionBackground1Click(self)
+       //CustomDraw1Click(self);  
+       //Selection1Click(self);
+       Background1.click;
+       bitmap1.click;
+       Tile1.click;
+       Showmodal;           //add methods
+       Free;                
+     end;
+  
+   //if IsTCPPortOpen(80,'192.168.1.53') then
+      if IsTCPPortOpen(80,getIP(getHostName)) then
+       writeln('Port 80 Open Started') else 
+       writeln('Port not open');
+   maxCalcF('SQRT(PI)');
+   maxCalcF('1/2*(SQRT(5)+1)');
+  
+   PrintF('gcd %d * lcm %d = %d ',[gcd(4,6), lcm(4,6), 4*6]);
+     //SetAlias(Alias, aAliasDir);
+     //SetBde('\DRIVERS\PARADOX\INIT','NET DIR',aNetDir);
+     //SetBde('\SYSTEM\INIT','LOCAL SHARE','TRUE');
+    //JSONTest; 
+     writeln(ovformatsettings.timeseparator);
+     writeln(ovformatsettings.dateseparator);
+     //writeln(getformatsettings.dateseparator);
+     writeln(PathEllipsis(exepath+'firstdemo.txt',90));
+     writeln(PathEllipsis2(exepath+'firstdemo.txt',90));
+    //  CL.AddDelphiFunction('Function wGetComputerName( lpBuffer : PKOLChar; var nSize : DWORD) : BOOL');
+
+    writeln(booleantoString(wGetComputerName('Came',asiz)));
+     //wgetfileversioninfo
+    writeln('proc page peak file '
+       +inttostr(getProcessAllMemory(GetCurrentProcessID).PeakPagefileUsage div 1024));
+       writeln('mem from dll '+inttostr(ProcessMemoryUsage(GetCurrentProcessID)));
+     with TOvcURL.create(self) do begin
+      parent:= NIL;
+      free;
+      end;  
+  
+  //GDS32DLL
+     
+     {with TALFBXClient.create(fb20, 'fbclient.dll') do begin
+      //parent:= NIL;
+      //connect
+      //selectdata8
+      free;
+      end;}
+   
+     with TALFBXClient.create1(lib) do begin
+      //parent:= NIL;
+      //connect
+      //selectdata
+      free;
+      end;
+   
+    {with TalMySqlClient.Create(MYSQL55,'libmysql.dll') do begin
+      //parent:= NIL;
+      //connect
+      //SelectData8
+      free;
+      end;}
+     //Exception: Can't load library: libmysql.dll. at 0.2533
+  
+        
+  
+     with TOvcMeter.create(self) do begin
+      //setBounds
+      parent:= NIL;
+      //connect
+      //parent:= NIL;
+      free;
+      end;  
+      
+   with TAlSelectSQLClause.Create do begin
+   Free;
+  end;
+  
+  with TALFTPClient.Create do begin
+    Free;
+  end;
+  
+  with TIdCommand.Create do begin
+  //sendreply;
+  Free;
+  end;
+  {TIdCustomHTTP.Create(self)
+  TALBaseAVLBinaryTree.Create;
+  TALFTPClient.Create;
+  TALHTTPResponseHeader.Create;
+  TALNewsArticleHeader.Create;
+  TALPhpSocketFastCgiRunnerEngine.Create;
+  TMsgWindow.Create('',NIL);
+  TALHTTPClient.Create;
+  TALBaseAVLList.Create;
+  TAlSmtpClient.Create;
+  TBoldFileHandler.Create;
+  TJclLinearTransformation.Create;
+  TStMimeConverter.Createinit(nil);
+  //TStRegIni.Create('',true)
+  TADOQuery.Create(self)
+  TCustomFileDialog.Create(self);
+  TIdLogFile.Create(self);
+  TIdStack.Create;
+  TStDictionary.Create(self);
+  TCustomPacketWriter.Create;
+  TStString.CreateAlloc(300);}
+
+ 
+      
+      
+  
+End.  
+
+
+----app_template_loaded_code----

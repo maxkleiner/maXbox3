@@ -1,0 +1,569 @@
+Version:0.9
+StartHTML:0000000105
+EndHTML:0000050348
+StartFragment:0000001037
+EndFragment:0000050332
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>mXScriptasHTML</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="generator" content="SynEdit HTML exporter" />
+<style type="text/css">
+<!--
+body { color: #000000; background-color: #FFFFFF; }
+.pas1-assembler { }
+.pas1-character { text-decoration: underline; }
+.pas1-comment { color: #000080; font-style: italic; }
+.pas1-float { color: #800080; }
+.pas1-hexadecimal { color: #FF00FF; }
+.pas1-identifier { }
+.pas1-number { color: #FF0000; }
+.pas1-preprocessor { font-style: italic; }
+.pas1-reservedword { color: #000000; font-weight: bold; }
+.pas1-space { }
+.pas1-string { color: #008080; }
+.pas1-symbol { color: #000000; }
+-->
+</style>
+</head>
+<body>
+<!--StartFragment--><pre><code><span class="pas1-comment">{***************************************************************
+ *            JProfiler Demo
+ * Project  : Profiling Demo Tool Simulator system bITbox
+ * Unit Name: 332_jprofiler_form2.txt
+ * Purpose  : Demonstrates analysis of runtime profiling in a report 
+ * Date     : 18/10/2012  -  14:38:56, translate dfm form
+ *          : 07/12/2012  - add more methods to simulate
+            : 13/12/2012  - replace Button to BitBtn
+            : 15/12/2012  - set profiler call at end, loc's= 298, intf=9
+ ****************************************************************}
+//shows structure of procedure types, max@kleiner.com ex. _299
+//compilerswitch $N- turns the coprocessor off, {$mode objfpc}{$H+}
+//You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
+//located at http://jvcl.sourceforge.net
+
+</span><span class="pas1-reservedword">PROGRAM</span><span class="pas1-space"> SimulationLAB_JProfiler;
+
+</span><span class="pas1-reservedword">Const</span><span class="pas1-space"> MILLISECONDS = </span><span class="pas1-number">50</span><span class="pas1-symbol">; </span><span class="pas1-comment">//for timer, sync trackbar 1000/50= position 20
+</span><span class="pas1-space">      DefCaption = </span><span class="pas1-string">'JvProfiler 32 Test program'</span><span class="pas1-symbol">;
+ 
+</span><span class="pas1-reservedword">type
+</span><span class="pas1-space">  TBoolean_func = </span><span class="pas1-reservedword">Function</span><span class="pas1-symbol">(a,b: boolean): boolean; 
+
+ </span><span class="pas1-reservedword">var</span><span class="pas1-space"> 
+   jfrm: TForm;
+   ListBox1: TListBox;
+   btnUseId, btnUseName, btnResult: TBitBtn;
+   Progress: TProgressBar;
+   JP: TJvProfiler;
+   FTerminated: boolean;
+  
+  
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> addAllBooleans;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> lbox: TListbox;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//S:= StringOfChar(' ',i div 2) +S+ StringOfChar(' ',i-i div 2); 
+</span><span class="pas1-space">   lbox.Clear;
+   </span><span class="pas1-reservedword">with</span><span class="pas1-space"> LBox.Items </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">         add(</span><span class="pas1-string">'All 16 Boolean Functions'</span><span class="pas1-symbol">);
+         add(</span><span class="pas1-string">'--------------------------------------------------------------'</span><span class="pas1-symbol">);
+         add(format(</span><span class="pas1-string">'01 FALSE(Contradiction)=0 %*s'</span><span class="pas1-symbol">,[</span><span class="pas1-number">21</span><span class="pas1-symbol">,</span><span class="pas1-string">'0000'</span><span class="pas1-symbol">]));
+         add(format(</span><span class="pas1-string">'02 AND(Conjunction)=xy %*s'</span><span class="pas1-symbol">,[</span><span class="pas1-number">27</span><span class="pas1-symbol">,</span><span class="pas1-string">'0001'</span><span class="pas1-symbol">]));
+         add(format(</span><span class="pas1-string">'03 Inhibition=x^y %*s'</span><span class="pas1-symbol">,[</span><span class="pas1-number">42</span><span class="pas1-symbol">,</span><span class="pas1-string">'0010'</span><span class="pas1-symbol">]));
+         add(format(</span><span class="pas1-string">'04 Prependence=x %*s'</span><span class="pas1-symbol">,[</span><span class="pas1-number">37</span><span class="pas1-symbol">,</span><span class="pas1-string">'0011'</span><span class="pas1-symbol">]));
+         add(format(</span><span class="pas1-string">'05 Presection=^xy %*s'</span><span class="pas1-symbol">,[</span><span class="pas1-number">38</span><span class="pas1-symbol">,</span><span class="pas1-string">'0100'</span><span class="pas1-symbol">]));
+         add(format(</span><span class="pas1-string">'06 Postpendence=y %*s'</span><span class="pas1-symbol">,[</span><span class="pas1-number">35</span><span class="pas1-symbol">,</span><span class="pas1-string">'0101'</span><span class="pas1-symbol">]));
+         add(format(</span><span class="pas1-string">'07 XOR(Exclusive OR)=x^y+^xy %*s'</span><span class="pas1-symbol">,[</span><span class="pas1-number">12</span><span class="pas1-symbol">,</span><span class="pas1-string">'0110'</span><span class="pas1-symbol">]));
+         add(format(</span><span class="pas1-string">'08 OR(Disjunction)=x+y %*s'</span><span class="pas1-symbol">,[</span><span class="pas1-number">29</span><span class="pas1-symbol">,</span><span class="pas1-string">'0111'</span><span class="pas1-symbol">]));
+         add(format(</span><span class="pas1-string">'09 NOR(Rejection)=^(x+y) %*s'</span><span class="pas1-symbol">,[</span><span class="pas1-number">23</span><span class="pas1-symbol">,</span><span class="pas1-string">'1000'</span><span class="pas1-symbol">]));
+         add(format(</span><span class="pas1-string">'10 Aequivalence(BiCond)=^x^y+xy %*s'</span><span class="pas1-symbol">,[</span><span class="pas1-number">05</span><span class="pas1-symbol">,</span><span class="pas1-string">'1001'</span><span class="pas1-symbol">]));
+         add(format(</span><span class="pas1-string">'11 NegationY=^y %*s'</span><span class="pas1-symbol">,[</span><span class="pas1-number">40</span><span class="pas1-symbol">,</span><span class="pas1-string">'1010'</span><span class="pas1-symbol">]));
+         add(format(</span><span class="pas1-string">'12 ImplicationY(y--&gt;x)=x+^y %*s'</span><span class="pas1-symbol">,[</span><span class="pas1-number">21</span><span class="pas1-symbol">,</span><span class="pas1-string">'1011'</span><span class="pas1-symbol">]));
+         add(format(</span><span class="pas1-string">'13 NegationX=^x %*s'</span><span class="pas1-symbol">,[</span><span class="pas1-number">41</span><span class="pas1-symbol">,</span><span class="pas1-string">'1100'</span><span class="pas1-symbol">]));
+         add(format(</span><span class="pas1-string">'14 ImplicationX(x--&gt;y)=^x+y %*s'</span><span class="pas1-symbol">,[</span><span class="pas1-number">21</span><span class="pas1-symbol">,</span><span class="pas1-string">'1101'</span><span class="pas1-symbol">]));
+         add(format(</span><span class="pas1-string">'15 NAND(Exclusion)=^(xy) %*s'</span><span class="pas1-symbol">,[</span><span class="pas1-number">22</span><span class="pas1-symbol">,</span><span class="pas1-string">'1110'</span><span class="pas1-symbol">]));
+         add(format(</span><span class="pas1-string">'16 TRUE(Tautologic)=1 %*s'</span><span class="pas1-symbol">,[</span><span class="pas1-number">27</span><span class="pas1-symbol">,</span><span class="pas1-string">'1111'</span><span class="pas1-symbol">]));
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;    
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+
+
+</span><span class="pas1-comment">//**************************Form Builder JFormDemo****************************
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TProfiler_FormCreate(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  JP.Names:= ListBox1.Items;
+  JP.Sorted:= true;
+  JP.Enabled:= true;
+  FTerminated:= false;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TProfiler_FormClose(Sender: TObject; </span><span class="pas1-reservedword">var</span><span class="pas1-space"> Action: TCloseAction);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Fterminated:= true;
+  JP.Enabled:= false;
+  JP.Stop;
+  Writeln(</span><span class="pas1-string">'Profiler Form Closed'</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TProfiler_FormKeyDown(Sender: TObject; </span><span class="pas1-reservedword">var</span><span class="pas1-space"> Key: Word;
+  Shift: TShiftState);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Key = </span><span class="pas1-number">27</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> FTerminated:= true;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TProfiler_ResultBtnClick(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  JP.ShowReport;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TProfiler32_UseNameBtnClick(Sender: TObject);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i,j,k:integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Randomize;
+  </span><span class="pas1-comment">{ just randomize to get some results }
+</span><span class="pas1-space">  Screen.Cursor:= crHourGlass;
+  btnUseId.Enabled:= false;
+  btnUseName.Enabled:= false;
+  btnResult.Enabled:= false;
+  JP.Start;
+  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    k:= Random(</span><span class="pas1-number">133</span><span class="pas1-symbol">);
+    Progress.Max:= k;
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> j:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> k </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      Progress.Position:= j;
+      jfrm.Caption:= Format(</span><span class="pas1-string">'%s - to do: %d'</span><span class="pas1-symbol">,[DefCaption,k - j]);
+      i:= Random(ListBox1.Items.Count);
+      </span><span class="pas1-comment">{ use integer ID (Names[i] ID = i) }
+</span><span class="pas1-space">      JP.EnterID(i);
+      </span><span class="pas1-comment">//SleepEx(random(333),false);
+</span><span class="pas1-space">      Sleep(random(</span><span class="pas1-number">333</span><span class="pas1-symbol">));
+      JP.ExitID(i);
+      Application.ProcessMessages;
+      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> FTerminated </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">        Break;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">    Screen.Cursor:= crDefault;
+    btnUseId.Enabled:= true;
+    btnUseName.Enabled:= true;
+    btnResult.Enabled:= true;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  JP.Stop;
+  Beep;
+  Progress.Position:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TProfiler_UseIdBtnClick(Sender: TObject);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i,j,k:integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Randomize;
+  JP.Start;
+  </span><span class="pas1-comment">{ make distributed randomize to get some results }
+</span><span class="pas1-space">  Screen.Cursor:= crHourGlass;
+  btnUseId.Enabled:= false;
+  btnUseName.Enabled:= false;
+  btnResult.Enabled:= false;
+  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    k:= Random(</span><span class="pas1-number">100</span><span class="pas1-symbol">);
+    Progress.Max:= k;
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> j:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> k </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      Progress.Position:= j;
+      jfrm.Caption:= Format(</span><span class="pas1-string">'%s - to do: %d'</span><span class="pas1-symbol">,[DefCaption,k - j]);
+      i:= Random(ListBox1.Items.Count);
+      </span><span class="pas1-comment">{ use string ID instead }
+</span><span class="pas1-space">      JP.EnterName(JP.Names[i]);
+      Sleep(</span><span class="pas1-number">10</span><span class="pas1-space"> * j);
+      JP.ExitName(JP.Names[i]);
+      Application.ProcessMessages;
+      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> FTerminated </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">        Break;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">    Screen.Cursor:= crDefault;
+    btnUseId.Enabled:= true;
+    btnUseName.Enabled:= true;
+    btnResult.Enabled:= true;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  JP.Stop;
+  Beep;
+  Progress.Position:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  
+</span><span class="pas1-comment">//**************************** Load Form ********************************//
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> loadJDemoForm;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> apanel: TPanel;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  jFrm:= TForm.Create(self);
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> jfrm </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    setbounds(</span><span class="pas1-number">343</span><span class="pas1-symbol">,</span><span class="pas1-number">157</span><span class="pas1-symbol">,</span><span class="pas1-number">506</span><span class="pas1-symbol">,</span><span class="pas1-number">507</span><span class="pas1-symbol">)
+    Caption:= </span><span class="pas1-string">'maXbox JProfiler Test Simulator'</span><span class="pas1-symbol">;
+    Font.Style:= [];
+    KeyPreview:= True;
+    </span><span class="pas1-comment">//OldCreateOrder:= True;
+</span><span class="pas1-space">    OnClose:= @TProfiler_FormClose;
+    OnKeyDown:= @TProfiler_FormKeyDown;
+    PixelsPerInch:= </span><span class="pas1-number">96</span><span class="pas1-symbol">;
+    Show;
+    </span><span class="pas1-comment">//TextHeight:= 13;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  ListBox1:= TListBox.Create(jfrm)
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> listbox1 </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent:= jfrm;
+    SetBounds(</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">41</span><span class="pas1-symbol">,</span><span class="pas1-number">498</span><span class="pas1-symbol">,</span><span class="pas1-number">225</span><span class="pas1-symbol">);
+    Align:= alClient;
+    </span><span class="pas1-comment">//BorderStyle:= bsNone;
+</span><span class="pas1-space">    ItemHeight:= </span><span class="pas1-number">13</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> Items </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      add(</span><span class="pas1-string">'ASSOC'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'AT'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'ATTRIB'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'BREAK'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'CACLS'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'CALL'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'CALLBOX'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'CD'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'CHCP'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'CHDIR'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'CHKDSK'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'CLS'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'CMD'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'COLOR'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'COMP'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'COMPACT'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'CONVERT'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'COPY'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'DATE'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'DEL'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'DIR'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'DISKCOMP'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'DISKCOPY'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'DOSKEY'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'ECHO'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'ENDLOCAL'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'ERASE'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'EXIT'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'FC'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'FIND'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'FINDSTR'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'FOR'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'FORMAT'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'FTYPE'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'GOTO'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'GRAFTABL'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'HELP'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'IF'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'KEYB'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'LABEL'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'MD'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'MKDIR'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'MODE'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'MORE'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'MOVE'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'PATH'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'PAUSE'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'POPD'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'PRINT'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'PROMPT'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'PUSHD'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'RD'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'RECOVER'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'REM'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'REN'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'RENAME'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'REPLACE'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'RESTORE'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'RMDIR'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'SET'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'SETLOCAL'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'SHIFT'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'SORT'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'START'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'SUBST'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'TIME'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'TITLE'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'TREE'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'TYPE'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'VER'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'VERIFY'</span><span class="pas1-symbol">); add(</span><span class="pas1-string">'VOL'</span><span class="pas1-symbol">);
+      add(</span><span class="pas1-string">'XCOPY'</span><span class="pas1-symbol">);
+      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+   apanel:= TPanel.Create(jfrm);
+   </span><span class="pas1-reservedword">with</span><span class="pas1-space"> apanel </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     parent:= jfrm;
+     SetBounds(</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">498</span><span class="pas1-symbol">,</span><span class="pas1-number">41</span><span class="pas1-symbol">);
+     Align:= alTop;
+     BevelOuter:= bvNone;
+     TabOrder:= </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+     </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TLabel.create(jfrm) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">       parent:= apanel;
+       SetBounds(</span><span class="pas1-number">10</span><span class="pas1-symbol">,</span><span class="pas1-number">10</span><span class="pas1-symbol">,</span><span class="pas1-number">64</span><span class="pas1-symbol">,</span><span class="pas1-number">13</span><span class="pas1-symbol">);
+       Caption:= </span><span class="pas1-string">'Create report:'</span><span class="pas1-symbol">;
+     </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+     btnUseId:= TBitBtn.Create(jfrm);
+     </span><span class="pas1-reservedword">with</span><span class="pas1-space"> btnUseId </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">       parent:= apanel;
+       SetBounds(</span><span class="pas1-number">104</span><span class="pas1-symbol">,</span><span class="pas1-number">8</span><span class="pas1-symbol">,</span><span class="pas1-number">85</span><span class="pas1-symbol">,</span><span class="pas1-number">25</span><span class="pas1-symbol">)
+       Caption:= </span><span class="pas1-string">'Use &amp;ID'</span><span class="pas1-symbol">;
+       glyph.LoadFromResourceName(getHINSTANCE,</span><span class="pas1-string">'CL_MPPLAY'</span><span class="pas1-symbol">); 
+       TabOrder:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+       OnClick:= @TProfiler_UseIdBtnClick;
+     </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+     btnUseName:= TBitBtn.Create(jfrm)
+     </span><span class="pas1-reservedword">with</span><span class="pas1-space"> btnUseName </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">       parent:= apanel;
+       SetBounds(</span><span class="pas1-number">198</span><span class="pas1-symbol">,</span><span class="pas1-number">8</span><span class="pas1-symbol">,</span><span class="pas1-number">85</span><span class="pas1-symbol">,</span><span class="pas1-number">25</span><span class="pas1-symbol">);
+       Caption:= </span><span class="pas1-string">'Use &amp;Name'
+</span><span class="pas1-space">       glyph.LoadFromResourceName(getHINSTANCE,</span><span class="pas1-string">'CL_MPSTEP'</span><span class="pas1-symbol">); 
+       TabOrder:= </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+       OnClick:= @TProfiler32_UseNameBtnClick;
+     </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+     btnResult:= TBitBtn.Create(jfrm)
+     </span><span class="pas1-reservedword">with</span><span class="pas1-space"> btnResult </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">       parent:= apanel;
+       SetBounds(</span><span class="pas1-number">392</span><span class="pas1-symbol">,</span><span class="pas1-number">8</span><span class="pas1-symbol">,</span><span class="pas1-number">85</span><span class="pas1-symbol">,</span><span class="pas1-number">25</span><span class="pas1-symbol">);
+       Font.Style:= [fsBold];
+       glyph.LoadFromResourceName(getHINSTANCE,</span><span class="pas1-string">'CL_MPPAUSE'</span><span class="pas1-symbol">); 
+       Caption:= </span><span class="pas1-string">'&amp;Result'
+</span><span class="pas1-space">       TabOrder:= </span><span class="pas1-number">2</span><span class="pas1-symbol">;
+       OnClick:= @TProfiler_ResultBtnClick;
+     </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+   Progress:= TProgressBar.Create(jfrm);
+   </span><span class="pas1-reservedword">with</span><span class="pas1-space"> progress </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     parent:= jfrm;
+     SetBounds(</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">266</span><span class="pas1-symbol">,</span><span class="pas1-number">498</span><span class="pas1-symbol">,</span><span class="pas1-number">16</span><span class="pas1-symbol">);
+     Align:= alBottom;
+     TabOrder:= </span><span class="pas1-number">2</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+   JP:= TJvProfiler.Create(jfrm);
+   TProfiler_FormCreate(self);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;    
+
+
+</span><span class="pas1-reservedword">Function</span><span class="pas1-space"> steptest: boolean;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  sleep(</span><span class="pas1-number">400</span><span class="pas1-symbol">);
+  result:= true;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+
+  </span><span class="pas1-comment">//main form list &amp; form call  
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">Begin
+</span><span class="pas1-space">    maxform1.color:= clpurple;
+    </span><span class="pas1-comment">//calls some test functions
+</span><span class="pas1-space">    printF(</span><span class="pas1-string">'this is test %.18f '</span><span class="pas1-symbol">,[</span><span class="pas1-reservedword">maxCalc</span><span class="pas1-symbol">(</span><span class="pas1-string">'ln(2)^e'</span><span class="pas1-symbol">)]);
+    printF(</span><span class="pas1-string">'this is test %.18f '</span><span class="pas1-symbol">,[</span><span class="pas1-reservedword">maxCalc</span><span class="pas1-symbol">(</span><span class="pas1-string">'sqr(cos(ln(2)^e))'</span><span class="pas1-symbol">)]);
+    printF(</span><span class="pas1-string">'this is test %.4f '</span><span class="pas1-symbol">,[</span><span class="pas1-reservedword">maxCalc</span><span class="pas1-symbol">(</span><span class="pas1-string">'sqrt(e^(ln(2)))'</span><span class="pas1-symbol">)]);
+    writeln(</span><span class="pas1-string">'mXVersion: '</span><span class="pas1-symbol">+getVersionString(exepath+</span><span class="pas1-string">'maxbox3.exe'</span><span class="pas1-symbol">));
+    </span><span class="pas1-comment">//str3:= loadFileAsString(exepath+'maxbox_functions_all.pdf');
+</span><span class="pas1-space"> </span><span class="pas1-comment">//--------------------------Main Topic--------------------------
+</span><span class="pas1-space">    </span><span class="pas1-comment">//load Profiler Form;
+</span><span class="pas1-space">    loadJDemoForm;
+
+</span><span class="pas1-reservedword">End</span><span class="pas1-symbol">.
+
+
+
+</span><span class="pas1-comment">/////////////////////////////// Code Snippets and Sources 
+
+
+</span><span class="pas1-space">    testprocnames:= TStringlist.Create;
+    testprocnames.add(</span><span class="pas1-string">'steptest'</span><span class="pas1-symbol">)
+    testprocnames.add(</span><span class="pas1-string">'loadform'</span><span class="pas1-symbol">)
+    
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TJvProfiler.Create(self) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      names:= testprocnames;    </span><span class="pas1-comment">//must before start!
+</span><span class="pas1-space">      enabled:= true;
+      </span><span class="pas1-comment">//initialize;
+</span><span class="pas1-space">      </span><span class="pas1-comment">//writeln('this is start '+names[0]);
+</span><span class="pas1-space">      writeln(</span><span class="pas1-string">'this is jprofile start '</span><span class="pas1-symbol">);
+      </span><span class="pas1-comment">//P.EnterName(P.Names[i]);
+</span><span class="pas1-space">      Entername(names[</span><span class="pas1-number">0</span><span class="pas1-symbol">]);
+      </span><span class="pas1-comment">//Enterid(0);
+</span><span class="pas1-space">           start;
+        steptest;
+           stop;
+           start;
+        steptest;
+           stop;
+      ExitName(Names[</span><span class="pas1-number">0</span><span class="pas1-symbol">]);
+      Entername(names[</span><span class="pas1-number">1</span><span class="pas1-symbol">]);
+       start;
+       loadform;
+       stop;
+      ExitName(Names[</span><span class="pas1-number">1</span><span class="pas1-symbol">]);
+      </span><span class="pas1-comment">//exitid(0);
+</span><span class="pas1-space">      </span><span class="pas1-comment">//showreport;
+</span><span class="pas1-space">      </span><span class="pas1-comment">//stop;
+</span><span class="pas1-space">      beep;
+      writeln(</span><span class="pas1-string">'this is jprofile stop'</span><span class="pas1-symbol">);
+      </span><span class="pas1-comment">//enabled:= false;
+</span><span class="pas1-space">      Showreport;
+      enabled:= false;
+      </span><span class="pas1-comment">//stop;
+</span><span class="pas1-space">      free;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+    testprocnames.Free;
+
+
+
+profiler32mainformu.pas
+***********************************
+he contents </span><span class="pas1-reservedword">of</span><span class="pas1-space"> this </span><span class="pas1-reservedword">file</span><span class="pas1-space"> are subject </span><span class="pas1-reservedword">to</span><span class="pas1-space"> the Mozilla </span><span class="pas1-reservedword">Public</span><span class="pas1-space"> License
+Version </span><span class="pas1-float">1.1</span><span class="pas1-space"> (the &quot;License&quot;); you may </span><span class="pas1-reservedword">not</span><span class="pas1-space"> use this </span><span class="pas1-reservedword">file</span><span class="pas1-space"> </span><span class="pas1-reservedword">except</span><span class="pas1-space"> </span><span class="pas1-reservedword">in</span><span class="pas1-space"> compliance
+</span><span class="pas1-reservedword">with</span><span class="pas1-space"> the License. You may obtain a copy </span><span class="pas1-reservedword">of</span><span class="pas1-space"> the License at
+http:</span><span class="pas1-comment">//www.mozilla.org/MPL/MPL-1.1.html
+</span><span class="pas1-identifier">Software distributed under the License </span><span class="pas1-reservedword">is</span><span class="pas1-space"> distributed </span><span class="pas1-reservedword">on</span><span class="pas1-space"> an &quot;</span><span class="pas1-reservedword">AS</span><span class="pas1-space"> </span><span class="pas1-reservedword">IS</span><span class="pas1-symbol">&quot; basis,
+WITHOUT WARRANTY </span><span class="pas1-reservedword">OF</span><span class="pas1-space"> ANY KIND, either expressed </span><span class="pas1-reservedword">or</span><span class="pas1-space"> implied. See the License </span><span class="pas1-reservedword">for
+</span><span class="pas1-identifier">the specific language governing rights </span><span class="pas1-reservedword">and</span><span class="pas1-space"> limitations under the License.
+The Original Code </span><span class="pas1-reservedword">is</span><span class="pas1-symbol">: JvLookOut.PAS, released </span><span class="pas1-reservedword">on</span><span class="pas1-space"> </span><span class="pas1-number">2002</span><span class="pas1-symbol">-</span><span class="pas1-number">05</span><span class="pas1-symbol">-</span><span class="pas1-float">26.
+</span><span class="pas1-identifier">The Initial Developer </span><span class="pas1-reservedword">of</span><span class="pas1-space"> the Original Code </span><span class="pas1-reservedword">is</span><span class="pas1-space"> Peter Th?nqvist [peter3@peter3.com]
+Portions created by Peter Th?nqvist are Copyright (C) </span><span class="pas1-number">2002</span><span class="pas1-space"> Peter Th?nqvist.
+All Rights Reserved.
+Contributor(s):
+Last Modified: </span><span class="pas1-number">2002</span><span class="pas1-symbol">-</span><span class="pas1-number">05</span><span class="pas1-symbol">-</span><span class="pas1-number">26
+</span><span class="pas1-identifier">You may retrieve the latest version </span><span class="pas1-reservedword">of</span><span class="pas1-space"> this </span><span class="pas1-reservedword">file</span><span class="pas1-space"> at the Project JEDI</span><span class="pas1-string">'s JVCL home page,
+</span><span class="pas1-identifier">located at http:</span><span class="pas1-comment">//jvcl.sourceforge.net
+</span><span class="pas1-identifier">Known Issues:
+-----------------------------------------------------------------------------}
+</span><span class="pas1-reservedword">unit</span><span class="pas1-space"> Profiler32MainFormU;
+</span><span class="pas1-reservedword">interface
+uses
+</span><span class="pas1-space">  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  StdCtrls, ExtCtrls, ComCtrls, JvProfiler32, JvComponent;
+</span><span class="pas1-reservedword">type
+</span><span class="pas1-space">  TProfiler32MainForm = </span><span class="pas1-reservedword">class</span><span class="pas1-symbol">(TForm)
+    ListBox1: TListBox;
+    Panel1: TPanel;
+    UseIdBtn: TButton;
+    UseNameBtn: TButton;
+    ResultBtn: TButton;
+    Label1: TLabel;
+    Progress: TProgressBar;
+    P: TJvProfiler;
+    </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> FormCreate(Sender: TObject);
+    </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> ResultBtnClick(Sender: TObject);
+    </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> UseNameBtnClick(Sender: TObject);
+    </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> UseIdBtnClick(Sender: TObject);
+    </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> FormClose(Sender: TObject; </span><span class="pas1-reservedword">var</span><span class="pas1-space"> Action: TCloseAction);
+    </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> FormKeyDown(Sender: TObject; </span><span class="pas1-reservedword">var</span><span class="pas1-space"> Key: Word; Shift: TShiftState);
+  </span><span class="pas1-reservedword">private
+</span><span class="pas1-space">    FTerminated:boolean;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  Profiler32MainForm: TProfiler32MainForm;
+</span><span class="pas1-reservedword">implementation
+</span><span class="pas1-comment">//{$R *.DFM}
+</span><span class="pas1-reservedword">const
+</span><span class="pas1-space">  DefCaption = </span><span class="pas1-string">'JvProfiler 32 Test program'</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TProfiler32MainForm.FormCreate(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  P.Names := ListBox1.Items;
+  P.Sorted := true;
+  P.Enabled := true;
+  FTerminated := false;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TProfiler32MainForm.ResultBtnClick(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  P.ShowReport;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TProfiler32MainForm.UseNameBtnClick(Sender: TObject);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i,j,k:integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Randomize;
+  </span><span class="pas1-comment">{ just randomize to get some results }
+</span><span class="pas1-space">  Screen.Cursor := crHourGlass;
+  UseIdBtn.Enabled := false;
+  UseNameBtn.Enabled := false;
+  ResultBtn.Enabled := false;
+  P.Start;
+  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    k := Random(</span><span class="pas1-number">133</span><span class="pas1-symbol">);
+    Progress.Max := k;
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> j := </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> k </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      Progress.Position := j;
+      Caption := Format(</span><span class="pas1-string">'%s - to do: %d'</span><span class="pas1-symbol">,[DefCaption,k - j]);
+      i := Random(ListBox1.Items.Count);
+      </span><span class="pas1-comment">{ use integer ID (Names[i] ID = i) }
+</span><span class="pas1-space">      P.EnterID(i);
+      SleepEx(random(</span><span class="pas1-number">333</span><span class="pas1-symbol">),false);
+      P.ExitID(i);
+      Application.ProcessMessages;
+      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> FTerminated </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">        Break;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">    Screen.Cursor := crDefault;
+    UseIdBtn.Enabled := true;
+    UseNameBtn.Enabled := true;
+    ResultBtn.Enabled := true;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  P.Stop;
+  Beep;
+  Progress.Position := </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TProfiler32MainForm.UseIdBtnClick(Sender: TObject);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i,j,k:integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Randomize;
+  P.Start;
+  </span><span class="pas1-comment">{ make distributed randomize to get some results }
+</span><span class="pas1-space">  Screen.Cursor := crHourGlass;
+  UseIdBtn.Enabled := false;
+  UseNameBtn.Enabled := false;
+  ResultBtn.Enabled := false;
+  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    k := Random(</span><span class="pas1-number">100</span><span class="pas1-symbol">);
+    Progress.Max := k;
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> j := </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> k </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      Progress.Position := j;
+      Caption := Format(</span><span class="pas1-string">'%s - to do: %d'</span><span class="pas1-symbol">,[DefCaption,k - j]);
+      i := Random(ListBox1.Items.Count);
+      </span><span class="pas1-comment">{ use string ID instead }
+</span><span class="pas1-space">      P.EnterName(P.Names[i]);
+      SleepEx(</span><span class="pas1-number">10</span><span class="pas1-space"> * j,false);
+      P.ExitName(P.Names[i]);
+      Application.ProcessMessages;
+      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> FTerminated </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">        Break;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">    Screen.Cursor := crDefault;
+    UseIdBtn.Enabled := true;
+    UseNameBtn.Enabled := true;
+    ResultBtn.Enabled := true;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  P.Stop;
+  Beep;
+  Progress.Position := </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TProfiler32MainForm.FormClose(Sender: TObject; </span><span class="pas1-reservedword">var</span><span class="pas1-space"> Action: TCloseAction);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Fterminated := true;
+  P.Enabled := false;
+  P.Stop;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TProfiler32MainForm.FormKeyDown(Sender: TObject; </span><span class="pas1-reservedword">var</span><span class="pas1-space"> Key: Word;
+  Shift: TShiftState);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Key = </span><span class="pas1-number">27</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> FTerminated := true;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">.
+
+
+
+Proposal </span><span class="pas1-reservedword">for</span><span class="pas1-space"> Abreviation Symbol:
+
+  </span><span class="pas1-number">01</span><span class="pas1-space"> FALSE    </span><span class="pas1-comment">//Contradiction
+
+</span><span class="pas1-space">  </span><span class="pas1-number">02</span><span class="pas1-space"> </span><span class="pas1-reservedword">AND</span><span class="pas1-space">      </span><span class="pas1-comment">//Conjunction x*y
+
+</span><span class="pas1-space">  </span><span class="pas1-number">03</span><span class="pas1-space"> INHIB    </span><span class="pas1-comment">//Inhibition x*^y
+
+</span><span class="pas1-space">  </span><span class="pas1-number">04</span><span class="pas1-space"> PRAEP    </span><span class="pas1-comment">//Praependence x
+
+</span><span class="pas1-space">  </span><span class="pas1-number">05</span><span class="pas1-space"> PRAE     </span><span class="pas1-comment">//Praesection ^x*y
+
+</span><span class="pas1-space">  </span><span class="pas1-number">06</span><span class="pas1-space"> POST     </span><span class="pas1-comment">//Postpendence y
+
+</span><span class="pas1-space">  </span><span class="pas1-number">07</span><span class="pas1-space"> </span><span class="pas1-reservedword">XOR</span><span class="pas1-space">      </span><span class="pas1-comment">//Exclusive OR x*^y+^x*y
+
+</span><span class="pas1-space">  </span><span class="pas1-number">08</span><span class="pas1-space"> </span><span class="pas1-reservedword">OR</span><span class="pas1-space">       </span><span class="pas1-comment">//Disjunction OR = x+y
+
+</span><span class="pas1-space">  </span><span class="pas1-number">09</span><span class="pas1-space"> NOR      </span><span class="pas1-comment">//Rejection
+
+</span><span class="pas1-space">  </span><span class="pas1-number">10</span><span class="pas1-space"> AEQ      </span><span class="pas1-comment">//Aequivalence x&lt;--&gt;y, ^x*^y+x*y
+
+</span><span class="pas1-space">  </span><span class="pas1-number">11</span><span class="pas1-space"> NEGY     </span><span class="pas1-comment">//YNegation ^y
+
+</span><span class="pas1-space">  </span><span class="pas1-number">12</span><span class="pas1-space"> IMPY     </span><span class="pas1-comment">//YImplication y--&gt;x; x+^y
+
+</span><span class="pas1-space">  </span><span class="pas1-number">13</span><span class="pas1-space"> NEGX     </span><span class="pas1-comment">//Xnegation ^x
+
+</span><span class="pas1-space">  </span><span class="pas1-number">14</span><span class="pas1-space"> IMPX     </span><span class="pas1-comment">//XImplication x--&gt;y; ^x+y
+
+</span><span class="pas1-space">  </span><span class="pas1-number">15</span><span class="pas1-space"> NAND     </span><span class="pas1-comment">//Exclusion
+
+</span><span class="pas1-space">  </span><span class="pas1-number">16</span><span class="pas1-space"> TRUE     </span><span class="pas1-comment">//TRUE Tautologic
+</span><span class="pas1-space">  
+
+
+ </span><span class="pas1-comment">//ShellExecute in W64
+</span><span class="pas1-space">    </span><span class="pas1-comment">//ExecuteCommand('cmd','/k FC /L /N C:\maxbook\maxbox3\maxbox391.exe C:\maxbook\maxbox3\maxbox3.exe')
+</span><span class="pas1-space"> </span><span class="pas1-comment">//  ExecuteCommand('cmd','/k FC /L /N C:\maxbook\maxbox3\maxboxdef1.ini C:\maxbook\maxbox3\maxboxdef2.ini')
+</span><span class="pas1-space">   
+
+getRulesbyContract  
+http:</span><span class="pas1-comment">//www.heise.de/newsticker/meldung/Leben-wir-in-einer-Computersimulation-1767578.html
+
+</span><span class="pas1-identifier">http:</span><span class="pas1-comment">//www.bestsoftware4download.com/software/k-ci-system-t-free-maxbox-download-sifqahci.html
+</span></code></pre><!--EndFragment--></body>
+</html>

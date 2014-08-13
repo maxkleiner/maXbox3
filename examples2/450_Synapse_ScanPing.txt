@@ -1,0 +1,228 @@
+ program ScanPing_Workflow;
+
+//{$APPTYPE CONSOLE}
+{Scan v1.0
+Synapse Demo Application
+(c) 2003 /2014 by Christian Brosius (brosius@online.de , maX)
+'Scan v1.0' is a multithreaded ping to scan a given networkrange for available IP-Adresses.
+Usage:  #locs:143
+'scan 192.168.50.1 192.168.50.254' scans a complete Class C Network with
+a timeout for each ping of 2 Seconds.
+The complete Scan will finish after about 3 Seconds.
+The result will be a sorted list of available IP-Adresses.}
+
+//uses SysUtils, IPUtils, PingThread;
+//TIPAdr', 'record Oct1 : Byte; Oct2 : Byte; Oct3 : Byte; Oct4: Byte; end');
+ 
+
+var i,j:Cardinal;
+    Ping:Array of TPingResult;
+    PingCount,Cardinal1,Cardinal2:Cardinal;
+    Puffer:String;
+    ThreadArray:Array of TPingThread;
+    ThreadsComplete:Boolean;
+    pingResult: TPingResult;
+    
+    
+Function strGetToken(s: string; delimeter: string; var APos: integer): string;
+  var tempStr: string;
+      endStringPos: integer;
+  begin
+     result:= '';
+     if APos<=0 then exit;
+     if APos>length(s) then begin
+        APos:= -1;
+        exit;
+     end;
+    tempStr:= copy(s, APos, length(s)+1-APos);
+       {Converts to Uppercase for check if delimeter more than one character}
+     if (length(delimeter)=1) then
+     {$ifndef wwDelphi3Up}
+        endStringPos:= pos(delimeter, tempStr)
+     {$ELSE}
+        endStringPos:= AnsiPos(delimeter, tempStr)
+     {$ENDIF}
+     else begin
+        delimeter := ' ' + delimeter + ' ';
+        {$ifndef wwDelphi3Up}
+        endStringPos:= pos(UpperCase(delimeter),UpperCase(tempStr));
+        {$ELSE}
+        endStringPos:= AnsiPos(UpperCase(delimeter),UpperCase(tempStr));
+        {$ENDIF}
+     end;
+      if endStringPos<=0 then begin
+        result:= tempStr;
+        APos:= -1;
+     end
+     else begin
+        result:= copy(tempStr, 1, endStringPos-1);
+        APos:= APos + endStringPos + length(delimeter) - 1;
+     end
+  end;
+
+      
+    
+begin
+  WriteLn('');
+  WriteLn('Scan v1.1');
+  WriteLn('Synapse Demo Application');
+  WriteLn('');;
+  if //(ParamCount = 2)and // Parse Commandline
+     //(IsIPAdr(ParamStr(1)))and
+     //(IsIPAdr(ParamStr(2)))
+     (IsIPAdr('192.168.50.1')) and
+     (IsIPAdr('192.168.50.254'))
+     //192.168.50.1
+    then begin
+        //Cardinal1 := IPToCardinal(xStrToIP(ParamStr(1)));
+        //Cardinal2 := IPToCardinal(xStrToIP(ParamStr(2)));
+        Cardinal1 := IPToCardinal(xStrToIP('192.168.50.1'));
+        Cardinal2 := IPToCardinal(xStrToIP('192.168.50.254'));
+     
+        // Count of Adresses to ping
+        PingCount := (Cardinal2 - Cardinal1) + 1;
+        // Show Adresscount to User
+        Write('Pinging ' + IntToStr(PingCount) + ' Adresses');
+        // Initialize dyn. Arrays
+        SetLength(Ping,PingCount);
+        SetLength(ThreadArray,PingCount);
+        j := 0;
+        for i := Cardinal1 to Cardinal2 do begin
+            Ping[j].IPAdress  := xIPToStr(CardinalToIP(i));
+            Ping[j].Exists    := false;
+            Inc(j);
+          end;
+
+        // Create one Thread for each Ping
+        for i := 0 to PingCount-1 do begin
+            ThreadArray[i]:= TPingThread.Create(Ping[i]);
+          end;
+
+        Write(' ');
+        // Wait till all threads are executed
+        repeat
+          ThreadsComplete:= true;
+          Write('.');
+          Sleep(1000);
+          for i:= 0 to PingCount-1 do begin
+              if not ThreadArray[i].Ready
+                then begin
+                    ThreadsComplete:= false;
+                    break;
+                end;
+            end;
+        until ThreadsComplete;
+
+        WriteLn('');
+        WriteLn('');
+        // Show Results to User
+        for i:= 0 to PingCount-1 do begin
+            pingResult:= ThreadArray[i].PingResult;
+            if pingResult.Exists then begin
+            //if ThreadArray[i].PingResult.Exists
+                  pingResult:= ThreadArray[i].PingResult;
+                  Puffer:= IntToStr(i+1) + '  ' + PingResult.IPAdress;
+                  WriteLn(Puffer);
+             end;
+          end;
+
+        // Free Threads
+        for i := 0 to PingCount-1 do begin
+            ThreadArray[i].Free;
+          end;
+      end
+    else begin
+        WriteLn('Syntax:  Scan StartIP StopIP');
+        WriteLn('');
+        WriteLn('Description:');
+        WriteLn('  With Scan you can do a fast scan of Adresses on your Network-Segment.');
+        WriteLn('');
+        WriteLn('Example:  scan 192.168.50.1 192.168.50.254');
+      end;
+      //InternetTimeFromSystemTime
+end.
+
+
+
+doc:
+//main
+begin
+end.
+
+
+object Form1: TForm1
+  Left = 249
+  Top = 130
+  Width = 672
+  Height = 480
+  Caption = 'Form1'
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -13
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  PixelsPerInch = 120
+  TextHeight = 16
+  object Label1: TLabel
+    Left = 8
+    Top = 56
+    Width = 47
+    Height = 16
+    Caption = 'Part-list:'
+  end
+  object Label2: TLabel
+    Left = 8
+    Top = 192
+    Width = 61
+    Height = 16
+    Caption = 'RAW part:'
+  end
+  object Edit1: TEdit
+    Left = 8
+    Top = 8
+    Width = 553
+    Height = 24
+    TabOrder = 0
+    Text = 'filename'
+  end
+  object Button1: TButton
+    Left = 576
+    Top = 8
+    Width = 75
+    Height = 25
+    Caption = 'Load'
+    TabOrder = 1
+    OnClick = Button1Click
+  end
+  object Memo1: TMemo
+    Left = 8
+    Top = 208
+    Width = 641
+    Height = 193
+    ScrollBars = ssBoth
+    TabOrder = 2
+  end
+  object Button2: TButton
+    Left = 8
+    Top = 416
+    Width = 641
+    Height = 25
+    Caption = 
+      'save selected decoded part to file (default filename is '#39'mimedem' +
+      'o.txt'#39')'
+    TabOrder = 3
+    OnClick = Button2Click
+  end
+  object TreeView1: TTreeView
+    Left = 8
+    Top = 72
+    Width = 641
+    Height = 113
+    ReadOnly = True
+    Indent = 19
+    OnChange = TreeView1Change
+    TabOrder = 4
+  end
+end

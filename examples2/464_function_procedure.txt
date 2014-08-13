@@ -1,0 +1,257 @@
+Program Function_versus_Procedure;
+
+///////////////////////////////////////////////////////////////////////////
+//  #sign:Administrator: PC08: 26/04/2014 09:10:23 PM 
+//  Purpose: shows the diff between function or procedure 
+//  #path>E:\maxbox3\mXGit39988\maxbox3\examples\
+//  Lines of Code #locs:92
+///////////////////////////////////////////////////////////////////////////
+//TODO: find out the performance of func or proc, #locs:92
+   
+Const  
+      SW = 'SW_SHOW';
+      BITMAP = 'examples\citymax.bmp';
+     
+var
+  year1, month1, day1: word;
+  dbform: TForm;  
+  //myappevent: TApplicationEvents;
+   
+  //var nullstr: string;
+    function LoadFile(const FileName: TFileName): string; 
+    var anullstr: string;
+     begin 
+      with TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite) do begin 
+        try 
+          SetLength(Result, Size); 
+          Read(result, Size); 
+          anullstr:= '0^';
+         //Write(Pointer(content)^, Length(content));    //test write
+        except 
+          Result := '';  // Deallocates memory 
+          Free; 
+          //raise; 
+          raiseLastWin32error;
+        end; 
+        Free; 
+      end; 
+    end; 
+    
+    procedure SaveFile(const FileName: TFileName; const acontent: string); 
+    begin 
+      with TFileStream.Create(FileName, fmCreate) do 
+        try 
+          Write(acontent, Length(acontent));
+          Seek(0, soBeginning);  
+        finally 
+          Free; 
+        end; 
+    end; 
+
+
+ procedure ProcedureSolution;    
+ var mystrings: TStrings;
+ begin
+   mystrings:= TStringlist.Create;
+   getVisibleWindows(mystrings)
+   showMessage(mystrings.text)
+   mystrings.Free;
+ end;
+    
+ function FunctionSolution: TStrings;    
+ begin
+   result:= getVisibleWindowsF(TStringlist.Create)
+ end;
+
+//main script app
+begin
+  //the the date from now to compare with file date
+  decodeDate(date, year1, month1, day1) 
+  Beep;
+  Writeln('Diff of Function or Procedure - silent except out of scope');
+  
+    ProcedureSolution; 
+    
+    ShowMessage(FunctionSolution.text);
+  
+    ShowMessage(GetVisibleWindowsF(TStringlist.Create).text);
+    
+    //GEO Stationary Satellite
+    //geostationary satellite
+    maxCalcF('((1/27.5)^2)^(1/3)*384E3-6371');
+    //shorten test
+    maxCalcF('SQRT(1/27.5)/2*(384E3-6371)');
+    //more precise
+    maxCalcF('((1/27.32)^2)^(1/3)*384E3-6371');
+    //just the track
+    maxCalcF('((1/27.32)^2)^(1/3)*3.8E8');
+  
+    if FileExists(Exepath+'Examples\geosatellite.png') then
+      OpenDoc(Exepath+'Examples\geosatellite.png');
+  
+End.
+
+A geostationary satellite is an earth-orbiting satellite, placed at an altitude of approximately
+  35,800 kilometers (22,300 miles) directly over the equator, that revolves in the same direction the earth rotates (west to east). At this altitude, one orbit takes 24 hours, the same length of time as the earth requires to rotate once on its axis. The term geostationary comes from the fact that such a satellite appears nearly stationary in the sky as seen by a ground-based observer. BGAN, the new global mobile communications network, uses geostationary satellites.
+  
+  A Geosynchonous Orbit (GEO) takes a satellite around the Earth at a rate of once per day, keeping it roughly in the same area over the ground. 
+A Geostationary Orbit (GSO) is a geosynchronous orbit with an inclination of zero, meaning, it lies on the equator.
+
+All geostationary satellites are geosynchronous. Not all geosynchronous satellites are geostationary.
+
+Example problems
+The Moon has an orbit radius of 3.8x108 m and a period of 27.3 days. Use this information to calculate the radius (RS) of the orbit of a geostationary satellite.
+Use: T2/R3 = constant      Period of satellite = 1 day      therefore:
+
+RS3 = [3.8x108]3/27.32 = 7.36x1022 and so:
+RS = 4.19x107 m = 41 900 km 
+
+
+// code snippets
+
+
+procedure TGraphic.LoadFromFile(const Filename: string);
+var
+  Stream: TStream;
+begin
+  Stream := TFileStream.Create(Filename, fmOpenRead or fmShareDenyWrite);
+  try
+    LoadFromStream(Stream); //virtual abstract
+  finally
+    Stream.Free;
+  end;
+end;
+
+procedure TBitmap.LoadFromStream(Stream: TStream);
+begin
+  ReadStream(Stream, Stream.Size - Stream.Position);
+end;
+
+
+procedure TBitmap.ReadStream(Stream: TStream; Size: Longint);
+var
+  Bmf: TBitmapFileHeader;
+  DIB: TDIBSection;
+begin
+  FreeContext;
+  if Size = 0 then
+  begin
+    FillChar(DIB, sizeof(DIB), 0);
+    NewImage(0, 0, DIB, False);
+  end
+  else
+  begin
+    Stream.ReadBuffer(Bmf, sizeof(Bmf));
+    if Bmf.bfType <> $4D42 then InvalidBitmap;
+    ReadDIB(Stream, Size - sizeof(Bmf), @Bmf);
+  end;
+end;
+procedure InvalidGraphic(Str: PResStringRec);
+begin
+  raise EInvalidGraphic.CreateRes(Str);
+end;
+
+procedure InvalidBitmap; 
+begin
+  InvalidGraphic(@SInvalidBitmap);
+end;
+
+//sysutils!
+{ Raise abort exception }
+
+procedure Abort;
+
+  function ReturnAddr: Pointer;
+  asm
+          MOV     EAX,[EBP + 4]
+  end;
+
+begin
+  raise EAbort.CreateRes(@SOperationAborted) at ReturnAddr;
+end;
+
+  SOperationAborted = 'Operation aborted';
+
+{ Raise out of memory exception }
+
+procedure OutOfMemoryError;
+begin
+  raise OutOfMemory;
+end;
+
+{ Exception class }
+
+constructor Exception.Create(const Msg: string);
+begin
+  FMessage := Msg;
+end;
+
+
+http://pages.cs.wisc.edu/~rkennedy/exception-messages
+Why do I continue getting error messages even after I have written an exception handler?
+
+
+In its default settings, the Delphi IDE
+notifies you whenever an exception occurs in your program, as in Figure
+1. What’s important to realize is that at that point, none
+of your program’s exception-handling code has run yet. It’s
+all Delphi itself; its special status as a debugger allows it to get
+first notification of any exception in your program, even before your
+program knows about it.
+
+  Exception
+  
+    Exception = class(TObject)
+  private
+    FMessage: string;
+    FHelpContext: Integer;
+  public
+    constructor Create(const Msg: string);
+    constructor CreateFmt(const Msg: string; const Args: array of const);
+    constructor CreateRes(Ident: Integer); overload;
+    constructor CreateRes(ResStringRec: PResStringRec); overload;
+    constructor CreateResFmt(Ident: Integer; const Args: array of const); overload;
+    constructor CreateResFmt(ResStringRec: PResStringRec; const Args: array of const); overload;
+    constructor CreateHelp(const Msg: string; AHelpContext: Integer);
+    constructor CreateFmtHelp(const Msg: string; const Args: array of const;
+      AHelpContext: Integer);
+    constructor CreateResHelp(Ident: Integer; AHelpContext: Integer); overload;
+    constructor CreateResHelp(ResStringRec: PResStringRec; AHelpContext: Integer); overload;
+    constructor CreateResFmtHelp(ResStringRec: PResStringRec; const Args: array of const;
+      AHelpContext: Integer); overload;
+    constructor CreateResFmtHelp(Ident: Integer; const Args: array of const;
+      AHelpContext: Integer); overload;
+    property HelpContext: Integer read FHelpContext write FHelpContext;
+    property Message: string read FMessage write FMessage;
+  end;
+
+
+  {$IFDEF MSWINDOWS}
+  { TIniFile - Encapsulates the Windows INI file interface
+    (Get/SetPrivateProfileXXX functions) }
+
+  TIniFile = class(TCustomIniFile)
+  public
+    destructor Destroy; override;
+    function ReadString(const Section, Ident, Default: string): string; override;
+    procedure WriteString(const Section, Ident, Value: String); override;
+    procedure ReadSection(const Section: string; Strings: TStrings); override;
+    procedure ReadSections(Strings: TStrings); override;
+    procedure ReadSectionValues(const Section: string; Strings: TStrings); override;
+    procedure EraseSection(const Section: string); override;
+    procedure DeleteKey(const Section, Ident: String); override;
+    procedure UpdateFile; override;
+  end;
+{$ELSE}
+    TIniFile = class(TMemIniFile)
+    public
+      destructor Destroy; override;
+    end;
+{$ENDIF}
+
+ with TColorDialog.Create(self) do try
+    execute;
+  finally
+    free;
+  end;    
+ 

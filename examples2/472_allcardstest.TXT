@@ -1,0 +1,763 @@
+PROGRAM Statistic_AllCards_Grid;
+//shows lotto tips, cards and all the binominal coefficients , #locs:425
+
+Const
+   CROW = 6;
+   CCOL = 10;
+   LotNR = 6;
+   LotRANGE = 45;
+
+Type 
+   TLottolist = array[1..lotNR] of byte;
+   TLottStat = array[1..lotRANGE] of integer;
+
+Var 
+//<Variable declarations>
+    quadrat,square: extended;
+    iz, i, j: integer;
+    flable: shortstring;
+    larr: TLottolist; 
+    comblist: TStringList;
+    sGrid1: TStringGrid;  
+    mForm: Tform;
+    aCard: TCard;
+      //   cards0: array[0..19] of TCard;   //0..15
+
+
+procedure CardMouseMove(Sender: TObject; Shift: TShiftState; X,Y:Integer);
+begin
+  //if (sender = mForm) and (assigned(acard)=true) then begin
+  if assigned(acard) then begin
+    //cards0[4*(i-10)+suit1].top:= X;
+    acard.top:= Y;  //on form
+    acard.left:= X;
+  end;
+  //  writeln(inttostr(x)) //debug
+  mform.canvas.Refresh;
+end;  
+
+procedure CardMouseDown(Sender: TObject; 
+          Button: TMouseButton;Shift: TShiftState; X,Y: Integer);
+begin
+  mform.onMouseMove:= @CardMouseMove;
+end;  
+
+procedure CardMouseUp(Sender: TObject; Button: TMouseButton;
+          Shift: TShiftState; X,Y: Integer);
+begin
+  mform.onMouseMove:= NIL;
+end;  
+
+
+//<FUNCTION> //<PROCEDURE> 
+procedure CreateDrawForm;
+begin
+  mForm:= TForm.create(self);
+  with mForm do begin
+    FormStyle:= fsStayOnTop;
+    Position:= poScreenCenter;
+    color:= clred;
+    Caption:= 'Max Lotto Card Coefficient Statistics';
+    Width:= 800;
+    Height:= 650;
+    BorderStyle:= bsDialog;
+    Cursor:= crHandPoint;
+    onMouseMove:= @cardMouseMove;
+ 
+     //onClose:= @FormClose;
+    Show
+  end;
+  sGrid1:= TStringGrid.Create(self);
+  {sGrid1.parent:= mForm;
+  with sGrid1 do begin
+    defaultColwidth:= 60;
+    defaultRowheight:= 60;
+    height:= 415;
+    width:= ;       
+    colcount:= CCOL+1;  
+    rowcount:= CROW+1;
+    top:= 20;
+    borderStyle:= bsNone;
+    GridLineWidth:= 8;
+    scrollbars:= false;
+  end;} 
+ end;
+
+function TForm1_makecard(L,T:Integer; newvalue:TCardValue; newSuit:TShortSuit):TCard;
+{create and set position for a card}
+begin
+  result:= TCard.Create(mform);
+  with result do begin
+    parent:= mform;
+    top:=T; left:=L;
+    setcard(newvalue,newSuit);
+    //bringToFront;
+    onmouseDown:= @CardMouseDown
+    onmouseUp:= @CardMouseUp
+  end;
+end;
+
+procedure cardSetTest;
+var suit1,i: integer;
+   cards0: array[0..11] of TCard;
+   startx,starty:integer;
+   suit:TShortSuit;   // TShortSuit=(CardS,CardD,CardC,CardH);
+   suits: set of TShortSuit;
+begin
+  //for suit1:= low(TShortSuit) to high(TShortSuit) do  won't work
+   starty:= 1;
+   for i:= 11 to 13 do begin 
+     startx:= 100;
+     starty:= starty + 120;
+     for suit1:= 0 to 3 do begin
+       cards0[4*(i-11)+suit1]:= TForm1_makecard(startx,starty,i,TShortSuit(suit1));
+       startx:= startx+100;  //overlap=50
+     end;
+   end;
+   suit:= CardC;
+   writeln(inttoStr(high(cards0))) //debug 
+   writeln(inttoStr(ord(suit))) 
+   writeln(inttoStr(ord(TShortSuit(suit1))))  
+end;
+
+
+procedure cardSetTestEasy;
+var  suit: TShortSuit;   //(CardS,CardD,CardC,CardH);
+     suit1,i,stx,sty: integer;
+     //cards0: array[0..19] of TCard;   //0..15
+begin
+   sty:=-70;
+   for i:= 10 to 14 do begin  //10 to 14
+     stx:= 100;
+     sty:= sty+110;
+     for suit1:= 0 to 3 do begin
+       aCard:= TForm1_makecard(stx,sty,i,TShortSuit(suit1));
+       //cards0[4*(i-10)+suit1]:= TForm1_makecard(stx,sty,i,TShortSuit(suit1));
+       stx:= stx+90;  //overlap=50
+     end;
+   end;
+end;
+
+procedure cardSetSpecial;
+var  suit: TShortSuit;   //(CardS,CardD,CardC,CardH);
+     suit1,i,stx,sty: integer;
+     //cards0: array[0..19] of TCard;   //0..15
+begin
+   sty:=200;
+   for i:= 13 to 14 do begin  //10 to 14
+     stx:= 320;
+     sty:= sty+110;
+     for suit1:= 0 to 3 do begin
+       aCard:= TForm1_makecard(stx,sty,i,TShortSuit(suit1));
+       //cards0[4*(i-10)+suit1]:= TForm1_makecard(stx,sty,i,TShortSuit(suit1));
+       stx:= stx+90;  //overlap=50
+     end;
+   end;
+end;
+
+
+procedure putNumbers(vrange: byte);
+var ti, z, myrand: byte;
+    dup: boolean;
+begin
+  ti:= 1;
+  Randomize
+  //if vrange < lotnr then vrange:= 6; 
+  repeat
+    myrand:= Random(vrange)+1;     
+    dup:= false;
+    for z:= 1 to lotnr do 
+      if (larr[z] = myrand) then dup:= true;
+    if (not dup) then begin
+      larr[ti]:= myrand;
+      //lstat[myrand]:= lstat[myrand] + 1;
+      ti:= ti + 1;
+    end;
+  until ti = lotnr + 1
+end;  
+
+procedure FillGrid;
+var i: byte;
+begin
+  j:= 1
+  with sGrid1 do begin
+    for i:= 1 to lotrange do begin
+      for iz:= 1 to lotnr do
+        if larr[iz] = i then
+          Cells[((i+CCOL-1) mod CCOL)+1, j]:= intToStr(i);
+      if i mod CCOL = 0 then
+       inc(j)
+    end;
+    Font.Size:= 40;
+    Cells[6,5]:= '!!!';
+  end;  
+end;
+
+function GetBigIntFact(aval: byte): string;
+  //unit mybigint
+var mbResult: TMyBigInt;
+    i: integer;
+begin
+  mbResult:= TMyBigInt.Create(1);
+  try
+    for i:= 1  to aval do 
+      //mbResult.Multiply(mbresult, mbresult);
+      mbResult.Multiply1(mbresult, i);
+    Result:= mbResult.ToString;
+  finally 
+    //FreeAndNil(mbResult);
+    mbResult.Free;
+  end;
+end;
+
+function getPermutation(npr, k: integer): extended; 
+//2. Permutation(Variation without repeating) = nPr = n!/(n-k)!
+begin
+  result:= (Fact(npr)/Fact(npr-k));
+  //test 4 of 10 = 5040 = NPR(10,4)
+end;
+
+function getCombination(npr, k: integer): extended; 
+//3. Combination (binominal coefficient)= nCr = nPr / k!
+begin
+  result:= (Fact(npr)/Fact(npr-k)/Fact(k));
+  //ncr:= npr/round(fact(ncr))
+  //test 4 of 20 = 4845 = NCR(20,4)
+end;
+
+procedure FindDataToFindRecTest(const FindData: TWin32FindData;
+  var FindRec: TFindRec);
+begin
+  //FindRec.Name := FindData.cFileName;
+  FindRec.Attributes := FindData.dwFileAttributes;
+  FindRec.SizeHigh := FindData.nFileSizeHigh;
+  FindRec.SizeLow := FindData.nFileSizeLow;
+  FindRec.CreationTime := FindData.ftCreationTime;
+  FindRec.LastAccessTime := FindData.ftLastAccessTime;
+  FindRec.LastWriteTime := FindData.ftLastWriteTime;
+  //FindRec.AlternateName := FindData.cAlternateFileName;
+end;
+
+
+ //const HWND_BROADCAST = $FFFF;
+ //CL.AddConstantN('wnd_Broadcast','').SetString( HWND_BROADCAST);
+   //HWND_MESSAGE = -3;
+ 
+
+function _FindFirst(const FileName: String; var FindRec: TFindRec): Boolean;
+var
+  FindHandle: THandle;
+  FindData: TWin32FindData;
+  //asd: HWND_BROADCAST;
+begin
+  //PostAppMessage
+  //PostThreadMessage
+  //SendNotifyMessage(HWND_MESSAGE,
+  //ReplyMessage
+  //WaitMessage;
+  //WaitForInputIdle
+  //GetDoubleClickTime
+  FindHandle := FindFirstFileRedir(false, FileName, FindData);
+  if FindHandle <> INVALID_HANDLE_VALUE then begin
+    FindRec.FindHandle := FindHandle;
+    FindDataToFindRec(FindData, FindRec);
+    Result := True;
+  end
+  else begin
+    FindRec.FindHandle := 0;
+    Result := False;
+  end;
+end;
+
+function _FindNext(var FindRec: TFindRec): Boolean;
+var
+  FindData: TWin32FindData;
+  res1, res2: boolean;
+begin
+  res1:= FindNextFile(FindRec.FindHandle,FindData);
+  res2:= (FindRec.FindHandle <> 0);
+  result:= res2 and res1;
+  //result:= (FindRec.FindHandle<>0) and FindNextFile(FindRec.FindHandle,FindData);
+  if Result then
+    FindDataToFindRec(FindData, FindRec);
+end;
+
+procedure _FindClose(var FindRec: TFindRec);
+begin
+  if FindRec.FindHandle <> 0 then begin
+    wFindClose(FindRec.FindHandle);
+    FindRec.FindHandle := 0;
+  end;
+end;
+
+
+type
+  TDllProc = function(const Param1, Param2: Longint): Longint; //stdcall;
+
+//{ Windows }
+(*function WindowsProc(Caller: TPSExec; Proc: TPSExternalProcRec; Global, Stack: TPSStack): Boolean;
+var
+  PStart: Cardinal;
+  DllProc: TDllProc;
+  DllHandle: THandle;
+  S: AnsiString;
+begin
+  PStart := Stack.Count-1;
+  Result := True;
+
+  if Proc.Name = 'SLEEP' then begin
+    Sleep(Stack.GetInt(PStart));
+  end else if Proc.Name = 'FINDWINDOWBYCLASSNAME' then begin
+    Stack.SetInt(PStart, FindWindow(PChar(Stack.GetString(PStart-1)), nil));
+  end else if Proc.Name = 'FINDWINDOWBYWINDOWNAME' then begin
+    Stack.SetInt(PStart, FindWindow(nil, PChar(Stack.GetString(PStart-1))));
+  end else if Proc.Name = 'SENDMESSAGE' then begin
+    Stack.SetInt(PStart, SendMessage(Stack.GetInt(PStart-1), Stack.GetInt(PStart-2), Stack.GetInt(PStart-3), Stack.GetInt(PStart-4)));
+  end else if Proc.Name = 'POSTMESSAGE' then begin
+    Stack.SetBool(PStart, PostMessage(Stack.GetInt(PStart-1), Stack.GetInt(PStart-2), Stack.GetInt(PStart-3), Stack.GetInt(PStart-4)));
+  end else if Proc.Name = 'SENDNOTIFYMESSAGE' then begin
+    Stack.SetBool(PStart, SendNotifyMessage(Stack.GetInt(PStart-1), Stack.GetInt(PStart-2), Stack.GetInt(PStart-3), Stack.GetInt(PStart-4)));
+  end else if Proc.Name = 'REGISTERWINDOWMESSAGE' then begin
+    Stack.SetInt(PStart, RegisterWindowMessage(PChar(Stack.GetString(PStart-1))));
+  end else if Proc.Name = 'SENDBROADCASTMESSAGE' then begin
+    Stack.SetInt(PStart, SendMessage(HWND_BROADCAST, Stack.GetInt(PStart-1), Stack.GetInt(PStart-2), Stack.GetInt(PStart-3)));
+  end else if Proc.Name = 'POSTBROADCASTMESSAGE' then begin
+    Stack.SetBool(PStart, PostMessage(HWND_BROADCAST, Stack.GetInt(PStart-1), Stack.GetInt(PStart-2), Stack.GetInt(PStart-3)));
+  end else if Proc.Name = 'SENDBROADCASTNOTIFYMESSAGE' then begin
+    Stack.SetBool(PStart, SendNotifyMessage(HWND_BROADCAST, Stack.GetInt(PStart-1), Stack.GetInt(PStart-2), Stack.GetInt(PStart-3)));
+  end else if Proc.Name = 'LOADDLL' then begin
+    DllHandle := SafeLoadLibrary(Stack.GetString(PStart-1), SEM_NOOPENFILEERRORBOX);
+    if DllHandle <> 0 then
+      Stack.SetInt(PStart-2, 0)
+    else
+      Stack.SetInt(PStart-2, GetLastError());
+    Stack.SetInt(PStart, DllHandle);
+  end else if Proc.Name = 'CALLDLLPROC' then begin
+    @DllProc := GetProcAddress(Stack.GetInt(PStart-1), PChar(Stack.GetString(PStart-2)));
+    if Assigned(DllProc) then begin
+      Stack.SetInt(PStart-5, DllProc(Stack.GetInt(PStart-3), Stack.GetInt(PStart-4)));
+      Stack.SetBool(PStart, True);
+    end else
+      Stack.SetBool(PStart, False);
+  end else if Proc.Name = 'FREEDLL' then begin
+    Stack.SetBool(PStart, FreeLibrary(Stack.GetInt(PStart-1)));
+  end else if Proc.Name = 'CREATEMUTEX' then begin
+    CreateMutex(nil, False, PChar(Stack.GetString(PStart)));
+  end else if Proc.Name = 'OEMTOCHARBUFF' then begin
+    S := StackGetAnsiString(Stack, PStart);
+    OemToCharBuffA(PAnsiChar(S), PAnsiChar(S), Length(S));
+    StackSetAnsiString(Stack, PStart, S);
+  end else if Proc.Name = 'CHARTOOEMBUFF' then begin
+    S := StackGetAnsiString(Stack, PStart);
+    CharToOemBuffA(PAnsiChar(S), PAnsiChar(S), Length(S));
+    StackSetAnsiString(Stack, PStart, S);
+  end else
+    Result := False;
+end; *)
+
+//{ Ole2 }
+(*function Ole2Proc(Caller: TPSExec; Proc: TPSExternalProcRec; Global, Stack: TPSStack): Boolean;
+begin
+  Result := True;
+
+  if Proc.Name = 'COFREEUNUSEDLIBRARIES' then begin
+    CoFreeUnusedLibraries;
+  end else
+    Result := False;
+end; *)
+
+  const fpath = 'C:\maXbook\maxbox3\mX3999\maxbox_content\index_files';
+
+
+  var strback: string;
+     dirlist: Tstrings;
+ 
+BEGIN  //Main
+//<Executable statements>
+  {x:= 100;
+  quadrat:= power(x,2); 
+  writeln(format('%f', [quadrat]))
+  writeln(format('%s',[inttobin(97 XOR 223)]))}
+
+  CreateDrawForm;
+  PutNumbers(lotrange)
+  FillGrid;  
+  
+  writeln(floattoStr(getPermutation(45,6)))
+  writeln(floattoStr(getCombination(45,6)))
+  writeln(floattoStr(getCombination(45,22)))
+  comblist:= TStringlist.create;
+  for i:= 1 to LotRANGE do
+    comblist.add(Format('case: %d is %f',[i, getCombination(45,i)]));
+  for i:= 1 to LotRANGE do
+    Writeln(comblist[i-1]);
+  comblist.Free;  
+  for i:= 1 to lotnr do 
+    Write(inttostr(larr[i])+ ' ');
+    
+    //cardSetTest;
+    cardSetTestEasy
+    cardSetSpecial
+    
+    writeln(formatBigInt(powerBig(2,1000)))
+    //writeln(formatBigInt(BigExp('2','1000')))
+    writeln(getAsciiline)
+    writeln(inttostr(GetDoubleClickTime))
+    if SetDoubleClickTime(500) then writeln('set click time');
+    writeln(inttostr(GetDoubleClickTime))
+    writeln(inttostr(HWND_BROADCAST))
+    maXcalcF('2^16')
+    //SafeLoadLibrary
+    FmtStr(strback,'thise ise %.10f of',[maXcalc('1.23^34')]);
+    writeln(strback);
+    //http://sourceforge.net/projects/maxbox/files/maxbox3clx.tar.gz/download
+    //wget('http://ftp.jaist.ac.jp/pub//sourceforge/m/ma/maxbox/Docu/gitwingui.PNG','gitwingui.png');
+    //wget2('http://ftp.jaist.ac.jp/pub//sourceforge/m/ma/maxbox/maxbox3clx.tar.gz','maxbox3clx.tar.gz');
+    
+    dirlist:= TStringlist.create;
+    GetDirList(fpath+'\*.*',dirlist,false)
+  //application.processmessages;
+  for i:= 0 to dirlist.count - 1 do
+      writeln(ExtractFileName(dirlist[i]));
+      dirlist.Free;
+  
+
+End. 
+
+Doc
+
+{ We use the Format/FmtStr functions from Delphi 7 because Delphi 2's Format
+  raises an exception if the result is more than 4096 characters. }
+function _Format(const Format: string; const Args: array of const): string;
+begin
+  _FmtStr(Result, Format, Args);
+end;
+
+
+-----------------------------------------------------
+     {for i:= 1 to 10 do
+       for j:= 1 to 10 do begin
+         //printf('%d',[j])
+           write(inttostr(j*i)+ '  ')
+           if j=10 then writeln('')
+        end
+        writeln('')
+     for i:= 1 to 10 do
+       for j:= 1 to 10 do begin
+         //printf('%d',[j])
+           ein:= j*i;
+           if (ein < 10) and (j<7) then
+             write(inttostr(ein)+ '    ')
+             else 
+             write(inttostr(ein)+ '  ')
+          if j=10 then writeln('')
+        end}
+       // big fact 70 = 1.1978571669969891796072783721689e+100
+
+        
+  00000000000000000000000100101100 XOR
+  00000000000000000000000100101100
+                         000000000
+
+----app_template_loaded----
+
+Corrections of V 3.5 beta
+
+cid:  182  winmemory: Twinmemory
+cid:  183  winmemory.#0: TLabel
+cid:  184  winmemory_1: Twinmemory
+cid:  185  winmemory_1.#0: TLabel
+
+
+  Dealing with Big Numbers (Integers)
+  -----------------------------------
+  
+  As you may know there's no simple solution to print or store big numbers, for example you want to compute fact(70), your calculator shows:
+  fact(70) = 1.197857166996989179607721689e+100
+  
+  but the maximum range on Delphi depends on your operating system types, means nowadays an int64 range is the big int.
+  Now that the "signed" Words are finally up-to-par with the unsigned integer types, Delphi 4 introduces a new 64-bits integer type, called Int64, with a whopping range of -2^63..2^63 - 1  
+
+ Another way is to use the type extended, but the limitation is precision like
+   
+        Writeln(FloatToStr(Fact(70)))
+ 
+    it only shows 
+    1.2E+0100
+
+With a BigInt Library (bigintlib) you'll see the full range of Fact(70):
+
+1197857166996989179607278372168909878925464755536628009582789845319680000000000000000
+    
+The call respectively the calculation goes like this:
+
+function GetBigIntFact(aval: byte): string;
+//call of unit mybigint
+var mbRes: TMyBigInt;
+    i: integer;
+begin
+  mbRes:= TMyBigInt.Create(1);
+  try
+    //multiplication of factor
+    for i:= 1  to aval do 
+      mbRes.Multiply1(mbresult, i);
+    Result:= mbRes.ToString;
+  finally 
+    //FreeAndNil(mbResult);
+    mbRes.Free;
+  end;
+end;
+    
+Or you want the power of 100        
+2^100=
+12676506002282299670376
+  
+The definition of the function could be the following:
+
+function GetBigIntPower(aval: integer): string;
+var mbResult: TMyBigInt;
+     i: integer;
+begin
+  mbResult:= TMyBigInt.Create(1);
+  try
+    for i:= 1 to aval do 
+      mbResult.Multiply1(mbresult, 2);
+    Result:= mbResult.ToString;
+  finally 
+    mbResult.Free;
+  end;
+end;
+  
+  
+At least one really big, it's 2^1000
+
+107150860718626732094849060001810561404811705574437503883703510511249361224931983788156958581275946729175531468251871452856923140445775746985748039345677748246050623711418779541821547498973987675591655407706291
+
+
+the class of the unit from swiss delphi:
+
+  TMyBigInt = class
+  private
+    Len: Integer;
+    Value: AnsiString;
+    procedure Trim;
+    procedure Shift(k: Integer);
+    procedure MultiplyAtom(Multiplier1: TMyBigInt; Multiplier2: Integer);
+  public
+    constructor Create(iValue: Integer = 0);
+    procedure Add(Addend1, Addend2: TMyBigInt);
+    procedure Multiply(Multiplier1, Multiplier2: TMyBigInt); overload;
+    procedure Multiply(Multiplier1: TMyBigInt; Multiplier2: Integer); overload;
+    function ToString: string;
+    procedure CopyFrom(mbCopy: TMyBigInt);
+  end;
+    
+    
+    Before the LTO flag commit:
+
+Sketch uses 26,628 bytes (82%) of program storage space. Maximum is 32,256 bytes.
+Global variables use 984 bytes (48%) of dynamic memory, leaving 1,064 bytes for local variables. Maximum is 2,048 bytes.
+
+After:
+
+Sketch uses 72,984 bytes (226%) of program storage space. Maximum is 32,256 bytes.
+Global variables use 1,222 bytes (59%) of dynamic memory, leaving 826 bytes for local variables. Maximum is 2,048 bytes.
+
+
+----Simple Browser started----
+
+why doesnrt it blink?
+
+  for i:= 1 to 5 do begin
+      cPort.WriteStr('3')
+      sleep(500)
+      cPort.WriteStr('C')
+    end; 
+
+  for i:= 1 to 5 do begin
+      cPort.WriteLED(HI)
+      sleep(500)
+      cPort.WriteLED(LO)
+    end; 
+    
+    
+    
+Error Message:
+111 out of 174 rated this helpful - Rate this topic
+
+KERNEL_DATA_INPAGE_ERROR
+Explanation:
+
+This Stop message indicates that the requested page of kernel data from the paging file could not be read into memory. This Stop message is usually caused by a bad block (sector) in a paging file, a virus, a disk controller error, or failing RAM. In rare cases, it is caused when nonpaged pool resources run out. It is also caused by defective hardware.
+User Action:
+
+If the I/O status is C0000185 and the paging file is on a SCSI disk, the disk cabling and SCSI termination should be checked for problems. Check your computer for viruses, using any up-to-date, commercial virus scanning software that examines the Master Boot Record of the hard disk. An I/O status code of 0xC000009C or 0xC000016A normally indicates the data cannot be read from the disk due to a bad block (sector). If you can restart the system after the error, Autochk runs automatically and attempts to map out the bad sector. If Autochk does not scan the hard disk for errors, manually launch the disk scanner. Run Chkdsk /f /r on the system partition. Restart the system before the disk scan begins. If you cannot start the system due to the error, use the Recovery Console and run Chkdsk /r. Caution: If your system partition is formatted with the FAT file system, the long file names used by Windows 2000 can be damaged if Scandisk or another MS-DOSbased hard disk tool is used to verify the integrity of your hard disk from an MS-DOS prompt. (An MS-DOS prompt is typically derived from an MS-DOS startup disk or from starting MS-DOS on a multiboot system.) Always use the Windows 2000 version of Chkdsk on Windows 2000 disks. Another common cause of this Stop message is failing RAM. Run hardware diagnostics supplied by the system manufacturer, especially the memory scanner. For details on these procedures, see the owners manual for your computer. Check that all network adapters in the computer are properly seated. Use an ink eraser or an electrical contact treatment, available at electronics supply stores, to ensure network adapter contacts are clean. Check the System Log in Event Viewer for additional error messages that might help pinpoint the device causing the error. Disabling memory caching of the BIOS might also resolve it. Finally, if all the above steps fail to resolve the error, take the system motherboard to a repair facility for diagnostic testing. A crack, a scratched trace, or a defective component on the motherboard can also cause this error. For more troubleshooting information about this Stop message, refer to the Microsoft Knowledge Base at http://support.microsoft.com/support.
+
+
+procedure UploadPerFTP;
+  procedure GetDir(dir: string);
+  var
+    SearchRec: TSearchRec;
+    details, nodetails: TStringList;
+    k: Integer;
+  begin
+    //iterate through directory given
+    //schleife über alle dateien im ordner
+    if FindFirst(dir + '*.*', faAnyFile, SearchRec) = 0 then
+    begin
+      repeat
+
+        //get rid of the both "dummy-directories" '.' and '..'
+        //die ordner '.' und '..' brauchen man nicht
+        if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
+        begin
+          //if we found a folder
+          //falls wir einen ordner haben
+          if (SearchRec.Attr and faDirectory) = faDirectory then
+          begin
+            //get folder contents from ftp. one with details, one without
+            //holen wir uns den ordnerinhalt mit details und einmal ohne vom server
+            details   := TStringList.Create;
+            nodetails := TStringList.Create;
+            FTPClient.List(details, '', True);
+            FTPClient.List(nodetails, '', False);
+
+            //we only want to have directories in the list (without '.' and '..')
+            //nun filtern wir das nach den ordnern (ohne '.' und '..')
+            for k := details.Count - 1 downto 0 do
+            begin
+              if details.Strings[k] <> '' then
+              begin
+                if (details.Strings[k][1] <> 'd') or
+                  (nodetails.Strings[k] = '.') or
+                  (nodetails.Strings[k] = '..') then
+                begin
+                  details.Delete(k);
+                  nodetails.Delete(k);
+                end;
+              end;
+            end;
+
+            //if our directory does not exists on the server, create it
+            //falls unser ordner auf dem server noch nicht existiert, legen wir ihn an
+            if nodetails.IndexOf(SearchRec.Name) = -1 then
+            begin
+              FTPClient.MakeDir(SearchRec.Name);
+            end;
+
+            //change into next directory on server
+            //nun wechseln wir in den nächsten ordner
+            FTPClient.ChangeDir(SearchRec.Name);
+            details.Free;
+            nodetails.Free;
+
+            //and also locally go into the next subfolder
+            //und suchen lokal im nächsten unterordner weiter
+            GetDir(dir + SearchRec.Name + '\');
+
+            //we have to go one directory up after leaving the recursion
+            //wenn die rekursion zurück ist, müssen wir wieder eine ordnerstufe hochgehen
+            FTPClient.ChangeDirUp;
+          end 
+          else 
+          begin
+            //if it's only a file, upload it to the current directory
+            //falls wir eine datei angetroffen haben, können wir diese uploaden
+            FTPClient.Put(dir + SearchRec.Name, SearchRec.Name);
+          end;
+        end;
+      until FindNext(SearchRec) <> 0;
+      FindClose(SearchRec);
+    end;
+  end;
+var
+  dir: string;
+  details, nodetails: TStringList;
+  k: Integer;
+begin
+  //set some basic settings on your ftp client (TIdFTPClient)
+  //hier kommen die grundangaben für unseren ftp client hin (TIdFTPClient)
+  with FTPClient do
+  begin
+    Host     := 'your_server.com';            // Adjust your data here / Hier gwünschte Daten eintragen
+    Username := 'your_username';
+    // Adjust your data here / Hier gwünschte Daten eintragen
+    Password := 'your_password';
+    // Adjust your data here / Hier gwünschte Daten eintragen
+    Passive := True;                      // Adjust your data here / Hier gwünschte Daten eintragen
+  end;
+  FTPClient.Connect;
+
+  //if you want to upload you data to an remote-directory, enter it below (does not matter if 'dir\dir' or 'dir/dir')
+  //falls die daten in ein remote-directory heraufgeladen werden sollen, kann es hier angegeben werden (egal ob 'dir\dir' oder 'dir/dir')
+  dir := StringReplace('your/remote_directory', '\', '/', [rfReplaceAll]);
+  // Adjust your data here / Hier gwünschte Daten eintragen
+
+  //remove first '/' if there's one
+  //wir löschen das erste '/', falls eines existiert
+  if dir <> '' then
+  begin
+    if dir[1] = '/' then Delete(dir, 1, 1);
+
+    //but add a '/' at the end
+    //aber am ende fügen wir ein '/' hinzu
+    if dir[Length(dir)] <> '/' then dir := dir + '/';
+
+    //loop through our remote-directories
+    //schleife über alle remote-directories
+    while Pos('/', dir) > 0 do
+    begin
+      //get folder contents from ftp. one with details, one without
+      //runterladen der aktuellen ordnerinhalte vom server (mit und ohne details)
+      details   := TStringList.Create;
+      nodetails := TStringList.Create;
+      FTPClient.List(details, '', True);
+      FTPClient.List(nodetails, '', False);
+
+      //we only want to have directories in the list (without '.' and '..')
+      //wir wollen wieder nur ordner ohne '.' und '..'
+      for k := details.Count - 1 downto 0 do
+      begin
+        if details.Strings[k] <> '' then
+        begin
+          if (details.Strings[k][1] <> 'd') or
+            (nodetails.Strings[k] = '.') or
+            (nodetails.Strings[k] = '..') then
+          begin
+            details.Delete(k);
+            nodetails.Delete(k);
+          end;
+        end;
+      end;
+
+      //if our directory does not exists on the server, create it
+      //falls der ordner nicht existiert, legen wir ihn an
+      if nodetails.IndexOf(Copy(dir, 1, Pos('/', dir) - 1)) = -1 then
+      begin
+        FTPClient.MakeDir(Copy(dir, 1, Pos('/', dir) - 1));
+      end;
+
+      //change to our directory on server
+      //nun wechseln wir in den nächsten ordner auf dem server
+      FTPClient.ChangeDir(Copy(dir, 1, Pos('/', dir) - 1));
+
+      //remove first directory from path ('your/directory/subdir/' --> 'directory/subdir/')
+      //wir schneiden den ersten ordner vom pfad ab ('dein/ordner/unterordner/' --> 'ordner/unterordner/')
+      Delete(dir, 1, Pos('/', dir));
+      details.Free;
+      nodetails.Free;
+    end;
+  end;
+
+  //ftp client is ready in your remote-directory
+  //begin to upload our local directory
+  //der ftp client ist nun im remote-directory bereit
+  //wür können anfangen unseren lokalen ordner raufzuladen
+  dir := 'C:\your\local\directory\';
+  // Adjust your data here / Hier gwünschte Daten eintragen
+  if dir[Length(dir)] <> '\' then dir := dir + '\';
+  GetDir(dir);
+  FTPClient.Disconnect;
+end;
+
+   

@@ -1,0 +1,368 @@
+Program Eliza_Webserver2;
+
+//interface  locs=262
+//uses Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  //Dialogs, IdBaseComponent, IdComponent, IdTCPServer, IdCustomHTTPServer, IdContext, IdHTTPServer;
+  
+  //eliza engine file to include 
+{$I ..\maxbox3\examples\305_eliza_engine.INC}
+
+Const
+  BITMAP = 'examples\citymax.bmp';
+  WEBPATH = 'web\elizaweb\HTML';
+  IPADDR = '127.0.0.1';
+  APORT = 9000;
+
+var 
+    ppform: TForm;
+    HTTPServer1: TIdCustomHTTPServer;
+    FHTMLDir,FTemplate,FLastMsg : string;
+    FConjugations: TStrings;
+  
+
+procedure TEZEngine_InitConjugations; forward;
+
+procedure TEZEngine_Create(AOwner: TComponent);
+begin
+  //inherited;
+  FConjugations:= TStringList.Create;
+  TEZEngine_InitConjugations;
+end;
+
+
+procedure TEZEngine_InitConjugations;
+begin
+  with FConjugations do begin
+    Add('Are=am');
+    Add('Were=was');
+    Add('You=I');
+    Add('Your=my');
+    Add('I''ve=you''ve');
+    Add('I''m=you''re');
+    Add('Me=you');
+  end;
+end;
+
+
+//web part communication
+procedure TF_IdHTTPServer1SessionStart(Sender: TIdHTTPSession);
+begin
+  //TEZEngine_Create(NIL);
+  writeln('session start');
+  Sender.Content.AddObject('Eliza', NIL);
+end;
+
+procedure TF_IdHTTPServer1SessionEnd(Sender: TIdHTTPSession);
+begin
+  writeln('session end');
+  Sender.Content.Objects[0].Free;
+end;
+
+procedure TFButton1Click(Sender: TObject);
+var ts: TS_ShellExecuteCmd;
+  // TS_ShellExecuteCmd = (seCmdOpen,seCmdPrint,seCmdExplore);
+begin
+  //ShellAPI.ShellExecute(Handle, PChar('open'), 'http://127.0.0.1:8000/', nil, nil, 0);
+  //ExecuteCommand('http://127.0.0.1:8000','')
+   //S_ShellExecute('http://127.0.0.1:9000','', seCmdOpen)
+   S_ShellExecute('http:'+IPADDR+':'+IntToStr(APORT),'', seCmdOpen)
+end;
+
+
+procedure TFAsk(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
+var s: string;
+  //LEliza: TEZEngine;
+  LPersonality, LResponse,LSound,LQuestion: string;
+  FDone: Boolean;
+begin
+  lSound:= 'maxmor.wav';    //for firefox an mp3
+  LResponse := '';
+  //LEliza := TEZEngine(ARequestInfo.Session.Content.Objects[0]);
+  LPersonality:= Trim(ARequestInfo.Params.Values['Personality']);
+  if LPersonality <> '' then begin
+    //TEZEngine_SetPersonality(LPersonality);
+  end else begin
+    LQuestion:= Trim(ARequestInfo.Params.Values['Thought']);
+    if LQuestion <> '' then begin
+      //LResponse := TEZEngine_TalkTo(LQuestion, LSound);
+      if AnsiSameText(LQuestion, FLastMsg) then
+      LResponse:= 'Please don''t repeat yourself.' else begin
+      LResponse:= GetReply(LQuestion)
+      FLastMsg:= LQuestion;
+    end
+    end else 
+     LResponse:= 'I cannot help you if you do not talk to me.';
+  end;
+  if FDone then begin
+    AResponseInfo.ContentText:= LResponse;
+  end else begin
+    s:= FTemplate;
+    s:= StringReplace(s, '{%RESPONSE%}', LResponse, []);
+    if LSound <> '' then begin
+      writeln(FHTMLDir + '\' + LSound)
+      if FileExists(FHTMLDir + '\' + LSound) then begin
+      //writeln(FHTMLDir + '\' + LSound)
+     //<bgsound src="example.wav" loop="3" balance="0" volume="0">   
+        LSound:= '<BGSOUND SRC=' + '"'+LSound+'"'+' '+ 'volume=30>';    // + '.wav>';
+    end else 
+        LSound:= '';
+  end;
+    s:= StringReplace(s, '{%SOUND%}', LSound, []);
+    AResponseInfo.ContentText:= s;
+  end;
+end;
+
+
+procedure TFIdHTTPServer1CommandGet(AContext: TIdPeerThread;
+          ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
+var
+  LFilename, LPathname: string;
+begin
+  LFilename:= ARequestInfo.Document;
+  if AnsiSameText(LFilename, '/eliza.html') then begin
+    TFAsk(ARequestInfo, AResponseInfo);
+  end else begin
+    if LFilename = '/' then 
+      LFilename:= '/index.html';
+    LPathname:= FHTMLDir + LFilename;
+    if FileExists(LPathname) then
+      AResponseInfo.ContentStream:= TFileStream.Create(LPathname,fmOpenRead + fmShareDenyWrite)
+    else begin
+      AResponseInfo.ResponseNo:= 404;
+      AResponseInfo.ContentText:= 'The requested URL '+ ARequestInfo.Document
+       + ' was not found on this server.';
+    end;
+  end;
+end;
+
+
+procedure CreateBitmapOnForm(aform: TForm);
+var mbitmap: TBitMap;
+begin
+  mbitmap:= TBitmap.Create;
+  try
+    mbitmap.LoadFromFile(Exepath+BITMAP);
+    aform.Canvas.Draw(320,160, mbitmap);
+    aform.Canvas.Draw(180,110, mbitmap);
+    aform.Canvas.draw(5,50, mbitmap);
+  finally
+    //aForm.Free;
+    mbitmap.Free;
+  end;
+end;
+
+procedure OnFormCreate(Sender: TObject);
+begin
+  FHTMLDir:= ExtractFilePath(Application.ExeName) + WEBPATH;
+  with TFileStream.Create(FHTMLDir + '\eliza.html', fmOpenRead) do try
+    SetLength(FTemplate, Size);
+     Seek(0, soBeginning)
+     Read(FTemplate, Size); 
+    //ReadBuffer(FTemplate[1], Size);
+  finally Free; end;
+end;
+
+
+procedure HTTPServerStartExecute(Sender: TObject);
+begin
+  HTTPServer1:= TIdCustomHTTPServer.Create(self)
+  with  HTTPServer1 do begin
+    if Active then Free;
+    if not Active then begin
+      Bindings.Clear;
+      bindings.Add;
+      bindings.items[0].Port:= APORT;
+      bindings.items[0].IP:= IPADDR; //'127.0.0.1';//'192.168.1.53';
+      Active:= true;
+      onSessionStart:= @TF_IdHTTPServer1SessionStart;
+      onSessionEnd:= @TF_IdHTTPServer1SessionEnd;
+      onCommandGet:= @TFIdHTTPServer1CommandGet;
+      Writeln(format('Listening for HTTP on %s:%d.',
+                          [Bindings[0].IP, Bindings[0].Port]));
+    end;
+    //Showmessage('Click OK to Close the HTTP Server');
+    //HTTPServer1.Free;
+  end;
+end;
+
+procedure TFFormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  FConjugations.Free;
+  HTTPServer1.Free;
+  Action:= cafree;
+  Writeln('Server Stopped at '+DateTimeToInternetStr(Now, true))
+end;
+
+procedure TFFormCloseClick(Sender: TObject);
+begin
+  ppForm.Close;   //calls onformclose
+end;
+
+
+function loadPForm(vx, vy: integer): TForm;
+var psize: integer;
+ //   ppform: TForm;
+    rgn: hrgn;
+begin
+  psize:= vx*vy
+  //constructor
+  ppform:= TForm.Create(self);
+  with ppform do begin
+    caption:= 'ELIZA Browser Solution';  
+    width:= (vx*psize)+ 10 + 200;
+    height:= (vy*psize)+ 30;
+    BorderStyle:= bsDialog;
+    Position:= poScreenCenter;
+    //onKeyPress:= @FormKeyPress
+    canvas.Pen.mode :=pmNotXor;
+    canvas.pen.style:= psDot; //pointed lines
+    color:= clBlack;
+    OnClose:= @TFFormClose;
+    Show;
+  end;
+  OnFormCreate(self);
+  //HTTPServerStartExecute(self);
+  with TBitBtn.create(self) do begin
+    parent:= ppform;
+    setbounds(140,440,140,40)
+    glyph.LoadFromResourceName(HINSTANCE,'CL_MPSTOP'); 
+    rgn:= createRoundRectrgn(0,0,width,height,12,12);
+    setWindowRgn(handle, rgn, true);
+    caption:= '&Close Server';
+    onClick:= @TFFormCloseClick;
+  end;
+   with TBitBtn.create(self) do begin
+    parent:= ppform;
+    setbounds(300,440,140,40)
+    glyph.LoadFromResourceName(HINSTANCE,'CL_MPPLAY'); 
+    mXButton(0,0,width, height,12,12,handle);
+    //rgn:= createRoundRectrgn(0,0,width,height,20,20);
+    //setWindowRgn(handle, rgn, true);
+    caption:= '&open Browser';
+    onClick:= @TFButton1Click;
+  end;
+  with TBitBtn.create(self) do begin
+    parent:= ppform;
+    setbounds(460,440,140,40)
+    glyph.LoadFromResourceName(HINSTANCE,'CL_MPRECORD'); 
+    mXButton(0,0,width, height,12,12,handle);
+    caption:= '&maXcalc button';
+    //onClick:= @openButtonClick;
+  end;  
+  result:= ppform;  
+end;
+
+//@implementation main
+
+begin   //main app
+  IncludeOFF;
+  CreateBitmapOnForm(loadPForm(8,8));
+  HTTPServerStartExecute(self);
+  TEZEngine_Create(self);
+End.
+
+
+//***************************************** code snippets ****************************
+
+
+(*procedure TForm1.IdHTTPServer1CommandGet(AContext: TIdContext;
+  ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
+begin
+  AResponseInfo.ContentText := 'Hello World. It is ' + TimeToStr(Time);
+end;*)
+
+
+
+function TEZEngine_TalkTo(AMsg: string; var VSound: string): string;
+var
+  i, j: Integer;
+  s: string;
+  LConj: string;
+  LFoundKeyword: string;
+  LFoundKeywordIdx: Integer;
+  LFoundKeywordPos: Integer;
+  LKeyword: string;
+  LWordIn: string;
+  LWordOut: string;
+      FPersonality: TObject; //EZPersonality;
+    FDone: Boolean;
+    FLastMsg: string;
+
+begin
+  //VSound := '';
+  if FPersonality = nil then begin
+     Exception.Create('No personality has been specified.');
+  end;
+  Result := '';
+  LConj := '';
+  LFoundKeyword := '';
+  //LFoundKeywordIdx := FPersonality.Keywords.IndexOf('--NOKEYFOUND--');
+  LFoundKeywordPos := 0;
+  //
+  AMsg := '  ' + Trim(AMsg) + '  ';
+  AMsg := StringReplace(AMsg, '''', '', [rfReplaceAll]);
+  // TODO: Respond to ones with ?
+  // Replace with spaces so ' bug ' will match ' bug. ' etc.
+  AMsg := StringReplace(AMsg, '?', ' ', [rfReplaceAll]);
+  AMsg := StringReplace(AMsg, '!', ' ', [rfReplaceAll]);
+  AMsg := StringReplace(AMsg, '.', ' ', [rfReplaceAll]);
+  if AnsiSameText(AMsg, FLastMsg) then begin
+    Result := 'Please don''t repeat yourself.';
+  end else if AnsiContainsText(AMsg, 'SHUT ') then begin
+    Result := 'How would you like it if I told you to shut up? I am sorry but we cannot continue'
+     + ' like this. Good bye.';
+    FDone := True;
+  end else if Trim(AMsg) = '' then begin
+    Result := 'I cannot help you if you do not talk to me.';
+  end else begin
+    FLastMsg := AMsg;
+    // Find Keyword
+     for i := 0 to {FPersonality.Keywords.Count - 1} 10 do begin
+      LKeyword := 'Keywords';
+     for j := 1 to Length(AMsg) - Length(LKeyword) + 1 do begin
+    writeln(' in this 2');
+       if AnsiSameText(Copy(AMsg, j, Length(LKeyword)), LKeyword) then begin
+             writeln(' in this 3');
+          LFoundKeywordIdx := i;
+          LFoundKeyword := LKeyword;
+          LFoundKeywordPos := j;
+          Break;
+        end;
+        // Break out of second loop
+        if LFoundKeyword <> '' then begin
+          Break;
+        end;  
+      end;    
+    end;  
+    // Take part of string and conjugate it using the list of strings to be swapped
+    LConj := ' ' + RightStr(AMsg, Length(AMsg) - Length(LFoundKeyword) - LFoundKeywordPos + 1)
+     + ' ';
+    for i := 0 to FConjugations.Count - 1 do begin
+        writeln(' in this 4');
+      LWordIn := FConjugations.Names[i];
+      LWordOut := FConjugations.Values[LWordIn] + ' ';
+      LWordIn := LWordIn + ' ';
+      LConj := StringReplace(LConj, LWordIn, LWordOut, [rfReplaceAll, rfIgnoreCase]);
+    end;
+    // Only one space
+    if Copy(LConj, 1, 1) = ' ' then begin
+      Delete(LConj, 1, 1);
+    end;
+    LConj := StringReplace(LConj, '!', '', [rfReplaceAll]);
+    // Get reply
+    s:= GetReply(amsg)
+    //s := 'TEZReply(FPersonality.Keywords.Objects[LFoundKeywordIdx]).NextText';
+    //VSound := TEZReply(FPersonality.Keywords.Objects[LFoundKeywordIdx]).Sound;
+    if AnsiPos('*', s) = 0 then begin
+      Result := s;
+    end else if Trim(LConj) = '' then begin
+      Result := 'You will have to elaborate more for me to help you.';
+    end else begin
+      Result := StringReplace(s, '*', LConj, [rfReplaceAll, rfIgnoreCase]);
+    end;
+  end;
+end;
+
+
+Could not call proc.Fault : Could not call proc. Date/time : 10/4/2012 10:58:19 PM Stack dump ---------- 00113FF8 00113923 0046A014 0046A7B7 0046A90C 00308923 002228ED 0022293E 0022295B 00222985 0003644F 00005466 
+ 

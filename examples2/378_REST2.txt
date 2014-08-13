@@ -1,0 +1,262 @@
+//Example of the REST load and save capabilities of the IndyVCL
+//Task: Code the button with your Video Server!
+//Get the text and write your memo todo memories, #locs=94
+//#sign:max: MAXBOX8: 15/11/2013 15:18:51 
+
+program SimpleRestRequestSample;
+
+//{$APPTYPE CONSOLE}
+
+//{$R *.res}
+
+{uses
+  SysUtils,
+  Classes,
+  RestRequest in 'RestRequest.pas';}
+  
+const 
+    domaintype = 'http://192.168.1.53:8080/';
+  
+
+var RestReq: TRestRequest;
+    RestResp: THttpResponse;
+    putParams: TStringList;
+    E: Exception;
+    
+    
+function TRestRequest_getURLAsStr: string;
+var
+  aFullPath: string;
+  aFullParams: string;
+  i: integer;
+  FPaths: TStringList;
+  FParams: TStringList;
+  AFDomain: string;
+
+begin
+  for i:= 0 to FPaths.Count - 1 do begin
+    aFullPath:= aFullPath + '/' + FPaths.Strings[i];
+  end;
+  if FParams.Count > 0 then begin
+    aFullParams:= '?';
+    for i:= 0 to FParams.Count - 1 do begin
+      if i > 0 then aFullParams:= aFullParams + '&';
+      aFullParams:= aFullParams + FParams.Names[i] + '=' + FParams.ValueFromIndex[i];
+    end;
+  end;
+  Result:= 'http://' + AFDomain + aFullPath + aFullParams;
+end;
+
+
+function TRestRequest_createStringStreamFromStringList(
+                                 strings: TStringList): TStringStream;
+var
+  i: Integer;
+  key, value: string;
+  strParam: string;
+begin
+  Result:= TStringStream.Create('');
+  for i:= 0 to strings.Count - 1 do begin
+    key:= strings.Names[i];
+    value:= strings.ValueFromIndex[i];
+    strParam:= urlEncode(key) + '=' + urlEncode(value);
+    if not (i = strings.Count - 1) then strParam:= strParam + '&';
+    Result.WriteString(strParam);
+  end;
+end;
+
+    
+    
+begin
+  try
+    try
+      putParams:= TStringList.Create();
+      putParams.Add('title=Buy milk and honey');
+      putParams.Add('due-date=01/01/2013 00:00:00');
+      RestReq:= 
+      TRestRequest.Create1().Domain('127.0.0.1').Path('todo').WithCredentials('test', 'test');
+      //TRestRequest.Create1().Domain('localhost').Path('todo').WithCredentials('test', 'test');
+      //TRestRequest.Create1().Domain(domaintype).Path('todo').WithCredentials('test','test');
+      RestResp:= RestReq.Put(putParams);
+      writeln('ResponseCode: '+inttoStr(RestResp.ResponseCode))
+      if RestResp.ResponseCode = 201 then WriteLn('Your todo was added!');
+      //restreq.jsonToObj()
+    finally
+      RestReq.Free;
+    end;
+  except
+    //on E: Exception do
+      //Writeln('Exception E.Message');
+      //raiseLastWin32error;
+      RaiseLastException;
+  end;
+  //millis
+End.
+
+
+http://jamiei.com/blog/2013/01/simple-rest-client-for-delphi/
+
+
+The TRestResponse record that is returned contains the ResponseCode and the ResponseBody but does nothing with the returned body as the type of response will be determined by your Client and Server. For example, in my own client project, I set the Accept header to prefer ‘application/json’ and then parse this in the response after receiving a 200 OK response from the server with the application/json header,
+
+
+    TRestRequest = class(TObject)
+      private
+        FDomain: string;
+        FPaths: TStringList;
+        FParams: TStringList;
+        FFileParams: TStringList;
+        FHeaders: TStringList;
+        FUsername: string;
+        FPassword: string;
+        FResponse: THttpResponse;
+        FAccept: string;
+        FContentType: string;
+        FBeforeRequest: TBeforeRequest;
+
+        procedure doBeforeRequest(AHttpInst: TIdHttp);
+        function getHttpClientInstance: TIdHttp;
+        function getURLAsStr: string;
+        function urlEncode(str: string): string;
+        function doPost(aParams: TIdMultiPartFormDataStream): THttpResponse; overload;
+        function doPost(aParams: TStringStream): THttpResponse; overload;
+        function multipartRequired(aParams, aFileParams: TStringList): boolean;
+        function createMultiPartFormDataStreamFromStringList(strings: TStringList; aFileParams: TStringList): TIdMultiPartFormDataStream;
+        function createStringStreamFromStringList(strings: TStringList): TStringStream;
+        procedure httpAuthorisation(Sender: TObject; Authentication: TIdAuthentication; var Handled: Boolean);
+
+        function getAccept: string;
+        procedure setAccept(const Value: string);
+        function getContentType: string;
+        procedure setContentType(const Value: string);
+        function GetBeforeRequest: TBeforeRequest;
+        procedure SetBeforeRequest(const Value: TBeforeRequest);
+      public
+        constructor Create(aIsSSL: boolean); overload;
+        constructor Create; overload;
+        destructor Destroy; override;
+        function Domain(aDomain: string): TRestRequest;
+        function Path(aPath: string): TRestRequest;
+        function Param(aKey: string; aValue: string): TRestRequest;
+        function FileParam(aKey: string; aValue: string): TRestRequest;
+        function WithHeader(aName: string; aValue: string): TRestRequest;
+        function WithCredentials(username, password: string): TRestRequest;
+
+        property Response: THttpResponse read FResponse;
+        property FullUrl: string read getURLAsStr;
+        property Accept: string read getAccept write setAccept;
+        property ContentType: string read getContentType write setContentType;
+        property BeforeRequest: TBeforeRequest read GetBeforeRequest write SetBeforeRequest;
+
+        function Get: THttpResponse;
+        function Put(aParams: TStringList): THttpResponse;
+        function Post(aParams: TStringList): THttpResponse;
+        function Delete: THttpResponse;
+        function Options: THttpResponse;
+    end;
+
+
+ 
+begin
+  memo2.font.size:= 14;
+  SetForm;
+  mymemo.lines.text:= getRandomText;
+  //SearchAndOpenDoc(ExePath+MEDIAPATH)
+  //mylistview:= TFormListView.Create(self);
+  //exit;
+  maxform1.color:= clsilver;
+End.
+
+//-------------------------------------------------
+
+source is tlistview
+target is tform
+
+procedure TfMerit.SourceLVStartDrag(Sender: TObject;
+var DragObject: TDragObject);
+var TargetLV:TListView;
+begin
+// TargetLV:=nejak urcit dle potreby
+  TargetLV.BeginDrag(True)
+end;
+
+procedure TfMerit.SourceLVMouseDown(Sender: TObject;
+Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+MouseIsDown:=True;
+end;
+
+procedure TfMerit.SourceLVMouseUp(Sender: TObject; Button: TMouseButton;
+Shift: TShiftState; X, Y: Integer);
+begin
+MouseIsDown:=False;
+if (Sender as TListView).Dragging then
+(Sender as TListView).EndDrag(False);
+end;
+
+procedure TfMerit.SourceLVMouseMove(Sender: TObject; Shift: TShiftState;
+X, Y: Integer);
+begin
+if (Sender.ClassNameIs('TListView')) then
+begin
+if MouseIsDown and ((Sender as TListView).SelCount>0) then
+(Sender as TListView).BeginDrag(True);
+end;
+end;
+
+
+procedure TfMerit.TargetLVDragOver(Sender, Source: TObject; X,
+Y: Integer; State: TDragState; var Accept: Boolean);
+var T:TListView;
+begin
+T:=Sender as TListView;
+Accept:=Assigned(T.GetItemAt(X,Y));
+end;
+
+
+procedure TfMerit.TargetLVDragDrop(Sender, Source: TObject; X,
+Y: Integer);
+var It:TListItem;
+LV1,LV2:TListView;
+begin
+LV1:=Source as TListView;
+LV2:=Sender as TListview;
+
+It:=LV2.GetItemAt(X,Y);
+if Assigned(It) then
+begin
+// zpracuj polozku ze zdrojoveho listview
+end;
+end;
+
+
+procedure TControlParentR(Self: TControl; var T:TWinControl); begin T:= Self.Parent; end;
+procedure TControlParentW(Self: TControl; T: TWinControl); begin Self.Parent:= T; end;
+    RegisterPropertyHelper(@TControlParentR, @TControlParentW, 'PARENT');
+    RegisterProperty('Parent', 'TWinControl', iptRW);
+
+procedure TTXPTool.LVPFFDblClick(Sender: TObject);
+var
+tmpList : TListItem;
+fn ; string;
+ft : integer;
+fs : integer;
+begin
+tmpList := LVPFF.Selected;
+if tmplist<>nil then
+begin
+  fn := tmpList.Caption
+  ft := tmpList.SubItems.Strings[1];
+  fs := tmpList.SubItems.Strings[3];
+  if pos('Wave', ft)>0 then
+    PlayThisOne1Click(nil);
+  if pos('Jpg', ft)>0 then
+    ShowJpg1Click(nil);
+  if pos('Targa', ft)>0 then
+    ShowTga1Click(nil);
+  if pos('Pcx', ft)>0 then
+    ShowPcx1Click(nil);
+  if pos('Mission Sound Collection', ft)>0 then
+    ShowPwf1Click(nil);
+end;
+end;

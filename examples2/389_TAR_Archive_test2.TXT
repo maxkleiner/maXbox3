@@ -1,0 +1,642 @@
+PROGRAM TAR_Archive;
+// dont 
+//#sign max: MAXBOX8: 15/11/2013 15:22:49 
+//#path:C:\maXbox\mX39960\maxbox3\examples\
+                               
+//uses
+  //System.SysUtils, // FreeAndNil
+  //System.Win.Registry, // TRegistry
+  //Winapi.Windows; // HKEY_LOCAL_MACHINE
+
+const
+  //change to your OS
+  REG_KEY_TEAMVIEWER8 = '\SOFTWARE\Wow6432Node\TeamViewer\Version8';
+  REG_VAL_CLIENTID = 'ClientID';
+
+function Endian64(x: Int64): Int64;
+begin
+  Result:= (x and $00000000000000FF) shl 56;
+  Result:= Result + (x and $000000000000FF00) shl 40;
+  Result:= Result + (x and $0000000000FF0000) shl 24;
+  Result:= Result + (x and $00000000FF000000) shl 8;
+  Result:= Result + (x and $000000FF00000000) shr 8;
+  Result:= Result + (x and $0000FF0000000000) shr 24;
+  Result:= Result + (x and $00FF000000000000) shr 40;
+  Result:= Result + (x and $FF00000000000000) shr 56;
+end;
+
+//type bool = boolean;
+
+function FileTimeGMT2 (FileName: STRING): TDateTime;
+         // Returns the Date and Time of the last modification of the given File
+         // The Result is zero if the file could not be found
+         // The Result is given in UTC (GMT) time zone
+VAR
+  Handle         : THandle;
+  FindData       : TWin32FindData;
+  SystemFileTime : TSystemTime;
+  mf: TFileTime;
+begin
+  Result := 0.0;
+  Handle := FindFirstFile (PChar (FileName), FindData);
+  IF Handle <> INVALID_HANDLE_VALUE THEN BEGIN
+    WFindClose (Handle);
+    IF (FindData.dwFileAttributes AND FILE_ATTRIBUTE_DIRECTORY) = 0 THEN
+      // FileTimeToSystemTime(FindData.ftLastWriteTime, SystemFileTime); 
+      IF FileTimeToSystemTime(FindData.ftLastWriteTime, SystemFileTime) THEN BEGIN
+        with SystemFileTime do begin
+          if messagebeep(4) then 
+            Result:= EncodeDate (wYear, wMonth, wDay) +
+          EncodeTime (wHour, wMinute, wSecond, wMilliseconds);
+        end;
+      END;
+    END;
+END;
+
+Procedure SetTAR;
+var TA : TTarArchive;
+    DirRec : TTarDirRec;
+    mjpeg: TJpegImage;
+begin
+  TA:= TTarArchive.Create1('tarFilename',fmOpenRead OR fmShareDenyWrite);   
+  TA.Reset;                              
+WHILE TA.FindNext (DirRec) DO BEGIN    
+  //ListBox.Items.Add (DirRec.Name);     
+  TA.ReadFile2('DestFilename');          
+  TA.Free;                                       
+  END;
+end;  
+
+
+Procedure CreateUpdateTAR;
+var TW: TTarWriter;
+begin
+    //TW:= TTarWriter.CreateEmpty;    
+    //TW:= TTarWriter.Create1(Exepath+'clxtetris.tar',fmCreate);    
+    TW:= TTarWriter.Create1(Exepath+'myex.tar',fmCreate);    
+    TW.AddFile(ExePath+'firstdemo3.uc','');             
+    TW.AddFile(ExePath+'firstdemo.txt','');             
+    TW.AddString('this is a text test', 'max.txt', Now);
+    TW.Free;                               
+end;    
+
+procedure AddNodes(Child: TTreeNode; aNode: IXmlNode);
+  var
+    i: Integer;
+    treeview: TTreeview;
+    asi: ansistring;
+    //XmlNodeList: IXmlNodeList;
+  begin
+    //Child := TreeView.Items.AddChild(Child, aNode.NodeName, Pointer(aNode));
+    //XmlNodeList := aNode.ChildNodes;
+    {for i:=0 to XmlNodeList.Count-1 do
+    begin
+      AddNodes(Child, XmlNodeList.Item[i]);
+    end;}
+  end;
+
+  //TODO: maXML  Decriptipn
+  
+procedure TMainForm_DoOpenFile(const Filename: String);
+var ffilename: string;
+     afilename: rawbytestring;
+  XmlDocument: IXmlDocument;
+  xelem: IXmlElement;
+  //Encoding : TJclStringEncoding;
+  //StringStream : TJclStringStream;
+  aser: TJvgXMLSerializer;
+  atree: TJvXMLTree;
+  aft: TFilename;
+  atp: TProcessTimer;
+begin
+  //AttributMemo.Clear;
+  //ValueMemo.Clear;
+  FFilename := 'Filename';
+  afilename:= Exepath+'examples\IVCLScanner.xml';
+  //Caption := Filename + ' - ' + Application.Title;
+  XmlDocument:= CreateXmlDocument('rootml','1.1','UTF-8',NIL);
+  //xmldocument:= XMLDocument.create;
+  xmldocument.save1(Exepath+'IVCLNewCreate.xml');
+  
+  if IsXmlDataString(afilename) then writeln('is XML ');
+  XmlDocument:= LoadXmlDocument1(aFilename);
+  xmldocument.save1(Exepath+'IVCLNewCreate.xml');
+  //OpenFile(Exepath+'IVCLScannerSave.xml');
+  //CreateTreeView;
+  
+  writeln(TextToXML(afilename));
+  
+  with TJclSimpleXML.create do begin
+    //LoadFromFile(afilename);
+    free;
+  end;  
+  
+  with TJvSimpleXML.create(self) do begin
+    LoadFromFile(afilename);
+    writeln(SaveToString);  //(Exepath+'IVCLScannerSave.xml');
+    prolog;
+    Free;
+  end;  
+  //I64ToCardinals
+  //CardinalsToI64
+    //SysErrorMessage
+    //StringListCustomSort
+    //PreProcessXML
+    //FileTimeToDateTime
+      //FileTimeToStr
+        //FirstWeekDay
+        //EncodeDate
+        //WinColorToOpenGLColor
+       //WinExec32AndRedirectOutput 
+         //WinExec32AndWait
+           //IniWriteStrings
+           //IniWriteInteger
+            // IniWriteString
+             // IniReadBool
+            // tinifile
+              //CharHex
+           
+           //StrQuote
+             //StrReplace
+               //twidestringds;
+                 //integertotext
+                 //texttointeger
+          //TJclAddr64    
+          
+          //nullstamp   
+        //JEncodeDate, 'EncodeDate', cdRegister);
+ //JDecodeDate, 'DecodeDate', cdRegister);
+ //DecodeDate1_P, 'DecodeDate1', cdRegister);
+ //DecodeDate2_P, 'DecodeDate2', cdRegister);
+ //CenturyOfDate, 'CenturyOfDate', cdRegister);
+ //CenturyBaseYear, 'CenturyBaseYear', cdRegister);
+ //DayOfDate, 'DayOfDate', cdRegister);
+ //MonthOfDate, 'MonthOfDate', cdRegister);
+ //YearOfDate, 'YearOfDate', cdRegister);
+ //DayOfTheYear, 'DayOfTheYear', cdRegister);
+ //DayOfTheYear1_P, 'DayOfTheYear1', cdRegister);
+ //DayOfTheYearToDateTime, 'DayOfTheYearToDateTime', cdRegister);
+ //HourOfTime, 'HourOfTime', cdRegister);
+ //MinuteOfTime, 'MinuteOfTime', cdRegister);
+ //SecondOfTime, 'SecondOfTime', cdRegister);
+ //GetISOYearNumberOfDays, 'GetISOYearNumberOfDays', cdRegister);
+ //IsISOLongYear, 'IsISOLongYear', cdRegister);
+ //IsISOLongYear1_P, 'IsISOLongYear1', cdRegister);
+ //ISODayOfWeek, 'ISODayOfWeek', cdRegister);
+ //JISOWeekNumber, 'ISOWeekNumber', cdRegister);
+ //ISOWeekNumber1_P, 'ISOWeekNumber1', cdRegister);
+ //ISOWeekNumber2_P, 'ISOWeekNumber2', cdRegister);
+ //ISOWeekToDateTime, 'ISOWeekToDateTime', cdRegister);
+
+ //JIsLeapYear, 'IsLeapYear', cdRegister);
+ //IsLeapYear1_P, 'IsLeapYear1', cdRegister);
+ //JDaysInMonth, 'DaysInMonth', cdRegister);
+     //Make4DigitYear, 'Make4DigitYear', cdRegister);
+     //JMakeYear4Digit, 'MakeYear4Digit', cdRegister);
+     //JJEasterSunday, 'EasterSunday', cdRegister);
+     //JFormatDateTime, 'FormatDateTime', cdRegister);
+     //FATDatesEqual, 'FATDatesEqual', cdRegister);
+     //FATDatesEqual1_P, 'FATDatesEqual1', cdRegister);
+     //HoursToMSecs, 'HoursToMSecs', cdRegister);
+     //MinutesToMSecs, 'MinutesToMSecs', cdRegister);
+     //SecondsToMSecs, 'SecondsToMSecs', cdRegister);
+     //TimeOfDateTimeToSeconds, 'TimeOfDateTimeToSeconds', cdRegister);
+     //TimeOfDateTimeToMSecs, 'TimeOfDateTimeToMSecs', cdRegister);
+     //DateTimeToLocalDateTime, 'DateTimeToLocalDateTime', cdRegister);
+     //LocalDateTimeToDateTime, 'LocalDateTimeToDateTime', cdRegister);
+     //DateTimeToDosDateTime, 'DateTimeToDosDateTime', cdRegister);
+     //JDateTimeToFileTime, 'DateTimeToFileTime', cdRegister);
+     //JDateTimeToSystemTime, 'DateTimeToSystemTime', cdRegister);
+     //DateTimeToSystemTime1_P, 'DateTimeToSystemTime1', cdRegister);
+     //LocalDateTimeToFileTime, 'LocalDateTimeToFileTime', cdRegister);
+     //DosDateTimeToDateTime, 'DosDateTimeToDateTime', cdRegister);
+     //JDosDateTimeToFileTime, 'DosDateTimeToFileTime', cdRegister);
+     //DosDateTimeToFileTime1_P, 'DosDateTimeToFileTime1', cdRegister);
+     //DosDateTimeToSystemTime, 'DosDateTimeToSystemTime', cdRegister);
+     //DosDateTimeToStr, 'DosDateTimeToStr', cdRegister);
+     //JFileTimeToDateTime, 'FileTimeToDateTime', cdRegister);
+     //FileTimeToLocalDateTime, 'FileTimeToLocalDateTime', cdRegister);
+     //JFileTimeToDosDateTime, 'FileTimeToDosDateTime', cdRegister);
+     //FileTimeToDosDateTime1_P, 'FileTimeToDosDateTime1', cdRegister);
+     //JFileTimeToSystemTime, 'FileTimeToSystemTime', cdRegister);
+     //FileTimeToSystemTime1_P, 'FileTimeToSystemTime1', cdRegister);
+     //FileTimeToStr, 'FileTimeToStr', cdRegister);
+     //SystemTimeToDosDateTime, 'SystemTimeToDosDateTime', cdRegister);
+     //JSystemTimeToFileTime, 'SystemTimeToFileTime', cdRegister);
+     //SystemTimeToFileTime1_P, 'SystemTimeToFileTime1', cdRegister);
+     //SystemTimeToStr, 'SystemTimeToStr', cdRegister);
+     //CreationDateTimeOfFile, 'CreationDateTimeOfFile', cdRegister);
+     //LastAccessDateTimeOfFile, 'LastAccessDateTimeOfFile', cdRegister);
+     //LastWriteDateTimeOfFile, 'LastWriteDateTimeOfFile', cdRegister);
+     //JDateTimeToUnixTime, 'DateTimeToUnixTime', cdRegister);
+     //JUnixTimeToDateTime, 'UnixTimeToDateTime', cdRegister);
+     //FileTimeToUnixTime, 'FileTimeToUnixTime', cdRegister);
+     //UnixTimeToFileTime, 'UnixTimeToFileTime', cdRegister);
+     //JNullStamp, 'NullStamp', cdRegister);
+     //JCompareTimeStamps, 'CompareTimeStamps', cdRegister);
+     //JEqualTimeStamps, 'EqualTimeStamps', cdRegister);
+     //JIsNullTimeStamp, 'IsNullTimeStamp', cdRegister);
+     //TimeStampDOW, 'TimeStampDOW', cdRegister);
+     {FirstWeekDay, 'FirstWeekDay', cdRegister);
+     FirstWeekDay1_P, 'FirstWeekDay1', cdRegister);
+     LastWeekDay, 'LastWeekDay', cdRegister);
+     LastWeekDay1_P, 'LastWeekDay1', cdRegister);
+     IndexedWeekDay, 'IndexedWeekDay', cdRegister);
+     FirstWeekendDay, 'FirstWeekendDay', cdRegister);
+     FirstWeekendDay1_P, 'FirstWeekendDay1', cdRegister);
+     LastWeekendDay, 'LastWeekendDay', cdRegister);
+     LastWeekendDay1_P, 'LastWeekendDay1', cdRegister);
+     IndexedWeekendDay, 'IndexedWeekendDay', cdRegister);
+     FirstDayOfWeek, 'FirstDayOfWeek', cdRegister); }
+     //LastDayOfWeek, 'LastDayOfWeek', cdRegister);
+     //IndexedDayOfWeek, 'IndexedDayOfWeek', cdRegister);
+      //  treplaceflags
+      //StringRemove, 'StringRemove', cdRegister);
+      // StringReplace, 'StringReplace', cdRegister);
+
+      //FormatMaskText 
+       // OffsetToMaskOffset         
+                 
+            //ansichar    
+      //StrIsAlpha, 'StrIsAlpha', cdRegister);
+     //StrIsAlphaNum, 'StrIsAlphaNum', cdRegister);
+     //StrIsAlphaNumUnderscore, 'StrIsAlphaNumUnderscore', cdRegister);
+     //StrContainsChars, 'StrContainsChars', cdRegister);
+     //StrConsistsOfNumberChars, 'StrConsistsOfNumberChars', cdRegister);
+     //StrIsDigit, 'StrIsDigit', cdRegister);
+     //StrIsSubset, 'StrIsSubset', cdRegister);
+     //StrSame, 'StrSame', cdRegister);
+     //StrCenter, 'StrCenter', cdRegister);
+     //StrCharPosLower, 'StrCharPosLower', cdRegister);
+     //StrCharPosUpper, 'StrCharPosUpper', cdRegister);
+     //StrDoubleQuote, 'StrDoubleQuote', cdRegister);
+     //StrEnsureNoPrefix, 'StrEnsureNoPrefix', cdRegister);
+     //StrEnsureNoSuffix, 'StrEnsureNoSuffix', cdRegister);
+     //StrEnsurePrefix, 'StrEnsurePrefix', cdRegister);
+     //StrEnsureSuffix, 'StrEnsureSuffix', cdRegister);
+     //StrEscapedToString, 'StrEscapedToString', cdRegister);
+     //StrLower, 'StrLower', cdRegister);
+     //StrLowerInPlace, 'StrLowerInPlace', cdRegister);
+     //StrLowerBuff, 'StrLowerBuff', cdRegister);
+     //JStrMove, 'StrMove', cdRegister);
+     //StrPadLeft, 'StrPadLeft', cdRegister);
+     //StrPadRight, 'StrPadRight', cdRegister);
+     //StrProper, 'StrProper', cdRegister);
+     //StrProperBuff, 'StrProperBuff', cdRegister);
+     //StrQuote, 'StrQuote', cdRegister);
+     //StrRemoveChars, 'StrRemoveChars', cdRegister);
+     //StrKeepChars, 'StrKeepChars', cdRegister);
+     //StrReplace, 'StrReplace', cdRegister);
+     //StrReplaceChar, 'StrReplaceChar', cdRegister);
+     //StrReplaceChars, 'StrReplaceChars', cdRegister);
+     //StrReplaceButChars, 'StrReplaceButChars', cdRegister);
+     //StrRepeat, 'StrRepeat', cdRegister);
+     //StrRepeatLength, 'StrRepeatLength', cdRegister);
+     //StrReverse, 'StrReverse', cdRegister);
+     //StrReverseInPlace, 'StrReverseInPlace', cdRegister);
+     //StrSingleQuote, 'StrSingleQuote', cdRegister);
+     //StrSmartCase, 'StrSmartCase', cdRegister);
+     //StrStringToEscaped, 'StrStringToEscaped', cdRegister);
+     //StrStripNonNumberChars, 'StrStripNonNumberChars', cdRegister);
+     //StrToHex, 'StrToHex', cdRegister);
+     //StrTrimCharLeft, 'StrTrimCharLeft', cdRegister);
+     //StrTrimCharsLeft, 'StrTrimCharsLeft', cdRegister);
+     //StrTrimCharRight, 'StrTrimCharRight', cdRegister);
+     //StrTrimCharsRight, 'StrTrimCharsRight', cdRegister);
+     //StrTrimQuotes, 'StrTrimQuotes', cdRegister);
+     //JStrUpper, 'StrUpper', cdRegister);
+     //StrUpperInPlace, 'StrUpperInPlace', cdRegister);
+     //StrUpperBuff, 'StrUpperBuff', cdRegister);
+     //StrOemToAnsi, 'StrOemToAnsi', cdRegister);
+     //StrAnsiToOem, 'StrAnsiToOem', cdRegister);
+     //StrAddRef, 'StrAddRef', cdRegister);
+     //StrAllocSize, 'StrAllocSize', cdRegister);
+     //StrDecRef, 'StrDecRef', cdRegister);
+     //StrLen, 'StrLen', cdRegister);
+     //StrLength, 'StrLength', cdRegister);
+     //StrRefCount, 'StrRefCount', cdRegister);
+     //StrResetLength, 'StrResetLength', cdRegister);
+     //StrCharCount, 'StrCharCount', cdRegister);
+     //StrCharsCount, 'StrCharsCount', cdRegister);
+     //StrStrCount, 'StrStrCount', cdRegister);
+     //StrCompare, 'StrCompare', cdRegister);
+     //StrCompareRange, 'StrCompareRange', cdRegister);
+     //StrFillChar, 'StrFillChar', cdRegister);
+     //StrFillChar1_P, 'StrFillChar1', cdRegister);
+     //StrFind, 'StrFind', cdRegister);
+     //StrHasPrefix, 'StrHasPrefix', cdRegister);
+     //StrIndex, 'StrIndex', cdRegister);
+     //StrILastPos, 'StrILastPos', cdRegister);
+     //StrIPos, 'StrIPos', cdRegister);
+     //StrIsOneOf, 'StrIsOneOf', cdRegister);
+     //StrLastPos, 'StrLastPos', cdRegister);
+     //StrMatch, 'StrMatch', cdRegister);
+     //StrMatches, 'StrMatches', cdRegister);
+     //StrNIPos, 'StrNIPos', cdRegister);
+     //StrNPos, 'StrNPos', cdRegister);
+     //StrPrefixIndex, 'StrPrefixIndex', cdRegister);
+     //StrSearch, 'StrSearch', cdRegister);
+     //StrAfter, 'StrAfter', cdRegister);
+     //StrBefore, 'StrBefore', cdRegister);
+     //StrBetween, 'StrBetween', cdRegister);
+     //StrChopRight, 'StrChopRight', cdRegister);
+     //StrLeft, 'StrLeft', cdRegister);
+     //StrMid, 'StrMid', cdRegister);
+     //StrRestOf, 'StrRestOf', cdRegister);
+     //StrRight, 'StrRight', cdRegister);
+     //CharEqualNoCase, 'CharEqualNoCase', cdRegister);
+     //CharIsAlpha, 'CharIsAlpha', cdRegister);
+     //CharIsAlphaNum, 'CharIsAlphaNum', cdRegister);
+     //CharIsBlank, 'CharIsBlank', cdRegister);
+     //CharIsControl, 'CharIsControl', cdRegister);
+     //CharIsDelete, 'CharIsDelete', cdRegister);
+     //CharIsDigit, 'CharIsDigit', cdRegister);
+     //CharIsLower, 'CharIsLower', cdRegister);
+     //CharIsNumberChar, 'CharIsNumberChar', cdRegister);
+     //CharIsPrintable, 'CharIsPrintable', cdRegister);
+     //CharIsPunctuation, 'CharIsPunctuation', cdRegister);
+     //CharIsReturn, 'CharIsReturn', cdRegister);
+     //CharIsSpace, 'CharIsSpace', cdRegister);
+     //CharIsUpper, 'CharIsUpper', cdRegister);
+     //CharIsWhiteSpace, 'CharIsWhiteSpace', cdRegister);
+     //CharType, 'CharType', cdRegister);
+     //CharHex, 'CharHex', cdRegister);
+     //CharLower, 'CharLower', cdRegister);
+     //CharUpper, 'CharUpper', cdRegister);
+     //CharToggleCase, 'CharToggleCase', cdRegister);
+     //CharPos, 'CharPos', cdRegister);
+     //CharLastPos, 'CharLastPos', cdRegister);
+     //CharIPos, 'CharIPos', cdRegister);
+     //CharReplace, 'CharReplace', cdRegister);
+     {StringsToPCharVector, 'StringsToPCharVector', cdRegister);
+     PCharVectorCount, 'PCharVectorCount', cdRegister);
+     PCharVectorToStrings, 'PCharVectorToStrings', cdRegister);
+     FreePCharVector, 'FreePCharVector', cdRegister);
+     StringsToMultiSz, 'StringsToMultiSz', cdRegister);
+     MultiSzToStrings, 'MultiSzToStrings', cdRegister);
+     MultiSzLength, 'MultiSzLength', cdRegister);
+     AllocateMultiSz, 'AllocateMultiSz', cdRegister);
+     FreeMultiSz, 'FreeMultiSz', cdRegister);
+     MultiSzDup, 'MultiSzDup', cdRegister);
+     WideStringsToWideMultiSz, 'WideStringsToWideMultiSz', cdRegister);
+     WideMultiSzToWideStrings, 'WideMultiSzToWideStrings', cdRegister);
+     WideMultiSzLength, 'WideMultiSzLength', cdRegister);
+     AllocateWideMultiSz, 'AllocateWideMultiSz', cdRegister);
+     FreeWideMultiSz, 'FreeWideMultiSz', cdRegister);
+     WideMultiSzDup, 'WideMultiSzDup', cdRegister); }
+     //StrIToStrings, 'StrIToStrings', cdRegister);
+     //StrToStrings, 'StrToStrings', cdRegister);
+     //StringsToStr, 'StringsToStr', cdRegister);
+     //TrimStrings, 'TrimStrings', cdRegister);
+     //TrimStringsRight, 'TrimStringsRight', cdRegister);
+     //TrimStringsLeft, 'TrimStringsLeft', cdRegister);
+     //AddStringToStrings, 'AddStringToStrings', cdRegister);
+     //BooleanToStr, 'BooleanToStr', cdRegister);
+     //FileToString, 'FileToString', cdRegister);
+     //StringToFile, 'StringToFile', cdRegister);
+     //StrToken, 'StrToken', cdRegister);
+     //StrTokens, 'StrTokens', cdRegister);
+     //StrTokenToStrings, 'StrTokenToStrings', cdRegister);
+     //StrWord, 'StrWord', cdRegister);
+     //StrToFloatSafe, 'StrToFloatSafe', cdRegister);
+     //StrToIntSafe, 'StrToIntSafe', cdRegister);
+     //StrNormIndex, 'StrNormIndex', cdRegister);
+     //ArrayOf, 'ArrayOf', cdRegister);
+     //InternalFillRect( dc : HDC; const rcPaint : TRect)');
+ //GetBestConvertTabsProc( TabWidth : integer) : TConvertTabsProc');
+  //ConvertTabs( const Line : AnsiString; TabWidth : integer) : AnsiString');
+  //GetBestConvertTabsProcEx( TabWidth : integer) : TConvertTabsProcEx');
+  //ConvertTabsEx( const Line : AnsiString; TabWidth : integer; var HasTabs : boolean) : AnsiString');
+  //GetExpandedLength( const aStr : string; aTabWidth : integer) : integer');
+  //CharIndex2CaretPos( Index, TabWidth : integer; const Line : string) : integer');
+  //CaretPos2CharIndex( Position, TabWidth : integer; const Line : string; var InsideTabChar : boolean) : integer');
+  //StrScanForCharInSet( const Line : string; Start : integer; AChars : TSynIdentChars) : integer');
+  //StrRScanForCharInSet( const Line : string; Start : integer; AChars : TSynIdentChars) : integer');
+    //StrScanForMultiByteChar
+      //StrRScanForMultiByteChar           
+        //httpget
+        //parsedate
+         // ExtractHTTPFields    
+         
+         
+     //TimeZoneBias, 'TimeZoneBias', cdRegister);
+     //TimeZone, 'TimeZone', cdRegister);
+     //Rfc822DateTime, 'Rfc822DateTime', cdRegister);
+     //CDateTime, 'CDateTime', cdRegister);
+     //SimpleDateTime, 'SimpleDateTime', cdRegister);
+     //AnsiCDateTime, 'AnsiCDateTime', cdRegister);
+     //GetMonthNumber, 'GetMonthNumber', cdRegister);
+     //GetTimeFromStr, 'GetTimeFromStr', cdRegister);
+     //GetDateMDYFromStr, 'GetDateMDYFromStr', cdRegister);
+     //DecodeRfcDateTime, 'DecodeRfcDateTime', cdRegister);
+     //GetUTTime, 'GetUTTime', cdRegister);
+     //SetUTTime, 'SetUTTime', cdRegister);
+     //GetTick, 'GetTick', cdRegister);
+     //STickDelta, 'TickDelta', cdRegister);
+     //CodeInt, 'CodeInt', cdRegister);
+     //DecodeInt, 'DecodeInt', cdRegister);
+     //CodeLongInt, 'CodeLongInt', cdRegister);
+     //DecodeLongInt, 'DecodeLongInt', cdRegister);
+     //DumpStr, 'DumpStr', cdRegister);
+     //DumpExStr, 'DumpExStr', cdRegister);
+     //Dump, 'Dump', cdRegister);
+     //DumpEx, 'DumpEx', cdRegister);
+     //TrimSPLeft, 'TrimSPLeft', cdRegister);
+     //TrimSPRight, 'TrimSPRight', cdRegister);
+     //TrimSP, 'TrimSP', cdRegister);
+     //SeparateLeft, 'SeparateLeft', cdRegister);
+     //SeparateRight, 'SeparateRight', cdRegister);
+     //GetParameter, 'GetParameter', cdRegister);
+     //ParseParametersEx, 'ParseParametersEx', cdRegister);
+     //ParseParameters, 'ParseParameters', cdRegister);
+     //IndexByBegin, 'IndexByBegin', cdRegister);
+     //GetEmailAddr, 'GetEmailAddr', cdRegister);
+     //GetEmailDesc, 'GetEmailDesc', cdRegister);
+     //CStrToHex, 'StrToHex', cdRegister);
+     //CIntToBin, 'IntToBin', cdRegister);
+     //CBinToInt, 'BinToInt', cdRegister);
+     //ParseURL, 'ParseURL', cdRegister);
+     //CReplaceString, 'ReplaceString', cdRegister);
+     //CRPosEx, 'RPosEx', cdRegister);
+     //CRPos, 'RPos', cdRegister);
+     //FetchBin, 'FetchBin', cdRegister);
+     //CFetch, 'Fetch', cdRegister);
+     //FetchEx, 'FetchEx', cdRegister);
+     //IsBinaryString, 'IsBinaryString', cdRegister);
+     //PosCRLF, 'PosCRLF', cdRegister);
+     //StringsTrim, 'StringsTrim', cdRegister);
+     //PosFrom, 'PosFrom', cdRegister);
+     //IncPoint, 'IncPoint', cdRegister);
+     //GetBetween, 'GetBetween', cdRegister);
+     //CCountOfChar, 'CountOfChar', cdRegister);
+     //UnquoteStr, 'UnquoteStr', cdRegister);
+     //QuoteStr, 'QuoteStr', cdRegister);
+     //HeadersToList, 'HeadersToList', cdRegister);
+     //ListToHeaders, 'ListToHeaders', cdRegister);
+     //SwapBytes, 'SwapBytes', cdRegister);
+     //ReadStrFromStream, 'ReadStrFromStream', cdRegister);
+     //WriteStrToStream, 'WriteStrToStream', cdRegister);
+     //GetTempFile, 'GetTempFile', cdRegister);
+     //CPadString, 'PadString', cdRegister);
+     //CXorString, 'XorString', cdRegister);
+     //NormalizeHeader, 'NormalizeHeader', cdRegister);
+       
+           
+end; 
+                                   
+                                 
+var i, k, z: integer;  
+  begin
+  writeln('TeamViewerID: '+getTeamViewerID);
+  writeln('addressinfo '+addressinfo($71A90000));
+  writeln(datetimetostr(FileTimeGMT(exepath+'maxbox3.exe')));
+  writeln(datetimetostr(FileTimeGMT2(exepath+'maxbox3.exe')));
+  //Grep
+  //Procedure RecurseDirectory2(Dir : String; IncludeSubs : boolean);
+  //RecurseDirectory2(Exepath,false);
+  //CreateUpdateTAR;
+  //CopyDirTree(exepath+'\source\devtools',exepath+'crypt',[]);
+   //TODO>: some of the copydirtree doesnt' work!
+    // maxform1.TodoList1click(self);
+   for i:= 1 to Screen.Fonts.count -1 do
+      writeln(inttostr(i)+ ' '+Screen.fonts.strings[i]);
+      
+      k:= 31
+      for i:= 1 to 4 do begin
+        //if k mod 2 = 0 then begin
+        k:= (k div 2);
+        writeln(inttostr(i)+ '  '+inttoStr(k))
+        //end;
+     end; 
+     writeln('');
+     i:= 0
+     k:= 32;
+     while k > 1 do begin
+         inc(i)
+         k:= (k div 2);
+        writeln(inttostr(i)+ '  '+inttoStr(k))
+     end;
+     //writeln(inttostr(9 div 2)) 
+
+      { z:= 10000;
+       for i:= 1 to 13 do begin
+        //if k mod 2 = 0 then begin
+        z:= (z div 2);
+        writeln(inttostr(i)+ '  '+inttoStr(z))
+        //end;
+     end;
+      z:= 20;
+       for i:= 1 to 4 do begin
+        //if k mod 2 = 0 then begin
+        z:= (z div 2);
+        writeln(inttostr(i)+ '  '+inttoStr(z))
+        //end;
+     end; }
+     
+     TMainForm_DoOpenFile('');
+     
+end.  
+
+http://www.delphi-central.com/callback.aspx
+
+
+TTarArchive Usage
+-----------------
+- Choose a constructor
+- Make an instance of TTarArchive                  TA := TTarArchive.Create (Filename);
+- Scan through the archive                         TA.Reset;
+                                                   WHILE TA.FindNext (DirRec) DO BEGIN
+- Evaluate the DirRec for each file                  ListBox.Items.Add (DirRec.Name);
+- Read out the current file                          TA.ReadFile (DestFilename);
+  (You can ommit this if you want to
+  read in the directory only)                        END;
+- You're done                                      TA.Free;
+
+
+TTarWriter Usage
+----------------
+- Choose a constructor
+- Make an instance of TTarWriter                   TW := TTarWriter.Create ('my.tar');
+- Add a file to the tar archive                    TW.AddFile ('foobar.txt');
+- Add a string as a file                           TW.AddString (SL.Text, 'joe.txt', Now);
+- Destroy TarWriter instance                       TW.Free;
+- Now your tar file is ready.
+
+
+// --- The TAR Archive CLASS
+  TTarArchive = CLASS
+                PROTECTED
+                  FOwnsStream : BOOLEAN;   // True if FStream is owned by the TTarArchive instance
+                  FBytesToGo  : INT64;     // Bytes until the next Header Record
+                PUBLIC
+                  FStream     : TStream;   // Internal Stream
+                  CONSTRUCTOR Create (Stream   : TStream);                                OVERLOAD;
+                  CONSTRUCTOR Create (Filename : STRING;
+                                      FileMode : WORD = fmOpenRead OR fmShareDenyWrite);  OVERLOAD;
+                  DESTRUCTOR Destroy;                                       OVERRIDE;
+                  PROCEDURE Reset;                                         // Reset File Pointer
+                  function  FindNext (VAR DirRec : TTarDirRec) : BOOLEAN;  // Reads next Directory Info Record. FALSE if EOF reached
+                  PROCEDURE ReadFile (Buffer   : POINTER); OVERLOAD;       // Reads file data for last Directory Record
+                  PROCEDURE ReadFile (Stream   : TStream); OVERLOAD;       // -;-
+                  PROCEDURE ReadFile (Filename : STRING);  OVERLOAD;       // -;-
+                  function  ReadFile : STRING;           OVERLOAD;         // -;-
+
+                  PROCEDURE GetFilePos (VAR Current, Size : INT64);        // Current File Position
+                  PROCEDURE SetFilePos (NewPos : INT64);                   // Set new Current File Position
+                END;
+
+  // --- The TAR Archive Writer CLASS
+  TTarWriter = CLASS
+               PROTECTED
+                 FStream      : TStream;
+                 FOwnsStream  : BOOLEAN;
+                 FFinalized   : BOOLEAN;
+                                                   // --- Used at the next "Add" method call: ---
+                 FPermissions : TTarPermissions;   // Access permissions
+                 FUID         : INTEGER;           // User ID
+                 FGID         : INTEGER;           // Group ID
+                 FUserName    : STRING;            // User name
+                 FGroupName   : STRING;            // Group name
+                 FMode        : TTarModes;         // Mode
+                 FMagic       : STRING;            // Contents of the "Magic" field
+                 CONSTRUCTOR CreateEmpty;
+               PUBLIC
+                 CONSTRUCTOR Create (TargetStream   : TStream);                            OVERLOAD;
+                 CONSTRUCTOR Create (TargetFilename : STRING; Mode : INTEGER = fmCreate);  OVERLOAD;
+                 DESTRUCTOR Destroy; OVERRIDE;                   // Writes End-Of-File Tag
+                 PROCEDURE AddFile   (Filename : STRING;  TarFilename : STRING = '');
+                 PROCEDURE AddStream (Stream   : TStream; TarFilename : STRING; FileDateGmt : TDateTime);
+                 PROCEDURE AddString (Contents : STRING;  TarFilename : STRING; FileDateGmt : TDateTime);
+                 PROCEDURE AddDir          (Dirname            : STRING; DateGmt : TDateTime; MaxDirSize : INT64 = 0);
+                 PROCEDURE AddSymbolicLink (Filename, Linkname : STRING; DateGmt : TDateTime);
+                 PROCEDURE AddLink         (Filename, Linkname : STRING; DateGmt : TDateTime);
+                 PROCEDURE AddVolumeHeader (VolumeId           : STRING; DateGmt : TDateTime);
+                 PROCEDURE Finalize;
+                 PROPERTY Permissions : TTarPermissions READ FPermissions WRITE FPermissions;   // Access permissions
+                 PROPERTY UID         : INTEGER         READ FUID         WRITE FUID;           // User ID
+                 PROPERTY GID         : INTEGER         READ FGID         WRITE FGID;           // Group ID
+                 PROPERTY UserName    : STRING          READ FUserName    WRITE FUserName;      // User name
+                 PROPERTY GroupName   : STRING          READ FGroupName   WRITE FGroupName;     // Group name
+                 PROPERTY Mode        : TTarModes       READ FMode        WRITE FMode;          // Mode
+                 PROPERTY Magic       : STRING          READ FMagic       WRITE FMagic;         // Contents of the "Magic" field
+               END;
+
+
+
+
+The last slash might be optional. Right?
+
+How about something like this:
+
+$url =~ m|([^/]+)/?$|;
+my $end_of_url = $1;
+
+The $ on the end anchors the regular expression to the end of the string. The [^/] means anything that's not a slash and the + after means I want one or more things that are not slashes. Notice that this is in a capture group which are marked with parentheses.
+
+I end the regular expression with /? which means that there may or may not be a slash on the very end of the string. I've put my regular expression between m| and |, so I can use forward slashes without having to constantly escape them.
+
+The last part of the URL is now in $1 and I can set my own scalar variable to save this Result.
+share|improve this answer
+ 
+
+----app_template_loaded_code----

@@ -1,0 +1,318 @@
+PROGRAM AsyncKeyState;
+
+//////////////////////////////////////////////////////////////////////
+//  #sign: max: MAXBOX8: 8/11/2014 8:08:39 PM 
+//  Purpose: checks your keys async on Console sync with maXbox //
+//  #path>ples\C:\maXbook\maxbox3\mX3999\maxbox3\examples\          //
+//  Lines of Code #locs:85
+//////////////////////////////////////////////////////////////////////
+
+//You must open a Console an end the loop with ESCAPE!
+  //TODO: Close the CMD Shell after Escape
+//<FUNCTION>
+//<PROCEDURE> 
+
+
+function SplitToken(const Text: string; SplitChar: Char;
+    var First, Last: string): Boolean;
+var  SplitPos: Integer;
+begin
+  Result:= False;
+  SplitPos:= Pos(SplitChar, Text);
+  if SplitPos = 0 then Exit;
+  First:= Trim(Copy(Text, 1, SplitPos -1));
+  Last:= Trim(Copy(Text, SplitPos +1, Length(Text) -SplitPos));
+  Result:= (First <>'') and (Last <>'');
+end;
+
+procedure TestKeyStateDemo;
+var I: integer;
+BEGIN
+   I:= 0;
+   REPEAT
+      IF GetAsyncKeyState(VK_RETURN) <> 0 THEN BEGIN
+         Inc(I);
+         Writeln(itoa(I)+' ');
+         //sleep(50);
+      END;
+   UNTIL GetAsyncKeyState(VK_ESCAPE) <> 0;
+   //WriteConsole(hOut, PChar(S), Length(S), Result, nil);
+end;
+
+
+procedure TestKeyStateDemo2;
+var I: integer;
+BEGIN
+   I := 0;
+   REPEAT
+      IF GetAsyncKeyState(VK_RETURN) <> 0 THEN BEGIN
+         Inc(I);
+         Writeln(itoa(I)+' ');
+         //single mode!
+         WHILE GetAsyncKeyState(VK_RETURN) AND $8000 <> 0 DO {Nothing};
+      END;
+   UNTIL GetAsyncKeyState(VK_ESCAPE) <> 0;
+   //SetConsoleTextAttribute(hOut, Attr);
+   //SetConsoleCursorPosition(hOut, c);
+   //WriteConsole(hOut, PChar(S), Length(S), Result, nil);
+end;
+
+procedure TestKeyStateDemoSingleMode;
+var I: integer;
+BEGIN
+   I := 0;
+   REPEAT
+      IF GetAsyncKeyState(VK_RETURN) <> 0 THEN BEGIN
+         Inc(I);
+         Writeln(itoa(I)+' ');
+         //single mode!
+         WHILE GetAsyncKeyState(VK_RETURN) AND $8000 <> 0 DO {Nothing};
+      END;
+   UNTIL GetAsyncKeyState(VK_ESCAPE) <> 0;
+end;
+
+
+Begin  //Main
+//<Executable statements>
+  Writeln('Async Key State Start the Mart:');
+//<Definitions>  
+    SetConsoleTitle('Async KeyState Demo-  NonVCL example, press ESC to exit');
+    maXForm1.DOSshell1Click(self)
+    ShowmessageBig('Now press Enter <VK_RETURN> on Shell to count   '+
+                   ' +'#13#10#13#10  ' - End with <Esc> on Shell!');
+    TestKeyStateDemo;
+    //doWebCamPic(ExePath+'mypictest12.png');
+End. 
+
+Doc:
+
+Run it and do a very quick press in the ENTER key; you'll see something like
+1
+2
+3
+...
+nnn
+
+This is due to the fact that the code detectes the keypress while the key is actually down (and what is quick for you are ages for the CPU).
+ 
+Press ENTER and keep it down: you'll see an endless stream of numbers in your console screen.
+
+Press any other key but ESCAPE; of course you'll see nothing; now keep ESCAPE and the console is done.
+
+//############################################################################
+// Archimedes Turbo Spiral App
+//############################################################################
+
+
+procedure TSimpleComPort.PortEvent(Sender: TAfComPortCore;
+  EventKind: TAfCoreEvent; Data: DWORD);
+
+  procedure DisplayData;
+var
+  S: String;
+  Count: DWORD;
+begin
+  Count := FComPort.ComStatus.cbInQue;
+  SetString(S, nil, Count);
+  FComPort.ReadData(Pointer(S)^, Count);
+  Write(S);
+end;
+
+begin
+  case EventKind of
+    ceLineEvent:
+      begin
+        if Data and EV_RXCHAR <> 0 then
+          DisplayData;
+        if Data and (not EV_RXCHAR) <> 0 then
+          Write(Format(#13#10'Line error: %.8xh'#13#10, [Data])); 
+      end;
+    ceNeedReadData:
+      DisplayData;
+  end;
+end;
+
+procedure TSimpleComPort.WriteString(const S: String);
+begin
+  FComPort.WriteData(Pointer(S)^, Length(S));
+end;
+
+var
+  StdIn: THandle;
+  InputBuffer: TInputRecord;
+  InputEvents, ConsoleMode: DWORD;
+  SimpleComPort: TSimpleComPort;
+
+begin
+  SetConsoleTitle('AsyncFree NonVCL example, press ESC to exit');
+  StdIn := GetStdHandle(STD_INPUT_HANDLE);
+  if StdIn = INVALID_HANDLE_VALUE then RaiseLastWin32Error;
+  Win32Check(GetConsoleMode(StdIn, ConsoleMode));
+  Win32Check(SetConsoleMode(StdIn, ConsoleMode and (not ENABLE_ECHO_INPUT)));
+
+  SimpleComPort := TSimpleComPort.Create;
+  SimpleComPort.Open(1, 'baud=115200 parity=N data=8 stop=1');
+
+  while True do
+    if ReadConsoleInput(StdIn, InputBuffer, 1, InputEvents) then
+    case InputBuffer.EventType of
+      KEY_EVENT:
+        with InputBuffer.Event.KeyEvent do if bKeyDown then
+          case AsciiChar of
+            #08, #10, #13, #32..#255:
+              SimpleComPort.WriteString(AsciiChar);
+            #27:
+              Break;
+          end;
+    end;
+   SimpleComPort.Free;
+end.
+
+
+----app_template_loaded_code----
+
+
+I'm fairly new to Delphi (though I've been programming in Pascal for some time) and to get to know it better, I've decided to make a small console game. The game should basically move a character across the screen according to keypressed up, down, left and right. You have to be able to press multiple keys, so that you can also move diagonally. I've found that I need to use the GetASyncKeyState for this. To test it I wrote the below test program, but I can't get it to work. I can compile it without errors, but when I run it, my console window just freezes, ignoring all keypresses. After a while my keypresses will result in a beep from the computer and I have to forcefully close the console window. Why doesn't the below code work?
+
+CODE
+PROGRAM Test;
+
+//{$APPTYPE CONSOLE}
+
+USES SysUtils, Windows;
+
+VAR I : Integer;
+
+BEGIN
+   I := 0;
+   REPEAT
+      IF GetAsyncKeyState(VK_RETURN) <> 0 THEN BEGIN
+         Inc(I);
+         Write(I);
+      END;
+   UNTIL GetAsyncKeyState(VK_ESCAPE) <> 0;
+END.
+
+buho (Programmer) 	
+25 Sep 06 8:15
+What OS version are you using (Win9x, 2K, XP)?
+
+In 2K your code works as expected to work and it can be used to check the arrow keys. The problem is I don't know what *you* are expecting for it :).
+
+Change it a little, use Write(I, #13#10); instead of Write(I); and recompile.
+
+Run it and do a very quick press in the ENTER key; you'll see something like
+
+1
+2
+3
+4
+5
+6
+...
+nnn
+
+This is due to the fact that the code detectes the keypress while the key is actually down (and what is quick for you are ages for the CPU).
+ 
+Press ENTER and keep it down: you'll see an endless stream of numbers in your console screen.
+
+Press any other key but ESCAPE; of course you'll see nothing; now keep ESCAPE and the console is done.
+
+Now change the code a little:
+
+CODE
+
+...
+   REPEAT
+      IF GetAsyncKeyState(VK_RETURN) <> 0 THEN BEGIN
+         Inc(I);
+         Write(I, #13#10);
+      WHILE GetAsyncKeyState(VK_RETURN) AND $8000 <> 0 DO {Nothing};
+      END;
+   UNTIL GetAsyncKeyState(VK_ESCAPE) <> 0;
+...
+
+Now you can press ENTER and have only one count per press.
+
+HTH.
+buho (A).
+buho (Programmer) 	
+25 Sep 06 8:34
+If you are trying to get a hang on Delphi, go straigth to Windows applications.
+
+Console applications have not use except in some very rare market niches, and after mastering Windows applications you'll be better prepared to tackle console ones.
+
+buho (A).
+chrknudsen (Programmer) (OP) 	
+25 Sep 06 10:51
+Thanks for the replies! clown
+
+As to what I expect of the code, I expect it to do exactly what it did when you ran it in 2K. However, as I wrote in my initial post, when I compile and run the program, my console window freezes and doesn't react to keypresses. I've also made similar tests with KeyState, but with the same result (the console window freezes).
+
+My plan is to make an ASCII game, which is why I'm making a console and not a Windows application.
+
+ 
+ Sketch uses 2,510 bytes (7%) of program storage space. Maximum is 32,256 bytes.
+Global variables use 189 bytes (9%) of dynamic memory, leaving 1,859 bytes for local variables. Maximum is 2,048 bytes.
+ 
+/*
+  Blink2
+  Turns on an LED on for one second, then off for one second, repeatedly.
+  This example code is in the mX public domain. locs=60
+ */
+ 
+// Pin 13 has an LED connected on most Arduino boards.
+// give it a name:
+int ledR = 11;
+int led = 13;
+int val = 0;
+bool gorun = false;
+
+// setup routine runs once when you press reset:
+void setup() {                
+  // initialize the digital pin as an output.
+  pinMode(led, OUTPUT); 
+  pinMode(ledR, OUTPUT); 
+  Serial.begin(9600); // connect to serial port  
+}
+
+// the loop routine runs over and over again:
+void loop() {
+  val = Serial.read();
+  //Serial.print(val, HEX); show time stream
+  //Serial.write(val);
+ 
+  if (val !=-1){ 
+   
+    if (val == '9')  
+     gorun = true;
+     else gorun = false;
+ 
+    if (val=='1'){
+      digitalWrite(ledR,HIGH);
+       //delay(1000);               // wait a sec
+      }
+    if (val=='A'){
+      digitalWrite(ledR,LOW);
+      }
+    
+    if (val=='3'){
+      digitalWrite(led,HIGH);
+       delay(1000);               // wait for a second
+      digitalWrite(led,LOW);
+       delay(1000);               // wait for a second
+      }
+    if (val=='C'){
+      digitalWrite(led,LOW);
+      }
+    Serial.write(val);            // read back to monitor
+  }
+  
+   if (gorun == true) {
+   digitalWrite(ledR, HIGH);   // turn LED on (HIGH is the voltage level)
+   delay(500);                 // wait for a second
+   digitalWrite(ledR, LOW);    // turn LED off by making the voltage LOW
+   delay(500);                 // wait for a second
+  } 
+}
+ 

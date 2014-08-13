@@ -1,0 +1,716 @@
+{***************************************************************
+ *            bITbox4 
+ * Project  : boolean logic education system bITbox
+ * Unit Name: 308_bitbox3.txt
+ * Purpose  : Demonstrates all boolean circuits and all 16 boolean logics
+ * Date     : 18/10/2012  -  14:38:5 
+ *     #sign:Administrator: PC08: 29/07/2014 09:38:55 PM 
+ *          : 11/11/2012  - fastform and motor on/off  #locs:564
+ ****************************************************************}
+//shows structure of procedure types, max@kleiner.com ex. _2
+//compilerswitch $N- turns the coprocessor off, {$mode objfpc}{$H+} loc's =1
+
+PROGRAM Animation_BooleanLAB;
+
+procedure TFrm1_FormPaint(Sender: TObject); forward;
+procedure TFrm1_timerRedrawTimer(Sender: TObject); forward;
+procedure TFrm1_CloseClick(Sender: TObject); forward;
+procedure TFrm1_PauseClick(Sender: TObject); forward;
+procedure TFrm1_trackSpeedChange(Sender: TObject); forward;
+procedure TFrm1_closeForm(Sender: TObject; var Action: TCloseAction); forward;
+
+Const MILLISECONDS = 50; //for timer, sync with trackbar 1000/50= position 20
+ 
+type
+  TBoolean_func = Function(a,b: boolean): boolean; 
+  
+var 
+  aFrm: TForm;
+  mT: TTimer;
+  tB: TTrackBar;
+  CurStep: Double;
+  btna, btnb, btnc: TBitBtn;
+  btnabool,btnbbool, astate,bstate,ledstate: boolean;
+  statbar: TStatusbar;
+  //boolfct: TBoolean_func;
+  Lbox: TLISTBOX;
+  boxidx: byte;
+
+
+procedure DrawRosette2;
+var m,p: TPoint;
+  rho,phi: real;
+  i,r: integer;
+begin
+   with afrm.Canvas do begin
+     Pen.Width:= 2;
+     Pen.Color:= clyellow;
+     //Brush.Color:= clblue;
+     Brush.Style:= bsClear;
+     //compute centerpoint and draw circle
+     m.x:=170; m.y:=165; r:=75;
+     rho:=360/18;
+     for i:=1 to 18 do begin
+       phi:=i*rho*pi/180;
+       p.x:=m.x+round(r*cos(phi));
+       p.y:=m.y+round(r*sin(phi));
+       Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+       Ellipse(p.x-3,p.y-3,p.x+3,p.y+3);
+     end;
+     //application.processMessages;
+  end;
+end;
+
+
+function TForm1_RotatePoint(APoint,ACenter: TPoint; AAngle: Double): TPoint;
+var dx,dy: Double;
+begin
+  dx:= (ACenter.Y * Sin(AAngle)) - (ACenter.X * Cos(AAngle)) + ACenter.X;
+  dy:= -(ACenter.X * Sin(AAngle)) - (ACenter.Y * Cos(AAngle)) + ACenter.Y;
+  Result.X:= Round((APoint.X * Cos(AAngle)) - (APoint.Y * Sin(AAngle)) + dx);
+  Result.Y:= Round((APoint.X * Sin(AAngle)) + (APoint.Y * Cos(AAngle)) + dy);
+end;
+  
+procedure TForm1_RotatePolygon(var APoints: array of TPoint; AAngle: Double);
+var aCentr: TPoint;
+    i: Integer;
+begin
+  aCentr:= Point(8, 20);
+  for i:= 0 to Length(APoints)-1 do begin
+    aCentr.X:= aCentr.X + APoints[i].X;
+    aCentr.Y:= aCentr.Y + APoints[i].Y;
+  end;
+  aCentr.X:= aCentr.X div Length(APoints);
+  aCentr.Y:= aCentr.Y div Length(APoints);
+  for i:= 0 to Length(APoints)-1 do
+    APoints[i]:= TForm1_RotatePoint(APoints[i], aCentr, AAngle);
+end;
+
+procedure TFrm1_FormPaint(Sender: TObject);
+var
+  //lPoints: array[0..2] of TPoint;
+  lPoints: array of TPoint;
+begin
+  try
+  SetLength(lpoints,3);
+  lPoints[0].X:= 100;
+  lPoints[0].Y:= 250;
+  lPoints[1].X:= 200;
+  lPoints[1].Y:= 20;
+  lPoints[2].X:= 200;
+  lPoints[2].Y:= 200;
+  TForm1_RotatePolygon(lpoints, CurStep);
+  afrm.Canvas.Pen.color:= clBlue;
+  afrm.Canvas.Pen.Width:= 15;
+  afrm.Canvas.Polygon(lPoints);
+  Drawrosette2;
+  if ledstate then begin
+    afrm.Canvas.Pen.color:= clyellow;
+    mt.enabled:= true;
+    afrm.Canvas.Rectangle(600,320,350,180)
+    afrm.Canvas.Rectangle(170,165,450,180)
+
+  end
+  else begin
+    mt.enabled:= false;
+    afrm.Canvas.Pen.color:= clblack;
+    afrm.Canvas.Rectangle(600,320,350,180);
+   // afrm.Canvas.Rectangle(170,165,450,180)
+
+//    mt.enabled:= false;
+
+  end;
+  except
+    writeln('on paint error');
+   end; 
+  //application.processMessages;
+end;
+
+
+ FUNCTION boolFCT(solutionstring: shortstring; bfct: TBoolean_func;
+                                                  fct_name: string): boolean;
+  BEGIN
+    //Writeln('debug boolean x | '+solutionstring+'  ' + fct_name);
+    statbar.panels.items[1].text:= fct_name +' of: '+solutionstring;
+    result:= bfct(astate,bstate);    //boolfct rec.!
+  END;
+ 
+
+//************************* 16 all booleans ******************************//    
+  function Contradiction(a,b: boolean): boolean;  //1 FALSE Contradiction
+  begin
+    result:= false;
+  end;  
+  function Conjunction_AND(a,b: boolean):boolean; //2 AND Conjunction x*y
+  begin
+    result:= a AND b;
+  end;  
+  function Inhibition(a,b: boolean): boolean;     //3 Inhibition x*^y
+  begin
+    result:= a AND NOT b;
+  end;  
+  function Praependence(a,b: boolean): boolean;   //4 Praependence x
+  begin
+    result:= a;
+  end;  
+  function Praesection(a,b: boolean): boolean;    //5 Praesection ^x*y
+  begin
+    result:= NOT a AND b;
+  end;  
+  function Postpendence(a,b: boolean): boolean;   //6 Postpendence y
+  begin
+    result:= b;
+  end;  
+  function EXOR(a,b: boolean): boolean;           //7 exclusive OR XOR= x*^y+^x*y
+  begin
+    //result:= a XOR b; //alternative
+    //result:= a AND NOT b OR NOT a AND b;
+    result:= NOT(A=B);    //!
+  end;  
+  function Disjunction_OR(a,b: boolean): boolean; //8 Disjunction OR = x+y
+  begin
+    //result:= a XOR b;
+    result:= a OR b;
+  end;  
+  function NOR(a,b: boolean): boolean;            //9 Rejection
+  begin
+    result:= NOT(a OR b);
+  end;  
+  function Aequivalence(a,b: boolean): boolean;   //10 double implication ^x*^y+x*y
+  begin                                           //  x<-->y
+    result:= (NOT a OR b) AND (NOT b or a);
+    //result:= NOT a AND NOT b OR a AND b
+    //result:= NOT(a XOR b);
+    //result:= NOT(EXOR(a,b));
+   end;   
+  function NegationY(a,b: boolean): boolean;      //11 ynegation ^y
+  begin
+    result:= NOT b;
+   end;   
+  function ImplicationY(a,b: boolean): boolean;   //12 yimplication y-->x; x+^y
+  begin
+    result:=  a OR NOT b;
+   end;   
+  function NegationX(a,b: boolean): boolean;      //13 xnegation ^x
+  begin
+    result:= NOT a;
+   end;   
+  function ImplicationX(a,b: boolean): boolean;   //14 ximplication x-->y; ^x+y
+  begin
+    result:=  NOT a OR b;
+  end;   
+  function NAND(a,b: boolean): boolean;           //15 NAND Exclusion
+  begin
+    result:= NOT(a AND b);
+  end;  
+  function Tautologic(a,b: boolean): boolean;     //16 TRUE Tautologic
+  begin
+    result:= true;
+  end;  
+//************************* 16 all booleans end *****************************//    
+
+  
+procedure addAllBooleans;
+begin
+  //S:= StringOfChar(' ',i div 2) +S+ StringOfChar(' ',i-i div 2); 
+   lbox.Clear;
+   with LBox.Items do begin
+   add('All 16 Boolean Functions');
+   add('--------------------------------------------------------------');
+   add(format('01 FALSE(Contradiction)=0 %*s',[21,'0000']));
+   add(format('02 AND(Conjunction)=xy %*s',[27,'0001']));
+   add(format('03 Inhibition=x^y %*s',[42,'0010']));
+   add(format('04 Prependence=x %*s',[37,'0011']));
+   add(format('05 Presection=^xy %*s',[38,'0100']));
+   add(format('06 Postpendence=y %*s',[35,'0101']));
+   add(format('07 XOR(Exclusive OR)=x^y+^xy %*s',[12,'0110']));
+   add(format('08 OR(Disjunction)=x+y %*s',[29,'0111']));
+   add(format('09 NOR(Rejection)=^(x+y) %*s',[23,'1000']));
+   add(format('10 Aequivalence(BiCond)=^x^y+xy %*s',[05,'1001']));
+   add(format('11 NegationY=^y %*s',[40,'1010']));
+   add(format('12 ImplicationY(y-->x)=x+^y %*s',[21,'1011']));
+   add(format('13 NegationX=^x %*s',[41,'1100']));
+   add(format('14 ImplicationX(x-->y)=^x+y %*s',[21,'1101']));
+   add(format('15 NAND(Exclusion)=^(xy) %*s',[22,'1110']));
+   add(format('16 TRUE(Tautologic)=1 %*s',[27,'1111']));
+ end;    
+end; 
+
+procedure boxClick(Sender: TObject);
+//var idx: integer;
+begin 
+   boxidx:= lbox.itemindex;
+   //writeln((Lbox.Items[boxidx]))
+   statbar.panels.items[1].text:= Lbox.Items[boxidx]+' is set active';
+end;
+
+//*************************************************************************
+procedure SetLEDStates;
+//var ledstate: boolean;
+begin
+  //ledstate:= ImplicationX(astate, bstate);
+  //statbar.panels.items[1].text:= 'Implication';
+  case boxidx of
+    2:  ledstate:= boolFCT('0000', @Contradiction, 'Contradiction');
+    3:  ledstate:= boolFCT('0001', @Conjunction_AND, 'Conjunction');
+    4:  ledstate:= boolFCT('0010', @Inhibition, 'Inhibition');
+    5:  ledstate:= boolFCT('0011', @Praependence, 'Praependence');
+    6:  ledstate:= boolFCT('0100', @Praesection, 'Praesection');
+    7:  ledstate:= boolFCT('0101', @Postpendence, 'Postpendence');
+    8:  ledstate:= boolFCT('0110', @EXOR, 'Exclusive OR');
+    9:  ledstate:= boolFCT('0111', @Disjunction_OR, 'Disjunction OR');
+    10: ledstate:= boolFCT('1000', @NOR, 'NOR Rejection');
+    11: ledstate:= boolFCT('1001', @Aequivalence, 'Bi Implication');
+    12: ledstate:= boolFCT('1010', @NegationY, 'Negation of Y');
+    13: ledstate:= boolFCT('1011', @ImplicationY, 'Implication of Y');
+    14: ledstate:= boolFCT('1100', @NegationX, 'Negation of X');
+    15: ledstate:= boolFCT('1101', @ImplicationX, 'Implication of X');
+    16: ledstate:= boolFCT('1110', @NAND, 'Not AND');
+    17: ledstate:= boolFCT('1111', @Tautologic, 'Tautologic');
+    //ledstate:= boolFCT('1,0,0,1', @Aequivalence, 'Bi Implication');
+  end;
+  //ledstate:= Aequivalence(astate,bstate)
+  //statbar.panels.items[1].text:= 'Bi Implication';
+  if ledstate then begin
+    btnc.glyph.LoadFromResourceName(getHINSTANCE,'LED_GREEN_ON')
+    statbar.panels.items[0].text:= 'LED is ON';
+    //mt.enabled:= true;
+  end else begin 
+    btnc.glyph.LoadFromResourceName(getHINSTANCE,'LED_RED_OFF');
+    statbar.panels.items[0].text:= 'LED is OFF';
+    //mt.enabled:= false;
+  end;
+  afrm.repaint;
+end;
+
+
+procedure btnAClick(Sender: TObject);
+begin
+  btnabool:= NOT btnabool;
+  astate:= btnabool;
+  SetLEDStates;
+  if btnabool then begin
+    btna.glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPLAY'); 
+    btna.spacing:= 22;
+    btna.caption:= 'ON'; 
+  end else begin
+    btna.glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP'); 
+    btna.spacing:= 15;
+    btna.caption:= 'OFF'; 
+  end; 
+end; 
+  
+procedure btnBClick(Sender: TObject);
+begin
+  btnbbool:= NOT btnbbool;
+  bstate:= btnbbool;
+  SetLEDStates;
+  if btnbbool then begin
+    btnb.glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPLAY'); 
+    //btnb.Layout:= blGlyphRight;
+    btnb.spacing:= 22;
+    btnb.caption:= 'ON'; 
+  end else begin
+    btnb.glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP'); 
+    btnb.spacing:= 15;
+    btnb.caption:= 'OFF'; 
+  end; 
+end; 
+
+
+//**************************Form Builder*******************************
+procedure loadForm;
+begin
+  aFrm:= TForm.Create(self);
+  mT:= TTimer.Create(self);
+  mt.onTimer:= @TFrm1_timerRedrawTimer;
+  mt.interval:= MILLISECONDS;
+  btnabool:= false; btnbbool:= false; //init
+  //mt.free;  in on close
+  with aFrm do begin
+    caption:= '************Boolean_Animation************';  
+    height:= 510;
+    width:= 1000;
+    Position:= poScreenCenter;
+    onClose:= @TFrm1_closeForm;
+    onPaint:= @TFrm1_FormPaint;
+    Canvas.Pen.color:= clBlue;
+    Canvas.Pen.Width:= 15;
+    Show;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(310, 350,150, 55);
+    caption:= 'Pause';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPAUSE'); 
+    mXButton(05,05,width, height,12,12,handle);
+    //event handler
+    onclick:= @TFrm1_PauseClick;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(480, 350,150, 55);
+    caption:= 'Close';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP'); 
+    mXButton(05,05,width, height,12,12,handle);
+    onclick:= @TFrm1_CloseClick;
+  end;
+  btna:= TBitBtn.Create(aFrm);
+  with btna do begin
+    Parent:= aFrm;
+    setbounds(310, 290,150, 55);
+    caption:= 'ON';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPLAY'); 
+    mXButton(05,05,width, height,12,12,handle);
+    onclick:= @btnaClick;
+  end;
+  btnb:= TBitBtn.Create(aFrm);
+  with btnb do begin
+    Parent:= aFrm;
+    setbounds(480, 290,150, 55);
+    caption:= 'OFF';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP'); 
+    mXButton(05,05,width, height,12,12,handle);
+    onclick:= @btnbClick;
+  end;
+   btnc:= TBitBtn.Create(aFrm);
+  with btnc do begin
+    Parent:= aFrm;
+    setbounds(445, 150,60, 60);
+    caption:= '';  
+    glyph.LoadFromResourceName(getHINSTANCE,'LED_RED_ON'); 
+    mXButton(0,0,width, height,12,12,handle);
+    //onclick:= @TFrm1_CloseClick;
+  end;
+  tB:= TTrackBar.create(aFrm);
+   with tB do begin
+      parent:= aFrm;
+      setBounds(40,360,230,40);
+      Min:= 10; Max:= 100
+      Frequency:= 10
+      Position:= 1000 div MILLISECONDS;
+      linesize:= 4;
+      ThumbLength:= 30;
+      SetFocus;
+      OnChange:= @TFrm1_trackSpeedChange;
+   end;
+  statbar:= TStatusBar.create(aFrm);
+  with statbar do begin
+    parent:= aFrm;
+    //simplepanel:= true;
+    showhint:= true;
+    hint:= 'LED Logger States';
+     Panels.add;
+     panels.items[0].width:= 200;
+     panels.items[0].text:= 'LED Data Log';
+     Panels.add;
+     panels.items[1].width:= 150;
+     panels.items[1].text:= 'Logic Logger State';
+  end;
+  lbox:= TListbox.Create(aFrm)
+   with lbox do begin
+    Parent:= afrm;
+    SetBounds(665,15,300,430)
+    font.size:= 11;
+    color:= clsilver;
+    font.name:= 'MS Sans Serif'  //or Courier
+    font.color:= clblack;
+    //Style:= csOwnerDrawFixed;
+    onClick:= @boxClick;
+    //onDrawItem:= @Listbox1DrawItem;
+  end;
+  addAllbooleans;
+end;  
+
+
+//**************************Event Handlers*******************************
+procedure TFrm1_trackSpeedChange(Sender: TObject);
+begin
+  mt.Interval:= 1000 div tB.Position;
+end;
+
+procedure TFrm1_timerRedrawTimer(Sender: TObject);
+begin
+  CurStep:= CurStep + 0.1;
+  if CurStep > 360 then CurStep:= 0;
+  afrm.Invalidate;  //redraw  from the timer trigger
+end;
+
+procedure TFrm1_closeForm(Sender: TObject; var Action: TCloseAction);
+begin
+  if mt <> NIL then begin
+    mT.enabled:= false;
+    mT.Free;
+    mT:= NIL;
+  end;
+  ///afrm.Free;  
+  action:= caFree;
+  afrm:= NIL;
+end;
+
+procedure TFrm1_CloseClick(Sender: TObject);
+begin
+  afrm.Close;
+end;
+
+procedure TFrm1_PauseClick(Sender: TObject);
+begin
+  if mT <> NIL then
+    mt.enabled:= not mt.enabled;
+end;
+
+procedure CreateMyFastForm;
+ //diaform:= CreateMessageDialog('my fast form perform',mtconfirmation, []);
+var 
+    dbform: TForm;
+begin
+   dbform:= CreateMessageDialog('My Fast Form Template - FFP',mtwarning,
+                                        [mball, mbyes, mbhelp, mbok]);
+   with dbform do begin
+     font.size:= 12;
+     caption:= 'FFP XML Demo';
+     setBounds(50,50,800,600)
+     FormStyle:= fsStayontop;
+     Color:= 12234;  //clWebGold;//12234;
+     autoScroll:= true;
+   with TLabel.Create(self) do begin
+     parent:= dbform;
+     SetBounds(400,60,500,600)
+     font.size:= 18;
+     //dblist.Add('All Converted to...XML')
+     caption:= 'entry in a list dblist.text...';
+   end;  
+   with TRadioGroup.Create(self) do begin
+     parent:= dbform;
+     top:= 130;
+     left:= 60;
+     items.add('first entry of');
+     items.add('second entry off');
+     items.add('third entry off');
+     ItemIndex:= 2; 
+     //writeln(Items.Strings[ItemIndex]); 
+   end;
+   Show;
+   Canvas.Draw(400,200,getBitMap(Exepath+'\examples\citymax.bmp'));
+  end; 
+   //SelectDirectory
+end;
+
+
+
+//design scetch for asort()  
+
+const MAX_EMPLOYEES=100;
+
+type 
+  TEmployeeOrder = (eoName, eoSalary);
+
+  Temp = record
+    name: string;
+    age: byte;
+  end;  
+  
+  TEmployeeArray= array[0..MAX_EMPLOYEES] of TEmp;
+  
+
+procedure SortEmployees(EmployeeArray: TEmployeeArray);
+// - sort an array of employees by name
+var I, J: Integer;
+  atemp: TEmp;
+begin
+  for I:= 1 to MAX_EMPLOYEES - 1 do
+    for J:= I + 1 to MAX_EMPLOYEES do
+      if EmployeeArray[J].Name < EmployeeArray[I].Name then begin
+        aTemp:= EmployeeArray[I];
+        EmployeeArray[I]:= EmployeeArray[J];
+        EmployeeArray[J]:= aTemp;
+      end;
+end;
+
+var    //test vars
+   str3: string;
+   ws: twidestrings;
+   //ccht: THTTPCustomHeaders;
+   //midt: TIdUDPServer;
+  //main form list call  
+  Begin
+    //calls some test functions
+    writeln(floattostr(maxCalc('e^ln(2)')));
+    printF('this is %.18f ',[maxCalc('ln(2)^e')]);
+    printF('this is %.18f ',[maxCalc('sqr(cos(ln(2)^e))')]);
+    printF('this is %.4f ',[maxCalc('sqrt(e^(ln(2)))')]);
+    printF('this is Area of r=1  %.18f ',[maxCalc('PI*(1^2)')]);
+    printF('this is Area of d=2r %.18f ',[maxCalc('PI/4*(2^2)')]);
+
+    writeln(getVersionString(exepath+'maxbox3.exe'));
+    str3:= loadFileAsString(exepath+'maxbox_functions_all.pdf');
+    writeln('file compare j: '+inttoStr(CompText(str3, str3)));
+    writeln(intToStr(length(str3)));
+ //--------------------------Main Topic--------------------------
+    
+    loadForm;
+    
+    writeln(floattostr(strtofloat('230.45')));
+    //CreateMyFastForm;
+    //GetConnectionNames
+    //reversebits  
+    //MessageDlg('Data file must contain 2 variables !', mtError, [mbOK], 0);
+    //extracticon  
+    //findexecutable                      
+End.
+
+  a+b --> a.+(b)
+
+
+Proposal for Abreviation Symbol:
+
+  01 FALSE    //Contradiction
+
+  02 AND      //Conjunction x*y
+
+  03 INHIB    //Inhibition x*^y
+
+  04 PRAEP    //Praependence x
+
+  05 PRAE     //Praesection ^x*y
+
+  06 POST     //Postpendence y
+
+  07 XOR      //Exclusive OR x*^y+^x*y
+
+  08 OR       //Disjunction OR = x+y
+
+  09 NOR      //Rejection
+
+  10 AEQ      //Aequivalence x<-->y, ^x*^y+x*y
+
+  11 NEGY     //YNegation ^y
+
+  12 IMPY     //YImplication y-->x; x+^y
+
+  13 NEGX     //Xnegation ^x
+
+  14 IMPX     //XImplication x-->y; ^x+y
+
+  15 NAND     //Exclusion
+
+  16 TRUE     //TRUE Tautologic
+  
+
+
+ //ShellExecute in W64
+//ExecuteCommand('cmd','/k FC /L/N C:\maxbook\maxbox3\maxbox391.exe C:\maxbook\maxbox3\maxbox3.exe')
+ //  ExecuteCommand('cmd','/k FC /L /N C:\maxbook\maxbox3\maxboxdef1.ini C:\maxbook\maxbox3\maxboxdef2.ini')
+   
+
+getRulesbyContract  
+
+
+  couple of slides i have but you got the point
+  one important things that i want to stress
+  difference between data and delta is the difference
+  units to add :
+  
+  unit SqlExpr;  // is just there integrate?
+unit DBXCommon;
+unit DBXPlatform;
+unit DBConnAdmin;
+
+unit IdVCard;  //check strtofloat
+unit IdTimeServer;
+unit IdTimeUDPServer;
+unit IdTimeUDP;
+unit TIdUDPServer
+unit IdIPWatch;
+unit IdMessageCollection;
+unit IdRexec;  //sort of remote execution
+unit IdRexecServer;
+unit IdRemoteCMDServer,
+unit IdRemoteCMDClient;
+
+unit uwinplot;   from dmat085
+   File name:        cUtils.pas unit cUtils;
+
+:: ***********************************************
+:: Compilation of DMath library for Delphi/Windows
+:: ***********************************************
+
+dcc32 dmath.dpr -$O+ -U..\units -DDELPHI 
+dcc32 dmath.pas -$O+ -I..\units -DDELPHI                                              }
+
+ add in menu by help dmath.pdf
+ 
+ navigator look at dependency viewer at the right site : skip list
+
+  with CL.AddClassN(CL.FindClass('TCustomListView'),'TListView') do begin
+  RegisterPublishedProperties;
+constructor is missing! to define in down class
+
+ListView1.Visible is missing     --->uPSI_ComCtrls.pas 
+ListView1.AddItem is missing
+more properties in downclass
+
+  Col.Width := 140; is missing //tcolumn  check 230_DataSetXMLBackupScholz2.txt
+             SQLQuery1['fullname']; is there a default propertie?
+                   
+ www.jensendatasystems.com/ekon16cds.zip
+
+check TSession.Free
+  writeln(createclassid);  from comobj unit
+
+
+check  with ListView1 do begin  tlistview constructor of columns.add ?
+   
+
+check all resources of add ons:
+- mp3 player ->ok
+- cipher file -> Tstringlist
+- memory game -> ok
+- 4 gewinnt ->ok
+- picture game -tbitmap, tbitmapimage  (if new picture or to picture)
+- maxplorer ->ok  (if drag n drop a tList is not freed)
+- cryptobox -> TStringlist
+
+  
+Scan-Report of: maxbox3.zip
+Ahnlab	-
+AntiVir	OK
+Avast	OK
+AVG	OK
+BitDefender	OK
+CA-AV	OK
+Command	OK
+Command (Online)	OK
+Eset Nod32	OK
+Fortinet	OK
+F-Prot	OK
+G Data	OK
+Ikarus	OK
+K7 Computing	OK
+Kaspersky	OK
+Kaspersky (Online)	OK
+McAfee	OK
+McAfee (BETA)	OK
+McAfee (Online)	OK
+McAfee GW Edition (Online)	OK
+Microsoft	OK
+Norman	OK
+Panda	OK
+Panda (Online)	OK
+QuickHeal	Suspicious (warning)
+Rising	OK
+Sophos	OK
+Sophos (Online)	OK
+Sunbelt	OK
+Symantec	OK
+Symantec (BETA)	OK
+Trend Micro	OK
+Trend Micro (Cons.)	OK
+Trend Micro (CPR)	OK
+VBA32	OK
+VirusBuster	OK  
+  

@@ -1,0 +1,524 @@
+PROGRAM Logic_Simulation_Dice;
+//////////////////////////////////////////////////////////////////////////
+
+{ * The mixer has following structure (as it is in this component) :
+ *
+ * Destinations (destinations should be for example: Playback, Recording and Voice commands)
+ *   |
+ *   |--Destination[0]  (if you want to get volume call GeVolume (<ThisDestinationNum>,-1,...))
+ *   |    |                                                         (=0)           ----
+ *   |    |--Data:TMixerLine
+ *   |    |--Controls         (controls of the line, ex: Master volume, master mute)
+ *   |    |    |
+ *   |    |    |--Control[0]
+ *   |    |    |--Control[1]
+ *   |    |    |--Control[..]
+ *   |    |
+ *   |    |--Connections      (ex: Wave, MIDI, CD Audio, Line-In,...)
+ *   |         |
+ *   |         |--Connection[0]   (GetVolume (<ThisDestinationNum>,<ThisConnectionNum>,...))
+ *   |         |    |                               (=0)                 (=0)
+ *   |         |    |--Data:TMixerLine
+ *   |         |    |--Controls   (here can be volume and mute)
+ *   |         |         |
+ *   |         |         |--Control[0]
+ *   |         |         |--Control[1]
+ *   |         |         |--Control[..]
+ *   |         |
+ *   |         |--Connection[1]
+ *   |         |--Connection[..]
+ *   |
+ *   |--Destination[1]
+ *   |--Destination[..]
+ *
+ * }
+
+// TPSImport_JvSimLogic;
+
+{TYPE 
+<Type declarations>} 
+
+Const GraphSAVENAME = 'logsimgraph_test.png';
+
+VAR 
+//<Variable declarations>
+    div_dbl: double;
+    i,k,t, bin1, bin2, bin3: integer;
+    wd: word;
+    st: String;
+    fileStream: TFileStream;
+    midilist: TStringList;
+    aFrm: TForm;
+    mydice: TJvDice;
+    //GameMi: TMenuItem;
+//<FUNCTION>
+//<PROCEDURE> 
+
+
+function LogicalAnd2(A, B: Integer): Boolean;
+begin
+  Result:= (A and B) = B;
+end;
+
+
+function GetTextFromFile(const AFile: String; var RetStr: string): boolean;
+//var
+  //fileStream: TFileStream;
+  var aseek: TSeekOrigin; 
+begin
+  result:= false;
+  if not fileExists(AFile) then exit;
+  FileStream:= TFileStream.Create(AFile, fmOpenRead);
+    writeln('file size '+inttostr(filestream.size));
+  try
+    if FileStream.Size > 0 then begin
+      SetLength(RetStr, FileStream.Size);
+      fileStream.Seek(0, soEnd);
+      FileStream.Read(RetStr, FileStream.Size); 
+      result:= true;
+    end;
+  finally
+    //FileStream.Free;
+  end; //try
+end;
+
+Procedure AllBooleanPattern(aX, aY: integer);
+begin
+    Writeln(#13#10+'************** All Booolean Functions **************');
+    PrintF('%-36s 01 False',[inttobin(0)])
+    PrintF('%-36s 02 AND',[inttobin(aX AND aY)])
+    PrintF('%-36s 03 Inhibit',[inttobin(aX AND NOT aY)])
+    PrintF('%-36s 04 Prepend',[inttobin(aX)])
+    PrintF('%-36s 05 Praesect',[inttobin(NOT aX AND aY)])
+    PrintF('%-36s 06 Postpend',[inttobin(aY)])
+    PrintF('%-36s 07 XOR',[inttobin(aX XOR aY)])
+    PrintF('%-36s 08 OR',[inttobin(aX OR aY)])
+    PrintF('%-36s 09 NOR',[inttobin(NOT(aX OR aY))])
+    PrintF('%-36s 10 Aequival',[inttobin((NOT aX OR aY)AND(NOT aY OR aX))])
+    PrintF('%-36s 11 NegY',[inttobin(NOT aY)])
+    PrintF('%-36s 12 ImplicatY',[inttobin(aX OR NOT aY)])
+    //PrintF('%-36s 12 ImplicatY2',[inttobin(aX AND aY IS aY)]);
+    PrintF('%-36s 13 NegX',[inttobin(NOT aX)])
+    PrintF('%-36s 14 ImplicatX',[inttobin(NOT aX OR aY)])
+    PrintF('%-36s 15 NAND',[inttobin(NOT(aX AND aY))])
+    PrintF('%-36s 16 True',[inttobin(NOT 0)])
+end;
+
+procedure TForm_btnSaveClick(Sender: TObject);
+ begin
+   //writeln('click of paintbox test');
+   SaveCanvas(aFrm.canvas,Exepath+GraphSAVENAME);
+   writeln('LogSimBox Graph as '+GraphSAVENAME +' saved');
+ end;  
+ 
+  procedure letBooleanLaws(a,b,c: boolean);
+  begin
+   // bool laws in one line
+    writeln('distributiv and: '+booltostr(a and(b or c) = a and b or a and c,true));
+    writeln('distributiv or  : '+booltostr(a or b and c =(a or b)and(a or c),true));
+    writeln('associativ and: '+booltostr(a and (b and c) = a and b and c, true));
+    writeln('associativ or  : '+booltostr(a or (b or c) = (a or b) or c, true));
+  end;
+  
+
+//procedure StrtoList(s: string; const List: TStrings; const delimiter: char=';');
+procedure StrtoList(s: string; const List: TStrings; const delimiter: char);
+var tmp : string;
+    i   : integer;
+begin
+  List.BeginUpdate;
+  if delimiter = '' then delimiter:= ';';
+  try
+   List.Clear;
+   while pos(delimiter, s) > 0 do begin
+     i := pos(delimiter, s);
+     tmp := Copy(s, 1, i - 1);
+     Delete(s, 1, i);
+     List.Add(tmp);
+   end;
+   if s <> '' then
+     List.Add(s);
+  finally
+   List.EndUpdate;
+  end;
+end;
+
+function ListtoStr(const List: TStrings): string;
+var i : integer;
+begin
+  result := '';
+  for i := 0 to List.Count - 1 do begin
+    if i = 0 then
+      result := List.Strings[0]
+    else
+      result := result + ';' + List.Strings[i];
+  end;
+end;
+
+procedure DiceRandom(Sender: TObject);
+var   
+ distX, distY, glx,gly, step, pct: float;
+  endX, endY, beginX, beginY, i: integer;
+  amap: TBitmap;
+begin
+  pct:= 0.0;
+  step:= 0.01;    // Size of each step along the path  100 steps
+  beginX:= 15;
+  beginY:= 100;
+  endX:= 425;
+  endY:= 425;
+  distX:= endX - beginX;
+  distY:= endY - beginY;
+  amap:= TBitmap.Create;
+  amap:= getbitmap(Exepath+'\examples\images\red1.bmp');
+  for i:= 1 to 100 do begin
+  pct:= pct+ step;
+  if (pct < 1.0) then begin
+    glx:= beginX + (pct * distX);
+    gly:= beginY + (Power(pct, 4) * distY);  //exponent
+  end;
+  //  bfrm.repaint;
+  //bfrm.canvas.draw(round(x),round(y), fpic);                           
+  afrm.canvas.draw(round(glx)-20,round(gly-20), amap);
+  //afrm.canvas.draw(round(glx)+30,round(gly+30),fPicRed);
+  //afrm.canvas.draw(round(glx)+80,round(gly+80),fPicGreen);
+    // BitBlt(FStorage.Canvas.Handle,0,0, FPic.Width, FPic.Height,
+              // bfrm.Canvas.Handle, round(x), round(y), SRCCOPY);
+  delay(6);
+  end;
+  amap.Free;
+  amap:= NIL;
+end;
+
+
+procedure LogBox_CloseClick(Sender: TObject);
+ begin
+   //writeln('click of paintbox test');
+   aFrm.Close;
+ end;
+
+ procedure LogBox_DiceClick(Sender: TObject);
+ begin
+    with mydice do begin
+       interval:= 100;
+       RandomValue;
+       rotate:= true;
+       //AutoSize:= true;
+       AutoStopInterval:= 1500;
+    end;
+    DiceRandom(Self);
+ end;
+
+procedure SetLogBoxForm;
+//var aFrm: TForm;
+ var   GameMi, game2, game3: TMenuItem;
+begin
+   aFrm:= TForm.create(self)
+   with aFrm do begin
+     Caption:= '********** SimLogic Box ***********';  
+     height:= 710;
+     width:= 750;
+     Position:= poScreenCenter;
+     //Color:= clBlack;
+     //onClose:= @TFrm1_closeForm;
+     //onPaint:= @TFrm1_FormPaint;
+     Canvas.Pen.color:= clBlue;
+     Canvas.Pen.Width:= 15;
+     Show;
+     canvas.brush.bitmap:= getBitmapObject(Exepath+'examples\images\bmp47.bmp');
+     Canvas.FillRect(Rect(600,510,400,300));
+  end;
+  
+  with TMainMenu.create(aFrm) do begin;
+     GameMi:= TMenuItem.Create(afrm);
+     gamemi.Caption:= '&Save Graph';
+     gamemi.OnClick:= @TForm_btnSaveClick;
+      Items.Add(gamemi);
+     Game2:= TMenuItem.Create(afrm);
+     game2.Caption:= '&Close LogBox';
+     game2.OnClick:= @LogBox_CloseClick;
+     Items.Add(game2);
+     Game3:= TMenuItem.Create(afrm);
+     game3.Caption:= '&New Dice Game';
+     game3.OnClick:= @LogBox_DiceClick;
+     Items.Add(game3);
+  end;
+    with TJvSimLogicBox.create(self) do begin
+       parent:= afrm;
+       setbounds(10,10,200,300);
+       Paint;
+       //Free;
+     end;
+    with TJvSimLight.Create(self) do begin
+       parent:= afrm;
+       setbounds(300,10,20,30);
+       Paint;
+       Lit:= true;
+       coloron:= clyellow;
+       coloroff:= clblue;
+       //ondblclick:= 
+      //RegisterProperty('ColorOn', 'TColor', iptrw);
+      //RegisterProperty('ColorOff', 'TColor', iptrw);
+      //RegisterMethod('Procedure Free');
+  end;
+    with TJvSimLight.Create(self) do begin
+       parent:= afrm;
+       setbounds(370,10,20,30);
+       Paint;
+       Lit:= false;
+       coloron:= clyellow;
+       coloroff:= clpurple;
+   end;
+    with TJvSimBin.create(self) do begin
+       parent:= afrm;
+       setbounds(200,10,20,30);
+       Paint;
+       //onclick
+       //Free;
+     end;
+     with TJvSimIndicator.Create(self) do begin
+       setbounds(670,20,30,440)
+       parent:= afrm;
+       value:= 70;
+       Paint;
+       //Free;
+     end;
+     mydice:= TJvDice.create(self);
+     with mydice do begin
+       setbounds(70,280,230,260)
+       parent:= afrm;
+       interval:= 500;
+       RandomValue;
+       rotate:= true;
+       //AutoSize:= true;
+       AutoStopInterval:= 1500;
+       //onmousedown;
+       //showfocus:= true;
+       onclick:= @LogBox_DiceClick;
+       //onstart:=
+     end;  
+  
+   with TJclFileVersionInfo.Create(exepath+'maxbox3.exe') do 
+     try
+       writeln('maXbox Version: '+binFileVersion);
+     finally
+       Free
+     end;
+  end;
+
+
+  var a,b,c: boolean;
+      a1,b1,c1: byte;
+       bstr: string;
+
+
+BEGIN  //Main
+//<Executable statement
+ 
+  //RleDecompress( Stream : TStream)');
+  // wholee ASCII Table
+   { writeln(Chr(67))
+   for i:= 0 to 255 do
+     writeln(format('wert %d %s',[i, Chr(i)]))}
+    
+    AllBooleanPattern(10,12);
+    
+    a:= true; b:= true; c:= true;
+    a:= true; b:= false; c:= false;
+    writeln('bool to str test '+booltostr(a or (b and c),true));
+    writeln('bool to str test '+booltostr(a or b and c,true));
+    // law of distribution
+    writeln('distributiv: '+booltostr((a or b) and c,true));
+    writeln('distributiv: '+booltostr(c and (a or b),true));
+    writeln('distributiv: '+booltostr(c and a or c and b,true));
+    writeln('');
+
+    //writeln('distributiv and: '+inttostr(1 and 0));
+   
+    a:= true; b:= false; c:= false;
+
+    // laws in one line
+    writeln('distributiv and: '+booltostr(a and(b or c) = a and b or a and c,true));
+    writeln('distributiv or : '+booltostr(a or b and c =(a or b)and(a or c),true));
+    writeln('associativ and: '+booltostr(a and (b and c) = a and b and c, true));
+    writeln('associativ or : '+booltostr(a or (b or c) = (a or b) or c, true));
+    
+    for i:= 0 to 1 do 
+      for k:= 0 to 1 do 
+        for t:= 0 to 1 do begin
+          a:= boolean(i); b:= boolean(k); c:= boolean(t);
+          printF('Boolean Law: %d%d%d',[a,b,c]);
+          letBooleanLaws(a,b,c);
+        end; 
+        
+   SetLogBoxForm;
+      
+     
+  // with TJclSysInfo.Create(exepath+'maxbox3.exe') do 
+  Writeln('Memory Load: '+inttoStr(GetMemoryLoad) +'% Memory used');
+  Writeln('Physic Memory: '+inttoStr(GetTotalPhysicalMemory div 1024) +'MB');
+  Writeln('Free Mem: '+inttoStr(GetFreePhysicalMemory div 1024) +'MB');
+  Writeln('Virtual Memory: '+inttoStr(GetTotalVirtualMemory div 1024) +'MB');
+  Writeln('Free Virt. Memory: '+inttoStr(GetFreeVirtualMemory div 1024) +'MB');
+  Writeln('Page File Memory: '+inttoStr(GetTotalPageFileMemory div 1024) +'MB');
+  Writeln('Free Page Memory: '+inttoStr(GetFreePageFileMemory div 1024) +'MB');
+  bstr:= ifThen(IsWow64, 'sysnative','system32');
+  bstr:= ifThen(cIsWinNt, 'sysnativent','system32');
+ //ExecuteCommand('cmd','/k dir E:\maxbox\maxbox3\examples\*.txt > E:\maxbox\maxbox3\examples\allexamples397.txt')
+
+  
+  {bstr:= ifThen(IsWow64, 'maxbox3_64.exe','maxbox3.exe');
+  if Winexec32(Format(ExePath+'%s',[bstr]),SW_Show) then 
+       writeln('EXE '+bstr+' is running');}
+         //getrealpath
+       //ciswinnt
+       writeln(getversionstring(exepath+'maxbox3.exe'));
+       //calcmod
+      if LogicalAnd2(9,9) then writeln('the same');
+      //strtolist
+End. 
+
+
+
+
+//////////////template  form builder
+var 
+  aFrm: TForm;
+  mT: TTimer;
+  tB: TTrackBar;
+  statBar1: TStatusBar;
+
+//**************************Event Handlers*******************************
+procedure TFrm1_trackSpeedChange(Sender: TObject);
+begin
+  //mt.Interval:= 1000 div tB.Position;
+  writeln(intToStr(1000 div tB.Position));
+end;
+
+procedure TFrm1_closeForm(Sender: TObject; var Action: TCloseAction);
+begin
+  {if mt <> NIL then begin
+    mT.enabled:= false;
+    mT.Free;
+    mT:= NIL;
+  end;}
+  ///afrm.Free;  
+  action:= caFree;
+  afrm:= NIL;
+end;
+
+procedure TFrm1_CloseClick(Sender: TObject);
+begin
+  afrm.Close;
+end;
+
+procedure TFrm1_PauseClick(Sender: TObject);
+begin
+  {if mT <> NIL then
+    mt.enabled:= not mt.enabled; }
+end;
+
+//**************************Form Builder*******************************
+procedure loadForm;
+begin
+  aFrm:= TForm.Create(self);
+  //mT:= TTimer.Create(self);
+  //mt.onTimer:= @TFrm1_timerRedrawTimer;
+  //mt.interval:= MILLISECONDS;
+  //mt.free;  in on close            
+  with aFrm do begin
+    Caption:= '********** Form Template ***********';  
+    height:= 510;
+    width:= 700;
+    Position:= poScreenCenter;
+    //Color:= clBlack;
+    onClose:= @TFrm1_closeForm;
+    //onPaint:= @TFrm1_FormPaint;
+    Canvas.Pen.color:= clBlue;
+    Canvas.Pen.Width:= 15;
+    Show;
+    canvas.brush.bitmap:= getBitmapObject(Exepath+'examples\images\bmp47.bmp');
+    Canvas.FillRect(Rect(600,300,100,100));
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(310,390,150,55);
+    caption:= 'Pause';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPAUSE'); 
+    mXButton(05,05,width, height,12,12,handle);
+    //event handler
+    onClick:= @TFrm1_PauseClick;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(480, 390,150, 55);
+    caption:= 'Close';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP'); 
+    mXButton(05,05,width, height,12,12,handle);
+    onClick:= @TFrm1_CloseClick;
+  end;
+  tB:= TTrackBar.create(aFrm);
+  with tB do begin
+    parent:= aFrm;
+    setBounds(40,402,230,40);
+    Min:= 10; Max:= 100
+    Frequency:= 10
+    Position:= 1000 div 50;
+    linesize:= 4;
+    ThumbLength:= 30;
+    SetFocus;
+    OnChange:= @TFrm1_trackSpeedChange;
+  end;
+  statbar1:= TStatusBar.Create(aFrm);
+  with statbar1 do begin
+    parent:= aFrm;
+    showhint:= true;
+    hint:= 'this is a LED BoX';
+    Panels.add;
+      panels.items[0].width:= 200;
+      panels.items[0].text:= '200';
+    Panels.add;
+      panels.items[1].width:= 150;
+      panels.items[1].text:= '150';
+  end;
+end;  
+
+
+
+       (A<>B)  NOT --> A=B
+        0  0 0 1       0 0
+        0  1 1 0
+        1  0 1 0
+        1  1 0 1       1 1
+        
+  XOR App      
+  0110 0001
+^ 1101 1111
+-----------
+  1011 1110
+        
+        
+  00000000000000000000000100101100 XOR
+  00000000000000000000000100101100
+                         000000000
+                         
+00000000000000000000000000000000     01 False
+00000000000000000000000000001000     02 AND
+00000000000000000000000000000010     03 Inhibit
+00000000000000000000000000001010     04 Prepend
+00000000000000000000000000000100     05 Praesect
+00000000000000000000000000001100     06 Postpend
+00000000000000000000000000000110     07 XOR
+00000000000000000000000000001110     08 OR
+11111111111111111111111111110001     09 NOR
+11111111111111111111111111111001     10 Aequival
+11111111111111111111111111110011     11 NegY
+11111111111111111111111111111011     12 ImplicatY
+11111111111111111111111111110101     13 NegX
+11111111111111111111111111111101     14 ImplicatX
+11111111111111111111111111110111     15 NAND
+11111111111111111111111111111111     16 True                         
+
+----app_template_loaded----

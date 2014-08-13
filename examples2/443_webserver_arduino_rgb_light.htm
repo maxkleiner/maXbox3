@@ -1,0 +1,774 @@
+Version:0.9
+StartHTML:0000000105
+EndHTML:0000147460
+StartFragment:0000001053
+EndFragment:0000147444
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>mXScriptasHTML</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="generator" content="SynEdit HTML exporter" />
+<style type="text/css">
+<!--
+body { color: #000000; background-color: #FFFFFF; }
+.pas1-assembler { }
+.pas1-character { color: #0066CC; text-decoration: underline; }
+.pas1-comment { color: #000080; font-style: italic; }
+.pas1-float { color: #FF6347; }
+.pas1-hexadecimal { color: #FF00FF; }
+.pas1-identifier { }
+.pas1-number { color: #FF0000; }
+.pas1-preprocessor { font-style: italic; }
+.pas1-reservedword { color: #000000; font-weight: bold; }
+.pas1-space { }
+.pas1-string { color: #008080; }
+.pas1-symbol { color: #800080; }
+-->
+</style>
+</head>
+<body>
+<!--StartFragment--><pre><code><span class="pas1-reservedword">program</span><span class="pas1-space"> Motion_HTTPServer_Arduino42_RGB_LED_Light</span><span class="pas1-symbol">;
+
+</span><span class="pas1-space">  </span><span class="pas1-comment">// Fourth httpserver script &amp; arduino control of webmax internet series
+</span><span class="pas1-space">  </span><span class="pas1-comment">// Send the RGB command LED and DEL to shine on a LED on Arduino Board, #locs=492
+</span><span class="pas1-space">  </span><span class="pas1-comment">// #sign:max: MAXBOX8: 28/01/2014 20:02:19 
+</span><span class="pas1-space">  </span><span class="pas1-comment">// update: just the RGB Color table, toogle web switch
+</span><span class="pas1-space">  </span><span class="pas1-comment">// V4.2 small version with RGB LED to switch 3 colors independent
+</span><span class="pas1-space">  </span><span class="pas1-comment">// TODO: check the sleep or delay difference in loop!
+</span><span class="pas1-space">  
+</span><span class="pas1-reservedword">Const
+</span><span class="pas1-space">  BACKMAP </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-string">'examples\images\bmp37.bmp'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  SIG </span><span class="pas1-symbol">=</span><span class="pas1-string">'&lt;---------&gt;'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  APORT </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">8080</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  COMPORT </span><span class="pas1-symbol">=</span><span class="pas1-string">'COM3'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  R_EXCEPTMESS </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-string">'Comport not in use - Connect first^!'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  
+  
+</span><span class="pas1-reservedword">var</span><span class="pas1-space">  HTTPSrv</span><span class="pas1-symbol">:</span><span class="pas1-space"> TIdCustomHTTPServer</span><span class="pas1-symbol">;
+</span><span class="pas1-space">     </span><span class="pas1-comment">//ends: TOnSessionEndEvent;
+</span><span class="pas1-space">     cPort</span><span class="pas1-symbol">:</span><span class="pas1-space"> TComPort</span><span class="pas1-symbol">;
+</span><span class="pas1-space">     webswitch</span><span class="pas1-symbol">:</span><span class="pas1-space"> boolean</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   
+</span><span class="pas1-reservedword">Function</span><span class="pas1-space"> getHTMLContentString</span><span class="pas1-symbol">(</span><span class="pas1-identifier">lastline</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">shortstring</span><span class="pas1-symbol">):</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin</span><span class="pas1-space">   
+  result</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-string">'&lt;html&gt;&lt;head&gt;&lt;title&gt;maXbox WebConnect Arduino&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;h1&gt;Welcome to LED WebBox3 *** Shine on you Crazy Diamond ***&lt;/h1&gt;'</span><span class="pas1-character">#13</span><span class="pas1-symbol">+
+</span><span class="pas1-space">    </span><span class="pas1-string">'Check script 305_webserver_arduino3 to discover more:&lt;br&gt;&lt;ul&gt;&lt;li&gt;Search for '</span><span class="pas1-character">#13</span><span class="pas1-space"> </span><span class="pas1-symbol">+
+</span><span class="pas1-space">    </span><span class="pas1-string">'&lt;b&gt;a LED&lt;/b&gt; to &lt;b&gt;light Event OnCommandGet and tag R/G/B or switch ON/OFF&lt;/b&gt;!'</span><span class="pas1-symbol">+
+</span><span class="pas1-space">    </span><span class="pas1-string">'&lt;br&gt; Example: 192.168.48.126:8000/R'</span><span class="pas1-symbol">+
+</span><span class="pas1-space">    </span><span class="pas1-string">'&lt;br&gt;&lt;br&gt;&lt;b&gt;'</span><span class="pas1-symbol">+</span><span class="pas1-identifier">lastline</span><span class="pas1-symbol">+</span><span class="pas1-string">'&lt;/b&gt;'</span><span class="pas1-symbol">+
+</span><span class="pas1-space">    </span><span class="pas1-string">'&lt;p align=&quot;center&quot;&gt;&lt;a href=&quot;http://www.opensource.org/&quot;target=&quot;&quot;&gt;&lt;img src=&quot;OSLogo.gif&quot;&gt;&lt;/a&gt;'</span><span class="pas1-symbol">+
+</span><span class="pas1-space">    </span><span class="pas1-string">'&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;'</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;</span><span class="pas1-space"> 
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> AOpenBrowser</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   S_ShellExecute</span><span class="pas1-symbol">(</span><span class="pas1-string">'http:'</span><span class="pas1-symbol">+</span><span class="pas1-identifier">getHostIP</span><span class="pas1-symbol">+</span><span class="pas1-string">':'</span><span class="pas1-symbol">+</span><span class="pas1-identifier">IntToStr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">APORT</span><span class="pas1-symbol">)+</span><span class="pas1-string">'/'</span><span class="pas1-symbol">,</span><span class="pas1-string">''</span><span class="pas1-symbol">,</span><span class="pas1-identifier">seCmdOpen</span><span class="pas1-symbol">)
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-comment">//******************************* HTTP Server *****************************//
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> HTTPServerGet</span><span class="pas1-symbol">(</span><span class="pas1-identifier">aThr</span><span class="pas1-symbol">:</span><span class="pas1-space"> TIdPeerThread</span><span class="pas1-symbol">;</span><span class="pas1-space"> reqInfo</span><span class="pas1-symbol">:</span><span class="pas1-space"> TIdHTTPRequestInfo</span><span class="pas1-symbol">;
+</span><span class="pas1-space">                                       respInfo</span><span class="pas1-symbol">:</span><span class="pas1-space"> TIdHTTPResponseInfo</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> loccom</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   PrintF</span><span class="pas1-symbol">(</span><span class="pas1-string">'Cmd %s %s at %-10s received from %s:%d'</span><span class="pas1-symbol">,[</span><span class="pas1-identifier">ReqInfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Command</span><span class="pas1-symbol">,</span><span class="pas1-space"> ReqInfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Document</span><span class="pas1-symbol">,</span><span class="pas1-space"> DateTimeToStr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Now</span><span class="pas1-symbol">),</span><span class="pas1-space"> aThr</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Connection</span><span class="pas1-symbol">.</span><span class="pas1-identifier">socket</span><span class="pas1-symbol">.</span><span class="pas1-identifier">binding</span><span class="pas1-symbol">.</span><span class="pas1-identifier">PeerIP</span><span class="pas1-symbol">,
+</span><span class="pas1-space">                           aThr</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Connection</span><span class="pas1-symbol">.</span><span class="pas1-identifier">socket</span><span class="pas1-symbol">.</span><span class="pas1-identifier">binding</span><span class="pas1-symbol">.</span><span class="pas1-identifier">PeerPort</span><span class="pas1-symbol">]);
+</span><span class="pas1-space">   loccom</span><span class="pas1-symbol">:=</span><span class="pas1-space"> ReqInfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Document</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'web debug: '</span><span class="pas1-symbol">+</span><span class="pas1-identifier">loccom</span><span class="pas1-symbol">)
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ReqInfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Document </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-string">'/'</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     RespInfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ContentText</span><span class="pas1-symbol">:=</span><span class="pas1-space"> 
+       getHTMLContentString</span><span class="pas1-symbol">(</span><span class="pas1-string">'Switch LED ON with /LED or OFF with /DEL in URL'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">       respinfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">writeheader</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">if</span><span class="pas1-space"> uppercase</span><span class="pas1-symbol">(</span><span class="pas1-identifier">loccom</span><span class="pas1-symbol">)=</span><span class="pas1-identifier">uppercase</span><span class="pas1-symbol">(</span><span class="pas1-string">'/LED'</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'1'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">      writeln</span><span class="pas1-symbol">(</span><span class="pas1-identifier">loccom</span><span class="pas1-symbol">+</span><span class="pas1-space"> </span><span class="pas1-string">': LED on'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">      RespInfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ContentText</span><span class="pas1-symbol">:=</span><span class="pas1-identifier">getHTMLContentString</span><span class="pas1-symbol">(</span><span class="pas1-string">'LED is:  ON'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">if</span><span class="pas1-space"> uppercase</span><span class="pas1-symbol">(</span><span class="pas1-identifier">loccom</span><span class="pas1-symbol">)=</span><span class="pas1-identifier">uppercase</span><span class="pas1-symbol">(</span><span class="pas1-string">'/DEL'</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'A'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">      writeln</span><span class="pas1-symbol">(</span><span class="pas1-identifier">loccom</span><span class="pas1-symbol">+</span><span class="pas1-space"> </span><span class="pas1-string">': LED off'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">      RespInfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ContentText</span><span class="pas1-symbol">:=</span><span class="pas1-identifier">getHTMLContentString</span><span class="pas1-symbol">(</span><span class="pas1-string">'LED is:  OFF'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else</span><span class="pas1-space"> 
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">uppercase</span><span class="pas1-symbol">(</span><span class="pas1-identifier">loccom</span><span class="pas1-symbol">)=</span><span class="pas1-identifier">uppercase</span><span class="pas1-symbol">(</span><span class="pas1-string">'/ON'</span><span class="pas1-symbol">))</span><span class="pas1-space"> </span><span class="pas1-reservedword">or</span><span class="pas1-space"> 
+                       </span><span class="pas1-symbol">(</span><span class="pas1-identifier">uppercase</span><span class="pas1-symbol">(</span><span class="pas1-identifier">loccom</span><span class="pas1-symbol">)=</span><span class="pas1-identifier">uppercase</span><span class="pas1-symbol">(</span><span class="pas1-string">'/R'</span><span class="pas1-symbol">))</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      webswitch</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-reservedword">NOT</span><span class="pas1-space"> webswitch</span><span class="pas1-symbol">;
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> webswitch </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'1'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">        RespInfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ContentText</span><span class="pas1-symbol">:=</span><span class="pas1-identifier">getHTMLContentString</span><span class="pas1-symbol">(</span><span class="pas1-string">'LED Red is: ON Switch'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'A'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">        RespInfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ContentText</span><span class="pas1-symbol">:=</span><span class="pas1-identifier">getHTMLContentString</span><span class="pas1-symbol">(</span><span class="pas1-string">'LED Red is: OFF Switch'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">end
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> uppercase</span><span class="pas1-symbol">(</span><span class="pas1-identifier">loccom</span><span class="pas1-symbol">)=</span><span class="pas1-identifier">uppercase</span><span class="pas1-symbol">(</span><span class="pas1-string">'/G'</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      webswitch</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-reservedword">NOT</span><span class="pas1-space"> webswitch</span><span class="pas1-symbol">;
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> webswitch </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'2'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">        RespInfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ContentText</span><span class="pas1-symbol">:=</span><span class="pas1-identifier">getHTMLContentString</span><span class="pas1-symbol">(</span><span class="pas1-string">'LED is: Green'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'B'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">        RespInfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ContentText</span><span class="pas1-symbol">:=</span><span class="pas1-identifier">getHTMLContentString</span><span class="pas1-symbol">(</span><span class="pas1-string">'LED is: Green OFF Switch'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">end
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> uppercase</span><span class="pas1-symbol">(</span><span class="pas1-identifier">loccom</span><span class="pas1-symbol">)=</span><span class="pas1-identifier">uppercase</span><span class="pas1-symbol">(</span><span class="pas1-string">'/B'</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      webswitch</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-reservedword">NOT</span><span class="pas1-space"> webswitch</span><span class="pas1-symbol">;
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> webswitch </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'3'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">        RespInfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ContentText</span><span class="pas1-symbol">:=</span><span class="pas1-identifier">getHTMLContentString</span><span class="pas1-symbol">(</span><span class="pas1-string">'LED is: Blue'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'C'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">        RespInfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ContentText</span><span class="pas1-symbol">:=</span><span class="pas1-identifier">getHTMLContentString</span><span class="pas1-symbol">(</span><span class="pas1-string">'LED is: Blue OFF Switch'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">end
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else</span><span class="pas1-space"> 
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> uppercase</span><span class="pas1-symbol">(</span><span class="pas1-identifier">loccom</span><span class="pas1-symbol">)=</span><span class="pas1-identifier">uppercase</span><span class="pas1-symbol">(</span><span class="pas1-string">'/RGB'</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      webswitch</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-reservedword">NOT</span><span class="pas1-space"> webswitch</span><span class="pas1-symbol">;
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> webswitch </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'1'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">        cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'2'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">        cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'3'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">        RespInfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ContentText</span><span class="pas1-symbol">:=</span><span class="pas1-identifier">getHTMLContentString</span><span class="pas1-symbol">(</span><span class="pas1-string">'LED is: RGB ON'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'A'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">        cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'B'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">        cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'C'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">        RespInfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ContentText</span><span class="pas1-symbol">:=</span><span class="pas1-identifier">getHTMLContentString</span><span class="pas1-symbol">(</span><span class="pas1-string">'LED is: RGB OFF'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">end
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">end</span><span class="pas1-space"> 
+  </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      RespInfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ResponseNo</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">404</span><span class="pas1-symbol">;</span><span class="pas1-space"> </span><span class="pas1-comment">//Not found round
+</span><span class="pas1-space">      RespInfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ContentText</span><span class="pas1-symbol">:=
+</span><span class="pas1-space">        </span><span class="pas1-string">'&lt;html&gt;&lt;head&gt;&lt;title&gt;Sorry WebBox3 Error&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;h1&gt;'</span><span class="pas1-space"> </span><span class="pas1-symbol">+
+</span><span class="pas1-space">      RespInfo</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ResponseText </span><span class="pas1-symbol">+</span><span class="pas1-space"> </span><span class="pas1-string">'&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;</span><span class="pas1-space"> 
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    
+    
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> HTTPServerStartExecute</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Sender</span><span class="pas1-symbol">:</span><span class="pas1-space"> TObject</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  HTTPSrv</span><span class="pas1-symbol">:=</span><span class="pas1-space"> TIdCustomHTTPServer</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Create</span><span class="pas1-symbol">(</span><span class="pas1-identifier">self</span><span class="pas1-symbol">)
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> HTTPSrv </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Active </span><span class="pas1-reservedword">then</span><span class="pas1-space"> Free</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> Active </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      Bindings</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Clear</span><span class="pas1-symbol">;
+</span><span class="pas1-space">      bindings</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Add</span><span class="pas1-symbol">;
+</span><span class="pas1-space">      bindings</span><span class="pas1-symbol">.</span><span class="pas1-identifier">items</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">].</span><span class="pas1-identifier">Port</span><span class="pas1-symbol">:=</span><span class="pas1-space"> APORT</span><span class="pas1-symbol">;
+</span><span class="pas1-space">      bindings</span><span class="pas1-symbol">.</span><span class="pas1-identifier">items</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">].</span><span class="pas1-identifier">IP</span><span class="pas1-symbol">:=</span><span class="pas1-space"> GetHostIP</span><span class="pas1-symbol">;</span><span class="pas1-space"> </span><span class="pas1-comment">//IPADDR; //'127.0.0.1';
+</span><span class="pas1-space">      Active</span><span class="pas1-symbol">:=</span><span class="pas1-space"> true</span><span class="pas1-symbol">;
+</span><span class="pas1-space">      onCommandGet</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-symbol">@</span><span class="pas1-identifier">HTTPServerGet</span><span class="pas1-symbol">;
+</span><span class="pas1-space">      PrintF</span><span class="pas1-symbol">(</span><span class="pas1-string">'Listening HTTP on %s:%d.'</span><span class="pas1-symbol">,[</span><span class="pas1-identifier">Bindings</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">].</span><span class="pas1-identifier">IP</span><span class="pas1-symbol">,</span><span class="pas1-identifier">Bindings</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">].</span><span class="pas1-identifier">Port</span><span class="pas1-symbol">]);
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">      PrintF</span><span class="pas1-symbol">(</span><span class="pas1-string">'Server Started at %s '</span><span class="pas1-symbol">,[</span><span class="pas1-identifier">DateTimeToInternetStr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Now</span><span class="pas1-symbol">,</span><span class="pas1-space"> true</span><span class="pas1-symbol">)])
+</span><span class="pas1-space">    </span><span class="pas1-comment">//HTTPServer.Free; in close
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//*******************************COM Port Arduino*****************************//
+</span><span class="pas1-space"> </span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  chk_led1</span><span class="pas1-symbol">,</span><span class="pas1-space"> chk_led2</span><span class="pas1-symbol">,</span><span class="pas1-space"> chk_led3</span><span class="pas1-symbol">,</span><span class="pas1-space"> chk_led4</span><span class="pas1-symbol">:</span><span class="pas1-space"> TCheckBox</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  btn_connect</span><span class="pas1-symbol">,</span><span class="pas1-space"> btn_Setup</span><span class="pas1-symbol">,</span><span class="pas1-space"> btn_loopsos</span><span class="pas1-symbol">:</span><span class="pas1-space"> TBitBtn</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  statBar</span><span class="pas1-symbol">:</span><span class="pas1-space"> TStatusBar</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  comFrm</span><span class="pas1-symbol">:</span><span class="pas1-space"> TForm</span><span class="pas1-symbol">;
+</span><span class="pas1-space"> 
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> LED_Checker</span><span class="pas1-symbol">(</span><span class="pas1-identifier">ab</span><span class="pas1-symbol">:</span><span class="pas1-space"> boolean</span><span class="pas1-symbol">;</span><span class="pas1-space"> checker</span><span class="pas1-symbol">:</span><span class="pas1-space"> boolean</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> checker </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    chk_led1</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Checked</span><span class="pas1-symbol">:=</span><span class="pas1-space"> ab</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    chk_led2</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Checked</span><span class="pas1-symbol">:=</span><span class="pas1-space"> ab</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    chk_led3</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Checked</span><span class="pas1-symbol">:=</span><span class="pas1-space"> ab</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    chk_led4</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Checked</span><span class="pas1-symbol">:=</span><span class="pas1-space"> ab</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin</span><span class="pas1-space">  
+    chk_led1</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Enabled</span><span class="pas1-symbol">:=</span><span class="pas1-space"> ab</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    chk_led2</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Enabled</span><span class="pas1-symbol">:=</span><span class="pas1-space"> ab</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    chk_led3</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Enabled</span><span class="pas1-symbol">:=</span><span class="pas1-space"> ab</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    chk_led4</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Enabled</span><span class="pas1-symbol">:=</span><span class="pas1-space"> ab</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;</span><span class="pas1-space">  
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm1_connectClick</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Sender</span><span class="pas1-symbol">:</span><span class="pas1-space"> TObject</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Connected </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     btn_connect</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Caption</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-string">'Connect'</span><span class="pas1-symbol">;</span><span class="pas1-space">  </span><span class="pas1-comment">// Toggle caption of Connection Button !
+</span><span class="pas1-space">     btn_Setup</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Enabled</span><span class="pas1-symbol">:=</span><span class="pas1-space"> True</span><span class="pas1-symbol">;</span><span class="pas1-space">         </span><span class="pas1-comment">// If not connected, lets enable Setup Button
+</span><span class="pas1-space">     btn_loopsos</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Enabled</span><span class="pas1-symbol">:=</span><span class="pas1-space"> false</span><span class="pas1-symbol">;
+</span><span class="pas1-space">      </span><span class="pas1-comment">// This block resets the state of all Leds to Off
+</span><span class="pas1-space">      </span><span class="pas1-comment">// According to ArduinoC the Chars A,B,C,D,E are used to set DigitalPins(2-6) to LOW
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">with</span><span class="pas1-space"> cPort </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'A'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">        WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'B'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">        WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'C'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">        WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'D'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;</span><span class="pas1-space">  
+      LED_Checker</span><span class="pas1-symbol">(</span><span class="pas1-identifier">false</span><span class="pas1-symbol">,</span><span class="pas1-space"> true</span><span class="pas1-symbol">);
+</span><span class="pas1-space">      cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Close</span><span class="pas1-symbol">;</span><span class="pas1-space">              
+      statBar</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Panels</span><span class="pas1-symbol">[</span><span class="pas1-number">1</span><span class="pas1-symbol">].</span><span class="pas1-identifier">Text</span><span class="pas1-symbol">:=</span><span class="pas1-string">'Disconnected'</span><span class="pas1-symbol">;</span><span class="pas1-space">  
+      LED_Checker</span><span class="pas1-symbol">(</span><span class="pas1-identifier">false</span><span class="pas1-symbol">,</span><span class="pas1-space"> false</span><span class="pas1-symbol">);</span><span class="pas1-space"> </span><span class="pas1-comment">//enabler
+</span><span class="pas1-space">      statBar</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Panels</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">].</span><span class="pas1-identifier">Text</span><span class="pas1-symbol">:=</span><span class="pas1-string">' Port closed '</span><span class="pas1-symbol">+</span><span class="pas1-space"> cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Port</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      btn_connect</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Caption</span><span class="pas1-symbol">:=</span><span class="pas1-string">'Disconnect'</span><span class="pas1-symbol">;</span><span class="pas1-space">   </span><span class="pas1-comment">// Toggle the caption of Connection Button
+</span><span class="pas1-space">      btn_Setup</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Enabled</span><span class="pas1-symbol">:=</span><span class="pas1-identifier">false</span><span class="pas1-symbol">;</span><span class="pas1-space">            </span><span class="pas1-comment">// If not connected, lets disable Setup Button
+</span><span class="pas1-space">      btn_loopsos</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Enabled</span><span class="pas1-symbol">:=</span><span class="pas1-identifier">true</span><span class="pas1-symbol">;</span><span class="pas1-space">           </span><span class="pas1-comment">// Now Rider demo button is enabled
+</span><span class="pas1-space">      cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Open</span><span class="pas1-symbol">;</span><span class="pas1-space">                          </span><span class="pas1-comment">// COM Port is finally opened
+</span><span class="pas1-space">      statBar</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Panels</span><span class="pas1-symbol">[</span><span class="pas1-number">1</span><span class="pas1-symbol">].</span><span class="pas1-identifier">Text</span><span class="pas1-symbol">:=</span><span class="pas1-string">'Connected and '</span><span class="pas1-space">  
+                        </span><span class="pas1-symbol">+</span><span class="pas1-identifier">Format</span><span class="pas1-symbol">(</span><span class="pas1-string">'Listening on http %s:%d'</span><span class="pas1-symbol">,
+</span><span class="pas1-space">                         </span><span class="pas1-symbol">[</span><span class="pas1-identifier">HTTPSrv</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Bindings</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">].</span><span class="pas1-identifier">IP</span><span class="pas1-symbol">,</span><span class="pas1-identifier">HTTPSrv</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Bindings</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">].</span><span class="pas1-identifier">Port</span><span class="pas1-symbol">]);
+</span><span class="pas1-space">      statBar</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Panels</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">].</span><span class="pas1-identifier">Text</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-string">'Port in use '</span><span class="pas1-symbol">+</span><span class="pas1-space"> cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Port</span><span class="pas1-symbol">;</span><span class="pas1-space"> 
+      </span><span class="pas1-comment">// This block enables check boxes
+</span><span class="pas1-space">      </span><span class="pas1-comment">// so a user can change them to set LED states when COM Port is connected
+</span><span class="pas1-space">      LED_Checker</span><span class="pas1-symbol">(</span><span class="pas1-identifier">true</span><span class="pas1-symbol">,</span><span class="pas1-space"> false</span><span class="pas1-symbol">);
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end
+end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm1_SetupClick</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Sender</span><span class="pas1-symbol">:</span><span class="pas1-space"> TObject</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ShowSetupDialog</span><span class="pas1-symbol">;</span><span class="pas1-space">        </span><span class="pas1-comment">//Opens predefined Setup Dialog (part of ComPort component)
+</span><span class="pas1-space">  statBar</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Panels</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">].</span><span class="pas1-identifier">Text</span><span class="pas1-symbol">:=</span><span class="pas1-string">'Port in use '</span><span class="pas1-space"> </span><span class="pas1-symbol">+</span><span class="pas1-space"> cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Port</span><span class="pas1-symbol">;</span><span class="pas1-space">  
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">// Next are procedures to turning ON and OFF each led using the variables
+// Ports are turned ON by sending it corresponding var 1,2,3,4,5
+// and they are turned OFF by sending it corresponding var A,B,C,D,E
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> chk_led1Click</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Sender</span><span class="pas1-symbol">:</span><span class="pas1-space"> TObject</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> strback</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> chk_led1</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Checked</span><span class="pas1-symbol">=</span><span class="pas1-identifier">true </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'1'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">else
+</span><span class="pas1-space">    cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'A'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ReadStr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">strback</span><span class="pas1-symbol">,</span><span class="pas1-number">1</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-symbol">&gt;</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'debug: com back led 1 signal '</span><span class="pas1-space"> </span><span class="pas1-symbol">+</span><span class="pas1-identifier">strback</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> chk_led2Click</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Sender</span><span class="pas1-symbol">:</span><span class="pas1-space"> TObject</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> chk_led2</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Checked</span><span class="pas1-symbol">=</span><span class="pas1-identifier">true </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'2'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">else</span><span class="pas1-space"> cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'B'</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> chk_led3Click</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Sender</span><span class="pas1-symbol">:</span><span class="pas1-space"> TObject</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> chk_led3</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Checked</span><span class="pas1-symbol">=</span><span class="pas1-identifier">true </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'3'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">else</span><span class="pas1-space"> cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'C'</span><span class="pas1-symbol">)
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//special piezo sound
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> chk_led4Click</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Sender</span><span class="pas1-symbol">:</span><span class="pas1-space"> TObject</span><span class="pas1-symbol">);</span><span class="pas1-space">  
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i</span><span class="pas1-symbol">:</span><span class="pas1-space"> integer</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> chk_led4</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Checked</span><span class="pas1-symbol">=</span><span class="pas1-identifier">true </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">200</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin</span><span class="pas1-space"> 
+      cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'4'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">      sleep</span><span class="pas1-symbol">(</span><span class="pas1-identifier">random</span><span class="pas1-symbol">(</span><span class="pas1-number">5</span><span class="pas1-symbol">))</span><span class="pas1-space">           
+      cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'D'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">      sleep</span><span class="pas1-symbol">(</span><span class="pas1-number">2</span><span class="pas1-symbol">)</span><span class="pas1-space">           
+    </span><span class="pas1-reservedword">end
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">else</span><span class="pas1-space"> cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'D'</span><span class="pas1-symbol">)
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-comment">//**************** map of digitalWrite()************************
+</span><span class="pas1-space"> </span><span class="pas1-reservedword">Const</span><span class="pas1-space"> AHIGH </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">1</span><span class="pas1-symbol">;</span><span class="pas1-space"> ALOW </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+</span><span class="pas1-space"> </span><span class="pas1-reservedword">type</span><span class="pas1-space"> cEnum </span><span class="pas1-symbol">=(</span><span class="pas1-identifier">red</span><span class="pas1-symbol">,</span><span class="pas1-space"> green</span><span class="pas1-symbol">,</span><span class="pas1-space"> blue</span><span class="pas1-symbol">);
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> digitalWrite</span><span class="pas1-symbol">(</span><span class="pas1-identifier">enum</span><span class="pas1-symbol">:</span><span class="pas1-space"> cEnum</span><span class="pas1-symbol">;</span><span class="pas1-space"> level</span><span class="pas1-symbol">:</span><span class="pas1-space"> byte</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">case</span><span class="pas1-space"> enum </span><span class="pas1-reservedword">of
+</span><span class="pas1-space">    red</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> level</span><span class="pas1-symbol">=</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> 
+           cport</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'1'</span><span class="pas1-symbol">)</span><span class="pas1-space">        </span><span class="pas1-comment">//ON
+</span><span class="pas1-space">           </span><span class="pas1-reservedword">else</span><span class="pas1-space"> cport</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'A'</span><span class="pas1-symbol">);</span><span class="pas1-space">  </span><span class="pas1-comment">//OFF
+</span><span class="pas1-space">    green</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> level</span><span class="pas1-symbol">=</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">             cport</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'2'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">             </span><span class="pas1-reservedword">else</span><span class="pas1-space"> cport</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'B'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">    blue</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> level</span><span class="pas1-symbol">=</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> 
+            cport</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'3'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">            </span><span class="pas1-reservedword">else</span><span class="pas1-space"> cport</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'C'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;</span><span class="pas1-space">    
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm1_Rainbowloop</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Sender</span><span class="pas1-symbol">:</span><span class="pas1-space"> TObject</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> mtime</span><span class="pas1-symbol">,</span><span class="pas1-space"> multiple</span><span class="pas1-symbol">:</span><span class="pas1-space"> integer</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   LED_Checker</span><span class="pas1-symbol">(</span><span class="pas1-identifier">false</span><span class="pas1-symbol">,</span><span class="pas1-space"> true</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  </span><span class="pas1-comment">{Color Spectrum from Red to White code (r,y,g,c,b,m,w...}
+</span><span class="pas1-space">   mtime</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">500</span><span class="pas1-symbol">;</span><span class="pas1-space"> </span><span class="pas1-comment">//1000; 
+</span><span class="pas1-space">   multiple</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">;</span><span class="pas1-space">  
+   statBar</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Panels</span><span class="pas1-symbol">[</span><span class="pas1-number">1</span><span class="pas1-symbol">].</span><span class="pas1-identifier">Text</span><span class="pas1-symbol">:=</span><span class="pas1-string">'Rainbow - Click LED4 checkbox to end the loop!'</span><span class="pas1-symbol">;</span><span class="pas1-space">  
+   </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">with</span><span class="pas1-space"> cPort </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin</span><span class="pas1-space">   </span><span class="pas1-comment">//using
+</span><span class="pas1-space">       </span><span class="pas1-reservedword">repeat</span><span class="pas1-space">       
+        </span><span class="pas1-comment">//WriteStr('1'); Sleep(mtime);
+</span><span class="pas1-space">         digitalWrite</span><span class="pas1-symbol">(</span><span class="pas1-identifier">red</span><span class="pas1-symbol">,</span><span class="pas1-space"> AHIGH</span><span class="pas1-symbol">);</span><span class="pas1-space">    </span><span class="pas1-comment">// red 
+</span><span class="pas1-space">         delay</span><span class="pas1-symbol">(</span><span class="pas1-identifier">mtime</span><span class="pas1-symbol">);</span><span class="pas1-space">                     
+         digitalWrite</span><span class="pas1-symbol">(</span><span class="pas1-identifier">green</span><span class="pas1-symbol">,</span><span class="pas1-space"> AHIGH</span><span class="pas1-symbol">);</span><span class="pas1-space">  </span><span class="pas1-comment">// yellow
+</span><span class="pas1-space">         delay</span><span class="pas1-symbol">(</span><span class="pas1-identifier">mtime</span><span class="pas1-symbol">);
+</span><span class="pas1-space">         digitalWrite</span><span class="pas1-symbol">(</span><span class="pas1-identifier">red</span><span class="pas1-symbol">,</span><span class="pas1-space"> ALOW</span><span class="pas1-symbol">);</span><span class="pas1-space">     </span><span class="pas1-comment">// green 
+</span><span class="pas1-space">         delay</span><span class="pas1-symbol">(</span><span class="pas1-identifier">mtime</span><span class="pas1-symbol">);
+</span><span class="pas1-space">         digitalWrite</span><span class="pas1-symbol">(</span><span class="pas1-identifier">blue</span><span class="pas1-symbol">,</span><span class="pas1-space"> AHIGH</span><span class="pas1-symbol">);</span><span class="pas1-space">   </span><span class="pas1-comment">// cyan
+</span><span class="pas1-space">         delay</span><span class="pas1-symbol">(</span><span class="pas1-identifier">mtime</span><span class="pas1-symbol">);
+</span><span class="pas1-space">         digitalWrite</span><span class="pas1-symbol">(</span><span class="pas1-identifier">green</span><span class="pas1-symbol">,</span><span class="pas1-space"> ALOW</span><span class="pas1-symbol">);</span><span class="pas1-space">   </span><span class="pas1-comment">// blue
+</span><span class="pas1-space">         delay</span><span class="pas1-symbol">(</span><span class="pas1-identifier">mtime</span><span class="pas1-symbol">);
+</span><span class="pas1-space">         digitalWrite</span><span class="pas1-symbol">(</span><span class="pas1-identifier">red</span><span class="pas1-symbol">,</span><span class="pas1-space"> AHIGH</span><span class="pas1-symbol">);</span><span class="pas1-space">    </span><span class="pas1-comment">// magenta 
+</span><span class="pas1-space">         delay</span><span class="pas1-symbol">(</span><span class="pas1-identifier">mtime</span><span class="pas1-symbol">);
+</span><span class="pas1-space">         digitalWrite</span><span class="pas1-symbol">(</span><span class="pas1-identifier">green</span><span class="pas1-symbol">,</span><span class="pas1-space"> AHIGH</span><span class="pas1-symbol">);</span><span class="pas1-space">  </span><span class="pas1-comment">// white 
+</span><span class="pas1-space">         mtime</span><span class="pas1-symbol">:=</span><span class="pas1-space"> mtime </span><span class="pas1-symbol">*</span><span class="pas1-space"> multiple</span><span class="pas1-symbol">;
+</span><span class="pas1-space">         delay</span><span class="pas1-symbol">(</span><span class="pas1-identifier">mtime</span><span class="pas1-symbol">);
+</span><span class="pas1-space">         digitalWrite</span><span class="pas1-symbol">(</span><span class="pas1-identifier">blue</span><span class="pas1-symbol">,</span><span class="pas1-space"> ALOW</span><span class="pas1-symbol">);</span><span class="pas1-space">    </span><span class="pas1-comment">// reset
+</span><span class="pas1-space">         digitalWrite</span><span class="pas1-symbol">(</span><span class="pas1-identifier">green</span><span class="pas1-symbol">,</span><span class="pas1-space"> ALOW</span><span class="pas1-symbol">);
+</span><span class="pas1-space">         digitalWrite</span><span class="pas1-symbol">(</span><span class="pas1-identifier">red</span><span class="pas1-symbol">,</span><span class="pas1-space"> ALOW</span><span class="pas1-symbol">);
+</span><span class="pas1-space">         mtime</span><span class="pas1-symbol">:=</span><span class="pas1-space"> mtime </span><span class="pas1-reservedword">div</span><span class="pas1-space"> multiple</span><span class="pas1-symbol">;</span><span class="pas1-space">  </span><span class="pas1-comment">//time/=multiple;  
+</span><span class="pas1-space">       </span><span class="pas1-reservedword">until</span><span class="pas1-space"> chk_led4</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Checked</span><span class="pas1-symbol">=</span><span class="pas1-identifier">true</span><span class="pas1-symbol">;
+</span><span class="pas1-space">       chk_led4</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Checked</span><span class="pas1-symbol">:=</span><span class="pas1-space"> false</span><span class="pas1-symbol">;
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">except
+</span><span class="pas1-space">      Showmessage</span><span class="pas1-symbol">(</span><span class="pas1-identifier">R_EXCEPTMESS</span><span class="pas1-symbol">);</span><span class="pas1-space"> 
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;</span><span class="pas1-space">    
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm1_FormClose</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Sender</span><span class="pas1-symbol">:</span><span class="pas1-space"> TObject</span><span class="pas1-symbol">;</span><span class="pas1-space"> </span><span class="pas1-reservedword">var</span><span class="pas1-space"> Action</span><span class="pas1-symbol">:</span><span class="pas1-space"> TCloseAction</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Connected </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'A'</span><span class="pas1-symbol">);</span><span class="pas1-space">     </span><span class="pas1-comment">// If the application is closed, its good to leave
+</span><span class="pas1-space">    cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'B'</span><span class="pas1-symbol">);</span><span class="pas1-space">     </span><span class="pas1-comment">// everything as we found it at start.
+</span><span class="pas1-space">    cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'C'</span><span class="pas1-symbol">);</span><span class="pas1-space">     </span><span class="pas1-comment">// So we reset all the leds to OFF
+</span><span class="pas1-space">    cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">WriteStr</span><span class="pas1-symbol">(</span><span class="pas1-string">'D'</span><span class="pas1-symbol">);
+</span><span class="pas1-space">    cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Close</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  HTTPSrv</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Free</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  Writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'Server Stopped at '</span><span class="pas1-symbol">+</span><span class="pas1-identifier">DateTimeToInternetStr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Now</span><span class="pas1-symbol">,</span><span class="pas1-space"> true</span><span class="pas1-symbol">))
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">Procedure</span><span class="pas1-space"> LabelFactory</span><span class="pas1-symbol">(</span><span class="pas1-identifier">a</span><span class="pas1-symbol">,</span><span class="pas1-identifier">b</span><span class="pas1-symbol">,</span><span class="pas1-identifier">c</span><span class="pas1-symbol">,</span><span class="pas1-identifier">d</span><span class="pas1-symbol">:</span><span class="pas1-space"> byte</span><span class="pas1-symbol">;</span><span class="pas1-space"> title</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">shortstring</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TLabel</span><span class="pas1-symbol">.</span><span class="pas1-identifier">create</span><span class="pas1-symbol">(</span><span class="pas1-identifier">self</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent</span><span class="pas1-symbol">:=</span><span class="pas1-space"> comfrm</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    SetBounds</span><span class="pas1-symbol">(</span><span class="pas1-identifier">a</span><span class="pas1-symbol">,</span><span class="pas1-identifier">b</span><span class="pas1-symbol">,</span><span class="pas1-identifier">c</span><span class="pas1-symbol">,</span><span class="pas1-identifier">d</span><span class="pas1-symbol">);
+</span><span class="pas1-space">    Caption</span><span class="pas1-symbol">:=</span><span class="pas1-space"> title
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">Procedure</span><span class="pas1-space"> CheckBoxFactory</span><span class="pas1-symbol">(</span><span class="pas1-identifier">a</span><span class="pas1-symbol">,</span><span class="pas1-identifier">b</span><span class="pas1-symbol">,</span><span class="pas1-identifier">c</span><span class="pas1-symbol">,</span><span class="pas1-identifier">d</span><span class="pas1-symbol">:</span><span class="pas1-space"> byte</span><span class="pas1-symbol">;</span><span class="pas1-space"> title</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">shortstring</span><span class="pas1-symbol">;
+</span><span class="pas1-space">                          abox</span><span class="pas1-symbol">:</span><span class="pas1-space"> TCheckbox</span><span class="pas1-symbol">;</span><span class="pas1-space"> anevent</span><span class="pas1-symbol">:</span><span class="pas1-space"> TNotifyEvent</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> abox </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent</span><span class="pas1-symbol">:=</span><span class="pas1-space"> comfrm</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    SetBounds</span><span class="pas1-symbol">(</span><span class="pas1-identifier">a</span><span class="pas1-symbol">,</span><span class="pas1-identifier">b</span><span class="pas1-symbol">,</span><span class="pas1-identifier">c</span><span class="pas1-symbol">,</span><span class="pas1-identifier">d</span><span class="pas1-symbol">)
+</span><span class="pas1-space">    Caption</span><span class="pas1-symbol">:=</span><span class="pas1-space"> title</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    Enabled</span><span class="pas1-symbol">:=</span><span class="pas1-space"> False</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">Procedure</span><span class="pas1-space"> BtnFactory</span><span class="pas1-symbol">(</span><span class="pas1-identifier">a</span><span class="pas1-symbol">,</span><span class="pas1-identifier">b</span><span class="pas1-symbol">,</span><span class="pas1-identifier">c</span><span class="pas1-symbol">,</span><span class="pas1-identifier">d</span><span class="pas1-symbol">:</span><span class="pas1-space"> smallint</span><span class="pas1-symbol">;</span><span class="pas1-space"> title</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">shortstring</span><span class="pas1-symbol">;</span><span class="pas1-space"> apic</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">shortstring</span><span class="pas1-symbol">;
+</span><span class="pas1-space">                          abtn</span><span class="pas1-symbol">:</span><span class="pas1-space"> TBitBtn</span><span class="pas1-symbol">;</span><span class="pas1-space"> anevent</span><span class="pas1-symbol">:</span><span class="pas1-space"> TNotifyEvent</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space"> </span><span class="pas1-reservedword">with</span><span class="pas1-space"> abtn </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   parent</span><span class="pas1-symbol">:=</span><span class="pas1-space"> comfrm</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   setBounds</span><span class="pas1-symbol">(</span><span class="pas1-identifier">a</span><span class="pas1-symbol">,</span><span class="pas1-identifier">b</span><span class="pas1-symbol">,</span><span class="pas1-identifier">c</span><span class="pas1-symbol">,</span><span class="pas1-identifier">d</span><span class="pas1-symbol">)
+</span><span class="pas1-space">   font</span><span class="pas1-symbol">.</span><span class="pas1-identifier">size</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">12</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   glyph</span><span class="pas1-symbol">.</span><span class="pas1-identifier">LoadFromResourceName</span><span class="pas1-symbol">(</span><span class="pas1-identifier">HINSTANCE</span><span class="pas1-symbol">,</span><span class="pas1-space"> apic</span><span class="pas1-symbol">);</span><span class="pas1-space"> 
+   mXButton</span><span class="pas1-symbol">(</span><span class="pas1-number">05</span><span class="pas1-symbol">,</span><span class="pas1-number">05</span><span class="pas1-symbol">,</span><span class="pas1-identifier">width</span><span class="pas1-symbol">,</span><span class="pas1-space"> height</span><span class="pas1-symbol">,</span><span class="pas1-number">12</span><span class="pas1-symbol">,</span><span class="pas1-number">12</span><span class="pas1-symbol">,</span><span class="pas1-identifier">handle</span><span class="pas1-symbol">);
+</span><span class="pas1-space">   caption</span><span class="pas1-symbol">:=</span><span class="pas1-space"> title</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   </span><span class="pas1-comment">//onClick:= anevent;
+</span><span class="pas1-space"> </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;</span><span class="pas1-space"> 
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> ACreateComPort</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Sender</span><span class="pas1-symbol">:</span><span class="pas1-space"> TObject</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  cPort</span><span class="pas1-symbol">:=</span><span class="pas1-space"> TComPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Create</span><span class="pas1-symbol">(</span><span class="pas1-identifier">self</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> cPort </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    BaudRate</span><span class="pas1-symbol">:=</span><span class="pas1-space"> br9600</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    Port</span><span class="pas1-symbol">:=</span><span class="pas1-space"> COMPORT</span><span class="pas1-symbol">;</span><span class="pas1-space"> </span><span class="pas1-comment">//'COM5';
+</span><span class="pas1-space">    Parity</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Bits</span><span class="pas1-symbol">:=</span><span class="pas1-space"> prNone</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    StopBits</span><span class="pas1-symbol">:=</span><span class="pas1-space"> sbOneStopBit</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    DataBits</span><span class="pas1-symbol">:=</span><span class="pas1-space"> dbEight</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   </span><span class="pas1-comment">{FlowControl.OutCTSFlow:= False;
+    FlowControl.OutDSRFlow:= False;
+    FlowControl.XonXoffOut:= False;
+    FlowControl.XonXoffIn:= False;}
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  statBar</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Panels</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">].</span><span class="pas1-identifier">Text</span><span class="pas1-symbol">:=</span><span class="pas1-string">'Pre Port in use '</span><span class="pas1-symbol">+</span><span class="pas1-space"> cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Port</span><span class="pas1-symbol">;</span><span class="pas1-space"> </span><span class="pas1-comment">//predefined Port at start
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Connected</span><span class="pas1-symbol">=</span><span class="pas1-identifier">true </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    statBar</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Panels</span><span class="pas1-symbol">[</span><span class="pas1-number">1</span><span class="pas1-symbol">].</span><span class="pas1-identifier">Text</span><span class="pas1-symbol">:=</span><span class="pas1-string">'Connected'</span><span class="pas1-space">   
+    statBar</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Panels</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">].</span><span class="pas1-identifier">Text</span><span class="pas1-symbol">:=</span><span class="pas1-string">' Port in use '</span><span class="pas1-symbol">+</span><span class="pas1-space"> cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Port</span><span class="pas1-symbol">;</span><span class="pas1-space">      
+  </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    statBar</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Panels</span><span class="pas1-symbol">[</span><span class="pas1-number">1</span><span class="pas1-symbol">].</span><span class="pas1-identifier">Text</span><span class="pas1-symbol">:=</span><span class="pas1-string">'Disconnected'
+</span><span class="pas1-space">    statBar</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Panels</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">].</span><span class="pas1-identifier">Text</span><span class="pas1-symbol">:=</span><span class="pas1-string">' Port closed '</span><span class="pas1-symbol">+</span><span class="pas1-space"> cPort</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Port</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;</span><span class="pas1-space">        
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-space">   
+</span><span class="pas1-comment">//******************************* Form Build********************************
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> AInitComPortForm</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> img</span><span class="pas1-symbol">:</span><span class="pas1-space"> TImage</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space"> comFrm</span><span class="pas1-symbol">:=</span><span class="pas1-space"> TForm</span><span class="pas1-symbol">.</span><span class="pas1-identifier">create</span><span class="pas1-symbol">(</span><span class="pas1-identifier">self</span><span class="pas1-symbol">);
+</span><span class="pas1-space"> img</span><span class="pas1-symbol">:=</span><span class="pas1-space"> TImage</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Create</span><span class="pas1-symbol">(</span><span class="pas1-identifier">comFrm</span><span class="pas1-symbol">);
+</span><span class="pas1-space"> </span><span class="pas1-reservedword">with</span><span class="pas1-space"> img </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   parent</span><span class="pas1-symbol">:=</span><span class="pas1-space"> comFrm</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   setbounds</span><span class="pas1-symbol">(</span><span class="pas1-number">250</span><span class="pas1-symbol">,</span><span class="pas1-number">100</span><span class="pas1-symbol">,</span><span class="pas1-number">400</span><span class="pas1-symbol">,</span><span class="pas1-number">300</span><span class="pas1-symbol">)
+</span><span class="pas1-space"> </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space"> </span><span class="pas1-reservedword">with</span><span class="pas1-space"> comFrm </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   FormStyle</span><span class="pas1-symbol">:=</span><span class="pas1-space"> fsStayOnTop</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   Position</span><span class="pas1-symbol">:=</span><span class="pas1-space"> poScreenCenter</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   caption</span><span class="pas1-symbol">:=</span><span class="pas1-string">'COM &amp; Arduino RGB LED'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   width</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">700</span><span class="pas1-symbol">;</span><span class="pas1-space"> height</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">570</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   </span><span class="pas1-comment">//onCreate:= @TForm1_FormCreate;        
+</span><span class="pas1-space">   onClose</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-symbol">@</span><span class="pas1-identifier">TForm1_FormClose</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   Show</span><span class="pas1-symbol">;
+</span><span class="pas1-space">   img</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Canvas</span><span class="pas1-symbol">.</span><span class="pas1-identifier">brush</span><span class="pas1-symbol">.</span><span class="pas1-identifier">bitmap</span><span class="pas1-symbol">:=</span><span class="pas1-space"> getBitmapObject</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Exepath</span><span class="pas1-symbol">+</span><span class="pas1-identifier">BACKMAP</span><span class="pas1-symbol">);
+</span><span class="pas1-space">   img</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Canvas</span><span class="pas1-symbol">.</span><span class="pas1-identifier">FillRect</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Rect</span><span class="pas1-symbol">(</span><span class="pas1-number">420</span><span class="pas1-symbol">,</span><span class="pas1-number">300</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">))
+</span><span class="pas1-space"> </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-space"> btn_Setup</span><span class="pas1-symbol">:=</span><span class="pas1-identifier">TBitBtn</span><span class="pas1-symbol">.</span><span class="pas1-identifier">create</span><span class="pas1-symbol">(</span><span class="pas1-identifier">comfrm</span><span class="pas1-symbol">);</span><span class="pas1-space">   </span><span class="pas1-comment">//Constructors
+</span><span class="pas1-space"> btn_connect</span><span class="pas1-symbol">:=</span><span class="pas1-identifier">TBitBtn</span><span class="pas1-symbol">.</span><span class="pas1-identifier">create</span><span class="pas1-symbol">(</span><span class="pas1-identifier">comfrm</span><span class="pas1-symbol">);
+</span><span class="pas1-space"> btn_loopsos</span><span class="pas1-symbol">:=</span><span class="pas1-identifier">TBitBtn</span><span class="pas1-symbol">.</span><span class="pas1-identifier">create</span><span class="pas1-symbol">(</span><span class="pas1-identifier">comfrm</span><span class="pas1-symbol">);
+</span><span class="pas1-space"> btn_loopsos</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Enabled</span><span class="pas1-symbol">:=</span><span class="pas1-identifier">false</span><span class="pas1-symbol">;</span><span class="pas1-space">          
+ btn_Setup</span><span class="pas1-symbol">.</span><span class="pas1-identifier">onClick</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-symbol">@</span><span class="pas1-identifier">TForm1_SetupClick</span><span class="pas1-symbol">;
+</span><span class="pas1-space"> BtnFactory</span><span class="pas1-symbol">(</span><span class="pas1-number">20</span><span class="pas1-symbol">,</span><span class="pas1-number">440</span><span class="pas1-symbol">,</span><span class="pas1-number">150</span><span class="pas1-symbol">,</span><span class="pas1-number">55</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-string">'&amp;COM Settings'</span><span class="pas1-symbol">,</span><span class="pas1-string">'LEDbulbon'</span><span class="pas1-symbol">,</span><span class="pas1-identifier">btn_Setup</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-reservedword">NIL</span><span class="pas1-symbol">);
+</span><span class="pas1-space"> btn_connect</span><span class="pas1-symbol">.</span><span class="pas1-identifier">onClick</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-symbol">@</span><span class="pas1-identifier">TForm1_connectClick</span><span class="pas1-symbol">;
+</span><span class="pas1-space"> BtnFactory</span><span class="pas1-symbol">(</span><span class="pas1-number">180</span><span class="pas1-symbol">,</span><span class="pas1-number">440</span><span class="pas1-symbol">,</span><span class="pas1-number">150</span><span class="pas1-symbol">,</span><span class="pas1-number">55</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-string">'C&amp;onnect Node'</span><span class="pas1-symbol">,</span><span class="pas1-string">'CL_MPNEXT'</span><span class="pas1-symbol">,</span><span class="pas1-identifier">btn_connect</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-reservedword">NIL</span><span class="pas1-symbol">);
+</span><span class="pas1-space"> btn_loopsos</span><span class="pas1-symbol">.</span><span class="pas1-identifier">onClick</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-symbol">@</span><span class="pas1-identifier">TForm1_Rainbowloop</span><span class="pas1-symbol">;
+</span><span class="pas1-space"> BtnFactory</span><span class="pas1-symbol">(</span><span class="pas1-number">500</span><span class="pas1-symbol">,</span><span class="pas1-number">440</span><span class="pas1-symbol">,</span><span class="pas1-number">150</span><span class="pas1-symbol">,</span><span class="pas1-number">55</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-string">'&amp;Rainbow Rising'</span><span class="pas1-symbol">,</span><span class="pas1-string">'CL_MPRECORD'</span><span class="pas1-symbol">,</span><span class="pas1-identifier">btn_loopsos</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-reservedword">NIL</span><span class="pas1-symbol">);
+
+</span><span class="pas1-space">  chk_led1</span><span class="pas1-symbol">:=</span><span class="pas1-space"> TCheckBox</span><span class="pas1-symbol">.</span><span class="pas1-identifier">create</span><span class="pas1-symbol">(</span><span class="pas1-identifier">self</span><span class="pas1-symbol">)
+</span><span class="pas1-space">  chk_led1</span><span class="pas1-symbol">.</span><span class="pas1-identifier">OnClick</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-symbol">@</span><span class="pas1-identifier">chk_led1Click</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  CheckBoxFactory</span><span class="pas1-symbol">(</span><span class="pas1-number">16</span><span class="pas1-symbol">,</span><span class="pas1-number">42</span><span class="pas1-symbol">,</span><span class="pas1-number">57</span><span class="pas1-symbol">,</span><span class="pas1-number">17</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-string">'Led 1'</span><span class="pas1-symbol">,</span><span class="pas1-identifier">chk_led1</span><span class="pas1-symbol">,</span><span class="pas1-reservedword">NIL</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  chk_led2</span><span class="pas1-symbol">:=</span><span class="pas1-space"> TCheckBox</span><span class="pas1-symbol">.</span><span class="pas1-identifier">create</span><span class="pas1-symbol">(</span><span class="pas1-identifier">self</span><span class="pas1-symbol">)
+</span><span class="pas1-space">  chk_led2</span><span class="pas1-symbol">.</span><span class="pas1-identifier">OnClick</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-symbol">@</span><span class="pas1-identifier">chk_led2Click</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  CheckBoxFactory</span><span class="pas1-symbol">(</span><span class="pas1-number">16</span><span class="pas1-symbol">,</span><span class="pas1-number">66</span><span class="pas1-symbol">,</span><span class="pas1-number">57</span><span class="pas1-symbol">,</span><span class="pas1-number">17</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-string">'Led 2'</span><span class="pas1-symbol">,</span><span class="pas1-identifier">chk_led2</span><span class="pas1-symbol">,</span><span class="pas1-reservedword">NIL</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  chk_led3</span><span class="pas1-symbol">:=</span><span class="pas1-space"> TCheckBox</span><span class="pas1-symbol">.</span><span class="pas1-identifier">create</span><span class="pas1-symbol">(</span><span class="pas1-identifier">self</span><span class="pas1-symbol">)
+</span><span class="pas1-space">  chk_led3</span><span class="pas1-symbol">.</span><span class="pas1-identifier">OnClick</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-symbol">@</span><span class="pas1-identifier">chk_led3Click</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  CheckBoxFactory</span><span class="pas1-symbol">(</span><span class="pas1-number">16</span><span class="pas1-symbol">,</span><span class="pas1-number">90</span><span class="pas1-symbol">,</span><span class="pas1-number">57</span><span class="pas1-symbol">,</span><span class="pas1-number">17</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-string">'Led 3'</span><span class="pas1-symbol">,</span><span class="pas1-identifier">chk_led3</span><span class="pas1-symbol">,</span><span class="pas1-reservedword">NIL</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  chk_led4</span><span class="pas1-symbol">:=</span><span class="pas1-space"> TCheckBox</span><span class="pas1-symbol">.</span><span class="pas1-identifier">create</span><span class="pas1-symbol">(</span><span class="pas1-identifier">self</span><span class="pas1-symbol">)
+</span><span class="pas1-space">  chk_led4</span><span class="pas1-symbol">.</span><span class="pas1-identifier">OnClick</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-symbol">@</span><span class="pas1-identifier">chk_led4Click</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  CheckBoxFactory</span><span class="pas1-symbol">(</span><span class="pas1-number">16</span><span class="pas1-symbol">,</span><span class="pas1-number">114</span><span class="pas1-symbol">,</span><span class="pas1-number">57</span><span class="pas1-symbol">,</span><span class="pas1-number">17</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-string">'Led 4'</span><span class="pas1-symbol">,</span><span class="pas1-identifier">chk_led4</span><span class="pas1-symbol">,</span><span class="pas1-reservedword">NIL</span><span class="pas1-symbol">);
+
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TLabel</span><span class="pas1-symbol">.</span><span class="pas1-identifier">create</span><span class="pas1-symbol">(</span><span class="pas1-identifier">self</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent</span><span class="pas1-symbol">:=</span><span class="pas1-space"> comfrm</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    setBounds</span><span class="pas1-symbol">(</span><span class="pas1-number">16</span><span class="pas1-symbol">,</span><span class="pas1-number">12</span><span class="pas1-symbol">,</span><span class="pas1-number">69</span><span class="pas1-symbol">,</span><span class="pas1-number">13</span><span class="pas1-symbol">)
+</span><span class="pas1-space">    Caption</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-string">'LED Control'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    Font</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Color</span><span class="pas1-symbol">:=</span><span class="pas1-space"> clMaroon</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    Font</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Size</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">14</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TLabel</span><span class="pas1-symbol">.</span><span class="pas1-identifier">create</span><span class="pas1-symbol">(</span><span class="pas1-identifier">self</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent</span><span class="pas1-symbol">:=</span><span class="pas1-space"> comfrm</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    setBounds</span><span class="pas1-symbol">(</span><span class="pas1-number">155</span><span class="pas1-symbol">,</span><span class="pas1-number">12</span><span class="pas1-symbol">,</span><span class="pas1-number">69</span><span class="pas1-symbol">,</span><span class="pas1-number">13</span><span class="pas1-symbol">)
+</span><span class="pas1-space">    Caption</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-string">'Arduino PIN'</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    Font</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Color</span><span class="pas1-symbol">:=</span><span class="pas1-space"> clNavy</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    Font</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Size</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">14</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  LabelFactory</span><span class="pas1-symbol">(</span><span class="pas1-number">80</span><span class="pas1-symbol">,</span><span class="pas1-number">42</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">13</span><span class="pas1-symbol">,</span><span class="pas1-space"> SIG</span><span class="pas1-symbol">)
+</span><span class="pas1-space">  LabelFactory</span><span class="pas1-symbol">(</span><span class="pas1-number">80</span><span class="pas1-symbol">,</span><span class="pas1-number">66</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">13</span><span class="pas1-symbol">,</span><span class="pas1-space"> SIG</span><span class="pas1-symbol">)
+</span><span class="pas1-space">  LabelFactory</span><span class="pas1-symbol">(</span><span class="pas1-number">80</span><span class="pas1-symbol">,</span><span class="pas1-number">90</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">13</span><span class="pas1-symbol">,</span><span class="pas1-space"> SIG</span><span class="pas1-symbol">)
+</span><span class="pas1-space">  LabelFactory</span><span class="pas1-symbol">(</span><span class="pas1-number">80</span><span class="pas1-symbol">,</span><span class="pas1-number">114</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">13</span><span class="pas1-symbol">,</span><span class="pas1-space"> SIG</span><span class="pas1-symbol">)
+</span><span class="pas1-space">  LabelFactory</span><span class="pas1-symbol">(</span><span class="pas1-number">156</span><span class="pas1-symbol">,</span><span class="pas1-number">42</span><span class="pas1-symbol">,</span><span class="pas1-number">38</span><span class="pas1-symbol">,</span><span class="pas1-number">13</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-string">'Dig 11 Red'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">  LabelFactory</span><span class="pas1-symbol">(</span><span class="pas1-number">156</span><span class="pas1-symbol">,</span><span class="pas1-number">66</span><span class="pas1-symbol">,</span><span class="pas1-number">38</span><span class="pas1-symbol">,</span><span class="pas1-number">13</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-string">'Dig 12 Green'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">  LabelFactory</span><span class="pas1-symbol">(</span><span class="pas1-number">156</span><span class="pas1-symbol">,</span><span class="pas1-number">90</span><span class="pas1-symbol">,</span><span class="pas1-number">38</span><span class="pas1-symbol">,</span><span class="pas1-number">13</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-string">'Dig 13 Int Blue'</span><span class="pas1-symbol">)
+</span><span class="pas1-space">  LabelFactory</span><span class="pas1-symbol">(</span><span class="pas1-number">156</span><span class="pas1-symbol">,</span><span class="pas1-number">114</span><span class="pas1-symbol">,</span><span class="pas1-number">38</span><span class="pas1-symbol">,</span><span class="pas1-number">13</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-string">'Dig 6 Extra'</span><span class="pas1-symbol">)
+</span><span class="pas1-space"> 
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TDateTimePicker</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Create</span><span class="pas1-symbol">(</span><span class="pas1-identifier">self</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent</span><span class="pas1-symbol">:=</span><span class="pas1-space"> comfrm</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    Date</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    top</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">190</span><span class="pas1-symbol">;</span><span class="pas1-space"> left</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">15</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    calAlignment</span><span class="pas1-symbol">:=</span><span class="pas1-space"> albottom</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  statBar</span><span class="pas1-symbol">:=</span><span class="pas1-space"> TStatusBar</span><span class="pas1-symbol">.</span><span class="pas1-identifier">create</span><span class="pas1-symbol">(</span><span class="pas1-identifier">self</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> statBar </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent</span><span class="pas1-symbol">:=</span><span class="pas1-space"> comFrm</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    Panels</span><span class="pas1-symbol">.</span><span class="pas1-identifier">add</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    panels</span><span class="pas1-symbol">.</span><span class="pas1-identifier">items</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">].</span><span class="pas1-identifier">width</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">200</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    Panels</span><span class="pas1-symbol">.</span><span class="pas1-identifier">add</span><span class="pas1-symbol">;
+</span><span class="pas1-space">    panels</span><span class="pas1-symbol">.</span><span class="pas1-identifier">items</span><span class="pas1-symbol">[</span><span class="pas1-number">1</span><span class="pas1-symbol">].</span><span class="pas1-identifier">width</span><span class="pas1-symbol">:=</span><span class="pas1-space"> </span><span class="pas1-number">150</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-comment">//TForm1_FormCreateCom(self); 
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;</span><span class="pas1-space">  </span><span class="pas1-comment">//***********************End Form Build************************
+
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> CheckComPort</span><span class="pas1-symbol">:</span><span class="pas1-space"> boolean</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> ComPorts</span><span class="pas1-symbol">:</span><span class="pas1-space"> TStringlist</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  result</span><span class="pas1-symbol">:=</span><span class="pas1-space"> false</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  ComPorts</span><span class="pas1-symbol">:=</span><span class="pas1-space"> TStringlist</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Create</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    EnumComPorts</span><span class="pas1-symbol">(</span><span class="pas1-identifier">ComPorts</span><span class="pas1-symbol">);
+</span><span class="pas1-space">    PrintF</span><span class="pas1-symbol">(</span><span class="pas1-string">'COM Port Check of Arduino %d COM: '</span><span class="pas1-symbol">,[</span><span class="pas1-identifier">ComPorts</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">]]);</span><span class="pas1-space">  
+  </span><span class="pas1-reservedword">except
+</span><span class="pas1-space">    PrintF</span><span class="pas1-symbol">(</span><span class="pas1-string">'No COM Ports'</span><span class="pas1-symbol">,[]);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;</span><span class="pas1-space">    
+  ComPorts</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Free</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  result</span><span class="pas1-symbol">:=</span><span class="pas1-space"> true</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;</span><span class="pas1-space">  
+
+
+</span><span class="pas1-reservedword">Begin</span><span class="pas1-space"> </span><span class="pas1-comment">//Main Server App 
+</span><span class="pas1-space">   writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'machine IP: '</span><span class="pas1-symbol">+</span><span class="pas1-identifier">GetIpAddress</span><span class="pas1-symbol">(</span><span class="pas1-identifier">getHostName</span><span class="pas1-symbol">))
+</span><span class="pas1-space">   writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'Thread ID :'</span><span class="pas1-symbol">+</span><span class="pas1-identifier">intToStr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">CurrentThreadID</span><span class="pas1-symbol">))
+</span><span class="pas1-space">   writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'Process ID :'</span><span class="pas1-symbol">+</span><span class="pas1-identifier">intToStr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">CurrentProcessID</span><span class="pas1-symbol">))
+</span><span class="pas1-space">   writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'Machine name is: '</span><span class="pas1-symbol">+</span><span class="pas1-identifier">getHostName</span><span class="pas1-symbol">)
+</span><span class="pas1-space">   writeln</span><span class="pas1-symbol">(</span><span class="pas1-string">'User name is: '</span><span class="pas1-symbol">+</span><span class="pas1-identifier">getUserName</span><span class="pas1-symbol">)
+
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-reservedword">Not</span><span class="pas1-space"> IsTCPPortOpen</span><span class="pas1-symbol">(</span><span class="pas1-identifier">APORT</span><span class="pas1-symbol">,</span><span class="pas1-identifier">getHostIP</span><span class="pas1-symbol">)</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space">  </span><span class="pas1-comment">//firewall?
+</span><span class="pas1-space">     HTTPServerStartExecute</span><span class="pas1-symbol">(</span><span class="pas1-identifier">self</span><span class="pas1-symbol">);
+
+</span><span class="pas1-space">   CheckComPort 
+   AInitComPortForm</span><span class="pas1-symbol">;</span><span class="pas1-space"> 
+   ACreateComPort</span><span class="pas1-symbol">(</span><span class="pas1-identifier">self</span><span class="pas1-symbol">);</span><span class="pas1-space"> 
+   AOpenBrowser</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-comment">//GetTimeZoneInformation
+</span><span class="pas1-reservedword">End</span><span class="pas1-symbol">.
+
+
+</span><span class="pas1-reservedword">def</span><span class="pas1-space"> Docu </span><span class="pas1-reservedword">and</span><span class="pas1-space"> </span><span class="pas1-reservedword">Arduino</span><span class="pas1-space"> Code below tested </span><span class="pas1-reservedword">with</span><span class="pas1-space"> </span><span class="pas1-reservedword">Android</span><span class="pas1-space"> seekBar </span><span class="pas1-reservedword">and</span><span class="pas1-space"> Chrome
+</span><span class="pas1-comment">//***********************************Web Code Snippets******************
+</span><span class="pas1-space"> </span><span class="pas1-comment">(*procedure AccessDenied;
+  begin
+    ResponseInfo.ContentText:=
+      '&lt;html&gt;&lt;head&gt;&lt;title&gt;Error&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;h1&gt;Access denied&lt;/h1&gt;'#13 +
+      'You do not have sufficient priviligies to access this document.&lt;/body&gt;&lt;/html&gt;';
+    ResponseInfo.ResponseNo:= 403;
+  end;*)
+</span><span class="pas1-space">  
+   </span><span class="pas1-comment">(*procedure AuthFailed;
+     begin
+      ResponseInfo.ContentText:=
+      '&lt;html&gt;&lt;head&gt;&lt;title&gt;Error&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;h1&gt;Authentication failed&lt;/h1&gt;'#13 +
+      'Check the file ip_a.ini to discover the demo password:&lt;br&gt;&lt;ul&gt;&lt;li&gt;Search for '#13 +
+      '&lt;b&gt;AuthUsername&lt;/b&gt; in &lt;b&gt;maXboxMain.pas&lt;/b&gt;!&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;';
+    ResponseInfo.AuthRealm:= CAUTHENTICATIONREALM; *)
+
+</span><span class="pas1-space">    </span><span class="pas1-comment">(*if not HTTPServer.Active then begin
+    HTTPServer.Bindings.Clear;
+    Binding := HTTPServer.Bindings.Add;
+    Binding.Port := StrToIntDef(edPort.text, 80);
+    Binding.IP := '127.0.0.1';
+  end;*)
+</span><span class="pas1-space">    </span><span class="pas1-comment">//statusbar1.SimpleText:= 'http active on v1.9';
+</span><span class="pas1-space">     </span><span class="pas1-comment">//+ [IdServerInterceptOpenSSL.SSLOptions.Method]
+</span><span class="pas1-space">    </span><span class="pas1-comment">//DisplayMessage(Format('OpenSSLVersion is: %s', [getOpenSSLVersion]))
+</span><span class="pas1-space">     
+ </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TfrmServer</span><span class="pas1-symbol">.</span><span class="pas1-identifier">pgpEHTMLHTMLTag</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Sender</span><span class="pas1-symbol">:</span><span class="pas1-space"> TObject</span><span class="pas1-symbol">;</span><span class="pas1-space"> Tag</span><span class="pas1-symbol">:</span><span class="pas1-space"> TTag</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">const</span><span class="pas1-space"> TagString</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;</span><span class="pas1-space"> TagParams</span><span class="pas1-symbol">:</span><span class="pas1-space"> TStrings</span><span class="pas1-symbol">;</span><span class="pas1-space"> </span><span class="pas1-reservedword">var</span><span class="pas1-space"> ReplaceText</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  LTag</span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  LTag </span><span class="pas1-symbol">:=</span><span class="pas1-space"> LowerCase</span><span class="pas1-symbol">(</span><span class="pas1-identifier">TagString</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> LTag </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-string">'date'</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    ReplaceText </span><span class="pas1-symbol">:=</span><span class="pas1-space"> DateToStr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Now</span><span class="pas1-symbol">)
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> LTag </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-string">'time'</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    ReplaceText </span><span class="pas1-symbol">:=</span><span class="pas1-space"> TimeToStr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Now</span><span class="pas1-symbol">)
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> LTag </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-string">'datetime'</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    ReplaceText </span><span class="pas1-symbol">:=</span><span class="pas1-space"> DateTimeToStr</span><span class="pas1-symbol">(</span><span class="pas1-identifier">Now</span><span class="pas1-symbol">)
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> LTag </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-string">'server'</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">    ReplaceText </span><span class="pas1-symbol">:=</span><span class="pas1-space"> httpServer</span><span class="pas1-symbol">.</span><span class="pas1-identifier">ServerSoftware</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-identifier">Port </span><span class="pas1-reservedword">Not</span><span class="pas1-space"> Open</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Fault </span><span class="pas1-symbol">:</span><span class="pas1-space"> Port </span><span class="pas1-reservedword">Not</span><span class="pas1-space"> Open</span><span class="pas1-symbol">.</span><span class="pas1-space"> Date</span><span class="pas1-symbol">/</span><span class="pas1-identifier">time </span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-float">30.09.2012</span><span class="pas1-space"> </span><span class="pas1-number">17</span><span class="pas1-symbol">:</span><span class="pas1-number">53</span><span class="pas1-symbol">:</span><span class="pas1-number">52</span><span class="pas1-space"> Stack dump </span><span class="pas1-symbol">----------</span><span class="pas1-space"> </span><span class="pas1-number">0055632</span><span class="pas1-identifier">D </span><span class="pas1-number">00556</span><span class="pas1-identifier">DB4 </span><span class="pas1-float">00556E</span><span class="pas1-identifier">FF </span><span class="pas1-number">00556</span><span class="pas1-identifier">F71 </span><span class="pas1-float">0010E</span><span class="pas1-identifier">A73 </span><span class="pas1-number">0010</span><span class="pas1-identifier">FA01 </span><span class="pas1-number">0001</span><span class="pas1-identifier">A20A </span><span class="pas1-number">00103</span><span class="pas1-identifier">D2F </span><span class="pas1-number">000024</span><span class="pas1-identifier">DA </span><span class="pas1-number">000055</span><span class="pas1-identifier">C5 </span><span class="pas1-number">00005608</span><span class="pas1-space"> </span><span class="pas1-float">000056E5</span><span class="pas1-space"> </span><span class="pas1-number">000</span><span class="pas1-identifier">FF62D </span><span class="pas1-number">00101499</span><span class="pas1-space"> </span><span class="pas1-number">00111208</span><span class="pas1-space"> </span><span class="pas1-number">0070</span><span class="pas1-identifier">F174 </span><span class="pas1-float">00109E7E</span><span class="pas1-space"> </span><span class="pas1-number">0000</span><span class="pas1-identifier">BC4C </span><span class="pas1-number">00108</span><span class="pas1-identifier">D45 </span><span class="pas1-number">00004489</span><span class="pas1-space"> </span><span class="pas1-float">00113E79</span><span class="pas1-space"> </span><span class="pas1-number">00113923</span><span class="pas1-space"> </span><span class="pas1-number">0046</span><span class="pas1-identifier">A014 </span><span class="pas1-number">0046</span><span class="pas1-identifier">A7B7 </span><span class="pas1-number">0046</span><span class="pas1-identifier">A90C </span><span class="pas1-number">00308923</span><span class="pas1-space"> </span><span class="pas1-float">002228E</span><span class="pas1-identifier">D </span><span class="pas1-float">0022293E</span><span class="pas1-space"> </span><span class="pas1-number">0022295</span><span class="pas1-identifier">B </span><span class="pas1-number">00222985</span><span class="pas1-space"> </span><span class="pas1-number">0003644</span><span class="pas1-identifier">F </span><span class="pas1-number">00005466</span><span class="pas1-space"> Fault </span><span class="pas1-symbol">:</span><span class="pas1-space"> Port </span><span class="pas1-reservedword">Not</span><span class="pas1-space"> Open</span><span class="pas1-symbol">.</span><span class="pas1-identifier">Fault </span><span class="pas1-symbol">:</span><span class="pas1-space"> Port </span><span class="pas1-reservedword">Not</span><span class="pas1-space"> Open</span><span class="pas1-symbol">.</span><span class="pas1-space"> Date</span><span class="pas1-symbol">/</span><span class="pas1-identifier">time </span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-float">30.09.2012</span><span class="pas1-space"> </span><span class="pas1-number">17</span><span class="pas1-symbol">:</span><span class="pas1-number">53</span><span class="pas1-symbol">:</span><span class="pas1-number">52</span><span class="pas1-space"> Stack dump </span><span class="pas1-symbol">----------</span><span class="pas1-space"> </span><span class="pas1-number">0055632</span><span class="pas1-identifier">D </span><span class="pas1-number">00556</span><span class="pas1-identifier">DB4 </span><span class="pas1-float">00556E</span><span class="pas1-identifier">FF </span><span class="pas1-number">00556</span><span class="pas1-identifier">F71 </span><span class="pas1-float">0010E</span><span class="pas1-identifier">A73 </span><span class="pas1-number">0010</span><span class="pas1-identifier">FA01 </span><span class="pas1-number">0001</span><span class="pas1-identifier">A20A </span><span class="pas1-number">00103</span><span class="pas1-identifier">D2F </span><span class="pas1-number">000024</span><span class="pas1-identifier">DA </span><span class="pas1-number">000055</span><span class="pas1-identifier">C5 </span><span class="pas1-number">00005608</span><span class="pas1-space"> </span><span class="pas1-float">000056E5</span><span class="pas1-space"> </span><span class="pas1-number">000</span><span class="pas1-identifier">FF62D </span><span class="pas1-number">00101499</span><span class="pas1-space"> </span><span class="pas1-number">00111208</span><span class="pas1-space"> </span><span class="pas1-number">0070</span><span class="pas1-identifier">F174 </span><span class="pas1-float">00109E7E</span><span class="pas1-space"> </span><span class="pas1-number">0000</span><span class="pas1-identifier">BC4C </span><span class="pas1-number">00108</span><span class="pas1-identifier">D45 </span><span class="pas1-number">00004489</span><span class="pas1-space"> </span><span class="pas1-float">00113E79</span><span class="pas1-space"> </span><span class="pas1-number">00113923</span><span class="pas1-space"> </span><span class="pas1-number">0046</span><span class="pas1-identifier">A014 </span><span class="pas1-number">0046</span><span class="pas1-identifier">A7B7 </span><span class="pas1-number">0046</span><span class="pas1-identifier">A90C </span><span class="pas1-number">00308923</span><span class="pas1-space"> </span><span class="pas1-float">002228E</span><span class="pas1-identifier">D </span><span class="pas1-float">0022293E</span><span class="pas1-space"> </span><span class="pas1-number">0022295</span><span class="pas1-identifier">B </span><span class="pas1-number">00222985</span><span class="pas1-space"> </span><span class="pas1-number">0003644</span><span class="pas1-identifier">F </span><span class="pas1-number">00005466</span><span class="pas1-space"> Date</span><span class="pas1-symbol">/</span><span class="pas1-identifier">time </span><span class="pas1-symbol">:</span><span class="pas1-space"> </span><span class="pas1-float">30.09.2012</span><span class="pas1-space"> </span><span class="pas1-number">17</span><span class="pas1-symbol">:</span><span class="pas1-number">53</span><span class="pas1-symbol">:</span><span class="pas1-number">52</span><span class="pas1-space"> Stack dump 
+
+</span><span class="pas1-comment">//*******************************************Arduino Code**********************
+</span><span class="pas1-symbol">/*
+</span><span class="pas1-space"> </span><span class="pas1-symbol">*</span><span class="pas1-space"> Delphi LEDs Control
+ </span><span class="pas1-symbol">*</span><span class="pas1-space"> </span><span class="pas1-symbol">-----------------
+</span><span class="pas1-space"> </span><span class="pas1-symbol">*</span><span class="pas1-space"> Turns </span><span class="pas1-reservedword">on</span><span class="pas1-space"> </span><span class="pas1-reservedword">and</span><span class="pas1-space"> off </span><span class="pas1-number">5</span><span class="pas1-space"> light emitting diodes</span><span class="pas1-symbol">(</span><span class="pas1-identifier">LED</span><span class="pas1-symbol">)</span><span class="pas1-space"> connected </span><span class="pas1-reservedword">to</span><span class="pas1-space"> digital  
+ </span><span class="pas1-symbol">*</span><span class="pas1-space"> pins </span><span class="pas1-number">2</span><span class="pas1-space"> thru </span><span class="pas1-float">6.</span><span class="pas1-space"> The LEDs will be controlled </span><span class="pas1-reservedword">using</span><span class="pas1-space"> check boxes </span><span class="pas1-reservedword">on</span><span class="pas1-space"> </span><span class="pas1-reservedword">maXbox
+</span><span class="pas1-space"> </span><span class="pas1-symbol">*</span><span class="pas1-space"> that sends serial data </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-reservedword">Arduino</span><span class="pas1-space"> Board</span><span class="pas1-symbol">.
+</span><span class="pas1-space"> </span><span class="pas1-symbol">*
+</span><span class="pas1-space"> </span><span class="pas1-symbol">*</span><span class="pas1-space"> IMPORTANT</span><span class="pas1-symbol">!!:</span><span class="pas1-space"> Don</span><span class="pas1-string">'t forget to download the Example 305_webserver_arduino3.txt that controls the leds connected to arduino board.
+</span><span class="pas1-space"> </span><span class="pas1-symbol">*
+</span><span class="pas1-space"> </span><span class="pas1-symbol">*</span><span class="pas1-space"> Created April </span><span class="pas1-number">02</span><span class="pas1-space"> </span><span class="pas1-number">2009
+</span><span class="pas1-space"> </span><span class="pas1-symbol">*</span><span class="pas1-space"> copyleft </span><span class="pas1-number">2009</span><span class="pas1-space"> Roberto Ramirez </span><span class="pas1-symbol">&lt;</span><span class="pas1-identifier">beta</span><span class="pas1-symbol">@</span><span class="pas1-identifier">thepenguincult</span><span class="pas1-symbol">.</span><span class="pas1-identifier">com</span><span class="pas1-symbol">&gt;
+</span><span class="pas1-space"> </span><span class="pas1-symbol">*</span><span class="pas1-space"> Full Source code at http</span><span class="pas1-symbol">:</span><span class="pas1-comment">//www.thepenguincult.com/proyectos/arduino-delphi-control/
+</span><span class="pas1-space"> </span><span class="pas1-symbol">*</span><span class="pas1-space"> 
+ </span><span class="pas1-symbol">*/
+
+</span><span class="pas1-identifier">int val </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-symbol">;</span><span class="pas1-space">       </span><span class="pas1-comment">// variable to store the data from the serial port
+</span><span class="pas1-identifier">int ledPin1 </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">;</span><span class="pas1-space">   </span><span class="pas1-comment">// LED connected to digital pin 2
+</span><span class="pas1-identifier">int ledPin2 </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">3</span><span class="pas1-symbol">;</span><span class="pas1-space">   </span><span class="pas1-comment">// LED connected to digital pin 3
+</span><span class="pas1-identifier">int ledPin3 </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">4</span><span class="pas1-symbol">;</span><span class="pas1-space">   </span><span class="pas1-comment">// LED connected to digital pin 4
+</span><span class="pas1-identifier">int ledPin4 </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">5</span><span class="pas1-symbol">;</span><span class="pas1-space">   </span><span class="pas1-comment">// LED connected to digital pin 5
+</span><span class="pas1-identifier">int ledPin5 </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">6</span><span class="pas1-symbol">;</span><span class="pas1-space">   </span><span class="pas1-comment">// LED connected to digital pin 6
+
+</span><span class="pas1-identifier">void setup</span><span class="pas1-symbol">()</span><span class="pas1-space"> </span><span class="pas1-comment">{
+
+  pinMode(ledPin1,OUTPUT);    // declare the LED's pin as output
+  pinMode(ledPin2,OUTPUT);    // declare the LED's pin as output
+  pinMode(ledPin3,OUTPUT);    // declare the LED's pin as output
+  pinMode(ledPin4,OUTPUT);    // declare the LED's pin as output
+  pinMode(ledPin5,OUTPUT);    // declare the LED's pin as output
+  Serial.begin(9600);        // connect to the serial port
+}
+
+</span><span class="pas1-identifier">void loop </span><span class="pas1-symbol">()</span><span class="pas1-space"> </span><span class="pas1-comment">{
+  val = Serial.read();      // read the serial port
+
+  if (val !=-1){
+
+    if (val=='1'){
+      digitalWrite(ledPin1,HIGH);
+    }
+</span><span class="pas1-space">    
+    </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">val</span><span class="pas1-symbol">==</span><span class="pas1-string">'A'</span><span class="pas1-symbol">)</span><span class="pas1-comment">{
+      digitalWrite(ledPin1,LOW);
+      }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">val</span><span class="pas1-symbol">==</span><span class="pas1-string">'2'</span><span class="pas1-symbol">)</span><span class="pas1-comment">{
+      digitalWrite(ledPin2,HIGH);
+    }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">val</span><span class="pas1-symbol">==</span><span class="pas1-string">'B'</span><span class="pas1-symbol">)</span><span class="pas1-comment">{
+      digitalWrite(ledPin2,LOW);
+      }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">val</span><span class="pas1-symbol">==</span><span class="pas1-string">'3'</span><span class="pas1-symbol">)</span><span class="pas1-comment">{
+      digitalWrite(ledPin3,HIGH);
+    }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">val</span><span class="pas1-symbol">==</span><span class="pas1-string">'C'</span><span class="pas1-symbol">)</span><span class="pas1-comment">{
+      digitalWrite(ledPin3,LOW);
+      }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">val</span><span class="pas1-symbol">==</span><span class="pas1-string">'4'</span><span class="pas1-symbol">)</span><span class="pas1-comment">{
+      digitalWrite(ledPin4,HIGH);
+    }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">val</span><span class="pas1-symbol">==</span><span class="pas1-string">'D'</span><span class="pas1-symbol">)</span><span class="pas1-comment">{
+      digitalWrite(ledPin4,LOW);
+      }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">val</span><span class="pas1-symbol">==</span><span class="pas1-string">'5'</span><span class="pas1-symbol">)</span><span class="pas1-comment">{
+      digitalWrite(ledPin5,HIGH);
+    }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">val</span><span class="pas1-symbol">==</span><span class="pas1-string">'E'</span><span class="pas1-symbol">)</span><span class="pas1-comment">{
+      digitalWrite(ledPin5,LOW);
+      }
+</span><span class="pas1-space">    </span><span class="pas1-comment">//Serial.println();
+</span><span class="pas1-space">  </span><span class="pas1-symbol">}
+}
+
+
+</span><span class="pas1-comment">//Second Edition RGB LED ***************************************
+//Binary sketch size: 1944 bytes (of a 32256 byte maximum)
+
+</span><span class="pas1-symbol">/*
+</span><span class="pas1-space">  Blink LEDMAX___WebofThings2
+  Turns </span><span class="pas1-reservedword">on</span><span class="pas1-space"> an LED </span><span class="pas1-reservedword">on</span><span class="pas1-space"> </span><span class="pas1-reservedword">for</span><span class="pas1-space"> one second</span><span class="pas1-symbol">,</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> off </span><span class="pas1-reservedword">for</span><span class="pas1-space"> one second</span><span class="pas1-symbol">,</span><span class="pas1-space"> repeatedly</span><span class="pas1-symbol">.
+</span><span class="pas1-space"> 
+  This example code </span><span class="pas1-reservedword">of</span><span class="pas1-space"> </span><span class="pas1-reservedword">maXbox</span><span class="pas1-space"> </span><span class="pas1-reservedword">is</span><span class="pas1-space"> </span><span class="pas1-reservedword">in</span><span class="pas1-space"> the </span><span class="pas1-reservedword">public</span><span class="pas1-space"> domain</span><span class="pas1-symbol">.
+</span><span class="pas1-space"> </span><span class="pas1-symbol">*/
+</span><span class="pas1-space"> 
+  int ledPin11 </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">11</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  int ledPin12 </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">12</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  int ledPin13 </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">13</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  int ledPin6Spec </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">6</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  
+  int counter </span><span class="pas1-symbol">=</span><span class="pas1-number">0</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  int change </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+</span><span class="pas1-space">  int val </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-symbol">;</span><span class="pas1-space">       </span><span class="pas1-comment">// variable to store the data from the serial port
+</span><span class="pas1-space">   
+
+void setup</span><span class="pas1-symbol">()</span><span class="pas1-space"> </span><span class="pas1-comment">{                
+  // initialize the digital pin as an output.
+  // Pin 13 has an LED connected on most Arduino boards:
+ 
+ Serial.begin(9600);  
+  //pinMode(ledPin1, OUTPUT);     
+  pinMode(ledPin11, OUTPUT);     
+  pinMode(ledPin12, OUTPUT);     
+  pinMode(ledPin13, OUTPUT);     
+  pinMode(ledPin6Spec, OUTPUT);     
+}
+
+</span><span class="pas1-identifier">int changeCounter</span><span class="pas1-symbol">()</span><span class="pas1-space"> </span><span class="pas1-comment">{
+  if (counter ==255)
+       change=-1;
+  if (counter ==0)
+       change= 1;
+  counter = counter + change;
+return counter;
+}
+</span><span class="pas1-space">       
+void ledmax</span><span class="pas1-symbol">()</span><span class="pas1-comment">{
+  digitalWrite(ledPin11, HIGH);   // set the LED on
+  delay(500);              // wait for a second
+  digitalWrite(ledPin11, LOW);    // set the LED off
+  delay(500);              // wait for a second
+  digitalWrite(ledPin11, HIGH);   // set the LED on
+  delay(500);              // wait for a second
+  digitalWrite(ledPin11, LOW);    // set the LED off
+  delay(500);              // wait for a second
+ }
+
+</span><span class="pas1-identifier">void loop</span><span class="pas1-symbol">()</span><span class="pas1-space"> </span><span class="pas1-comment">{
+  //digitalWrite(ledPin1, HIGH);   // set the LED on
+  //delay(4000);              // wait for a second
+  //digitalWrite(ledPin1, LOW);    // set the LED off
+  //delay(1000);              // wait for a second
+
+val = Serial.read();      // read the serial port
+
+  if (val !=-1){
+    if (val=='1'){
+      digitalWrite(ledPin11,HIGH);
+    }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">val</span><span class="pas1-symbol">==</span><span class="pas1-string">'A'</span><span class="pas1-symbol">)</span><span class="pas1-comment">{
+      digitalWrite(ledPin11,LOW);
+      }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">val</span><span class="pas1-symbol">==</span><span class="pas1-string">'2'</span><span class="pas1-symbol">)</span><span class="pas1-comment">{
+      digitalWrite(ledPin12,HIGH);
+    }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">val</span><span class="pas1-symbol">==</span><span class="pas1-string">'B'</span><span class="pas1-symbol">)</span><span class="pas1-comment">{
+      digitalWrite(ledPin12,LOW);
+      }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">val</span><span class="pas1-symbol">==</span><span class="pas1-string">'3'</span><span class="pas1-symbol">)</span><span class="pas1-comment">{
+      digitalWrite(ledPin13,HIGH);
+    }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">val</span><span class="pas1-symbol">==</span><span class="pas1-string">'C'</span><span class="pas1-symbol">)</span><span class="pas1-comment">{
+      digitalWrite(ledPin13,LOW);
+      }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">val</span><span class="pas1-symbol">==</span><span class="pas1-string">'4'</span><span class="pas1-symbol">)</span><span class="pas1-comment">{
+      digitalWrite(ledPin6Spec,HIGH);
+    }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-symbol">(</span><span class="pas1-identifier">val</span><span class="pas1-symbol">==</span><span class="pas1-string">'D'</span><span class="pas1-symbol">)</span><span class="pas1-comment">{
+      digitalWrite(ledPin6Spec,LOW);
+      }
+</span><span class="pas1-space">   </span><span class="pas1-comment">//Serial.write('X');
+</span><span class="pas1-space">   Serial</span><span class="pas1-symbol">.</span><span class="pas1-identifier">write</span><span class="pas1-symbol">(</span><span class="pas1-identifier">val</span><span class="pas1-symbol">);
+</span><span class="pas1-space">  </span><span class="pas1-symbol">}
+</span><span class="pas1-space">  </span><span class="pas1-comment">//counter = changeCounter();
+</span><span class="pas1-space">  </span><span class="pas1-comment">//analogWrite(ledPin2, counter);
+</span><span class="pas1-space">  </span><span class="pas1-comment">//delay(10);
+</span><span class="pas1-space">  </span><span class="pas1-comment">//ledmax();
+</span><span class="pas1-space">  </span><span class="pas1-comment">// digitalWrite(13, HIGH);    // set the LED off
+</span><span class="pas1-space">  </span><span class="pas1-comment">//delay(100);              // wait for a second
+</span><span class="pas1-space"> </span><span class="pas1-comment">//digitalWrite(13, LOW);    // set the LED off
+</span><span class="pas1-space">  </span><span class="pas1-comment">//delay(100);              // wait for a second
+</span><span class="pas1-space">  </span><span class="pas1-comment">// digitalWrite(13, LOW);    // set the LED off
+</span><span class="pas1-space">  </span><span class="pas1-comment">//delay(1000);              // wait for a second
+</span><span class="pas1-symbol">}
+
+</span><span class="pas1-comment">//all colors test routine in Rainbow loop on client site!
+
+</span><span class="pas1-reservedword">const</span><span class="pas1-space"> int red </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">9</span><span class="pas1-symbol">;</span><span class="pas1-space"> </span><span class="pas1-reservedword">const</span><span class="pas1-space"> int green </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">10</span><span class="pas1-symbol">;</span><span class="pas1-space"> </span><span class="pas1-reservedword">const</span><span class="pas1-space"> int blue </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">11</span><span class="pas1-symbol">;</span><span class="pas1-space">  
+int time </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">1000</span><span class="pas1-symbol">;</span><span class="pas1-space"> int multiple </span><span class="pas1-symbol">=</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">;</span><span class="pas1-space">  
+void setup</span><span class="pas1-symbol">()</span><span class="pas1-space"> 
+</span><span class="pas1-comment">{pinMode(red, OUTPUT);   pinMode(green, OUTPUT);   pinMode(blue, OUTPUT); }</span><span class="pas1-space"> 
+
+void loop</span><span class="pas1-symbol">()</span><span class="pas1-space"> 
+</span><span class="pas1-comment">{    digitalWrite(red, HIGH);     // red 
+     delay(time);   
+     digitalWrite(green, HIGH);   // yellow
+       delay(time);
+     digitalWrite(red, LOW);      // green 
+       delay(time);
+     digitalWrite(blue, HIGH);    // cyan
+     delay(time);
+     digitalWrite(green, LOW);    // blue
+     delay(time);
+     digitalWrite(red, HIGH);     // magenta 
+     delay(time);
+     digitalWrite(green, HIGH);   // white 
+     delay(time*=multiple);
+     digitalWrite(blue, LOW);     // reset
+        digitalWrite(green, LOW);
+           time/=multiple; }</span><span class="pas1-space"> 
+
+ 
+</span></code></pre><!--EndFragment--></body>
+</html>

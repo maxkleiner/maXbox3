@@ -1,0 +1,273 @@
+{***************************************************************
+ *
+ * Project  : ObjectList
+ * Unit Name: 160_object_list.txt 
+ * Purpose  : Demonstrates the functions of Container Classes and Collections
+ * Date  : 15/08/2011  -  14:38:56, #locs=171
+ * #sign>max: APSN21: 26.01.2014 11:26:04 
+ *
+ ****************************************************************}
+
+program Object_Lists;
+
+  //const HexN : array[0..15] of char = '0123456789ABCDEF' ; 
+  
+ var 
+  mbits: TBits;
+  md: int64;
+  i: integer;
+  mystr: TStrings;
+  mystrl: TStringlist;
+  mystack: TStack;
+  myobjlist: TObjectlist;
+  myobj: TObject;
+  complist: TComponentlist;
+  clist: TClasslist;
+  myclass: TClass;
+  objstack: TObjectStack;
+  mycoll: TCollection;
+  mycollitm: TCollectionItem;
+
+  
+procedure NetworkTest;
+var
+  mynetcalc: TIdNetworkCalculator;
+begin  
+  mynetcalc:= TIdNetworkCalculator.create(self)
+  writeln('net test '+inttostr(mynetcalc.numip));
+  mystr:= mynetcalc.listIP;
+  writeln(intToStr(mystr.count))
+  for i:= 1 to mystr.count-1 do 
+    writeln(mystr[i]);
+  mynetcalc.free;
+end;
+
+procedure MaskTest;
+var
+  maskopt, pads: string;
+begin
+  maskopt:= mMskAlphaNumOpt;
+  writeln('mask sign is '+maskopt)
+  pads:= padinPutLiterals('thias is a maska','k','*')
+  writeln(pads)
+end;
+
+procedure FileHandleTest;
+var
+  filehandle: THandle;
+begin
+  filehandle:= Fileopen(exepath+'\docs\pascalscript.pdf',fmOpenRead);
+  try
+    if filehandle > 0 then 
+      writeln('handle of doc '+intToStr(filehandle));
+  finally
+    fileClose(filehandle)
+  end
+end;   
+
+procedure TCollectionDemo;
+var
+  hairs: TCollection;
+  hair: TCollectionItem;
+  i: integer;
+begin
+  hair:= TCollectionItem.Create(NIL);
+  hairs:= TCollection.Create(Hair);        
+  //hair:= hairs.Add; 
+  //hair:= hairs.Add; 
+  //hairs.Add; 
+  //hairs.Add; 
+  for i:= 0 to hairs.Count-1 do
+    Writeln(hair.displayname);
+  hairs.Free;
+  hair.Free;  
+end;
+
+// mbversion > 3.9.9.85
+function TStack_NodeDemo(aNode: TalXmlNode): Integer;
+Var aStack: Tstack;
+    i: integer;
+begin
+  Result:= 0;
+  aStack:= TStack.Create;
+  try
+  //TRowNum = longint;  {actually 0..2 billion}
+  //TColNum = integer;  {actually 0..16K}
+  {with TStVMatrix.Create(1,2,3,4,'',6) do begin
+  flushcache; free; end;}   
+    For i:= 0 to aNode.ChildNodes.Count - 1 do
+        aStack.Push((ANode.ChildNodes[i]));
+      While astack.Count > 0 do begin
+        inc(result);
+        aNode:= TalxmlNode(astack.Pop);
+        If assigned(ANode.ChildNodes) then
+          For i:= 0 to ANode.ChildNodes.Count - 1 do
+            aStack.Push((ANode.ChildNodes[i]));
+        If assigned(ANode.AttributeNodes) then
+          For i:= 0 to ANode.attributeNodes.Count - 1 do
+            aStack.Push((ANode.AttributeNodes[i]));
+      end;
+  finally
+    aStack.Free;
+  end;
+end;
+
+
+begin
+  writeln('of monday '+intToStr(strToDay('mon')))
+  writeln('process id of box '+intToStr(currentProcessid))
+  md:= strToInt64def('5744666342663451266',md)
+  writeln('int64 '+inttostr64(md))
+  writeln(bintohex2('1001'))
+  Writeln('power test '+floattostr(power(2,32)))
+  NetWorkTest;
+  MaskTest;
+  FileHandleTest;
+  //PeekMessage(Mgs, 0, WM_CHAR, WM_CHAR, PM_REMOVE);  
+  mystrl:= TStringlist.create;
+  mystrl.add('first box');
+  mystrl.add('second box');
+  mystrl.add(intToStr64(md));
+  mystack:= TStack.create;
+  myobj:= TObject.create;
+   //mystack.push((mystrl.strings[0]))
+  mystack.free;  
+  myobjlist:= TObjectList.create;
+  with myobjlist do begin 
+    add(mystrl)
+    add(mystrl)
+    myobj:= myobjlist.last;
+    Writeln('index of '+IntToStr(TStringlist(myobj).indexOf('second box')));
+    Writeln('content of int64! '+(TStringlist(myobj).strings[2]));
+  end; 
+  //myobjlist.Free;
+  complist:= TComponentlist.create;
+  complist.free;
+  clist:= TClasslist.create;
+  clist.add(myclass)
+  clist.Free;
+  objstack:= TObjectStack.create;
+  with objstack do begin
+    push(mystrl)
+    push(mystrl)
+    push(mystrl)
+    Pop
+    writeln('objstack '+intToStr(count));
+    Free;
+  end;  
+  with TObjectQueue.create do begin
+    push(mystrl)
+    push(mystrl)
+    push(mystrl)
+    //Pop
+    writeln('objqueue '+intToStr(count));
+    Free;
+  end;  
+  //release and free;
+  mystrl.free;
+  mbits:= TBits.create;
+  mbits.free;
+  TCollectionDemo;
+end.
+
+
+http://www.atug.com/andypatterns/collections.htm
+
+http://delphi.about.com/od/toppicks/tp/orm-object-relational-mapping-delphi.htm
+
+
+----------------------------------------------------------
+Die Highlights der Delphi RTL.
+
+Dieser Speak ist garantiert werbefrei, auch wenn RTL dahintersteht.
+Ich zeige die besten Funktionen und Prozeduren aus der Delphi Runtime Library, die stetig (vor allem seit D2009) enorm zugenommen hat. In diesem Streifzug zeige ich krasse, exotische aber auch nützliche, mächtige Routinen aus der Bibliothek, die ja der Hauptlieferant zur VCL hin ist.
+Recht formlos zieht die Demo der Funktionen aus den Unit Kategorien von danen, die auch einige  versteckte Routinen aus der System und SysUtils aufdecken. Wir wagen zudem einen Blick auf die Indy- und Jedi RTL; einige Aussagen zu Packages, Lizenzen und 64bit- Compiler runden die Session dann ab.
+
+The TCollection and TCollectionItem classes provided by Delphi are supposed to make it easy to implement aggregation, which means one class has a list of instances of some other class. Aggregation is a common pattern you will be using a lot in programming. e.g. to implement 'one to many' relationships.
+
+
+Routines By Category
+
+Arithmetic routines
+Business and finance routines
+Command line utilities
+Character manipulation routines
+Date/Time routines
+Dialog and Message routines
+File Management Routines
+File Name Utilities
+Flow Control Routines
+Floating point conversion routines
+Geometric routines
+Measurement conversion routines
+Miscellaneous routines
+Numeric formatting routines
+Ordinal routines
+Pointer and address routines
+Random number routines
+Range Handling
+Set handling routines
+String handling routines
+String formating routines
+Text file routines
+Type conversion routines
+
+Routines By Unit
+Classes DateUtils Dialogs Math Masks FileCtrl System StrUtils SysUtils Types
+
+
+http://entwickler-konferenz.de/
+
+http://www.softwareschule.ch/images/maxlindau2.png
+
+The first programming languages reduced the burden of detail to simplify the effort associated with the creation of new software. More recently developed programming languages have pursued increasingly aggressive objectives. 
+
+  { List Of HTTPFile Objects }
+  THTTPFiles = class(TObjectList)
+  private
+    FOwnsObjects: Boolean;
+  protected
+    function GetItem(Index: Integer): THTTPFile;
+    procedure SetItem(Index: Integer; AObject: THTTPFile);
+  public
+    function Add(AObject: THTTPFile): Integer;
+    function Remove(AObject: THTTPFile): Integer;
+    function IndexOf(AObject: THTTPFile): Integer;
+    procedure Insert(Index: Integer; AObject: THTTPFile);
+    property OwnsObjects: Boolean read FOwnsObjects write FOwnsObjects;
+    property Items[Index: Integer]: THTTPFile read GetItem write SetItem; default;
+  end;
+
+{ THTTPFiles }
+
+function THTTPFiles.Add(AObject: THTTPFile): Integer;
+begin
+  Result := inherited Add(AObject);
+end;
+
+function THTTPFiles.GetItem(Index: Integer): THTTPFile;
+begin
+  Result := THTTPFile(inherited Items[Index]);
+end;
+
+function THTTPFiles.IndexOf(AObject: THTTPFile): Integer;
+begin
+  Result := inherited IndexOf(AObject);
+end;
+
+procedure THTTPFiles.Insert(Index: Integer; AObject: THTTPFile);
+begin
+  inherited Insert(Index, AObject);
+end;
+
+function THTTPFiles.Remove(AObject: THTTPFile): Integer;
+begin
+  Result := inherited Remove(AObject);
+end;
+
+procedure THTTPFiles.SetItem(Index: Integer; AObject: THTTPFile);
+begin
+  inherited Items[Index] := AObject;
+end;
+
+Above code taken from http://www.matlus.com/scripts/website.dll File upload (multi/part form data) example.

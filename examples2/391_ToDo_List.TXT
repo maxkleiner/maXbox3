@@ -1,0 +1,202 @@
+PROGRAM TAR_Archive;
+// dont 
+//#sign max: APSN21: 15.09.2013 23:51:43 
+//#path:E:\maxbox\maxbox3\examples\
+//#tech>perf: 0:0:5.218 threads: 1 192.168.174.1 23:51:43 3.9.9.8
+                               
+//uses
+  //System.SysUtils, // FreeAndNil
+  //System.Win.Registry, // TRegistry
+  //Winapi.Windows; // HKEY_LOCAL_MACHINE
+
+const
+  //change to your OS
+  REG_KEY_TEAMVIEWER8 = '\SOFTWARE\Wow6432Node\TeamViewer\Version8';
+  REG_VAL_CLIENTID = 'ClientID';
+
+function Endian64(x: Int64): Int64;
+begin
+  Result:= (x and $00000000000000FF) shl 56;
+  Result:= Result + (x and $000000000000FF00) shl 40;
+  Result:= Result + (x and $0000000000FF0000) shl 24;
+  Result:= Result + (x and $00000000FF000000) shl 8;
+  Result:= Result + (x and $000000FF00000000) shr 8;
+  Result:= Result + (x and $0000FF0000000000) shr 24;
+  Result:= Result + (x and $00FF000000000000) shr 40;
+  Result:= Result + (x and $FF00000000000000) shr 56;
+end;
+
+//type bool = boolean;
+//TODO: Returns the Date and Time of the last modification of the given File
+
+function FileTimeGMT2 (FileName: STRING): TDateTime;
+         // Returns the Date and Time of the last modification of the given File
+         // The Result is zero if the file could not be found
+         // The Result is given in UTC (GMT) time zone
+VAR
+  Handle         : THandle;
+  FindData       : TWin32FindData;
+  SystemFileTime : TSystemTime;
+  mf: TFileTime;
+begin
+  Result := 0.0;
+  Handle := FindFirstFile (PChar (FileName), FindData);
+  IF Handle <> INVALID_HANDLE_VALUE THEN BEGIN
+    WFindClose (Handle);
+    IF (FindData.dwFileAttributes AND FILE_ATTRIBUTE_DIRECTORY) = 0 THEN
+      // FileTimeToSystemTime(FindData.ftLastWriteTime, SystemFileTime); 
+      IF FileTimeToSystemTime(FindData.ftLastWriteTime, SystemFileTime) THEN BEGIN
+        with SystemFileTime do begin
+          if messagebeep(4) then 
+            Result:= EncodeDate (wYear, wMonth, wDay) +
+          EncodeTime (wHour, wMinute, wSecond, wMilliseconds);
+        end;
+      END;
+    END;
+END;
+
+//DONE: Returns the Date and Time of the last $71A90000 File
+                                 
+//TODO:#1 Returns the Date and Time of the last modification of the given File
+
+//11746: else if MaxMask(sl[I], '*/? TODO (#?#)*:*') then
+{11746: else if PRIORITY SETMask(sl[I]X, */? TODO (#3#): then }
+//11746: * TODO (#3#): else if PRIORITY SETMask(sl[I]X, then 
+
+
+{11740: while I < sl.Count do begin
+11741: // if MatchesMask(sl[I], '*/? TODO ([a-z0-9_]*#[1-9]#)*:*') then
+11742: if MatchesMask(sl[I], '*/? TODO (?*#?#)*:*') then
+11743: BreakupToDo(Filename, sl, I, 'TODO', True, True) // full info TODO
+11744: else if MatchesMask(sl[I], '*/? DONE (?*#?#)*:*') then
+11745: BreakupToDo(Filename, sl, I, 'DONE', True, True) // full info DONE
+11746: else if MatchesMask(sl[I]X, '*/? TODO (#6#)*:*') then
+11747: BreakupToDo(Filename, sl, I, 'TODO', False, True) // only priority info TODO
+11748: else if MatchesMask(sl[I], '*/? DONE (#?#)*:*') then
+11749: BreakupToDo(Filename, sl, I, 'DONE', False, True) // only priority info DONE
+11750: else if MatchesMask(sl[I], '*/?*TODO*:*') then
+11751: BreakupToDo(Filename, sl, I, 'TODO', False, False) // custom TODO
+11752: else if MatchesMask(sl[I], '*/?*DONE*:*') then
+11753: BreakupToDo(Filename, sl, I, 'DONE', False, False); // custom DONE
+11754: Inc(I);
+11755: end;}
+  
+  begin
+  writeln('TeamViewerID: '+getTeamViewerID);
+  writeln('addressinfo '+addressinfo($71A90000));
+  writeln(datetimetostr(FileTimeGMT(exepath+'maxbox3.exe')));
+  writeln(datetimetostr(FileTimeGMT2(exepath+'maxbox3.exe')));
+  //TODO: check GREP with startfinder3 on behalf
+  //Grep
+  //Procedure RecurseDirectory2(Dir : String; IncludeSubs : boolean);
+  //RecurseDirectory2(Exepath,false);
+  //CreateUpdateTAR;
+  //CopyDirTree(exepath+'\source\devtools',exepath+'crypt',[]);
+   //TODO>: some of the copydirtree doesnt' work!
+     maxform1.TodoList1click(self);
+
+end.  
+
+http://www.delphi-central.com/callback.aspx
+
+
+TTarArchive Usage
+-----------------
+- Choose a constructor
+- Make an instance of TTarArchive                  TA := TTarArchive.Create (Filename);
+- Scan through the archive                         TA.Reset;
+                                                   WHILE TA.FindNext (DirRec) DO BEGIN
+- Evaluate the DirRec for each file                  ListBox.Items.Add (DirRec.Name);
+- Read out the current file                          TA.ReadFile (DestFilename);
+  (You can ommit this if you want to
+  read in the directory only)                        END;
+- You're done                                      TA.Free;
+
+
+TTarWriter Usage
+----------------
+- Choose a constructor
+- Make an instance of TTarWriter                   TW := TTarWriter.Create ('my.tar');
+- Add a file to the tar archive                    TW.AddFile ('foobar.txt');
+- Add a string as a file                           TW.AddString (SL.Text, 'joe.txt', Now);
+- Destroy TarWriter instance                       TW.Free;
+- Now your tar file is ready.
+
+
+// --- The TAR Archive CLASS
+  TTarArchive = CLASS
+                PROTECTED
+                  FOwnsStream : BOOLEAN;   // True if FStream is owned by the TTarArchive instance
+                  FBytesToGo  : INT64;     // Bytes until the next Header Record
+                PUBLIC
+                  FStream     : TStream;   // Internal Stream
+                  CONSTRUCTOR Create (Stream   : TStream);                                OVERLOAD;
+                  CONSTRUCTOR Create (Filename : STRING;
+                                      FileMode : WORD = fmOpenRead OR fmShareDenyWrite);  OVERLOAD;
+                  DESTRUCTOR Destroy;                                       OVERRIDE;
+                  PROCEDURE Reset;                                         // Reset File Pointer
+                  function  FindNext (VAR DirRec : TTarDirRec) : BOOLEAN;  // Reads next Directory Info Record. FALSE if EOF reached
+                  PROCEDURE ReadFile (Buffer   : POINTER); OVERLOAD;       // Reads file data for last Directory Record
+                  PROCEDURE ReadFile (Stream   : TStream); OVERLOAD;       // -;-
+                  PROCEDURE ReadFile (Filename : STRING);  OVERLOAD;       // -;-
+                  function  ReadFile : STRING;           OVERLOAD;         // -;-
+
+                  PROCEDURE GetFilePos (VAR Current, Size : INT64);        // Current File Position
+                  PROCEDURE SetFilePos (NewPos : INT64);                   // Set new Current File Position
+                END;
+
+  // --- The TAR Archive Writer CLASS
+  TTarWriter = CLASS
+               PROTECTED
+                 FStream      : TStream;
+                 FOwnsStream  : BOOLEAN;
+                 FFinalized   : BOOLEAN;
+                                                   // --- Used at the next "Add" method call: ---
+                 FPermissions : TTarPermissions;   // Access permissions
+                 FUID         : INTEGER;           // User ID
+                 FGID         : INTEGER;           // Group ID
+                 FUserName    : STRING;            // User name
+                 FGroupName   : STRING;            // Group name
+                 FMode        : TTarModes;         // Mode
+                 FMagic       : STRING;            // Contents of the "Magic" field
+                 CONSTRUCTOR CreateEmpty;
+               PUBLIC
+                 CONSTRUCTOR Create (TargetStream   : TStream);                            OVERLOAD;
+                 CONSTRUCTOR Create (TargetFilename : STRING; Mode : INTEGER = fmCreate);  OVERLOAD;
+                 DESTRUCTOR Destroy; OVERRIDE;                   // Writes End-Of-File Tag
+                 PROCEDURE AddFile   (Filename : STRING;  TarFilename : STRING = '');
+                 PROCEDURE AddStream (Stream   : TStream; TarFilename : STRING; FileDateGmt : TDateTime);
+                 PROCEDURE AddString (Contents : STRING;  TarFilename : STRING; FileDateGmt : TDateTime);
+                 PROCEDURE AddDir          (Dirname            : STRING; DateGmt : TDateTime; MaxDirSize : INT64 = 0);
+                 PROCEDURE AddSymbolicLink (Filename, Linkname : STRING; DateGmt : TDateTime);
+                 PROCEDURE AddLink         (Filename, Linkname : STRING; DateGmt : TDateTime);
+                 PROCEDURE AddVolumeHeader (VolumeId           : STRING; DateGmt : TDateTime);
+                 PROCEDURE Finalize;
+                 PROPERTY Permissions : TTarPermissions READ FPermissions WRITE FPermissions;   // Access permissions
+                 PROPERTY UID         : INTEGER         READ FUID         WRITE FUID;           // User ID
+                 PROPERTY GID         : INTEGER         READ FGID         WRITE FGID;           // Group ID
+                 PROPERTY UserName    : STRING          READ FUserName    WRITE FUserName;      // User name
+                 PROPERTY GroupName   : STRING          READ FGroupName   WRITE FGroupName;     // Group name
+                 PROPERTY Mode        : TTarModes       READ FMode        WRITE FMode;          // Mode
+                 PROPERTY Magic       : STRING          READ FMagic       WRITE FMagic;         // Contents of the "Magic" field
+               END;
+
+
+
+
+The last slash might be optional. Right?
+
+How about something like this:
+
+$url =~ m|([^/]+)/?$|;
+my $end_of_url = $1;
+
+The $ on the end anchors the regular expression to the end of the string. The [^/] means anything that's not a slash and the + after means I want one or more things that are not slashes. Notice that this is in a capture group which are marked with parentheses.
+
+I end the regular expression with /? which means that there may or may not be a slash on the very end of the string. I've put my regular expression between m| and |, so I can use forward slashes without having to constantly escape them.
+
+The last part of the URL is now in $1 and I can set my own scalar variable to save this Result.
+share|improve this answer
+ 
+
+----app_template_loaded_code----

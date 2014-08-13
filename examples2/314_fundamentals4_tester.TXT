@@ -1,0 +1,627 @@
+PROGRAM Fundamentals4_RegExDecorator;
+
+//http://regexpstudio.com/tregexpr/help/article_mrdecorator.html
+//First contribution 2004 and then EKON 16 2012! ex. 310 of maXbox, loc's= 110
+//selftest functions of cutils alias cfundamentutils
+
+
+CONST 
+//<Constant declarations> 
+  TEXTOUT = 'Hi world of TRex code';
+
+  URLTemplate = 
+   '(?i)' 
+   + '(' 
+   + '(FTP|HTTP)://'             // Protocol 
+   + '|www\.)'                   // trick to catch links without
+                                 // protocol - by detecting of starting 'www.'
+   + '([\w\d\-]+(\.[\w\d\-]+)+)' // TCP addr or domain name
+   + '(:\d\d?\d?\d?\d?)?'        // port number
+   + '(((/[%+\w\d\-\\\.]*)+)*)'  // unix path
+   + '(\?[^\s=&]+=[^\s=&]+(&[^\s=&]+=[^\s=&]+)*)?'
+                                 // request (GET) params
+   + '(#[\w\d\-%+]+)?';          // bookmark
+
+//uses 
+//RegExpr; // Do not forget this line. Actually this is how TRegExpr 'Install' - the 
+// only thing You must do - include RegExpr into uses section.
+
+type 
+  TDecorateURLsFlags = (
+ // describes, which parts of hyper-link must be included
+ // into VISIBLE part of the link:
+  durlProto, // Protocol (like 'ftp://' or 'http://')
+  durlAddr,  // TCP address or domain name (like 'anso.da.ru')
+  durlPort,  // Port number if specified (like ':8080')
+  durlPath,  // Path to document (like 'index.htm')
+  durlBMark, // Book mark (like '#mark')
+  durlParam  // URL params (like '?ID=2&User=13')
+ );
+
+TDecorateURLsFlagSet = set of TDecorateURLsFlags;
+
+function DecorateURLs (
+ // can find hyper links like 'http://...' or 'ftp://..'
+ // as well as links without protocol, but start with 'www.'
+
+ const AText : string;
+ // Input text to find hyper-links
+
+  AFlags : TDecorateURLsFlagSet
+ // Which part of hyper-links found must be included into visible
+ // part of URL, for example if [durlAddr] then hyper link
+ // 'http://anso.da.ru/index.htm' will be decorated as
+ // '<a href="http://anso.da.ru/index.htm">anso.da.ru</a>'
+  ) : string;
+ // Returns input text with decorated hyper links
+
+var
+  PrevPos : integer;
+  s, Proto, Addr, HRef : string;
+begin
+  Result := ''; 
+  PrevPos := 1; 
+  with TRegExpr.Create do try 
+     Expression := URLTemplate; 
+     if Exec (AText) then 
+      REPEAT 
+        s := ''; 
+        if AnsiCompareText (Match [1], 'www.') = 0 then begin
+           Proto := 'http://';
+           Addr := Match [1] + Match [3];
+           HRef := Proto + Match [0];
+          end
+         else begin
+           Proto := Match [1];
+           Addr := Match [3];
+           HRef := Match [0];
+          end;
+        if durlProto in AFlags
+         then s := s + Proto;
+        if durlAddr in AFlags
+         then s := s + Addr;
+        if durlPort in AFlags
+         then s := s + Match [5];
+        if durlPath in AFlags
+         then s := s + Match [6];
+        if durlParam in AFlags
+         then s := s + Match [9];
+        if durlBMark in AFlags
+         then s := s + Match [11];
+        Result := Result + Copy (AText, PrevPos,
+         MatchPos [0] - PrevPos) + '<a href="' + HRef + '">' + s + '</a>';
+        PrevPos := MatchPos [0] + MatchLen [0];
+      UNTIL not ExecNext;
+     Result := Result + Copy (AText, PrevPos, MaxInt); // Tail
+    finally Free;
+   end;
+end; { of DecorateURLs}
+
+
+function RefToCell(ARow, ACol: Integer): string;
+begin
+  Result:= Chr(Ord('A') + ACol - 1) + IntToStr(ARow);
+end;
+
+
+const
+  xlWBATWorksheet = -4167;
+
+function SaveAsExcelFile2(AGrid: TStringGrid; ASheetName, AFileName: string): Boolean;
+var
+  Row, Col: Integer;
+  GridPrevFile: string;
+  XLApp, Sheet, Data: OLEVariant;
+  i, j: Integer;
+begin
+  // Prepare Data
+  Data := VarArrayCreate([1, AGrid.RowCount, 1, AGrid.ColCount], varVariant);
+  for i := 0 to AGrid.ColCount - 1 do
+    for j := 0 to AGrid.RowCount - 1 do
+      //Data[j + 1, i + 1] := AGrid.Cells[i, j];
+  // Create Excel-OLE Object
+  Result := False;
+  XLApp := CreateOleObject('Excel.Application');
+  try
+    // Hide Excel
+    XLApp.Visible := False;
+    // Add new Workbook
+    XLApp.Workbooks.Add(xlWBatWorkSheet);
+    Sheet := XLApp.Workbooks[1].WorkSheets[1];
+    Sheet.Name := ASheetName;
+    // Fill up the sheet
+    Sheet.Range[RefToCell(1, 1), RefToCell(AGrid.RowCount,
+      AGrid.ColCount)].Value:= Data;
+    // Save Excel Worksheet
+    //VarArrayDimCount(varvariant);
+    try
+      XLApp.Workbooks[1].SaveAs(AFileName);
+      Result := True;
+    except
+      // Error ?
+    end;
+  finally
+    // Quit Excel
+    if not VarIsEmpty(XLApp) then
+    begin
+      XLApp.DisplayAlerts := False;
+      XLApp.Quit;
+      XLAPP := Unassigned;
+      Sheet := Unassigned;
+    end;
+  end;
+end;
+
+
+var i,k,t: integer;
+  chset, cset1, cset2: Charset;
+  myst: TStringGrid;
+  //mv: TVarType;
+
+
+BEGIN  //Main
+//<Executable statements>
+ for i:= 1 to 3 do 
+    Writeln(TEXTOUT);
+  
+  Writeln('deco: '+DecorateURLs('http://www.softwareschule.ch/maxbox.htm',[durlAddr]));
+  
+  ShowMessage(ReplaceRegExpr('World','Hello, EKON TRex World!', 'Earth',true));
+  
+  SelftestPEM;
+  SelfTestCFundamentUtils;
+  
+  chset:= ['M','A','X','B','O','X']
+  //'abcdefghijklmnopqrstuvwxyz0123456789+/'];
+   writeln(intToStr(cCharCount(chset)));
+  cset1:= ['M','A','X','B','O','X'];
+  cset2:= ['M','A','X','S','I','X'];
+  Union(cset1, cset2); 
+  Difference(cset1,cset2); //overload;
+  Intersection(cset1,cset2); //overload;
+  assert(22>3,'assert tester');
+  writeln(BooleanToString(YesNoDialog('this is a smart dialog','you want to be art?')));
+  //function SaveAsExcelFile(AGrid: TStringGrid; ASheetName, AFileName: string): Boolean;
+   
+  myst:= TStringGrid.create(self)
+  myst.rowcount:= 11;
+  myst.colcount:= 11;
+  for k:= 1 to 40 do begin     //frame numbers
+     myst.Cells[k ,0]:= inttoStr(k);
+     myst.Cells[0,(k div 2)]:= inttoStr(k+1);   
+  end;  
+   for k:= 1 to myst.ColCount - 1 do
+    for t:= 1 to myst.RowCount - 1 do
+      myst.Cells[k ,t]:= inttoStr(t*k);    //one to one
+ 
+  if SaveAsExcelFile(myst,'maXcelgrid',Exepath+'maxcelgridfile.xls', false)
+    then msg('maxcel export success');
+  myst.Free;
+  writeln((FloatToBin(34.49)))
+//<Definitions>  
+  writeln(inttostr(hextoint('FFFF')));
+END. 
+
+
+--------------------------------------------------------------}
+
+Note, that You can easely extract any part of URL (see AFlags parameter).
+
+
+Fundamental Conclusion
+
+"Free Your mind" ((c) The Matrix ;)) and You'll find many other tasks there regular expressions can save You incredible part of stupid coding work !
+
+
+function HexToInt(hexnum: string): LongInt;
+begin
+  result:= StrToInt64('$' + hexnum);
+end;
+
+function IntToBin(Int: Integer): String; //is in IdGlobal 64bit
+var
+  i: integer;
+begin
+  Result:= '';
+  for i:= 31 downto 0 do
+  Result:= Result + IntToStr((Int shr i) and 1);
+end;
+
+
+function HexToBin2(HexNum: string): string;
+begin
+  Result:= IntToBin(HexToInt(HexNum));
+end;
+
+
+function FloatToBin(const D: Double): string;
+begin
+   result:= HexToBin2(DoubleToHex(D));
+//   HexToBin(DoubleToHex(D));
+  // Look at element 2 before element 1 because of "Little Endian" order.
+  //Result := IntToHex(Overlay[2], 8) + IntToHex(Overlay[1], 8);
+end;
+
+
+
+
+//    MinI(const A, B: Integer): Integer;   {$IFDEF UseInline}inline;{$ENDIF}
+//function  MaxI(const A, B: Integer): Integer;   {$IFDEF UseInline}inline;{$ENDIF}
+//function  MinC(const A, B: Cardinal): Cardinal; {$IFDEF UseInline}inline;{$ENDIF}
+//function  MaxC(const A, B: Cardinal): Cardinal; {$IFDEF UseInline}inline;{$ENDIF}
+
+{ Clip returns Value if in Low..High range, otherwise Low or High              }
+//function  SumClipI(const A, I: Integer): Integer;
+//function  SumClipC(const A: Cardinal; const I: Integer): Cardinal;
+
+{ InXXXRange returns True if A in range of type XXX                            }
+  //InByteRange(const A: Int64): Boolean;     {$IFDEF UseInline}inline;{$ENDIF}
+//function  InWordRange(const A: Int64): Boolean;     {$IFDEF UseInline}inline;{$ENDIF}
+//function  InLongWordRange(const A: Int64): Boolean; {$IFDEF UseInline}inline;{$ENDIF}
+//function  InShortIntRange(const A: Int64): Boolean; {$IFDEF UseInline}inline;{$ENDIF}
+//function  InSmallIntRange(const A: Int64): Boolean; {$IFDEF UseInline}inline;{$ENDIF}
+//function  InLongIntRange(const A: Int64): Boolean;  {$IFDEF UseInline}inline;{$ENDIF}
+
+
+
+{                                                                              }
+{ Boolean types                                                                }
+{                                                                              }
+{   Boolean    -        -                                                      }
+{   ByteBool   Bool8    8 bits                                                 }
+{   WordBool   Bool16   16 bits                                                }
+{   LongBool   Bool32   32 bits                                                }
+{                                                                              }
+{                                                                              }
+{ Comparison                                                                   }
+{                                                                              }
+
+{                                                                              }
+{ Real types                                                                   }
+{                                                                              }
+{   Floating point                                                             }
+{     Single    32 bits  7-8 significant digits                                }
+{     Double    64 bits  15-16 significant digits                              }
+{     Extended  80 bits  19-20 significant digits (mapped to Double in .NET)   }
+{                                                                              }
+{   Fixed point                                                                }
+{     Currency  64 bits  19-20 significant digits, 4 after the decimal point.  }
+{                                                                              }
+
+{ Min returns smallest of A and B                                              }
+{ Max returns greatest of A and B                                              }
+{ Clip returns Value if in Low..High range, otherwise Low or High              }
+function  MinF(const A, B: Float): Float; {$IFDEF UseInline}inline;{$ENDIF}
+function  MaxF(const A, B: Float): Float; {$IFDEF UseInline}inline;{$ENDIF}
+function  ClipF(const Value: Float; const Low, High: Float): Float;
+
+{ InXXXRange returns True if A in range of type XXX                            }
+function  InSingleRange(const A: Float): Boolean; {$IFDEF UseInline}inline;{$ENDIF}
+function  InDoubleRange(const A: Float): Boolean; {$IFDEF UseInline}inline;{$ENDIF}
+{$IFNDEF CLR}
+function  InCurrencyRange(const A: Float): Boolean; overload;
+function  InCurrencyRange(const A: Int64): Boolean; overload;
+{$ENDIF}
+
+{ FloatExponent returns the exponent component of an Extended value            }
+function  FloatExponentBase2(const A: Extended; var Exponent: Integer): Boolean;
+function  FloatExponentBase10(const A: Extended; var Exponent: Integer): Boolean;
+
+{ FloatIsInfinity is True if A is a positive or negative infinity.             }
+{ FloatIsNaN is True if A is Not-a-Number.                                     }  
+  //FloatIsInfinity(const A: Extended): Boolean;
+   //FloatIsNaN(const A: Extended): Boolean;
+
+
+
+  SingleCompareDelta   = 1.0E-34;
+  DoubleCompareDelta   = 1.0E-280;
+  {$IFDEF CLR}
+  ExtendedCompareDelta = DoubleCompareDelta;
+  {$ELSE}
+  ExtendedCompareDelta = 1.0E-4400;
+  {$ENDIF}   
+
+  // Default CompareDelta is set to SingleCompareDelta. This allows any type
+  // of floating-point value to be compared with any other.
+//  DefaultCompareDelta = SingleCompareDelta;
+
+
+
+{                                                                              }
+{ Bit functions                                                                }
+{                                                                              }
+  //ClearBit(const Value, BitIndex: LongWord): LongWord;
+  //SetBit(const Value, BitIndex: LongWord): LongWord;
+  //IsBitSet(const Value, BitIndex: LongWord): Boolean;
+  //ToggleBit(const Value, BitIndex: LongWord): LongWord;
+  //IsHighBitSet(const Value: LongWord): Boolean;
+
+  SetBitScanForward(const Value: LongWord): Integer; overload;
+  SetBitScanForward(const Value, BitIndex: LongWord): Integer; overload;
+  SetBitScanReverse(const Value: LongWord): Integer; overload;
+  SetBitScanReverse(const Value, BitIndex: LongWord): Integer; overload;
+  ClearBitScanForward(const Value: LongWord): Integer; overload;
+  ClearBitScanForward(const Value, BitIndex: LongWord): Integer; overload;
+  ClearBitScanReverse(const Value: LongWord): Integer; overload;
+  ClearBitScanReverse(const Value, BitIndex: LongWord): Integer; overload;
+
+  ReverseBits(const Value: LongWord): LongWord; overload;
+  ReverseBits(const Value: LongWord; const BitCount: Integer): LongWord; overload;
+  SwapEndian(const Value: LongWord): LongWord;
+
+  RotateLeftBits16(const Value: Word; const Bits: Byte): Word;
+  RotateLeftBits32(const Value: LongWord; const Bits: Byte): LongWord;
+  RotateRightBits16(const Value: Word; const Bits: Byte): Word;
+  RotateRightBits32(const Value: LongWord; const Bits: Byte): LongWord;
+
+  BitCount(const Value: LongWord): LongWord;
+  IsPowerOfTwo(const Value: LongWord): Boolean;
+
+  LowBitMask(const HighBitIndex: LongWord): LongWord;
+  HighBitMask(const LowBitIndex: LongWord): LongWord;
+  RangeBitMask(const LowBitIndex, HighBitIndex: LongWord): LongWord;
+
+  SetBitRange(const Value: LongWord;
+          const LowBitIndex, HighBitIndex: LongWord): LongWord;
+  ClearBitRange(const Value: LongWord;
+          const LowBitIndex, HighBitIndex: LongWord): LongWord;
+  ToggleBitRange(const Value: LongWord;
+          const LowBitIndex, HighBitIndex: LongWord): LongWord;
+  IsBitRangeSet(const Value: LongWord;
+          const LowBitIndex, HighBitIndex: LongWord): Boolean;
+  IsBitRangeClear(const Value: LongWord;
+          const LowBitIndex, HighBitIndex: LongWord): Boolean;   
+
+
+ //compare
+
+ //csgn
+ //ComplementChar(var C: CharSet; const Ch: AnsiChar);
+ //ClearCharSet(var C: CharSet);
+ //FillCharSet(var C: CharSet);
+ //ComplementCharSet(var C: CharSet);
+ //AssignCharSet(var DestSet: CharSet; const SourceSet: CharSet); overload;
+ //Union(var DestSet: CharSet; const SourceSet: CharSet); overload;
+ //Difference(var DestSet: CharSet; const SourceSet: CharSet); overload;
+ //Intersection(var DestSet: CharSet; const SourceSet: CharSet); overload;
+ //XORCharSet(var DestSet: CharSet; const SourceSet: CharSet);
+  //IsSubSet(const A, B: CharSet): Boolean;
+  //IsEqual(const A, B: CharSet): Boolean; overload;
+  //IsEmpty(const C: CharSet): Boolean;
+  //IsComplete(const C: CharSet): Boolean;
+  //CharCount(const C: CharSet): Integer; overload;
+ //ConvertCaseInsensitive(var C: CharSet);
+  //CaseInsensitiveCharSet(const C: CharSet): CharSet;
+
+{                                                                              }
+{ Range functions                                                              }
+{                                                                              }
+{   RangeLength      Length of a range                                         }
+{   RangeAdjacent    True if ranges are adjacent                               }
+{   RangeOverlap     True if ranges overlap                                    }
+{   RangeHasElement  True if element is in range                               }
+{                                                                              }
+function  IntRangeLength(const Low, High: Integer): Int64;
+function  IntRangeAdjacent(const Low1, High1, Low2, High2: Integer): Boolean;
+function  IntRangeOverlap(const Low1, High1, Low2, High2: Integer): Boolean;
+function  IntRangeHasElement(const Low, High, Element: Integer): Boolean;
+
+function  IntRangeIncludeElement(var Low, High: Integer;
+          const Element: Integer): Boolean;
+function  IntRangeIncludeElementRange(var Low, High: Integer;
+          const LowElement, HighElement: Integer): Boolean;
+
+function  CardRangeLength(const Low, High: Cardinal): Int64;
+function  CardRangeAdjacent(const Low1, High1, Low2, High2: Cardinal): Boolean;
+function  CardRangeOverlap(const Low1, High1, Low2, High2: Cardinal): Boolean;
+function  CardRangeHasElement(const Low, High, Element: Cardinal): Boolean;
+
+function  CardRangeIncludeElement(var Low, High: Cardinal;
+          const Element: Cardinal): Boolean;
+function  CardRangeIncludeElementRange(var Low, High: Cardinal;
+          const LowElement, HighElement: Cardinal): Boolean;
+
+
+{                                                                              }
+{ Direct comparison                                                            }
+{                                                                              }
+{   Compare(I1, I2) returns crLess if I1 < I2, crEqual if I1 = I2 or           }
+{   crGreater if I1 > I2.                                                      }
+{                                                                              }
+function  Compare(const I1, I2: Boolean): TCompareResult; overload;
+function  Compare(const I1, I2: Integer): TCompareResult; overload;
+function  Compare(const I1, I2: Int64): TCompareResult; overload;
+function  Compare(const I1, I2: Extended): TCompareResult; overload;
+function  CompareA(const I1, I2: AnsiString): TCompareResult;
+function  CompareW(const I1, I2: WideString): TCompareResult;
+function  CompareU(const I1, I2: UnicodeString): TCompareResult;
+
+function  Sgn(const A: LongInt): Integer; overload;
+function  Sgn(const A: Int64): Integer; overload;
+function  Sgn(const A: Extended): Integer; overload;
+
+
+
+{                                                                              }
+{ Convert result                                                               }
+{                                                                              }
+
+{                                                                              }
+{ Integer-String conversions                                                   }
+{                                                                              }
+
+//widechar
+ AnsiCharToInt(const A: AnsiChar): Integer;                            {$IFDEF UseInline}inline;{$ENDIF}
+  WideCharToInt(const A: WideChar): Integer;                            {$IFDEF UseInline}inline;{$ENDIF}
+  CharToInt(const A: Char): Integer;                                    {$IFDEF UseInline}inline;{$ENDIF}
+
+  IntToAnsiChar(const A: Integer): AnsiChar;                            {$IFDEF UseInline}inline;{$ENDIF}
+  IntToWideChar(const A: Integer): WideChar;                            {$IFDEF UseInline}inline;{$ENDIF}
+  IntToChar(const A: Integer): Char;                                    {$IFDEF UseInline}inline;{$ENDIF}
+
+  IsHexAnsiChar(const Ch: AnsiChar): Boolean;
+  IsHexWideChar(const Ch: WideChar): Boolean;
+  IsHexChar(const Ch: Char): Boolean;                                   {$IFDEF UseInline}inline;{$ENDIF}
+
+  HexAnsiCharToInt(const A: AnsiChar): Integer;
+  HexWideCharToInt(const A: WideChar): Integer;
+  HexCharToInt(const A: Char): Integer;                                 {$IFDEF UseInline}inline;{$ENDIF}
+
+  IntToUpperHexAnsiChar(const A: Integer): AnsiChar;
+  IntToUpperHexWideChar(const A: Integer): WideChar;
+  IntToUpperHexChar(const A: Integer): Char;                            {$IFDEF UseInline}inline;{$ENDIF}
+
+  IntToLowerHexAnsiChar(const A: Integer): AnsiChar;
+  IntToLowerHexWideChar(const A: Integer): WideChar;
+  IntToLowerHexChar(const A: Integer): Char;                            {$IFDEF UseInline}inline;{$ENDIF}
+
+  IntToStringA(const A: Int64): AnsiString;
+  IntToStringW(const A: Int64): WideString;
+  IntToStringU(const A: Int64): UnicodeString;
+  IntToString(const A: Int64): String;
+
+  UIntToStringA(const A: NativeUInt): AnsiString;
+  UIntToStringW(const A: NativeUInt): WideString;
+  UIntToStringU(const A: NativeUInt): UnicodeString;
+  UIntToString(const A: NativeUInt): String;
+
+  LongWordToStrA(const A: LongWord; const Digits: Integer = 0): AnsiString;
+  LongWordToStrW(const A: LongWord; const Digits: Integer = 0): WideString;
+  LongWordToStrU(const A: LongWord; const Digits: Integer = 0): UnicodeString;
+  LongWordToStr(const A: LongWord; const Digits: Integer = 0): String;
+
+  LongWordToHexA(const A: LongWord; const Digits: Integer = 0; const UpperCase: Boolean = True): AnsiString;
+  LongWordToHexW(const A: LongWord; const Digits: Integer = 0; const UpperCase: Boolean = True): WideString;
+  LongWordToHexU(const A: LongWord; const Digits: Integer = 0; const UpperCase: Boolean = True): UnicodeString;
+  LongWordToHex(const A: LongWord; const Digits: Integer = 0; const UpperCase: Boolean = True): String;
+
+  LongWordToOctA(const A: LongWord; const Digits: Integer = 0): AnsiString;
+  LongWordToOctW(const A: LongWord; const Digits: Integer = 0): WideString;
+  LongWordToOctU(const A: LongWord; const Digits: Integer = 0): UnicodeString;
+  LongWordToOct(const A: LongWord; const Digits: Integer = 0): String;
+
+  LongWordToBinA(const A: LongWord; const Digits: Integer = 0): AnsiString;
+  LongWordToBinW(const A: LongWord; const Digits: Integer = 0): WideString;
+  LongWordToBinU(const A: LongWord; const Digits: Integer = 0): UnicodeString;
+  LongWordToBin(const A: LongWord; const Digits: Integer = 0): String;
+
+  TryStringToInt64PA(const BufP: Pointer; const BufLen: Integer; out Value: Int64; out StrLen: Integer): TConvertResult;
+  TryStringToInt64PW(const BufP: Pointer; const BufLen: Integer; out Value: Int64; out StrLen: Integer): TConvertResult;
+  TryStringToInt64P(const BufP: Pointer; const BufLen: Integer; out Value: Int64; out StrLen: Integer): TConvertResult;
+
+  TryStringToInt64A(const S: AnsiString; out A: Int64): Boolean;
+  TryStringToInt64W(const S: WideString; out A: Int64): Boolean;
+  TryStringToInt64U(const S: UnicodeString; out A: Int64): Boolean;
+  TryStringToInt64(const S: String; out A: Int64): Boolean;
+
+  StringToInt64DefA(const S: AnsiString; const Default: Int64): Int64;
+  StringToInt64DefW(const S: WideString; const Default: Int64): Int64;
+  StringToInt64DefU(const S: UnicodeString; const Default: Int64): Int64;
+  StringToInt64Def(const S: String; const Default: Int64): Int64;
+
+  StringToInt64A(const S: AnsiString): Int64;
+  StringToInt64W(const S: WideString): Int64;
+  StringToInt64U(const S: UnicodeString): Int64;
+  StringToInt64(const S: String): Int64;
+
+  TryStringToIntA(const S: AnsiString; out A: Integer): Boolean;
+  TryStringToIntW(const S: WideString; out A: Integer): Boolean;
+  TryStringToIntU(const S: UnicodeString; out A: Integer): Boolean;
+  TryStringToInt(const S: String; out A: Integer): Boolean;
+
+  StringToIntDefA(const S: AnsiString; const Default: Integer): Integer;
+  StringToIntDefW(const S: WideString; const Default: Integer): Integer;
+  StringToIntDefU(const S: UnicodeString; const Default: Integer): Integer;
+  StringToIntDef(const S: String; const Default: Integer): Integer;
+
+  StringToIntA(const S: AnsiString): Integer;
+  StringToIntW(const S: WideString): Integer;
+  StringToIntU(const S: UnicodeString): Integer;
+  StringToInt(const S: String): Integer;
+
+  TryStringToLongWordA(const S: AnsiString; out A: LongWord): Boolean;
+  TryStringToLongWordW(const S: WideString; out A: LongWord): Boolean;
+  TryStringToLongWordU(const S: UnicodeString; out A: LongWord): Boolean;
+  TryStringToLongWord(const S: String; out A: LongWord): Boolean;
+
+  StringToLongWordA(const S: AnsiString): LongWord;
+  StringToLongWordW(const S: WideString): LongWord;
+  StringToLongWordU(const S: UnicodeString): LongWord;
+  StringToLongWord(const S: String): LongWord;
+
+  HexToUIntA(const S: AnsiString): NativeUInt;
+  HexToUIntW(const S: WideString): NativeUInt;
+  HexToUIntU(const S: UnicodeString): NativeUInt;
+  HexToUInt(const S: String): NativeUInt;
+
+  TryHexToLongWordA(const S: AnsiString; out A: LongWord): Boolean;
+  TryHexToLongWordW(const S: WideString; out A: LongWord): Boolean;
+  TryHexToLongWordU(const S: UnicodeString; out A: LongWord): Boolean;
+  TryHexToLongWord(const S: String; out A: LongWord): Boolean;
+
+  HexToLongWordA(const S: AnsiString): LongWord;
+  HexToLongWordW(const S: WideString): LongWord;
+  HexToLongWordU(const S: UnicodeString): LongWord;
+  HexToLongWord(const S: String): LongWord;
+
+  TryOctToLongWordA(const S: AnsiString; out A: LongWord): Boolean;
+  TryOctToLongWordW(const S: WideString; out A: LongWord): Boolean;
+  TryOctToLongWordU(const S: UnicodeString; out A: LongWord): Boolean;
+  TryOctToLongWord(const S: String; out A: LongWord): Boolean;
+
+  OctToLongWordA(const S: AnsiString): LongWord;
+  OctToLongWordW(const S: WideString): LongWord;
+  OctToLongWordU(const S: UnicodeString): LongWord;
+  OctToLongWord(const S: String): LongWord;
+
+  TryBinToLongWordA(const S: AnsiString; out A: LongWord): Boolean;
+  TryBinToLongWordW(const S: WideString; out A: LongWord): Boolean;
+  TryBinToLongWordU(const S: UnicodeString; out A: LongWord): Boolean;
+  TryBinToLongWord(const S: String; out A: LongWord): Boolean;
+
+  BinToLongWordA(const S: AnsiString): LongWord;
+  BinToLongWordW(const S: WideString): LongWord;
+  BinToLongWordU(const S: UnicodeString): LongWord;        
+  //BinToLongWord(const S: String): LongWord;
+
+
+
+{                                                                              }
+{ Base64                                                                       }
+{                                                                              }
+{   EncodeBase64 converts a binary string (S) to a base 64 string using        }
+{   Alphabet. if Pad is True, the result will be padded with PadChar to be a   }
+{   multiple of PadMultiple.                                                   }
+{                                                                              }
+{   DecodeBase64 converts a base 64 string using Alphabet (64 characters for   }
+{   values 0-63) to a binary string.                                           }
+{                                                                              }
+  EncodeBase64(const S, Alphabet: AnsiString;
+          const Pad: Boolean = False;
+          const PadMultiple: Integer = 4;
+          const PadChar: AnsiChar = '='): AnsiString;
+
+  DecodeBase64(const S, Alphabet: AnsiString;
+          const PadSet: CharSet{$IFNDEF CLR} = []{$ENDIF}): AnsiString;
+
+   
+  //ObjectToStr(const O: TObject): String;
+  //CharSetToStr(const C: CharSet): AnsiString;
+    //StrToCharSet(const S: AnsiString): CharSet;
+
+  //HashInteger(const I: Integer; const Slots: LongWord = 0): LongWord;
+  //HashLongWord(const I: LongWord; const Slots: LongWord = 0): LongWord;
+
+
+
+const
+  Bytes1KB  = 1024;
+  Bytes1MB  = 1024 * Bytes1KB;
+  Bytes1GB  = 1024 * Bytes1MB;
+  Bytes64KB = 64 * Bytes1KB;
+  Bytes64MB = 64 * Bytes1MB;
+  Bytes2GB  = 2 * LongWord(Bytes1GB);
+
+
+----app_template_loaded_code----

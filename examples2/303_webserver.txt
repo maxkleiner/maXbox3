@@ -1,0 +1,157 @@
+program Motion_HTTPGet;
+
+// first interpreter of runmax of internet series
+// shows subroutines new section 101 - 120 http examples _101, locs=25
+
+const
+  CAUTHENTICATIONREALM = 'openSSL maXbox https server demo';
+
+
+var
+    i: integer;
+    idHTTP: TIDHTTP;
+    idHTTP2: TIDHTTPRequest;
+    //myevent: TIdHTTPGetEvent;
+    //myevent2: TIdHTTPOtherEvent;
+    //AThread: TIdContext;
+    
+    
+procedure HTTPServerCommandGet(AThread: TIdPeerThread  {TIdContext};
+  RequestInfo: TIdHTTPRequestInfo; ResponseInfo: TIdHTTPResponseInfo);
+var
+  LocalDoc: string;
+  ByteSent: Cardinal;
+  ResultFile: TFileStream;
+
+begin
+    ResponseInfo.ContentText:=
+      '<html><head><title>Error</title></head><body><h1>Authentication failed</h1>'#13 +
+      'Check the file ip_a.ini to discover the demo password:<br><ul><li>Search for '#13 +
+      '<b>AuthUsername</b> in <b>Main.pas</b>!</ul></body></html>';
+    ResponseInfo.AuthRealm:= CAUTHENTICATIONREALM;
+
+  (*procedure AccessDenied;
+  begin
+    ResponseInfo.ContentText:=
+      '<html><head><title>Error</title></head><body><h1>Access denied</h1>'#13 +
+      'You do not have sufficient priviligies to access this document.</body></html>';
+    ResponseInfo.ResponseNo:= 403;
+  end;*)
+
+  // Log the request with time stamp
+  //Writeln((Format('Command %s %s at %-10s received from %s:%d',
+    //[ RequestInfo.Command, RequestInfo.Document, DateTimeToStr(Now),
+    //d6AThread.Connection.Binding.PeerIP, AThread.Connection.Binding.PeerPort]));
+    //AThread.Connection.Socket.PeerIP,
+      //                    AThread.Connection.Socket.Binding.PeerPort]));
+    // Interprete the command to it's final path (avoid sending files in parent folders)
+    //LocalDoc:= ExpandFilename(edRoot.text + RequestInfo.Document);
+    // Default document (index.html) for folder
+    (*if not FileExists(LocalDoc) and DirectoryExists(LocalDoc) and
+      FileExists(ExpandFileName(LocalDoc + '/index.html')) then
+       LocalDoc:= ExpandFileName(LocalDoc + '/index.html');
+    if FileExists(LocalDoc) then begin// File exists
+      if AnsiSameText(Copy(LocalDoc, 1, Length(edRoot.text)), edRoot.Text) then
+        // File down in dir structure
+      begin
+        if AnsiSameText(RequestInfo.Command, 'HEAD') then begin
+          // HEAD request, don't send the document but still send back it's size
+          ResultFile:= TFileStream.create(LocalDoc, fmOpenRead or
+            fmShareDenyWrite);
+          try
+            ResponseInfo.ResponseNo:= 200;
+            ResponseInfo.ContentType:= GetMIMEType(LocalDoc);
+            ResponseInfo.ContentLength:= ResultFile.Size;
+          finally
+            ResultFile.Free;
+              // We must free this file since it won't be done by web server component
+          end;
+        end else begin
+          // Normal document request
+          // Send the document back
+          //ByteSent := HTTPServer.ServeFile(AThread, ResponseInfo, LocalDoc);
+          ByteSent:= ResponseInfo.ServeFile(AThread, LocalDoc);
+          DisplayMessage(Format('Serving file %s (%d bytes / %d bytes sent) to %s:%d',
+            [LocalDoc, ByteSent, FileSizeByName(LocalDoc),
+            AThread.Connection.Socket.Binding.PeerIP,
+              AThread.Connection.Socket.Binding.PeerPort]));
+        end;
+      end else
+        //AccessDenied;
+    end else begin
+      ResponseInfo.ResponseNo:= 404; // Not found
+      ResponseInfo.ContentText:=
+        '<html><head><title>Error</title></head><body><h1>' +
+        ResponseInfo.ResponseText + '</h1></body></html>';
+    end;*)
+  //end;
+end;
+    
+    
+    
+procedure HTTPServerTestExecute(Sender: TObject);
+var
+  aBinding : TIdSocketHandle;
+  HTTPServer: TIdCustomHTTPServer;
+begin
+  //acActivate.Checked := not acActivate.Checked;
+  //lbSessionList.Items.Clear;
+  HTTPServer:= TIdCustomHTTPServer.create(self)
+  with  HTTPServer do begin
+    //AutoStartSession;
+    if not active then begin
+      Bindings.Clear;
+      //binding:= Bindings.items[1].Add;
+      //Binding.Port := StrToIntDef(edPort.text, 80);
+      abinding:= Bindings.Add;
+      abinding.port:= 80;
+      abinding.ip:= '127.0.0.1';
+      //bindings.items[0].port:= 80;
+      //bindings.defaultport:= 80;
+      //bindings.items[0].ip:= '127.0.0.1';
+         Active:= true;
+       oncommandget:= @HTTPServerCommandGet;
+      if Active then begin
+          //statusbar1.SimpleText:= 'http active on v1.9';
+          //+ [IdServerInterceptOpenSSL.SSLOptions.Method]
+          //DisplayMessage(Format('OpenSSLVersion is: %s', [getOpenSSLVersion]))
+        end else
+          writeln('http server inactive');
+       Writeln(format('Listening for HTTP connections on %s:%d.',
+                 [HTTPServer.Bindings[0].IP, HTTPServer.Bindings[0].Port]));
+  
+    writeln(' http server software: '+serversoftware)
+    //Free;
+    end;
+    //active
+    //bindings
+    //mimetable
+    end;
+  (*if not HTTPServer.Active then begin
+    HTTPServer.Bindings.Clear;
+    Binding := HTTPServer.Bindings.Add;
+    Binding.Port := StrToIntDef(edPort.text, 80);
+    Binding.IP := '127.0.0.1';
+  end;*)
+
+  end;
+    
+  
+begin
+
+  HTTPServerTestExecute(self);
+  (*idHTTP:= TIdHTTP.Create(NIL)
+  try
+    memo2.lines.text:= idHTTP.Get('http://www.softwareschule.ch/')
+    for i:= 1 to 10 do 
+       memo2.lines.add(intToStr(i)+' :'+memo2.lines[i]);
+    //idhttp.get2('http://www.softwareschule.ch/maxbox.htm')
+  finally
+    idHTTP.Free
+  end;*)    
+  Writeln(DateTimeToInternetStr(Now, true))
+  //GetTimeZoneInformation
+  //initialization
+  //finalization 
+end.
+

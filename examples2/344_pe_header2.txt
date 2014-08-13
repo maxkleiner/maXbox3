@@ -1,0 +1,208 @@
+PROGRAM PE_Header_Forensic2;
+CONST 
+//<Constant declarations>   locs=142
+  TEXTOUT = ' hi time traveler ';
+  FILENAME = 'maxbox3.exe';
+  AWORKPATH = '..\..\examples\';
+
+{TYPE 
+<Type declarations>} 
+
+VAR 
+//<Variable declarations>
+  i, N, SN: integer;
+  getlist: TStringList;
+  regstr: string;
+
+//procedure StrtoList(s: string; const List: TStrings; const delimiter: char=';');
+procedure StrtoList(s: string; const List: TStrings; const delimiter: char);
+var tmp : string;
+    i   : integer;
+begin
+  List.BeginUpdate;
+  if delimiter = '' then delimiter:= ';';
+  try
+   List.Clear;
+   while pos(delimiter, s) > 0 do begin
+     i := pos(delimiter, s);
+     tmp := Copy(s, 1, i - 1);
+     Delete(s, 1, i);
+     List.Add(tmp);
+   end;
+   if s <> '' then
+     List.Add(s);
+  finally
+   List.EndUpdate;
+  end;
+end;
+
+  const FXCOPSORTOUT2 = 'COPXML3sort.txt';
+
+  procedure findRegExExtensionsFXCopSort2;
+  var fstr, gstr, gstr2, oldmatch, zeradd: string;
+      cntr, cntr2, i: integer;
+      rlist: TStringlist;
+  begin
+    screen.cursor:= CRhourglass;
+    fstr:= loadFileasString(AWORKPATH+'IVCLScanner.xml');  //orig of XML
+    //fstr:= loadFileasString(AWORKPATH+'FXcop.txt');  //orig of XML
+    rlist:= TStringlist.create;
+    with TRegExpr.Create do try 
+      //gstr:= 'System';
+      gstr:= 'part';
+      //gstr2:= ' TypeName, Category, CheckId, Status, Created';
+      gstr2:= 'string'; //gstr2:= 'AvoidUnusedPrivateFields';
+      modifierS:= false; //non greedy
+      modifierI:= true;  //case insens
+      //Expression:= '.*[1-9a-zA-Z_](?).'+gstr+'.{10}'; //stand search
+      //Expression:= gstr+'.*(ca2201.*'+gstr2+').';      //standard copFX search
+      Expression:= gstr+'.*('+gstr2+').';      //standard copFX search
+      cntr:= 0;
+      rlist.Sorted:= true;   //before dup!
+      rlist.duplicates:= true; //NOT dupIgnore;
+      if Exec(fstr) then 
+        Repeat 
+          rlist.add(Match[0]); 
+          inc(cntr);
+        Until Not ExecNext; 
+      cntr:= 0;
+      cntr2:= 0;
+      fstr:= rlist.text;
+      rlist.Sorted:= true;   //before dup!
+      rlist.duplicates:= false;
+      rlist.Clear;
+      if Exec(fstr) then 
+       Repeat 
+         rlist.add(Match[0]); 
+         if oldmatch = Match[0] then
+           inc(cntr2)
+         else begin
+           if cntr2 <=9 then begin 
+             zeradd:= '00'+inttoStr(cntr2)
+             rlist.add(Format('Section Sum: %s of %s',[zeradd,oldmatch]));
+           end else 
+           if cntr2 <= 99 then begin
+             zeradd:= '0'+inttoStr(cntr2);
+             rlist.add(Format('Section Sum: %s of %s',[zeradd,oldmatch]));
+           end else
+             rlist.add(Format('Section Sum: %d of %s',[cntr2,oldmatch]));
+          cntr2:= 1;
+         end;    
+         oldmatch:= rlist[rlist.count-1];
+         inc(cntr);
+       Until Not ExecNext; 
+       with rlist do begin    //save console count categories
+         for i:= 0 to count-2 do 
+           writeln(rlist[i]);
+         Add(Format('Distinct Sort Metrics: %d of Total %d',[rlist.count,cntr]));
+         SavetoFile(AWORKPATH+FXCOPSORTOUT2);
+       end;  
+    finally 
+      writeln(inttostr(cntr)+ ' test total of '+gstr+' '+gstr2);
+      Free;
+      rlist.Free;
+    end; //with try
+    //SaveString(AWORKPATH+'COPFXcat.txt',fstr);
+    SearchandOpenDoc(AWORKPATH+FXCOPSORTOUT2);
+    screen.cursor:= CRDefault;
+  end;
+
+
+BEGIN  //Main
+//<Executable statements>
+  N:= 2; SN:= 1000;
+  {for i:= 1 to round(power(2,N)) do begin 
+    Writeln(intToStr(i)+TEXTOUT + DateTimeToStr(AddHours(Now,-i)));
+    Delay(SN);   //speed of time machine
+  end;}
+  getList:= TStringlist.create;
+     if IsValidPeFile(Exepath+FILENAME) then writeln ('Valid PE File!');
+     if PeVerifyCheckSum(Exepath+FILENAME) then writeln ('Valid CheckSum File!');
+     
+     if PeExportedFunctions(Exepath+FILENAME,  getList) then
+       for i:= 1 to getList.count-1 do 
+         writeln(getlist.strings[i]);
+     getList.Clear; 
+     if PeExportedNames(Exepath+FILENAME, getList) then
+       for i:= 1 to getList.count-1 do 
+         writeln(getlist.strings[i]);
+     getList.Clear; 
+     if PeBorFormNames(Exepath+FILENAME, getList) then
+       for i:= 1 to getList.count-1 do 
+         writeln(getlist.strings[i]);
+     getList.Clear; 
+     if PeResourceKindNames(Exepath+FILENAME, rtIcon, getList) then
+       for i:= 1 to getList.count-1 do 
+         writeln(getlist.strings[i]);
+      if PeDoesImportLibrary(Exepath+FILENAME,Exepath+'dmath.dll',false)
+       then writeln ('Import Lib!');
+    getList.Free;
+   Writeln(TEXTOUT + DateTimeToStr(AddHours(Now,-(round(power(2,24))))));
+//<Definitions>  
+
+  regstr:= 'd:\t\will\need\escaping\afile.pdf';
+  Writeln(booleanToString(ExecRegExpr('^\w{1}:\\.?\\.+\\.+\\.+\.pdf$',regstr))) 
+  Writeln(booleanToString(ExecRegExpr('^[a-zA-Z_][a-zA-Z0-9]*','pascal_name_kon'))) 
+  assert(21>2,'otherwise this is false');
+  assert(ExecRegExpr('(ab).+','abababab'),'otherwise REGEX false false');
+  findRegExExtensionsFXCopSort2;
+END. 
+
+
+
+----app_template_loaded_code----
+
+CL.AddDelphiFunction('Function PeExportedFunctions( const FileName : TFileName; const FunctionsList : TStrings) : Boolean');
+ CL.AddDelphiFunction('Function PeExportedNames( const FileName : TFileName; const FunctionsList : TStrings) : Boolean');
+ CL.AddDelphiFunction('Function PeExportedVariables( const FileName : TFileName; const FunctionsList : TStrings) : Boolean');
+ CL.AddDelphiFunction('Function PeResourceKindNames( const FileName : TFileName; ResourceType : TJclPeResourceKind; const NamesList : TStrings) : Boolean');
+ CL.AddDelphiFunction('Function PeBorFormNames( const FileName : TFileName; const NamesList : TStrings) : Boolean');
+ CL.AddDelphiFunction('Function PeBorDependedPackages( const FileName : TFileName; PackagesList : TStrings; FullPathName, Descriptions : Boolean) : Boolean');
+ CL.AddDelphiFunction('Function PeVerifyCheckSum( const FileName : TFileName) : Boolean');
+ CL.AddDelphiFunction('Function PeDoesImportLibrary( const FileName : TFileName; const LibraryName : string; Recursive : Boolean) : Boolean');
+ 
+ CL.AddTypeS('TJclPeResourceKind', '( rtUnknown0, rtCursorEntry, rtBitmap, rtI'
+   +'conEntry, rtMenu, rtDialog, rtString, rtFontDir, rtFont, rtAccelerators, r'
+   +'tRCData, rtMessageTable, rtCursor, rtUnknown13, rtIcon, rtUnknown15, rtVer'
+   +'sion, rtDlgInclude, rtUnknown18, rtPlugPlay, rtVxd, rtAniCursor, rtAniIcon'
+   +', rtHmtl, rtManifest, rtUserDefined )');
+  
+
+
+http://www.softwareschule.ch/download/maxbox_blix_the_programmer.pdf
+
+  
+  timec:= round(power(2,30)/24);
+  writeln(inttoStr(timec div 365));
+  writeln(intToStr(Round(Power(2,30)/24/365)));
+  writeln(inttoStr(round(power(2,12)) div 24));
+  maxcalcF('170*24');
+  
+  Energy = MemC * Work
+  W = KEt - KEº
+
+
+http://petshopboxstudio.com/goodies/free-vector-character-the-programmer/
+http://lifehacker.com/5401954/programmer-101-teach-yourself-how-to-code
+
+----code_cleared_checked----
+
+ 
+
+There are a lot of opinions out there, but there's no 88not one “best” language. Here's the thing to
+consider: In the end, language doesn't matter THAT much. Understanding data and control
+structures, algorithms, metrics, modelling and design patterns does matter very much. Every
+language, even a simple scripting language, will have elements that you'll use in other languages
+as well and will help 88your understanding. maXbox is build on Object Pascal and is similar to Java or C++ 88, a
+well known and mighty language.
+Script: Examples/336_digiclock2.txt
+Feedback @
+max@kleiner.com
+Literature:
+Kleiner et al., Patterns konkret, 2003, Software & Support
+Links of maXbox Tutorials:
+http://www.softwareschule.ch/maxbox.htm
+http://sourceforge.net/projects/maxbox
+http://sourceforge.net/apps/mediawiki/maxbox/
+http://en.wikipedia.org/wiki/Time_travel
+

@@ -1,0 +1,1376 @@
+Version:0.9
+StartHTML:0000000105
+EndHTML:0000171154
+StartFragment:0000001037
+EndFragment:0000171138
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>mXScriptasHTML</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="generator" content="SynEdit HTML exporter" />
+<style type="text/css">
+<!--
+body { color: #000000; background-color: #FFFFFF; }
+.pas1-assembler { }
+.pas1-character { text-decoration: underline; }
+.pas1-comment { color: #000080; font-style: italic; }
+.pas1-float { color: #800080; }
+.pas1-hexadecimal { color: #FF00FF; }
+.pas1-identifier { }
+.pas1-number { color: #FF0000; }
+.pas1-preprocessor { font-style: italic; }
+.pas1-reservedword { color: #000000; font-weight: bold; }
+.pas1-space { }
+.pas1-string { color: #008080; }
+.pas1-symbol { color: #000000; }
+-->
+</style>
+</head>
+<body>
+<!--StartFragment--><pre><code><span class="pas1-reservedword">Program</span><span class="pas1-space"> RegEx_Power_Tester_TRex3;
+
+</span><span class="pas1-comment">// Framework for RegEx tests  TRex at EKON 16
+// get the Box at: http://www.softwareschule.ch/maxbox.htm
+//*********************************************************************
+// logic REGEX ledwall example with objects, loc's=980, 28 intf, example 309ff  
+// first you define a size und pattern (word) and alter the pattern with
+// the function shows Delphi RegEx, TRegEx Studio and Core Unit Regex; 
+// task: write the sentence in sequence: 'the world of TREX color!'
+//*********************************************************************
+
+</span><span class="pas1-reservedword">Const</span><span class="pas1-space"> PATTERNPAUSE = </span><span class="pas1-number">350</span><span class="pas1-symbol">;
+      RUNPAUSE = </span><span class="pas1-number">180</span><span class="pas1-symbol">;
+      COL = </span><span class="pas1-number">5</span><span class="pas1-symbol">;
+      ROW = </span><span class="pas1-number">7</span><span class="pas1-symbol">;
+      SIGNS = </span><span class="pas1-number">36</span><span class="pas1-symbol">; </span><span class="pas1-comment">//(37_[0..36]: Space, A..Z, 0..9)
+</span><span class="pas1-space">      LEFTBASE = </span><span class="pas1-number">20</span><span class="pas1-symbol">;
+      TOPBASE = </span><span class="pas1-number">30</span><span class="pas1-symbol">; 
+      TEXTPATH = </span><span class="pas1-string">'examples\outline3.txt'</span><span class="pas1-symbol">;
+      AVIPATH = </span><span class="pas1-string">'examples\cool.avi'</span><span class="pas1-symbol">;
+      BITMAP = </span><span class="pas1-string">'examples\citymax.bmp'</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  ppForm: TForm;
+  mylabel: TLabel;
+  pattern1: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+  labelList: TStringList;
+  psize: integer;
+  pattar: </span><span class="pas1-reservedword">array</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">..SIGNS] </span><span class="pas1-reservedword">of</span><span class="pas1-space"> </span><span class="pas1-reservedword">shortstring</span><span class="pas1-symbol">;
+  mbitmap: TBitmap;
+  s1, c1: extended;
+  E: Exception;
+  
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> pauseLED(vpatt: </span><span class="pas1-reservedword">shortstring</span><span class="pas1-symbol">); </span><span class="pas1-reservedword">forward</span><span class="pas1-symbol">;
+  
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> LetShowRunVerify(apatt: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i,x: integer;
+  o: TLabel;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> x:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> COL </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> psize </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      o:= TLabel(labelList.objects[i-</span><span class="pas1-number">1</span><span class="pas1-symbol">]);
+      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> apatt[i] = </span><span class="pas1-string">'1'</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> o.color:= clblack
+        </span><span class="pas1-reservedword">else</span><span class="pas1-space"> o.color:= (clyellow);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> psize </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin</span><span class="pas1-space">   </span><span class="pas1-comment">//XCopy
+</span><span class="pas1-space">      apatt[i]:= apatt[i+</span><span class="pas1-number">1</span><span class="pas1-symbol">];
+      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (i </span><span class="pas1-reservedword">mod</span><span class="pas1-space"> COL = </span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then</span><span class="pas1-space">     </span><span class="pas1-comment">//!!
+</span><span class="pas1-space">        apatt[i]:= </span><span class="pas1-string">'0'
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+    Sleep(RUNPAUSE) 
+    </span><span class="pas1-comment">//if x= 4 then Break;  //optimise if run
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-comment">//Application.Processmessages; //debug
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> LetShowRunVerify2(vpattern: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">); </span><span class="pas1-comment">//draft
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  i,x: integer;
+  o: TLabel;
+  pattern2: </span><span class="pas1-reservedword">shortstring</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">40</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">      pattern2:= pattern2 + </span><span class="pas1-string">'0'</span><span class="pas1-symbol">;  </span><span class="pas1-comment">//Empty Space;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> psize+</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin</span><span class="pas1-space">   </span><span class="pas1-comment">//recopy   XCopy
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> vpattern[i] = </span><span class="pas1-string">'1'</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">         pattern2[i+</span><span class="pas1-number">1</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'1'</span><span class="pas1-symbol">;
+        </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+       </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> x:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> COL -</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> psize  </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      </span><span class="pas1-comment">//set next line of labels
+</span><span class="pas1-space">      o:= TLabel(labelList.objects[i-</span><span class="pas1-number">1</span><span class="pas1-symbol">]);
+        </span><span class="pas1-reservedword">if</span><span class="pas1-space"> pattern2[i] = </span><span class="pas1-string">'1'</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> o.color:= clblack
+          </span><span class="pas1-reservedword">else</span><span class="pas1-space"> o.color:= (clyellow);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+      </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> psize </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin</span><span class="pas1-space">   </span><span class="pas1-comment">//recopy
+</span><span class="pas1-space">      pattern2[i]:= pattern2[i+</span><span class="pas1-number">1</span><span class="pas1-symbol">];
+      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (i </span><span class="pas1-reservedword">mod</span><span class="pas1-space"> COL = </span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then</span><span class="pas1-space">     </span><span class="pas1-comment">//!!
+</span><span class="pas1-space">        pattern2[i]:= </span><span class="pas1-string">'0'
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    </span><span class="pas1-comment">//old
+</span><span class="pas1-space">     sleep(RUNPAUSE) 
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> x= </span><span class="pas1-number">4</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> break; 
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-comment">//application.processmessages;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> letShowVerify(vpattern: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i: integer;
+  o: TLabel;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> psize  </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    o:= TLabel(labelList.objects[i-</span><span class="pas1-number">1</span><span class="pas1-symbol">]);
+    </span><span class="pas1-comment">//o.caption:= inttostr(i);
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> i &lt;= length(vpattern) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> 
+      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> vpattern[i] = </span><span class="pas1-string">'1'</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> o.color:= clblack
+      </span><span class="pas1-reservedword">else</span><span class="pas1-space"> o.color:= clyellow;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-comment">//Runchar(vpattern)
+</span><span class="pas1-space">  </span><span class="pas1-comment">//application.ProcessMessages;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> Label1Click_EditPattern(Sender: TObject);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> o: TLabel;
+    sx: byte;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//70 in begin sound
+</span><span class="pas1-space">   </span><span class="pas1-comment">//showMessage(intToStr(TLabel(sender).tag))
+</span><span class="pas1-space">   sx:= TLabel(sender).tag;
+   o:= TLabel(labelList.objects[sx-</span><span class="pas1-number">1</span><span class="pas1-symbol">]);
+   </span><span class="pas1-comment">//o.caption:= inttostr(i);
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">if</span><span class="pas1-space"> o.color = clBlack </span><span class="pas1-reservedword">then</span><span class="pas1-space"> o.color:= clyellow
+       </span><span class="pas1-reservedword">else</span><span class="pas1-space"> o.color:= clblack;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> pauseLED(vpatt: </span><span class="pas1-reservedword">shortstring</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  sleep(PATTERNPAUSE);
+  letShowVerify(vpatt);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> Label1DClick_WritePattern(Sender: TObject);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i: byte;
+   st: </span><span class="pas1-reservedword">shortstring</span><span class="pas1-symbol">;
+    o: TLabel;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//70 in begin sound
+</span><span class="pas1-space">  st:= pattar[</span><span class="pas1-number">0</span><span class="pas1-symbol">];
+   </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> psize </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     o:= TLabel(labelList.objects[i-</span><span class="pas1-number">1</span><span class="pas1-symbol">]);
+     </span><span class="pas1-comment">//o.caption:= inttostr(i);
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">if</span><span class="pas1-space"> o.color = clBlack </span><span class="pas1-reservedword">then</span><span class="pas1-space"> st[i]:= </span><span class="pas1-string">'1'
+</span><span class="pas1-space">       </span><span class="pas1-reservedword">else</span><span class="pas1-space"> st[i]:= </span><span class="pas1-string">'0'</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-comment">//SetLEDConsole(st)
+</span><span class="pas1-space">   </span><span class="pas1-comment">//writeln(st)
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> ShowLED_TestSeq;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> 
+   pt0, pt11, tmpstr: </span><span class="pas1-reservedword">shortstring</span><span class="pas1-symbol">;
+   il: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   pt0:=  </span><span class="pas1-string">'00000000000000000000000000000000000'</span><span class="pas1-symbol">;
+   pt11:= </span><span class="pas1-string">'00100010101001111111011100111111100'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//hex store test 32+3=35
+</span><span class="pas1-space">   tmpstr:= pt11;
+   delete(tmpstr,</span><span class="pas1-number">4</span><span class="pas1-symbol">,</span><span class="pas1-number">32</span><span class="pas1-symbol">)
+   writeln(</span><span class="pas1-string">'cut test '</span><span class="pas1-symbol">+tmpstr)
+   writeln(bintohex2(tmpstr)); </span><span class="pas1-comment">//00000001
+</span><span class="pas1-space">   writeln(bintohex2(pt11));   </span><span class="pas1-comment">//153FB9FC
+</span><span class="pas1-space">   writeln(tmpstr+hextobin2(bintohex2(pt11)));  </span><span class="pas1-comment">//test to store pattern as HEX
+</span><span class="pas1-space">   writeln(pt11)
+   pattern1:= </span><span class="pas1-string">''</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">for</span><span class="pas1-space"> il:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> SIGNS </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     letShowVerify(pattar[il]);
+     </span><span class="pas1-comment">//writeln('pt'+inttostr(il))
+</span><span class="pas1-space">     pauseLED(pt0)
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">Procedure</span><span class="pas1-space"> WriteLED_Set(sentence: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">; arun: boolean);    </span><span class="pas1-comment">//draft
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> il,a: byte;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   sentence:= Uppercase(sentence)
+   </span><span class="pas1-reservedword">for</span><span class="pas1-space"> il:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> length(sentence) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     a:= Ord(sentence[il])-</span><span class="pas1-number">47</span><span class="pas1-symbol">;   </span><span class="pas1-comment">//ASCII 0=48 9=57  
+</span><span class="pas1-space">     writeln(inttostr(a))   </span><span class="pas1-comment">//debug
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (a&gt;</span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (a&lt;</span><span class="pas1-number">16</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">       </span><span class="pas1-reservedword">if</span><span class="pas1-space"> arun </span><span class="pas1-reservedword">then</span><span class="pas1-space">  
+          letShowRunVerify(pattar[a])
+          </span><span class="pas1-reservedword">else</span><span class="pas1-space"> letShowVerify(pattar[a]);
+     </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+     </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (a&gt;</span><span class="pas1-number">17</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (a&lt;</span><span class="pas1-number">42</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin</span><span class="pas1-space">   </span><span class="pas1-comment">//ASCII A=65 Z=90
+</span><span class="pas1-space">       </span><span class="pas1-reservedword">if</span><span class="pas1-space"> arun </span><span class="pas1-reservedword">then
+</span><span class="pas1-space">         letShowRunVerify(pattar[a-</span><span class="pas1-number">7</span><span class="pas1-symbol">])
+         </span><span class="pas1-reservedword">else</span><span class="pas1-space">  letShowVerify(pattar[a-</span><span class="pas1-number">7</span><span class="pas1-symbol">]);
+     </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+     </span><span class="pas1-reservedword">if</span><span class="pas1-space"> a&gt;</span><span class="pas1-number">220</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     </span><span class="pas1-comment">//if not arun then
+</span><span class="pas1-space">         pauseLED(pattar[</span><span class="pas1-number">0</span><span class="pas1-symbol">]);
+     </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;    
+     write(sentence[il])  </span><span class="pas1-comment">//test to console
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> FormKeyPress(Sender: TObject; </span><span class="pas1-reservedword">var</span><span class="pas1-space"> Key: Char);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Key =  </span><span class="pas1-character">#13</span><span class="pas1-space"> 
+   </span><span class="pas1-reservedword">then</span><span class="pas1-space"> WriteLED_Set(pattern1, true);
+ </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Key = </span><span class="pas1-character">#27</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> ppForm.close;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> CloseForm(Sender: TObject; </span><span class="pas1-reservedword">var</span><span class="pas1-space"> action: TCloseAction);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i: integer;
+</span><span class="pas1-reservedword">begin</span><span class="pas1-space"> 
+   </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> psize </span><span class="pas1-reservedword">do</span><span class="pas1-space">              
+     TLabel(labelList.objects[i-</span><span class="pas1-number">1</span><span class="pas1-symbol">]).Free;
+   action:= caFree;  
+   writeln(</span><span class="pas1-string">'free it label objects'</span><span class="pas1-symbol">)     </span><span class="pas1-comment">//debug
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+ 
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> loadPForm(vx, vy: integer);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  psize:= vx*vy
+  </span><span class="pas1-comment">//constructor
+</span><span class="pas1-space">  ppform:= TForm.Create(self);
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> ppform </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    caption:= </span><span class="pas1-string">'LEDBOX, click to edit, dblclick write out pattern'</span><span class="pas1-symbol">+
+                 </span><span class="pas1-string">' Press &lt;Return&gt; to run the Sentence'</span><span class="pas1-symbol">;  
+    width:= (vx*psize)+ </span><span class="pas1-number">10</span><span class="pas1-space"> + </span><span class="pas1-number">300</span><span class="pas1-symbol">;
+    height:= (vy*psize)+ </span><span class="pas1-number">30</span><span class="pas1-symbol">;
+    BorderStyle:= bsDialog;
+    Position:= poScreenCenter;
+    onKeyPress:= @FormKeyPress
+    </span><span class="pas1-comment">//OnClick:= @Label1Click;
+</span><span class="pas1-space">    OnClose:= @closeForm;
+    Show;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-space">  
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> InitPuzzle(vx: byte);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space">  i,x,y: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  labelList:= TStringList.Create;
+  x:= </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+  y:= </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> psize </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    mylabel:= TLabel.Create(ppform);
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mylabel </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      Parent:= ppForm;
+      color:= clyellow;
+      transparent:= false;
+      AutoSize:= false;
+      layout:= tlcenter;
+      alignment:= tacenter;
+      font.Size:= (psize </span><span class="pas1-reservedword">div</span><span class="pas1-space"> vx) + </span><span class="pas1-number">12</span><span class="pas1-symbol">;
+      </span><span class="pas1-comment">//font.Style:= [fsbold];
+</span><span class="pas1-space">      font.Color:= clyellow;
+      width:= psize; </span><span class="pas1-comment">//+1 without raster
+</span><span class="pas1-space">      height:= psize;
+      Left:= (x-</span><span class="pas1-number">1</span><span class="pas1-symbol">)*(psize + </span><span class="pas1-number">1</span><span class="pas1-symbol">);
+      Top:= (y-</span><span class="pas1-number">1</span><span class="pas1-symbol">)*(psize + </span><span class="pas1-number">1</span><span class="pas1-symbol">);
+      </span><span class="pas1-comment">//event handler to click!  
+</span><span class="pas1-space">      OnClick:= @Label1Click_EditPattern;
+      OnDblClick:= @Label1DClick_WritePattern;
+      tag:= i; </span><span class="pas1-comment">//save the position
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    </span><span class="pas1-comment">//set next line of labels
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (i </span><span class="pas1-reservedword">mod</span><span class="pas1-space"> vx = </span><span class="pas1-number">0</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      x:= </span><span class="pas1-number">1</span><span class="pas1-symbol">; 
+      inc(y);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else
+</span><span class="pas1-space">      inc(x);
+    </span><span class="pas1-comment">//add labels to the list
+</span><span class="pas1-space">    labellist.instancesize
+    labelList.addObject(inttostr(i), mylabel);
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> InitLED_SignPatterns;     </span><span class="pas1-comment">//add with 0 at the end
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">0</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'000000000000000000000000000000000000'</span><span class="pas1-symbol">;  </span><span class="pas1-comment">//Empty Space;
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">1</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'001000101001010010100101001010001000'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//0
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">2</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'001100111000010000100001000010000100'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//1
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">3</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'011100001000010011100100001000011100'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//2
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">4</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'011100001000010011100001000010011100'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//3
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">5</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'001100101001010010100111100010000100'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//4
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">6</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'011100100001100000100001000010011000'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//5
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">7</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'001100100001000011100101001010001000'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//6
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">8</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'011100001000010001000010000100001000'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//7
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">9</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'011100101001010011100101001010011100'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//8
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">10</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'011100101001010011100001000100010000'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//9
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">11</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'001000101001010100011111110001100010'</span><span class="pas1-symbol">;  </span><span class="pas1-comment">//A;
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">12</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'111001001010010111001001010010111000'</span><span class="pas1-symbol">;  </span><span class="pas1-comment">//B;
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">13</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'001100100010000100001000001000001100'</span><span class="pas1-symbol">;  </span><span class="pas1-comment">//C;
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">14</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'111001001010001100011000110010111000'</span><span class="pas1-symbol">;  </span><span class="pas1-comment">//D;
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">15</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'111101000010000111101000010000111100'</span><span class="pas1-symbol">;  </span><span class="pas1-comment">//E;
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">16</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'111111000010000111101000010000100000'</span><span class="pas1-symbol">;  </span><span class="pas1-comment">//F;
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">17</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'001100100110000101111000101001001100'</span><span class="pas1-symbol">;  </span><span class="pas1-comment">//G;
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">18</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'100011000110001111111000110001100010'</span><span class="pas1-symbol">;  </span><span class="pas1-comment">//H;
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">19</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'001000010000100001000010000100001000'</span><span class="pas1-symbol">;  </span><span class="pas1-comment">//I;
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">20</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'001110001000010000100001010010011000'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//J;
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">21</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'100011001010100110001010010010100010'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//K;
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">22</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'100001000010000100001000010000111110'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//L;
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">23</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'110111010110101101011000110001100010'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//M;
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">24</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'100011100110101100111000110001100010'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//N;
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">25</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'001000101010001100011000101010001000'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//O;
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">26</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'111001001010010100101110010000100000'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//P;
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">27</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'011101000110001100011000101110000110'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//Q;
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">28</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'111001001010010111001010010010100010'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//R
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">29</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'011101000010000011000001000010111000'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//S
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">30</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'111110010000100001000010000100001000'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//T
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">31</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'100011000110001100011000111011011100'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//U
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">32</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'100011000110001010100101000100001000'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//V
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">33</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'100011000110101101011010110101010100'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//W
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">34</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'100011000101010001000101010001100010'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//X
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">35</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'100011101101010001000010000100001000'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//Y
+</span><span class="pas1-space">   pattar[</span><span class="pas1-number">36</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'111110000100010001000100010000111110'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//Z
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> LetBitmap;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space"> mbitmap:= TBitmap.Create;
+  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    mbitmap.LoadFromFile(Exepath+BITMAP);
+    ppForm.Canvas.Draw(</span><span class="pas1-number">270</span><span class="pas1-symbol">,</span><span class="pas1-number">70</span><span class="pas1-symbol">, mbitmap);
+  </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">    raiseException2;
+    </span><span class="pas1-comment">//ppForm.Free;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+
+
+</span><span class="pas1-comment">//****************************** TRex Tester ********************************//
+</span><span class="pas1-reservedword">type</span><span class="pas1-space"> 
+  TDecorateURLsFlags = (
+ </span><span class="pas1-comment">// describes, which parts of hyper-link must be included
+</span><span class="pas1-space"> </span><span class="pas1-comment">// into VISIBLE part of the link:
+</span><span class="pas1-space">  durlProto, </span><span class="pas1-comment">// Protocol (like 'ftp://' or 'http://')
+</span><span class="pas1-space">  durlAddr,  </span><span class="pas1-comment">// TCP address or domain name (like 'anso.da.ru')
+</span><span class="pas1-space">  durlPort,  </span><span class="pas1-comment">// Port number if specified (like ':8080')
+</span><span class="pas1-space">  durlPath,  </span><span class="pas1-comment">// Path to document (like 'index.htm')
+</span><span class="pas1-space">  durlBMark, </span><span class="pas1-comment">// Book mark (like '#mark')
+</span><span class="pas1-space">  durlParam  </span><span class="pas1-comment">// URL params (like '?ID=2&amp;User=13')
+</span><span class="pas1-space"> );
+
+  TDecorateURLsFlagSet = </span><span class="pas1-reservedword">set</span><span class="pas1-space"> </span><span class="pas1-reservedword">of</span><span class="pas1-space"> TDecorateURLsFlags;
+
+</span><span class="pas1-reservedword">const</span><span class="pas1-space"> 
+  URLTemplate = 
+   </span><span class="pas1-string">'(?i)('</span><span class="pas1-space"> 
+   + </span><span class="pas1-string">'(FTP|HTTP)://'</span><span class="pas1-space">             </span><span class="pas1-comment">// Protocol 
+</span><span class="pas1-space">   + </span><span class="pas1-string">'|www\.)'</span><span class="pas1-space">     </span><span class="pas1-comment">// trick to catch links without protocol by detecting start'www.'
+</span><span class="pas1-space">   + </span><span class="pas1-string">'([\w\d\-]+(\.[\w\d\-]+)+)'</span><span class="pas1-space"> </span><span class="pas1-comment">// TCP addr or domain name
+</span><span class="pas1-space">   + </span><span class="pas1-string">'(:\d\d?\d?\d?\d?)?'</span><span class="pas1-space">        </span><span class="pas1-comment">// port number
+</span><span class="pas1-space">   + </span><span class="pas1-string">'(((/[%+\w\d\-\\\.]*)+)*)'</span><span class="pas1-space">  </span><span class="pas1-comment">// unix path
+</span><span class="pas1-space">   + </span><span class="pas1-string">'(\?[^\s=&amp;]+=[^\s=&amp;]+(&amp;[^\s=&amp;]+=[^\s=&amp;]+)*)?'</span><span class="pas1-space">  </span><span class="pas1-comment">// request (GET) params
+</span><span class="pas1-space">   + </span><span class="pas1-string">'(#[\w\d\-%+]+)?'</span><span class="pas1-symbol">;          </span><span class="pas1-comment">// bookmark 
+
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> DecorateURLs (
+ </span><span class="pas1-comment">// can find hyper links like 'http://...' or 'ftp://..'
+</span><span class="pas1-space"> </span><span class="pas1-comment">// as well as links without protocol, but start with 'www.'
+
+</span><span class="pas1-space"> </span><span class="pas1-reservedword">const</span><span class="pas1-space"> AText : </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">; </span><span class="pas1-comment">// Input text to find hyper-links
+
+</span><span class="pas1-space">  AFlags : TDecorateURLsFlagSet </span><span class="pas1-comment">//= [durlAddr, durlPath]
+</span><span class="pas1-space"> </span><span class="pas1-comment">// Which part of hyper-links found must be included into visible
+</span><span class="pas1-space"> </span><span class="pas1-comment">// part of URL, for example if [durlAddr] then hyper link
+</span><span class="pas1-space"> </span><span class="pas1-comment">// 'http://anso.da.ru/index.htm' will be decorated as
+</span><span class="pas1-space"> </span><span class="pas1-comment">// '&lt;a href=&quot;http://anso.da.ru/index.htm&quot;&gt;anso.da.ru&lt;/a&gt;'
+</span><span class="pas1-space">   ) : </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+ </span><span class="pas1-comment">// Returns input text with decorated hyper links 
+
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  PrevPos : integer;
+  s, Proto, Addr, HRef : </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Result := </span><span class="pas1-string">''</span><span class="pas1-symbol">; 
+  PrevPos := </span><span class="pas1-number">1</span><span class="pas1-symbol">; 
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TRegExpr.Create </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">try</span><span class="pas1-space"> 
+     Expression := URLTemplate; 
+     </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Exec (AText) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> 
+      </span><span class="pas1-reservedword">REPEAT</span><span class="pas1-space"> 
+        s := </span><span class="pas1-string">''</span><span class="pas1-symbol">; 
+        </span><span class="pas1-reservedword">if</span><span class="pas1-space"> AnsiCompareText (Match [</span><span class="pas1-number">1</span><span class="pas1-symbol">], </span><span class="pas1-string">'www.'</span><span class="pas1-symbol">) = </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">           Proto := </span><span class="pas1-string">'http://'</span><span class="pas1-symbol">;
+           Addr := Match [</span><span class="pas1-number">1</span><span class="pas1-symbol">] + Match [</span><span class="pas1-number">3</span><span class="pas1-symbol">];
+           HRef := Proto + Match [</span><span class="pas1-number">0</span><span class="pas1-symbol">];
+          </span><span class="pas1-reservedword">end
+</span><span class="pas1-space">         </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">           Proto := Match [</span><span class="pas1-number">1</span><span class="pas1-symbol">];
+           Addr := Match [</span><span class="pas1-number">3</span><span class="pas1-symbol">];
+           HRef := Match [</span><span class="pas1-number">0</span><span class="pas1-symbol">];
+          </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+        </span><span class="pas1-reservedword">if</span><span class="pas1-space"> durlProto </span><span class="pas1-reservedword">in</span><span class="pas1-space"> AFlags
+         </span><span class="pas1-reservedword">then</span><span class="pas1-space"> s := s + Proto;
+        </span><span class="pas1-reservedword">if</span><span class="pas1-space"> durlAddr </span><span class="pas1-reservedword">in</span><span class="pas1-space"> AFlags
+         </span><span class="pas1-reservedword">then</span><span class="pas1-space"> s := s + Addr;
+        </span><span class="pas1-reservedword">if</span><span class="pas1-space"> durlPort </span><span class="pas1-reservedword">in</span><span class="pas1-space"> AFlags
+         </span><span class="pas1-reservedword">then</span><span class="pas1-space"> s := s + Match [</span><span class="pas1-number">5</span><span class="pas1-symbol">];
+        </span><span class="pas1-reservedword">if</span><span class="pas1-space"> durlPath </span><span class="pas1-reservedword">in</span><span class="pas1-space"> AFlags
+         </span><span class="pas1-reservedword">then</span><span class="pas1-space"> s := s + Match [</span><span class="pas1-number">6</span><span class="pas1-symbol">];
+        </span><span class="pas1-reservedword">if</span><span class="pas1-space"> durlParam </span><span class="pas1-reservedword">in</span><span class="pas1-space"> AFlags
+         </span><span class="pas1-reservedword">then</span><span class="pas1-space"> s := s + Match [</span><span class="pas1-number">9</span><span class="pas1-symbol">];
+        </span><span class="pas1-reservedword">if</span><span class="pas1-space"> durlBMark </span><span class="pas1-reservedword">in</span><span class="pas1-space"> AFlags
+         </span><span class="pas1-reservedword">then</span><span class="pas1-space"> s := s + Match [</span><span class="pas1-number">11</span><span class="pas1-symbol">];
+        Result := Result + Copy (AText, PrevPos,
+         MatchPos [</span><span class="pas1-number">0</span><span class="pas1-symbol">] - PrevPos) + </span><span class="pas1-string">'&lt;a href=&quot;'</span><span class="pas1-space"> + HRef + </span><span class="pas1-string">'&quot;&gt;'</span><span class="pas1-space"> + s + </span><span class="pas1-string">'&lt;/a&gt;'</span><span class="pas1-symbol">;
+        PrevPos := MatchPos [</span><span class="pas1-number">0</span><span class="pas1-symbol">] + MatchLen [</span><span class="pas1-number">0</span><span class="pas1-symbol">];
+      </span><span class="pas1-reservedword">UNTIL</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> ExecNext;
+     Result := Result + Copy (AText, PrevPos, MaxInt); </span><span class="pas1-comment">// Tail
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">finally</span><span class="pas1-space"> Free;
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; </span><span class="pas1-comment">{ of function DecorateURLs }
+
+//RegEx Online
+</span><span class="pas1-reservedword">const</span><span class="pas1-space">  russTemplate = </span><span class="pas1-comment">//'(?i)Ioeoeaeuiue eo?n OA ii aieea?o' 
+</span><span class="pas1-space">    </span><span class="pas1-comment">//'.*Aaoa\s*Eo?n\s*Eo?n iie.\s*Eo?n i?ia. [^&lt;\d]*' 
+</span><span class="pas1-space">    </span><span class="pas1-comment">//  '.*&Auml;&agrave;&ograve;&agrave;\s*&Ecirc;&oacute;?&ntilde;\s*&Ecirc;&oacute;?&ntilde; &iuml;&icirc;&ecirc;.\s*&Ecirc;&oacute;?&ntilde; &iuml;?&icirc;&auml;.\s*&Ecirc;&oacute;&eth;&ntilde; &iacute;&agrave;?[^&lt;\d]*' 
+</span><span class="pas1-space">    </span><span class="pas1-string">'(\d?\d)/(\d?\d)/(\d\d)\s*[\d.]+\s*([\d.]+)'</span><span class="pas1-symbol">; 
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> getREGEXOnline(Sender: TObject); 
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> http1: TIDHTTP;
+  htret: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin</span><span class="pas1-space"> 
+  http1:= TIDHTTP.Create(self);
+  htret:= HTTP1.Get(</span><span class="pas1-string">'http://win.www.citycat.ru/finance/finmarket/_CBR/'</span><span class="pas1-symbol">); 
+  </span><span class="pas1-comment">//writeln(htret);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TRegExpr.Create </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">try</span><span class="pas1-space"> 
+     Expression:= russTemplate; 
+     </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Exec(htret) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin</span><span class="pas1-space"> 
+       </span><span class="pas1-comment">//if 
+</span><span class="pas1-space">       writeln(Format (</span><span class="pas1-string">'Russian rouble rate at %s.%s.%s: %s'</span><span class="pas1-symbol">, 
+         [Match[</span><span class="pas1-number">2</span><span class="pas1-symbol">], Match[</span><span class="pas1-number">1</span><span class="pas1-symbol">], Match[</span><span class="pas1-number">3</span><span class="pas1-symbol">], Match[</span><span class="pas1-number">4</span><span class="pas1-symbol">]])); 
+      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+      </span><span class="pas1-comment">//writeln(dump)
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">finally</span><span class="pas1-space"> Free; 
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+   </span><span class="pas1-comment">//text2html
+</span><span class="pas1-space">   </span><span class="pas1-comment">//writeln('deco: '+#13+#10+DecorateURLs(htret,[durlAddr, durlPath])) 
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> ExtractPhones (</span><span class="pas1-reservedword">const</span><span class="pas1-space"> AText : </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">; APhones : TStrings); 
+  </span><span class="pas1-reservedword">begin</span><span class="pas1-space"> 
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TRegExpr.Create </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">try</span><span class="pas1-space"> 
+    Expression:= </span><span class="pas1-string">'(\+\d *)?(\((\d+)\) *)?(\d+(-\d*)*)'</span><span class="pas1-symbol">; 
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Exec (AText) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> 
+      </span><span class="pas1-reservedword">REPEAT</span><span class="pas1-space"> 
+        </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Match [</span><span class="pas1-number">3</span><span class="pas1-symbol">] = </span><span class="pas1-string">'812'</span><span class="pas1-space"> 
+         </span><span class="pas1-reservedword">then</span><span class="pas1-space"> APhones.Add (Match [</span><span class="pas1-number">4</span><span class="pas1-symbol">]); 
+      </span><span class="pas1-reservedword">UNTIL</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> ExecNext; 
+    </span><span class="pas1-reservedword">finally</span><span class="pas1-space"> Free; 
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+
+</span><span class="pas1-comment">(*procedure regExGreedy;
+var S, RE, Link, Text: string;
+  Match: TMatch;
+begin
+  S := '&lt;a href=&quot;go1.html&quot;&gt;Go 1&lt;/a&gt;&lt;a href=&quot;go2.html&quot;&gt;Go 2&lt;/a&gt;'; *)
+</span><span class="pas1-space">  </span><span class="pas1-comment">//RE := '&lt;a href=&quot;(.*)&quot;&gt;(.*)&lt;/a&gt;';
+</span><span class="pas1-space">  </span><span class="pas1-comment">//Match:= TRegEx.Match(S, RE, [roIgnoreCase, roMultiLine, roCompiled]);
+</span><span class="pas1-space">  </span><span class="pas1-comment">//while Match.Success do begin
+</span><span class="pas1-space">    </span><span class="pas1-comment">//ShowMessage('URL: '+ Match.Groups[1].Value +', Text: ' + Match.Groups[2].Value);
+</span><span class="pas1-space">    </span><span class="pas1-comment">//Match := Match.NextMatch;
+</span><span class="pas1-space">  </span><span class="pas1-comment">//end;
+//end;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> DelphiPerlRegex;
+</span><span class="pas1-comment">//var mot: TPerlRegExOptions;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TPerlRegex.create </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    Options:= Options + [preUnGreedy];
+    Subject:= </span><span class="pas1-string">'I like to sing out at Foo bar'</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">RegEx</span><span class="pas1-symbol">:= </span><span class="pas1-string">'([1-9A-Za-z]+) bar'</span><span class="pas1-symbol">;
+    </span><span class="pas1-comment">//Study;
+</span><span class="pas1-space">    Replacement:= </span><span class="pas1-string">'\1 is the name of the bar I like'</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Match </span><span class="pas1-reservedword">then</span><span class="pas1-space"> ShowMessageBig(ComputeReplacement);
+    
+    Subject:= </span><span class="pas1-string">'This is a Linux or a Windows App.'</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">RegEx</span><span class="pas1-symbol">:= </span><span class="pas1-string">'Windows|Linux'</span><span class="pas1-symbol">;  </span><span class="pas1-comment">// Matches 'Windows' or 'Linux', whichever comes first
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Match </span><span class="pas1-reservedword">then</span><span class="pas1-space"> showMessageBig(MatchedText +</span><span class="pas1-string">'came first!'</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">    Free;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//I have the following REGEX:
+//^(\[[A-Za-z0-9,]+\])?([A-Za-z0-9]+:)?([A-Za-z]+)\(?([^\)]*)\)?$
+(*When presented with Set(ID,99)
+Perl returns:
+1:[], 2:[], 3:[Set], 4:[ID,99] - as I expected
+
+Delphi's Reg ex returns *)
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> DelphiCoreCodeRegEx;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> </span><span class="pas1-reservedword">regEx</span><span class="pas1-symbol">: TPerlRegEx;
+  i: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    </span><span class="pas1-comment">{ TODO -oUser -cConsole Main : Insert code here }
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">regEx</span><span class="pas1-symbol">:= TPerlRegEx.Create;
+    </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">regEx</span><span class="pas1-symbol">.</span><span class="pas1-reservedword">RegEx</span><span class="pas1-symbol">:= </span><span class="pas1-string">'^(\[[A-Za-z0-9,]+\])?([A-Za-z0-9]+:)?([A-Za-z]+)\(?([^\)]*)\)?$'</span><span class="pas1-symbol">;
+      </span><span class="pas1-reservedword">regEx</span><span class="pas1-symbol">.Subject:= </span><span class="pas1-string">'Set(ID,99)'</span><span class="pas1-symbol">;
+      WriteLn(</span><span class="pas1-string">'Regex: '</span><span class="pas1-symbol">+</span><span class="pas1-reservedword">regEx</span><span class="pas1-symbol">.</span><span class="pas1-reservedword">RegEx</span><span class="pas1-symbol">);
+      WriteLn(</span><span class="pas1-string">'Subject:'</span><span class="pas1-symbol">+</span><span class="pas1-reservedword">regEx</span><span class="pas1-symbol">.Subject);
+      WriteLn(</span><span class="pas1-string">''</span><span class="pas1-symbol">);
+      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-reservedword">regEx</span><span class="pas1-symbol">.Match </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">          </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">4</span><span class="pas1-space"> </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">            Write(Format(</span><span class="pas1-string">'Group %d:[%s] '</span><span class="pas1-symbol">,[i,</span><span class="pas1-reservedword">regEx</span><span class="pas1-symbol">.Groups[i]]));
+        </span><span class="pas1-reservedword">end
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">else
+</span><span class="pas1-space">        WriteLn(</span><span class="pas1-string">'Subject did not match the regular expression'</span><span class="pas1-symbol">);
+      </span><span class="pas1-comment">{ReadLn('')}</span><span class="pas1-symbol">;WriteLn(</span><span class="pas1-string">' '</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">regEx</span><span class="pas1-symbol">.Free;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">except
+</span><span class="pas1-space">    </span><span class="pas1-comment">//on E: Exception do
+</span><span class="pas1-space">     Writeln(</span><span class="pas1-string">'E.ClassName'</span><span class="pas1-symbol">+ </span><span class="pas1-string">': '</span><span class="pas1-symbol">+ E.</span><span class="pas1-reservedword">Message</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+ </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+ 
+ 
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  parser: TPerlRegEx;
+  list: TStringList;
+  found: boolean;
+  it: integer;
+
+</span><span class="pas1-reservedword">const</span><span class="pas1-space"> codestr1 =</span><span class="pas1-string">'2001, 2002, 200001, 2004, 1000000'</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> DelphiCoreCodeRegEx2;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    </span><span class="pas1-comment">{ TODO -oUser -cConsole Main : Insert code here }
+</span><span class="pas1-space">    list:= TStringList.Create;
+    </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">      parser:= TPerlRegEx.Create;
+      </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">        parser.</span><span class="pas1-reservedword">RegEx</span><span class="pas1-symbol">:= </span><span class="pas1-string">'\b(\d{4})(?!\d)'</span><span class="pas1-symbol">;
+        parser.Subject:= codeStr1;
+        found:= parser.Match;
+        </span><span class="pas1-reservedword">while</span><span class="pas1-space"> found </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">            list.Add(parser.Groups[</span><span class="pas1-number">1</span><span class="pas1-symbol">]);
+            found:= parser.MatchAgain;
+          </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+        </span><span class="pas1-comment">//for str in List do
+</span><span class="pas1-space">          </span><span class="pas1-comment">//WriteLn('Matched: ',str);
+</span><span class="pas1-space">        </span><span class="pas1-reservedword">for</span><span class="pas1-space"> it:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> list.count-</span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> 
+           WriteLn(</span><span class="pas1-string">'Matched: '</span><span class="pas1-symbol">+list.strings[it]);
+         WriteLn(</span><span class="pas1-string">'Total Matches: '</span><span class="pas1-symbol">+inttoStr(list.Count));
+        </span><span class="pas1-comment">//ReadLn;
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">        parser.Free;
+      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">      list.Free;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">except
+</span><span class="pas1-space">    </span><span class="pas1-comment">//on E: Exception do
+</span><span class="pas1-space">      </span><span class="pas1-comment">//Writeln(raiseLastException+ ' : '+ E.Message);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+ 
+ 
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> PR: TPerlRegEx;
+    TestString: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> delphiRegexMailfinder;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">// Initialize a test string to include some email addresses. This would normally
+</span><span class="pas1-space">  </span><span class="pas1-comment">// be your eMail text.
+</span><span class="pas1-space">  TestString:= </span><span class="pas1-string">'&lt;one@server.domain.xy&gt;, another@otherserver.xyz'</span><span class="pas1-symbol">;
+  PR:= TPerlRegEx.Create;
+  </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    PR.</span><span class="pas1-reservedword">RegEx</span><span class="pas1-symbol">:= </span><span class="pas1-string">'\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b'</span><span class="pas1-symbol">; </span><span class="pas1-comment">// &lt;-- this is the actual regex used.
+</span><span class="pas1-space">    PR.Options:= PR.Options + [preCaseLess, premultiline];
+    PR.Compile;
+    PR.Subject:= TestString; </span><span class="pas1-comment">// &lt;-- tell the TPerlRegEx where to look for matches
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> PR.Match </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      </span><span class="pas1-comment">// At this point a first matched eMail is already in MatchedText so grab it
+</span><span class="pas1-space">      WriteLn(PR.MatchedText); </span><span class="pas1-comment">// Extract first address (one@server.domain.xy)
+</span><span class="pas1-space">      </span><span class="pas1-comment">// Let the regex engine look for more matches in a loop:
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">while</span><span class="pas1-space"> PR.MatchAgain </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">        WriteLn(PR.MatchedText); </span><span class="pas1-comment">//Extract subsequent addresses(another@otherserver)
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">finally</span><span class="pas1-space"> PR.Free;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-comment">//Readln;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+ </span><span class="pas1-reservedword">var
+</span><span class="pas1-space">    myf: extended;
+    secyear, lightyear: extended;</span><span class="pas1-comment">//double;
+</span><span class="pas1-space">    regexres: TStrings;
+    gstr, fstr, email, rex, mystr, fs: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">regEx</span><span class="pas1-symbol">, PR1: TPerlRegEx;
+    </span><span class="pas1-comment">//myEval: TMatchEvaluator;
+</span><span class="pas1-space">    </span><span class="pas1-comment">//match: TPerlMatch;
+
+//main App of LED REGEX HEX BOX ****************************************
+</span><span class="pas1-reservedword">Begin
+
+</span><span class="pas1-comment">{fs:=  'northwest       NW      Charles Main            300000.00'#13#10+
+      'western         WE      Sharon Gray             53000.89'#13#10+
+      'southwest       SW      Lewis Dalsass           290000.73'+CR+LF+
+      'southern        SO      Suan Chin               54500.10'+CR+LF+
+      'southeast       SE      Patricia Hemenway       400000.00'+CR+LF+
+      'eastern         EA      TB Savage               440500.45'+CR+LF+
+      'northeast       NE      AM Main Jr.             57800.10'+CR+LF+
+      'north           NO      Ann Stephens            455000.50'+CR+LF+
+      'central         CT      KRush                   575500.70'+CR+LF+
+      ''+CR+LF+
+      'Extra [A-Z]****[0-9]..$5.00'; }
+
+</span><span class="pas1-space">  </span><span class="pas1-comment">//SaveString(Exepath+'\examples\regexlist.txt',fs);
+</span><span class="pas1-space">  </span><span class="pas1-comment">//memo2.text:= loadfileasString(Exepath+'\examples\regexlist.txt');
+</span><span class="pas1-space">  </span><span class="pas1-comment">//SearchandOpenDoc(Exepath+'\examples\regexlist.txt');
+
+//**************************** OOP in maXbox *******************************
+//sizex, sizey as paras()
+</span><span class="pas1-space">  </span><span class="pas1-comment">//pattern1:= '0123456789';
+</span><span class="pas1-space">  pattern1:= </span><span class="pas1-string">'Pascal_Rex'</span><span class="pas1-symbol">;
+  </span><span class="pas1-comment">//pattern1:= 'THIS IS MAXLAND';
+
+</span><span class="pas1-space">  </span><span class="pas1-comment">(*loadPForm(COL,ROW);
+  initPuzzle(COL); 
+  InitLED_SignPatterns; VCLtester_VCLUtils*)
+</span><span class="pas1-space"> 
+  </span><span class="pas1-comment">//ShowLED_TestSeq;
+</span><span class="pas1-space">  </span><span class="pas1-comment">//WriteLed_Set('PASCAL')
+</span><span class="pas1-space">  </span><span class="pas1-comment">//WriteLed_Set(pattern1)
+</span><span class="pas1-space">  </span><span class="pas1-comment">//WriteLed_Set('MAXBOX')
+</span><span class="pas1-space">  </span><span class="pas1-comment">//WriteLed_Set(pattern1, true)  //true with animation
+</span><span class="pas1-space">  </span><span class="pas1-comment">//Writeln(GetASCII)
+</span><span class="pas1-space">  
+  writeln(floattostr(power(</span><span class="pas1-number">2</span><span class="pas1-symbol">,</span><span class="pas1-number">64</span><span class="pas1-symbol">)))
+  writeln(</span><span class="pas1-string">'Formula Direct: '</span><span class="pas1-symbol">+floattoSTr(getFormulaValue(</span><span class="pas1-string">'3*45+ln(34)-sqrt(16)'</span><span class="pas1-symbol">)));
+  writeln(</span><span class="pas1-string">'Formula Direct: '</span><span class="pas1-symbol">+floattoSTr(</span><span class="pas1-reservedword">maxCalc</span><span class="pas1-symbol">(</span><span class="pas1-string">'3*45+ln(34)-sqrt(16)'</span><span class="pas1-symbol">)));
+  </span><span class="pas1-comment">//writeln('Formula Direct: '+floattoSTr(maxCalc('20 mod 4')));  syntax error
+</span><span class="pas1-space">  </span><span class="pas1-comment">//DomainCheck  error
+</span><span class="pas1-space">  myf:= </span><span class="pas1-float">123.059</span><span class="pas1-symbol">;
+  writeln(</span><span class="pas1-string">'Formula ArcCos: '</span><span class="pas1-symbol">+floattoSTr(arccos(</span><span class="pas1-float">0.05998</span><span class="pas1-symbol">)));
+  writeln(</span><span class="pas1-string">'Formula ArcSinH: '</span><span class="pas1-symbol">+floattoSTr(arcSinH(myf)));
+  PrintF(</span><span class="pas1-string">'Formula Direct: %f '</span><span class="pas1-symbol">,[</span><span class="pas1-reservedword">maxCalc</span><span class="pas1-symbol">(</span><span class="pas1-string">'Ln(123.059+sqrt((123.059*123.059)+1))'</span><span class="pas1-symbol">)]);
+  </span><span class="pas1-comment">//Result := Ln(X + Sqrt((X * X) + 1));
+</span><span class="pas1-space">  SinCos(</span><span class="pas1-number">0</span><span class="pas1-symbol">, s1, c1); </span><span class="pas1-comment">// 0 test
+</span><span class="pas1-space">  writeln(</span><span class="pas1-string">'Formula SinCos:  '</span><span class="pas1-symbol">+floattoSTr(s1)+ </span><span class="pas1-string">' '</span><span class="pas1-symbol">+floattoSTr(c1));
+  s1:= </span><span class="pas1-float">0.3</span><span class="pas1-symbol">; c1:= </span><span class="pas1-float">0.5</span><span class="pas1-symbol">;
+  SinCos(</span><span class="pas1-float">1.0</span><span class="pas1-symbol">, s1, c1);
+  writeln(</span><span class="pas1-string">'Formula SinCos:  '</span><span class="pas1-symbol">+floattoSTr(s1)+ </span><span class="pas1-string">' '</span><span class="pas1-symbol">+floattoSTr(c1));
+  SinCos(</span><span class="pas1-float">1.0</span><span class="pas1-symbol">, s1, c1);
+ </span><span class="pas1-comment">// SinCosJ(1.0, s1, c1);
+</span><span class="pas1-space">  writeln(</span><span class="pas1-string">'Formula SinCosJ: '</span><span class="pas1-symbol">+floattoSTr(s1)+ </span><span class="pas1-string">' '</span><span class="pas1-symbol">+floattoSTr(c1));
+  </span><span class="pas1-comment">//Ln((Sqrt(1 - X * X) + 1) / X)
+</span><span class="pas1-space">  writeln(</span><span class="pas1-string">'PI is: '</span><span class="pas1-symbol">+floatToStr(PI));  </span><span class="pas1-comment">//3.14159265358979
+</span><span class="pas1-space">  writeln(</span><span class="pas1-string">'Formula Gauss first, s=3, z=0.0014: '</span><span class="pas1-symbol">+</span><span class="pas1-character">#13#10</span><span class="pas1-symbol">+
+     floattoSTr(</span><span class="pas1-reservedword">maxCalc</span><span class="pas1-symbol">(</span><span class="pas1-string">'1/sqrt(2*PI*3^2)'</span><span class="pas1-symbol">)));
+  writeln(</span><span class="pas1-string">'Formula Gauss second: '</span><span class="pas1-symbol">+
+     floattoSTr(</span><span class="pas1-reservedword">maxCalc</span><span class="pas1-symbol">(</span><span class="pas1-string">'exp((-0.0014^2)/(2*3^2))'</span><span class="pas1-symbol">)));
+  </span><span class="pas1-comment">// 8.68956546144783
+</span><span class="pas1-space">  writeln(</span><span class="pas1-string">'Formula Gauss : '</span><span class="pas1-symbol">+
+     floatToSTr(</span><span class="pas1-reservedword">maxCalc</span><span class="pas1-symbol">(</span><span class="pas1-string">'1/SQRT(2*PI*3^2)*EXP((-0.0014^2)/(2*3^2))'</span><span class="pas1-symbol">)));
+ 
+   </span><span class="pas1-comment">//light seconds
+</span><span class="pas1-space">    printf(</span><span class="pas1-string">'check of light year %f'</span><span class="pas1-symbol">,[</span><span class="pas1-reservedword">maxCalc</span><span class="pas1-symbol">(</span><span class="pas1-string">'(60*24*60*365.25)*(299792458)'</span><span class="pas1-symbol">)]);
+  </span><span class="pas1-comment">//printf('check of lyear %f',[maxcalc('(60*24*60*365.25)*[metersperlightsecond]')]);
+</span><span class="pas1-space">    printf(</span><span class="pas1-string">'this is ysec %d'</span><span class="pas1-symbol">,[secondoftheyear(now)]);
+    printf(</span><span class="pas1-string">'sec of year %f'</span><span class="pas1-symbol">,[</span><span class="pas1-reservedword">maxCalc</span><span class="pas1-symbol">(</span><span class="pas1-string">'60*24*60*365.25'</span><span class="pas1-symbol">)]);
+    </span><span class="pas1-comment">//julian year
+</span><span class="pas1-space">    secyear:= (</span><span class="pas1-reservedword">maxCalc</span><span class="pas1-symbol">(</span><span class="pas1-string">'60*24*60*365.25'</span><span class="pas1-symbol">));
+    writeln(</span><span class="pas1-string">'secyear: '</span><span class="pas1-symbol">+floattostr(secyear));
+  </span><span class="pas1-comment">// 6149: GoldenMean: Float = 1.618033988749894848204586834365638; // GoldenMean
+</span><span class="pas1-space">   printf(</span><span class="pas1-string">'golden mean %.18f'</span><span class="pas1-symbol">,[goldenmean]);
+   printf(</span><span class="pas1-string">'pi of j %.18f'</span><span class="pas1-symbol">,[pij]);
+   printf(</span><span class="pas1-string">'one parsec %.18f'</span><span class="pas1-symbol">,[metersperparsec]);
+   printf(</span><span class="pas1-string">'ref meters per light second %.18f'</span><span class="pas1-symbol">,[metersperlightsecond]);
+   printf(</span><span class="pas1-string">'ref meters per light year %.18f'</span><span class="pas1-symbol">,[metersperlightyear]);
+   lightyear:= metersperlightyear;
+   </span><span class="pas1-comment">//Result:   9.461 E12 kilometers
+</span><span class="pas1-space">   </span><span class="pas1-comment">//one lightsecond (1 Ls) 299 792,458 km ~ 300 Millionen Meter ~ 300.000 km
+</span><span class="pas1-space">   </span><span class="pas1-comment">//lightyear:= 9454254955E15;
+</span><span class="pas1-space">   writeln(floattostr(lightyear));
+   printf(</span><span class="pas1-string">'meters per light sec2: %.12f'</span><span class="pas1-symbol">,[lightyear / secyear]);
+   writeln(floattostr(lightyear/secyear));
+   printf(</span><span class="pas1-string">'million of sec %f'</span><span class="pas1-symbol">,[</span><span class="pas1-reservedword">maXcalc</span><span class="pas1-symbol">(</span><span class="pas1-string">'1E6 / (60*24*60)'</span><span class="pas1-symbol">)]);
+   printf(</span><span class="pas1-string">'2 ^64 -1 is 18 trillionen %.18f'</span><span class="pas1-symbol">,[</span><span class="pas1-reservedword">maXcalc</span><span class="pas1-symbol">(</span><span class="pas1-string">'2^64-1'</span><span class="pas1-symbol">)]);
+   printf(</span><span class="pas1-string">'2 ^64 -1 is 18 trillionen %.21f'</span><span class="pas1-symbol">,[power(</span><span class="pas1-number">2</span><span class="pas1-symbol">,</span><span class="pas1-number">64</span><span class="pas1-symbol">)-</span><span class="pas1-number">1</span><span class="pas1-symbol">]);
+   
+  </span><span class="pas1-comment">(*ShowmessageBig('this is the first HI on the line so the box goes LO on');
+  z:= $2345;  // $2345 hex : $23 hi byte, $45 lo byte
+  ShowMessage(Format('Integer = $%x', [z]));
+  ShowMessage(Format('Hi byte = $%x', [Hi(z)]));
+  ShowMessage(Format('Lo byte = $%x', [Lo(z)]));*)
+</span><span class="pas1-space"> 
+  </span><span class="pas1-comment">//printf('test million of sec %f',[lightyear * secyear]);
+//************************************REGEX *****************************
+//  Function ExecRegExpr( const ARegExpr, AInputStr : RegExprString) : boolean');
+</span><span class="pas1-space">    </span><span class="pas1-comment">///regex1 [12][09]\d{2}-\d{2}-\d{2}T12:[23]\d:\d{2}/
+</span><span class="pas1-space">    </span><span class="pas1-comment">//regex2 result group = /((19)|(20))(\d{2}-\d{2}-\d{2}T)(12:[23]\d:\d{2})/
+
+</span><span class="pas1-space">  email:= </span><span class="pas1-string">'max@kleiner.com'</span><span class="pas1-symbol">;
+  rex:= </span><span class="pas1-string">'[\w\d\-\.]+@[\w\d\-]+(\.[\w\d\-]+)+'</span><span class="pas1-symbol">;
+  writeln(</span><span class="pas1-string">'email '</span><span class="pas1-symbol">+booleanToString(ExecRegExpr(rex, email)))
+
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ExecRegExpr (rex, email)   
+    </span><span class="pas1-reservedword">then</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'gotcha! e-mail is valid ...'</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">else</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'email not valid'</span><span class="pas1-symbol">);   
+	
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ExecRegExpr(</span><span class="pas1-string">'((19)|(20))\d{2}-\d{2}-\d{2}T12:[23]\d:\d{2}'</span><span class="pas1-symbol">,
+    </span><span class="pas1-string">'1925-04-01T12:23:29'</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex true'</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">else</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex false'</span><span class="pas1-symbol">);
+  
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ExecRegExpr(</span><span class="pas1-string">'((19)|(20))(\d{2}-\d{2}-\d{2}T)(12:[23]\d:\d{2}-)'</span><span class="pas1-symbol">,
+    </span><span class="pas1-string">'1925-04-01T12:23:29-'</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex true'</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">else</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex false'</span><span class="pas1-symbol">);
+    </span><span class="pas1-comment">//4464: Function RegExprSubExpressions(const ARegExpr: string; ASubExprs: TStrings; AExtendedSyntax : boolean) :
+</span><span class="pas1-space">   
+   regexres:= TStringlist.Create;
+   RegExprSubExpressions(</span><span class="pas1-string">'((19)|(20))(\d{2}-\d{2}-\d{2}T)(12:[23]\d:\d{2})'</span><span class="pas1-symbol">,regexres,true);
+   writeln(regexres[</span><span class="pas1-number">4</span><span class="pas1-symbol">]);
+ </span><span class="pas1-comment">//Procedure SplitRegExpr(const ARegExpr,AInputStr: RegExprString;APieces:TStrings)');
+</span><span class="pas1-space">   
+   regexres.clear;
+</span><span class="pas1-comment">// java.util.regex.Matcher[pattern=((19)|(20))(\d{2}-\d{2}-\d{2}T)(12:[23]\d:\d{2}) region=0,19 lastmatch=] 12:33:29
+
+</span><span class="pas1-space">   SplitRegExpr(</span><span class="pas1-string">'((19)|(20))(\d{2}-\d{2}-\d{2}T)(12:[23]\d:\d{2})'</span><span class="pas1-symbol">,
+   </span><span class="pas1-string">'1925-04-01T12:233:29'</span><span class="pas1-symbol">,regexres);
+   writeln(regexres[</span><span class="pas1-number">0</span><span class="pas1-symbol">]);
+   regexres.Free;
+  
+  </span><span class="pas1-comment">//last two m&uuml;ller - maierhuber are false
+</span><span class="pas1-space">  </span><span class="pas1-comment">//[ae] a oder e //e? -&gt; 0 oder 1 e
+
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ExecRegExpr(</span><span class="pas1-string">'^M[ae][iy]e?r'</span><span class="pas1-symbol">,
+    </span><span class="pas1-string">'&quot;Meyer&quot;, &quot;Meier&quot;, &quot;Mair&quot;, &quot;Mayer&quot;, &quot;Maier&quot;, &quot;Meir&quot;, &quot;M&uuml;ller&quot;, &quot;Maierhuber&quot;'</span><span class="pas1-symbol">) 
+      </span><span class="pas1-reservedword">then</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex maier true'</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">else</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex maier false'</span><span class="pas1-symbol">);
+  
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ExecRegExpr(</span><span class="pas1-string">'M[ae][iy]e?r.*[be]'</span><span class="pas1-symbol">, </span><span class="pas1-string">'Mairhuberu'</span><span class="pas1-symbol">) 
+      </span><span class="pas1-reservedword">then</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex maierhuber true'</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">else</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex maierhuber false'</span><span class="pas1-symbol">);
+                                              
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ExecRegExpr(</span><span class="pas1-string">'^[a-zA-Z_][a-zA-Z0-9_].*'</span><span class="pas1-symbol">,</span><span class="pas1-string">'pascal_name_kon'</span><span class="pas1-symbol">) 
+      </span><span class="pas1-reservedword">then</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex pascal true'</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">else</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex pascal false'</span><span class="pas1-symbol">);
+   
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ExecRegExpr(</span><span class="pas1-string">'^[1-4]{3,}[A-D]{4,}$'</span><span class="pas1-symbol">,</span><span class="pas1-string">'121ABCD'</span><span class="pas1-symbol">) 
+      </span><span class="pas1-reservedword">then</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex hash true'</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">else</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex hash false'</span><span class="pas1-symbol">);
+
+    </span><span class="pas1-comment">//if ExecRegExpr('[1-9]{4,5}[A-F]{4,}','2127FADFF') 
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ExecRegExpr(</span><span class="pas1-string">'^([a-fA-F\d]{8})$'</span><span class="pas1-symbol">,</span><span class="pas1-string">'8a2127FA'</span><span class="pas1-symbol">) 
+       </span><span class="pas1-reservedword">then</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex hash true'</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">else</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex hash false'</span><span class="pas1-symbol">);
+
+    </span><span class="pas1-comment">//if ExecRegExpr('(?i)(?&lt;![a-z0-9][a-f0-9]{32}?![a-z0-9])','8a2127FADFF') 
+</span><span class="pas1-space">       </span><span class="pas1-comment">//then writeln('regex hash true') else writeln('regex hash false');
+
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ExecRegExpr(</span><span class="pas1-string">'^(:\d\d?\d?\d?\d?)$'</span><span class="pas1-symbol">,</span><span class="pas1-string">':80009'</span><span class="pas1-symbol">) 
+    </span><span class="pas1-reservedword">then</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex port true'</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">else</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex port false'</span><span class="pas1-symbol">);
+
+    </span><span class="pas1-comment">//if ExecRegExpr('\b\d{4}(?!\d)',':80009') 
+</span><span class="pas1-space">    </span><span class="pas1-comment">//then writeln('regex lookahead true') else writeln('regex lookahead false');
+</span><span class="pas1-space">                          
+</span><span class="pas1-comment">//def myFile = new File(&quot;C:\\dateienmitback\\dateien\\sound\\aa_playlists\\songbird_20110301\\Rockdisco.m3u&quot;) //def group = &quot;Queen&quot;
+
+</span><span class="pas1-space">    regexres:= TStringlist.Create;
+    regexres.Clear;
+  
+  </span><span class="pas1-comment">//gstr:= 'The Doors';
+</span><span class="pas1-space">  </span><span class="pas1-comment">//gstr:= 'Deep Purple';
+</span><span class="pas1-space">  fstr:= loadFileasString(Exepath+</span><span class="pas1-string">'examples\Rockdisco.m3u'</span><span class="pas1-symbol">);
+  </span><span class="pas1-comment">//writeln(fstr);
+</span><span class="pas1-space">  </span><span class="pas1-comment">//SplitRegExpr('#EXTINF:\d{3},'+gstr+' - (.*)',fstr,regexres);
+</span><span class="pas1-space">   </span><span class="pas1-comment">//writeln(regexres[0]);
+</span><span class="pas1-space">   </span><span class="pas1-comment">//regexres.Free;
+</span><span class="pas1-space">    </span><span class="pas1-comment">//with TRegExpr.Create do try 
+</span><span class="pas1-space">     </span><span class="pas1-comment">//modifiers:= /s;
+</span><span class="pas1-space">     </span><span class="pas1-comment">//modifierG:= true;
+</span><span class="pas1-space">     </span><span class="pas1-comment">// modifierS:= false;
+</span><span class="pas1-space">     </span><span class="pas1-comment">// Expression:= '#EXTINF:\d{3},'+gstr+' - ([^\n].*)';
+</span><span class="pas1-space">     </span><span class="pas1-comment">//Expression:= '#EXTINF:\d{3},The Doors - (.*)'; 
+</span><span class="pas1-space">     </span><span class="pas1-comment">//if Exec(fstr) then begin 
+</span><span class="pas1-space">       </span><span class="pas1-comment">// writeln(Format ('Songs of Doors: %s', [Match[1]])); 
+</span><span class="pas1-space">      </span><span class="pas1-comment">//end; 
+</span><span class="pas1-space">      </span><span class="pas1-comment">//writeln(dump)
+</span><span class="pas1-space">      </span><span class="pas1-comment">//((InvertCaseFunction
+</span><span class="pas1-space">    </span><span class="pas1-comment">//finally Free; 
+</span><span class="pas1-space">   </span><span class="pas1-comment">//end; 
+</span><span class="pas1-space">   
+   
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TRegExpr.Create </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">try</span><span class="pas1-space"> 
+  gstr:= </span><span class="pas1-string">'Deep Purple'</span><span class="pas1-symbol">;
+  modifierS:= false; </span><span class="pas1-comment">//non greedy
+</span><span class="pas1-space">     </span><span class="pas1-comment">//Expression := '(\+\d *)?(\((\d+)\) *)?(\d+(-\d*)*)'; 
+</span><span class="pas1-space">     Expression:= </span><span class="pas1-string">'#EXTINF:\d{3},'</span><span class="pas1-symbol">+gstr+</span><span class="pas1-string">' - ([^\n].*)'</span><span class="pas1-symbol">;
+     </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Exec(fstr) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> 
+      </span><span class="pas1-reservedword">Repeat</span><span class="pas1-space"> 
+      </span><span class="pas1-comment">//countmatch
+</span><span class="pas1-space">       writeln(Format (</span><span class="pas1-string">'Songs of '</span><span class="pas1-space"> +gstr+</span><span class="pas1-string">': %s'</span><span class="pas1-symbol">, [Match[</span><span class="pas1-number">1</span><span class="pas1-symbol">]])); 
+        </span><span class="pas1-comment">{if AnsiCompareText(Match[1], 'Woman') &gt; 0 then begin
+          closeMP3;
+          playMP3('D:\kleiner2005\ekon_11\EKON_13_14_15\EKON16\06_Woman_From_Tokyo.mp3');
+        end;}
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">Until</span><span class="pas1-space"> </span><span class="pas1-reservedword">Not</span><span class="pas1-space"> ExecNext; 
+    </span><span class="pas1-reservedword">finally</span><span class="pas1-space"> Free; 
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+  regexres.Free;
+  
+  
+ </span><span class="pas1-comment">// email:= 'max@kleiner.com';
+</span><span class="pas1-space">  rex:= </span><span class="pas1-string">'[\w\d\-\.]+@[\w\d\-]+(\.[\w\d\-]+)+'</span><span class="pas1-symbol">;
+  fstr:= loadFileasString(Exepath+</span><span class="pas1-string">'examples\Simone_Seiler_Furrer.vcf'</span><span class="pas1-symbol">);
+   
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TRegExpr.Create </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">try</span><span class="pas1-space"> 
+  gstr:= </span><span class="pas1-string">'simone'</span><span class="pas1-symbol">;
+  modifierS:= false; </span><span class="pas1-comment">//non greedy
+</span><span class="pas1-space">     </span><span class="pas1-comment">//Expression := '(\+\d *)?(\((\d+)\) *)?(\d+(-\d*)*)'; 
+</span><span class="pas1-space">     Expression:= rex;
+     </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Exec(fstr) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> 
+      </span><span class="pas1-reservedword">Repeat</span><span class="pas1-space"> 
+      </span><span class="pas1-comment">//countmatch
+</span><span class="pas1-space">       writeln(Format(</span><span class="pas1-string">'mail of '</span><span class="pas1-space"> +gstr+</span><span class="pas1-string">': %s'</span><span class="pas1-symbol">,[Match[</span><span class="pas1-number">1</span><span class="pas1-symbol">]])); 
+      </span><span class="pas1-reservedword">Until</span><span class="pas1-space"> </span><span class="pas1-reservedword">Not</span><span class="pas1-space"> ExecNext; 
+    </span><span class="pas1-reservedword">finally</span><span class="pas1-space"> Free; 
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+  </span><span class="pas1-comment">//regexres.Free;
+</span><span class="pas1-space">  
+  </span><span class="pas1-comment">//@Slide Examples EKON:
+</span><span class="pas1-space">  fstr:= </span><span class="pas1-string">''</span><span class="pas1-symbol">;
+  fstr:= loadfileasString(Exepath+</span><span class="pas1-string">'\examples\regexlist.txt'</span><span class="pas1-symbol">);
+ 
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TRegExpr.Create </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">try</span><span class="pas1-space"> 
+    gstr:= </span><span class="pas1-string">'perl'</span><span class="pas1-symbol">;
+    modifierS:= false; </span><span class="pas1-comment">//non greedy
+</span><span class="pas1-space">     </span><span class="pas1-comment">//Expression := '(\+\d *)?(\((\d+)\) *)?(\d+(-\d*)*)'; 
+</span><span class="pas1-space">     Expression:= </span><span class="pas1-string">'(north[^\n].*)'</span><span class="pas1-symbol">;
+     </span><span class="pas1-comment">//Expression:= '\b\d{4}(?!\d)';
+</span><span class="pas1-space">     </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Exec(fstr) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> 
+      </span><span class="pas1-reservedword">Repeat</span><span class="pas1-space"> 
+      </span><span class="pas1-comment">//countmatch
+</span><span class="pas1-space">       writeln(Format(</span><span class="pas1-string">'match of '</span><span class="pas1-space"> +gstr+</span><span class="pas1-string">': %s'</span><span class="pas1-symbol">,[Match[</span><span class="pas1-number">1</span><span class="pas1-symbol">]])); 
+      </span><span class="pas1-reservedword">Until</span><span class="pas1-space"> </span><span class="pas1-reservedword">Not</span><span class="pas1-space"> ExecNext; 
+    </span><span class="pas1-reservedword">finally</span><span class="pas1-space"> Free; 
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+   
+ </span><span class="pas1-comment">//******************* compare perlregex - regexstudio *****************
+</span><span class="pas1-space">   
+   </span><span class="pas1-comment">//var mystr: string;    Delphi RegEx - RegeX Studio
+</span><span class="pas1-space">       
+       </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TRegExpr.Create </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">try</span><span class="pas1-space"> 
+         </span><span class="pas1-comment">//Make it case-insensitive 
+</span><span class="pas1-space">         ModifierI:= True; 
+         mystr:= </span><span class="pas1-string">'&lt;body&gt; My TRex on Regex&lt;/body&gt;'</span><span class="pas1-symbol">; 
+         Expression := </span><span class="pas1-string">'&lt;body.*&gt;(.*?)&lt;/body&gt;'</span><span class="pas1-symbol">; 
+       </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Exec(Mystr) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> 
+              ShowMessageBig(Match[</span><span class="pas1-number">1</span><span class="pas1-symbol">]); 
+       </span><span class="pas1-reservedword">finally</span><span class="pas1-space"> 
+         Free; 
+       </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+ 
+       </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TPerlRegEx.Create </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">try</span><span class="pas1-space">        </span><span class="pas1-comment">//Perl Delphi RegEx
+</span><span class="pas1-space">         </span><span class="pas1-reservedword">RegEx</span><span class="pas1-symbol">:= </span><span class="pas1-string">'&lt;title&gt;(.+?)&lt;/title&gt;'</span><span class="pas1-symbol">; 
+         Options:= [preCaseLess]; 
+         Subject:= </span><span class="pas1-string">'testa &lt;title&gt; My TRex on Regex&lt;/title&gt; testb'</span><span class="pas1-symbol">; 
+         </span><span class="pas1-comment">//ResString:= Replace;
+</span><span class="pas1-space">          </span><span class="pas1-reservedword">If</span><span class="pas1-space"> Match </span><span class="pas1-reservedword">then</span><span class="pas1-space"> 
+             ShowMessageBig(Groups[</span><span class="pas1-number">1</span><span class="pas1-symbol">])  </span><span class="pas1-comment">//SubExpressions[1]) ,MatchedText
+</span><span class="pas1-space">         </span><span class="pas1-reservedword">else</span><span class="pas1-space"> 
+           ShowMessageBig(</span><span class="pas1-string">'Regex Not found'</span><span class="pas1-symbol">);
+       </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">         Free;
+       </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;      
+   
+   
+</span><span class="pas1-comment">//********* TMatchCollection   EKON 16 Examples  *****************************
+</span><span class="pas1-space">   </span><span class="pas1-comment">//http://www.regexbuddy.com/delphi.html
+
+</span><span class="pas1-identifier">fs:=  </span><span class="pas1-string">'Northwest       NW      Charles Main            300000.00'</span><span class="pas1-character">#13#10</span><span class="pas1-symbol">+
+      </span><span class="pas1-string">'Western         WE      Sharon Gray             53000.89'</span><span class="pas1-character">#13#10</span><span class="pas1-symbol">+
+      </span><span class="pas1-string">'southwest       SW      Lewis Dalsass           290000.73'</span><span class="pas1-symbol">+CR+LF+
+      </span><span class="pas1-string">'Southern        SO      Suan Chin               54500.10'</span><span class="pas1-symbol">+CR+LF+
+      </span><span class="pas1-string">'southeast       SE      Patricia Hemenway       400000.00'</span><span class="pas1-symbol">+CR+LF+
+      </span><span class="pas1-string">'eastern         EA      TB Savage               440500.45'</span><span class="pas1-symbol">+CR+LF+
+      </span><span class="pas1-string">'northeast       NE      AM Main Jr.             57800.10'</span><span class="pas1-symbol">+CR+LF+
+      </span><span class="pas1-string">'north           NO      Ann Stephens            455000.52'</span><span class="pas1-symbol">+CR+LF+
+      </span><span class="pas1-string">'ncentral         CT      KRush                   575500.70'</span><span class="pas1-symbol">+CR+LF+
+      </span><span class="pas1-string">''</span><span class="pas1-symbol">+CR+LF+    </span><span class="pas1-comment">//emptyline
+</span><span class="pas1-space">      </span><span class="pas1-comment">//'Extra [A-Z]****[0-9]..$5.00'+CR+LF+
+</span><span class="pas1-space">      </span><span class="pas1-string">'Extra2 ^[A-Z]****[0-9]..$5.00'</span><span class="pas1-symbol">+CR+LF;
+
+    </span><span class="pas1-comment">//rex:= '(north[^\n].*)';
+</span><span class="pas1-space">    </span><span class="pas1-comment">//rex:= '.*NW|EA[^\n].*';
+</span><span class="pas1-space">    </span><span class="pas1-comment">//rex:= '.*3+[^\n].*';
+</span><span class="pas1-space">    </span><span class="pas1-comment">//rex:= '.*2\.?[0-9].*';
+</span><span class="pas1-space">    </span><span class="pas1-comment">//rex:= '(no)+.*';   //Print all lines containing one or more consecutive occurrences of the pattern “no”.
+</span><span class="pas1-space">    </span><span class="pas1-comment">//rex:=  '.*S(h|u).*';  //Print all lines containing the uppercase letter “S”, followed by either “h” or “u”.
+</span><span class="pas1-space">    </span><span class="pas1-comment">//rex:=  '[A-Z]'+'****'+'[0-9]..$5.00';
+</span><span class="pas1-space">    </span><span class="pas1-comment">//rex:=  '^n.*';
+</span><span class="pas1-space">    </span><span class="pas1-comment">//rex:= '.*\.00$';
+</span><span class="pas1-space">    </span><span class="pas1-comment">//rex:= '.*5\..';
+</span><span class="pas1-space">    </span><span class="pas1-comment">//rex:= '^[we].*';
+</span><span class="pas1-space">    </span><span class="pas1-comment">//rex:= '.*\.[^0][^0].*'; //Print all lines ending with a period and exactly two non-zero numbers.
+</span><span class="pas1-space">    </span><span class="pas1-comment">//rex:= '.*[0-9]{6}\..*'; //all lines at least 6 consecutive numbs follow. by a period.
+</span><span class="pas1-space">    </span><span class="pas1-comment">//rex:= '\&lt;north';
+</span><span class="pas1-space">    </span><span class="pas1-comment">//rex:= '.*(es).*\1.*';   //subpattern
+</span><span class="pas1-space">    </span><span class="pas1-comment">//rex:= '^No.*0$';   //subpattern
+</span><span class="pas1-space">     rex:= </span><span class="pas1-string">'^No.*0'</span><span class="pas1-symbol">;   </span><span class="pas1-comment">//greedy test
+</span><span class="pas1-space">    </span><span class="pas1-comment">//rex:= '[]^[-]';
+</span><span class="pas1-space">    </span><span class="pas1-comment">//rex:= '\b(\d{2,4})';
+</span><span class="pas1-space">    </span><span class="pas1-comment">// rex:= '^[A-Z].*';
+</span><span class="pas1-space">    </span><span class="pas1-comment">// rex:= '^.*$';   //emptyline
+</span><span class="pas1-space">    
+    PR1:= TPerlRegEx.Create;
+    </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">      PR1.</span><span class="pas1-reservedword">RegEx</span><span class="pas1-symbol">:= rex;     </span><span class="pas1-comment">//whole line!
+</span><span class="pas1-space">      Writeln(</span><span class="pas1-string">'EKON 16 EXamples:'</span><span class="pas1-symbol">);
+      </span><span class="pas1-comment">//PR1.RegEx := '\b\d{4}(?!\d)';
+</span><span class="pas1-space">      PR1.Subject:= fs; </span><span class="pas1-comment">//fstr;
+</span><span class="pas1-space">      </span><span class="pas1-comment">//WriteLn('Regex: '+regEx.RegEx);
+</span><span class="pas1-space">      </span><span class="pas1-comment">//WriteLn('Subject:'+regEx.Subject);
+</span><span class="pas1-space">      WriteLn(</span><span class="pas1-string">''</span><span class="pas1-symbol">);
+     PR1.Options:= PR1.Options + [preCaseLess];
+     PR1.Options:= PR1.Options + [preMultiline];
+     </span><span class="pas1-comment">//PR1.Options:= PR1.Options + [preUnGreedy];
+</span><span class="pas1-space">   
+     </span><span class="pas1-comment">//PR1.Compile;
+</span><span class="pas1-space">      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> PR1.Match </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        WriteLn(</span><span class="pas1-string">'Firstmatch: '</span><span class="pas1-symbol">+PR1.MatchedText);    
+      </span><span class="pas1-reservedword">while</span><span class="pas1-space"> PR1.MatchAgain </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">        WriteLn(</span><span class="pas1-string">'Nextmatch: '</span><span class="pas1-symbol">+PR1.MatchedText); </span><span class="pas1-comment">// Extract subsequent )
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+      </span><span class="pas1-comment">{if regEx.Match then begin
+          for i:= 1 to 4 do
+            Write(Format('Group %d:[%s] ',[i,regEx.Groups[i]]));
+        end }
+</span><span class="pas1-space">      WriteLn(</span><span class="pas1-string">' '</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">      PR1.Free;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+   
+   </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TRegExpr.Create </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin</span><span class="pas1-space"> 
+       modifierS:= true; </span><span class="pas1-comment">//greedy
+</span><span class="pas1-space">       ModifierI:= false;
+       ModifierM:= false;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;   
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ExecRegExpr(rex,fs) 
+      </span><span class="pas1-reservedword">then</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex found'</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">else</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex not found'</span><span class="pas1-symbol">);
+  
+    </span><span class="pas1-comment">//if ExecRegExpr('^[A-Z,a-z].*',fs) 
+</span><span class="pas1-space">      </span><span class="pas1-comment">//then writeln('regex found') else writeln('regex not found');
+</span><span class="pas1-space">  
+  </span><span class="pas1-comment">//getREGEXonLine(self);             
+</span><span class="pas1-space">  
+  DelphiPerlRegex;
+  DelphiCoreCodeRegEx;
+  DelphiCoreCodeRegEx2;
+  DelphiRegexMailfinder;
+  
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ExecRegExpr(</span><span class="pas1-string">'^[a-zA-Z_][a-zA-Z0-9_].*$'</span><span class="pas1-symbol">,</span><span class="pas1-string">'pascal_name_kon'</span><span class="pas1-symbol">) 
+      </span><span class="pas1-reservedword">then</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex pascal name true'</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">else</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'regex pascal name false'</span><span class="pas1-symbol">);
+   
+ Writeln(booleanToString(ExecRegExpr(</span><span class="pas1-string">'^[a-zA-Z_][a-zA-Z0-9]*'</span><span class="pas1-symbol">,</span><span class="pas1-string">'pascal_name_kon'</span><span class="pas1-symbol">))) 
+ writeln(</span><span class="pas1-string">''</span><span class="pas1-symbol">); 
+ writeln(</span><span class="pas1-string">'IP Test'</span><span class="pas1-symbol">); 
+ Writeln(</span><span class="pas1-string">'IP Test '</span><span class="pas1-symbol">+booleanToString(ExecRegExpr(</span><span class="pas1-string">'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}'</span><span class="pas1-symbol">,
+                                  </span><span class="pas1-string">'192.168.1.044'</span><span class="pas1-symbol">))) 
+ 
+ Writeln(</span><span class="pas1-string">'Tasche '</span><span class="pas1-symbol">+booleanToString(ExecRegExpr(</span><span class="pas1-string">'T[ai]sche'</span><span class="pas1-symbol">,</span><span class="pas1-string">'Taaaasche'</span><span class="pas1-symbol">))) 
+ writeln(</span><span class="pas1-string">''</span><span class="pas1-symbol">);
+  </span><span class="pas1-comment">//writeln('deco: '+DecorateURLs('http://anso.da.ru/index.htm',[durlAddr]));
+</span><span class="pas1-space">  </span><span class="pas1-comment">//oExpression:=TniRegularExpression.Create('PascalNames:[a-zA-Z_][a-zA-Z0-9_]*',[ ]);
+</span><span class="pas1-space">  </span><span class="pas1-comment">//TniRegularExpressionMatchResult = (mrNone, mrFail, mrMatch, mrInsufficient);
+</span><span class="pas1-space">   </span><span class="pas1-comment">//if oExpression.match('PascalNames:Get_function_A999') = mrMatch then
+</span><span class="pas1-space">     </span><span class="pas1-comment">//      writeln('expression matched! '+intToStr(oExpression.MatchCount)) else
+</span><span class="pas1-space">     </span><span class="pas1-comment">//      writeln('no matching');
+
+</span><span class="pas1-space">  </span><span class="pas1-comment">//ShowMessage(ReplaceRegExpr('World','Hello, EKON World!', 'Earth',true)); 
+</span><span class="pas1-space">  </span><span class="pas1-comment">//ShowMessageBig(ReplaceRegExpr('&lt;.*?&gt;','Dies ist ein &lt;b&gt;Text&lt;/b&gt; mit &lt;i&gt;HTML&lt;/i&gt;-Kennzeichen', '',true)); 
+</span><span class="pas1-space">  Writeln(ReplaceRegExpr(</span><span class="pas1-string">'&lt;.*?&gt;'</span><span class="pas1-symbol">,</span><span class="pas1-string">'Dies ist ein &lt;b&gt;Text&lt;/b&gt; mit &lt;i&gt;HTML&lt;/i&gt;-Kennzeichen'</span><span class="pas1-symbol">, </span><span class="pas1-string">''</span><span class="pas1-symbol">,true)); 
+  Writeln(ReplaceRegExpr(</span><span class="pas1-string">'&lt;.*&gt;'</span><span class="pas1-symbol">,</span><span class="pas1-string">'Dies ist ein &lt;b&gt;Text&lt;/b&gt; mit &lt;i&gt;HTML&lt;/i&gt;-Kennzeichen'</span><span class="pas1-symbol">, </span><span class="pas1-string">''</span><span class="pas1-symbol">,true)); 
+  Writeln(ReplaceRegExpr(</span><span class="pas1-string">'&lt;.&gt;'</span><span class="pas1-symbol">,</span><span class="pas1-string">'Dies ist ein &lt;b&gt;Text&lt;/b&gt; mit &lt;i&gt;HTML&lt;/i&gt;-Kennzeichen'</span><span class="pas1-symbol">, </span><span class="pas1-string">''</span><span class="pas1-symbol">,true)); 
+  
+  </span><span class="pas1-comment">//maxform1.SerialRS2321Click(self)
+</span><span class="pas1-space">  </span><span class="pas1-comment">//Application.onmessage
+</span><span class="pas1-space">  </span><span class="pas1-comment">//Application.onException
+</span><span class="pas1-space">  </span><span class="pas1-comment">//label1click_EditPattern(self)
+</span><span class="pas1-space">  </span><span class="pas1-comment">//DisplayStream
+</span><span class="pas1-space">  </span><span class="pas1-comment">//SwapLong(swap_endian_u32)
+//  AESSymetricExecute(exepath+'examples\aestest.txt', exepath+'examples\aestest_encrypt/.txt','0001020304');
+</span><span class="pas1-space"> </span><span class="pas1-comment">///  writeln('app handle '+ inttostr(application.handle));
+</span><span class="pas1-space">  </span><span class="pas1-comment">//writeln('app owner'+ TApplication(application.owner).name);
+</span><span class="pas1-space">  </span><span class="pas1-comment">// writeln('app name '+ (application.name));
+</span><span class="pas1-space"> 
+</span><span class="pas1-reservedword">End</span><span class="pas1-symbol">.
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |
+        |____/  |___| |____| |_|     |_| |_| |_| 
+        
+
+http:</span><span class="pas1-comment">//regexpstudio.com/tregexpr/help/whats_new.html      
+
+
+</span><span class="pas1-identifier">Ein Lichtjahr ist die Strecke, die eine elektromagnetische Welle wie das Licht </span><span class="pas1-reservedword">in</span><span class="pas1-space"> einem julianischen Jahr </span><span class="pas1-reservedword">in</span><span class="pas1-space"> absolutem Vakuum zur&uuml;cklegt. Das sind etwa </span><span class="pas1-number">9</span><span class="pas1-symbol">,</span><span class="pas1-number">5</span><span class="pas1-space"> Billionen Kilometer (</span><span class="pas1-number">9</span><span class="pas1-symbol">,</span><span class="pas1-number">5</span><span class="pas1-space"> &middot; </span><span class="pas1-number">1012</span><span class="pas1-space"> km).      
+Das Formelzeichen c (von lateinisch celeritas, Schnelligkeit) wird </span><span class="pas1-reservedword">in</span><span class="pas1-space"> vielen F&auml;llen auch f&uuml;r die abweichende Ausbreitungsgeschwindigkeit </span><span class="pas1-reservedword">in</span><span class="pas1-space">   
+
+</span><span class="pas1-number">1</span><span class="pas1-space"> Lj = </span><span class="pas1-number">9</span><span class="pas1-space"> </span><span class="pas1-number">460</span><span class="pas1-space"> </span><span class="pas1-number">730</span><span class="pas1-space"> </span><span class="pas1-number">472</span><span class="pas1-space"> </span><span class="pas1-number">580</span><span class="pas1-space"> </span><span class="pas1-number">800</span><span class="pas1-space"> m        
+  printf(</span><span class="pas1-string">'check of light year %f'</span><span class="pas1-symbol">,[</span><span class="pas1-reservedword">maxcalc</span><span class="pas1-symbol">(</span><span class="pas1-string">'(60*24*60*365.25)*(299792458)'</span><span class="pas1-symbol">)]);
+  
+F&uuml;r andere Jahresdefinitionen ergeben sich:
+
+    </span><span class="pas1-float">9.454.254.955.488.000</span><span class="pas1-space"> m bez&uuml;glich des Gemeinjahrs (exakt),
+    </span><span class="pas1-float">9.460.528.191.000.000</span><span class="pas1-space"> m bez&uuml;glich des tropischen Jahrs (zur Epoche J2000.</span><span class="pas1-number">0</span><span class="pas1-symbol">),
+    </span><span class="pas1-float">9.460.536.207.068.016</span><span class="pas1-space"> m bez&uuml;glich des gregorianischen Jahrs (exakt),
+    </span><span class="pas1-float">9.460.895.221.000.000</span><span class="pas1-space"> m bez&uuml;glich des siderischen Jahrs (zur Epoche J2000.</span><span class="pas1-number">0</span><span class="pas1-symbol">).
+    
+ CL.AddConstantN(</span><span class="pas1-string">'MetersPerLightYear'</span><span class="pas1-symbol">,</span><span class="pas1-string">'Extended'</span><span class="pas1-symbol">).setExtended( MetersPerLightSecond * </span><span class="pas1-float">31556925.9747</span><span class="pas1-symbol">);    </span><span class="pas1-comment">//mit 365.2422 !
+</span><span class="pas1-space">    
+
+</span><span class="pas1-reservedword">RegEx</span><span class="pas1-space"> </span><span class="pas1-reservedword">for</span><span class="pas1-space"> a valid </span><span class="pas1-reservedword">file</span><span class="pas1-space"> name: (?i)^(?!^(PRN|AUX|CLOCK\</span><span class="pas1-hexadecimal">$</span><span class="pas1-symbol">|NUL|CON|COM\d|LPT\d|\..*)(\..+)?</span><span class="pas1-hexadecimal">$</span><span class="pas1-symbol">)[^\\\./:\*\?\&quot;&lt;&gt;\|][^\\/:\*\?\&quot;&lt;&gt;\|]</span><span class="pas1-comment">{0,254}</span><span class="pas1-hexadecimal">$</span><span class="pas1-space">        
+                                          
+   Weiterf&uuml;hrung der Scholz Software Systems </span><span class="pas1-number">3</span><span class="pas1-identifier">S
+        
+The Jedi project provides the following solution </span><span class="pas1-reservedword">in</span><span class="pas1-space"> JclMath:
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> SinCos(X: Float; </span><span class="pas1-reservedword">var</span><span class="pas1-space"> Sin, Cos: Float);
+
+  </span><span class="pas1-preprocessor">{$IFDEF CPU386}
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> FSinCos(X: Float; </span><span class="pas1-reservedword">var</span><span class="pas1-space"> Sin, Cos: Float); </span><span class="pas1-reservedword">assembler</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">asm
+</span><span class="pas1-space">          FLD     X
+          FSINCOS
+          FSTP    Float PTR [EDX]
+          FSTP    Float PTR [EAX]
+          FWAIT
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-preprocessor">{$ENDIF CPU386}
+
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  DomainCheck(Abs(X) &gt; MaxAngle);
+  </span><span class="pas1-preprocessor">{$IFDEF CLR}
+</span><span class="pas1-space">  Sin := System.Math.Sin(X);
+  Cos := System.Math.Cos(X);
+  </span><span class="pas1-preprocessor">{$ELSE}
+</span><span class="pas1-space">  FSinCos(X, Sin, Cos);
+  </span><span class="pas1-preprocessor">{$ENDIF CLR}
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+The domain check raises a exception </span><span class="pas1-reservedword">in</span><span class="pas1-space"> </span><span class="pas1-reservedword">case</span><span class="pas1-space"> </span><span class="pas1-reservedword">of</span><span class="pas1-space"> argument </span><span class="pas1-reservedword">out</span><span class="pas1-space"> </span><span class="pas1-reservedword">of</span><span class="pas1-space"> +</span><span class="pas1-number">2</span><span class="pas1-symbol">^</span><span class="pas1-float">63.</span><span class="pas1-space">  
+
+http:</span><span class="pas1-comment">//regexpstudio.com/tregexpr/help/whats_new.html      
+</span><span class="pas1-space">        
+        
+Text processing from bird</span><span class="pas1-string">'s eye view
+</span><span class="pas1-reservedword">Do</span><span class="pas1-space"> You want </span><span class="pas1-reservedword">to</span><span class="pas1-space"> write </span><span class="pas1-reservedword">program</span><span class="pas1-space"> </span><span class="pas1-reservedword">for</span><span class="pas1-space"> extracting weather forecast </span><span class="pas1-reservedword">or</span><span class="pas1-space"> currency rates </span><span class="pas1-reservedword">or</span><span class="pas1-space"> e-mails </span><span class="pas1-reservedword">or</span><span class="pas1-space"> whatsoever You want from HTML-pages, e-mails </span><span class="pas1-reservedword">or</span><span class="pas1-space"> other unformatted source? </span><span class="pas1-reservedword">Or</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> You need </span><span class="pas1-reservedword">to</span><span class="pas1-space"> import data into Your database from old DB</span><span class="pas1-string">'s ugly export form
+
+</span><span class="pas1-identifier">There are two ways.
+
+The traditional one - You must make full featured text parser. This </span><span class="pas1-reservedword">is</span><span class="pas1-space"> an awful peace </span><span class="pas1-reservedword">of</span><span class="pas1-space"> work!
+</span><span class="pas1-reservedword">For</span><span class="pas1-space"> example, </span><span class="pas1-reservedword">try</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> implement rules how </span><span class="pas1-reservedword">to</span><span class="pas1-space"> recognize e-mail address - simple code like
+	p := Pos (</span><span class="pas1-string">'@'</span><span class="pas1-symbol">, email);   
+	</span><span class="pas1-reservedword">if</span><span class="pas1-space"> (p &gt; </span><span class="pas1-number">1</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> (p &lt; length (email))   
+	  </span><span class="pas1-reservedword">then</span><span class="pas1-space"> ...   
+	
+don</span><span class="pas1-string">'t filter many common errors, for example, users frequently forget enter domain-part of e-mail, You'</span><span class="pas1-identifier">ll need much more complex code (just read the big article &quot;Extended E-mail Address Verification </span><span class="pas1-reservedword">and</span><span class="pas1-space"> Correction&quot; </span><span class="pas1-reservedword">on</span><span class="pas1-space"> www.Delphi3000.com). Just th
+
+The second way - look at the text from bird</span><span class="pas1-string">'s eye view with help of regular expressions engine. You don'</span><span class="pas1-identifier">t write the check processing routine, You just describe how regexp engine must </span><span class="pas1-reservedword">do</span><span class="pas1-space"> it </span><span class="pas1-reservedword">for</span><span class="pas1-space"> You. Your application will be implemented very fast a
+Unfortunately, Delphi component palette </span><span class="pas1-reservedword">contains</span><span class="pas1-space"> no TRegularExpression component. But there are some third-party implementations (I think You already know at least one </span><span class="pas1-number">8</span><span class="pas1-symbol">-)).
+
+Example </span><span class="pas1-number">1
+</span><span class="pas1-identifier">How </span><span class="pas1-reservedword">to</span><span class="pas1-space"> chech e-mail address syntax.
+Just write
+	</span><span class="pas1-reservedword">if</span><span class="pas1-space"> ExecRegExpr (</span><span class="pas1-string">'[\w\d\-\.]+@[\w\d\-]+(\.[\w\d\-]+)+'</span><span class="pas1-symbol">, email)   
+	</span><span class="pas1-reservedword">then</span><span class="pas1-space"> ... gotcha! e-mail </span><span class="pas1-reservedword">is</span><span class="pas1-space"> valid ...   
+	
+</span><span class="pas1-reservedword">Do</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> forget </span><span class="pas1-reservedword">to</span><span class="pas1-space"> add TRegExpr into </span><span class="pas1-reservedword">uses</span><span class="pas1-space"> section </span><span class="pas1-reservedword">of</span><span class="pas1-space"> the </span><span class="pas1-reservedword">unit</span><span class="pas1-symbol">.
+
+Example </span><span class="pas1-number">2
+</span><span class="pas1-identifier">How </span><span class="pas1-reservedword">to</span><span class="pas1-space"> extract phone numbers from unformatted text (web-pages, e-mails, etc).
+</span><span class="pas1-reservedword">For</span><span class="pas1-space"> example, we need only St-Petersburg (Russia) phones (city code </span><span class="pas1-number">812</span><span class="pas1-symbol">).
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> ExtractPhones (</span><span class="pas1-reservedword">const</span><span class="pas1-space"> AText : </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">; APhones : TStrings); 
+</span><span class="pas1-reservedword">begin</span><span class="pas1-space"> 
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TRegExpr.Create </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">try</span><span class="pas1-space"> 
+     Expression := </span><span class="pas1-string">'(\+\d *)?(\((\d+)\) *)?(\d+(-\d*)*)'</span><span class="pas1-symbol">; 
+     </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Exec (AText) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> 
+      </span><span class="pas1-reservedword">REPEAT</span><span class="pas1-space"> 
+        </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Match [</span><span class="pas1-number">3</span><span class="pas1-symbol">] = </span><span class="pas1-string">'812'</span><span class="pas1-space"> 
+         </span><span class="pas1-reservedword">then</span><span class="pas1-space"> APhones.Add (Match [</span><span class="pas1-number">4</span><span class="pas1-symbol">]) 
+      </span><span class="pas1-reservedword">UNTIL</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> ExecNext; 
+    </span><span class="pas1-reservedword">finally</span><span class="pas1-space"> Free; 
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+
+</span><span class="pas1-reservedword">For</span><span class="pas1-space"> the input text
+	&quot;Hi !  
+	Please call me at work (</span><span class="pas1-number">812</span><span class="pas1-symbol">)</span><span class="pas1-number">123</span><span class="pas1-symbol">-</span><span class="pas1-number">4567</span><span class="pas1-space"> </span><span class="pas1-reservedword">or</span><span class="pas1-space"> at home +</span><span class="pas1-number">7</span><span class="pas1-space"> (</span><span class="pas1-number">812</span><span class="pas1-symbol">) </span><span class="pas1-number">12</span><span class="pas1-symbol">-</span><span class="pas1-number">345</span><span class="pas1-symbol">-</span><span class="pas1-number">67</span><span class="pas1-space">  
+	truly yours ..&quot;  
+	
+this </span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> returns
+	APhones[</span><span class="pas1-number">0</span><span class="pas1-symbol">]=</span><span class="pas1-string">'123-4567'</span><span class="pas1-space">  
+	APhones[</span><span class="pas1-number">1</span><span class="pas1-symbol">]=</span><span class="pas1-string">'12-345-67'</span><span class="pas1-space">  
+	
+Example </span><span class="pas1-number">3
+</span><span class="pas1-identifier">Extracting currency rate from Russian Bank web page.
+
+Create new project </span><span class="pas1-reservedword">and</span><span class="pas1-space"> place at the main form TBitBtn, TLabel </span><span class="pas1-reservedword">and</span><span class="pas1-space"> TNMHTTP components.
+
+Add following code </span><span class="pas1-reservedword">as</span><span class="pas1-space"> BitBtn1 OnClick event handler (don</span><span class="pas1-string">'t mind Russian letter - they need for Russian web-page parsing):
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm1.BitBtn1Click(Sender: TObject); 
+</span><span class="pas1-reservedword">const</span><span class="pas1-space"> 
+  Template = </span><span class="pas1-string">'(?i)Ioeoeaeuiue eo?n OA ii aieea?o'</span><span class="pas1-space"> 
+   + </span><span class="pas1-string">'.*Aaoa\s*Eo?n\s*Eo?n iie.\s*Eo?n i?ia. [^&lt;\d]*'</span><span class="pas1-space"> 
+   + </span><span class="pas1-string">'(\d?\d)/(\d?\d)/(\d\d)\s*[\d.]+\s*([\d.]+)'</span><span class="pas1-symbol">; 
+</span><span class="pas1-reservedword">begin</span><span class="pas1-space"> 
+  NMHTTP1.Get (</span><span class="pas1-string">'http://win.www.citycat.ru/finance/finmarket/_CBR/'</span><span class="pas1-symbol">); 
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TRegExpr.Create </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">try</span><span class="pas1-space"> 
+     Expression := Template; 
+     </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Exec (NMHTTP1.Body) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin</span><span class="pas1-space"> 
+       Label1.Caption := Format (</span><span class="pas1-string">'Russian rouble rate %s.%s.%s: %s'</span><span class="pas1-symbol">, 
+         [Match [</span><span class="pas1-number">2</span><span class="pas1-symbol">], Match [</span><span class="pas1-number">1</span><span class="pas1-symbol">], Match [</span><span class="pas1-number">3</span><span class="pas1-symbol">], Match [</span><span class="pas1-number">4</span><span class="pas1-symbol">]]); 
+      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+    </span><span class="pas1-reservedword">finally</span><span class="pas1-space"> Free; 
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+
+</span><span class="pas1-float">5.</span><span class="pas1-space"> time </span><span class="pas1-reservedword">of</span><span class="pas1-space"> day: </span><span class="pas1-reservedword">For</span><span class="pas1-space"> example. </span><span class="pas1-number">11</span><span class="pas1-symbol">:</span><span class="pas1-float">30.</span><span class="pas1-space">   [</span><span class="pas1-number">01</span><span class="pas1-symbol">][</span><span class="pas1-number">0</span><span class="pas1-symbol">-</span><span class="pas1-number">9</span><span class="pas1-symbol">]:[</span><span class="pas1-number">0</span><span class="pas1-symbol">-</span><span class="pas1-number">5</span><span class="pas1-symbol">][</span><span class="pas1-number">0</span><span class="pas1-symbol">-</span><span class="pas1-number">9</span><span class="pas1-symbol">] won</span><span class="pas1-string">'t work well, because it would allow such impossible times as 19:00 and 00:30.  A more complicated construction works better: (1[012] | [1-9]) :[0-5][0-9].  That is, a 1 followed by 0, 1, or 2, OR any digit 1-9.
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> perlregex;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> mot: TPerlRegExOptions;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TPerlRegex.create </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    Options:= Options + [preUnGreedy];
+    Subject:= </span><span class="pas1-string">'I like to sing out at Foo bar'</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">RegEx</span><span class="pas1-symbol">:= </span><span class="pas1-string">'([A-Za-z]+) bar'</span><span class="pas1-symbol">;
+    Replacement:= </span><span class="pas1-string">'\1 is the name of the bar I like'</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Match </span><span class="pas1-reservedword">then</span><span class="pas1-space"> ShowMessageBig(ComputeReplacement);
+    
+    Subject := </span><span class="pas1-string">'This is a Linux or a Windows App.'</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">RegEx</span><span class="pas1-symbol">:= </span><span class="pas1-string">'Windows|Linux'</span><span class="pas1-symbol">;  </span><span class="pas1-comment">// Matches 'Windows' or 'Linux', whichever comes first
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Match </span><span class="pas1-reservedword">then</span><span class="pas1-space"> showMessageBig(MatchedText +</span><span class="pas1-string">'came first!'</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">    free;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> PerlRegex;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> mot: TPerlRegExOptions;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TPerlRegex.create </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">    Subject:= </span><span class="pas1-string">'I like to hang out at Foo bar'</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">RegEx</span><span class="pas1-symbol">:= </span><span class="pas1-string">'([A-Za-z]+) bar'</span><span class="pas1-symbol">;
+    Replacement:= </span><span class="pas1-string">'\1 is the name of the bar I like'</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Match </span><span class="pas1-reservedword">then</span><span class="pas1-space"> ShowMessage(ComputeReplacement);
+    Subject := </span><span class="pas1-string">'This is a Linux or a Windows App.'</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">RegEx</span><span class="pas1-space"> := </span><span class="pas1-string">'Windows|Linux'</span><span class="pas1-symbol">;  </span><span class="pas1-comment">// Matches 'Windows' or 'Linux', whichever comes first
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Match </span><span class="pas1-reservedword">then</span><span class="pas1-space"> showMessage(MatchedText + </span><span class="pas1-string">' came first!'</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">    free;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+------------------------Description
+
+Match option enumeration </span><span class="pas1-reservedword">set</span><span class="pas1-space"> </span><span class="pas1-reservedword">for</span><span class="pas1-space"> the Perl regular expression.
+Option 	Meaning
+
+preCaseLess
+	
+Tries </span><span class="pas1-reservedword">to</span><span class="pas1-space"> match the </span><span class="pas1-reservedword">regex</span><span class="pas1-space"> without paying attention </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-reservedword">case</span><span class="pas1-symbol">. </span><span class="pas1-reservedword">If</span><span class="pas1-space"> </span><span class="pas1-reservedword">set</span><span class="pas1-symbol">, </span><span class="pas1-string">'Bye'</span><span class="pas1-space"> will match </span><span class="pas1-string">'Bye'</span><span class="pas1-symbol">, </span><span class="pas1-string">'bye'</span><span class="pas1-symbol">, </span><span class="pas1-string">'BYE'</span><span class="pas1-space"> </span><span class="pas1-reservedword">and</span><span class="pas1-space"> even </span><span class="pas1-string">'byE'</span><span class="pas1-symbol">, </span><span class="pas1-string">'bYe'</span><span class="pas1-symbol">, </span><span class="pas1-reservedword">and</span><span class="pas1-space"> so </span><span class="pas1-reservedword">on</span><span class="pas1-symbol">. Otherwise, only </span><span class="pas1-string">'Bye'</span><span class="pas1-space"> will be matched. Equivalent </span><span class="pas1-reservedword">to</span><span class="pas1-space"> Perl</span><span class="pas1-string">'s /i modifier.
+
+</span><span class="pas1-identifier">preMultiLine
+	
+The ^ (beginning </span><span class="pas1-reservedword">of</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> </span><span class="pas1-hexadecimal">$</span><span class="pas1-space"> (ending </span><span class="pas1-reservedword">of</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">regex</span><span class="pas1-space"> operators will also match right after </span><span class="pas1-reservedword">and</span><span class="pas1-space"> right before a new line </span><span class="pas1-reservedword">in</span><span class="pas1-space"> the Subject </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">. This effectively treats one </span><span class="pas1-reservedword">string</span><span class="pas1-space"> </span><span class="pas1-reservedword">with</span><span class="pas1-space"> multiple lines </span><span class="pas1-reservedword">as</span><span class="pas1-space"> multiple strings. Equivalent </span><span class="pas1-reservedword">to</span><span class="pas1-space"> Perl</span><span class="pas1-string">'s /m modifier.
+
+</span><span class="pas1-identifier">preSingleLine
+
+Normally, dot (.) matches anything but a new line (\n). </span><span class="pas1-reservedword">With</span><span class="pas1-space"> preSingleLine, dot (.) will match anything, including new lines. This allows a multiline </span><span class="pas1-reservedword">string</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> be regarded </span><span class="pas1-reservedword">as</span><span class="pas1-space"> a single entity. Equivalent </span><span class="pas1-reservedword">to</span><span class="pas1-space"> Perl</span><span class="pas1-string">'s /s modifier. Note that preMultiLine and preSingleLine can be used together.
+
+</span><span class="pas1-identifier">preExtended
+
+Allow the regular expression </span><span class="pas1-reservedword">to</span><span class="pas1-space"> contain extra white spaces, new lines, </span><span class="pas1-reservedword">and</span><span class="pas1-space"> Perl-style comments, all </span><span class="pas1-reservedword">of</span><span class="pas1-space"> which will be filtered </span><span class="pas1-reservedword">out</span><span class="pas1-symbol">. This </span><span class="pas1-reservedword">is</span><span class="pas1-space"> sometimes called &quot;free-spacing mode&quot;.
+
+preAnchored
+
+Allows the regular expression </span><span class="pas1-reservedword">to</span><span class="pas1-space"> match only at the start </span><span class="pas1-reservedword">of</span><span class="pas1-space"> the subject </span><span class="pas1-reservedword">or</span><span class="pas1-space"> right after the previous match.
+
+preUnGreedy
+	
+</span><span class="pas1-reservedword">Repeat</span><span class="pas1-space"> operators (?, *, +, </span><span class="pas1-comment">{num,num}</span><span class="pas1-symbol">) are greedy by </span><span class="pas1-reservedword">default</span><span class="pas1-symbol">, </span><span class="pas1-reservedword">for</span><span class="pas1-space"> example, they </span><span class="pas1-reservedword">try</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> match </span><span class="pas1-reservedword">as</span><span class="pas1-space"> many characters </span><span class="pas1-reservedword">as</span><span class="pas1-space"> possible. </span><span class="pas1-reservedword">Set</span><span class="pas1-space"> preUnGreedy </span><span class="pas1-reservedword">to</span><span class="pas1-space"> use ungreedy </span><span class="pas1-reservedword">repeat</span><span class="pas1-space"> operators by </span><span class="pas1-reservedword">default</span><span class="pas1-symbol">, </span><span class="pas1-reservedword">for</span><span class="pas1-space"> example, so that they </span><span class="pas1-reservedword">try</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> match </span><span class="pas1-reservedword">as</span><span class="pas1-space"> few characters </span><span class="pas1-reservedword">as</span><span class="pas1-space"> possible.
+
+preNoAutoCapture
+
+Allows the regular expression </span><span class="pas1-reservedword">to</span><span class="pas1-space"> capture only named groups. Note that (group) </span><span class="pas1-reservedword">is</span><span class="pas1-space"> a non-capturing group. 
+
+
+It</span><span class="pas1-string">'s unlikely that Emb will change this before XE3 because it would
+</span><span class="pas1-identifier">require an </span><span class="pas1-reservedword">interface</span><span class="pas1-space"> change, however you can work around it like this :
+
+</span><span class="pas1-reservedword">uses
+</span><span class="pas1-identifier">RegularExpressionsCore,
+RegularExpressions;
+
+</span><span class="pas1-reservedword">type
+</span><span class="pas1-identifier">TRegExCrack = </span><span class="pas1-reservedword">record
+private
+</span><span class="pas1-identifier">FOptions: TRegExOptions;
+FMatchEvaluator: TMatchEvaluator;
+FNotifier: IInterface;
+FRegEx: TPerlRegEx;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-comment">//Note the above should match the layout of TRegEx exactly.
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> dosomething;
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-identifier">regx : TRegEx;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-identifier">regx := TRegEx.Create(</span><span class="pas1-string">'.*'</span><span class="pas1-symbol">);
+TRegEx2(regx).FRegEx.Options := TRegEx2(regx).FRegEx.Options +
+[preUnGreedy];
+
+.....
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+The regular expression engine </span><span class="pas1-reservedword">in</span><span class="pas1-space"> Delphi XE </span><span class="pas1-reservedword">is</span><span class="pas1-space"> PCRE (Perl Compatible Regular Expression). It</span><span class="pas1-string">'s a fast and compliant (with generally accepted regex syntax) engine which has been around for many years. Users of earlier versions of delphi can use it with TPerlRegEx, a delphi class wrapper around it.
+
+</span><span class="pas1-identifier">The XE </span><span class="pas1-reservedword">interface</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> pcre </span><span class="pas1-reservedword">is</span><span class="pas1-space"> a layer </span><span class="pas1-reservedword">of</span><span class="pas1-space"> units based </span><span class="pas1-reservedword">on</span><span class="pas1-space"> contributions from various people, the pcre api header translations </span><span class="pas1-reservedword">in</span><span class="pas1-space"> RegularExpressionsAPI.pas (Florent Ouchet </span><span class="pas1-reservedword">and</span><span class="pas1-space"> co), the wrapper </span><span class="pas1-reservedword">class</span><span class="pas1-space"> TPerlRegEx (Jan Goyvaerts) </span><span class="pas1-reservedword">in</span><span class="pas1-space"> RegularExpressionsCore.pas </span><span class="pas1-reservedword">and</span><span class="pas1-space"> the </span><span class="pas1-reservedword">record</span><span class="pas1-space"> wrappers </span><span class="pas1-reservedword">on</span><span class="pas1-space"> RegularExpressions.pas (myself). This </span><span class="pas1-reservedword">unit</span><span class="pas1-space"> </span><span class="pas1-reservedword">is</span><span class="pas1-space"> based </span><span class="pas1-reservedword">on</span><span class="pas1-space"> code we currently use </span><span class="pas1-reservedword">in</span><span class="pas1-space"> FinalBuilder </span><span class="pas1-number">6</span><span class="pas1-space"> &amp; </span><span class="pas1-number">7</span><span class="pas1-symbol">, it</span><span class="pas1-string">'s well tested and has proven to be very reliable in our products.
+
+</span><span class="pas1-identifier">RegularExpressions.pas </span><span class="pas1-reservedword">is</span><span class="pas1-space"> what you will use </span><span class="pas1-reservedword">in</span><span class="pas1-space"> your code. It</span><span class="pas1-string">'s loosely based on the .net regex interfaces.
+
+</span><span class="pas1-identifier">The main </span><span class="pas1-reservedword">type</span><span class="pas1-space"> </span><span class="pas1-reservedword">in</span><span class="pas1-space"> RegularExpressions.pas </span><span class="pas1-reservedword">is</span><span class="pas1-space"> TRegEx. TRegEx </span><span class="pas1-reservedword">is</span><span class="pas1-space"> a </span><span class="pas1-reservedword">record</span><span class="pas1-space"> </span><span class="pas1-reservedword">with</span><span class="pas1-space"> a bunch </span><span class="pas1-reservedword">of</span><span class="pas1-space"> methods </span><span class="pas1-reservedword">and</span><span class="pas1-space"> static </span><span class="pas1-reservedword">class</span><span class="pas1-space"> methods </span><span class="pas1-reservedword">for</span><span class="pas1-space"> matching </span><span class="pas1-reservedword">with</span><span class="pas1-space"> regular expressions. The static versions </span><span class="pas1-reservedword">of</span><span class="pas1-space"> the methods are provided </span><span class="pas1-reservedword">for</span><span class="pas1-space"> convenience, </span><span class="pas1-reservedword">and</span><span class="pas1-space"> should only be used </span><span class="pas1-reservedword">for</span><span class="pas1-space"> one off matches, </span><span class="pas1-reservedword">if</span><span class="pas1-space"> you are matching </span><span class="pas1-reservedword">in</span><span class="pas1-space"> a loop </span><span class="pas1-reservedword">or</span><span class="pas1-space"> repeating the same search often </span><span class="pas1-reservedword">then</span><span class="pas1-space"> you should create an </span><span class="pas1-string">'instance'</span><span class="pas1-space"> </span><span class="pas1-reservedword">of</span><span class="pas1-space"> the TRegEx </span><span class="pas1-reservedword">record</span><span class="pas1-space"> </span><span class="pas1-reservedword">and</span><span class="pas1-space"> use the non static methods.
+
+You will notice I don</span><span class="pas1-string">'t free any of the TRegEx, TMatch or TGroups, that'</span><span class="pas1-identifier">s because they are Records </span><span class="pas1-reservedword">with</span><span class="pas1-space"> methods rather than classes. This keeps memory management simple </span><span class="pas1-reservedword">and</span><span class="pas1-space"> helps avoid memory leaks, my original code used interfaces </span><span class="pas1-reservedword">and</span><span class="pas1-space"> reference counting but Embarcadero preferred </span><span class="pas1-reservedword">to</span><span class="pas1-space"> use records (</span><span class="pas1-reservedword">as</span><span class="pas1-space"> they have done </span><span class="pas1-reservedword">with</span><span class="pas1-space"> other new stuff introduced </span><span class="pas1-reservedword">in</span><span class="pas1-space"> recent releases).
+
+
+Re: </span><span class="pas1-reservedword">REGEX</span><span class="pas1-space"> Delphi XE2 Question? 		
+Click </span><span class="pas1-reservedword">to</span><span class="pas1-space"> report abuse... Click </span><span class="pas1-reservedword">to</span><span class="pas1-space"> reply </span><span class="pas1-reservedword">to</span><span class="pas1-space"> this thread 	Reply
+  	Posted: Jul </span><span class="pas1-number">20</span><span class="pas1-symbol">, </span><span class="pas1-number">2012</span><span class="pas1-space"> </span><span class="pas1-number">6</span><span class="pas1-symbol">:</span><span class="pas1-number">41</span><span class="pas1-space"> AM   </span><span class="pas1-reservedword">in</span><span class="pas1-space"> response </span><span class="pas1-reservedword">to</span><span class="pas1-symbol">: Christopher Burke </span><span class="pas1-reservedword">in</span><span class="pas1-space"> response </span><span class="pas1-reservedword">to</span><span class="pas1-symbol">: Christopher Burke
+The only big difference </span><span class="pas1-reservedword">is</span><span class="pas1-space"> that I</span><span class="pas1-string">'m using the class method:
+
+</span><span class="pas1-identifier">G:=TRegex.Match(...) I also tried G:=TRegex.Split </span><span class="pas1-reservedword">as</span><span class="pas1-space"> well.
+
+Will </span><span class="pas1-reservedword">try</span><span class="pas1-space"> creating </span><span class="pas1-reservedword">and</span><span class="pas1-space"> using that instead.
+
+This </span><span class="pas1-reservedword">is</span><span class="pas1-space"> the first time I</span><span class="pas1-string">'ve used the unit, and all defaults are as
+</span><span class="pas1-identifier">installed.
+
+I hope it helps! I</span><span class="pas1-string">'ve always used the RegularExpressionsCore unit rather
+</span><span class="pas1-identifier">than the higher level stuff because the core </span><span class="pas1-reservedword">unit</span><span class="pas1-space"> </span><span class="pas1-reservedword">is</span><span class="pas1-space"> compatible </span><span class="pas1-reservedword">with</span><span class="pas1-space"> the
+</span><span class="pas1-reservedword">unit</span><span class="pas1-space"> that Jan Goyvaerts has provided </span><span class="pas1-reservedword">for</span><span class="pas1-space"> free </span><span class="pas1-reservedword">for</span><span class="pas1-space"> years. That was my
+introduction </span><span class="pas1-reservedword">to</span><span class="pas1-space"> regular expressions. So I forgot about the other </span><span class="pas1-reservedword">unit</span><span class="pas1-symbol">. I
+guess there</span><span class="pas1-string">'s either a bug or it just doesn'</span><span class="pas1-identifier">t work the way one might expect.
+Personally, I don</span><span class="pas1-string">'t think the low level code is too hard to work with, so
+</span><span class="pas1-identifier">give it a </span><span class="pas1-reservedword">try</span><span class="pas1-space"> ans see </span><span class="pas1-reservedword">if</span><span class="pas1-space"> it works better </span><span class="pas1-reservedword">for</span><span class="pas1-space"> you.
+
+Lee
+
+northwest       NW      Charles Main            </span><span class="pas1-float">300000.00
+</span><span class="pas1-identifier">western         WE      Sharon Gray             </span><span class="pas1-float">53000.89
+</span><span class="pas1-identifier">southwest       SW      Lewis Dalsass           </span><span class="pas1-float">290000.73
+</span><span class="pas1-identifier">southern        SO      Suan Chin               </span><span class="pas1-float">54500.10
+</span><span class="pas1-identifier">southeast       SE      Patricia Hemenway       </span><span class="pas1-float">400000.00
+</span><span class="pas1-identifier">eastern         EA      TB Savage               </span><span class="pas1-float">440500.45
+</span><span class="pas1-identifier">northeast       NE      AM Main Jr.             </span><span class="pas1-float">57800.10
+</span><span class="pas1-identifier">north           NO      Ann Stephens            </span><span class="pas1-float">455000.50
+</span><span class="pas1-identifier">central         CT      KRush                   </span><span class="pas1-float">575500.70
+</span><span class="pas1-identifier">Extra [A-Z]****[</span><span class="pas1-number">0</span><span class="pas1-symbol">-</span><span class="pas1-number">9</span><span class="pas1-symbol">]..</span><span class="pas1-hexadecimal">$5</span><span class="pas1-symbol">.</span><span class="pas1-number">00
+
+
+</span><span class="pas1-identifier">bug comment </span><span class="pas1-reservedword">on</span><span class="pas1-space"> </span><span class="pas1-reservedword">regex</span><span class="pas1-space"> static </span><span class="pas1-reservedword">record
+
+procedure</span><span class="pas1-space"> TForm1.Button1Click(Sender: TObject);
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">RegEx</span><span class="pas1-symbol">: TRegEx;
+  Match: TMatch;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">RegEx</span><span class="pas1-space"> := TRegex.Create(</span><span class="pas1-string">'\w+'</span><span class="pas1-symbol">);
+  Match := </span><span class="pas1-reservedword">RegEx</span><span class="pas1-symbol">.Match(</span><span class="pas1-string">'One two three four'</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">while</span><span class="pas1-space"> Match.Success </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Memo1.Lines.Add(Match.Value);
+    Match := Match.NextMatch;
+  </span><span class="pas1-reservedword">end
+end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">Or</span><span class="pas1-space"> you could save yourself two lines </span><span class="pas1-reservedword">of</span><span class="pas1-space"> code by using the static TRegEx.Match call:
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm1.Button2Click(Sender: TObject);
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  Match: TMatch;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Match := TRegEx.Match(</span><span class="pas1-string">'One two three four'</span><span class="pas1-symbol">, </span><span class="pas1-string">'\w+'</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">while</span><span class="pas1-space"> Match.Success </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Memo1.Lines.Add(Match.Value);
+    Match := Match.NextMatch;
+  </span><span class="pas1-reservedword">end
+end</span><span class="pas1-symbol">;
+
+Unfortunately, due </span><span class="pas1-reservedword">to</span><span class="pas1-space"> a bug </span><span class="pas1-reservedword">in</span><span class="pas1-space"> the RegularExpressions </span><span class="pas1-reservedword">unit</span><span class="pas1-symbol">, the static call doesn’t work. Depending </span><span class="pas1-reservedword">on</span><span class="pas1-space"> your exact code, you may get fewer matches than you should, </span><span class="pas1-reservedword">or</span><span class="pas1-space"> you may get blank matches, </span><span class="pas1-reservedword">or</span><span class="pas1-space"> your application may crash </span><span class="pas1-reservedword">with</span><span class="pas1-space"> an access violation.
+
+The RegularExpressions </span><span class="pas1-reservedword">unit</span><span class="pas1-space"> defines TRegEx </span><span class="pas1-reservedword">and</span><span class="pas1-space"> TMatch </span><span class="pas1-reservedword">as</span><span class="pas1-space"> records. That way you don’t have </span><span class="pas1-reservedword">to</span><span class="pas1-space"> explicitly create </span><span class="pas1-reservedword">and</span><span class="pas1-space"> destroy them. Internally, TRegEx </span><span class="pas1-reservedword">uses</span><span class="pas1-space"> TPerlRegEx </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> the heavy lifting. TPerlRegEx </span><span class="pas1-reservedword">is</span><span class="pas1-space"> a </span><span class="pas1-reservedword">class</span><span class="pas1-space"> that needs </span><span class="pas1-reservedword">to</span><span class="pas1-space"> be created </span><span class="pas1-reservedword">and</span><span class="pas1-space"> destroyed like any other </span><span class="pas1-reservedword">class</span><span class="pas1-symbol">. </span><span class="pas1-reservedword">If</span><span class="pas1-space"> you look at the TRegEx source code, you’ll notice that it </span><span class="pas1-reservedword">uses</span><span class="pas1-space"> an </span><span class="pas1-reservedword">interface</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> destroy the TPerlRegEx instance when TRegEx goes </span><span class="pas1-reservedword">out</span><span class="pas1-space"> </span><span class="pas1-reservedword">of</span><span class="pas1-space"> scope. Interfaces are reference counted </span><span class="pas1-reservedword">in</span><span class="pas1-space"> Delphi, making them usable </span><span class="pas1-reservedword">for</span><span class="pas1-space"> automatic memory management.
+
+The bug </span><span class="pas1-reservedword">is</span><span class="pas1-space"> that TMatch </span><span class="pas1-reservedword">and</span><span class="pas1-space"> TGroupCollection also need the TPerlRegEx instance </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> their work. TRegEx passes its TPerlRegEx instance </span><span class="pas1-reservedword">to</span><span class="pas1-space"> TMatch </span><span class="pas1-reservedword">and</span><span class="pas1-space"> TGroupCollection, but it does </span><span class="pas1-reservedword">not</span><span class="pas1-space"> pass the instance </span><span class="pas1-reservedword">of</span><span class="pas1-space"> the </span><span class="pas1-reservedword">interface</span><span class="pas1-space"> that </span><span class="pas1-reservedword">is</span><span class="pas1-space"> responsible </span><span class="pas1-reservedword">for</span><span class="pas1-space"> destroying TPerlRegEx.
+
+This </span><span class="pas1-reservedword">is</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> a problem </span><span class="pas1-reservedword">in</span><span class="pas1-space"> our first code sample. TRegEx stays </span><span class="pas1-reservedword">in</span><span class="pas1-space"> scope </span><span class="pas1-reservedword">until</span><span class="pas1-space"> we’re done </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TMatch. The </span><span class="pas1-reservedword">interface</span><span class="pas1-space"> </span><span class="pas1-reservedword">is</span><span class="pas1-space"> destroyed when Button1Click exits.
+
+</span><span class="pas1-reservedword">In</span><span class="pas1-space"> the second code sample, the static TRegEx.Match call creates a local variable </span><span class="pas1-reservedword">of</span><span class="pas1-space"> </span><span class="pas1-reservedword">type</span><span class="pas1-space"> TRegEx. This local variable goes </span><span class="pas1-reservedword">out</span><span class="pas1-space"> </span><span class="pas1-reservedword">of</span><span class="pas1-space"> scope when TRegEx.Match returns. Thus the reference count </span><span class="pas1-reservedword">on</span><span class="pas1-space"> the </span><span class="pas1-reservedword">interface</span><span class="pas1-space"> reaches zero </span><span class="pas1-reservedword">and</span><span class="pas1-space"> TPerlRegEx </span><span class="pas1-reservedword">is</span><span class="pas1-space"> destroyed when TRegEx.Match returns. When we call MatchAgain the TMatch </span><span class="pas1-reservedword">record</span><span class="pas1-space"> tries </span><span class="pas1-reservedword">to</span><span class="pas1-space"> use a TPerlRegEx instance that has already been destroyed.
+
+</span><span class="pas1-reservedword">To</span><span class="pas1-space"> fix this bug, delete </span><span class="pas1-reservedword">or</span><span class="pas1-space"> rename the two RegularExpressions.dcu files </span><span class="pas1-reservedword">and</span><span class="pas1-space"> copy RegularExpressions.pas into your source code folder. Make these changes </span><span class="pas1-reservedword">to</span><span class="pas1-space"> both the TMatch </span><span class="pas1-reservedword">and</span><span class="pas1-space"> TGroupCollection records </span><span class="pas1-reservedword">in</span><span class="pas1-space"> this </span><span class="pas1-reservedword">unit</span><span class="pas1-symbol">:
+
+    Declare FNotifier: IInterface; </span><span class="pas1-reservedword">in</span><span class="pas1-space"> the </span><span class="pas1-reservedword">private</span><span class="pas1-space"> section.
+    Add the parameter ANotifier: IInterface; </span><span class="pas1-reservedword">to</span><span class="pas1-space"> the Create </span><span class="pas1-reservedword">constructor</span><span class="pas1-symbol">.
+    Assign FNotifier := ANotifier; </span><span class="pas1-reservedword">in</span><span class="pas1-space"> the </span><span class="pas1-reservedword">constructor</span><span class="pas1-symbol">’s </span><span class="pas1-reservedword">implementation</span><span class="pas1-symbol">.
+
+You also need </span><span class="pas1-reservedword">to</span><span class="pas1-space"> add the ANotifier: IInterface; parameter </span><span class="pas1-reservedword">to</span><span class="pas1-space"> the TMatchCollection.Create </span><span class="pas1-reservedword">constructor</span><span class="pas1-symbol">.
+
+Now </span><span class="pas1-reservedword">try</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> compile some code that </span><span class="pas1-reservedword">uses</span><span class="pas1-space"> the RegularExpressions </span><span class="pas1-reservedword">unit</span><span class="pas1-symbol">. The compiler will flag all calls </span><span class="pas1-reservedword">to</span><span class="pas1-space"> TMatch.Create, TGroupCollection.Create </span><span class="pas1-reservedword">and</span><span class="pas1-space"> TMatchCollection.Create. Fix them by adding the ANotifier </span><span class="pas1-reservedword">or</span><span class="pas1-space"> FNotifier parameter, depending </span><span class="pas1-reservedword">on</span><span class="pas1-space"> whether ARegEx </span><span class="pas1-reservedword">or</span><span class="pas1-space"> FRegEx </span><span class="pas1-reservedword">is</span><span class="pas1-space"> being passed.
+
+</span><span class="pas1-reservedword">With</span><span class="pas1-space"> these fixes, the TPerlRegEx instance won’t be destroyed </span><span class="pas1-reservedword">until</span><span class="pas1-space"> the last TRegEx, TMatch, </span><span class="pas1-reservedword">or</span><span class="pas1-space"> TGroupCollection that </span><span class="pas1-reservedword">uses</span><span class="pas1-space"> it goes </span><span class="pas1-reservedword">out</span><span class="pas1-space"> </span><span class="pas1-reservedword">of</span><span class="pas1-space"> scope </span><span class="pas1-reservedword">or</span><span class="pas1-space"> </span><span class="pas1-reservedword">is</span><span class="pas1-space"> used </span><span class="pas1-reservedword">with</span><span class="pas1-space"> a different regular expression.
+
+MatchedLength
+
+</span><span class="pas1-reservedword">Try</span><span class="pas1-space"> the following expression </span><span class="pas1-reservedword">RegEx</span><span class="pas1-space"> := </span><span class="pas1-string">'\b\d{4}(?!\d)'
+
+</span><span class="pas1-identifier">Breaking it down:
+
+\b - Anchor: Match at word boundaries
+\d - Character </span><span class="pas1-reservedword">Class</span><span class="pas1-symbol">: digits (</span><span class="pas1-number">0</span><span class="pas1-symbol">-</span><span class="pas1-number">9</span><span class="pas1-symbol">)
+</span><span class="pas1-comment">{4}</span><span class="pas1-space"> - Quantifier: Exactly </span><span class="pas1-number">4
+</span><span class="pas1-symbol">(?!\d) - Negative lookahead assertion. Match only </span><span class="pas1-reservedword">if</span><span class="pas1-space"> no digits follow
+the preceding pattern sought.
+
+</span><span class="pas1-reservedword">For</span><span class="pas1-space"> new code written </span><span class="pas1-reservedword">in</span><span class="pas1-space"> Delphi XE, you should definitely use the RegularExpressions </span><span class="pas1-reservedword">unit</span><span class="pas1-space"> that </span><span class="pas1-reservedword">is</span><span class="pas1-space"> part </span><span class="pas1-reservedword">of</span><span class="pas1-space"> Delphi rather than one </span><span class="pas1-reservedword">of</span><span class="pas1-space"> the many </span><span class="pas1-number">3</span><span class="pas1-identifier">rd party units that may be available. </span><span class="pas1-reservedword">If</span><span class="pas1-space"> you</span><span class="pas1-string">'re dealing with UTF-8 data, use the RegularExpressionsCore unit to avoid needless UTF-8 to UTF-16 to UTF-8 conversions.
+
+</span><span class="pas1-identifier">myform
+
+Genug Theorie. Wollen wir das mal an einem Beispiel anschauen:
+
+</span><span class="pas1-hexadecimal">$</span><span class="pas1-identifier">variable =~ m/\d</span><span class="pas1-comment">{1,3}</span><span class="pas1-symbol">\.\d</span><span class="pas1-comment">{1,3}</span><span class="pas1-symbol">\.\d</span><span class="pas1-comment">{1,3}</span><span class="pas1-symbol">\.\d</span><span class="pas1-comment">{1,3}</span><span class="pas1-symbol">/;
+Dieses Beispiel &uuml;berpr&uuml;ft, ob </span><span class="pas1-hexadecimal">$</span><span class="pas1-identifier">variable vier Zahlenbl&ouml;cke mit ein bis drei Stellen enth&auml;lt, getrennt durch einen Punkt (z.B. IP-Adresse). Hier sieht man: ein Punkt muss als \. geschrieben, da der Punkt alleine ein beliebiges Zeichen darstellt.
+
+</span><span class="pas1-hexadecimal">$</span><span class="pas1-identifier">variable =~ m/^[abc]/i;
+Dieses Suchpattern ist wahr, wenn </span><span class="pas1-hexadecimal">$</span><span class="pas1-identifier">variable mit a, b, c, A, B oder C anf&auml;ngt.
+
+</span><span class="pas1-hexadecimal">$</span><span class="pas1-identifier">variable =~ m/(foo|bar)/;
+</span><span class="pas1-reservedword">In</span><span class="pas1-space"> diesem Beispiel bezieht sich das Suchpattern nicht nur auf einzelne Zeichen (wie im oberen Beispiel mit [abc]) sondern auf ganze W&ouml;rter: die Bedingung ist </span><span class="pas1-reservedword">in</span><span class="pas1-space"> diesem Fall wahr, wenn </span><span class="pas1-hexadecimal">$</span><span class="pas1-identifier">variable das Wort &quot;foo&quot; und/oder &quot;bar&quot; enth&auml;lt (an beliebiger Stelle).
+
+</span><span class="pas1-hexadecimal">$</span><span class="pas1-identifier">variable =~ m/\.jpe?g</span><span class="pas1-hexadecimal">$</span><span class="pas1-symbol">/;
+Hier wird &uuml;berpr&uuml;ft, ob </span><span class="pas1-hexadecimal">$</span><span class="pas1-identifier">variable mit dem Text &quot;.jpg&quot; oder &quot;.jpeg&quot; endet (jedoch NICHT &quot;.JPG&quot;!).
+
+</span><span class="pas1-hexadecimal">$</span><span class="pas1-identifier">variable =~ m/^[a-z0-</span><span class="pas1-number">9</span><span class="pas1-symbol">\-_\.]+\@[a-z0-</span><span class="pas1-number">9</span><span class="pas1-symbol">\-_\.]+\.[a-z]</span><span class="pas1-comment">{2,}</span><span class="pas1-hexadecimal">$</span><span class="pas1-symbol">/i;
+Hierbei handelt es sich um einen primitiven Check, ob </span><span class="pas1-hexadecimal">$</span><span class="pas1-identifier">variable eine g&uuml;ltige Mailadresse enth&auml;lt. </span><span class="pas1-reservedword">In</span><span class="pas1-space"> der Praxis m&uuml;sste dies noch etwas erweitert werden (z.B. Domainnames mit Umlauten).
+</span></code></pre><!--EndFragment--></body>
+</html>

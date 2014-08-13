@@ -1,0 +1,614 @@
+{***************************************************************
+ *            TJvQBEQuery JProfiler Demo
+ * Project  : Profiling Demo Tool Simulator system bITbox
+ * Unit Name: 333_querybyexample.txt
+ * Purpose  : Demonstrates analysis of runtime profiling and QBE 
+ * Date     : 18/10/2012  -  14:38:56, translate dfm form
+ *          : 07/12/2012  - add more methods to simulate
+            : 13/12/2012  - replace Button to BitBtn
+            : 15/12/2012  - set profiler call at end, loc's= 338, intf=11
+ ****************************************************************}
+//shows structure of procedure types, max@kleiner.com ex. _299
+//compilerswitch $N- turns the coprocessor off, {$mode objfpc}{$H+}
+//You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
+//located at http://jvcl.sourceforge.net
+
+//http://ftp.escom.bg/Windows/winsite/JCL/jvcl/examples/
+
+PROGRAM SimulationLAB_QBE;
+
+Const MILLISECONDS = 50; //for timer, sync trackbar 1000/50= position 20
+      DefCaption = 'JvProfiler 32 Test program';
+ 
+type
+  TBoolean_func = Function(a,b: boolean): boolean; 
+
+ var 
+   jfrm: TForm;
+   ListBox1: TListBox;
+   btnUseId, btnUseName, btnResult: TBitBtn;
+   Progress: TProgressBar;
+   JP: TJvProfiler;
+   FTerminated: boolean;
+   JvDirectories1: TJvDirectories;
+   QBEQuery1: TJvQBEQuery;
+  
+  
+procedure addAllBooleans;
+var lbox: TListbox;
+begin
+  //S:= StringOfChar(' ',i div 2) +S+ StringOfChar(' ',i-i div 2); 
+   lbox.Clear;
+   with LBox.Items do begin
+         add('All 16 Boolean Functions');
+         add('--------------------------------------------------------------');
+         add(format('01 FALSE(Contradiction)=0 %*s',[21,'0000']));
+         add(format('02 AND(Conjunction)=xy %*s',[27,'0001']));
+         add(format('03 Inhibition=x^y %*s',[42,'0010']));
+         add(format('04 Prependence=x %*s',[37,'0011']));
+         add(format('05 Presection=^xy %*s',[38,'0100']));
+         add(format('06 Postpendence=y %*s',[35,'0101']));
+         add(format('07 XOR(Exclusive OR)=x^y+^xy %*s',[12,'0110']));
+         add(format('08 OR(Disjunction)=x+y %*s',[29,'0111']));
+         add(format('09 NOR(Rejection)=^(x+y) %*s',[23,'1000']));
+         add(format('10 Aequivalence(BiCond)=^x^y+xy %*s',[05,'1001']));
+         add(format('11 NegationY=^y %*s',[40,'1010']));
+         add(format('12 ImplicationY(y-->x)=x+^y %*s',[21,'1011']));
+         add(format('13 NegationX=^x %*s',[41,'1100']));
+         add(format('14 ImplicationX(x-->y)=^x+y %*s',[21,'1101']));
+         add(format('15 NAND(Exclusion)=^(xy) %*s',[22,'1110']));
+         add(format('16 TRUE(Tautologic)=1 %*s',[27,'1111']));
+  end;    
+end; 
+
+procedure TJvDirectoriesDemo;
+begin
+   JvDirectories1:= TJvDirectories.Create(self);
+ with Memo2.Lines do begin
+   Add('CurrentDirectory: ' + JvDirectories1.CurrentDirectory);
+   Add('WindowsDirectory: ' + JvDirectories1.WindowsDirectory);
+   Add('SystemDirectory:: ' + JvDirectories1.SystemDirectory);
+   Add('TempPath: ' + JvDirectories1.TempPath);
+   Add('ApplicationData: ' + JvDirectories1.ApplicationData);
+   Add('Cache: ' + JvDirectories1.Cache);
+   Add('Cookies: ' + JvDirectories1.Cookies);
+   Add('Desktop: ' + JvDirectories1.Desktop);
+   Add('Favorites: ' + JvDirectories1.Favorites);
+   Add('Fonts: ' + JvDirectories1.Fonts);
+   Add('History: ' + JvDirectories1.History);
+   Add('NetHood: ' + JvDirectories1.NetHood);
+   Add('Personal: ' + JvDirectories1.Personal);
+   Add('Programs: ' + JvDirectories1.Programs);
+   Add('ProgramFiles: ' + JvDirectories1.ProgramFiles);
+   Add('Recent: ' + JvDirectories1.Recent);
+   Add('SendTo: ' + JvDirectories1.SendTo);
+   Add('StartMenu: ' + JvDirectories1.StartMenu);
+   Add('Startup: ' + JvDirectories1.Startup);
+   Add('Templates: ' + JvDirectories1.Templates);
+ end;
+ JvDirectories1.Free;
+end;
+
+
+//**************************Form Builder JFormDemo****************************
+procedure TProfiler_FormCreate(Sender: TObject);
+begin
+  JP.Names:= ListBox1.Items;
+  JP.Sorted:= true;
+  JP.Enabled:= true;
+  FTerminated:= false;
+end;  
+
+procedure TProfiler_FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Fterminated:= true;
+  JP.Enabled:= false;
+  JP.Stop;
+  Writeln('Profiler Form Closed');
+end;
+
+procedure TProfiler_FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = 27 then FTerminated:= true;
+end; 
+
+procedure TProfiler_ResultBtnClick(Sender: TObject);
+begin
+  JP.ShowReport;
+end;
+
+procedure setProfile(aprobyID: boolean);
+var i,j,k:integer;
+begin
+  Randomize;
+  { just randomize to get some results }
+  Screen.Cursor:= crHourGlass;
+  btnUseId.Enabled:= false;
+  btnUseName.Enabled:= false;
+  btnResult.Enabled:= false;
+  JP.Start;
+  try
+    if aprobyId then 
+      k:= Random(133)
+    else
+      k:= Random(100);
+    Progress.Max:= k;
+    for j:= 0 to k do begin
+      Progress.Position:= j;
+      jfrm.Caption:= Format('%s - to do: %d',[DefCaption,k - j]);
+      i:= Random(ListBox1.Items.Count);
+      if aprobyID then begin
+        { use integer ID (Names[i] ID = i) }
+        JP.EnterID(i);
+        //SleepEx(random(333),false);
+        Sleep(random(333));
+        JP.ExitID(i);
+      end else begin
+        { use string ID instead }
+        JP.EnterName(JP.Names[i]);
+        Sleep(10 * j);
+        JP.ExitName(JP.Names[i]);
+      end;
+      Application.ProcessMessages;
+      if FTerminated then
+        Break;
+    end;
+  finally
+    Screen.Cursor:= crDefault;
+    btnUseId.Enabled:= true;
+    btnUseName.Enabled:= true;
+    btnResult.Enabled:= true;
+  end;
+  JP.Stop;
+  Beep;
+  Progress.Position:= 0;
+end;
+
+procedure TProfiler32_UseNameBtnClick(Sender: TObject);
+begin
+  SetProfile(false);
+end;
+
+procedure TProfiler_UseIdBtnClick(Sender: TObject);
+begin
+  SetProfile(true);
+end;
+  
+//**************************** Load Form ********************************//
+procedure loadJDemoForm;
+var apanel: TPanel;
+begin
+  jFrm:= TForm.Create(self);
+  with jfrm do begin
+    setbounds(343,157,506,507)
+    Caption:= 'maXbox JProfiler Test Simulator';
+    Font.Style:= [];
+    KeyPreview:= True;
+    //OldCreateOrder:= True;
+    OnClose:= @TProfiler_FormClose;
+    OnKeyDown:= @TProfiler_FormKeyDown;
+    PixelsPerInch:= 96;
+    Show;
+    //TextHeight:= 13;
+  end;
+  ListBox1:= TListBox.Create(jfrm)
+  with listbox1 do begin
+    parent:= jfrm;
+    SetBounds(0,41,498,225);
+    Align:= alClient;
+    //BorderStyle:= bsNone;
+    ItemHeight:= 13;
+    with Items do begin
+      add('ASSOC'); add('AT');
+      add('ATTRIB'); add('BREAK');
+      add('CACLS'); add('CALL');
+      add('CALLBOX'); add('CD');
+      add('CHCP'); add('CHDIR');
+      add('CHKDSK'); add('CLS');
+      add('CMD'); add('COLOR');
+      add('COMP'); add('COMPACT');
+      add('CONVERT'); add('COPY');
+      add('DATE'); add('DEL');
+      add('DIR'); add('DISKCOMP');
+      add('DISKCOPY'); add('DOSKEY');
+      add('ECHO'); add('ENDLOCAL');
+      add('ERASE'); add('EXIT');
+      add('FC'); add('FIND');
+      add('FINDSTR'); add('FOR');
+      add('FORMAT'); add('FTYPE');
+      add('GOTO'); add('GRAFTABL');
+      add('HELP'); add('IF');
+      add('KEYB'); add('LABEL');
+      add('MD'); add('MKDIR');
+      add('MODE'); add('MORE');
+      add('MOVE'); add('PATH');
+      add('PAUSE'); add('POPD');
+      add('PRINT'); add('PROMPT');
+      add('PUSHD'); add('RD');
+      add('RECOVER'); add('REM');
+      add('REN'); add('RENAME');
+      add('REPLACE'); add('RESTORE');
+      add('RMDIR'); add('SET');
+      add('SETLOCAL'); add('SHIFT');
+      add('SORT'); add('START');
+      add('SUBST'); add('TIME');
+      add('TITLE'); add('TREE');
+      add('TYPE'); add('VER');
+      add('VERIFY'); add('VOL');
+      add('XCOPY');
+      end;
+   end;
+   apanel:= TPanel.Create(jfrm);
+   with apanel do begin
+     parent:= jfrm;
+     SetBounds(0,0,498,41);
+     Align:= alTop;
+     BevelOuter:= bvNone;
+     TabOrder:= 1;
+   end; 
+     with TLabel.create(jfrm) do begin
+       parent:= apanel;
+       SetBounds(10,10,64,13);
+       Caption:= 'Create report:';
+     end; 
+     btnUseId:= TBitBtn.Create(jfrm);
+     with btnUseId do begin
+       parent:= apanel;
+       SetBounds(104,8,85,25)
+       Caption:= 'Use &ID';
+       glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPLAY'); 
+       TabOrder:= 0;
+       OnClick:= @TProfiler_UseIdBtnClick;
+     end;
+     btnUseName:= TBitBtn.Create(jfrm)
+     with btnUseName do begin
+       parent:= apanel;
+       SetBounds(198,8,85,25);
+       Caption:= 'Use &Name'
+       glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTEP'); 
+       TabOrder:= 1;
+       OnClick:= @TProfiler32_UseNameBtnClick;
+     end;
+     btnResult:= TBitBtn.Create(jfrm)
+     with btnResult do begin
+       parent:= apanel;
+       SetBounds(392,8,85,25);
+       Font.Style:= [fsBold];
+       glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPAUSE'); 
+       Caption:= '&Result'
+       TabOrder:= 2;
+       OnClick:= @TProfiler_ResultBtnClick;
+     end;
+   Progress:= TProgressBar.Create(jfrm);
+   with progress do begin
+     parent:= jfrm;
+     SetBounds(0,266,498,16);
+     Align:= alBottom;
+     TabOrder:= 2;
+   end;
+   JP:= TJvProfiler.Create(jfrm);
+   TProfiler_FormCreate(self);
+end;    
+
+
+Function steptest: boolean;
+begin
+  sleep(400);
+  result:= true;
+end; 
+
+Procedure getQuerybyExample;
+var
+  //rxDBLookupCombo1: TDBLookupCombo;
+  DataSource2: TDataSource;
+  i,z: integer;
+begin
+   with TTable.create(self) do begin  //tester
+     DatabaseName:= 'DBDEMOS';
+     TableName:= 'customer.db';
+     Active:= True;
+     Close;
+     Free;
+   end;
+  QBEQuery1:= TJvQBEQuery.create(self);
+    with QBEQuery1 do begin
+      //parent
+      DatabaseName:= 'DBDEMOS'
+      with QBE do begin
+        add('Query')
+        add('');
+        add('SORT: EMPLOYEE.DB->"LastName", EMPLOYEE.DB->"FirstName"');
+        add('');
+        add('EMPLOYEE.DB | EmpNo  | LastName | FirstName | PhoneExt |');
+        add('            | Check  | Check    | Check     | Check    |');
+        add('');
+        add('EndQuery');
+      end;
+      Active:= True;
+      for i:= 0 to Recordcount - 1 do begin
+        for z:= 0 to Fieldcount - 1 do 
+          Write((Fields[z].asString)+'  ');
+        Writeln(#13#10)
+        Next;
+      end;
+    //StmtHandle
+    //StartParam:= '<>'; //Params:= '<>';
+    //ParamData:= <>
+    Close;
+    Free;
+  end;
+  {DataSource2:= TDataSource.create(self);
+  with DataSource2 do begin
+    DataSet:= QBEQuery1;
+    Free;
+  end;
+    QBEQuery1.Close;
+    QBEQuery1.Free;}
+end;  
+ 
+
+  //main form list & form call  
+  Begin
+    maxform1.color:= clpurple;
+    //calls some test functions
+    printF('this is test %.18f ',[maxCalc('ln(2)^e')]);
+    printF('this is test %.18f ',[maxCalc('sqr(cos(ln(2)^e))')]);
+    printF('this is test %.4f ',[maxCalc('sqrt(e^(ln(2)))')]);
+    writeln('mXVersion: '+getVersionString(exepath+'maxbox3.exe'));
+    //str3:= loadFileAsString(exepath+'maxbox_functions_all.pdf');
+ //--------------------------Main Topic--------------------------
+    //load Profiler Form;
+    loadJDemoForm;
+    Writeln('getQuerybyExample: '+#13#10);
+    getQuerybyExample;
+    
+    TJvDirectoriesDemo;
+   
+End.
+
+
+
+/////////////////////////////// Code Snippets and Sources
+
+
+    testprocnames:= TStringlist.Create;
+    testprocnames.add('steptest')
+    testprocnames.add('loadform')
+    
+    with TJvProfiler.Create(self) do begin
+      names:= testprocnames;    //must before start!
+      enabled:= true;
+      //initialize;
+      //writeln('this is start '+names[0]);
+      writeln('this is jprofile start ');
+      //P.EnterName(P.Names[i]);
+      Entername(names[0]);
+      //Enterid(0);
+           start;
+        steptest;
+           stop;
+           start;
+        steptest;
+           stop;
+      ExitName(Names[0]);
+      Entername(names[1]);
+       start;
+       loadform;
+       stop;
+      ExitName(Names[1]);
+      //exitid(0);
+      //showreport;
+      //stop;
+      beep;
+      writeln('this is jprofile stop');
+      //enabled:= false;
+      Showreport;
+      enabled:= false;
+      //stop;
+      free;
+    end;  
+    testprocnames.Free;
+
+
+
+profiler32mainformu.pas
+***********************************
+he contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at
+http://www.mozilla.org/MPL/MPL-1.1.html
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either expressed or implied. See the License for
+the specific language governing rights and limitations under the License.
+The Original Code is: JvLookOut.PAS, released on 2002-05-26.
+The Initial Developer of the Original Code is Peter Th?nqvist [peter3@peter3.com]
+Portions created by Peter Th?nqvist are Copyright (C) 2002 Peter Th?nqvist.
+All Rights Reserved.
+Contributor(s):
+Last Modified: 2002-05-26
+You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
+located at http://jvcl.sourceforge.net
+Known Issues:
+-----------------------------------------------------------------------------}
+unit Profiler32MainFormU;
+interface
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  StdCtrls, ExtCtrls, ComCtrls, JvProfiler32, JvComponent;
+type
+  TProfiler32MainForm = class(TForm)
+    ListBox1: TListBox;
+    Panel1: TPanel;
+    UseIdBtn: TButton;
+    UseNameBtn: TButton;
+    ResultBtn: TButton;
+    Label1: TLabel;
+    Progress: TProgressBar;
+    P: TJvProfiler;
+    procedure FormCreate(Sender: TObject);
+    procedure ResultBtnClick(Sender: TObject);
+    procedure UseNameBtnClick(Sender: TObject);
+    procedure UseIdBtnClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+  private
+    FTerminated:boolean;
+  end;
+var
+  Profiler32MainForm: TProfiler32MainForm;
+implementation
+//{$R *.DFM}
+const
+  DefCaption = 'JvProfiler 32 Test program';
+procedure TProfiler32MainForm.FormCreate(Sender: TObject);
+begin
+  P.Names := ListBox1.Items;
+  P.Sorted := true;
+  P.Enabled := true;
+  FTerminated := false;
+end;
+procedure TProfiler32MainForm.ResultBtnClick(Sender: TObject);
+begin
+  P.ShowReport;
+end;
+procedure TProfiler32MainForm.UseNameBtnClick(Sender: TObject);
+var i,j,k:integer;
+begin
+  Randomize;
+  { just randomize to get some results }
+  Screen.Cursor := crHourGlass;
+  UseIdBtn.Enabled := false;
+  UseNameBtn.Enabled := false;
+  ResultBtn.Enabled := false;
+  P.Start;
+  try
+    k := Random(133);
+    Progress.Max := k;
+    for j := 0 to k do
+    begin
+      Progress.Position := j;
+      Caption := Format('%s - to do: %d',[DefCaption,k - j]);
+      i := Random(ListBox1.Items.Count);
+      { use integer ID (Names[i] ID = i) }
+      P.EnterID(i);
+      SleepEx(random(333),false);
+      P.ExitID(i);
+      Application.ProcessMessages;
+      if FTerminated then
+        Break;
+    end;
+  finally
+    Screen.Cursor := crDefault;
+    UseIdBtn.Enabled := true;
+    UseNameBtn.Enabled := true;
+    ResultBtn.Enabled := true;
+  end;
+  P.Stop;
+  Beep;
+  Progress.Position := 0;
+end;
+procedure TProfiler32MainForm.UseIdBtnClick(Sender: TObject);
+var i,j,k:integer;
+begin
+  Randomize;
+  P.Start;
+  { make distributed randomize to get some results }
+  Screen.Cursor := crHourGlass;
+  UseIdBtn.Enabled := false;
+  UseNameBtn.Enabled := false;
+  ResultBtn.Enabled := false;
+  try
+    k := Random(100);
+    Progress.Max := k;
+    for j := 0 to k do
+    begin
+      Progress.Position := j;
+      Caption := Format('%s - to do: %d',[DefCaption,k - j]);
+      i := Random(ListBox1.Items.Count);
+      { use string ID instead }
+      P.EnterName(P.Names[i]);
+      SleepEx(10 * j,false);
+      P.ExitName(P.Names[i]);
+      Application.ProcessMessages;
+      if FTerminated then
+        Break;
+    end;
+  finally
+    Screen.Cursor := crDefault;
+    UseIdBtn.Enabled := true;
+    UseNameBtn.Enabled := true;
+    ResultBtn.Enabled := true;
+  end;
+  P.Stop;
+  Beep;
+  Progress.Position := 0;
+end;
+procedure TProfiler32MainForm.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Fterminated := true;
+  P.Enabled := false;
+  P.Stop;
+end;
+procedure TProfiler32MainForm.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = 27 then FTerminated := true;
+end;
+end.
+
+
+
+Proposal for Abreviation Symbol:
+
+  01 FALSE    //Contradiction
+
+  02 AND      //Conjunction x*y
+
+  03 INHIB    //Inhibition x*^y
+
+  04 PRAEP    //Praependence x
+
+  05 PRAE     //Praesection ^x*y
+
+  06 POST     //Postpendence y
+
+  07 XOR      //Exclusive OR x*^y+^x*y
+
+  08 OR       //Disjunction OR = x+y
+
+  09 NOR      //Rejection
+
+  10 AEQ      //Aequivalence x<-->y, ^x*^y+x*y
+
+  11 NEGY     //YNegation ^y
+
+  12 IMPY     //YImplication y-->x; x+^y
+
+  13 NEGX     //Xnegation ^x
+
+  14 IMPX     //XImplication x-->y; ^x+y
+
+  15 NAND     //Exclusion
+
+  16 TRUE     //TRUE Tautologic
+  
+
+
+ //ShellExecute in W64
+    //ExecuteCommand('cmd','/k FC /L /N C:\maxbook\maxbox3\maxbox391.exe C:\maxbook\maxbox3\maxbox3.exe')
+ //  ExecuteCommand('cmd','/k FC /L /N C:\maxbook\maxbox3\maxboxdef1.ini C:\maxbook\maxbox3\maxboxdef2.ini')
+   
+
+getRulesbyContract  
+http://www.heise.de/newsticker/meldung/Leben-wir-in-einer-Computersimulation-1767578.html
+
+http://www.bestsoftware4download.com/software/k-ci-system-t-free-maxbox-download-sifqahci.html
+
+http://ftp.escom.bg/Windows/winsite/JCL/jvcl/examples/JVCLMegaDemo/JvUtilsU.pas
+
+http://ftp.escom.bg/Windows/winsite/JCL/jvcl/examples/
+
+
+http://ftp.escom.bg/Windows/winsite/JCL/jvcl/examples/RxDemo/DBAWARE.dfm
+http://ftp.escom.bg/Windows/winsite/JCL/jvcl/examples/RxDemo/DBAWARE.PAS

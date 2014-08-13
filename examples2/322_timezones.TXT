@@ -1,0 +1,241 @@
+
+PROGRAM TimeZones_Math;
+
+//selftest of super functions !
+//Task: get the interfaces of those functions from Help "All Functions List"
+
+
+//6. TimeZones
+ function GetXRTLGetTimeZones: TXRTLTimeZones; forward;           
+                          
+
+var i: integer;
+  S: AnsiString;
+  A: TDateTime;
+  bigfloat: extended;
+  byt: TBytes;
+ 
+  
+  
+function StrToBytes2(const Value: String): TBytes;
+var i: integer;
+begin
+  SetLength(result, Length(Value));
+  for i:= 0 to Length(Value)-1 do
+    result[i]:= Ord(Value[i+1])- 48;    //-48
+end;
+
+
+function BytesToStr2(const Value: TBytes): String;
+var I: integer;
+    Letra: char;
+begin
+  result:= '';
+  for I:= Length(Value)-1 Downto 0 do begin
+    letra:= Chr(Value[I] + 48);
+    result:= letra + result;
+  end;
+end;
+
+
+
+ function IntToRoman2(Value: Longint): string;
+ begin
+   writeln(IntToRoman(Value));
+ end;   
+ 
+
+ procedure LeibnizFormula;
+ var  zeta, bigdecadd: double;
+   tac: boolean;
+
+ begin
+     zeta:= 0;
+     tac:= true;
+     for i:= 1 to 50000 do 
+       if NOT (i mod 2 = 0) then begin 
+         tac:= not tac;
+         if tac then
+           zeta:= zeta - 1/i else
+         zeta:= zeta + 1/i;
+       end;  
+  writeln('harmonic alternate leibniz formula to PI/4: '+floatToStr(zeta))  
+  writeln(floatToStr(maxcalc('PI/4')))
+  writeln(floatToStr(PIOn4))         
+end;   
+
+  function GetXRTLGetTimeZones: TXRTLTimeZones;
+  var mzone: TXRTLTimeZones;
+      i: integer;
+  begin
+     //mzone:= TXRTLTimeZones.Create; //not cause of interface func
+     mzone:= XRTLGetTimeZones;  
+     for i:= 1 to mzone.Count-1 do 
+        writeln(mzone.item[i].display);
+     //mzone.Free;         
+  end;         
+
+
+function BytesToHex(aSource: TBytes): string;
+begin
+  SetLength(Result, Length(aSource) * 2);
+  if Length(aSource) > 0 then
+  //BinToHex(aSource[0], PChar(Result), Length(aSource));
+  //result:= BinToHex2(aSource);
+end;       
+
+
+var
+  myst: TStringGrid;
+  k,t: integer;
+  //d: decimal;
+
+BEGIN  //Main
+//<Executable statements>
+  
+  ShowMessage(ReplaceRegExpr('World','Hello, EKON TRex Superfunction Tester World!', 'Earth',true));
+  
+  myst:= TStringGrid.create(self)
+  myst.rowcount:= 10;
+  myst.colcount:= 10;
+  for k:= 1 to 40 do begin
+     myst.Cells[k ,0]:= inttoStr(k);
+     myst.Cells[0,(k div 4)]:= inttoStr(k+1);//-47);   
+   end;  
+  for k:= 1 to myst.ColCount - 1 do
+    for t:= 1 to myst.RowCount - 1 do
+     myst.Cells[k ,t]:= inttoStr(t);
+     //myst.Cells[0,t]:= inttoStr(t+1);//-47);   
+   myst.Free;
+  
+      
+    IntToRoman2(2012); 
+  
+    printF('addition theorem  %.18f ',[maxcalc('sin(2.5/2)')])
+    printF('addition theorem  %.18f ',[maxcalc('sqrt(1/2*(1-cos(2.5)))')])
+    printF('addition theorem2 %22.18f ',[maxcalc('cos(2.5/2)')])
+    printF('addition theorem2 %22.18f ',[maxcalc('sqrt(1/2*(1+cos(2.5)))')])
+    bigfloat:= maXcalc('ln(1.0000*10^4932)/ln(2)');
+    printF('limes extended %22.18f ',[bigfloat])
+    printF('limes extended int return %.18f ',[maXcalc('2^16383.749363984471100000')])
+    writeln(formatBigInt(powerBig(10,22)))
+    writeln(formatBigInt(powerBig(9,2222)))
+    
+    LeibnizFormula;
+    
+    GetXRTLGetTimeZones;           
+    
+    printF('max extended %.18f',[bigfloat]);
+    writeln('MaxFloatingPoint: '+floatToStr(MaxFloatingPoint));
+    //StrtoBytes
+    byt:= StrToBytes('DevMediaBox');
+    for I:= 0 to Length(byt) - 1 do
+        write(IntToStr(byt[I])+' ');
+    writeln(BytestoStr(byt));
+    writeln('');
+    byt:= StrToBytes2('DevMediaBox');  //internal test
+    for I:= 0 to Length(byt) - 1 do
+        write(IntToStr(byt[I])+' ');
+    writeln(BytestoStr2(byt));
+    
+          
+  SelftestPEM;
+  SelfTestCFundamentUtils;                             
+  SelfTestCFileUtils;
+  SelfTestCDateTime;
+  SelfTestCTimer;
+  SelfTestCRandom;
+  
+  Writeln(' 6 Units Tested with success ')
+  ShowMessageBig(' 6 Units Tested with success!');
+  Assert2(FilePath('C', '..\X\Y', 'A\B', '\') = 'A\X\Y\C', 'FilePath');
+  Assert2(PathCanonical('\A\B\..\C\D\..\..\..\..\', '\') = '\', 'PathCanonical');
+  Assert2(UnixPathToWinPath('/c/d.f') = '\c\d.f', 'UnixPathToWinPath');
+  Assert2(WinPathToUnixPath('\c\d.f') = '/c/d.f', 'WinPathToUnixPath');
+  
+  A:= EncodeDateTime(2001, 09, 02, 12, 11, 10, 0);
+  Assert2(Month(A) = 9, 'EncodeDateTime');
+  S:= GMTTimeToRFC1123TimeA(A, True);
+  Assert2(S = '12:11:10 GMT','GMT');
+  S:= GMTDateTimeToRFC1123DateTimeA(A, True);
+  Assert2(S = 'Sun, 02 Sep 2001 12:11:10 GMT', 'GMTDateTimeToRFC1123DateTime');
+  Assert2(TickDeltaW($FFFFFFF6, 0) = 10,'TrickDelta');
+  Assert2(CPUClockFrequency > 0,'RTC Prepare');
+  Assert2(Length(RandomPassword(0, 0, True, True, True)) = 0,'random passwd');
+  Assert2(Length(RandomPassword(1, 1, True, True, True)) = 1,'random passwd');
+ 
+  CompareDateTime(DateOf(Now),DateOf(Now)+1)
+  printF('sin  test in RAD %.18f',[sin((3))]); 
+  printF('sinj test in RAD %.18f',[sinj((3))]); 
+  printF('sin  test in GRAD %.18f',[sin(gradtorad(60))]); 
+  //printF('sin  test in GRAD %.18f',[radtodeg(sin(60))]); 
+  printF('sinj test in GRAD %.18f',[sinj(gradtorad(60))]); 
+  printF('sinc test in GRAD %.18f',[sinc(gradtorad(60))]); 
+  printF('sin  test in DEG %.18f',[Sin(degtorad(60))]); 
+  printF('sinj test in DEG %.18f',[sinj(degtorad(60))]); 
+  printF('cos  test in DEG %.18f',[Cos(degtorad(60))]); 
+  printF('cosj  test in DEG %.18f',[Cosj(degtorad(60))]); 
+ 
+  //sin(60)=0.866 --> arcsin(0.866)=59,99999999 
+  printF('ARCSIN test in DEG %.18f',[radtodeg(arcsin(Sin(degtorad(60))))]); 
+  printF('ARCSIN test in DEG %.18f',[radtodeg(arcsin(Sinj(degtorad(60))))]); 
+  printF('ARCSIN test in DEG %.18f',[radtodeg(stinvSin(Sinj(degtorad(60))))]); 
+  //CL.AddDelphiFunction('Function StInvSin( Y : Double) : Double');
+   printF('ARCCOS test in DEG %.18f',[radtodeg(arccos(Cos(degtorad(60))))]); 
+  //printF('sinj test in DEG %.18f',[sinj(degtorad(60))]); 
+  printF('sin test not %f',[sin(radtograd(60))]); 
+  //InputQuery( const ACaption, APrompt : string; var Value : string) : Boolean
+  
+     writeln(floatToStr(single(PI)))
+     PrintF('floatToStr(less type cast  %.18f: ',[PI])
+     PrintF('floatToStr(cast single(PI) %.18f: ',[single(PI)])
+//<Definitions>  
+     with Tstringlist.create do begin
+       clear;
+       add('this is my own');
+       //exchange(1,1)
+       //Destroy;
+       writeln(strings[0])
+       Free;
+     end; 
+     with TStringGrid.Create(self) do begin
+       tabstop; 
+       tabstops[true]; 
+       free;
+    end;   
+END. 
+
+
+Alternating harmonic series
+The first fourteen partial sums of the alternating harmonic series (black line segments) shown converging to the natural logarithm of 2 (red line).
+
+The series
+    \sum_{n = 1}^\infty \frac{(-1)^{n + 1}}{n} \;=\; 1 \,-\, \frac{1}{2} \,+\, \frac{1}{3} \,-\, \frac{1}{4} \,+\, \frac{1}{5} \,-\, \cdots 
+
+is known as the alternating harmonic series. This series converges by the alternating series test. In particular, the sum is equal to the natural logarithm of 2:
+    1 \,-\, \frac{1}{2} \,+\, \frac{1}{3} \,-\, \frac{1}{4} \,+\, \frac{1}{5} \,-\, \cdots \;=\; \ln 2.
+    1-1/2+1/3-1/4+1/5-1/6... = ln2
+
+This formula is a special case of the Mercator series, the Taylor series for the natural logarithm.
+A related series can be derived from the Taylor series for the arctangent:
+
+    \sum_{n = 0}^\infty \frac{(-1)^{n}}{2n+1} \;\;=\;\; 1 \,-\, \frac{1}{3} \,+\, \frac{1}{5} \,-\, \frac{1}{7} \,+\, \cdots \;\;=\;\; \frac{\pi}{4}. 
+
+This is known as the Leibniz formula for pi.
+
+A related series can be derived from the Taylor series for the arctangent:
+
+    \sum_{n = 0}^\infty \frac{(-1)^{n}}{2n+1} \;\;=\;\; 1 \,-\, \frac{1}{3} \,+\, \frac{1}{5} \,-\, \frac{1}{7} \,+\, \cdots \;\;=\;\; \frac{\pi}{4}.    pi/4
+
+This is known as the Leibniz formula for pi.
+
+{Delphi}
+function BytesToHex(aSource: TBytes): string;
+begin
+SetLength(Result, Length(aSource) * 2);
+if Length(aSource) > 0 then
+BinToHex(aSource[0], PChar(Result), Length(aSource));
+end;
+
+
+----app_template_loaded_code----

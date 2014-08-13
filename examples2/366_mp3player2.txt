@@ -1,0 +1,756 @@
+//Version:0.9 StartHTML:0000000105 EndHTML:0000072924 StartFragment:0000001037 EndFragment:0000072908 
+//demo for media player component v
+//loads a file and list, bitmap , mp video and so on
+//task: delete writeln for add on, async call #name Administrator
+//#file 366_mp3player2.txt
+//{$R+}{$D-,L-,O+,Q-,R-,Y-,S-} loc's=561, App_366_, Intf=17
+
+program MP3MediaPlayer3;
+
+type TWeekDays = (Monday, Tuesday, Wednesday,
+                 Thursday, Friday, Saturday, Sunday);
+                 
+  TID3Rec = record
+    Tag     : array[0..2] of Char;
+    Title,
+    Artist,
+    Comment,
+    Album   : array[0..29] of Char;
+    Year    : array[0..3] of Char;
+    Genre   : Byte;
+  end;   
+
+Const MILLISECONDS = 50;    
+      MEDIAPATH = 'D:\kleiner2005\download'; 
+      BACKBITMAP = 'examples\citymax.bmp';
+
+var 
+  //ms: TStringGrid;
+  //mg: TDrawGrid;
+  selectFile: string;
+  loadlist: TStringlist;
+  handle: THandle;
+  mPlayer: TMediaPlayer;
+  lstbox: TListbox;
+  stat: TStatusbar;
+  S_Listmode, S_LoadList: Boolean; //play mp3 list
+  chkbox: TCheckbox;
+  mbutton: TBitBtn;
+  inFrm: TForm;
+  Progress: TProgressBar;
+  ProgTimer: TTimer;
+  
+  procedure plaYList; forward;
+
+
+
+function GetTextFromFile(const AFile: String; var ReturnString: string): boolean;
+var
+  fileStream: TFileStream;
+begin
+  result:= false;
+  if not fileExists(AFile) then exit;
+  FileStream:= TFileStream.Create(AFile, fmOpenRead);
+    writeln(inttostr(filestream.size));
+  try
+    if FileStream.Size > 0 then begin
+      SetLength(ReturnString, FileStream.Size);
+      fileStream.Seek(0, soBeginning)
+      writeln(inttostr(filestream.size));
+      FileStream.Read(ReturnString, FileStream.Size); 
+      result:= true;
+    end;
+  finally
+    FileStream.Free;
+  end; //try
+end;
+
+function MSecToTime(mSec: Int64): string;
+var dt: TDateTime;
+begin
+  dt:= (mSec/1000/86400);  //SecsPerDay;
+  Result:= FormatDateTime('" Length:" nn:ss:zzz',dt);
+end; 
+
+
+procedure openFileSystem;
+var s: string;
+begin
+  if GetTextFromFile(MEDIAPATH,s) then
+    ShowMessage(s);
+     //Memo2.text:= s;
+     Writeln(inttoStr(SW_Show)) 
+  end;
+  
+procedure LetLogoDraw(mCanvas: TCanvas; x,y,r: integer; vclr: TColor);
+var
+  rad, a: Single;
+  i: Integer;
+begin
+  mCanvas.Pen.Color:= random(vclr);
+  mCanvas.Pen.width:= random(23)+8;
+  for i:= 100 to 800 do begin
+    inc(y); inc(x);
+    mCanvas.Pen.Color:= random(vclr);
+    a:= Random(150) * 1.18 * sin(pi);
+    rad:= Random(135) * r;
+    mCanvas.MoveTo(X, Y);
+    mCanvas.LineTo(x + Round(rad*Cos(a)), y +Round(rad*Sin(a)));
+  end;
+  inFrm.Canvas.Draw(460,40,getBitmap(Exepath+BACKBITMAP));
+end;
+  
+
+procedure FillID3TagInformation(mp3File: string;
+                                   Title,Artist,Album,Year,Genre,Comment:TEdit);
+var ID3 : TID3Rec;
+    fmp3: TFileStream;
+begin
+  fmp3:=TFileStream.Create(mp3File, fmOpenRead);
+  try
+    fmp3.position:=fmp3.size-128;
+    //fmp3.Read(ID3,SizeOf(ID3));
+  finally
+    fmp3.free;
+  end;
+ if ID3.Tag[0] <> 'T' then begin
+   Title.Text:='Wrong or no ID3 tag information';
+   Artist.Text:='Wrong or no ID3 tag information';
+   Album.Text:='Wrong or no ID3 tag information';
+   Year.Text:='Wrong or no ID3 tag information';
+   Genre.Text:='Wrong or no ID3 tag information';
+   Comment.Text:='Wrong or no ID3 tag information';
+ end else begin
+   //Title.Text:=ID3.Title;
+   //Artist.Text:=ID3.Artist;
+   //Album.Text:=ID3.Album;
+   //Year.Text:=ID3.Year;
+   {if ID3.Genre in [0..MaxID3Genre] then
+     Genre.Text:=ID3Genre[ID3.Genre]
+   else
+     Genre.Text:=IntToStr(ID3.Genre);
+   Comment.Text:=ID3.Comment }
+ end;
+end;
+
+procedure CloseClick(Sender: TObject; var action: TCloseAction);
+begin
+  //Form1.Close;  free 308 kByte
+  if MessageDlg('Wanna Leave?',mtConfirmation,[mbYes, mbNo],0) = mrYes then begin
+    MPlayer.Close;
+    MPlayer.Free;
+    //bmp.Free;
+  if progTimer <> NIL then begin
+    progTimer.enabled:= false;
+    progTimer.Free;
+    progTimer:= NIL;
+  end;
+  if assigned(loadlist) then
+    loadlist.Free;
+  action:= caFree;
+    //ShowMessage('Now you see the hits of mX3');
+    //ExecuteCommand('http://www.softwareschule.ch/maxboxshow.htm','')
+ end else
+    Action:= caNone;
+end;
+
+procedure checkBoxClick(Sender: TObject);
+begin
+    //chkbox.checked:= Not chkbox.checked;
+  if chkbox.checked then begin 
+     S_Listmode:= true 
+     mbutton.caption:= 'Open MP3 List';
+    if S_LoadList then PlayList; 
+  end else begin
+    S_Listmode:= false;
+    mbutton.caption:= 'Open MP3 Song';
+    writeln('listmode set to '+booleantoString(S_Listmode));
+  end;
+end;
+
+
+procedure runDuallistForm;
+var getList: TStringlist;
+    //mpFrm: TJvDualListForm;
+    mpFrmdlg: TJvDualListDialog; 
+    i: integer; 
+    //s1: string;
+begin                                                                            
+  getList:= TStringlist.create;
+   //GetDirList(extractfilePath(selectFile),getlist,true)
+  GetDirList(extractfilePath(selectFile)+'*.mp3',getlist,true)
+  {for i:= 1 to getlist.count-1 do begin
+  t1:= pos('*.mp3',getlist[i]);
+  s1:= getlist[i]; Delete(s1,5,t1);  end;}
+  SearchAndReplace(getlist,'*.mp3',''); 
+ 
+  mpFrmDlg:= TJvDualListDialog.create(self);
+   with mpFrmDlg do begin
+     list1:= getList;
+     width:= 900;
+     height:= 550;
+     ScrollBars:= ssboth;
+     //SetBounds(10,10,450,400)
+     resizable:= true;
+     label1caption:= 'Song Selection:';
+     label2caption:= 'Song Play List:';
+     okBtncaption:= 'Play';
+     listboxheight:= 400;
+     listboxscrollwidth:= 500;
+     //TJvDualListDialog(setbounds
+     title:= 'MP3 Dual Player';
+     HelpBtnCaption:= 'Help Play';
+    for i:= 0 to mpFrmDlg.ComponentCount - 1 do 
+      if mpFrmDlg.Components[i] is TListBox then begin
+        with mpFrmDlg.Components[i] {as TListBox} do
+        TListbox(mpFrmDlg.Components[i]).color:= clblue;
+      end;
+    Execute;
+    //loadlist.assign(TStringlist(list2));
+    for i:= 0 to list2.count- 1 do 
+      loadlist.add(list2[i]);
+    writeln('debug list count '+inttostr(loadlist.count))
+    //showmodal;
+    Free;
+  end;
+  LetLogoDraw(inFrm.Canvas,55,5,5, clblue);
+  getlist.Free;  
+end; 
+
+procedure plaYList;
+var i: integer;
+begin
+  lstbox.font.size:= 14;
+  if NOT S_Listmode then begin
+      Progress.Max:= 0;
+      MPlayer.Close;
+      MPlayer.Wait:= true;
+      MPlayer.filename:= selectFile;
+      MPlayer.Open;
+      Progress.Max:= mPlayer.Length;
+      lstbox.items.add(Format('%s - %s ',
+                 [ExtractFileName(selectFile),MSecToTime(MPlayer.length)]));
+      loadlist.add(selectFile);  //tmp           
+      lstbox.hint:= ExtractFileName(selectFile);
+      stat.SimpleText:= Format('%s: %s ',[selectFile,MSecToTime(MPlayer.length)]);
+      Writeln('play time '+MSecToTime(MPlayer.length));
+      MPlayer.Play; 
+    end;  
+  
+  if S_Listmode then begin
+    lstbox.items.clear;
+    //if not S_Loadlist then
+    //lstbox.items.add('MP3 BOX List'); 
+    for i:= 0 to loadlist.count-1 do begin 
+       lstbox.items.add(extractFileName(loadlist[i]))
+    end;  
+      MPlayer.EnabledButtons:= [btStop];
+    for i:= 1 to loadlist.count-1 do begin 
+       application.ProcessMessages;
+       //VIDEO... MPlayer.filename:= ExePath+'examples\*.mpeg';
+      Progress.Max:= 0;
+      lstbox.selected[i]:= true;
+      MPlayer.Close;
+      MPlayer.Wait:= true;
+      MPlayer.filename:= loadlist[i];
+      MPlayer.Open;
+      stat.SimpleText:= Format('%s: %s ',[loadlist[i],MSecToTime(MPlayer.length)]);
+      Writeln('play time of '+inttoStr(i)+MSecToTime(MPlayer.length));
+      MPlayer.Play;
+      Sleep(MPlayer.length);
+    end;
+  end;
+  LetLogoDraw(inFrm.Canvas, 55, 5, 5, clblue);
+end;    
+  
+
+procedure GetMediaData(sender: TObject);
+begin
+ if PromptForFileName(selectFile, 'Media files (*.mp3)|*.mp3|*.mpg)|*.mpg', //others
+                      '', 'Select your mX3 media file Directory',
+                         MEDIAPATH, False) //false: not Save dialog!
+   then begin
+     // Display this full file/path value
+     stat.SimpleText:= 'Selected File Path First: '+ExtractFilePath(selectFile);     
+     if S_Listmode then
+        runDuallistForm;
+      LetLogoDraw(inFrm.Canvas, 110, 5, 5, clblue);
+      MPlayer.AutoEnable:= false;
+      //MPlayer.EnabledButtons := [];
+      MPlayer.EnabledButtons:= [btPause, btStop, btPlay, btNext, btPrev, btBack];
+      MPlayer.Refresh;
+      plaYList;
+   end;
+end;
+
+procedure StoreSonglist(Sender: TObject);
+begin
+selectFile:= 'mp3Songlist.txt';
+if PromptForFileName(selectFile, 'Save Song list (*.txt)', //others
+                      '', 'Select your mX3 media file Directory',
+                      '', True) //true: Save!  
+  then 
+    loadlist.SaveToFile(selectFile)
+end;  
+
+procedure LoadSonglist(Sender: TObject);
+var i: integer;
+begin
+  selectFile:= 'mp3Songlist.txt';
+  lstbox.font.size:= 14;
+  S_LoadList:= true;
+  if PromptForFileName(selectFile, 'Load Song list (*.txt)', //others
+                      '', 'Select your mX3 media Directory',
+                      MEDIAPATH, false) //false: not Save!  
+  then begin
+    lstbox.items.clear;
+    //lstbox.items.add('MP3 BOX'); 
+    loadlist.LoadFromFile(selectFile);
+    for i:= 0 to loadlist.count-1 do 
+       lstbox.items.add(extractFileName(loadlist[i]))
+  end;
+end;  
+
+procedure ProgresTimerTimer(Sender: TObject);
+begin
+  if Progress.Max<>0 then
+    Progress.Position:= mPlayer.Position;
+end;
+
+ procedure LogBox_DiceClick(Sender: TObject);
+ begin
+    with TJvDice(sender) do begin
+       interval:= 200;
+       RandomValue;
+       rotate:= true;
+       AutoStopInterval:= 2500;
+    end;
+    //DiceRandom(Self);
+ end;
+
+
+procedure ChangeSong(Sender: TObject);   
+begin
+  //lstbox.items[lstbox.itemIndex];
+  Progress.Max:= 0;
+  lstbox.font.size:= 14;
+  with MPlayer do begin
+     Close;
+     EnabledButtons:= [btPause, btStop, btPlay, btPrev, btBack];
+     filename:= loadlist[lstbox.itemIndex];
+     Open;
+     Progress.Max:= mPlayer.Length;
+     stat.SimpleText:= Format('Once %s: %s ',[selectFile,MSecToTime(MPlayer.length)]);
+     Play;
+  end;    
+  Writeln('song changed: '+ Mplayer.filename);
+  //LogBox_DiceClick(self);
+end;
+
+procedure DeleteItem(Sender: TObject);   
+begin
+  //lstbox.items[lstbox.itemIndex];
+   if lstbox.selected[lstbox.itemIndex] then
+     lstbox.items.delete(lstbox.itemIndex);
+end;
+
+
+//************************************ Form Builder ***************************
+procedure SetForm;
+var //inFrm: TForm;
+    //lstbox: TListbox;
+  mi, mi1, mi2, mipop: TMenuItem;
+  mpop: TPopupmenu;
+  mt: TMainMenu;
+begin
+  inFrm:= TForm.Create(self);
+  loadlist:= TStringlist.create;
+  loadlist.Add('maXbox MP3 Boxlist');  //FILE HEADER
+  mpop:= TPopupMenu.create(self);
+  mipop:= TMenuItem.Create(mt)
+  with mipop do begin
+    Caption:='Delete List Item';
+    mpop.Items.Add(mipop) ;
+    OnClick:= @DeleteItem;
+  end;
+  {  object Delete1: TMenuItem
+      Action = acDelete
+    end}
+   with inFrm do begin
+      caption:= '********MediaPlayer3************';  
+      Formstyle:= fsStayontop;
+      height:= 650;
+      width:= 700;
+      //color:= clred;
+      Position:= poScreenCenter;
+      onClose:= @CloseClick;
+      popupmenu:= mpop;
+      show;
+   end;
+
+   with TPanel.Create(inFrm) do begin
+     caption:= '********maXboxMP3********';  
+     parent:= inFrm;  
+     SetBounds(40,70,500,420)
+     color:= clyellow;
+     show;
+   end; 
+  Lstbox:= TListbox.create(inFrm);
+  with Lstbox do begin
+    parent:= inFrm;
+    setBounds(50,80, 480,400)
+    font.size:= 55;
+    font.color:= clwhite;
+    color:= clPurple;
+    items.add('MP3 BOX'); 
+    onDblClick:= @ChangeSong;
+    //popupmenu
+  end;
+  mButton:= TBitBtn.Create(inFrm)
+  with mButton do begin
+    Parent:= inFrm;
+    setbounds(400,510,150, 40);
+    caption:= 'Open MP3 List';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'OPENFOLDER');
+    mXButton(0,0,width, height,12,12,handle); 
+    //event handler
+    onclick:= @GetMediaData;
+  end;
+ 
+  with TJvAnalogClock.Create(inFrm) do begin  //widgets set
+    parent:= inFrm;
+    bevelwidth:= 0;
+    colormin:= clblue;
+    //timeoffSet:= -60;
+    ColorHr:= clRed;
+    //WidthHandHr:= 1;
+    ColorHandHr:= clRed;
+    ColorHandMin:= clRed;
+    setBounds(565,5,100,100);
+    //centercol:= clyellow; //cldarkblue32; //clwebgold; 
+    //centersize:= 8;
+  end;
+  with TJvStarfield.Create(inFrm) do begin
+    parent:= inFrm;
+    stars:= 250;
+    maxSpeed:= 12;
+    setBounds(565,150,100,100);
+    active:= true; 
+  end;  
+  with TJvDice.create(inFrm) do begin
+    setbounds(565,295,100,105)
+    parent:= infrm;
+    interval:= 500;
+    RandomValue;
+    rotate:= true;
+    //AutoSize:= true;
+    AutoStopInterval:= 1500;
+    //onmousedown;
+    //showfocus:= true;
+    onclick:= @LogBox_DiceClick;
+  end;  
+ 
+  inFrm.Canvas.Draw(460,10,getBitmap(Exepath+BACKBITMAP));
+ 
+  stat:= TStatusbar.Create(inFrm);
+  with Stat do begin
+    parent:= inFrm;
+    Align:= alBottom;
+    stat.SimplePanel:= true;
+  end;
+  Progress:= TProgressBar.Create(inFrm);
+  with progress do begin
+    parent:= inFrm;
+    Align:= alBottom;
+    //step:= 10;
+    //Max:= maxSteps+20;
+  end;
+  chkbox:= TCheckBox.create(self);
+  with chkbox do begin
+    Parent:= inFrm;
+    checked:= false;
+    if checked then S_Listmode:= true else
+      S_Listmode:= false;
+    setbounds(300,510,80, 40);
+    font.size:= 12;
+    caption:= 'Play List';
+    onClick:= @checkboxClick;
+  end;
+ 
+  mt:= TMainMenu.Create(infrm)
+  mi:= TMenuItem.Create(mt)
+  mi1:= TMenuItem.Create(mt)
+  mi2:= TMenuItem.Create(mt)
+  //mi3:= TMenuItem.Create(mi)
+  with mi do begin
+    //parent:= frmMon;
+    Caption:='Load SongList';
+    Name:='ITEM';
+    mt.Items.Add(mi);   
+    OnClick:= @LoadSonglist;
+  end;
+  with mi1 do begin
+    Caption:='Store SongList';
+    Name:='ITEM2';
+    mt.Items.Add(mi1) ;
+    OnClick:= @StoreSonglist;
+  end;
+  with mi2 do begin
+    Caption:='Open CDPlayer';
+    Name:='ITEM3';
+    mt.Items.Add(mi2);
+    //OnClick:= @OPenCD;
+  end;
+
+  MPlayer:= TMediaPlayer.create(self);
+  MPlayer.parent:= inFrm;
+  MPlayer.top:= 511;
+  MPlayer.left:= 20;
+  MPlayer.height:= 36;
+  //Mplayer.Display:= mPanel;   //for video
+  MPlayer.AutoEnable:= false;
+  //mplayer.next;
+  MPlayer.EnabledButtons:= [btPause,btStop];
+  progTimer:= TTimer.Create(self);
+  progTimer.onTimer:= @ProgresTimerTimer;
+  progTimer.interval:= MILLISECONDS;
+  LetLogoDraw(inFrm.Canvas, 55,5,5, clblue);
+  S_LoadList:= false;
+
+ //('TMPBtnType','(btPlay,btPause,btStop,btNext,btPrev,btStep,btBack,btRecord,btEject)');
+  //CL.AddTypeS('TButtonSet', 'set of TMPBtnType');
+end;
+//************************************ Form Builder End************************
+
+ 
+var cdinfo: TJclCdMediaInfo;
+    a,b: boolean;
+    sopts: TSelectDirOpts;
+    //SomeDay: TWeekDays;
+    vmsgbtn: tMsgDlgBtn;
+    
+begin
+  //openFileSystem
+  SetForm;
+  //writeln(gethostbyname('www.kleiner.ch'))
+   writeln('Instance: '+intToStr(getHinstance))
+   writeln('Procid: '+intToStr(getProcessid))
+   writeln('Processors: '+inttostr(GetNumberOfProcessors)) 
+   // type   TJclCdMediaInfo = (miProduct, miIdentity, miUPC);
+    //  CL.AddTypeS('TJclCdMediaInfo', '( miProduct, miIdentity, miUPC )');
+   // cdinfo:= miproduct;  
+   { if IsMediaPresentInDrive('F') then begin
+      writeln('CD in drive');
+      writeln(GetCdInfo(miproduct, 'F'));
+    end;}  
+   //CL.AddTypeS('TSelectDirOpt', '( sdAllowCreate, sdPerformCreate, sdPrompt )');
+   //CL.AddTypeS('TSelectDirOpts', 'set of TSelectDirOpt');
+
+     sopts:= sopts + [sdprompt, sdallowcreate];
+     sopts:= sopts - [sdallowcreate];
+     if sdAllowcreate in sopts then writeln('included');
+    writeln('warning test '+booltostr(false and true,true));
+    a:= false; b:= true;
+    writeln(booleantoString((a and b) = b));
+    //for SomeDay:= Monday to Sunday do
+      //if succ(monday) = Tuesday then
+      //ShowMessage('Tuesday is after monday!');
+    Writeln(StringReplace('this is Max','max', 'box',[rfReplaceAll, rfIgnoreCase]));
+    vmsgbtn:= mbyes;  
+    //if MessageDlg('Learning about Sets!', mtInformation, [mbYes, mbOk, mbCancel], 0)
+      //   = mrOk then writeln('this is in set... ');  
+           //in [mrYes, mrOK] then writeln('this is in set... ');  
+End.
+
+
+///////////////////Code Snippets
+
+
+  {Handle:= FindWindow('TMaxForm1','');
+  if Handle <> 0 then 
+    Showmessage('maXbox is alive')}
+
+
+{function TranslateSLLVerifyToInternal(Mode: Integer): TIdSSLVerifyModeSet;
+begin
+  Result := [];
+  if LogicalAnd(Mode, OPENSSL_SSL_VERIFY_PEER) then Result := Result + [sslvrfPeer];
+  if LogicalAnd(Mode, OPENSSL_SSL_VERIFY_FAIL_IF_NO_PEER_CERT) then Result := Result + [sslvrfFailIfNoPeerCert];
+  if LogicalAnd(Mode, OPENSSL_SSL_VERIFY_CLIENT_ONCE) then Result := Result + [sslvrfClientOnce];
+end;}
+
+function LogicalAnd(A, B: Integer): Boolean;
+begin
+  Result := (A and B) = B;
+end;
+
+
+//---------------------------------------------------------
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  MediaPlayer1.Close;
+  MediaPlayer1.FileName := 'c:\music\test.mp3';
+  MediaPlayer1.Open;
+end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  MediaPlayer1.Close;
+  MediaPlayer1.FileName := 'c:\music\test.mp3';
+  MediaPlayer1.Open; 
+  MediaPlayer1.Play;
+end;
+
+procedure TForm2.btOpenClick(Sender: TObject);
+var
+  OpenMediaDialog : TOpenDialog;
+begin
+  OpenMediaDialog := TOpenDialog.Create(Self);
+  OpenMediaDialog.Filter := 'All Video Files (*.avi)|*.avi';
+  // There are avi files in
+  // C:\Documents and Settings\All Users\Documents\RAD Studio\6.0\Demos\DelphiWin32\VCLWin32\CoolStuff.
+  if OpenMediaDialog.Execute() then begin
+    { Assign a file to the media player. }
+    MediaPlayer1.FileName := OpenMediaDialog.FileName;
+ 
+    { Check if the file exists and is not a directory. }
+    if (FileExists(OpenMediaDialog.FileName)) and
+       (not DirectoryExists(OpenMediaDialog.FileName)) then begin
+      { Open the files. }
+      MediaPlayer1.Wait := true;
+      MediaPlayer1.Open;
+      MediaPlayer1.Play;
+ 
+      { Override automatic button controlling. }
+      MediaPlayer1.EnabledButtons :=
+        [TMPBtnType.btPause, TMPBtnType.btStop, TMPBtnType.btPlay];
+ 
+      { Enable the Stop button. }
+      btStop.Enabled := true;
+      btOpen.Enabled := false;
+    end;
+  end;
+ 
+  OpenMediaDialog.Free;
+end;
+ 
+procedure TForm2.btStopClick(Sender: TObject);
+begin
+  { Stop and close the media. }
+  MediaPlayer1.Stop;
+  MediaPlayer1.Close;
+ 
+  MediaPlayer1.EnabledButtons := [];
+ 
+  { Enable Open button again. }
+  btOpen.Enabled := true;
+end;
+ 
+procedure TForm2.FormCreate(Sender: TObject);
+begin
+  { Disable all buttons. }
+  MediaPlayer1.AutoEnable := false;
+  MediaPlayer1.EnabledButtons := [];
+end;
+ 
+procedure TForm2.MediaPlayer1PostClick(Sender: TObject;
+  Button: TMPBtnType);
+begin
+  if Button = TMPBtnType.btStop then
+     btStop.Click;
+end;
+
+
+------------------------------------------------------
+Programmers never die, they just GOSUB without RETURN 
+
+
+ 	Reference	Designation	Time period
+nopict	8441	CoCo 21000 SNCF	novel. 1991
+jouef 8441	8441*	CoCo 21002 SNCF	cat. 1991 > cat. 2000/2001
+nopict	8443*	CoCo 21002 SNCF for AC 3 rails system	cat. 1993 > cat. 1995/96
+jouef 844200	844200	CoCo 21001 SNCF original livery	cat. 1998 > cat. 2000/2001
+r1629	R1629	CoCo 21002 SNCF original livery	novel. LIMA 2002,
+cat. RIVAROSSI 2003
+nopict	HJ 2138	CoCo 21003 SNCF	announced in 2010 then in 2011
+nopict	HJ 2139	CoCo 21004 SNCF	announced in 2010 then in 2011
+* : ref. 844x00 after 1994. 
+
+http://docwiki.embarcadero.com/RADStudio/XE4/en/Building_a_Basic_Media_Player
+
+  //mpFrm:= TJvDualListForm.create(self);
+  {with mpFrm do begin
+    //list:= getList;
+    width:= 600;
+    height:= 650;
+    //SetBounds(10,10,450,400)
+    BorderStyle:= bsDialog;
+    //okbtncaption:= 'Player';
+    //TJvDualListDialog(setbounds
+    caption:= 'MP3 Dual Player';
+    //width:= 700;
+    //Execute;
+    //Show;
+    showmodal;
+    Free;
+  end;}
+
+
+...........
+
+var
+
+   NumLine: Integer;
+
+begin
+
+   ListBox1.LoadFromFile('test.m3u')
+
+   If ListBox1.Lines.Count > 0 Then
+
+      For NumLine := ListBox1.Items.Count - 1 DownTo 0 Do
+
+         If Copy(ListBox1.Items[NumLine], 1, 8) = '#EXTINF:' Then
+
+            ListBox1.Items.Delete(NumLine);
+
+end;
+
+
+const
+  MaxID3Genre=147;
+  ID3Genre: array[0..MaxID3Genre] of string = (
+    'Blues', 'Classic Rock', 'Country', 'Dance', 'Disco', 'Funk', 'Grunge',
+    'Hip-Hop', 'Jazz', 'Metal', 'New Age', 'Oldies', 'Other', 'Pop', 'R&B',
+    'Rap', 'Reggae', 'Rock', 'Techno', 'Industrial', 'Alternative', 'Ska',
+    'Death Metal', 'Pranks', 'Soundtrack', 'Euro-Techno', 'Ambient',
+    'Trip-Hop', 'Vocal', 'Jazz+Funk', 'Fusion', 'Trance', 'Classical',
+    'Instrumental', 'Acid', 'House', 'Game', 'Sound Clip', 'Gospel',
+    'Noise', 'AlternRock', 'Bass', 'Soul', 'Punk', 'Space', 'Meditative',
+    'Instrumental Pop', 'Instrumental Rock', 'Ethnic', 'Gothic',
+    'Darkwave', 'Techno-Industrial', 'Electronic', 'Pop-Folk',
+    'Eurodance', 'Dream', 'Southern Rock', 'Comedy', 'Cult', 'Gangsta',
+    'Top 40', 'Christian Rap', 'Pop/Funk', 'Jungle', 'Native American',
+    'Cabaret', 'New Wave', 'Psychadelic', 'Rave', 'Showtunes', 'Trailer',
+    'Lo-Fi', 'Tribal', 'Acid Punk', 'Acid Jazz', 'Polka', 'Retro',
+    'Musical', 'Rock & Roll', 'Hard Rock', 'Folk', 'Folk-Rock',
+    'National Folk', 'Swing', 'Fast Fusion', 'Bebob', 'Latin', 'Revival',
+    'Celtic', 'Bluegrass', 'Avantgarde', 'Gothic Rock', 'Progressive Rock',
+    'Psychedelic Rock', 'Symphonic Rock', 'Slow Rock', 'Big Band',
+    'Chorus', 'Easy Listening', 'Acoustic', 'Humour', 'Speech', 'Chanson',
+    'Opera', 'Chamber Music', 'Sonata', 'Symphony', 'Booty Bass', 'Primus',
+    'Porn Groove', 'Satire', 'Slow Jam', 'Club', 'Tango', 'Samba',
+    'Folklore', 'Ballad', 'Power Ballad', 'Rhythmic Soul', 'Freestyle',
+    'Duet', 'Punk Rock', 'Drum Solo', 'Acapella', 'Euro-House', 'Dance Hall',
+    'Goa', 'Drum & Bass', 'Club-House', 'Hardcore', 'Terror', 'Indie',
+    'BritPop', 'Negerpunk', 'Polsk Punk', 'Beat', 'Christian Gangsta Rap',
+    'Heavy Metal', 'Black Metal', 'Crossover', 'Contemporary Christian',
+    'Christian Rock', 'Merengue', 'Salsa', 'Trash Metal', 'Anime', 'Jpop',
+    'Synthpop'  {and probably more to come}
+  );
+
+
+----code_cleared_checked----
+
+----code_cleared_checked----

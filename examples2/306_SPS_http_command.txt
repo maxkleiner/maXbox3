@@ -1,0 +1,178 @@
+program SPS_HTTPCommands;
+
+//HTTP Series 301 - 306
+//shows command syntax for an SPS switch with IndySockets on webbox ex. _306, locs=29
+
+Const 
+   //IPBASIS = 'http://192.192.172.112';
+   IPBASIS = 'http://127.0.0.1:8000';
+
+
+var myURL: string;
+    idHTTP, http1: TIDHTTP;
+    idHTTP2: TIDHTTPRequest;
+    zipStream: TFileStream;
+
+    
+procedure SetUp_ClienttoWebServerSPS;
+begin
+ http1:= TIDHTTP.Create(self)
+  with http1 do begin
+    //MaxLineAction:= maException
+    ReadTimeout:= 0
+    AllowCookies:= True
+    ProtocolVersion:= pv1_1
+    ProxyParams.BasicAuthentication:= False
+    ProxyParams.ProxyPort:= 0
+    Request.ContentLength:= -1
+    Request.ContentRangeEnd:= 0
+    Request.ContentRangeStart:= 0
+    Request.ContentType:= 'text/html'
+    Request.Accept:= 'text/html, */*'
+    Request.BasicAuthentication:= False
+    Request.UserAgent:= 'Mozilla/3.0 (compatible; Indy Library)'
+    HTTPOptions:= [hoForceEncodeParams]
+  end;
+end;
+
+
+procedure post_SPSCommand;
+var r: TStringlist;
+   prot: TMemo;
+  erg: string;
+begin
+{... }
+   HTTP1.Host:= IPBASIS;
+   R:= TStringlist.Create;
+   prot:= TMemo.Create(self);
+   r.Add('OUT=A');
+   r.Add('SUB=Senden');
+   HTTP1.Request.Method := hmPOST;
+   HTTP1.Request.ContentType:='application/x-www-form-urlencoded';
+   //HTTP1.Port:= 8000;
+   //HTTP1.IP:= IPBASIS;
+   //HTTP1.connect(4000);
+   erg:= HTTP1.post(IPBASIS,R);
+   memo2.lines.add(erg);
+   //Prot.Clear;
+   //Prot.Lines.Add(erg);
+   //Prot.Lines.SaveToFile('prot.html');
+   R.Free;
+   prot.Free;
+   http1.Free;
+end;
+    
+    
+    
+function TTAServiceSendSMS(const Destination: WideString; const Body: WideString): Integer;
+var
+  h : TIdHTTP;
+  URL: string;
+  Params: TStringStream;
+  res: TStringStream;
+  e: exception;
+begin
+   try
+      h:= TIdHTTP.create(self);
+      Params := TStringStream.Create('');
+      Params.WriteString(HTTPEncode('Billing_Ref=KUDEX'+'&'));
+      Params.WriteString(HTTPEncode('DestinationEx='+Destination+'&'));
+      Params.WriteString(HTTPEncode('Body='+Body+''));
+      URL := 'http://ws.textanywhere.net/HTTPRX/SendSMSEx.aspx';
+      h.Request.Method := hmPOST;
+      h.Request.Source:= Params;
+      h.Request.ContentType := 'application/x-www-form-urlencoded';
+      res := TStringStream.create('');
+      //h.connnectTimeout := 20000;
+      h.connect(20000);
+      h.post5(URL,params,res);
+  except
+    //on E: Exception do begin
+      ShowMessage('Error: ' + E.Message);
+    end;
+  end;
+    
+    
+procedure setHTTPheaderTest;
+var
+  pStream: TMemoryStream;
+  idHTTP1: TIdHTTP;
+begin
+  pStream:= TMemoryStream.Create;
+  idHTTP1:= TIdHTTP.create(NIL)
+try
+// write/load your data into the stream, then ...
+  IdHTTP1.ProtocolVersion := pv1_1; // PUT is not supported inHTTP v1.0
+  IdHTTP1.Request.ContentType := 'application/octet-stream';
+  IdHTTP1.Request.Date := now;
+  IdHTTP1.Request.BasicAuthentication := False;
+  IdHTTP1.Request.UserAgent:= 'Mozilla/3.0 (compatible; Indy Library)';
+  idhttp1.HTTPOptions:= [hoForceEncodeParams]
+  //IdHTTP1.Request.CustomHeaders.Values['Authorization'] := 'AWS12GHGKM5J4HSY2VDTK02:$b64sig';
+  //IdHTTP1.Request.CustomHeaders.Values['X-Amz-Acl'] := 'private';
+  idHTTP1.Put('www.somesite.com/altexa-test/fl', pStream);
+finally
+  pStream.Free;
+  idHttp.Free;
+end;
+end;    
+  
+begin    //main app
+  //myURL:= 'http://www.softwareschule.ch/download/maxbox_examples.zip';
+  //myURL:= 'http://rapidgator.net/file/28115986/Nazareth.Anthology.02Cedes.rar#';
+  //myURL:= 'http://127.0.0.1:8000/SOA_delphi.pdf';   //localhost
+  //zipStream:= TFileStream.Create('soadelphi.pdf', fmCreate)
+  //zipStream:= TFileStream.Create('nazareth_anto.rar', fmCreate)
+  
+  SetUp_ClienttoWebServerSPS;
+  post_SPSCommand;
+  
+  idHTTP:= TIdHTTP.create(NIL)  //tester
+  try
+    //idhttp.get1(myURL,zipStream)
+    //idhttp.AuthRetries:= 3;
+    //idhttp.onredirect:= @3;
+   // memo2.lines.text:= idhttp.get2('http://www.softwareschule.ch/maxbox.htm')
+    //memo2.lines.text:= idhttp.get('http://127.0.0.1:8000/')
+    //memo2.lines.text:= idhttp.get2('http://www.search.ch')
+    //idHTTP.Request.RawHeaders.Add('X-AjaxPro-Method: ButtonEvent'); 
+     //IdHTTP.Request.CustomHeaders.Values['X-AjaxPro-Method'] := 'ButtonEvent'; 
+          idhttp.Request.Pragma := 'no-cache';
+          idhttp.Request.CacheControl := 'no-cache'; 
+          idhttp.ProxyParams.BasicAuthentication:= False;
+          idhttp.ProxyParams.ProxyPort:= 0;
+      //IdHTTP.Response.Header
+      //idhttp.writeheader;
+  finally
+    idHTTP.Free
+    //zipStream.Free;
+  end;
+  //SearchAndOpenDoc(exepath+'myexamples.zip');    
+  //initialization
+  //finalization 
+end.
+
+//Comments
+Wer anderen eine Grube gräbt, hat ein Gruben-Grab-Gerät! 
+ich möchte an einen Webserver ein POST senden, um dort Schaltungen auszulösen.
+Zur Anwendung kommen die Indy 9 Komponenten (TidHTTP) unter Delphi 7 .
+Mittels Wireshark habe ich mir die Befehlssyntax zusammengeklaut,
+Beispiel: "OUT=A&OUT=C&SUB=Senden" . 
+A und C sind hier Checkboxen, Senden ist der Knopf zum Absenden im Formular. 
+PS: Nach über 200 Posts, sollte man den Unterschied zwischen Code-Tags und Delphi-Tags kennen.
+PPS: Beispiel: "OUT=A&OUT=C&SUB=Senden" .
+Das Beispiel kann nicht funktionieren, des weiteren unterscheidet Post Groß- und Kleinschreibung der Parameter... 
+ Wireshark zeigt die Befehlssyntax genauso an, also "OUT=C&SUB=Senden", wieso sollte es also nicht klappen ? 
+ 
+ On the WebServer Site:
+ HtmlResult:= '<html><head><title>maXbox Web</title></head><body><h1>HttpServ Demo</h1>' +
+    '<p>This is the only page you''ll get from this example.</p><hr>' +
+    '<p>Request: ' + ReqInf.Document + '</p>' +
+    '<p>Host: ' + ReqInf.Host + '</p>' +
+    '<p>Params: ' + ReqInf.UnparsedParams + '</p></ul></body></html>';  // +
+    //'<p>header: 'ReqInf.rawheaders + '</p>';
+    
+    RespInf.ContentText:= HtmlResult; //    xx
+    
+  <html><head><title>maXbox SPSWeb</title></head><body><h1>HttpServ Demo</h1><p>This is the only page you'll get from this example.</p><hr><p>Request: /</p><p>Host: 127.0.0.1:8000</p><p>Params: OUT=A&SUB=Senden</p></ul></body></html>
+ mX3 executed: 15.10.2012 10:48:16  Runtime: 0:0:0.434  

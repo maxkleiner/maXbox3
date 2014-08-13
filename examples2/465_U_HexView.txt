@@ -1,0 +1,382 @@
+Program U_HexView;
+{Copyright 07, Gary Darby, Intellitech Systems Inc., www.DelphiForFun.org
+
+ This program may be used or modified for any non-commercial purpose
+ so long as this original notice remains in place.    }
+
+{ A hexadecimal file viewer}
+
+{interface
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  StdCtrls, Buttons, ComCtrls, ExtCtrls, Menus, ShellApi;
+
+type
+  TForm2 = class(TForm) }
+  var
+    aMemo1: TMemo;
+    OpenBtn: TButton;
+    OpenDialog1: TOpenDialog;
+    Label1: TLabel;
+    StaticText1: TStaticText;
+    aMemo2: TMemo;
+       {procedure FormActivate(Sender: TObject);
+       procedure FormKeyDown(Sender: TObject; var Key: Word;
+         Shift: TShiftState);
+       procedure FormResize(Sender: TObject);
+       procedure FormDeactivate(Sender: TObject);
+       procedure OpenBtnClick(Sender: TObject);
+       procedure StaticText1Click(Sender: TObject);
+       procedure FormCanResize(Sender: TObject; var NewWidth,
+         NewHeight: Integer; var Resize: Boolean);
+  public              }
+    { Public declarations }
+    browsefilename:string;
+    f_in : TFileStream;
+    //buffer:array of byte;
+    buffer:  TByteArray;
+    //7buffer: string;
+    buflen:integer; {buffer size and number of bytes to read}
+    bytesread:integer;  {number of bytes actually read during last read}
+    curpage,maxpage:integer;
+    charsperline:integer;
+    list:TStringlist;  {area in which to build  the lines for a displayed page}
+    //procedure setupPage;
+    //procedure showpage; {display the current page (curpage)}
+    //7procedure resetbrowsefile;
+  //end;
+  
+      procedure TForm2_resetbrowsefile; forward;
+
+var
+  Form2: TForm;
+
+//implementation
+//{$R *.DFM}
+
+//var hexchars:array[0..15] of char=('0','1','2','3','4','5','6','7','8',
+                                   //'9','A','B','C','D','E','F');
+
+
+{**************** ShowPage *************}
+ procedure TForm2_showpage;
+ {Display the page indicated by CurPage variable}
+ var
+   lines:integer;
+   i,j,n:integer;
+   text:string;
+   hex:string;
+   bytesread, byteswritten: longint;
+   hexsize:integer;
+ begin
+   if browsefilename='' then exit;
+   f_in.seek(curpage*buflen, soBeginning);
+   
+   bytesread:= f_in.readByteArray(buffer,buflen);
+ 
+   //f_in.readByteArray(buffer,23);
+  
+   //bytesread:= f_in.readByteArray(buffer,20);
+   
+   //bytesread:= f_in.readstring(string(hex),buflen);
+   
+   label1.caption:=inttostr(curpage+1) +#13+'of  '+ #13+ inttostr(maxpage+1);
+   list.clear;
+   lines:=bytesread div charsperline;
+   hexsize:=charsperline*2+charsperline div 4; {length of a full hex string}
+   if lines>=0 then
+   begin
+     byteswritten:=0;
+     for i:= 0 to lines do begin{for all lines}
+       hex:='';
+       n:=i*charsperline;
+       text:='';
+       for j:=0 to charsperline -1 do begin {for characters im the line}
+         {The clear text part -  if it's displayable the do it}
+         if (buffer[n+j]>=32) and (buffer[n+j]<=127) then 
+             text:=text+ chr(buffer[n+j])
+         else text:=text+chr($90); {otherwise display a block char}
+         {The hex part - turn left and right halves of each character into a
+          two character hex number}
+         if (j mod 4=0) and (j>0) then hex:=hex+' ';
+         hex:=hex+chexset[(buffer[n+j] and $F0) shr 4]
+            + chexset[(buffer[n+j] and $0F)];
+         inc(byteswritten);
+         if byteswritten>=bytesread then break;
+       end;
+       {pad out the last hex string if it is short}
+       if length(hex)< hexsize then 
+            hex:=hex+stringofchar(' ',hexsize-length(hex));
+       list.add(hex+' '+text);
+       if byteswritten>=bytesread then break;
+     end;
+     amemo1.lines.assign(list); {move the text to the display area}
+   end;
+end;
+
+{****************** SetupPage ****************}
+procedure Tform2_SetupPage;
+{{Called initally and if form size changes}
+var
+  savefont:TFont;
+  w,h:integer;
+  pagecharwidth, pagelines:integer;
+begin
+  if not fileexists(browsefilename) then exit;
+  {Memo does not have a canvas so we'll use the forms canvas to calculate
+   character height and width}
+  savefont:=form2.font;
+  form2.font:=amemo1.font;
+  w:=form2.canvas.textwidth('X');
+  h:=form2.canvas.textheight('X');
+  form2.font:=savefont;
+  pagecharwidth:=amemo1.width{clientwidth} div w;
+  pagelines:=amemo1.height {clientheight} div h-1;
+  {due to hex display formatting,characters can only use less than 1/3 of width}
+  charsperline:=4*((4*pagecharwidth div 13 -2) div 4);
+  buflen:=charsperline*pagelines;
+  setlength(buffer,buflen);
+  maxpage:=f_in.size div buflen ;
+  curpage:=0;
+  TForm2_showpage;
+end;
+
+{***************** FormKeyDown ***************}
+procedure TForm2_FormKeyDown(Sender: TObject; var Key: Word;
+{Form KeyPreview property is set to True, so we come here for any
+keypress.  We'll handle PgUp, PgDn, CtrlPgUp,CtrlPgDn and Up and Dow arrow keys to
+display a new page from the file}
+  Shift: TShiftState);
+begin
+    If (key=vk_Next) or (key=vk_down) then begin
+      if ssCtrl in shift then  curpage:=maxpage
+      else if curpage<maxpage then inc(curpage) else beep;
+      TForm2_showpage;
+    end
+    else if (key=vk_Prior) or (key=vk_up) then begin
+     if ssctrl in shift then  curpage:=0
+     else if curpage>0 then dec(curpage) else beep;
+     TForm2_showpage;
+    end
+    else if key=vk_escape then begin
+      TForm2_resetbrowsefile;
+    end;
+    key:=0;
+end;
+
+procedure TForm2_FormCanResize(Sender: TObject; var NewWidth,
+  NewHeight: Integer; var Resize: Boolean);
+var
+  newtop:integer;
+begin
+  {we need to move some of the stuff up if newsize is smaller than current size
+  because statictext1 is aligned to the bottom before the call to onresize and
+  it gets placed belows the now-too-low controls and causes scroll bars to be
+  generated for the form.}
+  if newheight<form2.height then begin
+    newtop:=newheight-statictext1.height-(form2.height-form2.clientheight);
+    statictext1.top:=newtop;
+    label1.top:=newtop-label1.height-56;
+    amemo1.height:=(label1.top-amemo1.top) - 5;
+    openbtn.top:=label1.top;
+    amemo2.top:=label1.top;
+  end;
+  resize:=true;
+end;
+
+{************ FormResize *************}
+procedure TForm2_FormResize(Sender: TObject);
+{Resize the memo1 display area and other controls when the form is resized}
+begin
+  
+  label1.top:=statictext1.top-label1.height-56;
+  openbtn.top:=label1.top;
+  amemo2.top:=label1.top;
+
+  amemo1.width:=form2.clientwidth-2*amemo1.left; {leave equal margins}
+  amemo1.height:=(label1.top-amemo1.top) - 5;
+  {align key tips with right side of memo1}
+  amemo2.left:=amemo1.left+amemo1.width-amemo2.width;
+  statictext1.alignment:=tacenter;
+  if browsefilename<>'' then TForm2_setuppage;
+end;
+
+{************* FormDeactivate ************}
+procedure TForm2_FormDeactivate(Sender: TObject);
+{Free the file stream}
+begin
+  TForm2_resetbrowsefile;
+  writeln('TForm2_resetbrowsefile;')
+end;
+
+{*********** OpenBtnClick ***********}
+procedure TForm2_OpenBtnClick(Sender: TObject);
+begin
+  if assigned(f_in) then begin
+    f_in.free
+    f_in:= NIL;
+  end;  
+  If opendialog1.execute then begin
+    if fileexists(opendialog1.filename) then begin
+      browsefilename:=opendialog1.filename;
+      form2.caption:='Hex View: File:  ' +browsefilename;
+      f_in:= TFileStream.create(browsefilename,fmOpenread);
+    end
+    else TForm2_resetbrowsefile;
+    TForm2_setupPage; {calculate page size stuff}
+    Tform2_showpage;
+  end;
+end;
+
+{********* ResetBrowsefile ********}
+procedure TForm2_resetbrowsefile;
+begin
+  browsefilename:='';
+  form2.Caption:='Hex View:  No file selected';
+  amemo1.clear;
+  if assigned(f_in) then begin
+  f_in.free
+  f_in:= NIL;
+  end;
+end;
+
+procedure TForm2_StaticText1Click(Sender: TObject);
+begin
+  //ShellExecute(hinstance, 'open', 'http://www.delphiforfun.org/',
+  //nil, nil, SW_SHOWNORMAL) ;
+end;
+
+{*************** FormActivate *****************}
+procedure TForm2_FormActivate(Sender: TObject);
+
+begin
+  //amemo1.doublebuffered:=true;
+  list:=TStringlist.create;
+  TForm2_formresize(sender);  {set up page paramters for current form size}
+  writeln('form activated');
+  
+end;
+
+procedure SetForm;
+var
+  mi, mi1, mi2: TMenuItem;
+  mt: TMainMenu;
+  mPanel: TPanel;
+begin
+  form2:= TForm.Create(self);
+  //stat:= TStatusbar.Create(inFrm);
+  //mymemo:= TMemo.create(inFrm);
+  //Listbox1:= TLISTBOX.Create(inFrm);
+  with form2 do begin
+    caption:= '********HEX View No file selected ************';  
+   SetBounds(207,36,911,751);
+    Position:= poScreenCenter;
+   KeyPreview:= True;
+   //OnActivate:= @TForm2_FormActivate
+   OnCanResize:= @TForm2_FormCanResize;
+   OnDeactivate:= @TForm2_FormDeactivate;
+   OnKeyDown:= @TForm2_FormKeyDown;
+ //  OnResize:= @TForm2_FormResize;
+  PixelsPerInch:= 96;
+  oldcreateorder
+  //TransparentColor
+  //onClose:= @TForm1_FormClose;
+    Show;
+    //canvas.stretchdraw(rect(0,0,width,height), 
+      //        getbitmap(Exepath+'\examples\brightfullmoon.bmp'));
+    //show;          
+  end;
+  Label1:= TLabel.create(form2);
+  with Label1 do begin
+    parent:= form2;
+    setbounds(224,648,66,16)
+    Anchors:= [akLeft, akBottom];
+    Caption:= 'Page 0 of 0';
+  end;
+  aMemo1:= TMemo.create(form2)
+  with amemo1 do begin
+    parent:= form2;
+    setbounds(24,16,848,601)
+    Anchors:= [akLeft, akTop, akRight, akBottom];
+    DoubleBuffered:= true;
+    Font.Charset:= DEFAULT_CHARSET;
+    Font.Color:= clWindowText;
+    Font.Height:= -13;
+    Font.Name:= 'Courier New';
+    Font.Style:= [fsBold];
+    Lines.text:=
+      ''+
+      +'    Select a file to view contents.'+#13#10
+      +''
+      +'    Browse using PgUp, PgDn keys'+#13#10
+      +''
+      +'    Ctrl+PgUp = view 1st page'+#13#10
+      +'    Ctrl+PgDn = view last page'+#13#10
+      +'    Esc = Close file';
+    ParentFont:= False;
+    TabOrder:= 0;
+    WordWrap:= False;
+  end;
+  OpenBtn:= TButton.create(form2)
+  with OpenBtn do begin
+    parent:= form2;
+    Setbounds(40,648,137,25)
+    Anchors:= [akLeft, akBottom];
+    Caption:= 'Select a file'
+    TabOrder:= 1
+    OnClick:= @TForm2_OpenBtnClick;
+  end;
+  StaticText1:= TStaticText.create(form2)
+  with StaticText1 do begin
+    parent:= form2;
+    setBounds(0,704, 903,20)
+    Cursor:= crHandPoint;
+    Align:= alBottom;
+    //Alignment:= taCenter;
+    Caption:= 
+      'Copyright 2007, mX and Gary Darby, Intellitech Systems Inc., www.Delphi' +
+      'ForFun.org';
+    Font.Charset:= DEFAULT_CHARSET
+    Font.Color:= clBlue
+    Font.Height:= -13
+    Font.Name:= 'MS Sans Serif'
+    Font.Style:= [fsUnderline]
+    ParentFont:= False
+    TabOrder:= 2
+    OnClick:= @TForm2_StaticText1Click;
+  end;
+  aMemo2:= TMemo.create(form2)
+  with amemo2 do begin
+    parent:= form2;
+    setbounds(432,600,393,57)
+    Lines.Strings[0]:= (
+      '    Browse using PgUp, PgDn keys.  '
+      +'    Ctrl+PgUp = view 1st page;     Ctrl+PgDn = view last page'
+      +'    Esc= Close file'
+      +'')
+    TabOrder:= 3
+  end;
+  OpenDialog1:= TOpenDialog.create(form2)
+    //7Left = 784
+    //Top = 576
+  //end
+   form2.OnResize:= @TForm2_FormResize;
+   //form2.OnActivate:= @TForm2_FormActivate
+   TForm2_FormActivate(form2);
+   
+  {edt:= TEdit.Create(inFrm)
+  with edt do begin
+    parent:= inFrm;
+    color:= clteal;
+    SetBounds(LBASE+70,TBASE+40,90,28)
+    font.size:= 14;
+    text:= '2014';
+  end;}
+end;
+
+
+begin
+    SetForm;
+end.
+$
+$Stalemate - the game is a draw?

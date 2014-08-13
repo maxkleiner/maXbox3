@@ -1,0 +1,551 @@
+PROGRAM AsyncFree_COM_Form;
+
+//////////////////////////////////////////////////////////////////////
+//  #sign:max: APSN21: 26.01.2014 19:24:08 
+//  Purpose: Grabs async COM out of,  more items see below   //
+//  #path>ples\E:\maxbox\maxbox3\examples\                          //
+//  Lines of Code #locs:266
+//////////////////////////////////////////////////////////////////////
+
+Const TEXTOUT = 'hi world of COM Turbo Power coverage with cover age';
+
+//############################################################################
+// Async TurboPower Spiral Architect
+//############################################################################
+//TODO: Button with stop event, change terminal color and save bitmap as png
+
+{TYPE <Type declarations>} 
+
+  var aform: TForm;
+      FWait, switch: Boolean;
+      FValueA: Float;
+
+//<FUNCTION>
+//<PROCEDURE> 
+
+
+function SplitToken(const Text: string; SplitChar: Char;
+    var First, Last: string): Boolean;
+var  SplitPos: Integer;
+begin
+  Result:= False;
+  SplitPos:= Pos(SplitChar, Text);
+  if SplitPos = 0 then Exit;
+  First:= Trim(Copy(Text, 1, SplitPos -1));
+  Last:= Trim(Copy(Text, SplitPos +1, Length(Text) -SplitPos));
+  Result:= (First <>'') and (Last <>'');
+end;
+
+//com form test vars maXcom
+//*************************************Af COM_Code_Streamer*****************;
+
+var
+    AfTerminal1: TAfTerminal;
+    AfComPort1: TAfComPort;
+    AfPortRadioGroup1: TAfPortRadioGroup;
+    Panel1: TPanel;
+    
+procedure FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  //AfComPort1.CloseComPort;
+  //AfComPort1.Close;
+  AfComPort1.Free;
+  AfTerminal1.Free;
+  AfPortRadioGroup1.Free;
+  aForm.FreeOnRelease;
+  WRITELN('ALL PORT AND TERMINAL CLOSED ');
+end;
+    
+  
+procedure TPortForm1_AfTerminal1SendChar(Sender: TObject; var Key: Char);
+begin
+  AfComPort1.WriteChar(Key);
+end;
+
+procedure TPortForm1_AfComPort1DataRecieved(Sender: TObject; Count: Integer);
+begin
+  AfTerminal1.WriteString(AfComPort1.ReadString);
+end;
+
+procedure TPortForm1_Button1Click(Sender: TObject);
+begin
+  AfComPort1.ExecuteConfigDialog;
+end;
+
+procedure TPortForm1_AfPortRadioGroup1Click(Sender: TObject);
+begin
+  AfTerminal1.SetFocus;
+end;
+
+
+procedure TPortForm1_FormCreate(Sender: TObject);
+begin
+  aForm:= TForm.create(self)
+  with aForm do begin
+    position:= poScreenCenter;
+    FormStyle:= fsStayOnTop;
+    color:= clblue;
+    borderStyle:= bsDialog;
+    caption:= 'mX3 Arduino COM Code StreamDream'
+    width:= 820; height:= 700;
+    OnClose:= @FormClose;
+    Show;
+  end;
+  Panel1:= TPanel.Create(self);
+   with Panel1 do begin
+    parent:= aForm;
+    Caption:= 'Config Ports';
+    SetBounds(600,20,100,300)
+  end;
+  with TOvcClock.create(self) do begin
+    parent:= aForm;
+    //Caption:= 'Config Ports';
+    SetBounds(600,334,90,90)
+    time:= now;
+    DisplayMode:= dmAnalog;
+  end;
+
+  with TBitBtn.Create(aForm) do begin
+    Parent:= aForm;
+    setbounds(575, 440,150, 55);
+    caption:= '&Config';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'TAFTERMINAL'); // CL_MPSTOP'); 
+    mXButton(05,05,width, height,12,12,handle);
+    onClick:= @TPortForm1_Button1Click;
+  end;
+  
+  AfComPort1:= TAfComPort.Create(NIL);
+   with AfComPort1 do begin
+    BaudRate:= br4800;
+    OnDataRecived:= @TPortForm1_AfComPort1DataRecieved;
+  end;
+
+   AfPortRadioGroup1:= TAfPortRadioGroup.Create(self);
+   with AfPortRadioGroup1 do begin
+      parent:= Panel1;
+      SetBounds(8,8,90,190)
+      ComPort:= AfComPort1;
+      MaxComPorts:= 8;
+      Options:= [pcCheckExist, pcHighlightOpen];
+      Caption:= '&Select Port';
+      Show;
+      OnClick:= @TPortForm1_AfPortRadioGroup1Click;
+    end;
+
+  AfTerminal1:= TAfTerminal.create(self);
+  with AfTerminal1 do begin
+    parent:= aForm;
+    SetBounds(10,10,520,480)
+    //Align:= alClient;
+    //caption:= 'this is';
+    CaretBlinkTime:= 500;
+    Color:= clblack;
+    Font.size:= 20;
+    //Font.color:= clGreen;
+    Font.color:= clred; //yellow;
+    TermColorMode:= cmline;
+    //CharWidth:= 20;
+    LogName:= 'LOG.TXT';
+    Options:= [];
+    Show;
+    OnSendChar:= @TPortForm1_AfTerminal1SendChar;
+  end;
+    //AfComPort1.WriteChar('T');
+ 
+end;
+
+//****************************Af COM_Code_End**************************
+
+
+type Trec = record
+             ind: byte;
+           end;  
+function getRec: TRec;
+begin
+  result.ind:= 12344;;
+end;  
+
+procedure AfComPort1DataRecived(Sender: TObject; Count: Integer);
+var AfTerminal1: TAfTerminal;
+    AfComPort1: TAfComPort;
+begin
+  writeln(inttostr(getRec.ind));
+  AfTerminal1.WriteString(AfComPort1.ReadString);
+end;
+
+var  FComPort: TAfComPortCore;
+procedure TSimpleComPort_PortEvent(Sender: TAfComPortCore;
+                                             EventKind: TAfCoreEvent; Data: DWORD);
+//  FComPort: TAfComPort;
+var acs: TComStat;
+begin
+   //acs.cbinQue:= 234;
+   //acs1.reserved[1]:= 12;
+  acs:= FComPort.ComStatus;
+  //Count:= acs.CBInQue;
+  //count:= TComStat(FComPort).ComStatus;
+    AfComPort1.BaudRate:= br9600;
+    AfComPort1.OnDataRecived:= @AfComPort1DataRecived;
+   //Count:= FComPort.ComStatus.CBInQue;
+  //SetString(S, nil, Count);
+  //FComPort.ReadData(Pointer(S)^, Count);
+  //Write(S);
+end;
+
+procedure TSimpleComPort_Open(PortNumber: Integer; const Parameters: String);
+var DCB: TDCB;
+  //C: array[0..255] of Char;
+  C: PChar;
+begin
+  //StrPCopy(C, Parameters);
+  //ZeroMemory(@DCB, Sizeof(DCB));
+  Win32Check(BuildCommDCB(PChar(C), DCB));
+  FComPort.DCB:= DCB;
+  FComPort.OpenComPort(PortNumber);
+  Writeln(Format('Port initialized: COM%d: %s', [PortNumber, Parameters]));
+end;
+
+//var FComPort: TAfComPortCore;
+procedure TSimpleComPort_Create;
+begin
+  FComPort:= TAfComPortCore.Create;
+  FComPort.OnPortEvent:= @TSimpleComPort_PortEvent;
+  FComPort.DirectWrite:= True;
+end;
+
+procedure TSimpleComPort_Destroy;
+begin
+  FComPort.Free;
+  //inherited Destroy;
+end;
+
+
+
+Begin  //Main
+//<Executable statements>
+  //TOutlookExport_Spy;
+  Writeln('');
+//<Definitions>  
+
+  {with TPortForm1.create(NIL) do begin
+    //panel1;
+   //writeln(inttostr(GetHostByName(gethostname)));
+    AfComPort1.BaudRate:= br4800;
+    //OnDataRecived
+    //Showmodal;
+    Showmodal;
+    Free;
+  end;} 
+  
+  TPortForm1_FormCreate(Self);
+  
+  with TOvcCalculator.create(self) do begin
+    parent:= aForm;
+  //free;
+    setbounds(550,510,200,150);
+    displaystr:= 'maxcalc';
+  end;
+
+  
+   //ares:= TResolver.create;
+ { with TResolver.create do begin
+   //writeln(inttostr(GetHostByName(gethostname)));
+    Free;
+   end;  }
+   {repeat 
+     TApplication_PaintView(aform.canvas);
+     switch:= NOT switch;
+     Sleep(20);
+   until isKeyPressed or FWait;}
+  // function GetMacAddresses(const Machine: string; const Addresses: TStrings):Integer;
+    //OVCInternationalDemoClass;
+    writeln(CreateGUIDString);
+    //writeln(sha1(exepath+'maxbox3.exe'));
+    
+END. 
+
+
+//############################################################################
+// Archimedes Turbo Spiral App
+//############################################################################
+
+//GUI EXample:
+
+type
+  TPortForm1 = class(TForm)
+    Panel1: TPanel;
+    //AfTerminal1: TAfTerminal;
+    //AfComPort1: TAfComPort;
+    Button1: TButton;
+    //AfPortRadioGroup1: TAfPortRadioGroup;
+    procedure AfTerminal1SendChar(Sender: TObject; var Key: Char);
+    procedure AfComPort1DataRecived(Sender: TObject; Count: Integer);
+    procedure Button1Click(Sender: TObject);
+    procedure AfPortRadioGroup1Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    AfTerminal1: TAfTerminal;
+    AfComPort1: TAfComPort;
+    AfPortRadioGroup1: TAfPortRadioGroup;
+    { Public declarations }
+  end;
+
+var
+  PortForm1: TPortForm1;
+
+implementation
+
+//{$R *.DFM}
+
+procedure TPortForm1.AfTerminal1SendChar(Sender: TObject; var Key: Char);
+begin
+  AfComPort1.WriteChar(Key);
+end;
+
+procedure TPortForm1.AfComPort1DataRecived(Sender: TObject; Count: Integer);
+begin
+  AfTerminal1.WriteString(AfComPort1.ReadString);
+end;
+
+procedure TPortForm1.Button1Click(Sender: TObject);
+begin
+  AfComPort1.ExecuteConfigDialog;
+end;
+
+procedure TPortForm1.FormCreate(Sender: TObject);
+begin
+
+  AfComPort1:= TAfComPort.Create(self);
+   with AfComPort1 do begin
+    BaudRate:= br4800;
+    OnDataRecived:= AfComPort1DataRecived;
+  end;
+
+   AfPortRadioGroup1:= TAfPortRadioGroup.Create(self);
+   with AfPortRadioGroup1 do begin
+      parent:= Panel1;
+      Left:= 8;
+      Top:= 8;
+      Width:= 89;
+      Height:= 193;
+      ComPort:= AfComPort1;
+      MaxComPorts:= 8;
+      Options:= [pcCheckExist, pcHighlightOpen];
+      Caption:= '&Select Port';
+      Show;
+      //TabOrder = 1
+      OnClick:= AfPortRadioGroup1Click;
+    end;
+
+  AfTerminal1:= TAfTerminal.create(self);
+  with AfTerminal1 do begin
+    parent:= self;
+    Left:= 0;
+    Top:= 0;
+    Width:= 420;
+    Height:= 352;
+    Align:= alClient;
+    CaretBlinkTime:= 500;
+    LogName:= 'LOG.TXT';
+    Options:= [];
+    Show;
+    OnSendChar:= AfTerminal1SendChar;
+   end;
+ end;
+
+procedure TPortForm1.FormDestroy(Sender: TObject);
+begin
+    AfTerminal1.FreeOnRelease;
+    AfComPort1.Close;
+    AfComPort1.FreeOnRelease;
+    AfPortRadioGroup1.FreeOnRelease;
+end;
+
+
+procedure TPortForm1.AfPortRadioGroup1Click(Sender: TObject);
+begin
+  AfTerminal1.SetFocus;
+end;
+
+end.
+
+program NonVCLExample;
+
+//{$APPTYPE CONSOLE}
+
+uses
+  Windows, Classes, SysUtils, AfComPortCore;
+
+type
+  TSimpleComPort = class(TObject)
+  private
+    FComPort: TAfComPortCore;
+    procedure PortEvent(Sender: TAfComPortCore; EventKind: TAfCoreEvent; Data: DWORD);
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Open(PortNumber: Integer; const Parameters: String);
+    procedure WriteString(const S: String);
+  end;
+
+{ TSimpleComPort }
+
+constructor TSimpleComPort.Create;
+begin
+  FComPort := TAfComPortCore.Create;
+  FComPort.OnPortEvent := PortEvent;
+  FComPort.DirectWrite := True;
+end;
+
+destructor TSimpleComPort.Destroy;
+begin
+  FComPort.Free;
+  inherited Destroy;
+end;
+
+procedure TSimpleComPort.Open(PortNumber: Integer; const Parameters: String);
+var
+  DCB: TDCB;
+  C: array[0..255] of Char;
+begin
+  StrPCopy(C, Parameters);
+  ZeroMemory(@DCB, Sizeof(DCB));
+  Win32Check(BuildCommDCB(C, DCB));
+  FComPort.DCB := DCB;
+  FComPort.OpenComPort(PortNumber);
+  Writeln(Format('Port initialized: COM%d: %s', [PortNumber, Parameters]));
+end;
+
+procedure TSimpleComPort.PortEvent(Sender: TAfComPortCore;
+  EventKind: TAfCoreEvent; Data: DWORD);
+
+  procedure DisplayData;
+var
+  S: String;
+  Count: DWORD;
+begin
+  Count := FComPort.ComStatus.cbInQue;
+  SetString(S, nil, Count);
+  FComPort.ReadData(Pointer(S)^, Count);
+  Write(S);
+end;
+
+begin
+  case EventKind of
+    ceLineEvent:
+      begin
+        if Data and EV_RXCHAR <> 0 then
+          DisplayData;
+        if Data and (not EV_RXCHAR) <> 0 then
+          Write(Format(#13#10'Line error: %.8xh'#13#10, [Data])); 
+      end;
+    ceNeedReadData:
+      DisplayData;
+  end;
+end;
+
+procedure TSimpleComPort.WriteString(const S: String);
+begin
+  FComPort.WriteData(Pointer(S)^, Length(S));
+end;
+
+var
+  StdIn: THandle;
+  InputBuffer: TInputRecord;
+  InputEvents, ConsoleMode: DWORD;
+  SimpleComPort: TSimpleComPort;
+
+begin
+  SetConsoleTitle('AsyncFree NonVCL example, press ESC to exit');
+  StdIn := GetStdHandle(STD_INPUT_HANDLE);
+  if StdIn = INVALID_HANDLE_VALUE then RaiseLastWin32Error;
+  Win32Check(GetConsoleMode(StdIn, ConsoleMode));
+  Win32Check(SetConsoleMode(StdIn, ConsoleMode and (not ENABLE_ECHO_INPUT)));
+
+  SimpleComPort := TSimpleComPort.Create;
+  SimpleComPort.Open(1, 'baud=115200 parity=N data=8 stop=1');
+
+  while True do
+    if ReadConsoleInput(StdIn, InputBuffer, 1, InputEvents) then
+    case InputBuffer.EventType of
+      KEY_EVENT:
+        with InputBuffer.Event.KeyEvent do if bKeyDown then
+          case AsciiChar of
+            #08, #10, #13, #32..#255:
+              SimpleComPort.WriteString(AsciiChar);
+            #27:
+              Break;
+          end;
+    end;
+
+  SimpleComPort.Free;
+end.
+
+
+
+procedure SIRegister_TOvcIntlSup(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TObject', 'TOvcIntlSup') do
+  with CL.AddClassN(CL.FindClass('TObject'),'TOvcIntlSup') do begin
+    RegisterMethod('Constructor Create');
+    Procedure Free');
+    Function CurrentDateString( const Picture : string; Pack : Boolean) : string');
+    Function CurrentDatePChar( Dest : PChar; Picture : PChar; Pack : Boolean) : PChar');
+    Function CurrentTimeString( const Picture : string; Pack : Boolean) : string');
+    Function CurrentTimePChar( Dest : PChar; Picture : PChar; Pack : Boolean) : PChar');
+    Function DateToDateString( const Picture : string; Julian : TStDate; Pack : Boolean) : string');
+    Function DateToDatePChar( Dest : PChar; Picture : PChar; Julian : TStDate; Pack : Boolean) : PChar');
+    Function DateTimeToDatePChar( Dest : PChar; Picture : PChar; DT : TDateTime; Pack : Boolean) : PChar');
+    Function DateStringToDMY( const Picture, S : string; var Day, Month, Year : Integer; Epoch : Integer) : Boolean');
+    Function DatePCharToDMY( Picture, S : PChar; var Day, Month, Year : Integer; Epoch : Integer) : Boolean');
+    Function DateStringIsBlank( const Picture, S : string) : Boolean');
+    Function DatePCharIsBlank( Picture, S : PChar) : Boolean');
+    Function DateStringToDate( const Picture, S : string; Epoch : Integer) : TStDate');
+    Function DatePCharToDate( Picture, S : PChar; Epoch : Integer) : TStDate');
+    Function DayOfWeekToString( WeekDay : TDayType) : string');
+    Function DayOfWeekToPChar( Dest : PChar; WeekDay : TDayType) : PChar');
+    Function DMYtoDateString( const Picture : string; Day, Month, Year : Integer; Pack : Boolean; Epoch : Integer) : string');
+    Function DMYtoDatePChar( Dest : PChar; Picture : PChar; Day, Month, Year : Integer; Pack : Boolean; Epoch : Integer) : PChar');
+    Function InternationalCurrency( FormChar : Char; MaxDigits : Byte; Float, AddCommas, IsNumeric : Boolean) : string');
+    Function InternationalCurrencyPChar( Dest : PChar; FormChar : Char; MaxDigits : Byte; Float, AddCommas, IsNumeric : Boolean) : PChar');
+    Function InternationalDate( ForceCentury : Boolean) : string');
+    Function InternationalDatePChar( Dest : PChar; ForceCentury : Boolean) : PChar');
+    Function InternationalLongDate( ShortNames : Boolean; ExcludeDOW : Boolean) : string');
+    Function InternationalLongDatePChar( Dest : PChar; ShortNames : Boolean; ExcludeDOW : Boolean) : PChar');
+    Function InternationalTime( ShowSeconds : Boolean) : string');
+    Function InternationalTimePChar( Dest : PChar; ShowSeconds : Boolean) : PChar');
+    Function MonthStringToMonth( const S : string; Width : Byte) : Byte');
+    Function MonthPCharToMonth( S : PChar; Width : Byte) : Byte');
+    Function MonthToString( Month : Integer) : string');
+    Function MonthToPChar( Dest : PChar; Month : Integer) : PChar');
+    Procedure ResetInternationalInfo');
+    Function TimeStringToHMS( const Picture, S : string; var Hour, Minute, Second : Integer) : Boolean');
+    Function TimePCharToHMS( Picture, S : PChar; var Hour, Minute, Second : Integer) : Boolean');
+    Function TimeStringToTime( const Picture, S : string) : TStTime');
+    Function TimePCharToTime( Picture, S : PChar) : TStTime');
+    Function TimeToTimeString( const Picture : string; T : TStTime; Pack : Boolean) : string');
+    Function TimeToTimePChar( Dest : PChar; Picture : PChar; T : TStTime; Pack : Boolean) : PChar');
+    Function TimeToAmPmString( const Picture : string; T : TStTime; Pack : Boolean) : string');
+    Function TimeToAmPmPChar( Dest : PChar; Picture : PChar; T : TStTime; Pack : Boolean) : PChar');
+    RegisterProperty('AutoUpdate', 'Boolean', iptrw);
+    RegisterProperty('CurrencyLtStr', 'string', iptrw);
+    RegisterProperty('CurrencyRtStr', 'string', iptrw);
+    RegisterProperty('DecimalChar', 'Char', iptrw);
+    RegisterProperty('CommaChar', 'Char', iptrw);
+    RegisterProperty('Country', 'string', iptr);
+    RegisterProperty('CurrencyDigits', 'Byte', iptrw);
+    RegisterProperty('ListChar', 'Char', iptrw);
+    RegisterProperty('SlashChar', 'Char', iptrw);
+    RegisterProperty('TrueChar', 'Char', iptrw);
+    RegisterProperty('FalseChar', 'Char', iptrw);
+    RegisterProperty('YesChar', 'Char', iptrw);
+    RegisterProperty('NoChar', 'Char', iptrw);
+    RegisterProperty('OnWinIniChange', 'TNotifyEvent', iptrw);
+  end;
+end;
+
+
+----app_template_loaded_code----

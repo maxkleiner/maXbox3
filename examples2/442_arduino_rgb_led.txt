@@ -1,0 +1,1089 @@
+program ArduinoRGBLED_Pulsar_BITMAX_JpegTester;   // on progress not finished yet!
+
+//Loads a bitmap with an aggregation from TPicture Class
+//A function stretches also a bitmap with specified number of pixels
+// in horizontal, vertical dimension, #locs=1054
+  //TODO: transfer the App to analog write with the sliders!
+  //TODO: send the slider with CPort.Write() values to RGB LED [0..255]Matrix!
+
+const MAXP = 100;
+      FIRSTCOLOR = clTeal;           //clPurple;
+      KB = 'abcdefghijklmnopqrstuvwxyz';
+       BACKMAP = 'examples\images\bmp47.bmp';
+      SIG ='<--------->';
+      IPADDR = '127.0.0.1';
+      APORT = 8000;
+      COMPORT ='COM4';
+ 
+type
+ TMMatrix = Array[1..MAXP] of TPoint;
+
+var
+    Exc2: Exception;
+    Image1, Image2: TImage;
+    frmMon, frmMon2, frmMon3: TForm;
+    UD: TUpDown;
+    SB: TScrollBar;
+    TB: TTrackBar;
+    panUD: TPanel;
+    panTB: TPanel;
+    panSB: TPanel;
+    tbR, tbG, tbB: TTrackBar;
+    panWr, panWg, panwb: TPanel;
+    panCP: TPanel;
+    panCP2: TLabel;
+    // char word counter
+    edText: TEdit;
+    sgStat: TStringGrid;
+    panB: TPanel;
+    cPort: TComPort;
+    btn_connect, btn_Setup: TBitBtn;
+    statBar: TStatusBar;
+
+    
+
+procedure SaveImageJpeg(img: TImage; fname, fext: string);
+var
+jpeg, jpeg2: tjpegimage;
+  f: string;
+begin
+ if (fext='jpg') then begin
+  jpeg := TJpegImage.create();
+  jpeg.Assign(img.picture.bitmap);
+  jpeg.compressionQuality:= 85;
+  jpeg.compress();
+  f:= changeFileExt(fname,'.jpg');
+  jpeg.SaveToFile(ExePath+'examples\'+f);
+  //image2.picture.assign(jpeg2);
+  jpeg.Free;
+  end;
+  //Image1.Picture.LoadFromFile(ExePath+'examples\faszination_tee.jpg');
+  //Image1.Picture.LoadFromFile(ExePath+'examples\citymax.bmp');
+end; 
+
+
+procedure manip_ScanImage;
+var i,j: smallint;
+  colorref: integer;
+begin
+  for i:= 1 to image1.width do
+    for j:= 1 to image1.height do begin
+    writeln(colortoString(image1.Picture.Bitmap.Canvas.pixels[i,j]));
+    colorref:= image1.Picture.Bitmap.Canvas.pixels[i,j];
+    image1.Picture.Bitmap.Canvas.pixels[i,j]:= clyellow;
+    image1.Picture.Bitmap.Canvas.pixels[i-1,j-1]:= colorref;
+  end;
+end;    
+
+  
+procedure loadImage;
+var
+jpeg, jpeg2: tjpegimage;
+begin
+  jpeg := TJpegImage.create();
+  jpeg2:= TJpegImage.create();
+  {@to save from bmp to jpg }
+  Image1.Picture.BitMap.LoadFromFile(ExePath+'examples\citymax.bmp');
+  //jpeg.loadfromfile(ExePath+'examples\faszination_tee.jpg');
+  jpeg2.loadfromfile(ExePath+'examples\maxbox_logo3.jpg');
+   //jpeg2.loadfromfile(ExePath+'docs\utils\pascalandroid.jpg');
+   //jpeg2.savetofile(ExePath+'examples\tee6358_3.jpg');
+  //SearchandopenDoc(ExePath+'examples\tee6358_3.jpg');
+  //image2.parent:= NIL;
+  //image1.picture.assign(jpeg);
+  image2.picture.assign(jpeg2);
+  //Image1.Picture.LoadFromFile(ExePath+'examples\faszination_tee.jpg');
+  //Image1.Picture.LoadFromFile(ExePath+'examples\citymax.bmp');
+  jpeg.Free;
+  jpeg2.Free;
+
+end; 
+
+procedure Image1MouseDown(Sender: TObject; Button: TMouseButton;
+Shift: TShiftState; X, Y: Integer);
+var i: byte;
+begin
+//test
+  loadimage;
+  try
+  Image1.Canvas.MoveTo(X,Y);
+  image1.canvas.pen.color:= clyellow;
+  //image1.canvas.floodfill() 
+  for i:= 1 to 30 do
+    //Image1.Canvas.LineTo(X+random(140),Y+random(140));
+    Image1.Picture.Bitmap.Canvas.LineTo(X+random(140),Y+random(140));
+  except
+     writeln('you cant write on an jpeg') 
+  end;  
+end;  
+
+
+Function RGB2(R,G,B: Byte): TColor;
+Begin
+  Result:= B Shl 16 Or G Shl 8 Or R;
+End;
+
+function ResizeBmp(abitmap: TBitmap; wid, hei: Integer): Boolean;
+var 
+  TmpBmp: TBitmap;
+  ARect: TRect;
+begin
+  Result:= False;
+  try
+    //TmpBmp:= TBitmap.Create;
+    try
+      abitmap.Width:= wid;
+      abitmap.Height:= hei;
+      //abitmap.size
+      ARect:= Rect(10,10, wid, hei);
+      //TmpBmp.loadfromfile('examples\citymax.bmp')
+      //frmMon.Canvas.FillRect(Rect(130,150,350,10));
+      abitmap.LoadFromResourceName(hinstance, 'plus');
+      frmMon.Canvas.StretchDraw(ARect, abitmap);
+      writeln(inttoStr(BytesPerScanline(20,20,10)))
+      //frmMon.Canvas.Brush.Bitmap:= aBitmap;
+      //abitmap.canvas.copyrect(Rect(0,0,140,140)) 
+      //frmMon.Canvas.picture:=Assign(abitmap);
+    finally
+      //TmpBmp.Free;
+       frmmon.Canvas.Brush.Bitmap:= NIL;
+       aBitmap.Free;
+    end;
+    Result:= True;
+  except
+    Result:= False;
+  end;
+end;
+
+procedure DrawRosette2;
+var
+  m,p: TPoint;
+  rho,phi: real;
+  i,br,r,n: integer;
+begin
+   n:=StrToInt('18');
+   br:=1;
+   with frmmon.Canvas do begin
+     Pen.Width:= br;
+     Pen.Color:= clyellow;
+     Brush.Color:= clblue;
+     Brush.Style:= bsClear;
+     //Mittelpunkte berechnen und Kreise zeichnen
+     m.x:=225; m.y:=225; r:=175;
+     rho:=360/n;
+     for i:=1 to n do begin
+       phi:=i*rho*pi/180;
+       p.x:=m.x+round(r*cos(phi));
+       p.y:=m.y+round(r*sin(phi));
+       Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+       Ellipse(p.x-3,p.y-3,p.x+3,p.y+3);
+     end;
+  end;
+end;
+
+
+procedure DrawPowerCircle(n: integer);
+//const pi=3.1415926;
+var
+  p: TMMatrix; m: TPoint;
+  r,rho,phi: real;
+  i,j,x,y,br: integer;
+begin
+  //with Form1.img1.Canvas do begin
+    with frmMon.Canvas do begin
+    br:= 1;
+    Pen.Width:=br;
+    Pen.Color:= clblue;
+    Brush.Color:=  clred;
+    //Kreisdefinition
+    m.x:=225; m.y:=225; r:=175;
+    rho:=360/n;
+    //Stützpunkte berechnen
+    for i:=1 to n do begin
+      phi:=i*rho*pi/180;
+      p[i].x:=m.x+round(r*(cos(phi)));
+      p[i].y:=m.y+round(r*sin(phi));
+    end;
+    //if Form1.chb1.checked=true then
+      Ellipse(50,50,400,400);
+    for i:=1 to n-1 do
+      for j:=i to n do begin
+        MoveTo(p[i].x,p[i].y);
+        LineTo(p[j].x,p[j].y);
+      end;
+    //if Form1.chb2.checked=true then begin
+      for i:=1 to n do begin
+        x:=p[i].x; y:=p[i].y;
+        Ellipse(x-3,y-3,x+3,y+3);
+      end;
+    //end;
+  end;
+end;
+
+procedure SetColors;
+//Umrechnung und Anzeige der Farbangaben
+var
+  r,g,b: byte; //Farbwerte
+begin
+  with frmmon2 do begin
+    //Farbwerte
+    r:=tbR.Position; g:=tbG.Position; b:=tbB.Position;
+    //Farbe einstellen
+    panCP2.Color:=RGB(r,g,b);
+    //RGB-Farbwert
+    writeln('edRgb.Text '+IntToStr(r)+','+IntToStr(g)+','+IntToStr(b)+'  ');
+    //Hex-Farbwert
+    writeln('edHex.Text '+'$00'+IntToHex(panCP2.Color,6)+'  ');
+    //HTML-Farbwert
+    writeln('edHtml.Text '+'#'+IntToHex(r,2)+IntToHex(g,2)+IntToHex(b,2));
+    //writeln(' ')
+  end;
+end;
+
+
+procedure HideGridCursor(g: TStringGrid);
+//Cursor aus dem StringGrid verbannen
+var gr: TGridRect;
+begin
+  with gr do begin
+    Top:=-1; Left:=-1; Right:=-1; Bottom:=-1
+  end;
+  g.Selection:=gr;
+end;
+
+procedure btnCalcCharsClick(Sender: TObject);
+//Auswertung der Buchstabenverteilung
+var
+  i,s,x,anzB: integer;
+  t: string;
+  b: array[0..25] of integer; //Array Buchstabenzähler
+begin
+  //Ausgangsbelegung
+  anzB:=0;
+  for i:=0 to 25 do b[i]:=0; //Buchstabenzähler löschen
+  //Auswertung
+  t:=edText.Text; //aktuelle Zeile
+  t:=LowerCase(t); //Umwandlung in Kleinbuchstaben
+  for s:=1 to length(t) do begin
+    if pos(t[s],kb)>0 then begin //Zeichen ist Kleinbuchstabe
+      x:=ord(t[s])-97; //Buchstabennummer
+      b[x]:=b[x]+1;    //Buchstabenzähler aktualisieren
+      inc(anzB);       //Anzahl der Buchstaben anpassen
+    end;
+  end;
+  edText.Text:=t; //angepasste Zeile zurückschreiben
+  //Ausgabe
+  for i:=0 to 25 do sgStat.Cells[i,1]:=''; //Tabelle löschen
+  for i:=0 to 25 do
+    if b[i]>0 then //nur Werte größer als 0 ausgeben
+      sgStat.Cells[i,1]:=IntToStr(b[i]);
+  panB.Caption:=IntToStr(anzB);
+  HideGridCursor(sgStat);
+end;
+
+procedure btnNewClick(Sender: TObject);
+//Zurücksetzen der Formulareinstellungen
+var i: integer;
+begin
+  edText.Text:=''; panB.Caption:='';
+  for i:=0 to 25 do sgStat.Cells[i,1]:='';
+  edText.SetFocus;
+  HideGridCursor(sgStat);
+end;
+
+procedure CCFormCreate(Sender: TObject);
+//Einrichten des Stringgrids
+var i: integer;
+begin
+  for i:=0 to 25 do //Tabellenkopf mit Buchstaben beschriften
+    sgStat.Cells[i,0]:= chr(97+i);
+  HideGridCursor(sgStat);
+end;
+
+
+procedure SBChange(Sender: TObject);
+begin
+  panSB.Caption:=IntToStr(SB.Position);
+end;
+
+procedure TBChange(Sender: TObject);
+begin
+  panTB.Caption:=IntToStr(TB.Position);
+end;
+
+procedure tbRChange(Sender: TObject);
+//Farbeinstellung rot
+begin
+  //Anzeige des Farbwertes
+  panWr.Caption:=IntToStr(tbR.Position);
+  //Darstellung der aktualisierten Farbe im Panel
+  panCP2.Color:= RGB(tbR.Position,tbG.Position,tbB.Position);
+  SetColors;
+end;
+
+procedure tbGChange(Sender: TObject);
+//Farbeinstellung grün
+begin
+  panWg.Caption:=IntToStr(tbG.Position);
+  panCP2.Color:=RGB(tbR.Position,tbG.Position,tbB.Position);
+  SetColors;
+end;
+
+procedure tbBChange(Sender: TObject);
+//Farbeinstellung blau
+begin
+  panWb.Caption:=IntToStr(tbB.Position);
+  panCP2.Color:=RGB(tbR.Position,tbG.Position,tbB.Position);
+  SetColors;
+end;
+
+procedure FormCreateComPort(Sender: TObject);
+begin
+  cPort:= TComPort.Create(self);
+  with cPort do begin
+    BaudRate:= br9600;
+    Port:= COMPORT; //'COM5';
+    Parity.Bits:= prNone;
+    StopBits:= sbOneStopBit;
+    DataBits:= dbEight;
+   {FlowControl.OutCTSFlow:= False;
+    FlowControl.OutDSRFlow:= False;
+    FlowControl.ControlDTR:= dtrDisable;
+    FlowControl.ControlRTS:= rtsDisable;
+    FlowControl.XonXoffOut:= False;
+    FlowControl.XonXoffIn:= False;}
+  end;
+  statBar.Panels[0].Text:='Pre Port in use '+ cPort.Port; //show predefined Port at start
+  if cPort.Connected=true then begin
+    statBar.Panels[1].Text:= 'Connected'   
+    statBar.Panels[0].Text:=' Port in use '+ cPort.Port;      
+  end else begin
+    statBar.Panels[1].Text:= 'Disconnected'
+    statBar.Panels[0].Text:=' Port closed '+ cPort.Port;
+  end;        
+end;
+
+
+procedure TForm1_FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  if cPort.Connected then begin
+    cPort.WriteStr('A');     // If the application is closed, its good to leave
+    cPort.WriteStr('B');     // everything as we found it at start.
+    cPort.WriteStr('C');     // So we reset all the leds to OFF
+    cPort.WriteStr('D');
+    //cPort.Write(1)
+    cPort.Close;
+  end;
+  //HTTPServer.Free;
+  Writeln('COM Stopped at '+DateTimeToInternetStr(Now, true))
+end;
+
+procedure TForm1_btn_SetupClick(Sender: TObject);
+begin
+  cPort.ShowSetupDialog;                       // Opens predefined Setup Dialog
+  statBar.Panels[0].Text:= 'Port in use ' + cPort.Port;  // Status set to display Port
+end;
+
+Procedure BtnFactory(a,b,c,d: smallint; title: shortstring; apic: shortstring;
+                          abtn: TBitBtn; anevent: TNotifyEvent);
+begin
+ with abtn do begin
+   parent:= frmmon;
+   setBounds(a,b,c,d)
+   font.size:= 12;
+   glyph.LoadFromResourceName(HINSTANCE, apic); //Knownfile
+   mXButton(05,05,width, height,12,12,handle);
+   caption:= title;
+   //onClick:= anevent;
+ end;
+end; 
+
+procedure TForm1_btn_connectClick(Sender: TObject);
+begin
+  if cPort.Connected then begin
+     btn_connect.Caption:= 'Connect';  // Toggle the caption of Connection Button !
+     btn_Setup.Enabled:= True;         // If not connected, lets enable Setup Button
+      // This block resets the state of all Leds to Off
+      // According to Arduino Code the Chars A,B,C,D,E are used
+      // to set Digital Pins (2-6) to LOW
+     with cPort do begin
+        WriteStr('A');
+        WriteStr('B');
+        WriteStr('C');
+        WriteStr('D');
+     end;  
+      // This block resets the state of all Check Boxes to Unchecked
+      //cPort.WriteStr('A');
+      cPort.Close;              // COM Port in use is closed
+      statBar.Panels[1].Text:='Disconnected';  
+      statBar.Panels[0].Text:=' Port closed '+ cPort.Port;
+    end else begin
+      btn_connect.Caption:='Disconnect';   // Toggle the caption of Connection Button
+      btn_Setup.Enabled:=False;            // If not connected, lets disable Setup Button
+      cPort.Open;                           // COM Port in use is finally opened
+      cPort.WriteStr('1');
+      statBar.Panels[1].Text:='Connected';  
+      statBar.Panels[0].Text:= 'Port in use ' + cPort.Port; 
+      // This block enables the check boxes
+      // so the user can change them to set LED states when COM Port is connected
+      //LED_Checker(true, false);
+    end
+end;
+
+
+procedure InitMainForm;
+begin
+ frmMon:= TForm.create(self);
+ with frmMon do begin
+   //FormStyle := fsStayOnTop;
+   Position := poScreenCenter;
+   caption:='RGB Pulsar Universe BitmaX';
+   color:= clblack;
+   width:= 850;
+   height:= 700;
+   Show;
+   onMousedown:= @Image1MouseDown;
+   onClose:= @TForm1_FormClose;
+ end;
+ Image1:= TImage.create(frmMon);
+ with Image1 do begin
+   parent:= frmMon;
+   setbounds(10,15, 200,180);
+   onMousedown:= @Image1MouseDown;
+   show;
+   //onMouseup:= @Image1MouseUp
+ end;
+ Image2:= TImage.create(frmMon);
+ with Image2 do begin
+   parent:= frmMon;
+   setbounds(70,470,700,170);
+   onMousedown:= @Image1MouseDown;
+   show;
+   //onMouseup:= @Image1MouseUp
+ end;
+ statBar:= TStatusBar.create(self);
+  with statBar do begin
+    parent:= frmMon;
+     Panels.add;
+     panels.items[0].width:= 200;
+     panels.items[0].text:= '200';
+     Panels.add;
+     panels.items[1].width:= 150;
+     panels.items[1].text:= '150';
+  end;
+  FormCreateComPort(self);
+   with TDateTimePicker.Create(self) do begin
+    parent:= frmMon;
+    date;
+    top:= 190; left:= 15;
+    calAlignment:= albottom;
+  end;
+  btn_Setup:=  TBitBtn.create(frmmon);   //Android Constructors
+  btn_connect:= TBitBtn.create(frmmon);
+  btn_connect.onClick:= @TForm1_btn_connectClick;
+  BtnFactory(10,510,150,55, 'C&onnect Node','CL_MPNEXT',btn_connect, NIL);
+  btn_Setup.onClick:= @TForm1_btn_SetupClick;
+  BtnFactory(10,580,150,55, '&COM Settings','LEDbulbon',btn_Setup, NIL);
+end;
+
+
+procedure InitColorForms2;
+var panel2, panel3: TPanel;
+  fcolor: integer;
+  rc,gc,bc: TColor32;
+    
+begin
+ frmMon2:= TForm.create(self);
+ with frmMon2 do begin
+  Left:= 499; Top:= 359;
+  BorderIcons:= [biSystemMenu, biMinimize]
+  BorderStyle:= bsSingle
+  Caption:= 'ArduinoColorPicker'
+  ClientHeight:= 263
+  ClientWidth:= 338
+  //Color:= RGB(255,255,0);
+  Font.Charset:= DEFAULT_CHARSET
+  Font.Color:= clWindowText
+  Font.Height:= -11
+  Font.Name:= 'MS Sans Serif'
+  Font.Style:= [];
+  //OldCreateOrder = False
+  Position:= poDesktopCenter;
+  PixelsPerInch:= 96;
+  //TextHeight(13); //Icon:= { }
+   FormStyle := fsStayOnTop;
+   Show;
+   onMousedown:= @Image1MouseDown;
+ end;
+ 
+ panCP:= TPanel.create(frmMon2);
+ with panCP do begin
+    parent:= frmMon2;
+    SetBounds(8,8,321,121)
+    BevelOuter:= bvLowered
+    //transparent
+    parentcolor:= false;
+    color:= clblue;
+    end;
+    panCP2:= TLabel.create(frmMon2)
+    with panCP2 do begin
+      parent:= panCP;
+      SetBounds(8,8,305,105)
+      parentcolor:= false;
+      transparent:= false;
+      panCP2.Color:= FIRSTCOLOR;
+    end;
+    panel2:= TPanel.create(frmmon2);
+    with panel2 do begin
+      parent:= frmMon2;
+      SetBounds(8,136,321,113)
+      BevelOuter:= bvLowered
+      //TabOrder = 0
+      with TPanel.Create(frmmon2) do begin
+        parent:= panel2;
+        SetBounds(8,8,38,29);
+        //BevelOuter:= bvLowered;
+        //TabOrder:= 3
+    panel3:= TPanel.Create(frmmon2);
+    with panel3 do begin
+        parent:= panel2;
+        BevelOuter:= bvLowered
+        SetBounds(13,13,28,19)
+        Color:= clRed;
+        caption:= 'R';
+        //TabOrder = 0
+    end;
+      with TPanel.Create(frmmon2) do begin
+        parent:= panel2;
+        SetBounds(13,45,28,19)
+        Color:= clblue;
+      end
+    end;
+      with TPanel.Create(frmmon2) do begin
+        parent:= panel2;
+        SetBounds(8,40,38,29)
+        Color:= clgreen;
+        caption:= 'G';
+      end;
+    with TPanel.Create(frmmon2) do begin //panG
+        parent:= panel2;
+        SetBounds(8,72,38,29)
+        Color:= clblue;
+        caption:= 'B';
+        //TabOrder = 0
+      end;
+    end;
+   panWR:= TPanel.create(frmmon2);
+   with panWR do begin
+      parent:= panel2;
+      setBounds(280,8,33,19)
+      BevelOuter:= bvLowered
+      Caption:= '0'
+      Color:= clWhite
+      Font.Charset:= DEFAULT_CHARSET
+      Font.Color:= clBlack
+      Font.Name:= 'MS Sans Serif'
+      Font.Style:= [fsBold]
+      ParentFont:= False
+      //TabOrder = 8
+    end;
+  panWG:= TPanel.create(frmmon2);
+   with panWG do begin
+      parent:= panel2;
+      setBounds(280,40,33,19)
+      BevelOuter:= bvLowered
+      Font.Style:= [fsBold]
+      Caption:= '0'
+      Color:= clWhite
+    end;
+  panWB:= TPanel.create(frmmon2);
+   with panWB do begin
+      parent:= panel2;
+      setBounds(280,72,33,19)
+      Font.Style:= [fsBold]
+      BevelOuter:= bvLowered
+      Caption:= '0'
+      Color:= clWhite
+    end;
+    rc:= RedComponent(FIRSTCOLOR)
+    gc:= GreenComponent(FIRSTCOLOR)
+    bc:= BlueComponent(FIRSTCOLOR)
+    panWR.Caption:= inttoStr(rc);
+    panWG.Caption:= inttoStr(gc);
+    panWB.Caption:= inttoStr(bc);
+    
+    tbR:= TTrackBar.create(frmmon2);
+    tbG:= TTrackBar.create(frmmon2);
+    tbB:= TTrackBar.create(frmmon2);
+    fColor:= ColorToRGB(FIRSTCOLOR);
+    //msg(inttostr(firstcolor))
+    writeln(inttostr(ColorToRGB(FIRSTCOLOR)));
+    //writeln(floattostr(intpower(2,24)))
+  
+    with tbR do begin
+      parent:= panel2;
+      setBounds(48,8,230,25);
+      Max:= 255
+      Frequency:= 10
+      Position:= rc;
+      ThumbLength:= 20
+      OnChange:= @tbRChange;
+    end;
+     with tbG do begin
+      parent:= panel2;
+      setBounds(48,40,230,25);
+      Max:= 255
+      Frequency:= 10
+      Position:= gc;
+      ThumbLength:= 20
+      OnChange:= @tbGChange;
+    end;
+     with tbB do begin
+      parent:= panel2;
+      setBounds(48,72,230,25);
+      Max:= 255
+      Frequency:= 10
+      Position:= bc;
+      ThumbLength:= 20
+      OnChange:= @tbBChange;
+    end;
+ 
+ {Image2:= TImage.create(frmMon);
+ with Image2 do begin
+   parent:= frmMon2;
+   setbounds(265,465,560,250);
+   onMousedown:= @Image1MouseDown;
+   show;
+   //onMouseup:= @Image1MouseUp
+ end;}
+end;
+
+
+
+procedure InitWordForms3;
+var i: integer;
+  bc: TColor32;
+    
+begin
+ frmMon3:= TForm.create(self);
+ with frmMon3 do begin
+  Left:= 1200
+  Top:= 303
+  BorderIcons:= [biSystemMenu, biMinimize]
+  BorderStyle:= bsSingle
+  Caption:= 'WordCharacterCounter'
+  ClientHeight:= 224
+  ClientWidth:= 493
+  //Color:= RGB(255,255,0);
+  Font.Charset:= DEFAULT_CHARSET
+  Font.Color:= clWindowText
+  Font.Height:= -11
+  Font.Name:= 'MS Sans Serif'
+  Font.Style:= [];
+  //OldCreateOrder = False
+  Position:= poDesktopCenter;
+  PixelsPerInch:= 96;
+  //TextHeight(13);
+  //Icon:= { }
+   //FormStyle := fsStayOnTop;
+   Show;
+   onMousedown:= @Image1MouseDown;
+   //onCreate:= @CCFormCreate;
+
+ end;
+ with TLabel.Create(frmmon3) do begin
+    parent:= frmmon3;
+    setbounds(8,8,62,13)
+    Caption:= 'Texteingabe:'
+  end;
+  with TLabel.Create(frmmon3) do begin
+    parent:= frmmon3;
+    setbounds(8,64,95,13)
+    Caption:= 'Buchstabenstatistik:'
+  end;
+  with TLabel.Create(frmmon3) do begin
+    parent:= frmmon3;
+    setbounds(8,148,116,13)
+    Caption:= 'Character Count:';
+  end;
+  sgStat:= TStringGrid.Create(frmmon3);
+  with sgStat do begin
+    parent:= frmmon3;
+    Left:= 8
+    Top:= 88
+    Width:= 473
+    Height:= 41
+    //setBounds(8,88,473,41)
+    TabStop:= False
+    ColCount:= 26
+    DefaultColWidth:= 17
+    DefaultRowHeight:= 18
+    FixedCols:= 0
+    RowCount:= 2 
+    //Font.Name:= 'Wingdings';     //J is smile
+    //TabOrder:= 2
+  end;
+    for i:= 0 to 26-1 do 
+       sgStat.ColWidths[i]:= 17;
+    CCFormCreate(self);
+    with TButton.Create(frmmon3) do begin
+      parent:= frmmon3;
+      SetBounds(32,180,121,25)
+      Caption:= 'Calculation'
+      //TabOrder = 0
+      OnClick:= @btnCalcCharsClick
+    end;
+    with TButton.Create(frmmon3) do begin
+      parent:= frmmon3;
+      SetBounds(176,180,121,25)
+      Caption:= 'Reset'
+      //TabOrder = 0
+      OnClick:= @btnNewClick
+    end;
+   panB:= TPanel.Create(frmmon3)
+   with panB do begin
+     parent:= frmmon3;
+     setBounds(100,144,49,18);
+     BevelOuter:= bvLowered;
+    Color:= clWhite
+    //TabOrder = 3
+  end;
+  edText:= TEdit.Create(frmmon3);
+   with edText do begin
+    parent:= frmmon3;
+    Setbounds(8,32,473,21);
+    //CharCase:= ecUpperCase;
+    //passwordChar:= '*';
+    Text:= 'the quick brown fox jumps over the lazy dog'
+   end;
+ 
+end;
+
+
+procedure AnimatePowerCircle;
+var i: smallint;
+begin 
+  for i:= 1 to 25 do begin
+    DrawPowerCircle(i);    // try 30 or 35
+    //sleep(100)
+  end;  
+end;    
+
+
+procedure LoadBitMap;
+var mybitmap: Tbitmap;
+begin
+ mybitmap:= TBitmap.create;
+ mybitmap.loadfromfile('examples\citymax.bmp')
+ //mycanvas:= TCanvas.create;
+ if ResizeBmp(mybitmap, 443, 330) then
+    showmessage('picture almost resized');
+  //Image1.LoadFromFile(ExtractFilePath(Application.Exename) + 'Bild.bmp');
+ //mycanvas.Free;
+end;
+
+procedure allDialogsTest;
+begin
+  with TOpenDialog.create(self) do begin
+    execute;
+    Free;
+  end;
+    with TSaveDialog.create(self) do begin
+    execute;
+    Free;
+  end;
+    with TOpenPictureDialog.create(self) do begin
+    //show
+    //execute('');
+    Free;
+  end;
+    with TSavePictureDialog.create(self) do begin
+    //execute;
+    Free;
+  end;
+    with TFontDialog.create(self) do begin
+    execute;
+    Free;
+  end;
+    with TColorDialog.create(self) do begin
+    execute;
+    Free;
+  end;
+  {with TPrinterDialog.create(self) do begin
+    execute;
+    Free;
+  end;}
+    with TPrinterSetupDialog.create(self) do begin
+    execute;
+    Free;
+  end;
+    //with TFindDialog.create(self) do begin
+    //execute;
+    //showmodal
+    //Free;
+  //end;
+   with TReplaceDialog.create(self) do begin
+    execute;
+    //Free;
+  end;
+  with TEdit.Create(self) do begin
+     parent:= frmmon;
+     selectAll;
+     copytoclipboard
+     //borderstyle
+     //unselect;
+     //undo
+     //hasselection
+     //bevelkind
+     maxlength
+     charcase
+     ctl3d
+     passwordchar:= #0;
+    Free;
+  end;
+  
+  with TMemo.create(self) do begin
+    parent:= frmmon2;
+    alignment:= alleft;
+    wantreturns:= true;
+    //ateof
+    //bevelkind
+    //append
+    clear;
+    //copytoclipboard
+    //selectall
+    //redo;
+    //onChange
+    //insert
+    //gettextbuf
+     //gettextlen
+    //hasselection
+      //undo
+      //unselect
+        clearselection
+        Free;
+  end;  
+  with TCanvas.create do begin
+    //arc
+    //chord
+    // brushcopy
+     //copyrect
+    // drawfocusrect
+     // framerect
+      //parent:= frmmon;
+      brush
+      canvasorientation
+      //cliprect
+      copymode
+      font
+      //handle
+      lockcount
+      pen
+      //penpos
+      //polygon
+      //pixels[10,25]:= clRed;
+      textflags
+      Free;
+    
+  end;  
+  
+end;   
+
+
+function ExceptionTester: boolean;
+var S1, S2, S3: Single;
+  //Exc2: Exception;
+begin
+  result:= false;
+  Exc2:= Exception.Create('intern division zero');
+  try
+    S1 := 1.0;
+    S2 := 0.0;
+    S3 := S1/S2;
+    result:= true;
+  except
+    //on E: Exception do
+      //Writeln('Exc.ClassName '+ Exc2.message);
+      Exc2.message;    //raise
+      //exit;
+      RaiseLastException;
+  end;
+  //result:= true;
+  //Exc2.Free;
+end;  
+ 
+procedure TestFloatingPoints_Unit;
+var
+  S, S1, S2, S3: Single;
+  E: Extended;
+  E1, E2, E3: Extended;
+  exc: Exception;
+begin
+  exc:= Exception.Create('division zero fault');
+  E:= 0.1;
+  //Writeln(E:20:18);
+  //0.100000000000000000
+  //0.100000001490116120 converting
+  PrintF('this is a fpoint before %.18f ',[E]);
+  S:= E;
+  E:= S;
+  //Writeln(E:20:18);
+  PrintF('this is a fpoint after %.18f ',[E]);
+ //Readln;
+ //Rounding
+  {The output is
+  0.100000001490116120
+  0.010000000707805160
+  0.009999999776482580 }
+  S1 := 0.1;
+  //Writeln(S1:20:18);
+  PrintF('this is a fpoint before %.18f ',[S1]);
+  S1 := S1 * S1;
+  S2 := 0.01;
+  PrintF('this is a fpoint after %.18f ',[S1]);
+  PrintF('this is a fpoint after %.18f ',[S2]);
+  //Writeln(S1:20:18);
+  //Writeln(S2:20:18);
+  //Readln;
+  //Compare Literals
+  S1 := 0.3;
+  S2 := 0.1;
+  S2 := S2 / 10.0;      // should be 0.01  
+  writeln(floattoStr((s2)))  
+  S2 := S2 * 10.0;      // should be 0.1 again
+  writeln(floattoStr(s2))  
+  S2 := S2 + S2 + S2;   // should be 0.3
+  writeln(floattoStr(s2))  
+  //floattodecimal
+   if S1 = S2 then
+    Writeln('True')
+  else
+    Writeln('False');
+  if SameValue2(S1, S2, 0) then  //single
+    Writeln('True')
+  else
+    Writeln('False');
+  //The output is  False True  
+  //Readln;
+  E1 := 16.000000000000000001;
+  E2 := 16.000000000000000000;
+  E3 := E1 - E2;
+  //Writeln(E1:22:18, E2:22:18, E3);
+   PrintF('this is FPoint subtract E1: %.18f E2: %.18f E3: %.18f',[E1,E2, E3]);
+   E1 := 1000000000000000000000000.0;
+  E2 := 0.1;
+  E3 := E1;
+  //Writeln(E1 + E2 - E3:10:10);
+  PrintF('this is a fpoint after %.10f ',[E1+E2-E3]);
+  //Writeln(S1 - S3 + S2:10:10);
+  PrintF('this is a fpoint after %.10f ',[E1-E3+E2]);
+  PrintF('Sin(Pi) returns %.18f ',[Sin(PI)]);
+  //Delphi returns -5.42101086242752 × 10-20 , instead of the expected 0.
+  //Sin(Pi),
+   writeln(floatToStr(maxCalc('-5.4*10^-2')))
+   writeln(floatToStr(maxCalc('5.4*(10^-4)')))
+   writeln('sin pi of maxcalc '+floatToStr(maxCalc('Sin(PI)')))
+   writeln('sin pi of convert '+floatToStr(Sin(PI)))
+  //SetExceptionMask(GetExceptionMask + [exZeroDivide]); // default is: unmasked
+  try
+    S1 := 1.0; S2 := 0.0;
+    S3 := S1/S2;
+  except
+    //on E: Exception do
+      Writeln('Exc.ClassName '+ Exc.message);
+      Exc.message;
+  end;
+  //Writeln(S3);
+    //The number 0.1 is stored as $3DCCCCCD or (ordering the bits already)
+     writeln(hextobin2('3DCCCCCD'))
+     //0   0111 1011   100 1100 1100 1100 1100 1101
+     //0 – 0111 1011 (123)-127=-4 – 100 1100 1100 1100 1100 1101,
+     writeln(inttoStr(bintoint('110011001100110011001101')))  
+     writeln(floattoStr(maxCalc('(13421773*(2^-4))/(2^23)'))) //scale by 2^23
+     writeln(floattoStr(maxCalc('(13421773*(2^-4))*(2^-23)'))) //scale by 2^23
+     //0.10000000149011612,
+     writeln(floattoStr(maxCalc('2^-4')))
+     writeln('this is E '+floattoStr(E))
+   
+end;  //fpointunit
+
+ var md: TDynCardinalArray;
+   i: smallint;
+   cc: comp;  //it is an Int64 which is supported and calculated by the FPU.
+   ComPorts: TStrings;
+
+  //TODO: check com ports with terminal to a LED Matrix!
+begin
+  ProcessMessagesON;
+  InitMainForm;
+  InitColorForms2;
+  //InitWordForms3;
+  DrawRosette2;
+  //Pulsar
+  //DrawPowerCircle(25);    // try 30 or 35
+  AnimatePowerCircle;
+  //LoadBitMap; //test
+  loadImage;
+  //SaveImageJpeg(image1,'newteejpg','jpg');
+  cc:= round(power(2,30))
+  writeln('cc type: '+inttostr64(cc))
+  //allDialogsTest;
+  //writeln(booltostrj(IsPrimeFactor(7,1)))
+  md:= PrimeFactors(51) 
+  for i:= 0 to length(md)-1  do
+    write(inttostr(md[i])+ ' ');
+    //WideFormat
+    TestFloatingPoints_Unit;
+    try
+      if ExceptionTester then 
+        writeln('no exception');
+        //writeln(exc2.message);
+    except
+      writeln('got last exception '+Exception(exc2).message);
+    end;
+  ComPorts:= TStringlist.Create;
+  try
+    EnumComPorts(ComPorts);
+    Writeln('Start COM Port Command of Arduino COM: '+ComPorts[0]);  
+  except
+    Writeln('No COM Ports');
+  end;    
+  ComPorts.Free;
+//
+     //manip_ScanImage;  
+End.  
+
+
+Add jpeg in your uses section.
+
+Saving a jpeg to table :
+
+table1.append;
+table1Image.LoadFromFile('c:\bob.jpg');
+table1.post;
+// where table1image is a tblobfield linked to the image field of table1
+
+loading the image from the table :
+var
+jpeg: tjpegimage;
+buf: tmemorystream;
+begin
+jpeg := tjpegimage.create();
+buf := tmemorystream.create();
+table1Image.savetostream(buf);
+buf.seek(0, soFromBeginning);
+jpeg.loadfromstream(buf);
+image1.picture.assign(jpeg);
+buf.free;
+jpeg.free;
+end;
+
+Internals
+
+So how does this look internally? In the following example I use a Single, since Singles have an overviewable mantissa and exponent. Let me show you how a number like 0.1 is stored in a Single.
+
+The number 0.1 is stored as $3DCCCCCD or (ordering the bits already)
+0 – 0111 1011 – 100 1100 1100 1100 1100 1101,
+which means the sign bit is 0, the exponent is 123-127 = -4 and the mantissa is (after putting the hidden bit in front) 1100 1100 1100 1100 1100 1101 or $CCCCCD or 13421773.
+
+If we multiply 13421773 with 2-4 (0.0625), we get 838860,8125. Now we only have to scale that by 223 = 8388608, and we get 0.10000000149011612, which is indeed pretty close to 0.1.

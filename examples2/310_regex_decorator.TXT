@@ -1,0 +1,123 @@
+PROGRAM RegExDecorator;
+
+//http://regexpstudio.com/tregexpr/help/article_mrdecorator.html
+//First contribution 2004 and then EKON 16 2012! ex. 310 of maXbox, loc's= 110
+
+CONST 
+//<Constant declarations> 
+  TEXTOUT = 'Hi world of TRex code';
+
+  URLTemplate = 
+   '(?i)' 
+   + '(' 
+   + '(FTP|HTTP)://'             // Protocol 
+   + '|www\.)'                   // trick to catch links without
+                                 // protocol - by detecting of starting 'www.'
+   + '([\w\d\-]+(\.[\w\d\-]+)+)' // TCP addr or domain name
+   + '(:\d\d?\d?\d?\d?)?'        // port number
+   + '(((/[%+\w\d\-\\\.]*)+)*)'  // unix path
+   + '(\?[^\s=&]+=[^\s=&]+(&[^\s=&]+=[^\s=&]+)*)?'
+                                 // request (GET) params
+   + '(#[\w\d\-%+]+)?';          // bookmark
+
+//uses 
+//RegExpr; // Do not forget this line. Actually this is how TRegExpr 'Install' - the 
+// only thing You must do - include RegExpr into uses section.
+
+type 
+  TDecorateURLsFlags = (
+ // describes, which parts of hyper-link must be included
+ // into VISIBLE part of the link:
+  durlProto, // Protocol (like 'ftp://' or 'http://')
+  durlAddr,  // TCP address or domain name (like 'anso.da.ru')
+  durlPort,  // Port number if specified (like ':8080')
+  durlPath,  // Path to document (like 'index.htm')
+  durlBMark, // Book mark (like '#mark')
+  durlParam  // URL params (like '?ID=2&User=13')
+ );
+
+TDecorateURLsFlagSet = set of TDecorateURLsFlags;
+
+function DecorateURLs (
+ // can find hyper links like 'http://...' or 'ftp://..'
+ // as well as links without protocol, but start with 'www.'
+
+ const AText : string;
+ // Input text to find hyper-links
+
+  AFlags : TDecorateURLsFlagSet
+ // Which part of hyper-links found must be included into visible
+ // part of URL, for example if [durlAddr] then hyper link
+ // 'http://anso.da.ru/index.htm' will be decorated as
+ // '<a href="http://anso.da.ru/index.htm">anso.da.ru</a>'
+  ) : string;
+ // Returns input text with decorated hyper links
+
+var
+  PrevPos : integer;
+  s, Proto, Addr, HRef : string;
+begin
+  Result := ''; 
+  PrevPos := 1; 
+  with TRegExpr.Create do try 
+     Expression := URLTemplate; 
+     if Exec (AText) then 
+      REPEAT 
+        s := ''; 
+        if AnsiCompareText (Match [1], 'www.') = 0 then begin
+           Proto := 'http://';
+           Addr := Match [1] + Match [3];
+           HRef := Proto + Match [0];
+          end
+         else begin
+           Proto := Match [1];
+           Addr := Match [3];
+           HRef := Match [0];
+          end;
+        if durlProto in AFlags
+         then s := s + Proto;
+        if durlAddr in AFlags
+         then s := s + Addr;
+        if durlPort in AFlags
+         then s := s + Match [5];
+        if durlPath in AFlags
+         then s := s + Match [6];
+        if durlParam in AFlags
+         then s := s + Match [9];
+        if durlBMark in AFlags
+         then s := s + Match [11];
+        Result := Result + Copy (AText, PrevPos,
+         MatchPos [0] - PrevPos) + '<a href="' + HRef + '">' + s + '</a>';
+        PrevPos := MatchPos [0] + MatchLen [0];
+      UNTIL not ExecNext;
+     Result := Result + Copy (AText, PrevPos, MaxInt); // Tail
+    finally Free;
+   end;
+end; { of DecorateURLs}
+
+var i: integer;
+
+BEGIN  //Main
+//<Executable statements>
+ for i:= 1 to 3 do 
+    Writeln(TEXTOUT);
+  
+  Writeln('deco: '+DecorateURLs('http://www.softwareschule.ch/maxbox.htm',[durlAddr]));
+  
+  ShowMessage(ReplaceRegExpr('World','Hello, EKON TRex World!', 'Earth',true)); 
+
+//<Definitions>  
+END. 
+
+
+--------------------------------------------------------------}
+
+Note, that You can easely extract any part of URL (see AFlags parameter).
+
+
+Conclusion
+
+"Free Your mind" ((c) The Matrix ;)) and You'll find many other tasks there regular expressions can save You incredible part of stupid coding work !
+
+
+----app_template_loaded_code----

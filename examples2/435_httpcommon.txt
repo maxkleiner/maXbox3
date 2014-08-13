@@ -1,0 +1,511 @@
+PROGRAM HTTP_Common;        //in progress on work
+
+//////////////////////////////////////////////////////////////////////
+//  #sign:max: APSN21: 11.01.2014 19:06:18 
+//  Purpose: Grabs HTTP tests out of,  more items see below   //
+//  #path>ples\E:\maxbox\maxbox3\examples\                     //
+//  Lines of Code #locs:270
+//////////////////////////////////////////////////////////////////////
+
+Const TEXTOUT = 'hi world of code coverage with cover age';
+
+//############################################################################
+// Archimedes HTTP Spiral Architect
+//############################################################################
+//TODO: Button with stop event, change color and save bitmap as png
+
+{TYPE <Type declarations>} 
+
+  var aform: TForm;
+      FWait, switch: Boolean;
+      FValueA: Float;
+      FValueB: Float;
+      ipv6: TALIPv6Binary;
+
+
+//<FUNCTION>
+//<PROCEDURE> 
+procedure OpenIEURL(aURL:string);
+var sz: string;
+   //asr: TResolver;
+   //ahead: TIPHeader;
+begin
+  Application.ProcessMessages;
+  aURL:= trim(aURL);
+  if aURL='' then Exit;
+  with TRegistry.Create do try
+     rootkey:= HKey_Classes_Root;
+     OpenKey('\htmlfile\shell\open\command',false);
+     try 
+       sz:= ReadString('');
+       writeln('test of IE readkey '+sz) 
+     except
+       sz:= ''; 
+     end;
+     CloseKey;
+  finally
+      Free;
+  end;
+  if sz='' then Exit;
+  sz:= copy(sz, pos('"',sz)+1, length(sz));
+  sz:= copy(sz, 1, pos('"',sz)-1);
+  if pos('http://',aURL)<>1 then aURL:='http://'+aURL;
+  //ShellExecute(0,'open',PChar(z), PChar(aURL), nil, sw_ShowNormal); 
+  //ShellExecute(0,'open', PChar(aURL), nil, nil, sw_Show);
+end;
+
+procedure stopclick(sender: TObject);
+begin
+  writeln('archimedes demo stopped');
+  FWait:= true;
+end;  
+
+
+procedure CreateAForm;
+ //diaform:= CreateMessageDialog('my fast form perform',mtconfirmation, []);
+begin
+   FValueA:= 3.0;
+   FValueB:= 1.4;
+   FWait:= false;
+   aform:= CreateMessageDialog('Archimedes Spiral - Click to Stop or KeyPress',mtwarning,
+                                        [mball, mbyes, mbhelp, mbok]);
+   with aform do begin
+     caption:= 'Archimedes Spiral Architect Demo';
+     setBounds(50,50,800,850)
+     Formstyle:= fsStayontop;
+     Color:= clRed; //1266;
+     Canvas.Brush.Color:= clBlack; //clBlue;
+     Canvas.Brush.Style:= bsSolid;
+     Canvas.Pen.Color:= clWhite;
+     onclick:= @stopclick;
+   end;  
+   with TLabel.Create(self) do begin
+     parent:= aform;
+     SetBounds(330,30,400,70)
+     font.size:= 34;
+     font.style:= [fsItalic]
+     font.color:= clyellow;
+     caption:= 'Archimedes Spiral ';
+   end;  
+   aform.show; 
+end;
+
+
+
+procedure TApplication_PaintView(Canvas: TCanvas);
+var
+  cx, cy, i: Integer;
+  angle,x,y: Float;
+
+begin
+  if FWait then Exit;
+   
+   FValueB:= FValueB + 0.001;
+   // Clear background
+   //Canvas.FillStyle := 'rgba(0,0,99,0.08)';
+   if switch then
+     Canvas.FillRect(rect(0,90, aForm.Width, aForm.Height));
+   //Draw our framerate on the screen
+    cx:= aForm.width div 2;
+    cy:= aForm.Height div 2;
+
+  // Canvas.BeginPath;
+  for i:= 42 downto 0 do begin
+    angle:= FValueB * i;
+    x:= cx + (FValueA + FValueB * angle) * Cos(angle);
+    y:= cy + (FValueA + FValueB * angle) * Sin(angle);
+    if i = 42 then Canvas.MoveTo(round(x), round(y)) 
+      else Canvas.LineTo(round(x),round(y));
+  end;
+  //Canvas.StrokeStyle := '#FFF';
+  //Canvas.Stroke;
+end;
+
+
+
+function CheckIEStartCommand: string;
+begin
+  Application.ProcessMessages;
+  with TRegistry.Create do try
+     rootkey:= HKey_Classes_Root;
+     OpenKey('\htmlfile\shell\open\command',false);
+     try 
+       result:= ReadString('');
+     except
+       result:= ''; 
+     end;
+     CloseKey;
+  finally
+     Free;
+  end;
+end;
+
+{*******************************************}
+procedure TForm1_FormCreateWeb(Sender: TObject);
+var Url, Flags, TargetFrameName, PostData, Headers, ie: OleVariant;
+begin
+  //TIPCClient.Create
+  ie := CreateOleObject('InternetExplorer.Application'); //as IWebBrowser2;
+  SetWindowLong(ie.hwnd, GWL_STYLE, GetWindowLong(ie.hwnd, GWL_STYLE) and not WS_BORDER and not WS_SIZEBOX and not WS_DLGFRAME );
+  SetWindowPos(ie.hwnd, HWND_TOP, ie.Left, ie.Top, ie.Width, ie.Height, SWP_FRAMECHANGED);
+  Setparent(ie.hwnd, hinstance {ie.PanelWebBrowser.handle});
+  ie.Left := maxint; // don't understand why it's look impossible to setup the position
+  ie.Top  := maxint; // don't understand why it's look impossible to setup the position
+  ie.Width := 100;
+  ie.Height := 300;
+  ie.MenuBar := false;
+  ie.AddressBar := false;
+  ie.Resizable := false;
+  ie.StatusBar := false;
+  ie.ToolBar := 0;
+  Url := 'http://static.arkadia.com/html/alcinoe_like.html';
+  ie.Navigate2(Url,Flags,TargetFrameName,PostData,Headers);
+  ie.Visible := true;
+end;
+
+
+//const
+  //WM_UPDATESTATUS = WM_USER + 2;
+
+procedure TClientForm_FormCreate(Sender: TObject);
+var
+  CNo, VCnt: Integer;
+ //MC! C, T: Integer;
+ IPCClient : TIPCClient;
+begin
+  //Caption := Format('%s (%X)', [Application.Title, GetCurrentProcessID]);
+  try
+    IPCClient := TIPCClient.Create(GetCurrentProcessID, maxform1.Caption);
+    //IPCClient.OnConnect := OnConnect;
+    //IPCClient.OnSignal := OnSignal;
+    //IPCClient.Activate;
+    //if not (IPCClient.State = stConnected) then OnConnect(nil, False);
+    {VCnt := Screen.Height div (Height + 10);
+    CNo := IPCClient.ClientCount - 1;
+    Top := (CNo mod VCnt) * (Height + 10) + 10;
+    Left := (Screen.Width div 2) + (CNo div VCnt) * (Width + 10);}
+  except
+    //Application.HandleException(ExceptObject);
+    //Application.Terminate;
+  end;
+end;
+
+
+
+function SplitToken(const Text: string; SplitChar: Char;
+    var First, Last: string): Boolean;
+var  SplitPos: Integer;
+begin
+  Result:= False;
+  SplitPos:= Pos(SplitChar, Text);
+  if SplitPos = 0 then Exit;
+  First:= Trim(Copy(Text, 1, SplitPos -1));
+  Last:= Trim(Copy(Text, SplitPos +1, Length(Text) -SplitPos));
+  Result:= (First <>'') and (Last <>'');
+end;
+
+{***********************************************************************************}
+function AlStringFetch(var AInput: AnsiString; const ADelim: String): AnsiString;
+var 
+  LPos: Integer;
+begin
+  LPos:= Pos(ADelim, AInput);
+  if LPos <= 0 then begin
+    Result:= AInput;
+    AInput:= '';
+  end else begin
+    Result:= AlCopyStr(AInput, 1, LPos-1);
+    AInput:= AlCopyStr(AInput, LPos+Length(ADelim), MaxInt);
+  end;
+end;
+
+ var myXML: TalXMLDocument;
+
+
+Begin  //Main
+//<Executable statements>
+  //TOutlookExport_Spy;
+  Writeln('');
+  Writeln('Start Command of IE: '+CheckIEStartCommand);  
+//<Definitions>  
+
+  //ares:= TResolver.create;
+ { with TResolver.create do begin
+   //writeln(inttostr(GetHostByName(gethostname)));
+    Free;
+   end;  }
+   
+   {CreateAForm;
+   repeat 
+     TApplication_PaintView(aform.canvas);
+     switch:= NOT switch;
+     Sleep(20);
+   until isKeyPressed or FWait;}
+   
+   writeln(AlRemoveShemeFromUrl('http://www.softwareschule.ch'));
+   
+   writeln(AlRemoveAnchorFromUrl1('http://www.softwareschule.ch'));
+   
+   //AlCombineUrl(RelativeUrl, BaseUrl: AnsiString): AnsiString; overload;
+   writeln(AlCombineUrl('www.softwareschule.ch/maxbox.htm','www.softwareschule.ch'));
+   //TForm1_FormCreateWeb(self);
+   
+   {with TledForm.create(self) do begin
+    showmodal;
+    free;
+   end;} 
+ // function GetMacAddresses(const Machine: string; const Addresses: TStrings):Integer;
+ 
+   with TMonitorForm.create(self) do begin
+     //FormCreate(self)
+     Showmodal;
+     Free;
+   end;  
+   
+   writeln('gets IP from Host Machine '+getHostIP);
+   //Function ALCreateEmptyXMLDocument( const Rootname : AnsiString) : TalXMLDocument');
+   myXML:= ALCreateEmptyXMLDocument(Exepath+'alxmldocu.xml');
+   writeln(myXML.XML); 
+   myXML.Free;
+END. 
+
+{Http Function}
+function  ALHTTPDecode(const AStr: AnsiString): AnsiString;
+procedure ALHTTPEncodeParamNameValues(ParamValues: TALStrings);
+procedure ALExtractHTTPFields(Separators,
+                              WhiteSpace,
+                              Quotes: TSysCharSet;
+                              Content: PAnsiChar;
+                              Strings: TALStrings;
+                              StripQuotes: Boolean = False);
+procedure ALExtractHeaderFields(Separators,
+                                WhiteSpace,
+                                Quotes: TSysCharSet;
+                                Content: PAnsiChar;
+                                Strings: TALStrings;
+                                Decode: Boolean;
+                                StripQuotes: Boolean = False);
+procedure ALExtractHeaderFieldsWithQuoteEscaped(Separators,
+                                                WhiteSpace,
+                                                Quotes: TSysCharSet;
+                                                Content: PAnsiChar;
+                                                Strings: TALStrings;
+                                                Decode: Boolean;
+                                                StripQuotes: Boolean = False);
+Function  AlRemoveShemeFromUrl(aUrl: AnsiString): ansiString;
+Function  AlExtractShemeFromUrl(aUrl: AnsiString): TInternetScheme;
+Function  AlExtractHostNameFromUrl(aUrl: AnsiString): AnsiString;
+Function  AlExtractDomainNameFromUrl(aUrl: AnsiString): AnsiString;
+Function  AlExtractUrlPathFromUrl(aUrl: AnsiString): AnsiString;
+Function  AlInternetCrackUrl(aUrl: AnsiString;
+                             Var SchemeName,
+                                 HostName,
+                                 UserName,
+                                 Password,
+                                 UrlPath,
+                                 ExtraInfo: AnsiString;
+                             var PortNumber: integer): Boolean; overload;
+Function  AlInternetCrackUrl(aUrl: AnsiString;
+                             Var SchemeName,
+                                 HostName,
+                                 UserName,
+                                 Password,
+                                 UrlPath,
+                                 Anchor: AnsiString; // not the anchor is never send to the server ! it's only used on client side
+                             Query: TALStrings;
+                             var PortNumber: integer): Boolean; overload;
+Function  AlInternetCrackUrl(var Url: AnsiString; // if true return UrlPath
+                             var Anchor: AnsiString;
+                             Query: TALStrings): Boolean; overload;
+Function  AlRemoveAnchorFromUrl(aUrl: AnsiString; Var aAnchor: AnsiString): AnsiString; overload;
+Function  AlRemoveAnchorFromUrl(aUrl: AnsiString): AnsiString; overload;
+function  AlCombineUrl(RelativeUrl, BaseUrl: AnsiString): AnsiString; overload;
+Function  AlCombineUrl(RelativeUrl,
+                       BaseUrl,
+                       Anchor: AnsiString;
+                       Query: TALStrings): AnsiString; overload;
+                       
+type
+  TALIPv6Binary = array[1..16] of ansiChar;
+
+Function ALZeroIpV6: TALIPv6Binary;
+Function ALTryIPV6StrToBinary(aIPv6Str: ansiString; var aIPv6Bin: TALIPv6Binary): Boolean;
+Function ALIPV6StrTobinary(aIPv6: ansiString): TALIPv6Binary;
+Function ALBinaryToIPv6Str(aIPv6: TALIPv6Binary): ansiString;
+Function ALBinaryStrToIPv6Binary(aIPV6BinaryStr: ansiString): TALIPv6Binary;
+                       
+
+
+
+//############################################################################
+// Archimedes Spiral App
+//############################################################################
+
+unit ArchSpiralMain;
+
+interface
+
+uses
+  w3system, w3components, w3ctrls, w3application, w3game, w3gameapp,
+  w3polygons, w3inet, w3graphics;
+
+type
+  TApplication = class(TW3CustomGameApplication)
+  private
+    FValueA: Float;
+    FValueB: Float;
+    FWait: Boolean;
+    procedure HandleClick(Sender:TObject);
+  protected
+    procedure ApplicationStarting; override;
+    procedure ApplicationClosing; override;
+    procedure PaintView(Canvas: TW3Canvas); override;
+  end;
+
+implementation
+
+//############################################################################
+// TApplication
+//############################################################################
+
+procedure TApplication.ApplicationStarting;
+begin
+  inherited;
+
+  FValueA := 3.0;
+  FValueB := 1.4;
+
+  GameView.OnClick := Self.HandleClick;
+
+  // Initialize refresh interval, set this to 1 for optimal speed
+  GameView.Delay := 10;
+ 
+  // Start the redraw-cycle with framecounter active
+  // Note: the framecounter impacts rendering speed. Disable
+  // the framerate for maximum speed (false)
+  GameView.StartSession(true);
+end;
+
+procedure TApplication.ApplicationClosing;
+begin
+  GameView.EndSession;
+  inherited;
+end;
+
+procedure TApplication.HandleClick(Sender: TObject);
+begin
+  FWait := not FWait;
+end;
+
+// Note: In a real live game you would try to cache as much
+// info as you can. Typical tricks are: 
+//   1: Only get the width/height when resized
+//   2: Pre-calculate strings, especially RGB/RGBA values
+//   3: Only redraw what has changed, avoid a full repaint
+// The code below is just to get you started
+
+procedure TApplication.PaintView(Canvas: TW3Canvas);
+var
+  cx, cy: Integer;
+  i: Integer;
+  angle: Float;
+  x, y: Float;
+begin
+  if FWait then
+    exit;
+
+  FValueB := FValueB + 0.001;
+
+  // Clear background
+  Canvas.FillStyle := 'rgba(0,0,99,0.08)';
+  Canvas.FillRectF(0, 0, GameView.Width, GameView.Height);
+
+  // Draw our framerate on the screen
+//  Canvas.font := '10pt verdana';
+//  Canvas.FillStyle := 'rgb(255,255,255)';
+//  Canvas.FillTextF('FPS:' + IntToStr(GameView.FrameRate) + ' / ' + floatToStr(FbValue) ,10,20,MAX_INT);
+
+  cx := GameView.width div 2;
+  cy := GameView.Height div 2;
+  Canvas.BeginPath;
+
+  for i := 42 downto 0 do
+  begin
+    angle := FValueB * i;
+    x := cx + (FValueA + FValueB * angle) * cos(angle);
+    y := cy + (FValueA + FValueB * angle) * sin(angle);
+    if i = 42 then Canvas.MoveToF(x, y) else Canvas.LineToF(x,y);
+  end;
+
+  Canvas.StrokeStyle := '#FFF';
+  Canvas.Stroke;
+end;
+
+
+end.
+
+
+
+More Items:
+
+       aContactItem.Categories:='Kunde'; // neu
+       aContactItem.FirstName:=KundeName1.AsString;
+       aContactItem.LastName:=KundeName2.AsString;
+       aContactItem.FileAs:=KundeSuchbegriff.AsString;
+       aContactItem.CompanyName:=KundeSuchbegriff.AsString;
+       aContactItem.CustomerID:=KundeKundenNr.AsString;
+       aContactItem.Account:=KundeFibuNr.AsString; // neu
+       aContactItem.Body:=KundeAnsprechpartner.AsString;
+       aContactItem.BusinessAddressStreet:=KundeStrasse.AsString;
+       aContactItem.BusinessAddressPostalCode:=KundePLZ.AsString;
+       aContactItem.BusinessAddressPostOfficeBox:=KundePostfach.AsString;
+       aContactItem.BusinessAddressCity:=KundeOrt.AsString;
+//         aContactItem.BusinessAddressCountry:=KundeLand.AsString; // neu
+       aContactItem.OrganizationalIDNumber:=KundeUStIdNr.AsString; // neu
+//         aContactItem.GovernmentIDNumber:=''
+       aContactItem.BusinessTelephoneNumber:=KundeTelefon1.AsString;
+       aContactItem.BusinessFaxNumber:=KundeFax.AsString;
+       aContactItem.MobileTelephoneNumber:=KundeTelefon2.AsString;
+       aContactItem.Email1Address:=KundeEMail.AsString;
+       aContactItem.WebPage:=KundeHomepage.AsString;
+       aContactItem.Save;
+ 
+  http://i1-win.softpedia-static.com/screenshots/maXbox_5.png?1381322021
+  
+    RegisterMethod('Constructor Create(AOwner: TComponent)');
+    RegisterConstructor(@TJvMail.Create, 'Create');
+  
+  
+   RegisterMethod('Procedure Free');
+   RegisterMethod(@TJvMail.Destroy, 'Free');
+
+LIKE Test
+   
+   <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>ArKadia.com</title>
+    <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+  </head>
+  <body style="background-color:#FFFFFF;padding:5px 0px 0px 5px;margin:0px;">    
+    <div style="height:135px;width:120px;overflow:auto;"> 
+      <iframe src="http://www.facebook.com/plugins/like.php?app_id=195188513847063&amp;href=http%3A%2F%2Fus.arkadia.com&amp;send=false&amp;layout=button_count&amp;width=100&amp;show_faces=false&amp;action=like&amp;colorscheme=light&amp;font&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:100px; height:21px;" allowTransparency="true"></iframe><br />
+      <div style="height:8px"></div>
+      <iframe src="http://www.facebook.com/plugins/like.php?app_id=195188513847063&amp;href=http%3A%2F%2Ffr.arkadia.com&amp;send=false&amp;layout=button_count&amp;width=100&amp;show_faces=false&amp;action=like&amp;colorscheme=light&amp;font&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:100px; height:21px;" allowTransparency="true"></iframe><br />    
+      <div style="height:8px"></div>
+      <iframe src="http://www.facebook.com/plugins/like.php?app_id=195188513847063&amp;href=http%3A%2F%2Fru.arkadia.com&amp;send=false&amp;layout=button_count&amp;width=100&amp;show_faces=false&amp;action=like&amp;colorscheme=light&amp;font&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:100px; height:21px;" allowTransparency="true"></iframe><br />
+      <div style="height:8px"></div>
+      <g:plusone size="medium" recommendations="false" href="http://us.arkadia.com/"></g:plusone>
+      <div style="height:8px"></div>
+      <g:plusone size="medium" recommendations="false" href="http://fr.arkadia.com/"></g:plusone>
+      <div style="height:8px"></div>
+      <g:plusone size="medium" recommendations="false" href="http://ru.arkadia.com/"></g:plusone>
+      <div style="height:20px"></div>
+    </div>
+  </body>
+</html>
+   
+
+
+----app_template_loaded_code----

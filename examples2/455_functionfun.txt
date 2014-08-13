@@ -1,0 +1,371 @@
+Program FunctionFun_Truth;
+
+//#net>DDNS: 192.168.1.1; local IPs: fe80::102b:66c2:9557:7a93%10,fe80::39cb:cc4a:b4e7:9e03%20,fe80::25d2:cdb2:b4d2:1291%21,fe80::3c2c:2ecd:3f57:fed7%12,192.168.1.40,192.168.25.1,192.168.18.1,2001:0:5ef5:79fd:3c2c:2ecd:3f57:fed7; local IP: 192.168.1.40
+//TODO: just missing a filestream mime file; search and get one
+//TODO: Refactor boolean shorter #locs:244
+
+{uses
+  SysUtils,
+  Classes;}
+  
+Const fstreamname = 'streamtest.txt';  
+ 
+var
+  fs: TFileStream;
+  v: byte;
+  vs: string;
+  vsf: double;
+  i: integer;
+  start: LongWord;
+
+function StripString(st: String; CharsToStrip: String): String;
+var
+  i: Integer;
+begin
+  result:= '';
+  for i:= 1 to Length(st) do begin
+    if Pos(st[i], CharsToStrip) = 0 then
+      result:= result + st[i];
+  end;
+  //string_GetWord
+end;
+ 
+  
+procedure fileStreamOne;
+begin
+  //fs := TFileStream.Create(&#39;C:\test.txt&#39;, fmOpenWrite);
+  //fs:= TFileStream.Create(Exepath+'examples\firstdemo22.txt', fmOpenWrite or fmCreate);
+  fs:= TFileStream.Create(Exepath+'examples\firstdemo.txt', fmOpenWrite);
+  vs:= '656';
+  v:= 64;
+  vsf:= 12.3;
+  try
+    fs.Seek(0, soBeginning);
+    fs.WriteBuffer(vs, SizeOf(vs));
+    //fs.ReadBufferInt(v, SizeOf(v));
+    //fs.WriteBufferInt(v, SizeOf(v));
+    //fs.WriteBufferInt(6,1);
+    //fs.WriteBufferFloat(vsf,4);
+    fs.WriteInt(v,2);
+  finally
+    fs.Free;
+  end;
+end;
+
+procedure fileStreamByte;
+var I: Integer;
+    Buff: Byte;
+    FileS: TFilestream;  
+begin
+
+Files:= TFileStream.Create(Exepath+'examples\firstdemoBYTE.txt', fmCreate);
+try
+  //files.Seek(0, soBeginning);
+  for I := 0 to 299 do begin
+    Buff:= Random(255);
+    //FileS.WriteBufferInt(Buff,1);
+    FileS.WriteInt(Buff,1);
+    end;
+  finally
+    FileS.Free;
+  end;
+end;   
+
+//TODO: However, since the file is opened only in write mode (fmOpenWrite), if you try to add fs.ReadBuffer(v, SizeOf(v)); you will have an exception 'Stream Read Error' raised.
+
+
+//How about the time difference if you use fmOpenReadWrite or fmOpenWrite whichever makes no difference?
+
+procedure fileStreamTwo;
+begin
+  start := GetTickCount;
+  fs := TFileStream.Create('C:\test.txt', fmOpenWrite or fmCreate);
+  v := 65;
+  try
+    fs.Seek(0, soBeginning);
+    for i := 0 to 10000000 do begin
+      fs.WriteBufferInt(v, SizeOf(v));
+    end;
+  finally
+    fs.Free;
+  end;
+  Writeln(IntToStr(GetTickCount - start));
+  start := GetTickCount;
+  fs := TFileStream.Create('C:\test.txt', fmOpenReadWrite or fmCreate);
+  v := 65;
+  try
+    fs.Seek(0, soBeginning);
+    for i := 0 to 10000000 do begin
+      fs.WriteBufferInt(v, SizeOf(v));
+    end;
+  finally
+    fs.Free;
+  end;
+  Writeln(IntToStr(GetTickCount - start));
+  //Readln; 
+end;  
+
+function FileToStringStep(const AFilename: string;
+                                 StartPos: Integer; EndPos: Integer): string;
+var
+  FileStream : TFileStream;
+  wlCount: Integer;
+begin
+  if FileExists(AFilename) then begin
+    if StartPos < 0 then
+      StartPos := 0;
+    FileStream:= TFileStream.Create(AFilename, fmOpenRead or fmShareDenyWrite);
+    try
+      if (EndPos <= StartPos) or (EndPos > FileStream.Size) then
+        EndPos := FileStream.Size;
+      wlCount := EndPos - StartPos;
+      if FileStream.Size > StartPos then begin
+        SetLength(Result, wlCount);
+        //FileStream.Seek(StartPos, soFromBeginning);
+        FileStream.Seek(StartPos, soBeginning);
+        //FileStream.Read(Result[1], wlCount);
+        FileStream.Read(Result, wlCount);
+      end;
+    finally
+      FileStream.Free;
+    end;
+  end
+  else
+    Result:= '';
+end;
+
+//The timing is roughly the same (but using fmOpenWrite if you intend no read might be a slightly bit faster). 
+
+function IsNetworkConnected2: Boolean;
+begin
+  if GetSystemMetrics(SM_NETWORK) and $01 = $01 then
+  begin
+    Result := True;
+  end
+  else
+  begin
+    Result := False;
+  end;
+end;
+
+//To Refactor:
+function IsNetworkConnected3: Boolean;
+begin
+  result:= GetSystemMetrics(SM_NETWORK) and $01 = $01
+end;
+
+function IsInternetConnected2: Boolean;
+begin
+  Result:= InternetGetConnectedState(0, 0);      //of wininet
+end;
+
+function IsCOMConnected2: Boolean;
+begin
+  result:= getComports.Count > 0;
+end;
+
+procedure PlayMediaUniversal;
+var wmp: OLEVariant; 
+ //Maybe you'll be more comfortable with automation.
+begin
+   wmp:= CreateOleObject('WMPlayer.OCX');
+   //wmp.OpenPlayer(Exepath+'examples\maxbox.wav');
+   if ISInternetOn then begin
+     wmp.URL:= 'http://www.softwareschule.ch/download/airmaxloop3.mp3';
+     wmp.OpenPlayer(wmp.URL);
+   end else
+     wmp.OpenPlayer(Exepath+'examples\maxbox.wav');
+  //wmp.controls.play;
+end;
+
+procedure WWStrTest;
+begin
+{ strBreakApart(s: string; delimeter: string; parts: TStrings);
+Function strGetToken(s: string; delimeter: string; var APos: integer): string;
+Procedure strStripPreceding(var s: string; delimeter: strCharSet);
+Procedure strStripTrailing(var s: string; delimeter: strCharSet);
+Procedure strStripWhiteSpace(var s: string);
+Function strRemoveChar(str: string; removeChar: char): string;
+Function strReplaceChar(str: string; removeChar, replaceChar: char): string;
+Function strReplaceCharWithStr(str: string; removeChar: char;replaceStr: string): string;
+Function wwEqualStr(s1, s2: string): boolean;
+Function strCount(s: string; delimeter: char): integer;
+Function strWhiteSpace : strCharSet;
+Function wwExtractFileNameOnly(const FileName: string): string;
+Function wwGetWord(s: string; var APos: integer; Options: TwwGetWordOptions;
+                   DelimSet: strCharSet): string;
+Function strTrailing(s: string; delimeter: char): string;
+Function strPreceding(s: string; delimeter: char): string;
+function strReplace(s, Find, Replace: string): string;}
+end; 
+
+
+
+var adyn: TDynCardinalArray;
+
+begin
+ //wwScanDate
+   //loadMimeForm;
+   fileStreamOne;
+   OpenDoc(Exepath+'examples\firstdemo22.txt');
+   writeln(FileToStringStep(exepath+'firstdemo.txt',0,200));
+   //fileStreamByte;
+   //OpenDoc(Exepath+'examples\firstdemoBYTE.txt');
+   writeln('Is Network Connected1 '+BooleanToString(IsNetworkConnected));
+   writeln('Is Network Connected2 '+BooleanToString(IsNetworkConnected2));
+   writeln('Is Network Connected3 '+BooleanToString(IsNetworkConnected3));
+   writeln('Is Internet Connected1 '+BooleanToString(IsInternetConnected));
+   writeln('Is Internet Connected2 '+BooleanToString(IsInternetConnected2));
+   writeln('Is COM Port Available1 '+BooleanToString(IsCOMConnected));
+   writeln('Is COM Port Available2 '+BooleanToString(IsCOMConnected2));
+  
+   maxForm1.color:= clSilver;
+   
+    adyn:= PrimeFactors(1270);
+    for i:= 0 to length(adyn)-1 do 
+      write(inttostr(adyn[i])+' ');
+    for i:= 0 to length(PrimeFactors(20))-1 do 
+      writeln(inttostr(adyn[i]));
+    //299792458
+    writeln(floattoStr(MetersPerLightSecond));
+    writeln(floattoStr(1/ (MetersPerLightSecond / 2000)));
+    writeln(floattoStr((2000 /MetersPerLightSecond)));
+    printF('light of 2000 meters %.14f',[2000 /MetersPerLightSecond]);
+    //TJvMemoryTable
+    //TJvObjectStrings
+   PlayMediaUniversal; 
+   //GetWindowTask
+     //GetWindow
+     //GetTopWindow
+      // GetNextWindow
+    ShellExecuteAndWait(exepath+'maxbox3.exe','');
+    writeln('wait for....'); 
+     
+End.  
+
+Doc:
+//maxform1
+
+http://www.cryer.co.uk/brian/delphi/wininet.htm
+------------------------------
+
+  memo1 and memo2 is keyword!  and maxform1 is main OpenTools API window
+  
+  The File Open modes are defined in SysUtils.pas as below.
+
+  
+  {$IFDEF MSWINDOWS}
+  fmOpenRead       = $0000;
+  fmOpenWrite      = $0001;
+  fmOpenReadWrite  = $0002;
+ 
+  fmShareCompat    = $0000 platform; // DOS compatibility mode is not portable
+  fmShareExclusive = $0010;
+  fmShareDenyWrite = $0020;
+  fmShareDenyRead  = $0030 platform; // write-only not supported on all platforms
+  fmShareDenyNone  = $0040;
+{$ENDIF}
+
+We can see that the fmOpenReadWrite is not as the same as fmOpenRead or fmOpenWrite.
+
+The fmShareExclusive specifies that the file cannot be read or write by other processes. 
+The fmShareDenyWrite specifies that the file can by read but not write by other processes. 
+The fmShareDenyRead specifies that the file can by write but not read by other processes. 
+The fmShareDenyNone specifies that the file can by read or write (no limitation) by other processes
+
+If you specify the fmCreate, the file will always be cleared as empty if created or always exists. In this case, if you specify fmCreate or fmOpenWrite, it is actually the same a fmCreate or fmOpenReadWrite, in such case, you can use ReadBuffer to read the data you have written before (or zero if it has not been written by WriteBuffer).
+
+
+ Urknall: Erster direkter Beweis für kosmologische Inflation
+Meldung vorlesen und MP3-Download
+
+Offenbar ist es gelungen, erstmals direkte Beweise für die kurzzeitige überlichtschnelle Expansion des Universums nach dem Urknall zu finden. Den Nachweis für diese sogenannte Inflation fanden Forscher in der kosmischen Hintergrundstrahlung.
+
+Astronomen ist es mithilfe von Radioteleskopen am Südpol offenbar gelungen, erstmals direkte Beweise für die sogenannte kosmologische Inflation nachzuweisen. Dabei handelt es sich um eine überlichtschnelle Expansion des Universums in einem äußerst kurzen Zeitraum direkt nach dem Urknall, die in Bruchteilen einer Sekunde stattfand.
+
+Die bislang nur in der Theorie beschriebene Inflation erklärt einige Probleme, die sich aus der Beschreibung des Urknalls ergeben hatten, etwa die große Gleichförmigkeit unseres Universums. Nun konnte sie experimentell bestätigt und dabei erstmals auch Bilder sogenannter Gravitationswellen gemacht werden. Die Ergebnisse bestätigen außerdem die enge Verbindung zwischen der Quantenmechanik und der Relativitätstheorie.
+
+
+ Lazarus-IDE für Pascal und Object Pascal in Version 1.2 veröffentlicht
+
+Die freie Entwicklungsumgebung enthält im ersten größeren Release nach etwa anderthalb Jahren unter anderem einen Makro-Recorder, einen verbesserten Debugger und überarbeiteten Compiler-Optionen.
+
+Version 1.2 der integrierten Entwicklungsumgebung Lazarus steht zum Download bereit. Sie ist zum Rapid Application Development (RAD) mit Pascal und Object Pascal gedacht und zu Delphi kompatibel, während andere Pascal-IDEs sich eher an Turbo Pascal anlehnen. Intern kommt der Free-Pascal-Compiler zum Einsatz.
+
+object Form1: TForm1
+  Left = 249
+  Top = 130
+  Width = 672
+  Height = 480
+  Caption = 'Form1'
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -13
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  PixelsPerInch = 120
+  TextHeight = 16
+  object Label1: TLabel
+    Left = 8
+    Top = 56
+    Width = 47
+    Height = 16
+    Caption = 'Part-list:'
+  end
+  object Label2: TLabel
+    Left = 8
+    Top = 192
+    Width = 61
+    Height = 16
+    Caption = 'RAW part:'
+  end
+  object Edit1: TEdit
+    Left = 8
+    Top = 8
+    Width = 553
+    Height = 24
+    TabOrder = 0
+    Text = 'filename'
+  end
+  object Button1: TButton
+    Left = 576
+    Top = 8
+    Width = 75
+    Height = 25
+    Caption = 'Load'
+    TabOrder = 1
+    OnClick = Button1Click
+  end
+  object Memo1: TMemo
+    Left = 8
+    Top = 208
+    Width = 641
+    Height = 193
+    ScrollBars = ssBoth
+    TabOrder = 2
+  end
+  object Button2: TButton
+    Left = 8
+    Top = 416
+    Width = 641
+    Height = 25
+    Caption = 
+      'save selected decoded part to file (default filename is '#39'mimedem' +
+      'o.txt'#39')'
+    TabOrder = 3
+    OnClick = Button2Click
+  end
+  object TreeView1: TTreeView
+    Left = 8
+    Top = 72
+    Width = 641
+    Height = 113
+    ReadOnly = True
+    Indent = 19
+    OnChange = TreeView1Change
+    TabOrder = 4
+  end
+end
+----Simple Browser started----

@@ -1,0 +1,649 @@
+PROGRAM FPlot_Framework_format;
+
+//VAR 
+//<Variable declarations>       still in progress (tous pourris), loc's=430
+//Task: connect the trackbar with the math functions!  virare in numeris
+  
+  
+//<FUNCTION>
+// do with format to left or right justifying-- 
+
+// With the '-' operator, the data is left justified
+//  ShowMessage(Format('Justified decimal = <%-7d>', [1234]));
+// The precision value forces 0 padding to the desired size
+//  ShowMessage(Format('0 padded decimal  = <%.6d>', [1234]));
+// Note the <> characters are added to show formatting
+//  ShowMessage(Format('Padded decimal    = <%7d>', [1234]));
+
+//call by value - wertübergabe - copy
+
+
+const
+  MaxSymbol    = 9;          { Max. number of symbols for plotting curves }
+  MaxCurvColor = 9;          { Max. number of colors for curves }
+  MaxPixel     = 30000;      { Max. number of pixels }
+  Eps          = 1.0E-10;    { Lower limit for an axis label }
+  MaxColor     = $02FFFFFF;  { Max. color value for Delphi }
+  
+var PenWidth                : Integer;
+    PenStyle                : TPenStyle;
+    PenColor, BrushColor    : TColor;
+    BrushStyle              : TBrushStyle;  
+
+
+type TFuncX = function(x: double): double;
+
+
+procedure PlotFunc2(Canvas: TCanvas; Func: TFuncX; Xmin, Xmax : Float;
+                   Npt: Integer; CurvIndex: Integer); forward;
+
+
+
+Function NMaleins(limit: byte): string;
+var i, j: byte;  //local
+   temps: string;
+begin
+for i:= 1 to LIMIT do
+  for j:= 1 to LIMIT do begin
+    temps:= temps + Format('%.3d   ',[i*j])
+    if j=LIMIT then temps:= temps + #13#10;
+  end;
+  result:= temps;    
+end; //function end   
+
+
+// call by reference -pointer   
+//PSXCompiler: [Hint] 08_EINMALEINS_FUNC.TXT(32:10): Variable 'Result' never used
+Function NMaleinsWithout_Return(var limit: byte): string;
+var i, j: byte;  //local
+begin
+limit:= 15;
+for i:= 1 to LIMIT do
+  for j:= 1 to LIMIT do begin
+    write(intToStr(i*j)+'   ')
+    if j = LIMIT then writeln('')
+  end;    
+end; //function end   
+
+
+procedure recursion_fct(k: integer);
+begin
+ inc(k)
+ writeln(format('top S: Funktion rek_fkt (%f)',[power(k,2)]));
+  if k < 5  then //break condition
+    recursion_fct(k); //recursive call
+  writeln(format('back E: Funktion rek_fkt(%d)',[k])); 
+  writeln(floatToStr(log2(20)))
+end;
+
+function Func2(X : double): double;
+{ Function to be plotted }
+begin
+   // 7 : Func := Sin(X);
+   //x:= 20;
+    result:= Cos(X);
+   // 9 : Func := Tan(X);
+end;
+
+
+var   tB: TTrackBar;
+
+function Func(X : double) : double;
+{ Function to be plotted }
+begin
+  case tb.position of
+    0 : result:= uExpo(X);
+    1 : result:= Exp2(X);
+    2 : result:= Exp10(X);
+    //3 : result := Power(X, Y);
+    4 : result := Log(X);
+    5 : result := Log2(X);
+    6 : result := Log10(X);
+    7 : result := Sin(X);
+    8 : result := Cos(X);
+    9 : result := Tan(X);
+   10 : result := ArcSin(X);
+   11 : result := ArcCos(X);
+   12 : result := ArcTan(X);
+   //13 : result := uSinh(X);
+   //14 : result := Cosh(X);
+   //15 : result := Tanh(X);
+   16 : result := ArcSinh(X);
+   17 : result := ArcCosh(X);
+   //18 : result := ArcTanh(X);
+   19 : result := Gamma(X);
+   //20 : result := IGamma(A, X);
+   //21 : result := Beta(X, Y);
+   //22 : result := IBeta(A, B, X);
+   //23 : result := Erf(X);
+    23 : result := Stirling(X);
+    //24 : result := LambertW(X, UBranch, False);
+  else
+    result:= 0.0
+  end;
+end;
+
+
+var 
+  aFrm: TForm;
+  mT: TTimer;
+  statBar1: TStatusBar;
+  image1: TImage;
+
+
+//**************************Event Handlers*******************************
+procedure TFrm1_trackSpeedChange(Sender: TObject);
+begin
+  //mt.Interval:= 1000 div tB.Position;
+  writeln(intToStr(tB.Position));
+end;
+
+procedure TFrm1_closeForm(Sender: TObject; var Action: TCloseAction);
+begin
+  {if mt <> NIL then begin
+    mT.enabled:= false;
+    mT.Free;
+    mT:= NIL;
+  end;}
+  ///afrm.Free;  
+  action:= caFree;
+  afrm:= NIL;
+end;
+
+procedure TFrm1_CloseClick(Sender: TObject);
+begin
+  afrm.Close;
+end;
+
+procedure TFrm1_PauseClick(Sender: TObject);
+var  ax: TFuncX;
+begin
+  {if mT <> NIL then
+    mt.enabled:= not mt.enabled; }
+  ax:= @Func;
+  //image1.repaint;
+  //image1.canvas.invalidaterect;
+  PlotFunc2(image1.canvas, ax, 100, 100, 120, 1);
+  //PlotFunc2(image1.canvas, ax, X1, X2, Npts, 1);
+end;
+
+//**************************Form Builder*******************************
+procedure loadForm;
+begin
+  aFrm:= TForm.Create(self);
+  //mT:= TTimer.Create(self);
+  //mt.onTimer:= @TFrm1_timerRedrawTimer;
+  //mt.interval:= MILLISECONDS;
+  //mt.free;  in on close            
+  with aFrm do begin
+    Caption:= '********** Plot Form Template ***********';  
+    height:= 510;
+    width:= 700;
+    Position:= poScreenCenter;
+    //Color:= clBlack;
+    onClose:= @TFrm1_closeForm;
+    //onPaint:= @TFrm1_FormPaint;
+    Canvas.Pen.color:= clBlue;
+    Canvas.Pen.Width:= 15;
+    Show;
+    //canvas.brush.bitmap:= getBitmapObject(Exepath+'examples\images\citymax.bmp');
+    Canvas.FillRect(Rect(600,300,100,100));
+  end;
+  image1:= Timage.create(aFrm);
+  with image1 do begin
+    Parent:= aFrm;
+    setbounds(31,39,550,255);
+ //Image1.Picture.BitMap.LoadFromFile('F:\dateienohneback\EKON15\maxbox3\mX397\maxbox3\examples\citymax.bmp');
+    //image1.brush.color:= clblue;
+  end;
+ 
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(310,390,150,55);
+    caption:= 'New Plot';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPAUSE'); 
+    mXButton(05,05,width, height,12,12,handle);
+    //event handler
+    onClick:= @TFrm1_PauseClick;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(480, 390,150, 55);
+    caption:= 'Close';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP'); 
+    mXButton(05,05,width, height,12,12,handle);
+    onClick:= @TFrm1_CloseClick;
+  end;
+  tB:= TTrackBar.create(aFrm);
+  with tB do begin
+    parent:= aFrm;
+    setBounds(40,402,230,40);
+    Min:= 1; Max:= 100;
+    Frequency:= 10;
+    Position:= 5;
+    linesize:= 4;
+    ThumbLength:= 30;
+    SetFocus;
+    OnChange:= @TFrm1_trackSpeedChange;
+  end;
+  statbar1:= TStatusBar.Create(aFrm);
+  with statbar1 do begin
+    parent:= aFrm;
+    showhint:= true;
+    hint:= 'this is a LED BoX';
+    Panels.add;
+      panels.items[0].width:= 200;
+      panels.items[0].text:= '200';
+    Panels.add;
+      panels.items[1].width:= 150;
+      panels.items[1].text:= '150';
+  end;
+end;
+
+  
+//**************************FPlot*******************************
+
+ type
+  TAxis = record        { Coordinate axis }
+    Scale : TScale;
+    Min   : Float;
+    Max   : Float;
+    Step  : Float;
+  end;
+  
+procedure PlotLine(Canvas : TCanvas; X1, Y1, X2, Y2: Integer);
+begin
+  Canvas.MoveTo(X1, Y1);
+  Canvas.LineTo(X2, Y2);
+  //writeln(inttoStr(y2));
+end;
+
+
+var
+  MaxCurv : Byte;
+  XminPixel : Integer; 
+  XmaxPixel : Integer; 
+  YminPixel : Integer; 
+  YmaxPixel : Integer; 
+  //XminPixel := 0;
+  XAxis: TAxis; 
+  YAxis: TAxis; 
+  //XTitle     : String = 'X';
+  //YTitle     : String = 'Y';
+  //GraphTitle : String = '';
+  
+procedure InitScale;
+begin
+   Xaxis.Scale:= LinScale;
+   Xaxis.Min:= 0.0;
+   Xaxis.Max:= 1.0;
+   Xaxis.Step:= 0.2;  
+   yaxis.Scale:= LinScale;
+   Yaxis.Min:= 0.0;
+   Yaxis.Max:= 1.0;
+   Yaxis.Step:= 0.2;  
+   MaxCurv:= 0;
+   XminPixel:= 0;
+   XmaxPixel:= 100;
+   YminPixel:= 0;
+   YmaxPixel:= 100;
+//   = (Scale : LinScale; Min : 0.0; Max : 1.0; Step : 0.2);
+end;
+
+
+function XOutOfBounds(X : Integer) : Boolean;
+{ Checks if an absissa is outside the graphic bounds }
+begin
+  result:= (X < 0) or (X > 100);
+end;
+
+function YOutOfBounds(Y : Integer) : Boolean;
+{ Checks if an ordinate is outside the graphic bounds }
+begin
+  result:= (Y < 0) or (Y > 100);
+end;
+
+function CheckPoint(X, Y       : Float;
+                    var Xp, Yp : Integer) : Boolean;
+{ Computes the pixel coordinates of a point and
+  checks if it is enclosed within the graph limits }
+begin
+  //Xp := Xpixel(X);
+  //Yp := Ypixel(Y);
+  result:= not(XOutOfBounds(Xp) or YOutOfBounds(Yp));
+end;
+
+procedure RestoreGraphSettings(Canvas : TCanvas);
+begin
+  Canvas.Pen.Color   := PenColor;
+  Canvas.Pen.Style   := PenStyle;
+  Canvas.Pen.Width   := PenWidth;
+  Canvas.Brush.Color := BrushColor;
+  Canvas.Brush.Style := BrushStyle;
+end;
+
+
+procedure PlotFunc2(Canvas     : TCanvas;
+                   Func       : TFuncX;
+                   Xmin, Xmax : Float;
+                   Npt        : Integer;
+                   CurvIndex  : Integer);
+var
+  X1, Y1, X2, Y2, H  : Float;
+  Xp1, Yp1, Xp2, Yp2 : Integer;
+  Flag1, Flag2       : Boolean;
+  I                  : Integer;
+begin
+  //if (Npt < 2) or (CurvParam[CurvIndex]^.LineParam.Style = psClear) then Exit;
+
+  if Xmin >= Xmax then begin
+      Xmin:= 10; //XAxis.Min; //10;
+      Xmax:= 300; //XAxis.Max;  //100;
+    end;
+
+  H := (Xmax - Xmin) / Npt;
+  //SetGraphSettings(Canvas, CurvIndex);
+  { Check first point }
+  X1 := Xmin;
+  if XAxis.Scale = LinScale then
+    Y1 := Func(X1)
+  else
+    Y1 := Func(uExp10(X1));
+
+  if YAxis.Scale = LogScale then Y1 := Log10(Y1);
+    Flag1 := CheckPoint(X1, Y1, Xp1, Yp1);
+
+  { Check other points and plot lines if possible }
+  for I := 1 to Npt do begin
+      X2 := X1 + H;
+      if XAxis.Scale = LinScale then
+        Y2 := Func(X2)
+        //writeln(floattostr(y2))
+      else
+        Y2 := Func(uExp10(X2));
+
+      if YAxis.Scale = LogScale then Y2 := Log10(Y2);
+      Flag2 := CheckPoint(X2, Y2, Xp2, Yp2);
+      if Flag1 and Flag2 then
+        PlotLine(Canvas, XP1, YP1, round(X1)+210, round(Y2)+200);
+          //PlotLine(Canvas, Xp1, Yp1, Xp2, Yp2);
+      X1 := X2;
+      Xp1 := Xp2;
+      Yp1 := Yp2;
+      Flag1 := Flag2;
+    end;
+   RestoreGraphSettings(Canvas);
+end;
+
+
+var   npts, width: integer;
+      X1,X2,Y1,Y2,D: float;
+      color: TColor;
+      ax: TFuncX;
+
+BEGIN  //Main
+//<Executable statements>
+  recursion_fct(0)
+  Writeln(' ');
+  Writeln(NMaleins(12))
+  loadForm;
+    //PlotFunc(Image1.Canvas, @Func, X1, X2, Npts, 1);
+  if not InitGraphics(Image1.Width, Image1.Height) then Exit;
+
+  InitScale;
+  SetWindow(Image1.Canvas, 10, 95, 10, 80, True);
+  X1 := StrToFloat('170');
+  X2 := StrToFloat('140');
+  D  := StrToFloat('50');
+
+  if (X1 < X2) and (D > 0.0) and (D <= X2 - X1) then
+    SetOxScale(LinScale, X1, X2, D);
+  Y1 := StrToFloat('140');
+  Y2 := StrToFloat('20');
+  D  := StrToFloat('50');
+
+  if (Y1 < Y2) and (D > 0.0) and (D <= Y2 - Y1) then
+    SetOyScale(LinScale, Y1, Y2, D);
+
+  PlotOxAxis(Image1.Canvas);
+  PlotOyAxis(Image1.Canvas);
+  PlotGrid(Image1.Canvas, BothGrid);
+  
+  Width:= 50;
+  Npts  := 120;
+  Color := clBlue;
+  SetLineParam(1, psSolid, Width, Color);
+  //X1:= 20;
+  //X2:= 530;
+    
+  Func2(10);
+  ax:= @Func2;
+  ax:= @Func;
+  PlotFunc2(image1.canvas, @Func2, X1, X2, Npts, 1);
+  //PlotFunc2(image1.canvas, ax, X1, X2, Npts, 1);
+
+  {elimit:= 12;
+  NMaleinsReturn(elimit)}
+//<Definitions>  
+
+   //SetCurrentPrinterAsDefault;
+   //CurrentPrinterName: string;
+   //writeln((CurrentPrinterPaperSize));
+   //UseDefaultPrinter;
+     //pagenumber
+     
+     //register
+END. 
+
+//---------------------------------------------------------------------
+
+  1     2     3     4     5     6     7     8     9    10    11    12   
+  2     4     6     8    10    12    14    16    18    20    22    24   
+  3     6     9    12    15    18    21    24    27    30    33    36   
+  4     8    12    16    20    24    28    32    36    40    44    48   
+  5    10    15    20    25    30    35    40    45    50    55    60   
+  6    12    18    24    30    36    42    48    54    60    66    72   
+  7    14    21    28    35    42    49    56    63    70    77    84   
+  8    16    24    32    40    48    56    64    72    80    88    96   
+  9    18    27    36    45    54    63    72    81    90    99   108   
+ 10    20    30    40    50    60    70    80    90   100   110   120   
+ 11    22    33    44    55    66    77    88    99   110   121   132   
+ 12    24    36    48    60    72    84    96   108   120   132   144   
+
+Was ist die Idee eines Stacks ?
+
+Die Daten werden auf den Stapel gelegt und in derselben Reihenfolge wieder vom Stapel genommen.  Bsp.: Zwischenspeicher, Parameteraufrufe, lokale Variablen, Datenbankfragen (SQL) 
+
+
+
+----app_template_loaded----
+
+
+unit Main;
+
+interface
+
+uses
+  SysUtils, WinTypes, WinProcs, Messages, Classes, Graphics, Controls,
+  Forms, Dialogs, StdCtrls, ExtCtrls, Spin;
+
+type
+  TForm1 = class(TForm)
+    RadioGroup1: TRadioGroup;
+    GroupBox1: TGroupBox;
+    Label1: TLabel;
+    Edit1: TEdit;
+    Label2: TLabel;
+    Edit2: TEdit;
+    Label3: TLabel;
+    Edit3: TEdit;
+    GroupBox2: TGroupBox;
+    Label4: TLabel;
+    Label5: TLabel;
+    Label6: TLabel;
+    Edit4: TEdit;
+    Edit5: TEdit;
+    Edit6: TEdit;
+    ColorDialog1: TColorDialog;
+    GroupBox4: TGroupBox;
+    Label9: TLabel;
+    Edit7: TEdit;
+    Label10: TLabel;
+    Edit8: TEdit;
+    Label11: TLabel;
+    Edit9: TEdit;
+    GroupBox3: TGroupBox;
+    Shape1: TShape;
+    Label7: TLabel;
+    Label8: TLabel;
+    SpinEdit1: TSpinEdit;
+    SpinEdit2: TSpinEdit;
+    Button1: TButton;
+    Button2: TButton;
+    Button3: TButton;
+    Image1: TImage;
+    RadioGroup2: TRadioGroup;
+    procedure Button1Click(Sender: TObject);
+    procedure RadioGroup1Click(Sender: TObject);
+    procedure Button3Click(Sender: TObject);
+    procedure RadioGroup2Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+//{$R *.DFM}
+
+uses
+  utypes, umath, utrigo, uhyper, ugamma, uigamma,
+  ubeta, uibeta, ulambert, uwinplot;
+
+//{$IFDEF _16BIT}const{$ELSE}var{$ENDIF}
+  UBranch : Boolean = True;  { Use upper branch of Lambert's function }
+
+var
+  A, B, Y : Float;    { Function parameters }
+
+function Func(X : Float) : Float;
+{ Function to be plotted }
+begin
+  case Form1.RadioGroup1.ItemIndex of
+    0 : Func := Expo(X);
+    1 : Func := Exp2(X);
+    2 : Func := Exp10(X);
+    3 : Func := Power(X, Y);
+    4 : Func := Log(X);
+    5 : Func := Log2(X);
+    6 : Func := Log10(X);
+    7 : Func := Sin(X);
+    8 : Func := Cos(X);
+    9 : Func := Tan(X);
+   10 : Func := ArcSin(X);
+   11 : Func := ArcCos(X);
+   12 : Func := ArcTan(X);
+   13 : Func := Sinh(X);
+   14 : Func := Cosh(X);
+   15 : Func := Tanh(X);
+   16 : Func := ArcSinh(X);
+   17 : Func := ArcCosh(X);
+   18 : Func := ArcTanh(X);
+   19 : Func := Gamma(X);
+   20 : Func := IGamma(A, X);
+   21 : Func := Beta(X, Y);
+   22 : Func := IBeta(A, B, X);
+   23 : Func := Erf(X);
+   24 : Func := LambertW(X, UBranch, False);
+  else
+    Func := 0.0
+  end;
+end;
+
+procedure TForm1.RadioGroup1Click(Sender: TObject);
+begin
+  with Form1 do
+    begin
+      Edit7.Visible := (RadioGroup1.ItemIndex in [3, 21]);
+      Edit8.Visible := (RadioGroup1.ItemIndex in [20, 22]);
+      Edit9.Visible := (RadioGroup1.ItemIndex = 22);
+
+      Label9.Visible  := Edit7.Visible;
+      Label10.Visible := Edit8.Visible;
+      Label11.Visible := Edit9.Visible;
+
+      GroupBox4.Visible := (RadioGroup1.ItemIndex in [3, 20, 21, 22]);
+
+      RadioGroup2.Visible := (RadioGroup1.ItemIndex = 24);
+    end;
+end;
+
+procedure TForm1.RadioGroup2Click(Sender: TObject);
+begin
+  UBranch := (RadioGroup2.ItemIndex = 0);
+end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  if ColorDialog1.Execute then
+    Shape1.Brush.Color := ColorDialog1.Color;
+end;
+
+procedure TForm1.Button2Click(Sender: TObject);
+var
+  X1, X2, Y1, Y2, D, Temp : Float;
+  Npts, Width             : Integer;
+  Color                   : TColor;
+begin
+  if not InitGraphics(Image1.Width, Image1.Height) then Exit;
+
+  SetWindow(Image1.Canvas, 10, 95, 10, 90, True);
+
+  X1 := StrToFloat(Edit1.Text);
+  X2 := StrToFloat(Edit2.Text);
+  D  := StrToFloat(Edit3.Text);
+
+  if (X1 < X2) and (D > 0.0) and (D <= X2 - X1) then
+    SetOxScale(LinScale, X1, X2, D);
+
+  Y1 := StrToFloat(Edit4.Text);
+  Y2 := StrToFloat(Edit5.Text);
+  D  := StrToFloat(Edit6.Text);
+
+  if (Y1 < Y2) and (D > 0.0) and (D <= Y2 - Y1) then
+    SetOyScale(LinScale, Y1, Y2, D);
+
+  PlotOxAxis(Image1.Canvas);
+  PlotOyAxis(Image1.Canvas);
+  PlotGrid(Image1.Canvas, BothGrid);
+
+  Width := SpinEdit1.Value;
+  Npts  := SpinEdit2.Value;
+  Color := Shape1.Brush.Color;
+
+  SetLineParam(1, psSolid, Width, Color);
+
+  Temp := StrToFloat(Edit7.Text); if Temp > 0.0 then Y := Temp;
+  Temp := StrToFloat(Edit8.Text); if Temp > 0.0 then A := Temp;
+  Temp := StrToFloat(Edit9.Text); if Temp > 0.0 then B := Temp;
+
+  PlotFunc(Image1.Canvas, Func, X1, X2, Npts, 1);
+end;
+
+procedure TForm1.Button3Click(Sender: TObject);
+begin
+  with Image1 do
+    Canvas.FillRect(Rect(0, 0, Width, Height));
+end;
+
+end.
+
+
+
+
+
+
+----app_template_loaded----

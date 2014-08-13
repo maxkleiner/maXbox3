@@ -1,0 +1,359 @@
+{***************************************************************
+ *
+ * Project  : boolean logic hexer
+ * Unit Name: 307_allbooleanlogic.txt
+ * Purpose  : Demonstrates the functions of a hex and all 16 boolean converter
+ * Date     : 15/10/2012  -  14:38:56, loc's=322, 28 intf
+ *
+ ****************************************************************}
+
+program HEX_SET_BooleanLogic;
+
+ //const HexN : array[0..15] of char = '0123456789ABCDEF' ; 
+ 
+  type
+   TPasStyle = (a,b,c,d,e,f,k,p,z);
+   //TPasStyle = integer;
+   TPasStyles = set of TPasStyle;
+ 
+  
+ var hexn: THexArray;  //hexdigits
+     mbits: TBits;
+     aPas: TPasStyles;
+
+//{$I maxdefine.inc}
+//{$I pas_includebox.inc}
+
+FUNCTION HASH2 (X : string) : INTEGER;
+VAR I,H : INTEGER;
+BEGIN
+  aPas:= aPas+[d,a,b,c];
+   if e in aPas then
+   showmessage(' this is inside');
+  H := 0;
+  FOR I := 1 TO length(X) DO
+      H := (H * 10 + ORD(X[I]));
+  result:= H MOD 2000;
+END;
+
+
+procedure initHexSet;
+  var i: integer;
+begin
+  for i:= 0 to 9 do 
+    hexn[i]:= Chr(i+48);
+    hexn[10]:= 'A'; hexn[11]:= 'B'; hexn[12]:= 'C'; hexn[13]:= 'D'; 
+    hexn[14]:= 'E'; hexn[15]:= 'F';
+end;  
+
+  function Hex_ofB (b: byte): string; 
+  begin 
+    result:= HexN[b shr 4] + HexN[b and $0F];
+  end;
+   
+  function Hex_ofC (c: char): string;
+  begin
+    result:= Hex_ofB (ord(c));
+  end; 
+  
+  function Hex_ofW (w: word): string;
+  var ahi, alo: integer;
+  begin 
+    // hi and lo function (see below)
+    ahi:= w shr 8;
+    alo:= w and $FF;
+    result:= Hex_ofB(ahi) +' lo: '+ Hex_ofB(alo);
+  end;
+  
+  function Hex_ofDW(i: Integer): string ;
+  begin
+    result:= Hex_ofW(word(i shr 16)) + Hex_ofW( word(i));
+  end; 
+
+  function ImplicationtoMuch(a,b: boolean): boolean;
+  begin
+    result:= NOT a OR b;
+    //writeln(booleantostring(result))
+  end;  
+  
+  function biImplicationtoMuch(a,b: boolean): boolean;
+  begin
+    result:= (NOT a OR b) AND (NOT b or a);
+    //writeln(booleantostring(result))
+  end;  
+  
+  function biImplication(a,b: boolean): boolean;
+  begin
+    result:= NOT(a XOR b);
+  end;  
+//************************* 16 all booleans     
+
+  function Contradiction(a,b: boolean): boolean;   //1 FALSE Contradiction
+  begin
+    result:= false;
+  end;  
+
+  function Conjunction_AND(a,b: boolean): boolean;   //2 AND Conjunction x*y
+  begin
+    result:= a AND b;
+  end;  
+
+  function Inhibition(a,b: boolean): boolean;   //3 Inhibition x*^y
+  begin
+    result:= a AND NOT b;
+  end;  
+
+  function Praependence(a,b: boolean): boolean;   //4 Praependence x
+  begin
+    result:= a;
+  end;  
+
+  function Praesection(a,b: boolean): boolean;   //5 Praesection ^x*y
+  begin
+    result:= NOT a AND b;
+  end;  
+
+  function Postpendence(a,b: boolean): boolean;   //6 Postpendence y
+  begin
+    result:= b;
+  end;  
+
+  function EXOR(a,b: boolean): boolean;   //7 exclusive OR XOR= x*^y+^x*y
+  begin
+    //result:= a XOR b; //alternative
+    //result:= a AND NOT b OR NOT a AND b;
+    result:= NOT(A=B);    //!
+  end;  
+
+  function Disjunction_OR(a,b: boolean): boolean;   //8 Disjunction OR = x+y
+  begin
+    //result:= a XOR b;
+    result:= a OR b;
+  end;  
+
+  function NOR(a,b: boolean): boolean;   //9 Rejection
+  begin
+    result:= NOT(a OR b);
+  end;  
+ 
+  function Aequivalence(a,b: boolean): boolean;   //10 double implication ^x*^y+x*y
+  begin
+    result:= (NOT a OR b) AND (NOT b or a);
+    //result:= NOT a AND NOT b OR a AND b
+    //result:= NOT(a XOR b);
+    //result:= NOT(EXOR(a,b));
+   end;   
+ 
+  function NegationY(a,b: boolean): boolean;   //11 ynegation ^y
+  begin
+    result:= NOT b;
+   end;   
+ 
+  function ImplicationY(a,b: boolean): boolean;   //12 yimplication y-->x; x+^y
+  begin
+    result:=  a OR NOT b;
+   end;   
+
+  function NegationX(a,b: boolean): boolean;   //13 ynegation ^x
+  begin
+    result:= NOT a;
+   end;   
+
+  function ImplicationX(a,b: boolean): boolean;   //14 ximplication x-->y; ^x+y
+  begin
+    result:=  NOT a OR b;
+  end;   
+
+
+  function NAND(a,b: boolean): boolean;   //15 NAND Exclusion
+  begin
+    result:= NOT(a AND b);
+  end;  
+ 
+  function Tautologic(a,b: boolean): boolean;   //16 TRUE Tautologic
+  begin
+    result:= true;
+  end;  
+ 
+var tint: dword;
+    tw: word;
+    ab,bb,i,l: byte;
+              
+begin
+  maxform1.console1click(self)
+  writeln('process id of hexer '+inttostr(currentprocessid))
+  Writeln('test ref ' +inttobin(2000))
+  InitHexSet;
+  writeln('from extern function '+bintohex2('11111010000'))
+  writeln('from extern function back '+hextobin2('000007D0'))
+  writeln('')
+  //writeln(chr(48))
+  write(Hex_ofB(255)+' '+Hex_ofC('F')+' '+Hex_ofW(65535)+ ' '+hex_ofDW(2147483647))
+  //just a test
+  mbits:= TBits.create;
+  mbits.free;
+  
+  tint:= 123456789;
+  tw:= 1234567 ;
+  writeln(inttobin(tint))
+  writeln(inttobin(hiword(tint)))
+  writeln(inttobin(tint SHR 16));
+  writeln(inttobin(loword(tint)))
+  writeln(inttobin(tint AND $FFFF))
+  //writeln(inttobin($FF))
+    ab:= 25; bb:= 100;
+    writeln(inttobin(ab)+' '+inttobin(bb));
+    writeln(inttostr(makeword(ab,bb)))
+    writeln(inttobin(ab)+' '+inttobin(bb));
+    writeln(inttobin(makeword(ab,bb)));
+    tint:= (bb OR ab SHL 8);
+      writeln(inttobin(tint));
+
+   //writeln(inttobin(cc));
+   tint:= 9;
+   writeln('shl '+#13#10+inttobin(tint shl 8))
+   writeln(inttostr(HASH2('this is maxland and a second boxa')));
+
+   //if doubleImplication(true,true) then writeln('back');
+   writeln(BooleanToString(biImplication(false,false)));
+   writeln(BooleanToString(biImplication(false,true)));
+   writeln(BooleanToString(biImplication(true,false)));
+   writeln(BooleanToString(biImplication(true,true)));
+
+   printF(' 0 0: %d ',[biImplicationtomuch(false,false)]);
+   printF(' 0 1: %d ',[biImplicationtomuch(false,true)]);
+   printF(' 1 0: %d ',[biImplicationtomuch(true,false)]);
+   printF(' 1 1: %d ',[biImplicationtomuch(true,true)]);
+   writeln(' ');
+
+   printF(' 0 0: %d ',[biImplication(false,false)]);
+   printF(' 0 1: %d ',[biImplication(false,true)]);
+   printF(' 1 0: %d ',[biImplication(true,false)]);
+   printF(' 1 1: %d ',[biImplication(true,true)]);
+
+   writeln(' ');
+     for i:= 0 to 1 do
+    for l:= 0 to 1 do
+      printF(' %d %d: %d ',[i,l,biImplication(bool(i),bool(l))]);
+      //printF(' %d %d: %s ',[i,l,booltostr(biImplication(bool(i),bool(l)),true)]);
+ 
+ writeln('//***********************All Boolean Logics**********************//');
+   
+   Writeln('1: Contradiction')
+   for i:= 0 to 1 do
+    for l:= 0 to 1 do 
+      printF(' %d %d: %d ',[i,l,Contradiction(bool(i),bool(l))]);
+  
+   Writeln('2: AND Conjunction')
+   for i:= 0 to 1 do
+    for l:= 0 to 1 do
+      printF(' %d %d: %d ',[i,l,Conjunction_AND(bool(i),bool(l))]);
+
+   Writeln('3: Inhibition')
+   for i:= 0 to 1 do
+    for l:= 0 to 1 do
+      printF(' %d %d: %d ',[i,l,Inhibition(bool(i),bool(l))]);
+
+   Writeln('4: Praependence')
+   for i:= 0 to 1 do
+    for l:= 0 to 1 do
+      printF(' %d %d: %d ',[i,l,Praependence(bool(i),bool(l))]);
+
+   Writeln('5: Praesection')
+   for i:= 0 to 1 do
+    for l:= 0 to 1 do
+      printF(' %d %d: %d ',[i,l,Praesection(bool(i),bool(l))]);
+
+   Writeln('6: Postpendence, Projection')
+   for i:= 0 to 1 do
+    for l:= 0 to 1 do
+      printF(' %d %d: %d ',[i,l,Postpendence(bool(i),bool(l))]);
+ 
+   Writeln('7: EXOR Antivalence, Alternative')
+   for i:= 0 to 1 do
+    for l:= 0 to 1 do
+      printF(' %d %d: %d ',[i,l,EXOR(bool(i),bool(l))]);
+ 
+   Writeln('8: OR Disjunction')
+   for i:= 0 to 1 do
+    for l:= 0 to 1 do
+      printF(' %d %d: %d ',[i,l,Disjunction_OR(bool(i),bool(l))]);
+ 
+   Writeln('9: NOR Rejection')
+   for i:= 0 to 1 do
+    for l:= 0 to 1 do
+      printF(' %d %d: %d ',[i,l,NOR(bool(i),bool(l))]);
+      
+   Writeln('10: Aequivalence')
+   for i:= 0 to 1 do
+    for l:= 0 to 1 do
+      printF(' %d %d: %d ',[i,l,Aequivalence(bool(i),bool(l))]);
+ 
+   Writeln('11: NegationY')
+   for i:= 0 to 1 do
+    for l:= 0 to 1 do
+      printF(' %d %d: %d ',[i,l,NegationY(bool(i),bool(l))]);
+
+    Writeln('12: ImplicationY')
+   for i:= 0 to 1 do
+    for l:= 0 to 1 do
+      printF(' %d %d: %d ',[i,l,ImplicationY(bool(i),bool(l))]);
+
+   Writeln('13: NegationX')
+   for i:= 0 to 1 do
+    for l:= 0 to 1 do
+      printF(' %d %d: %d ',[i,l,NegationX(bool(i),bool(l))]);
+
+   Writeln('14: ImplicationX')  //x-->y
+   for i:= 0 to 1 do
+    for l:= 0 to 1 do
+      printF(' %d %d: %d ',[i,l,ImplicationX(bool(i),bool(l))]);
+
+   Writeln('15 NAND Exclusion')
+   for i:= 0 to 1 do
+    for l:= 0 to 1 do         
+      printF(' %d %d: %d ',[i,l,NAND(bool(i),bool(l))]);
+    
+   Writeln('16 Tautologic TRUE')
+   for i:= 0 to 1 do
+    for l:= 0 to 1 do         
+      printF(' %d %d: %d ',[i,l,Tautologic(bool(i),bool(l))]);
+ 
+End.
+
+
+Die Highlights der Delphi RTL.
+
+Dieser Speak ist garantiert werbefrei, auch wenn RTL dahintersteht.
+Ich zeige die besten Funktionen und Prozeduren aus der Delphi Runtime Library, die stetig (vor allem seit D2009) enorm zugenommen hat. In diesem Streifzug zeige ich krasse, exotische aber auch nützliche, mächtige Routinen aus der Bibliothek, die ja der Hauptlieferant zur VCL hin ist.
+Recht formlos zieht die Demo der Funktionen aus den Unit Kategorien von danen, die auch einige  versteckte Routinen aus der System und SysUtils aufdecken. Wir wagen zudem einen Blick auf die Indy- und Jedi RTL; einige Aussagen zu Packages, Lizenzen und 64bit- Compiler runden die Session dann ab.
+
+
+RTLConsts.pas
+
+function ReturnAddr: Pointer;
+  asm
+  	MOV	EAX,[EBP+4]
+  end;
+
+http://docwiki.embarcadero.com/CodeExamples/en/Code_Samples_by_Function
+
+Es gibt die Hi und Lo-Funktionen, geht aber auch selber ganz leicht:
+
+Delphi-Quellcode:
+  hibyte:= myword shr 8;
+  lobyte:= myword and $FF;
+Ein Word sieht ja so aus:
+
+Code:
+hh hh hh hh ll ll ll ll
+Wenn du das jetzt um 8 nach rechts shiftest, siehts so aus:
+
+Code:
+00 00 00 00 hh hh hh hh
+Und bei and $FF siehts so aus:
+
+Code:
+00 00 00 00 ll ll ll ll
+
+

@@ -1,0 +1,171 @@
+PROGRAM Callback_Recursion_To_HTML_Clean;
+// dont: fly, robin, fly 
+//#sign max: APSN21: 01.10.2013 21:32:39 
+//#path:E:\maxbox\maxbox3\examples\
+//try also the class TJvStringListToHtml , #file:390_CallbackClean.TXT
+//TODO: check RecFileLook with subdirs and fix it #locs:89
+//ERROR in RecFile Search, wont back from subdir
+
+//uses  
+  //TJvStringListToHtml
+
+Const
+//resourcestring
+  RC_Html1 = '<HTML>';
+  RC_Html2 = '<TITLE>TStringList converted JEDI-VCL maXbox Component</TITLE>';
+  FNAME = 'stFilelist.htm';
+
+  
+Type
+  TFileCallbackProc = procedure(filename: string);
+  
+var icnt: integer;
+
+
+Procedure CB_LetdataOut(filenamepath: string);
+ begin
+   inc(iCnt);
+   writeln(intToStr(iCnt)+': '+filenamepath) 
+ end;   
+
+
+Function RecFileSearch(Filespec: string; callBack: TFileCallbackProc): boolean;
+ {scan for rec subdirs list code}
+var
+  validres: integer; {SearchRec return 0 if successful}
+  SearchRec: TSearchRec;
+  dirPath, dirName, flname: string; {search for subdirs flname will be *.*}
+begin
+    DirPath:= ExtractFilePath(FileSpec);
+    Result:= DirectoryExists(DirPath);
+    writeln('result of dir '+searchrecname);
+    If not Result then Exit; {//TODO: add error checking code}
+    Flname:= ExtractFileName(FileSpec); {save wild cards in the filespec}
+    validres:= FindFirst(FileSpec, FaDirectory);   //Fadirectory
+    while validres = 0 do begin
+      If (SearchRecAttr And faDirectory <>0) And (SearchRecName[1]<>'.') 
+                   {AND (SearchRecName[1]<>'\')} then begin
+             {ignore two dotted dirs, do AND on attribs to confirm
+              that current searchrec is a directory}
+        {add dirname to current path}
+        //dirname:= SearchRecName;   //+'('; test
+        RecFileSearch(dirpath+dirname+flname, callBack);
+        writeln('dirpath back '+dirpath+searchrecname)
+      end;
+        validres:= FindNext;
+        dirname:= dirpath;
+      callBack(dirname+ searchrecname);
+      {if not returned subdirs keep looking in current path}
+   end;
+   findClose;
+end; 
+
+
+procedure fromMemotoHTML;
+begin
+  with TJvStringListToHtml.Create(self) do begin
+    HTMLTitle:= RC_Html2;
+    ConvertToHTML(memo2.lines, Exepath+FNAME);
+    Free;
+  end;  
+end;
+ 
+
+begin
+  Writeln('Date of Exe: '+datetimetostr(FileTimeGMT(exepath+'maxbox3.exe')));
+ //Procedure RecurseDirectory2(Dir : String; IncludeSubs : boolean);
+  Writeln('');
+  Writeln('***************** Callback Report Out *********************')
+  //RecurseDir(Exepath,true, @letdataout);
+  //RecurseDir(ExePath{TESTD},true, @letdataout);
+  //RecurseDirectory3(ExePath{TESTD}, true);
+  icnt:= 0;
+  RecFileSearch(ExePath+'*.*', @CB_Letdataout);
+  fromMemoToHTML;
+  OpenFile(Exepath+FNAME);
+  //ParamStrUTF8
+  Writeln(SHA1('E:\maxbox\maxbox3.zip'));
+  //7ba201851fadde76b93011904cf49d7d1c399f9f
+End. 
+
+
+
+
+(* === compile-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJvStringListToHtml(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TJvComponent', 'TJvStringListToHtml') do
+  with CL.AddClassN(CL.FindClass('TJvComponent'),'TJvStringListToHtml') do begin
+    RegisterMethod('Constructor Create( AOwner : TComponent)');
+    RegisterMethod('Procedure Free');
+    RegisterMethod('Procedure ConvertToHTML( Source : TStrings; const FileName : string)');
+    RegisterMethod('Procedure ConvertToHTMLStrings( Source, Destination : TStrings)');
+    RegisterProperty('HTML', 'TStrings', iptrw);
+    RegisterProperty('Strings', 'TStrings', iptrw);
+    RegisterProperty('HTMLLineBreak', 'string', iptrw);
+    RegisterProperty('HTMLTitle', 'string', iptrw);
+    RegisterProperty('IncludeHeader', 'Boolean', iptrw);
+  end;
+end;
+ 
+
+
+TTarArchive Usage
+-----------------
+- Choose a constructor
+- Make an instance of TTarArchive                  TA := TTarArchive.Create (Filename);
+- Scan through the archive                         TA.Reset;
+                                                   WHILE TA.FindNext (DirRec) DO BEGIN
+- Evaluate the DirRec for each file                  ListBox.Items.Add (DirRec.Name);
+- Read out the current file                          TA.ReadFile (DestFilename);
+  (You can ommit this if you want to
+  read in the directory only)                        END;
+- You're done                                      TA.Free;
+
+
+TTarWriter Usage
+----------------
+- Choose a constructor
+- Make an instance of TTarWriter                   TW := TTarWriter.Create ('my.tar');
+- Add a file to the tar archive                    TW.AddFile ('foobar.txt');
+- Add a string as a file                           TW.AddString (SL.Text, 'joe.txt', Now);
+- Destroy TarWriter instance                       TW.Free;
+- Now your tar file is ready.
+
+Iterator Code Snippets
+
+   stlist:= TStringlist.create;
+  //stlist.add(memo2.text);
+  for i:= 1 to memo2.lines.count - 1 do 
+    stlist.add(memo2.lines[i]);
+  TJvstringListToHtml_ConvertToHtml(stlist, Exepath+'stlist.htm')
+  OpenFile(Exepath+'stlist.htm');
+  stlist.Free;
+    if DirPath[length(DirPath)] <> '\' then
+                       DirPath:= DirPath + '\';
+
+
+
+The last slash might be optional. Right?
+
+How about something like this:
+
+$url =~ m|([^/]+)/?$|;
+my $end_of_url = $1;
+
+The $ on the end anchors the regular expression to the end of the string. The [^/] means anything that's not a slash and the + after means I want one or more things that are not slashes. Notice that this is in a capture group which are marked with parentheses.
+
+I end the regular expression with /? which means that there may or may not be a slash on the very end of the string. I've put my regular expression between m| and |, so I can use forward slashes without having to constantly escape them.
+
+The last part of the URL is now in $1 and I can set my own scalar variable to save this result.
+share|improve this answer
+
+
+ Raspberry Pi soll Nashörner schützen
+Meldung vorlesen und MP3-Download
+
+Die Entwicklungsfirma Cambridge Consultants nutzt einen Raspberry Pi zur Steuerung eines robusten Kamerasystems, mit dem Nashörnern in Kenias Tsavo-Nationalpark überwacht werden sollen. Die Kamera, die ihre Daten quasi in Echtzeit über Satellit aus dem Park zum kenianischen Wildlife Service schickt, soll das Überleben der Tiere sichern helfen. 
+ 
+
+----app_template_loaded_code----

@@ -1,0 +1,986 @@
+Program IB_SortGrid_Database_Implements_SortGrid_DRAFFFT;
+
+//#sign max: APSN21: 04.01.2014 18:29:32 
+//#path:E:\maxbox\maxbox3\examples\
+//TODO: Save the QRCode to webserver_file, #locs:612
+//http://theroadtodelphi.wordpress.com/2010/12/06/generating-qr-codes-with-delphi/
+                               
+Const
+   
+   UrlGoogleQrCode='http://chart.apis.google.com/chart?chs=%dx%d&cht=qr&chld=%s&chl=%s';
+   AFILENAME= 'mX3ScholzCode3.png';
+   //QDATA= 'this is maXland on a maXbox stream dream firebox';
+   QDATA= 'http://scholz2000.com/ ';
+   DB_NAME = 'UMLBANK12.GDB'; //'UMLBANK4.GDB'; is empty
+  
+
+{The API requires 3 simple fields be posted to it:
+cht=qr this tells Google to create a QR code;
+chld=M the error correction level of the QR code (see here for more info);
+chs=wxh the width and height of the image to return (eg chs=250x250);
+chl=text the URL encoded text to be inserted into the barcode.}
+
+type
+  TQrImage_ErrCorrLevel=(L,M,Q,H);
+
+var ibtimer: TIBTimer; 
+  //afl: TFileMode = fmClosed..fmOutput;
+  //aext: TFileExt = string[3];  
+  
+  //uses IBXConst, IB;
+
+function iMax(n1, n2: Integer): Integer;
+begin
+  if (n1 > n2) then
+    result := n1
+  else
+    result := n2;
+end;
+
+function iMin(n1, n2: Integer): Integer;
+begin
+  if (n1 < n2) then
+    result := n1
+  else
+    result := n2;
+end;
+
+
+function iRandomInteger(iLow, iHigh: Integer): Integer;
+begin
+  result := Random(iHigh - iLow) + iLow;
+end;
+
+function iRandomString(iLength: Integer): String;
+begin
+  result := '';
+  while Length(result) < iLength do
+    result := result + IntToStr(iRandomInteger(0, High(iLength)));
+  if Length(result) > iLength then
+    result := Copy(result, 1, iLength);
+end;
+
+
+function iStripString(st: String; CharsToStrip: String): String;
+var
+  i: Integer;
+begin
+  result := '';
+  for i := 1 to Length(st) do begin
+    if AnsiPos(st[i], CharsToStrip) = 0 then
+      result := result + st[i];
+  end;
+end;
+
+function iFormatIdentifier(Dialect: Integer; Value: String): String;
+begin
+  Value := Trim(Value);
+  if Dialect = 1 then
+    Value := AnsiUpperCase(Value)
+  else
+    if (Value <> '') and (Value[1] = '"') then
+      Value := '"' + StringReplace (TrimRight(Value), '"', '""', [rfReplaceAll]) + '"'
+    else
+      Value := AnsiUpperCase(Value);
+  Result := Value;
+end;
+
+function iFormatIdentifierValue(Dialect: Integer; Value: String): String;
+begin
+  Value := Trim(Value);
+  if Dialect = 1 then
+    Value := AnsiUpperCase(Value)  
+  else begin
+    if (Value <> '') and (Value[1] = '"') then begin
+      Delete(Value, 1, 1);
+      Delete(Value, Length(Value), 1);
+      Value := StringReplace (Value, '""', '"', [rfReplaceAll]);
+    end
+    else
+      Value:= AnsiUpperCase(Value);
+  end;
+  Result := Value;
+end;
+
+function iExtractIdentifier(Dialect: Integer; Value: String): String;
+begin
+  Value := Trim(Value);
+  if Dialect = 1 then
+    Value := AnsiUpperCase(Value)
+  else begin
+    if (Value <> '') and (Value[1] = '"') then begin
+      Delete(Value, 1, 1);
+      Delete(Value, Length(Value), 1);
+      Value := StringReplace (Value, '""', '"', [rfReplaceAll]);
+    end
+    else
+      Value := AnsiUpperCase(Value);
+  end;
+  Result := Value;
+end;
+
+function iQuoteIdentifier(Dialect: Integer; Value: String): String;
+begin
+  if Dialect = 1 then
+    Value:= AnsiUpperCase(Trim(Value))
+  else
+    Value:= '"' + StringReplace (Value, '"', '""', [rfReplaceAll]) + '"';
+  Result:= Value;
+end;
+
+const
+  iSWhere = ' where ';     { do not localize }
+  iSAnd = ' and ';         { do not localize }
+
+//function AddIBParamSQLForDetail(Params: TParams; SQL: string;
+  //                                       Native: Boolean; Dialect : Integer): string;
+
+function iGenerateParamSQL(Params: TParams; Native: Boolean; Dialect : Integer): string;   
+ var I: Integer;
+  begin
+    for I := 0 to Params.Count -1 do begin
+      if I > 0 then Result := Result + SAnd;
+      if Native then
+       Result:= Result + format('%s = ?', [iQuoteIdentifier(Dialect, Params[I].Name)])
+         {do not localize}
+      else
+       Result:= Result+ format('%0:s = :%0:s',[iQuoteIdentifier(Dialect,Params[I].Name)]); {do not localize}
+    end;
+    if pos(SWhere, LowerCase(Result)) > 0 then
+      Result := SAnd + Result
+    else
+      Result := SWhere + Result;
+  end;
+
+  function AddWhereClause(Params: TParams; Native: Boolean; Dialect : Integer;
+                                           SQL: string): string;
+  var
+    Start: PChar;
+    Rest, FName: string;
+    SQLToken, CurSection: TSQLToken;
+    aps: TSearchEvent; //TFormatOptions; Tsortdirection;//TSortstyle; TPrintmode;
+  begin
+    Start := PChar(SQL);
+    CurSection := stUnknown;
+    repeat
+      SQLToken := NextSQLToken(Start, FName, CurSection);
+      //IsMultiTableQuery
+      //GetTableNameFromSQL
+      //GetFieldInfo
+      //SQLRequiresParams
+      //compare
+    until SQLToken in [stFrom, stEnd];
+    if SQLToken = stFrom then
+      NextSQLToken(Start, FName, CurSection);
+    Rest := string(Start);
+    if Rest = '' then
+      Result := SQL + ' ' + iGenerateParamSQL(Params, native, dialect)
+    else
+      Result := Copy(SQL, 1, pos(Rest, SQL))
+                 + ' ' + iGenerateParamSQL(Params, native, dialect) + Rest;
+  end;
+
+
+function iAddIBParamSQLForDetail(Params: TParams; Native: Boolean;
+                                 Dialect : Integer; SQL: string): string;
+begin
+  Result := SQL;
+  if (Params.Count > 0) then
+    Result := AddWhereClause(Params, native, dialect, SQL);
+end;
+
+procedure DecomposeDatabaseName(DatabaseName : String;
+  var ServerName, Protocol, DatabasePath : String);
+var
+  Idx1, Idx2: Integer;
+  st: string;
+begin
+  if Pos('\\', DatabaseName) <> 0 then {do not localize}
+  begin
+    Protocol := 'NamedPipe';
+    st := copy(DatabaseName, 3, Length(DatabaseName));
+    Idx1 := Pos('\', st); {do not localize}
+    if Idx1 = 0 then
+      IBError(ibxeUnknownError, [])
+    else begin
+      ServerName := Copy(st, 1, Idx1 - 1);
+      DatabasePath := Copy(st, Idx1 + 1, Length(st));
+    end;
+  end
+  else begin
+    Idx1 := Pos(':', DatabaseName ); {do not localize}
+    If (Idx1 = 0) or (Idx1 = 2) then begin
+      DatabasePath := DatabaseName;
+      ServerName := '';
+      Protocol := 'Local';
+    end
+    else begin
+      Idx2 := Pos('@', DatabaseName); {do not localize}
+      if Idx2 = 0 then begin
+        Protocol := 'TCP';
+        ServerName := copy(DatabaseName, 1, Idx1 - 1);
+        DatabasePath := copy(DatabaseName, Idx1 + 1, Length(DatabaseName));
+      end
+      else begin
+        Protocol := 'SPX';
+        ServerName := copy(DatabaseName, 1, Idx2 - 1);
+        DatabasePath := copy(DatabaseName, Idx2 + 1, Length(DatabaseName));
+      end;
+    end;
+  end;
+end;
+
+
+var Database1: TIBDATABASE;
+
+procedure TBusObj_loadMasterBase;
+begin
+  //with dataModule1 do begin
+    try
+      Database1:= TIBDATABASE.Create(self);
+      with Database1 do begin
+        Connected:= false;
+        //LoginPrompt:=false;
+        //AliasName:= DB_ALIAS;
+        DatabaseName:= Exepath+'\examples\'+DB_NAME;
+        connected:= true;
+        //keepConnection:= true;
+      end;
+      {tblCust.active:= true;
+      dSrcCust.dataSet:= tblCust;
+      tblAcctype.active:= true;
+      dSrcAccType.dataSet:= tblAcctype;
+      tblAccount.active:= true;
+      dSrcAccount.dataSet:= tblAccount;}
+    except
+      //on EDataBaseError do
+       raise EDatabaseError.Create;
+       //('frmTrans.strLit[19]');
+    end;
+    //Database1.close;
+    //Database1.Free;
+    
+  //end;
+ end;
+ 
+ function TBusObj_getAllVermoegen(custNo: integer): double;
+ var seekStr: string;
+      q_summe: TIBQuery;
+      //atxt: TTxtFile;
+ begin
+ 
+ //SELECT AMOUNT FROM ACCOUNT WHERE CUST_NO ='1001' AND ACC_TYPE='4';
+ seekStr:='';
+ //seekStr:='SELECT SUM(amount) as TOTAL FROM ACCOUNT ' +
+   //               'WHERE CUST_NO =:NUMB ';
+ //seekStr:='SELECT AMOUNT FROM ACCOUNT ' +
+   //               'WHERE CUST_NO =:NUMB AND ACC_TYPE=''4''';
+ 
+ //seekStr:= 'SELECT AMOUNT FROM ACCOUNT WHERE CUST_NO =''1001'' AND ACC_TYPE=''4''';
+ //seekStr:= 'SELECT AMOUNT FROM ACCOUNT WHERE CUST_NO=1001 AND ACC_TYPE=4';
+ //seekStr:= 'SELECT count(*) as CNT FROM ACCOUNT';
+ seekStr:= 'SELECT count(*) FROM ACCOUNT';
+ 
+  q_summe:= TIBQuery.create(self);
+  with q_summe do begin
+    try
+      close;
+      Database:= Database1;
+      //DataSource:= Database1.Dataset;
+      SQL.Clear;
+      SQL.Add(seekStr);
+      //paramByName('NUMB').value:= IntToStr(custNo);
+      Writeln(inttoStr(RowsAffected));
+  
+      open;
+      Writeln(inttoStr(RowsAffected));
+    except
+     //on EDatabaseError do
+      showmessage('frmTrans.strLit[42] exception');
+    end;
+   //result:= fieldByName('TOTAL').asFloat;
+   //result:= fieldByName('AMOUNT').asFloat;
+   //result:= fieldByName('CNT').asFloat;
+
+  end;
+  q_summe.Free;
+ end;
+ 
+ 
+ {************** Form Builder Section ***********}            
+
+const  GPIC = 'examples\citymax.bmp';
+       BOSIZE= 42;  {height and width of board}
+Type 
+    TBoardsize = array [0..BOSIZE-1] of boolean;
+
+var    frmMon: TForm;
+       frmsg, golstg: TSortGrid;
+       Currentgrid, NextGrid, oldgrid: array[0..BOSIZE-1] of TBoardsize;
+       FAuto: boolean;
+       Cntr: integer;
+       panstep: TPanel;
+       Progress: TProgressBar;
+         stat: TStatusbar;
+
+{************** FormActivate ***********}
+procedure Tfrm_FormActivate(Sender: TObject);
+var
+  i,j:integer;
+begin  {Initialize the active grid}
+ 
+  for i:=0 to high(Currentgrid) do
+    for j:=0 to high(Currentgrid) do Currentgrid[i][j]:= false;
+  Screen.Cursor:= crHandPoint;
+  FAuto:= false;
+  Cntr:= 0;
+end;
+
+{************** Event Handlers  ******************************************}
+procedure Tfrm_btnClose(Sender: TObject);
+begin
+  stat.SimpleText:= 'Closed Clicked Event';
+  frmMon.Close;
+  Screen.Cursor:= crDefault;
+end;
+
+procedure CloseHandler(Sender: TObject; var action: TCloseAction);
+begin
+   //if MessageDlg('Wanna Leave?',mtConfirmation,[mbYes, mbNo],0)= mrYes then begin
+   action:= caFree;
+   writeln('Free Game and Closer test finished');
+   //Action:= caNone;
+end;
+
+
+
+procedure InitCreateForms;
+var panImg, panR: TPanel;
+    bmp: TBitmap;
+begin
+ // seq --> panel-image-drawgrid-bitmap
+ //for i:= 1 to QB+1 do bArr[i]:= TBitMap.Create;
+ //HideGridCursor(frmsg);
+ frmMon:= TForm.Create(self);
+ with frmMon do begin
+   //FormStyle := fsStayOnTop;
+   Position:= poScreenCenter;
+   BorderIcons:= [biSystemMenu, biMinimize];
+   BorderStyle:= bsSingle;
+   PixelsPerInch:= 96;
+   Caption:= 'Conway'#39's Game of Life - V1.4 by maXbox';
+   color:= clBtnFace;
+   color:= clblack;
+   width:= 1000;
+   height:= 660;
+   Show;
+   Canvas.stretchDraw(Rect(0,0,width,height), getbitmap(Exepath+GPIC));     
+   //onClose:= @CloseHandler;
+ end;
+ Tfrm_FormActivate(self);
+
+ panImg:= TPanel.Create(frmMon)
+   with panImg do begin
+    parent:= frmMon;
+    setBounds(15,8,740,570)
+    BevelOuter:= bvLowered
+    //DoubleBuffered:= true;
+   end; 
+   PanR:= TPanel.create(frmMon);
+    with PanR do begin
+      parent:= frmMon;
+      setBounds(772,8,155,570);
+      BevelOuter:= bvLowered
+      TabOrder:= 1
+    end;
+    with TBitBtn.Create(frmMon) do begin
+      Parent:= frmMon;        
+      SetBounds(788,30,121,30)        //30
+      Caption:= '&Load/Run GOL'
+      Hint:= 'Loads the GRAND DESIGN and runs your own game of life!';
+      ShowHint:= true;
+      glyph.LoadFromRes(getHINSTANCE,'CL_MPEJECT'); 
+      //OnClick:= @Tfrm_btnLoad;
+    end;
+    with TBitBtn.Create(frmMon) do begin
+      Parent:= frmMon;        
+      SetBounds(788,80,121,30)       //68
+      glyph.LoadFromRes(getHINSTANCE,'CL_MPSTEP'); 
+      Caption:= 'Start GOL'
+      //Enabled:= False
+      //OnClick:= @Tfrm_StartBtn;
+    end;
+    with TBitBtn.Create(frmMon) do begin
+      Parent:= frmMon;        
+      SetBounds(788,160,121,30)       //68
+      glyph.LoadFromRes(getHINSTANCE,'CL_MPPLAY'); 
+      Caption:= '&Run Loop'
+      Hint:= 'Let it run till the end of life!';
+      ShowHint:= true;
+      //Enabled:= False
+      //OnClick:= @Tfrm_StartBtnNext;
+    end;
+    with TBitBtn.Create(frmMon) do begin
+      Parent:= frmMon;        
+      SetBounds(788,120,121,30)       //68
+      glyph.LoadFromRes(getHINSTANCE,'CL_MPPREV'); 
+      Caption:= 'Run Back'
+      //Enabled:= False
+      //TabOrder = 7
+      //OnClick:= @Tfrm_makestepback;
+    end;
+    with TBitBtn.Create(frmMon) do begin
+      Parent:= frmMon;        
+      SetBounds(788,480,121,30)
+      glyph.LoadFromRes(getHINSTANCE,'CL_MPSTOP'); 
+      Caption:= 'Close'
+      OnClick:= @Tfrm_btnClose
+    end;
+    with TBitBtn.Create(frmMon) do begin
+      Parent:= frmMon;        
+      SetBounds(788,230,121,30)
+      glyph.LoadFromRes(getHINSTANCE,'CL_MPPAUSE'); 
+      Caption:= 'New Evolution'
+      Hint:= 'just for a New Game';
+      ShowHint:= true;
+      //OnClick:= @Tfrm_btnNew;
+    end;
+    with TBitBtn.Create(frmMon) do begin
+      Parent:= frmMon;        
+      SetBounds(788,270,121,30)
+      glyph.LoadFromRes(getHINSTANCE,'TCHART16'); 
+      Caption:= 'Save Graph'
+      //OnClick:= @Tfrm_btnSave;
+    end;
+  
+    panstep:= TPanel.Create(frmMon); 
+    with panstep do begin
+      Parent:= frmMon;
+      SetBounds(788,420,121,25)
+      BevelOuter:= bvLowered
+      font.color:= clblue;
+      color:= clyellow;
+      Caption:= '0 steps'
+      //Color:= clyellow;//$30809000; //Color:= 8404992
+    end;
+   frmsg:= TSortGrid.Create(frmMon);
+   with frmsg do begin
+    SetBounds(12,12,479,279)  
+     parent:= panImg;
+     //rowheights
+     //Gridheight:= 100;
+     rowcount:= 6;
+     colcount:= 8;
+     Cells[1,1]:='42';
+     Cells[1,2]:='43';
+     Cells[1,3]:='44';
+     Cells[1,4]:='45';
+     Cells[1,5]:='145';
+         //Col:= 3;
+     //Row:= 3;
+     //left
+     //Left:= 35; Top:= 320;
+     //ColWidth:= 79; Height:= 79;
+     //ColCount:= 4;
+     //DefaultColWidth:= 18
+     //DefaultRowHeight:= 18
+     //FixedCols:= 0
+     //RowCount:= 4
+     //FixedRows:= 0
+     SortOptions;
+   end; 
+   {golstg:= TStringGrid.Create(frmMon);
+   with golstg do begin
+    Left:= 25;  Top:= 20;
+    Width:= 719; Height:= 538;
+    parent:= frmMon;
+    parentcolor:= false;
+    Anchors:= [akLeft,akTop,akRight,akBottom]
+    ColCount:= 42
+    DefaultColWidth:= 16
+    DefaultRowHeight:= 16
+    DefaultDrawing:= False
+    FixedCols:= 0
+    RowCount:= 42
+    FixedRows:= 0
+    color:= clblue;
+    OnClick:= @Tfrm_StringGrid1Click; 
+    OnDrawCell:= @Tfrm_StringGrid1DrawCell;
+  end;}
+  //SetFirstForm;
+  
+  Bmp:= TBitmap.Create;
+  try
+    Bmp.LoadFromFile(Exepath+'examples\mxlogoball.bmp');
+    //golstg.Canvas.Draw(18,18, Bmp);     
+  finally
+    Bmp.Free;
+  end;
+  stat:= TStatusbar.Create(FrmMon);
+   with Stat do begin
+     parent:= frmMon;
+     stat.SimplePanel:= true;
+     simpletext:= datetimetostr(now) +' Set a few boxes in the grid to start...'; 
+   end;
+   with TStaticText.create(frmmon) do begin
+    //setBounds(10,100,100,30);
+    Cursor:= crHandPoint;
+    parent:= panImg; //frmmon;
+    Align:= alBottom;
+    parentcolor:= false;
+    //Color:= clRed;
+    Caption:= ' Game of Life GOL © 1970, by Conway and maXbox Copyleft';
+    //Font.Charset:= DEFAULT_CHARSET
+    Font.Color:= clBlue;
+    Font.Height:= 12
+    Font.Name:= 'MS Arial'
+    Font.Style:= [fsUnderline]
+    //Show;
+    //OnClick:= @Tfrm_StaticText1Click;
+  end;
+ end;  
+
+
+
+
+  var mylist, iplist: TAlStrings;
+      i: integer;
+
+//TODO:#1 Returns the QR Code direct of the last modification of the given File
+
+begin
+  Writeln(datetimetostr(FileTimeGMT(exepath+'maxbox3.exe')));
+   
+  //GetQrCodeTest(150,150,'Q', 'this is maXland on the maXbox');
+  //call of the script
+  //GetQrCodeInet(150,150,'Q',ExePath+'mX3QRCode2.png','this is maXland on maXbox');
+ 
+  //call of the Lib
+  //GetQrCode2(150,150,'Q',QDATA, ExePath+AFILENAME);
+  initCreateForms;
+  
+  //HideWindowforSeconds(3, frmmon.handle, frmmon.handle);
+  //HideWindowforSeconds2(3, frmmon, frmmon);
+  //HideWindow(3, frmmon, frmmon);
+  
+  maxCalcF('SQRT(4296)');
+  {TBusObj_loadMasterBase;
+  writeln(floatToStr(TBusObj_getAllVermoegen(1001)));
+  Database1.close;
+  Database1.Free;}
+  
+  writeln(ALGetModulePath);
+  writeln(ALGetModuleName);
+  //mylist:= TAlStrings.create;
+  mylist:= ALgetLocalIPs;
+  for i:= 1 to mylist.count-1 do begin
+    writeln(mylist[i]);
+    writeln('name of '+mylist[i]+' is: '+ALIPAddrToName(mylist[i]));
+  end;  
+  mylist.free;
+
+  writeln('');
+  
+  for i:= 0 to ALGetLocalIPs.Count-1 do 
+    PrintF('ipname of %.44s is: %s',[ALgetLocalIPs.strings[i],
+                      ALIPAddrToName(ALgetLocalIPs.strings[i])]);
+  
+  for i:= 0 to ALGetLocalIPs.Count-1 do 
+    PrintF('ipname2 of %.44s is: %s',[ALgetLocalIPs[i],
+                      ALIPAddrToName(ALgetLocalIPs[i])]);
+
+  iplist:= ALgetLocalIPs;
+  for i:= 0 to ALGetLocalIPs.Count-1 do 
+    PrintF('ipname3 of %.44s is: %s',[iplist[i],
+                      ALIPAddrToName(iplist[i])]);
+  iplist.Free;                    
+
+  writeln('my machine '+ALgetLocalHostName);
+ 
+  
+ //RandomString( iLength : Integer) : String');
+ //RandomInt( iLow, iHigh : Integer) : Integer');
+ //StripString( st : String; CharsToStrip : String) : String');
+ //FormatIdentifier( Dialect : Integer; Value : String) : String');
+ //FormatIdentifierValue( Dialect : Integer; Value : String) : String');
+ //ExtractIdentifier( Dialect : Integer; Value : String) : String');
+ //QuoteIdentifier( Dialect : Integer; Value : String) : String');
+ //AddIBParamSQLForDetail( Params : TParams; SQL : string; Native : Boolean; Dialect : Integer) : string');
+ //DecomposeDatabaseName(DatabaseName: String; var ServerName,Protocol,DatabasePath : String)');
+
+   
+End.
+
+
+procedure SIRegister_TSortGrid(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TMyStringGrid', 'TSortGrid') do
+  with CL.AddClassN(CL.FindClass('TMyStringGrid'),'TSortGrid') do begin
+    RegisterMethod('Constructor Create( AOwner : TComponent)');
+    RegisterMethod('Procedure Free');
+    RegisterProperty('FilterCount', 'integer', iptr);
+    RegisterProperty('ColFont', 'TFontSetting integer', iptrw);
+    RegisterProperty('RowFont', 'TFontSetting integer', iptrw);
+    RegisterMethod('Function LoadFromFile( const FileName : String; RestoreWidth : Boolean) : Boolean');
+    RegisterMethod('Procedure SaveToFile( const FileName : String; SaveWidth : Boolean)');
+    RegisterMethod('Procedure LoadFromReg( RegRoot : HKey; RegKey, RegName : String; RestoreWidth : Boolean)');
+    RegisterMethod('Procedure SaveToReg( RegRoot : HKey; RegKey, RegName : String; SaveWidth : Boolean)');
+    RegisterMethod('Procedure SaveToCSV( const FileName : String)');
+    RegisterProperty('ColCommaText', 'string Integer Boolean', iptrw);
+    RegisterProperty('CellChecked', 'Boolean Integer Integer', iptrw);
+    RegisterProperty('RowSelected', 'Boolean Integer', iptrw);
+    RegisterProperty('SelectedRows', 'TStringList', iptr);
+    RegisterMethod('Procedure SortRowsSel');
+    RegisterMethod('Function SelCount : Integer');
+    RegisterMethod('Procedure SortColumn( ACol : integer)');
+    RegisterProperty('Sorting', 'Boolean', iptr);
+    RegisterProperty('Modified', 'Boolean', iptrw);
+    RegisterMethod('Procedure Clear');
+    RegisterMethod('Procedure InvalidateRow( ARow : integer)');
+    RegisterMethod('Procedure InvalidateCol( ACol : integer)');
+    RegisterMethod('Procedure MoveTo( ACol, ARow : integer; MakeVisible : Boolean)');
+    RegisterMethod('Procedure FocusColRow( ACol, ARow : integer)');
+    RegisterMethod('Function FindCol( Header : String) : Integer');
+    RegisterMethod('Function FindRow( ACol : integer; Value : string; CaseSensitive : boolean) : integer');
+    RegisterMethod('Function FindFirst( var ARow : integer) : boolean');
+    RegisterMethod('Function FindNext( var ARow : integer) : boolean');
+    RegisterMethod('Function RowEmpty( ARow : Integer) : Boolean');
+    RegisterMethod('Procedure AutoSizeColumns( AlwaysSize : Boolean)');
+    RegisterMethod('Procedure AutoSizeCol( const ACol : integer; AlwaysSize : Boolean)');
+    RegisterMethod('Procedure MoveRow( FromIndex, ToIndex : integer)');
+    RegisterMethod('Procedure MoveColumn( FromIndex, ToIndex : integer)');
+    RegisterMethod('Procedure SwapRows( ARow1, ARow2 : integer)');
+    RegisterMethod('Procedure SwapColumns( ACol1, ACol2 : integer)');
+    RegisterMethod('Procedure AddRow( ACells : TStrings)');
+    RegisterMethod('Procedure InsertRow( ARow : integer)');
+    RegisterMethod('Procedure AddCol( Header : string)');
+    RegisterMethod('Procedure InsertColumn( ACol : integer)');
+    RegisterMethod('Function UpdateCell( FindValue : string; FindACol : integer; SetValue : string; SetCol : integer; UpdateAll : boolean) : boolean');
+    RegisterMethod('Procedure Print');
+    RegisterMethod('Procedure PrintPreview( Image : TImage)');
+    RegisterMethod('Function PageCount : Integer');
+    RegisterProperty('FixedRows', 'Integer', iptr);
+    RegisterProperty('PopupMenu', 'TPopupMenu', iptrw);
+    RegisterProperty('SortOptions', 'TSortOptions', iptrw);
+    RegisterProperty('PrintOptions', 'TPrintOptions', iptrw);
+    RegisterProperty('HideRows', 'Boolean', iptrw);
+    RegisterProperty('Filtered', 'Boolean', iptrw);
+    RegisterProperty('MultiSelect', 'Boolean', iptrw);
+    RegisterProperty('UserSettings', 'TStringList', iptrw);
+    RegisterProperty('AlignmentHorz', 'TAlignment', iptrw);
+    RegisterProperty('AlignmentVert', 'TVertAlignment', iptrw);
+    RegisterProperty('BevelStyle', 'TCellBevelStyle', iptrw);
+    RegisterProperty('ProportionalScrollBars', 'Boolean', iptrw);
+    RegisterProperty('ExtendedKeys', 'Boolean', iptrw);
+    RegisterProperty('OnModified', 'TNotifyEvent', iptrw);
+    RegisterProperty('OnRowSelected', 'TNotifyEvent', iptrw);
+    RegisterProperty('OnRowInsert', 'TUpdateGridEvent', iptrw);
+    RegisterProperty('OnRowDelete', 'TUpdateGridEvent', iptrw);
+    RegisterProperty('OnColumnInsert', 'TUpdateGridEvent', iptrw);
+    RegisterProperty('OnColumnDelete', 'TUpdateGridEvent', iptrw);
+    RegisterProperty('OnColumnWidthsChanged', 'TNotifyEvent', iptrw);
+    RegisterProperty('OnRowHeightsChanged', 'TNotifyEvent', iptrw);
+    RegisterProperty('OnSizeChanged', 'TSizeChangedEvent', iptrw);
+    RegisterProperty('OnGetCellFormat', 'TFormatDrawCellEvent', iptrw);
+    RegisterProperty('OnSetFilter', 'TSetFilterEvent', iptrw);
+    RegisterProperty('OnSearch', 'TSearchEvent', iptrw);
+    RegisterProperty('OnEndUpdate', 'TNotifyEvent', iptrw);
+    RegisterProperty('OnGetSortStyle', 'TGetSortStyleEvent', iptrw);
+    RegisterProperty('OnCellValidate', 'TCellValidateEvent', iptrw);
+    RegisterProperty('OnSetChecked', 'TSetChecked', iptrw);
+    RegisterProperty('OnGetComboBox', 'TGetComboBox', iptrw);
+    RegisterProperty('OnSetComboBox', 'TSetComboBox', iptrw);
+    RegisterProperty('OnSetEllipsis', 'TSetEllipsis', iptrw);
+  end;
+end;
+
+
+
+/*  Table ACCOUNT  */
+CREATE TABLE ACCOUNT (
+  ACC_NO INTEGER NOT NULL,
+  CUST_NO INTEGER,
+  ACC_TYPE SMALLINT,
+  AMOUNT NUMERIC(15, 2),
+  LIMIT AMOUNT,
+  FEE AMOUNT,
+  MUTDATE TIMESTAMP
+)
+---
+
+/*  Table ACCTYPE  */
+CREATE TABLE ACCTYPE (
+  ACC_ID SMALLINT NOT NULL,
+  DESCRIPT VARCHAR(50),
+  MUTDATE TIMESTAMP
+)
+---
+
+/*  Table CUSTOMER  */
+CREATE TABLE CUSTOMER (
+  CUST_NO CUSTNO NOT NULL,
+  CUSTOMER VARCHAR(25) NOT NULL,
+  CONTACT_FIRST FIRSTNAME,
+  CONTACT_LAST LASTNAME,
+  PHONE_NO PHONENUMBER,
+  ADDRESS_LINE1 ADDRESSLINE,
+  ADDRESS_LINE2 ADDRESSLINE,
+  CITY VARCHAR(25),
+  COUNTRY VARCHAR(15),
+  POSTAL_CODE VARCHAR(12),
+  ON_HOLD CHAR(1) DEFAULT NULL,
+  MUTDATE TIMESTAMP
+)
+---
+
+/*  Table KINGS  */
+CREATE TABLE KINGS (
+  KINGS_ID INTEGER NOT NULL,
+  EMAIL VARCHAR(40),
+  FIRSTNAME VARCHAR(30),
+  LASTNAME VARCHAR(30),
+  MUTDATE VARCHAR(18)
+)
+---
+
+/*  Table TRANS  */
+CREATE TABLE TRANS (
+  TRANS_ID INTEGER NOT NULL,
+  ACC_NO INTEGER NOT NULL,
+  TRANSAMOUNT INTEGER,
+  OPENDATE TIMESTAMP,
+  OPENPERSON LASTNAME,
+  MUTDATE TIMESTAMP,
+  MUTPERSON LASTNAME
+)
+---
+
+/*  Table TRANS1  */
+CREATE TABLE TRANS1 (
+  TRANS_ID INTEGER NOT NULL,
+  ACC_NO INTEGER NOT NULL,
+  TRANSAMOUNT NUMERIC(15, 2),
+  OPENDATE TIMESTAMP,
+  OPENPERSON LASTNAME,
+  MUTDATE TIMESTAMP,
+  MUTPERSON LASTNAME
+)
+
+
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TIBDATABASE(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TCUSTOMCONNECTION', 'TIBDATABASE') do
+  with CL.AddClassN(CL.FindClass('TCUSTOMCONNECTION'),'TIBDATABASE') do begin
+    RegisterMethod('Constructor Create(AOwner: TComponent)');
+    RegisterMethod('Procedure Free');
+    RegisterMethod('Procedure ADDEVENTNOTIFIER( NOTIFIER : IIBEVENTNOTIFIER)');
+    RegisterMethod('Procedure REMOVEEVENTNOTIFIER( NOTIFIER : IIBEVENTNOTIFIER)');
+    RegisterMethod('Procedure APPLYUPDATES( const DATASETS : array of TDATASET)');
+    RegisterMethod('Procedure CLOSEDATASETS');
+    RegisterMethod('Procedure CHECKACTIVE');
+    RegisterMethod('Procedure CHECKINACTIVE');
+    RegisterMethod('Procedure CREATEDATABASE');
+    RegisterMethod('Procedure DROPDATABASE');
+    RegisterMethod('Procedure FORCECLOSE');
+    RegisterMethod('Procedure GETFIELDNAMES( const TABLENAME : STRING; LIST : TSTRINGS)');
+    RegisterMethod('Procedure GETTABLENAMES( LIST : TSTRINGS; SYSTEMTABLES : BOOLEAN)');
+    RegisterMethod('Function INDEXOFDBCONST( ST : STRING) : INTEGER');
+    RegisterMethod('Function TESTCONNECTED : BOOLEAN');
+    RegisterMethod('Procedure CHECKDATABASENAME');
+    RegisterMethod('Function CALL(ERRCODE:ISC_STATUS; RAISEERROR: BOOLEAN) : ISC_STATUS');
+    RegisterMethod('Function ADDTRANSACTION( TR : TIBTRANSACTION) : INTEGER');
+    RegisterMethod('Function FINDTRANSACTION( TR : TIBTRANSACTION) : INTEGER');
+    RegisterMethod('Function FINDDEFAULTTRANSACTION( ) : TIBTRANSACTION');
+    RegisterMethod('Procedure REMOVETRANSACTION( IDX : INTEGER)');
+    RegisterMethod('Procedure REMOVETRANSACTIONS');
+    RegisterMethod('Procedure SETHANDLE( VALUE : TISC_DB_HANDLE)');
+    RegisterMethod('procedure Open');
+    RegisterMethod('procedure Close');
+    RegisterProperty('Connected','BOOLEAN',iptrw);
+    RegisterProperty('HANDLE', 'TISC_DB_HANDLE', iptr);
+    RegisterProperty('ISREADONLY', 'BOOLEAN', iptr);
+    RegisterProperty('DBPARAMBYDPB', 'STRING INTEGER', iptrw);
+    RegisterProperty('SQLOBJECTCOUNT', 'INTEGER', iptr);
+    RegisterProperty('SQLOBJECTS', 'TIBBASE INTEGER', iptr);
+    RegisterProperty('HANDLEISSHARED', 'BOOLEAN', iptr);
+    RegisterProperty('TRANSACTIONCOUNT', 'INTEGER', iptr);
+    RegisterProperty('TRANSACTIONS', 'TIBTRANSACTION INTEGER', iptr);
+    RegisterProperty('INTERNALTRANSACTION', 'TIBTRANSACTION', iptr);
+    RegisterMethod('Function HAS_DEFAULT_VALUE( RELATION, FIELD : STRING) : BOOLEAN');
+    RegisterMethod('Function HAS_COMPUTED_BLR( RELATION, FIELD : STRING) : BOOLEAN');
+    RegisterMethod('Procedure FLUSHSCHEMA');
+    RegisterProperty('DATABASENAME', 'TIBFILENAME', iptrw);
+    RegisterProperty('PARAMS', 'TSTRINGS', iptrw);
+    RegisterProperty('DEFAULTTRANSACTION', 'TIBTRANSACTION', iptrw);
+    RegisterProperty('IDLETIMER', 'INTEGER', iptrw);
+    RegisterProperty('SQLDIALECT', 'INTEGER', iptrw);
+    RegisterProperty('DBSQLDIALECT', 'INTEGER', iptr);
+    RegisterProperty('TRACEFLAGS', 'TTRACEFLAGS', iptrw);
+    RegisterProperty('ALLOWSTREAMEDCONNECTED', 'BOOLEAN', iptrw);
+    RegisterProperty('ONLOGIN', 'TIBDATABASELOGINEVENT', iptrw);
+    RegisterProperty('ONIDLETIMER', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONDIALECTDOWNGRADEWARNING', 'TNOTIFYEVENT', iptrw);
+  end;
+end;
+
+  
+
+
+(* === compile-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TIBQuery(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TIBCustomDataSet', 'TIBQuery') do
+  with CL.AddClassN(CL.FindClass('TIBCustomDataSet'),'TIBQuery') do begin
+    RegisterMethod('Constructor Create(AOwner: TComponent)');
+    RegisterMethod('Procedure Free');
+    RegisterMethod('Procedure BatchInput( InputObject : TIBBatchInput)');
+    RegisterMethod('Procedure BatchOutput( OutputObject : TIBBatchOutput)');
+    RegisterMethod('Procedure ExecSQL');
+    RegisterMethod('Function ParamByName( const Value : string) : TParam');
+    RegisterMethod('Procedure Prepare');
+    RegisterMethod('Procedure UnPrepare');
+    RegisterProperty('Prepared', 'Boolean', iptrw);
+    RegisterProperty('ParamCount', 'Word', iptr);
+    RegisterProperty('StmtHandle', 'TISC_STMT_HANDLE', iptr);
+    RegisterProperty('Text', 'string', iptr);
+    RegisterProperty('RowsAffected', 'Integer', iptr);
+    RegisterProperty('GenerateParamNames', 'Boolean', iptrw);
+    RegisterProperty('DataSource', 'TDatasource', iptrw);
+    RegisterProperty('SQL', 'TStrings', iptrw);
+    RegisterProperty('Params', 'TParams', iptrw);
+  end;
+end;
+
+
+http://theroadtodelphi.wordpress.com/2010/12/06/generating-qr-codes-with-delphi/
+
+Using the Google Chart Tools / Image Charts (aka Chart API) you can easily generate QR codes, this kind of images are a special type of two-dimensional barcodes. They are also known as hardlinks or physical world hyperlinks.
+
+The QR Codes store up to 4,296 alphanumeric characters of arbitrary text. QR codes can be read by an optical device with the appropriate software. Such devices range from dedicated QR code readers to mobile phones.
+
+
+Using Delphi there are several ways you can generate QR codes - to encode any text (URL, phone number, simple message). QR Codes store up to 4,296 alphanumeric characters of arbitrary text.
+
+The 2D Barcode VCL components is a set of components designed for generating and printing barcode symbols in your Delphi or C++ Builder applications. Use the components set like any other VCL components.
+
+J4L Components includes the QR-code implementation featuring: auto, byte, alpha, numeric and kanji encoding.
+
+The Google Chart Tools (Chart API) also let you generate QR-code images using an HTTP POST or 
+
+All do you need to generate a QrCode is make a get request to this URI
+
+http://chart.apis.google.com/chart?chs=200x200&cht=qr&chld=M&chl=Go+Delphi+Go
+
+uses
+ PngImage,
+ HTTPApp,
+ WinInet;
+ 
+type
+TQrImage_ErrCorrLevel=(L,M,Q,H);
+ 
+const
+UrlGoogleQrCode='http://chart.apis.google.com/chart?chs=%dx%d&cht=qr&chld=%s&chl=%s';
+QrImgCorrStr   : array [TQrImage_ErrCorrLevel] of string=('L','M','Q','H');
+ 
+procedure WinInet_HttpGet(const Url: string;Stream:TStream);
+const
+BuffSize = 1024*1024;
+var
+  hInter   : HINTERNET;
+  UrlHandle: HINTERNET;
+  BytesRead: DWORD;
+  Buffer   : Pointer;
+begin
+  hInter := InternetOpen('', INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
+  if Assigned(hInter) then
+  begin
+    Stream.Seek(0,0);
+    GetMem(Buffer,BuffSize);
+    try
+        UrlHandle := InternetOpenUrl(hInter, PChar(Url), nil, 0, INTERNET_FLAG_RELOAD, 0);
+        if Assigned(UrlHandle) then
+        begin
+          repeat
+            InternetReadFile(UrlHandle, Buffer, BuffSize, BytesRead);
+            if BytesRead>0 then
+             Stream.WriteBuffer(Buffer^,BytesRead);
+          until BytesRead = 0;
+          InternetCloseHandle(UrlHandle);
+        end;
+    finally
+      FreeMem(Buffer);
+    end;
+    InternetCloseHandle(hInter);
+  end
+end;
+ 
+//this function return a Stream (PngImage inside) with a Qr code.
+procedure GetQrCode(Width,Height:Word;Correction_Level:TQrImage_ErrCorrLevel;const Data:string;StreamImage : TMemoryStream);
+Var
+ EncodedURL  : string;
+begin
+  EncodedURL:=Format(UrlGoogleQrCode,[Width,Height,QrImgCorrStr[Correction_Level],HTTPEncode(Data)]);
+  WinInet_HttpGet(EncodedURL,StreamImage);
+end;
+
+
+http://www.delphi-central.com/callback.aspx
+
+
+function CheckSumModulo10(const data:string):string;
+function ConvertMmToPixelsX(const Value:Double):Integer;
+function ConvertMmToPixelsY(const Value:Double):Integer;
+function ConvertInchToPixelsX(const Value:Double):Integer;
+function ConvertInchToPixelsY(const Value:Double):Integer;
+
+TTarArchive Usage
+-----------------
+- Choose a constructor
+- Make an instance of TTarArchive                  TA := TTarArchive.Create (Filename);
+- Scan through the archive                         TA.Reset;
+                                                   WHILE TA.FindNext (DirRec) DO BEGIN
+- Evaluate the DirRec for each file                  ListBox.Items.Add (DirRec.Name);
+- Read out the current file                          TA.ReadFile (DestFilename);
+  (You can ommit this if you want to
+  read in the directory only)                        END;
+- You're done                                      TA.Free;
+
+
+TTarWriter Usage
+----------------
+- Choose a constructor
+- Make an instance of TTarWriter                   TW := TTarWriter.Create ('my.tar');
+- Add a file to the tar archive                    TW.AddFile ('foobar.txt');
+- Add a string as a file                           TW.AddString (SL.Text, 'joe.txt', Now);
+- Destroy TarWriter instance                       TW.Free;
+- Now your tar file is ready.
+
+
+
+The last slash might be optional. Right?
+
+How about something like this:
+
+$url =~ m|([^/]+)/?$|;
+my $end_of_url = $1;
+
+The $ on the end anchors the regular expression to the end of the string. The [^/] means anything that's not a slash and the + after means I want one or more things that are not slashes. Notice that this is in a capture group which are marked with parentheses.
+
+I end the regular expression with /? which means that there may or may not be a slash on the very end of the string. I've put my regular expression between m| and |, so I can use forward slashes without having to constantly escape them.
+
+The last part of the URL is now in $1 and I can set my own scalar variable to save this Result.
+share|improve this answer
+
+   { RegisterMethod('Constructor Create(AOwner: TComponent)');
+    RegisterConstructor(@TJvMail.Create, 'Create');
+     RegisterMethod('Procedure Free');
+    RegisterMethod(@TJvMail.Destroy, 'Free');}
+
+
+  
+
+  
+----app_template_loaded_code----

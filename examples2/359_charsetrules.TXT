@@ -1,0 +1,848 @@
+PROGRAM Funcplot_Charset_Prototyp;    //still in progress
+
+// shows UNION DIFFERENCE and INTERSECTION of SETS
+//http://regexpstudio.com/tregexpr/help/article_mrdecorator.html
+//First contribution 2004 and then EKON 16 2012! ex. 310 of maXbox, loc's= 274
+//selftest functions of cutils alias cfundamentutils
+
+
+var i: integer;
+  chset, cset1, cset2: Charset;
+  aFrm: TForm;
+  mT: TTimer;
+  tB: TTrackBar;
+  radgrp1: TRadioGroup;
+  statBar1: TStatusBar;
+  image1: TImage;
+  A, B, Y : Float;    { Function parameters }
+  chstr: string;
+  abitm1, abitm2: TBitmap;
+  fxmx: TJvPaintFX;
+  getstproc: TGetStrProc;
+
+
+//**************************Event Handlers*******************************
+procedure TFrm1_trackSpeedChange(Sender: TObject);
+begin
+  //mt.Interval:= 1000 div tB.Position;
+  writeln(intToStr(1000 div tB.Position));
+end;
+
+procedure TFrm1_closeForm(Sender: TObject; var Action: TCloseAction);
+begin
+  action:= caFree;
+  afrm:= NIL;
+end;
+
+procedure TFrm1_CloseClick(Sender: TObject);
+begin
+  afrm.Close;
+end;
+
+procedure TFrm1_PauseClick(Sender: TObject);
+begin
+  {if mT <> NIL then
+    mt.enabled:= not mt.enabled; }
+end;
+
+
+function Func(X : Float): Float;
+{ Function to be plotted }
+begin
+  case RadGrp1.ItemIndex of
+    0 : result:= Sin(X);
+    1 : result:= Log(X);
+    2 : result:= Tan(X);
+    //Exp10(X);
+    (*3 : result:= Power(X, Y);
+    4 : Func := Log(X);
+    5 : Func := Log2(X);
+    6 : Func := Log10(X);
+    7 : Func := Sin(X);
+    8 : Func := Cos(X);
+    9 : Func := Tan(X);
+   10 : Func := ArcSin(X);
+   11 : Func := ArcCos(X);
+   12 : Func := ArcTan(X);
+   13 : Func := Sinh(X);
+   14 : Func := Cosh(X);
+   15 : Func := Tanh(X);
+   16 : Func := ArcSinh(X);
+   17 : Func := ArcCosh(X);
+   18 : Func := ArcTanh(X);
+   19 : Func := Gamma(X);
+   20 : Func := IGamma(A, X);
+   21 : Func := Beta(X, Y);
+   22 : Func := IBeta(A, B, X);
+   23 : Func := Erf(X);
+   24 : Func := LambertW(X, UBranch, False);*) 
+  else
+    result:= 0.0
+  end;
+end;
+
+
+function GetASCIILine2: string;
+var i: integer;
+begin
+  for i:= 1 to 255 do
+    result:= result +Chr(i)
+end;  
+
+
+//**************************Form Builder*******************************
+procedure loadForm;
+begin
+  aFrm:= TForm.Create(self);
+  //mT:= TTimer.Create(self);
+  //mt.onTimer:= @TFrm1_timerRedrawTimer;
+  //mt.interval:= MILLISECONDS;
+  //mt.free;  in on close            
+  with aFrm do begin
+    Caption:= '********** Form Func Plot Template ***********';  
+    height:= 630;
+    width:= 700;
+    Position:= poScreenCenter;
+    //Color:= clBlack;
+    onClose:= @TFrm1_closeForm;
+    //onPaint:= @TFrm1_FormPaint;
+    Canvas.Pen.color:= clBlue;
+    Canvas.Pen.Width:= 15;
+    //canvas.brush.bitmap:= getBitmapObject(Exepath+'examples\images\bmp47.bmp');
+    //Canvas.FillRect(Rect(600,300,100,100))
+    Show;
+    canvas.brush.bitmap:= getBitmapObject(Exepath+'examples\images\bmp47.bmp');
+    Canvas.FillRect(Rect(600,400,100,20));
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(310,500,150,55);
+    caption:= 'Pause';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPAUSE'); 
+    mXButton(05,05,width, height,12,12,handle);
+    //event handler
+    onClick:= @TFrm1_PauseClick;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(480, 500,150, 55);
+    caption:= 'Close';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP'); 
+    mXButton(05,05,width, height,12,12,handle);
+    onClick:= @TFrm1_CloseClick;
+  end;
+  tB:= TTrackBar.create(aFrm);
+  with tB do begin
+    parent:= aFrm;
+    setBounds(40,510,230,40);
+    Min:= 10; Max:= 100
+    Frequency:= 10
+    Position:= 1000 div 50;
+    linesize:= 4;
+    ThumbLength:= 30;
+    SetFocus;
+    OnChange:= @TFrm1_trackSpeedChange;
+  end;
+   radgrp1:= TRadioGroup.Create(aFrm);
+     with radgrp1 do begin
+     parent:= afrm;
+     top:= 400;
+     left:= 50;
+     items.add('SIN');
+     items.add('LOG');
+     items.add('TAN');
+     ItemIndex:= 1; 
+     //writeln('classname of radio group '+classname);
+     //writeln(Items.Strings[ItemIndex]); 
+   end;
+   (*image1:= TImage.Create(aFrm);
+     with image1 do begin
+     parent:= afrm;
+     SetBounds(30,80,150,300)
+     //writeln('classname of radio group '+classname);
+     //writeln(Items.Strings[ItemIndex]); 
+   end; *)
+
+  statbar1:= TStatusBar.Create(aFrm);
+  with statbar1 do begin
+    parent:= aFrm;
+    showhint:= true;
+    hint:= 'this is a LED BoX';
+    Panels.add;
+      panels.items[0].width:= 200;
+      panels.items[0].text:= '200';
+    Panels.add;
+      panels.items[1].width:= 150;
+      panels.items[1].text:= '150';
+  end;
+end;  
+
+
+BEGIN  //Main
+//<Executable statements>
+  LoadForm;
+  //TForm1_Button2Click(self);
+
+  ShowMessage(ReplaceRegExpr('World','Hello, Charset Set TRex World!', 'Earth',true));
+  
+  SelftestPEM;
+  SelfTestCFundamentUtils;
+  //write(getascii)
+   writeln(GetASCIILine);
+   cset1:= Strtocharset(getAscIILine);
+   writeln('ASCII line Signs: '+inttostr(ccharCount(cset1)));
+ 
+  //interfacetoStr(IIncomeInt)
+  //GetWordGridFormatValues
+  
+  //chset:= ['M','A','X','B','O','X']
+  //'abcdefghijklmnopqrstuvwxyz0123456789+/'];
+  writeln(b64_mimebase64);
+  cset1:= Strtocharset(b64_mimebase64);
+  writeln(CharSetToStr(cset1));
+  writeln(intToStr(cCharCount(chset)));
+  
+  cset1:= ['M','A','X','B','O','X'];
+  
+  chstr:= CharSetToStr(cset1);
+  writeln(chstr[2]);
+  
+  cset1:= ['M','A','X','B','O','X'];
+  cset2:= ['M','A','X','S','I','X'];
+  
+  Union(cset1, cset2); 
+   //CharsetToIdent(cset1)
+    //FillCharSet(cset2);
+   writeln(CharSetToStr(cset1));
+   writeln(inttostr(ccharCount(cset1))); 
+                 
+  Difference(cset1,cset2); //overload;
+   writeln(CharSetToStr(cset1));
+   writeln(inttostr(ccharCount(cset1))); 
+ 
+  Intersection(cset1,cset2); //overload;
+    writeln(CharSetToStr(cset2));
+   writeln(inttostr(ccharCount(cset2))); 
+ 
+  cset1:= ['M','A','X','B','O','X'];
+  cset2:= ['M','A','X','S','I','X'];
+   Union(cset1, cset2); 
+   //CharsetToIdent(cset1)
+    //FillCharSet(cset2);
+   writeln(CharSetToStr(cset1));
+   writeln(inttostr(ccharCount(cset1))); 
+
+  cset1:= ['M','A','X','B','O','X'];
+  cset2:= ['M','A','X','S','I','X'];
+   Difference(cset1,cset2); //overload;
+    writeln(CharSetToStr(cset1));
+   writeln(inttostr(ccharCount(cset1))); 
+
+  cset1:= ['M','A','X','B','O','X'];
+  cset2:= ['M','A','X','S','I','X'];
+  Intersection(cset1,cset2); //overload;
+    writeln(CharSetToStr(cset1));
+   writeln(inttostr(ccharCount(cset1))); 
+   
+   abitm1:= TBitmap.create;
+   abitm2:= TBitmap.create;
+   with TJvPaintFX.create(self) do begin
+     abitm1.width:= 300;
+     abitm1.height:= 300;
+     abitm1.loadFromfile(Exepath+'examples/citymax.bmp');
+     //turn(abitm1, abitm2)
+     //mandelbrot(image1.picture.bitmap,100);
+     afrm.canvas.brush.bitmap:= abitm1;
+     //mandelbrot(afrm.canvas.brush.bitmap,10);
+     mandelbrot(abitm1,35);
+     MaskMandelbrot(abitm1,15);
+     //KeepRed(abitm1,40);
+     //KeepGreen(abitm1,5);
+     //KeepBlue(abitm1,10);
+     Wave(abitm1,15, 15, 2);
+     afrm.show;
+     aFrm.Canvas.FillRect(Rect(650,300,120,60));
+     //mandelbrot(afrm.canvas.brush.bitmap,10);
+     Free;
+   end;
+    //fxmx.turn(abitm1, abitm2); 
+   abitm1.Free;
+   abitm2.Free;
+//<Definitions>  
+END. 
+
+
+
+unit Main;
+
+interface
+
+uses
+  SysUtils, WinTypes, WinProcs, Messages, Classes, Graphics, Controls,
+  Forms, Dialogs, StdCtrls, ExtCtrls, Spin;
+
+type
+  TForm1 = class(TForm)
+    RadioGroup1: TRadioGroup;
+    GroupBox1: TGroupBox;
+    Label1: TLabel;
+    Edit1: TEdit;
+    Label2: TLabel;
+    Edit2: TEdit;
+    Label3: TLabel;
+    Edit3: TEdit;
+    GroupBox2: TGroupBox;
+    Label4: TLabel;
+    Label5: TLabel;
+    Label6: TLabel;
+    Edit4: TEdit;
+    Edit5: TEdit;
+    Edit6: TEdit;
+    ColorDialog1: TColorDialog;
+    GroupBox4: TGroupBox;
+    Label9: TLabel;
+    Edit7: TEdit;
+    Label10: TLabel;
+    Edit8: TEdit;
+    Label11: TLabel;
+    Edit9: TEdit;
+    GroupBox3: TGroupBox;
+    Shape1: TShape;
+    Label7: TLabel;
+    Label8: TLabel;
+    SpinEdit1: TSpinEdit;
+    SpinEdit2: TSpinEdit;
+    Button1: TButton;
+    Button2: TButton;
+    Button3: TButton;
+    Image1: TImage;
+    RadioGroup2: TRadioGroup;
+    procedure Button1Click(Sender: TObject);
+    procedure RadioGroup1Click(Sender: TObject);
+    procedure Button3Click(Sender: TObject);
+    procedure RadioGroup2Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+//{$R *.DFM}
+
+uses
+  utypes, umath, utrigo, uhyper, ugamma, uigamma,
+  ubeta, uibeta, ulambert, uwinplot;
+
+{$IFDEF _16BIT}const{$ELSE}var{$ENDIF}
+  UBranch : Boolean = True;  { Use upper branch of Lambert's function }
+
+var
+  A, B, Y : Float;    { Function parameters }
+
+function Func(X : Float) : Float;
+{ Function to be plotted }
+begin
+  case Form1.RadioGroup1.ItemIndex of
+    0 : Func := Expo(X);
+    1 : Func := Exp2(X);
+    2 : Func := Exp10(X);
+    3 : Func := Power(X, Y);
+    4 : Func := Log(X);
+    5 : Func := Log2(X);
+    6 : Func := Log10(X);
+    7 : Func := Sin(X);
+    8 : Func := Cos(X);
+    9 : Func := Tan(X);
+   10 : Func := ArcSin(X);
+   11 : Func := ArcCos(X);
+   12 : Func := ArcTan(X);
+   13 : Func := Sinh(X);
+   14 : Func := Cosh(X);
+   15 : Func := Tanh(X);
+   16 : Func := ArcSinh(X);
+   17 : Func := ArcCosh(X);
+   18 : Func := ArcTanh(X);
+   19 : Func := Gamma(X);
+   20 : Func := IGamma(A, X);
+   21 : Func := Beta(X, Y);
+   22 : Func := IBeta(A, B, X);
+   23 : Func := Erf(X);
+   24 : Func := LambertW(X, UBranch, False);
+  else
+    Func := 0.0
+  end;
+end;
+
+procedure TForm1.RadioGroup1Click(Sender: TObject);
+begin
+  with Form1 do
+    begin
+      Edit7.Visible := (RadioGroup1.ItemIndex in [3, 21]);
+      Edit8.Visible := (RadioGroup1.ItemIndex in [20, 22]);
+      Edit9.Visible := (RadioGroup1.ItemIndex = 22);
+
+      Label9.Visible  := Edit7.Visible;
+      Label10.Visible := Edit8.Visible;
+      Label11.Visible := Edit9.Visible;
+
+      GroupBox4.Visible := (RadioGroup1.ItemIndex in [3, 20, 21, 22]);
+
+      RadioGroup2.Visible := (RadioGroup1.ItemIndex = 24);
+    end;
+end;
+
+procedure TForm1.RadioGroup2Click(Sender: TObject);
+begin
+  UBranch := (RadioGroup2.ItemIndex = 0);
+end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  if ColorDialog1.Execute then
+    Shape1.Brush.Color := ColorDialog1.Color;
+end;
+
+procedure TForm1.Button2Click(Sender: TObject);
+var
+  X1, X2, Y1, Y2, D, Temp : Float;
+  Npts, Width             : Integer;
+  Color                   : TColor;
+begin
+  if not InitGraphics(Image1.Width, Image1.Height) then Exit;
+
+  SetWindow(Image1.Canvas, 10, 95, 10, 90, True);
+
+  X1 := StrToFloat(Edit1.Text);
+  X2 := StrToFloat(Edit2.Text);
+  D  := StrToFloat(Edit3.Text);
+
+  if (X1 < X2) and (D > 0.0) and (D <= X2 - X1) then
+    SetOxScale(LinScale, X1, X2, D);
+
+  Y1 := StrToFloat(Edit4.Text);
+  Y2 := StrToFloat(Edit5.Text);
+  D  := StrToFloat(Edit6.Text);
+
+  if (Y1 < Y2) and (D > 0.0) and (D <= Y2 - Y1) then
+    SetOyScale(LinScale, Y1, Y2, D);
+
+  PlotOxAxis(Image1.Canvas);
+  PlotOyAxis(Image1.Canvas);
+  PlotGrid(Image1.Canvas, BothGrid);
+
+  Width := SpinEdit1.Value;
+  Npts  := SpinEdit2.Value;
+  Color := Shape1.Brush.Color;
+
+  SetLineParam(1, psSolid, Width, Color);
+
+  Temp := StrToFloat(Edit7.Text); if Temp > 0.0 then Y := Temp;
+  Temp := StrToFloat(Edit8.Text); if Temp > 0.0 then A := Temp;
+  Temp := StrToFloat(Edit9.Text); if Temp > 0.0 then B := Temp;
+
+  PlotFunc(Image1.Canvas, Func, X1, X2, Npts, 1);
+end;
+
+procedure TForm1.Button3Click(Sender: TObject);
+begin
+  with Image1 do
+    Canvas.FillRect(Rect(0, 0, Width, Height));
+end;
+
+end.
+
+
+--------------------------------------------------------------}
+
+Note, that You can easely extract any part of URL (see AFlags parameter).
+
+
+Fundamental Conclusion
+
+"Free Your mind" ((c) The Matrix ;)) and You'll find many other tasks there regular expressions can save You incredible part of stupid coding work !
+
+
+//    MinI(const A, B: Integer): Integer;   {$IFDEF UseInline}inline;{$ENDIF}
+//function  MaxI(const A, B: Integer): Integer;   {$IFDEF UseInline}inline;{$ENDIF}
+//function  MinC(const A, B: Cardinal): Cardinal; {$IFDEF UseInline}inline;{$ENDIF}
+//function  MaxC(const A, B: Cardinal): Cardinal; {$IFDEF UseInline}inline;{$ENDIF}
+
+{ Clip returns Value if in Low..High range, otherwise Low or High              }
+//function  SumClipI(const A, I: Integer): Integer;
+//function  SumClipC(const A: Cardinal; const I: Integer): Cardinal;
+
+{ InXXXRange returns True if A in range of type XXX                            }
+  //InByteRange(const A: Int64): Boolean;     {$IFDEF UseInline}inline;{$ENDIF}
+//function  InWordRange(const A: Int64): Boolean;     {$IFDEF UseInline}inline;{$ENDIF}
+//function  InLongWordRange(const A: Int64): Boolean; {$IFDEF UseInline}inline;{$ENDIF}
+//function  InShortIntRange(const A: Int64): Boolean; {$IFDEF UseInline}inline;{$ENDIF}
+//function  InSmallIntRange(const A: Int64): Boolean; {$IFDEF UseInline}inline;{$ENDIF}
+//function  InLongIntRange(const A: Int64): Boolean;  {$IFDEF UseInline}inline;{$ENDIF}
+
+
+
+{                                                                              }
+{ Boolean types                                                                }
+{                                                                              }
+{   Boolean    -        -                                                      }
+{   ByteBool   Bool8    8 bits                                                 }
+{   WordBool   Bool16   16 bits                                                }
+{   LongBool   Bool32   32 bits                                                }
+{                                                                              }
+{                                                                              }
+{ Comparison                                                                   }
+{                                                                              }
+
+{                                                                              }
+{ Real types                                                                   }
+{                                                                              }
+{   Floating point                                                             }
+{     Single    32 bits  7-8 significant digits                                }
+{     Double    64 bits  15-16 significant digits                              }
+{     Extended  80 bits  19-20 significant digits (mapped to Double in .NET)   }
+{                                                                              }
+{   Fixed point                                                                }
+{     Currency  64 bits  19-20 significant digits, 4 after the decimal point.  }
+{                                                                              }
+
+{ Min returns smallest of A and B                                              }
+{ Max returns greatest of A and B                                              }
+{ Clip returns Value if in Low..High range, otherwise Low or High              }
+function  MinF(const A, B: Float): Float; {$IFDEF UseInline}inline;{$ENDIF}
+function  MaxF(const A, B: Float): Float; {$IFDEF UseInline}inline;{$ENDIF}
+function  ClipF(const Value: Float; const Low, High: Float): Float;
+
+{ InXXXRange returns True if A in range of type XXX                            }
+function  InSingleRange(const A: Float): Boolean; {$IFDEF UseInline}inline;{$ENDIF}
+function  InDoubleRange(const A: Float): Boolean; {$IFDEF UseInline}inline;{$ENDIF}
+{$IFNDEF CLR}
+function  InCurrencyRange(const A: Float): Boolean; overload;
+function  InCurrencyRange(const A: Int64): Boolean; overload;
+{$ENDIF}
+
+{ FloatExponent returns the exponent component of an Extended value            }
+function  FloatExponentBase2(const A: Extended; var Exponent: Integer): Boolean;
+function  FloatExponentBase10(const A: Extended; var Exponent: Integer): Boolean;
+
+{ FloatIsInfinity is True if A is a positive or negative infinity.             }
+{ FloatIsNaN is True if A is Not-a-Number.                                     }  
+  //FloatIsInfinity(const A: Extended): Boolean;
+   //FloatIsNaN(const A: Extended): Boolean;
+
+
+
+  SingleCompareDelta   = 1.0E-34;
+  DoubleCompareDelta   = 1.0E-280;
+  {$IFDEF CLR}
+  ExtendedCompareDelta = DoubleCompareDelta;
+  {$ELSE}
+  ExtendedCompareDelta = 1.0E-4400;
+  {$ENDIF}   
+
+  // Default CompareDelta is set to SingleCompareDelta. This allows any type
+  // of floating-point value to be compared with any other.
+//  DefaultCompareDelta = SingleCompareDelta;
+
+
+
+{                                                                              }
+{ Bit functions                                                                }
+{                                                                              }
+  //ClearBit(const Value, BitIndex: LongWord): LongWord;
+  //SetBit(const Value, BitIndex: LongWord): LongWord;
+  //IsBitSet(const Value, BitIndex: LongWord): Boolean;
+  //ToggleBit(const Value, BitIndex: LongWord): LongWord;
+  //IsHighBitSet(const Value: LongWord): Boolean;
+
+  SetBitScanForward(const Value: LongWord): Integer; overload;
+  SetBitScanForward(const Value, BitIndex: LongWord): Integer; overload;
+  SetBitScanReverse(const Value: LongWord): Integer; overload;
+  SetBitScanReverse(const Value, BitIndex: LongWord): Integer; overload;
+  ClearBitScanForward(const Value: LongWord): Integer; overload;
+  ClearBitScanForward(const Value, BitIndex: LongWord): Integer; overload;
+  ClearBitScanReverse(const Value: LongWord): Integer; overload;
+  ClearBitScanReverse(const Value, BitIndex: LongWord): Integer; overload;
+
+  ReverseBits(const Value: LongWord): LongWord; overload;
+  ReverseBits(const Value: LongWord; const BitCount: Integer): LongWord; overload;
+  SwapEndian(const Value: LongWord): LongWord;
+
+  RotateLeftBits16(const Value: Word; const Bits: Byte): Word;
+  RotateLeftBits32(const Value: LongWord; const Bits: Byte): LongWord;
+  RotateRightBits16(const Value: Word; const Bits: Byte): Word;
+  RotateRightBits32(const Value: LongWord; const Bits: Byte): LongWord;
+
+  BitCount(const Value: LongWord): LongWord;
+  IsPowerOfTwo(const Value: LongWord): Boolean;
+
+  LowBitMask(const HighBitIndex: LongWord): LongWord;
+  HighBitMask(const LowBitIndex: LongWord): LongWord;
+  RangeBitMask(const LowBitIndex, HighBitIndex: LongWord): LongWord;
+
+  SetBitRange(const Value: LongWord;
+          const LowBitIndex, HighBitIndex: LongWord): LongWord;
+  ClearBitRange(const Value: LongWord;
+          const LowBitIndex, HighBitIndex: LongWord): LongWord;
+  ToggleBitRange(const Value: LongWord;
+          const LowBitIndex, HighBitIndex: LongWord): LongWord;
+  IsBitRangeSet(const Value: LongWord;
+          const LowBitIndex, HighBitIndex: LongWord): Boolean;
+  IsBitRangeClear(const Value: LongWord;
+          const LowBitIndex, HighBitIndex: LongWord): Boolean;   
+
+
+ //compare
+
+ //csgn
+ //ComplementChar(var C: CharSet; const Ch: AnsiChar);
+ //ClearCharSet(var C: CharSet);
+ //FillCharSet(var C: CharSet);
+ //ComplementCharSet(var C: CharSet);
+ //AssignCharSet(var DestSet: CharSet; const SourceSet: CharSet); overload;
+ //Union(var DestSet: CharSet; const SourceSet: CharSet); overload;
+ //Difference(var DestSet: CharSet; const SourceSet: CharSet); overload;
+ //Intersection(var DestSet: CharSet; const SourceSet: CharSet); overload;
+ //XORCharSet(var DestSet: CharSet; const SourceSet: CharSet);
+  //IsSubSet(const A, B: CharSet): Boolean;
+  //IsEqual(const A, B: CharSet): Boolean; overload;
+  //IsEmpty(const C: CharSet): Boolean;
+  //IsComplete(const C: CharSet): Boolean;
+  //CharCount(const C: CharSet): Integer; overload;
+ //ConvertCaseInsensitive(var C: CharSet);
+  //CaseInsensitiveCharSet(const C: CharSet): CharSet;
+
+{                                                                              }
+{ Range functions                                                              }
+{                                                                              }
+{   RangeLength      Length of a range                                         }
+{   RangeAdjacent    True if ranges are adjacent                               }
+{   RangeOverlap     True if ranges overlap                                    }
+{   RangeHasElement  True if element is in range                               }
+{                                                                              }
+function  IntRangeLength(const Low, High: Integer): Int64;
+function  IntRangeAdjacent(const Low1, High1, Low2, High2: Integer): Boolean;
+function  IntRangeOverlap(const Low1, High1, Low2, High2: Integer): Boolean;
+function  IntRangeHasElement(const Low, High, Element: Integer): Boolean;
+
+function  IntRangeIncludeElement(var Low, High: Integer;
+          const Element: Integer): Boolean;
+function  IntRangeIncludeElementRange(var Low, High: Integer;
+          const LowElement, HighElement: Integer): Boolean;
+
+function  CardRangeLength(const Low, High: Cardinal): Int64;
+function  CardRangeAdjacent(const Low1, High1, Low2, High2: Cardinal): Boolean;
+function  CardRangeOverlap(const Low1, High1, Low2, High2: Cardinal): Boolean;
+function  CardRangeHasElement(const Low, High, Element: Cardinal): Boolean;
+
+function  CardRangeIncludeElement(var Low, High: Cardinal;
+          const Element: Cardinal): Boolean;
+function  CardRangeIncludeElementRange(var Low, High: Cardinal;
+          const LowElement, HighElement: Cardinal): Boolean;
+
+
+{                                                                              }
+{ Direct comparison                                                            }
+{                                                                              }
+{   Compare(I1, I2) returns crLess if I1 < I2, crEqual if I1 = I2 or           }
+{   crGreater if I1 > I2.                                                      }
+{                                                                              }
+function  Compare(const I1, I2: Boolean): TCompareResult; overload;
+function  Compare(const I1, I2: Integer): TCompareResult; overload;
+function  Compare(const I1, I2: Int64): TCompareResult; overload;
+function  Compare(const I1, I2: Extended): TCompareResult; overload;
+function  CompareA(const I1, I2: AnsiString): TCompareResult;
+function  CompareW(const I1, I2: WideString): TCompareResult;
+function  CompareU(const I1, I2: UnicodeString): TCompareResult;
+
+function  Sgn(const A: LongInt): Integer; overload;
+function  Sgn(const A: Int64): Integer; overload;
+function  Sgn(const A: Extended): Integer; overload;
+
+
+
+{                                                                              }
+{ Convert result                                                               }
+{                                                                              }
+
+{                                                                              }
+{ Integer-String conversions                                                   }
+{                                                                              }
+
+//widechar
+ AnsiCharToInt(const A: AnsiChar): Integer;                            {$IFDEF UseInline}inline;{$ENDIF}
+  WideCharToInt(const A: WideChar): Integer;                            {$IFDEF UseInline}inline;{$ENDIF}
+  CharToInt(const A: Char): Integer;                                    {$IFDEF UseInline}inline;{$ENDIF}
+
+  IntToAnsiChar(const A: Integer): AnsiChar;                            {$IFDEF UseInline}inline;{$ENDIF}
+  IntToWideChar(const A: Integer): WideChar;                            {$IFDEF UseInline}inline;{$ENDIF}
+  IntToChar(const A: Integer): Char;                                    {$IFDEF UseInline}inline;{$ENDIF}
+
+  IsHexAnsiChar(const Ch: AnsiChar): Boolean;
+  IsHexWideChar(const Ch: WideChar): Boolean;
+  IsHexChar(const Ch: Char): Boolean;                                   {$IFDEF UseInline}inline;{$ENDIF}
+
+  HexAnsiCharToInt(const A: AnsiChar): Integer;
+  HexWideCharToInt(const A: WideChar): Integer;
+  HexCharToInt(const A: Char): Integer;                                 {$IFDEF UseInline}inline;{$ENDIF}
+
+  IntToUpperHexAnsiChar(const A: Integer): AnsiChar;
+  IntToUpperHexWideChar(const A: Integer): WideChar;
+  IntToUpperHexChar(const A: Integer): Char;                            {$IFDEF UseInline}inline;{$ENDIF}
+
+  IntToLowerHexAnsiChar(const A: Integer): AnsiChar;
+  IntToLowerHexWideChar(const A: Integer): WideChar;
+  IntToLowerHexChar(const A: Integer): Char;                            {$IFDEF UseInline}inline;{$ENDIF}
+
+  IntToStringA(const A: Int64): AnsiString;
+  IntToStringW(const A: Int64): WideString;
+  IntToStringU(const A: Int64): UnicodeString;
+  IntToString(const A: Int64): String;
+
+  UIntToStringA(const A: NativeUInt): AnsiString;
+  UIntToStringW(const A: NativeUInt): WideString;
+  UIntToStringU(const A: NativeUInt): UnicodeString;
+  UIntToString(const A: NativeUInt): String;
+
+  LongWordToStrA(const A: LongWord; const Digits: Integer = 0): AnsiString;
+  LongWordToStrW(const A: LongWord; const Digits: Integer = 0): WideString;
+  LongWordToStrU(const A: LongWord; const Digits: Integer = 0): UnicodeString;
+  LongWordToStr(const A: LongWord; const Digits: Integer = 0): String;
+
+  LongWordToHexA(const A: LongWord; const Digits: Integer = 0; const UpperCase: Boolean = True): AnsiString;
+  LongWordToHexW(const A: LongWord; const Digits: Integer = 0; const UpperCase: Boolean = True): WideString;
+  LongWordToHexU(const A: LongWord; const Digits: Integer = 0; const UpperCase: Boolean = True): UnicodeString;
+  LongWordToHex(const A: LongWord; const Digits: Integer = 0; const UpperCase: Boolean = True): String;
+
+  LongWordToOctA(const A: LongWord; const Digits: Integer = 0): AnsiString;
+  LongWordToOctW(const A: LongWord; const Digits: Integer = 0): WideString;
+  LongWordToOctU(const A: LongWord; const Digits: Integer = 0): UnicodeString;
+  LongWordToOct(const A: LongWord; const Digits: Integer = 0): String;
+
+  LongWordToBinA(const A: LongWord; const Digits: Integer = 0): AnsiString;
+  LongWordToBinW(const A: LongWord; const Digits: Integer = 0): WideString;
+  LongWordToBinU(const A: LongWord; const Digits: Integer = 0): UnicodeString;
+  LongWordToBin(const A: LongWord; const Digits: Integer = 0): String;
+
+  TryStringToInt64PA(const BufP: Pointer; const BufLen: Integer; out Value: Int64; out StrLen: Integer): TConvertResult;
+  TryStringToInt64PW(const BufP: Pointer; const BufLen: Integer; out Value: Int64; out StrLen: Integer): TConvertResult;
+  TryStringToInt64P(const BufP: Pointer; const BufLen: Integer; out Value: Int64; out StrLen: Integer): TConvertResult;
+
+  TryStringToInt64A(const S: AnsiString; out A: Int64): Boolean;
+  TryStringToInt64W(const S: WideString; out A: Int64): Boolean;
+  TryStringToInt64U(const S: UnicodeString; out A: Int64): Boolean;
+  TryStringToInt64(const S: String; out A: Int64): Boolean;
+
+  StringToInt64DefA(const S: AnsiString; const Default: Int64): Int64;
+  StringToInt64DefW(const S: WideString; const Default: Int64): Int64;
+  StringToInt64DefU(const S: UnicodeString; const Default: Int64): Int64;
+  StringToInt64Def(const S: String; const Default: Int64): Int64;
+
+  StringToInt64A(const S: AnsiString): Int64;
+  StringToInt64W(const S: WideString): Int64;
+  StringToInt64U(const S: UnicodeString): Int64;
+  StringToInt64(const S: String): Int64;
+
+  TryStringToIntA(const S: AnsiString; out A: Integer): Boolean;
+  TryStringToIntW(const S: WideString; out A: Integer): Boolean;
+  TryStringToIntU(const S: UnicodeString; out A: Integer): Boolean;
+  TryStringToInt(const S: String; out A: Integer): Boolean;
+
+  StringToIntDefA(const S: AnsiString; const Default: Integer): Integer;
+  StringToIntDefW(const S: WideString; const Default: Integer): Integer;
+  StringToIntDefU(const S: UnicodeString; const Default: Integer): Integer;
+  StringToIntDef(const S: String; const Default: Integer): Integer;
+
+  StringToIntA(const S: AnsiString): Integer;
+  StringToIntW(const S: WideString): Integer;
+  StringToIntU(const S: UnicodeString): Integer;
+  StringToInt(const S: String): Integer;
+
+  TryStringToLongWordA(const S: AnsiString; out A: LongWord): Boolean;
+  TryStringToLongWordW(const S: WideString; out A: LongWord): Boolean;
+  TryStringToLongWordU(const S: UnicodeString; out A: LongWord): Boolean;
+  TryStringToLongWord(const S: String; out A: LongWord): Boolean;
+
+  StringToLongWordA(const S: AnsiString): LongWord;
+  StringToLongWordW(const S: WideString): LongWord;
+  StringToLongWordU(const S: UnicodeString): LongWord;
+  StringToLongWord(const S: String): LongWord;
+
+  HexToUIntA(const S: AnsiString): NativeUInt;
+  HexToUIntW(const S: WideString): NativeUInt;
+  HexToUIntU(const S: UnicodeString): NativeUInt;
+  HexToUInt(const S: String): NativeUInt;
+
+  TryHexToLongWordA(const S: AnsiString; out A: LongWord): Boolean;
+  TryHexToLongWordW(const S: WideString; out A: LongWord): Boolean;
+  TryHexToLongWordU(const S: UnicodeString; out A: LongWord): Boolean;
+  TryHexToLongWord(const S: String; out A: LongWord): Boolean;
+
+  HexToLongWordA(const S: AnsiString): LongWord;
+  HexToLongWordW(const S: WideString): LongWord;
+  HexToLongWordU(const S: UnicodeString): LongWord;
+  HexToLongWord(const S: String): LongWord;
+
+  TryOctToLongWordA(const S: AnsiString; out A: LongWord): Boolean;
+  TryOctToLongWordW(const S: WideString; out A: LongWord): Boolean;
+  TryOctToLongWordU(const S: UnicodeString; out A: LongWord): Boolean;
+  TryOctToLongWord(const S: String; out A: LongWord): Boolean;
+
+  OctToLongWordA(const S: AnsiString): LongWord;
+  OctToLongWordW(const S: WideString): LongWord;
+  OctToLongWordU(const S: UnicodeString): LongWord;
+  OctToLongWord(const S: String): LongWord;
+
+  TryBinToLongWordA(const S: AnsiString; out A: LongWord): Boolean;
+  TryBinToLongWordW(const S: WideString; out A: LongWord): Boolean;
+  TryBinToLongWordU(const S: UnicodeString; out A: LongWord): Boolean;
+  TryBinToLongWord(const S: String; out A: LongWord): Boolean;
+
+  BinToLongWordA(const S: AnsiString): LongWord;
+  BinToLongWordW(const S: WideString): LongWord;
+  BinToLongWordU(const S: UnicodeString): LongWord;        
+  //BinToLongWord(const S: String): LongWord;
+
+
+
+{                                                                              }
+{ Base64                                                                       }
+{                                                                              }
+{   EncodeBase64 converts a binary string (S) to a base 64 string using        }
+{   Alphabet. if Pad is True, the result will be padded with PadChar to be a   }
+{   multiple of PadMultiple.                                                   }
+{                                                                              }
+{   DecodeBase64 converts a base 64 string using Alphabet (64 characters for   }
+{   values 0-63) to a binary string.                                           }
+{                                                                              }
+  EncodeBase64(const S, Alphabet: AnsiString;
+          const Pad: Boolean = False;
+          const PadMultiple: Integer = 4;
+          const PadChar: AnsiChar = '='): AnsiString;
+
+  DecodeBase64(const S, Alphabet: AnsiString;
+          const PadSet: CharSet{$IFNDEF CLR} = []{$ENDIF}): AnsiString;
+
+   
+  //ObjectToStr(const O: TObject): String;
+  //CharSetToStr(const C: CharSet): AnsiString;
+    //StrToCharSet(const S: AnsiString): CharSet;
+
+  //HashInteger(const I: Integer; const Slots: LongWord = 0): LongWord;
+  //HashLongWord(const I: LongWord; const Slots: LongWord = 0): LongWord;
+
+
+
+const
+  Bytes1KB  = 1024;
+  Bytes1MB  = 1024 * Bytes1KB;
+  Bytes1GB  = 1024 * Bytes1MB;
+  Bytes64KB = 64 * Bytes1KB;
+  Bytes64MB = 64 * Bytes1MB;
+  Bytes2GB  = 2 * LongWord(Bytes1GB);
+
+
+----app_template_loaded_code----

@@ -1,0 +1,590 @@
+Program Global_Exception;
+
+///////////////////////////////////////////////////////////////////////////
+//  #sign:Administrator: PC08: 26/04/2014 09:48:36 PM 
+//  Purpose: how to call global exception handler, on progress  experiments 
+//  #path>E:\maxbox3\mXGit39988\maxbox3\examples\
+//  Lines of Code #locs:341
+///////////////////////////////////////////////////////////////////////////
+//TODO: Save the QRCode to webserver_file, #locs:341
+   
+
+const ext = 'txt';   
+      sw = 'SW_SHOW';
+      BITMAP = 'examples\citymax.bmp';
+     
+var
+  year1, month1, day1: word;
+  dbform: TForm;  
+  //E: Eheapexception; 
+  //myappevent: TApplicationEvents;
+   
+
+  //var nullstr: string;
+  function LoadFile(const FileName: TFileName): string; 
+  var anullstr: string;
+    begin 
+      with TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite) do begin 
+        try 
+          SetLength(Result, Size); 
+          Read(result, Size); 
+          anullstr:= '0^';
+          //getmemosize(pchar(anullstr));
+         //Write(Pointer(content)^, Length(content));    //test write
+        except 
+          Result := '';  // Deallocates memory 
+          Free; 
+          //raise; 
+          raiseLastWin32error;
+        end; 
+        Free; 
+      end; 
+    end; 
+    
+    
+    procedure SaveFile(const FileName: TFileName; const acontent: string); 
+    begin 
+      with TFileStream.Create(FileName, fmCreate) do 
+        try 
+          Write(acontent, Length(acontent));
+          Seek(0, soBeginning);  
+        finally 
+          Free; 
+        end; 
+    end; 
+    
+  
+  function getBitmapOn(apath: shortstring): TBitmap;
+  begin
+    result:= TBitmap.Create;
+    with result do try
+      LoadFromFile(apath);
+    finally
+      //Free;
+    end;
+    //getbitmap
+  end;
+    
+    
+  function CleanInput(input: String) : String; 
+    var 
+      output : string; 
+    begin 
+      output:= StringReplace(input, #9, '',[rfReplaceAll, rfIgnoreCase]); 
+      output:= StringReplace(output, #10, '',[rfReplaceAll, rfIgnoreCase]); 
+      output:= StringReplace(output, #13, '',[rfReplaceAll, rfIgnoreCase]); 
+      output:= StringReplace(output, '  ', '',[rfReplaceAll, rfIgnoreCase]); 
+      output:= StringReplace(output, '&nbsp;', '',[rfReplaceAll, rfIgnoreCase]); 
+      output:= StringReplace(output, '&nbsp', '',[rfReplaceAll, rfIgnoreCase]); 
+      output:= StringReplace(output, '<br>', '',[rfReplaceAll, rfIgnoreCase]); 
+      Result:= output; 
+    end;
+    
+ 
+ procedure arrayHash;
+    var 
+      myhash: TStringList; 
+      //mst: TStringHash;
+      Index: Integer; 
+     begin 
+      myhash:= TStringList.Create; 
+      myhash.Add('mykey=myvalue'); 
+      myhash.Add('mykey2=myvalue2'); 
+      ShowMessage(myhash.Values['mykey']); 
+       for Index := 0 to myhash.Count-1 do begin 
+        writeln(myhash.Names[Index] + '=' + myhash.ValueFromIndex[Index]); 
+      end;
+      myhash.Free;
+    end;
+    
+    
+  procedure StringHash;
+    var 
+      hsh: TStringHash; 
+    begin 
+      hsh:= TStringHash.Create(20); 
+        with hsh do try 
+          add('viens',1234-445-4343); 
+          add('divi',2344556); 
+        ShowMessage(inttostr(valueof('viens'))); 
+        ShowMessage(inttostr(valueof('divi')));
+      finally 
+        Free;
+     end; 
+   end;
+   
+   procedure dont_do_that;
+   var arr: array of integer;
+   begin
+     SetLength(Arr,4);
+     try
+       Arr[1]:= 123;
+       Arr[2]:= 234;
+       Arr[3]:= 345;
+     except
+       ShowMessageBig('out of range e');  
+     end; 
+   end;
+   
+procedure MAppOnException(sender: TObject; E: Exception);
+var
+  Addr: string;
+  FErrorLog: Text;
+  FileNamePath, userName: string;
+  userNameLen: dWord;
+  mem: TMemoryStatus;
+begin
+  //writes errorlog.txt file
+  mem.dwLength:= sizeOf(mem);
+  GlobalMemoryStatus(mem);
+  UserNameLen := 255;
+  SetLength(userName, UserNameLen);
+  FileNamePath:= extractFilePath(application.exeName) + EXCEPTLOGFILE;
+  AssignFile(FErrorLog, FileNamePath);
+  try
+    Append(FErrorlog);
+  except
+    //on EInOutError do Rewrite(FErrorLog);
+  end;
+  Addr:= inttoStr(mem.dwAvailPageFile div 1024) + 'pgf; mem:'
+              +inttoStr(mem.dwAvailPhys div 1024);
+  //Writeln(FErrorLog+ Format('%s %s [%s] %s %s [%s]'+[DateTimeToStr(Now),'V:'+MBVERSION,
+    //      UserName, ComputerName, E.Message,'at:  ',Addr]));
+  CloseFile(FErrorLog);
+  MessageDlg(MBVERSION +' '+E.Message +'. occured at: '+Addr,mtError,[mbOK],0);
+  MessageBox(0, pChar(MBVERSION +' '+E.Message +'. occured at: '+Addr),'ExceptionLog',MB_OKCANCEL)
+end;
+
+   
+   
+function TApplication_GetTitle: string;
+var
+  Buffer: array[0..255] of Char;
+  Ftitle: string;
+begin
+  //if HandleCreated and not MainFormOnTaskBar then
+  if application.handle > 2000 then
+  begin
+  //SetString(Result,GetWindowText(application.Handle,Buffer,SizeOf(Buffer)));
+    if Length(Result) = 0 then
+      Result := FTitle;
+  end
+  else
+    Result := FTitle;
+end;
+   
+
+procedure TApplication_ShowException(E: Exception);
+var
+  Msg, s: string;
+begin
+  Msg := E.Message;
+  s:= AnsiLastChar(Msg);
+   if (Msg <> '') and (s > '.') then Msg:= Msg + '.';
+  application.MessageBox(PChar(Msg),PChar(TApplication_GetTitle),MB_OK + MB_ICONSTOP);
+end;
+
+
+const BITMAP2 = 'examples\citymax33.bmp';
+
+procedure ExceptionErrorCode;
+var E: EInOutError;
+    EI: EIBError;
+begin
+    try 
+        //SomeCodeThatRaisesAnEConvertError;
+      strToInt('this is not 2'); 
+    except 
+        //on E: EIBError do begin 
+            if E.ErrorCode = 105 {iSomeCodeIWantToCatch} then begin 
+                // Deal with this specific exception here 
+            end else begin 
+                raise; // re-raise the exception if it’s not the one I handle 
+            end; 
+        end; 
+    end;
+
+
+procedure AppException(Sender: TObject; E: Exception);
+begin
+  Application.ShowException(E);
+  writeln('own global exception intercept: '+E.message);
+  //Application.HandleException(self);
+  //Application.Terminate;
+end; 
+
+procedure TForm1FormCreate(Sender: TObject);
+begin
+  Application.OnException:= @AppException;
+  writeln('own global exception handler startet: '+datetimeToStr(now));
+  //Application.OnException:= NIL;
+end;
+ 
+ 
+procedure TForm1_MyExceptionHandler(Sender : TObject; E : Exception );
+var
+  wRetVal : integer;
+  Buttons: TMsgDlgButtons;
+begin
+  //MessageDlg('are you sure to instance?', mtConfirmation, [mbOk], 0);
+  //buttons:= [mbignore]+[mbignore];
+  wRetVal := MessageDlg(
+    { E.Message contains the actual error message
+     we'll customize it a bit...     }
+    'ERROR: '+ E.Message,  mtError, [mbabort, mbignore], 0);
+    //'ERROR: '+ E.Message,  mtError, [mbabort], 0);
+  case wRetVal of
+    mrAbort:
+    begin
+      { handle "Abort" here... }
+    end;
+    mrRetry:
+    begin
+      { handle "Retry" here... }
+    end;
+    mrIgnore:
+    begin
+      { handle "Ignore" here... }
+    end;
+    else begin
+      { handle "other" action here...
+       for example, if user choose to
+       close the message box without
+       clicking on any buttons
+      }
+    end;
+  end;
+  { you could also call the default
+   exception handler:
+      Application.ShowException( E );  }
+end;
+
+   
+   procedure ShowMessageBig2(const aText : string);
+   begin 
+   with CreateMessageDialog(atext ,mtinformation, [mbyes, mbok])
+      do try
+        setBounds(100,100,500,450)
+        caption:= 'Show Big Message';
+        font.size:= 15;
+        Color:= clwebgold;
+        autoscroll:= true;
+        canvas.draw(100,200,getBitMapon(Exepath+BITMAP));
+        update;
+        showmodal;
+        //showmodal;    //GUI Exception
+        //canvas.draw(100,200,getBitMapon(Exepath+BITMAP));
+      finally
+        Free;
+      end;
+      //lo
+   end; 
+   
+  
+ var    E: Exception;
+        ExObject: TObject;
+
+//main script exception app
+begin
+  //the the date from now to compare with file date
+  decodeDate(date, year1, month1, day1) 
+  beep;
+  //writeln(LoadFile(exepath+'firstdemo.txt'));
+  //mystring:= LoadFile(exepath+'firstdemo.txt');
+  //mystring:= loadStringJ(exepath+'firstdemo.txt');
+  //showmessageBig(mystring);
+  //SaveFile('firstdemosave.txt', memo2.text); 
+  //Searchandopendoc('firstdemosave.txt');
+  //shellexecute(1, 'open', 'notepad', 'rec_files.txt', '', 2)
+  //orthogonal and idempotent
+  //stringHashTest;
+  //writeln(CleanInput(mystring));
+  //arrayhash;
+  //StringHash;
+  
+  //mDivideByZero(2013);
+  //mDivideByZero2(2013);
+  //mIOError(2013);
+ 
+  {e:= ematherror.create('out of rule');
+  showexception(NIL,E)
+  E.Free;}
+  
+  //Dumpexception;
+  //ShowMessageBig2('bit mapper');
+
+  Writeln('silent except out of scope');
+  
+  TForm1FormCreate(self);   //my own exception handler
+
+  dont_do_that;
+   
+  //outofmemoryerror;
+    //writeln(scanf('enter a number %d ', [23]));
+    //redrawwindow
+  
+   (*Integer = $2345
+   Hi byte = $23
+   Lo byte = $45*)
+    //validaterect
+    //ddfff
+    try
+    except
+        //if not Error(Exception(ExObject).Message) then raise;
+    end
+    //RaiseConversionError('this is conv error');
+    writeln('at the end send a Save Origin Source ');
+    
+    //NtfsGetCompression
+    //SelectDate
+    
+End.
+
+
+// code snippets
+
+  With ASQLite3DB1 do begin 
+        DefaultDir := ExtractFileDir(Application.ExeName); 
+        Database := 'test.sqlite'; 
+        CharacterEncoding := 'STANDARD'; 
+        Open; 
+   SQLite3_ExecSQL('CREATE TABLE IF NOT EXISTS mytable (id INTEGER PRIMARY KEY, label VARCHAR)'); 
+    end; 
+      
+    AssignFile(SomeTxtFile, FILE2PARSE) ; 
+    Reset(SomeTxtFile) ; 
+    ASQLite3DB1.SQLite3_ExecSQL('BEGIN;'); 
+      
+    while not EOF(SomeTxtFile) do begin 
+        ReadLn(SomeTxtFile, buffer) ; 
+      
+        PerlRegEx1.RegEx := '^([^d].+)\s(\d+)$'; 
+        PerlRegEx1.Options := [preCaseLess]; 
+        PerlRegEx1.Subject := buffer; 
+        If PerlRegEx1.Match then begin 
+            row := Format('INSERT INTO mytable (id,label) VALUES (%s,"%s");',[PerlRegEx1.SubExpressions[2],PerlRegEx1.SubExpressions[1]]); 
+            ASQLite3DB1.SQLite3_ExecSQL(row); 
+        end; 
+    end; 
+
+ Use OnException to change the default behavior that occurs when an exception is not handled by application code. The OnException event handler is called automatically in the HandleException method.  
+
+OnException only handles exceptions that occur during message processing. Exceptions that occur before or after the execution of the application's Run method do not generate OnException events. 
+
+If an exception passes through the tryblocks in the application code, the application automatically calls the HandleException method. Unless the exception object is EAbort, HandleException calls the OnException handler, if one exists. Otherwise, it calls ShowException to display a message box indicating an error occurred. 
+
+TExceptionEvent is the type of the OnException event. It points to a method that handles exceptions in the application. The Sender parameter is the object that raised the exception, and E is the exception object.
+Note: You can also respond to this event using the TApplicationEvents component, which allows you to assign an event handler using the IDE. 
+
+
+int
+main(void)
+{
+    int n;
+    while (scanf("%d", & n) > 0)
+        printf("%d\n", n);
+    return 0;
+}
+
+
+procedure MAppOnException(sender: TObject; E: Exception);
+var
+  Addr: string[64];
+  FErrorLog: System.Text;
+  FileNamePath, userName: string;
+  userNameLen: dWord;
+  mem: TMemoryStatus;
+begin
+  //writes errorlog.txt file
+  mem.dwLength:= sizeOf(TMemoryStatus);
+  GlobalMemoryStatus(mem);
+  UserNameLen := 255;
+  SetLength(userName, UserNameLen);
+  FileNamePath:= extractFilePath(application.exeName) + EXCEPTLOGFILE;
+  AssignFile(FErrorLog, FileNamePath);
+  try
+    System.Append(FErrorlog);
+  except
+    on EInOutError do Rewrite(FErrorLog);
+  end;
+  Addr:= inttoStr(mem.dwAvailPageFile div 1024) + 'pgf; mem:'
+               +inttoStr(mem.dwAvailPhys div 1024);
+  Writeln(FErrorLog, Format('%s %s [%s] %s %s [%s]',[DateTimeToStr(Now),'V:'+MBVERSION,
+          getUserNameWin, getComputerNameWin, E.Message,'at:  '+Addr]));
+  System.Close(FErrorLog);
+  MessageDlg(MBVERSION +' '+E.Message +'. occured at: '+Addr,mtError,[mbOK],0);
+  //MessageBox(0, pChar(MBVERSION +' '+E.Message +'. occured at: '+Addr), 'ExceptionLog', MB_OKCANCEL)
+end;
+
+unit Classes;
+
+  EFOpenError = class(EFileStreamError);
+
+
+unit RTLConsts
+  SFOpenErrorEx = 'Cannot open file "%s". %s';
+
+
+constructor TFileStream.Create(const AFileName: string; Mode: Word; Rights: Cardinal);
+begin
+  if Mode = fmCreate then
+  begin
+    inherited Create(FileCreate(AFileName, Rights));
+    if FHandle < 0 then
+      raise EFCreateError.CreateResFmt(@SFCreateErrorEx, [ExpandFileName(AFileName), SysErrorMessage(GetLastError)]);
+  end
+  else
+  begin
+    inherited Create(FileOpen(AFileName, Mode));
+    if FHandle < 0 then
+      raise EFOpenError.CreateResFmt(@SFOpenErrorEx, [ExpandFileName(AFileName), SysErrorMessage(GetLastError)]);
+  end;
+  FFileName := AFileName;
+end;
+
+
+procedure TGraphic.LoadFromFile(const Filename: string);
+var
+  Stream: TStream;
+begin
+  Stream := TFileStream.Create(Filename, fmOpenRead or fmShareDenyWrite);
+  try
+    LoadFromStream(Stream); //virtual abstract
+  finally
+    Stream.Free;
+  end;
+end;
+
+procedure TBitmap.LoadFromStream(Stream: TStream);
+begin
+  ReadStream(Stream, Stream.Size - Stream.Position);
+end;
+
+
+procedure TBitmap.ReadStream(Stream: TStream; Size: Longint);
+var
+  Bmf: TBitmapFileHeader;
+  DIB: TDIBSection;
+begin
+  FreeContext;
+  if Size = 0 then
+  begin
+    FillChar(DIB, sizeof(DIB), 0);
+    NewImage(0, 0, DIB, False);
+  end
+  else
+  begin
+    Stream.ReadBuffer(Bmf, sizeof(Bmf));
+    if Bmf.bfType <> $4D42 then InvalidBitmap;
+    ReadDIB(Stream, Size - sizeof(Bmf), @Bmf);
+  end;
+end;
+procedure InvalidGraphic(Str: PResStringRec);
+begin
+  raise EInvalidGraphic.CreateRes(Str);
+end;
+
+procedure InvalidBitmap; 
+begin
+  InvalidGraphic(@SInvalidBitmap);
+end;
+
+//sysutils!
+{ Raise abort exception }
+
+procedure Abort;
+
+  function ReturnAddr: Pointer;
+  asm
+          MOV     EAX,[EBP + 4]
+  end;
+
+begin
+  raise EAbort.CreateRes(@SOperationAborted) at ReturnAddr;
+end;
+
+  SOperationAborted = 'Operation aborted';
+
+{ Raise out of memory exception }
+
+procedure OutOfMemoryError;
+begin
+  raise OutOfMemory;
+end;
+
+{ Exception class }
+
+constructor Exception.Create(const Msg: string);
+begin
+  FMessage := Msg;
+end;
+
+
+http://pages.cs.wisc.edu/~rkennedy/exception-messages
+Why do I continue getting error messages even after I have written an exception handler?
+
+
+In its default settings, the Delphi IDE
+notifies you whenever an exception occurs in your program, as in Figure
+1. What’s important to realize is that at that point, none
+of your program’s exception-handling code has run yet. It’s
+all Delphi itself; its special status as a debugger allows it to get
+first notification of any exception in your program, even before your
+program knows about it.
+
+  Exception
+  
+    Exception = class(TObject)
+  private
+    FMessage: string;
+    FHelpContext: Integer;
+  public
+    constructor Create(const Msg: string);
+    constructor CreateFmt(const Msg: string; const Args: array of const);
+    constructor CreateRes(Ident: Integer); overload;
+    constructor CreateRes(ResStringRec: PResStringRec); overload;
+    constructor CreateResFmt(Ident: Integer; const Args: array of const); overload;
+    constructor CreateResFmt(ResStringRec: PResStringRec; const Args: array of const); overload;
+    constructor CreateHelp(const Msg: string; AHelpContext: Integer);
+    constructor CreateFmtHelp(const Msg: string; const Args: array of const;
+      AHelpContext: Integer);
+    constructor CreateResHelp(Ident: Integer; AHelpContext: Integer); overload;
+    constructor CreateResHelp(ResStringRec: PResStringRec; AHelpContext: Integer); overload;
+    constructor CreateResFmtHelp(ResStringRec: PResStringRec; const Args: array of const;
+      AHelpContext: Integer); overload;
+    constructor CreateResFmtHelp(Ident: Integer; const Args: array of const;
+      AHelpContext: Integer); overload;
+    property HelpContext: Integer read FHelpContext write FHelpContext;
+    property Message: string read FMessage write FMessage;
+  end;
+
+
+  {$IFDEF MSWINDOWS}
+  { TIniFile - Encapsulates the Windows INI file interface
+    (Get/SetPrivateProfileXXX functions) }
+
+  TIniFile = class(TCustomIniFile)
+  public
+    destructor Destroy; override;
+    function ReadString(const Section, Ident, Default: string): string; override;
+    procedure WriteString(const Section, Ident, Value: String); override;
+    procedure ReadSection(const Section: string; Strings: TStrings); override;
+    procedure ReadSections(Strings: TStrings); override;
+    procedure ReadSectionValues(const Section: string; Strings: TStrings); override;
+    procedure EraseSection(const Section: string); override;
+    procedure DeleteKey(const Section, Ident: String); override;
+    procedure UpdateFile; override;
+  end;
+{$ELSE}
+    TIniFile = class(TMemIniFile)
+    public
+      destructor Destroy; override;
+    end;
+{$ENDIF}
+
+ with TColorDialog.Create(self) do try
+    execute;
+  finally
+    free;
+  end;    
+ 

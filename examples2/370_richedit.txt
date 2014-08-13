@@ -1,0 +1,546 @@
+//*************************************************************************
+//Example of the memo load and save capabilities of the VCL
+//Task: Code the button with Open a Video!
+//Get the text and write your sinmemo memories, #locs=399
+//#perf>8780:0:7.650
+//#head@Administrator: PC08: 03/04/2014 10:56:38 PM E:\maxbox3\mXGit39988\maxbox3\examples\370_richedit.txt 
+//*************************************************************************
+
+program SynMemo_Form_Demo;
+
+const LEFTBASE = 20;
+      TOPBASE = 25; 
+      MEDIAPATH =  '..\maxbox3\examples\mymemomemoire.txt';
+
+var 
+  mymemo: TRichedit;
+  mpanel: TPanel;
+  mPlayer: TMediaPlayer;
+  inFrm: TForm;  
+  mbtn3: TBitBtn;
+  Lstbox: TListbox;
+  stat: TStatusbar;
+  cal: TCalendar;
+  selectedFile: string;
+  
+ 
+   ResWord: array[0..75] of string;
+   AllowedChars: array[0..5] of string; 
+   t, t1, t2, t3: boolean;
+
+
+procedure SetReservedWords;
+begin
+  resword[0]:= 'and';    resword[9]:= 'constructor';   
+  resword[1]:= 'array';  resword[10]:= 'default'; 
+  resword[2]:= 'as';     resword[11]:= 'destructor';    
+  resword[3]:= 'asm';    resword[12]:= 'dispinterface';   
+  resword[4]:= 'at';     resword[13]:= 'div';    
+  resword[5]:= 'begin';  resword[14]:= 'do'; 
+  resword[6]:= 'case';   resword[15]:= 'downto';  
+  resword[7]:= 'class';  resword[16]:= 'else'; 
+  resword[8]:= 'const';  resword[17]:= 'endt';
+  
+  
+  
+  AllowedChars[0]:= '(';
+  AllowedChars[1]:= ')';
+  AllowedChars[2]:= '[';
+  AllowedChars[3]:= ']';
+  AllowedChars[4]:= ' ';
+  AllowedChars[5]:= '';
+
+
+end;   
+
+
+ {  =
+    ('and', '', '', 'asm', 'at', 'begin', 'case', 'class', 'const',
+     'constructor', 'default', 'destructor', 'dispinterface', 'div', 'do',
+     'downto', 'else', 'end', 'except', 'exports', 'file', 'finalization',
+     'finally', 'for', 'function', 'goto', 'if', 'implementation', 'in',
+     'inherited', 'initialization', 'inline', 'interface', 'is', 'label',
+     'library', 'message', 'mod', 'nil', 'not', 'object', 'of', 'on', 'or',
+     'out', 'packed', 'procedure', 'program', 'property', 'raise', 'read',
+     'record', 'repeat', 'resourcestring', 'set', 'shl', 'shr', 'string',
+     'stored', 'then', 'threadvar', 'to', 'try', 'type', 'unit', 'until',
+     'uses', 'var', 'while', 'with', 'write', 'xor', 'private', 'protected',
+     'public', 'published');
+  AllowedChars: array[0..5] of string =
+    ('(', ')', '[', ']', ' ', '');
+  t, t1, t2, t3: boolean; }
+
+
+  
+Function getRandomText: string;
+var i, getback: integer;
+begin
+  for i:= 1 to 1400 do begin
+    getback:=  random(58)+65
+    if (getback < 91) OR (getback > 96) then
+      result:= result + Chr(getback) +Chr(32)
+  end;
+end;  
+
+procedure HighlightReservedWords(re: Trichedit);
+var
+  i, j, k: integer;
+  rword, str: string;
+begin
+  for i:= 1 to length(re.Text) do
+    for j:= 0 to High(ResWord) do begin
+        application.processmessages;
+        rword:= ResWord[j];
+        str:= Copy(re.text, i, Length(rword));
+        if (str = rword) then begin
+            re.SelStart:= i - 1;
+            re.Sellength:= length(rword);
+            re.SelAttributes.Color:= clnavy;
+            re.SelAttributes.style:= [fsbold];
+          end;
+      end;
+end;
+
+procedure HighlightStrings(re: TRichedit);
+var
+  i: integer;
+begin
+  t:= false;
+  for i:= 1 to length(re.text) do begin
+      application.processmessages;
+      if not (t) then  begin
+          if re.text[i] = '''' then begin
+              t:= true;
+              re.selstart:= i - 1;
+            end;
+        end else
+          if (t) and (re.Text[i] = '''') then begin
+              t:= false;
+              re.SelLength:= i - re.selstart;
+              re.SelAttributes.Color:= clblue;
+              re.SelAttributes.Style:= [];
+            end;
+    end;
+end;
+
+procedure HighLightComments(re: TRichedit);
+var
+  i: integer;
+  str: string;
+begin
+  t1:= false;
+  t2:= false;
+  t3:= false;
+  for i:= 1 to length(re.text) do begin
+      application.processmessages;
+      str:= copy(re.text, i, 2);
+      if not ((t1) or (t2) or (t3)) then begin
+          if str = '//' then
+            t1:= true;
+          if str = '(*' then
+            t2:= true;
+          if str[1] = '{' then
+            t3:= true;
+          if ((t1) or (t2) or (t3)) then
+            re.SelStart:= i - 1;
+        end else begin
+            if (t1) and (str = #13#10) then begin
+                t1:= false;
+                re.SelLength:= i - re.selstart + 1;
+                re.SelAttributes.Color:= clgreen;
+                re.SelAttributes.Style:= [];
+              end;
+            if (t2) and (str = '*)') then begin
+                t2:= false;
+                re.SelLength:= i - re.SelStart + 1;
+                re.SelAttributes.Color:= clgreen;
+                re.SelAttributes.Style:= [];
+              end;
+            if (t3) and (str[1] = '}') then begin
+                t3:= false;
+                re.SelLength:= i - re.SelStart;
+                re.SelAttributes.Color:= clgreen;
+                re.SelAttributes.Style:= [];
+              end;
+          end;
+    end;
+end;
+
+procedure SyntaxHighLighting(re: TRichEdit);
+begin
+  re.Font.Name:= 'arial';
+  re.Font.Color:= clblack;
+  HighlightReservedWords(re);
+  HighlightStrings(re);
+  HighlightComments(re);
+  HighlightStrings(re); //Nur zu testzwecken !
+  SetReservedWords;
+end;
+
+  
+//Event Handler - Closure  
+Procedure GetMediaData(self: TObject);
+begin
+  if PromptForFileName(selectedFile,
+                       'Text files (*.txt)|*.txt',
+                       '',
+                       'Select your mX3 test file',
+                       ExePath+'examples\', False)  // Means not a Save dialog !
+   then begin
+     // Display this full file/path value
+     ShowMessage('Selected file = '+selectedFile);
+     Stat.simpletext:= selectedFile;
+     mymemo.lines.LoadFromFile(selectedFile);
+     // Split this full file/path value into its constituent parts
+     //writeln('PromptForFileName_28: Res of processpath '+tmp)
+   end;
+end;  
+  
+//Event Handler - Closure
+Procedure BtnSaveClick(self: TObject);
+begin
+  //mymemo.lines.savetofile(ExePath+'\examples\mymemomemoire.txt');
+  mymemo.lines.SaveToFile(selectedFile);
+  Stat.simpletext:= selectedFile+ ' has been saved' ;
+end; 
+
+
+Procedure SetForm;
+var
+  mbtn, mbtn2: TBitBtn;
+  mi, mi1, mi2, mi3: TMenuItem;
+  mt: TMainMenu;
+  mlbl, mlbl1: TLabel; 
+  mspas: TSynPasSyn;
+  mymemo2: TSynEdit;
+
+begin
+  inFrm:= TForm.Create(self);
+  mLbl:= TLabel.create(inFrm);
+  mLbl1:= TLabel.create(inFrm);
+  mPanel:= TPanel.Create(inFrm);
+  stat:= TStatusbar.Create(inFrm);
+  Lstbox:= TListbox.create(inFrm);
+  mymemo:= TRichedit.create(inFrm);
+  //mymemo2:= TSynEdit.create(inFrm);
+
+  with inFrm do begin
+    caption:= '********MediaMonster3************';  
+    height:= 610;
+    width:= 980;
+    //color:= clred;
+    Position:= poScreenCenter;
+    //onClose:= @CloseClick;
+    Show;
+  end;
+  with mPanel do begin
+     caption:= '*****maXboxTV*****';  
+     Parent:= inFrm;  
+     SetBounds(LEFTBASE+10,TOPBASE+40,420,400)
+     color:= clsilver;
+     font.color:= clyellow;
+     font.size:= 30;
+     Show;
+  end; 
+  
+  mspas:= TSynPasSyn.create(self);
+  mspas.StringAttri:= 1;//InternalSaveDefaultValues; ??
+  mspas.Enabled:= true;
+  
+  //mspas.KeywordAttribute:= 4;
+  
+  writeln('highlander attrib count '+intToStr(mspas.AttrCount));
+  with mymemo do begin
+    Parent:= inFrm;
+    SetBounds(LEFTBASE+450, TOPBASE+40, 465, 400)
+    font.size:= 12;
+    //color:= clYellow;
+    wordwrap:= true;
+    scrollbars:= ssvertical;
+    //RightEdgeColor:= clred;
+    //if extractFileName(maxform1.appname) = '370_synedit.txt' then begin
+      //Options:= +[eoShowSpecialChars];
+      //ActiveLineColor:= clyellow;
+      maxform1.tbtnUseCase.caption:= 'ScriptRich'; 
+      maxform1.ShellStyle1Click(self)
+    //end else   
+      //ActiveLineColor:= clyellow;
+   
+    //WordWrapGlyph    
+    //selectedColor:= clyellow;
+    //borderStyle:= bsdialog;
+    //Options
+
+    
+     //memo1.Options:= +[SYNEDIT_DEFAULT_OPTIONS];
+       //memo1.RightEdgeColor := clSilver;
+    //lines.loadfromfile(ExePath+'\examples\mymemomemoire.txt');
+    lines.loadfromfile(ExePath+'\examples\003_pas_motion.txt');
+    //mymemo.CommandProcessor2(TSynEditorCommand(ecSelectAll),' ');
+    //mymemo.CommandProcessor(TSynEditorCommand(ecSelectAll),' ',0);
+    
+    //onclick:= @ChangeSong;  
+  end;
+  //mspas.Free;
+  
+  mBtn:= TBitBtn.Create(inFrm)
+  with mBtn do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 590, TOPBASE+ 460,150, 40);
+    caption:= 'Open Text';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'OPENFOLDER'); 
+    //event handler
+    onclick:= @GetMediaData;
+  end;
+  mBtn2:= TBitBtn.Create(inFrm)
+  with mBtn2 do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 430, TOPBASE+460,150, 40);
+    caption:= 'Open Video';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'FLOPPY'); 
+    //event handler
+    //onclick:= @GetVideoData;
+  end;
+  mBtn3:= TBitBtn.Create(inFrm)
+  with mBtn3 do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 750, TOPBASE+460,150, 40);
+    caption:= 'Save Text';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'PREVIEWGLYPH'); 
+    //event handler
+    onclick:= @BtnSaveClick;
+  end;
+  cal:= TCalendar.Create(self);
+  with cal do begin
+    enabled:= true;
+    updateCalendar
+    Parent:= inFrm;
+    top:= 100;
+    left:= 50;
+    CalendarDate:= Now;
+  end;
+
+  with mlbl do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+15,TOPBASE-15,180,20);
+    font.size:= 28;
+    font.color:= clred;
+    //font.style:= [fsunderline]
+    caption:= 'MediaMemoApp';
+  end;  
+  with mlbl1 do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+495,TOPBASE-1,180,20);
+    font.size:= 20;
+    font.color:= clred;
+    caption:= 'SynMemo Text File:';
+  end;  
+  mt:= TMainMenu.Create(infrm)
+  with mt do begin
+   //parent:= frmMon;
+  end;  
+  mi:= TMenuItem.Create(mt)
+  mi1:= TMenuItem.Create(mt)
+  mi2:= TMenuItem.Create(mt)
+  mi3:= TMenuItem.Create(mi)
+  with mi do begin
+    //parent:= frmMon;
+    Caption:='Play Media';
+    Name:='ITEM';
+    mt.Items.Add(mi);   
+    //onclick:= @GetMediaData;
+  end;
+  with mi1 do begin
+    //parent:= frmMon;
+    Caption:='Show Video';
+    Name:='ITEM2';
+    mt.Items.Add(mi1) ;
+    //onclick:= @GetVideoData
+  end;
+  with mi2 do begin
+    //parent:= frmMon;
+    Caption:='Open CD Player';
+    Name:='ITEM3';
+    mt.Items.Add(mi2);
+    //onclick:= @OPenCD;
+  end;
+  with mi3 do begin
+    Caption:='Open maXbook';
+    Name:='ITEM4';
+    //mi.Items[0].add(mi3);
+  end;
+  with Stat do begin
+    parent:= inFrm;
+    stat.SimplePanel:= true;
+  end;
+  MPlayer:= TMediaPlayer.create(self);
+  with MPlayer do begin
+    parent:= inFrm; 
+    height:= 38;
+    top:= TOPBASE + 460;
+    left:= LEFTBASE+ 10;
+    Display:= mPanel;   //for video show
+  end;
+end; 
+  
+ 
+begin
+  memo2.font.size:= 14;
+  SetForm;
+  //mymemo.lines.text:= getRandomText;
+  //SearchAndOpenDoc(ExePath+MEDIAPATH)
+  //mylistview:= TFormListView.Create(self);
+  //exit;
+  maxform1.color:= clsilver;
+  SyntaxHighLighting(mymemo);
+End.
+
+//-------------------------------------------------
+
+source is tlistview
+target is tform
+
+Procedure TfMerit.SourceLVStartDrag(Sender: TObject;
+var DragObject: TDragObject);
+var TargetLV:TListView;
+begin
+// TargetLV:=nejak urcit dle potreby
+  TargetLV.BeginDrag(True)
+end;
+
+Procedure TfMerit.SourceLVMouseDown(Sender: TObject;
+Button: TMouseButton; Shift: TShiftState; X, Y: integer);
+begin
+MouseIsDown:=True;
+end;
+
+Procedure TfMerit.SourceLVMouseUp(Sender: TObject; Button: TMouseButton;
+Shift: TShiftState; X, Y: integer);
+begin
+MouseIsDown:=False;
+if (Sender as TListView).Dragging then
+(Sender as TListView).EndDrag(False);
+end;
+
+Procedure TfMerit.SourceLVMouseMove(Sender: TObject; Shift: TShiftState;
+X, Y: integer);
+begin
+if (Sender.ClassNameIs('TListView')) then
+begin
+if MouseIsDown and ((Sender as TListView).SelCount>0) then
+(Sender as TListView).BeginDrag(True);
+end;
+end;
+
+
+Procedure TfMerit.TargetLVDragOver(Sender, Source: TObject; X,
+Y: integer; State: TDragState; var Accept: Boolean);
+var T:TListView;
+begin
+T:=Sender as TListView;
+Accept:=Assigned(T.GetItemAt(X,Y));
+end;
+
+
+Procedure TfMerit.TargetLVDragDrop(Sender, Source: TObject; X,
+Y: integer);
+var It:TListItem;
+LV1,LV2:TListView;
+begin
+LV1:=Source as TListView;
+LV2:=Sender as TListview;
+
+It:=LV2.GetItemAt(X,Y);
+if Assigned(It) then
+begin
+// zpracuj polozku ze zdrojoveho listview
+end;
+end;
+
+
+Procedure TControlParentR(Self: TControl; var T:TWinControl); begin T:= Self.Parent; end;
+Procedure TControlParentW(Self: TControl; T: TWinControl); begin Self.Parent:= T; end;
+    RegisterPropertyHelper(@TControlParentR, @TControlParentW, 'PARENT');
+    RegisterProperty('Parent', 'TWinControl', iptRW);
+
+Procedure TTXPTool.LVPFFDblClick(Sender: TObject);
+var
+tmpList : TListItem;
+fn ; string;
+ft : integer;
+fs : integer;
+begin
+tmpList := LVPFF.Selected;
+if tmplist<>nil then
+begin
+  fn := tmpList.Caption
+  ft := tmpList.SubItems.Strings[1];
+  fs := tmpList.SubItems.Strings[3];
+  if pos('Wave', ft)>0 then
+    PlayThisOne1Click(nil);
+  if pos('Jpg', ft)>0 then
+    ShowJpg1Click(nil);
+  if pos('Targa', ft)>0 then
+    ShowTga1Click(nil);
+  if pos('Pcx', ft)>0 then
+    ShowPcx1Click(nil);
+  if pos('Mission Sound Collection', ft)>0 then
+    ShowPwf1Click(nil);
+end;
+end;
+
+
+  #date-03/04/2014 10:56:38 PM
+  date-01.06.2013 10:20:08
+  
+  
+ var
+  ReservedWords: array[0..75] of string =
+    ('and', 'array', 'as', 'asm', 'at', 'begin', 'case', 'class', 'const',
+     'constructor', 'default', 'destructor', 'dispinterface', 'div', 'do',
+     'downto', 'else', 'end', 'except', 'exports', 'file', 'finalization',
+     'finally', 'for', 'function', 'goto', 'if', 'implementation', 'in',
+     'inherited', 'initialization', 'inline', 'interface', 'is', 'label',
+     'library', 'message', 'mod', 'nil', 'not', 'object', 'of', 'on', 'or',
+     'out', 'packed', 'procedure', 'program', 'property', 'raise', 'read',
+     'record', 'repeat', 'resourcestring', 'set', 'shl', 'shr', 'string',
+     'stored', 'then', 'threadvar', 'to', 'try', 'type', 'unit', 'until',
+     'uses', 'var', 'while', 'with', 'write', 'xor', 'private', 'protected',
+     'public', 'published');
+  AllowedChars: array[0..5] of string =
+    ('(', ')', '[', ']', ' ', '');
+  t, t1, t2, t3: boolean;
+  
+  
+Topic:
+SynEdit change markers (yellow or green line on gutter)
+
+does anyone know how to add "change markers" functionality to SynEdit? I mean those lines, green for modified & saved, yellow for modified & unsaved parts of document... here is an example from other
+
+Yes, I've added it to my copy of SynEdit. I originally snagged the code from another project.
+
+It is broken across (at least) two different units IIRC.
+
+You need to modify SynEditTextBuffer.pas as well as SynEdit.pas.
+
+The code is rather complex because you need to modify several spots in SynEditTextBuffer.pas as well as 1 or 2 spots in SynEdit.pas.
+
+The original project I snagged the code from was being very ambitious in that they were trying to develop code folding and line blocking (as shown in your image) as well.
+
+I couldn't get the code folding to work reliably so I dropped that mod and just used the line change code. I believe that dropping the code folding also dropped the line blocking.
+
+The name of that project is SynEditSudio, it from a Chinese website, but I believe the Firefox translator plugins work pretty well in converting it.
+
+EDIT: contact me directly if you want to get a copy of my changes.
+
+HTH Ryan.
+
+I decided to have a concerted effort to get the excellent DWScript (Delph Web Script DWS) integrated into a simple IDE using SynEdit. DWScript is currently being agressively developed and has a number of advantages over other Pascal Script libraries, however it does not contain an editor or any IDE example beyond a simple memo control to prove execution capability. It does contain a number of hooks for editor / debugger integration and in fact when DWS was reawakened a while ago, releases did contain an example of a SynEdit / DWS2 (as it was then) integration. An example can be found in the file dws2src20-20030907.zip in the \dws2rel\dwstools\idedialog\source where there is a 'mini-IDE' with editor window, call stack, breakpoint window etc. Really nice. I did get this working some months ago using an old SynEdit and the DWS2 that was included in this file.
+
+So, I have now tried achieve this (or a similar) ide using the latest SynEdit (downloaded from SVN) and the latest DWScript (also from the SVN). Both libraries are installed fine into XE and their demos run fine. I then tried taking the ide example from the old "\dws2rel\dwstools\idedialog\source" and updating the code but much has changed. Frustratingly, not so much has changed that I gave up quickly - I tried searching for the various 'old' type definitions in old source and matching them up with 'new' definitions. Finally though, after several hours mired in code I decided that someone, somewhere must surely have been down this route?
+
+Has anyone got an example of a DWScript - SynEdit integration using recent DWScript code please? I'm very happy with something simple that I can learn / build upon. Thanks
+

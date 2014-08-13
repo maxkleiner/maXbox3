@@ -1,0 +1,260 @@
+program fractals_2D_TVOut_Composition;
+
+//*********************************************************************
+// the world of fractals, chaos, patterns & topology, loc's=167, ex.72_ff  
+// strange worlds of mandelbrot, lorenz attractors & bifurcations;)
+// you can switch in main between the functions()
+// #sign:max: APSN21: 13.07.2013 16:44:01 
+//*********************************************************************
+(*RRRR    EEEEEE   AAAA   DDDDD    MM     MM   EEEEEE 
+ RR  RR   EE       AA AA  DD  DD   MMMM MMMM   EE    
+ RRRRR    EEEE    AAAAAA  DD   DD  MM MMM MM   EEEE
+ RR  RR   EE      AA   AA DD   DD  MM  M  MM   EE
+ RR   RR  EEEEEE AA    AA DDDDD    MM  M  MM   EEEEEE *)
+ 
+const
+  DAT = 1200;
+  CHDAT = 450;          
+
+type
+  TMemor= array[1..DAT] of double;
+  TAColors = array[0..14] of TColor;
+    
+
+var
+  scaleX1, scaleX2, scaleY1, scaleY2: double;
+  cFrm: TForm;
+  time1, time2, diff: TDateTime;
+  mycolor: TAColors;
+  
+procedure DrawMandelbrot;
+var
+   iI, iJ, iNewColor : Integer;
+   rU, rV, rX, rY, rZ: double;
+begin
+  mycolor[0]:= clBlack;     mycolor[1]:= clMaroon;   mycolor[2]:= clGreen;
+  mycolor[3]:= clNavy;     mycolor[4]:= clPurple;   mycolor[5]:= clTeal;
+  mycolor[6]:= clGray;     mycolor[7]:= clSilver;   mycolor[8]:= clRed;
+  mycolor[9]:= clLime;     mycolor[10]:= clBlue;   mycolor[11]:= clFuchsia;
+  mycolor[12]:= clAqua;     mycolor[13]:= clWhite;   mycolor[14]:= clblack;
+  
+    for iI := 0 to cFrm.ClientWidth - 2 do
+      for iJ := 0 to cFrm.ClientHeight - 2 do begin
+        //orig 3, 2.8  -0.8, -1.7
+        //rX := -0.9 + 0.2 * iI / cFrm.ClientWidth;
+        //rY := -1.2 + 0.6 * iJ / cFrm.ClientHeight;
+        rX := -0.9 + 0.2 * iI / cFrm.ClientWidth;
+        rY := -1.2 + 0.6 * iJ / cFrm.ClientHeight;
+        iNewColor := 0;
+        rU := 0;
+        rV := 0;
+        repeat
+          rZ := Sqr(rU) - Sqr(rV) - rX;
+          rV := 2 * rU * rV - rY;
+          rU := (rZ/2);
+          Inc(iNewColor);
+        until (Sqr(rU) + Sqr(rV) > 9) or (iNewColor = 14);
+        cFrm.Canvas.Pixels[iI + 1, iJ + 1] := myColor[iNewColor];
+      end;
+  end;
+  
+  
+procedure Mandelbrot2setup(vForm: TForm);
+var
+  X, Y, depth: integer;
+  minre, maxre, minim, maxim: double;
+  im, re, tr, ti, tmp: single;
+begin
+  minre:=-2.5; maxre:=1.0;
+  minim:=-1.2; maxim:=1.2;
+  depth:= 0;
+  //anotherfractal:= NOT anotherfractal;
+  for y:= 0 to vForm.height-1 do begin
+    im:= minim + y * (maxim-minim) / vForm.height;
+    for x:= 0 to vForm.width-1 do begin
+      re:= minre+x*(maxre- minre)/vForm.Width;
+      tr:= re;
+      ti:= im;
+      {count is deep of iteration of the mandelbrot set
+      if |z| >=2 then z is not a member of a mandelset}
+      depth:= 0;
+      while (depth < 30) do begin
+        tmp:= tr*tr - ti*ti + re;
+        ti:= 2*tr*ti+im;
+        tr:= tmp;
+        if (tr*tr + ti*ti > 4) then break;
+        inc(depth);
+      end;
+      //the color-palette depends on TColor(n*count mod t)
+      //if matrixfractal then
+        //  anotherfractal:= NOT anotherfractal;
+      if (depth < 16) then
+      //if anotherfractal then
+        vForm.Canvas.Pixels[x,y]:= (16*depth mod 255)
+        // else  //clwhite;
+          //vForm.Canvas.Pixels[y,x]:= (16*depth mod 255);  //clwhite;
+    end;
+  end;
+end;
+  
+
+procedure MandelbrotMatrix(vForm: TForm);
+var
+  X, Y, depth: integer;
+  minre, maxre, minim, maxim: double;
+  im, re, tr, ti, tmp: single;
+  anotherfractal: boolean;
+begin
+  minre:=-2.5; maxre:=1.0;
+  minim:=-1.2; maxim:=1.2;
+  depth:= 0;
+  for y:= 0 to vForm.height-1 do begin
+    im:= minim + y * (maxim-minim) / vForm.height;
+    for x:= 0 to vForm.width-1 do begin
+      re:= minre+x*(maxre-minre)/vForm.Width;
+      tr:= re;
+      ti:= im;
+      {count is deep of iteration of the mandelbrot set
+      if |z| >=2 then z is not a member of a mandelset}
+      depth:= 0;
+      while (depth < 22) do begin
+        tmp:= tr*tr - ti*ti + re;
+        ti:= 2*tr*ti+im;
+        tr:= tmp;
+        if (tr*tr + ti*ti > 4) then break;
+        inc(depth);
+      end;
+      //the color-palette depends on TColor(n*count mod t)
+      anotherfractal:= NOT anotherfractal;
+      if (depth < 16) then
+      if anotherfractal then
+        vForm.Canvas.Pixels[x,y]:= (26*depth mod 255)
+      else  //clwhite;
+        vForm.Canvas.Pixels[y,x]:= (26*depth mod 255);
+    end;
+  end;
+end;
+
+
+procedure scaleResults(const X, Y : double; var intX, intY : integer;
+                                        width, height: integer);
+var scaledX, scaledY: double; 
+ begin
+   scaledX:= (X-scaleX1)/(scaleX2-scaleX1);
+   scaledY:= (Y-scaleY2)/(scaleY1-scaleY2);
+   intX:= round(scaledX * width);
+   intY:= round(scaledY * height);
+ end; 
+
+ 
+procedure Lorenz_process(var X, Y, Z: double; vForm: TForm);
+var intX, intY : integer;
+  dX, dY, dZ: double; 
+begin 
+  dY:= X * (28-Z)-Y; 
+  dX:= 10 * (Y-X); 
+  dZ:= X * Y- (8/3) * Z; 
+  scaleResults(X,Y,intX,intY, vForm.ClientWidth, vForm.ClientHeight);
+  {$IFDEF LINUX}
+    vForm.Canvas.DrawPoint(intX,intY);
+  {$ELSE}
+    vForm.Canvas.Pixels[intX, intY]:= clRed; 
+  {$ENDIF}
+  X:= X+ 0.01 * dX;
+  Y:= Y+ 0.01 * dY; 
+  Z:= Z+ 0.01 * Dz;
+end;
+
+procedure ModelLorenzsetup(vForm: TForm);
+var
+  i: integer;
+  x, y, z: double; 
+begin
+  scaleX1:=-20; scaleX2:=20;
+  scaleY1:=-25; scaleY2:=30; 
+  X:= 0.1; Y:= 0.1; Z:= 0.1; 
+  for i:= 1 to 6500 do 
+    Lorenz_process(X,Y,Z, vForm);
+end; 
+
+procedure Bifurcation_process(var X, Y: double; vForm: TForm);
+var 
+  j,k,i: integer;
+  r: double;
+begin 
+  for i:=0 to 630 do begin 
+    //i and r depends on overflow
+    r:=2.95+1.643192e-03*i; 
+    X:=0.02;
+    for j:=1 to 350 do X:=r*X*(1-X);
+    //accuracy filter
+    for k:=1 to 220 do begin
+    {$IFDEF LINUX}
+      vForm.Canvas.DrawPoint(i,round(390*(1.0-X)));
+    {$ELSE}
+      vForm.Canvas.Pixels[i,round(390*(1.0-X))]:= clTeal;
+    {$ENDIF}
+      X:=r*X*(1-X); 
+    end;
+  end;
+end; 
+ 
+procedure Bifurcationsetup(vForm: TForm);
+var X, Y: double;
+begin
+  X:=1; Y:=1; 
+  vForm.Canvas.pen.Color:=clblue;
+  bifurcation_process(X,Y, vForm);
+  //direct mode without scaling
+end;  
+
+
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  try
+    with cFrm do begin
+      caption:= 'chaosMAX III';  
+      height:= 460;
+      width:= 460;
+      color:= clblack;
+      Position := poScreenCenter;
+      show;
+    end;
+    Application.processMessages;
+  except
+    exit
+  end  
+end;
+
+//main chaos
+begin
+//*************maXbox graphics series***********************************
+  ProcessMessagesOFF;
+  time1:= time;
+  writeln(formatdatetime('"performance start is:" hh:mm:ss:zzz', time)) 
+  loadForm();
+  //DrawMandelbrot;    
+  //Mandelbrot2Setup(cFrm);
+  MandelbrotMatrix(cFrm);
+  //Bifurcationsetup(cFrm);
+  //ModelLorenzSetup(cFrm)
+  time2:= time;
+  writeln(formatdatetime('"performance stop is:" hh:mm:ss:zzz', time)) 
+  Diff:= time2 - time1; 
+  writeln(IntToStr(Trunc(Diff * 24)) + 
+                   FormatDateTime('" h elapsed run time is:" nn:ss:zzz',Diff));
+end.
+
+just inside maxbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+        
+        
+        
+                              

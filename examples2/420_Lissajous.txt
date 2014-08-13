@@ -1,0 +1,314 @@
+PROGRAM Lissajous_Spiral;   //Draft on progress
+
+//////////////////////////////////////////////////////////////////////
+//  #sign:max: APSN21: 18.12.2013 15:20:07 
+//  Purpose: Demo of lissajous out of,  more items see below   //
+//  #path>ples\E:\maxbox\maxbox3\examples\                          //
+//  Lines of Code #locs:173
+//////////////////////////////////////////////////////////////////////
+
+Const TEXTOUT = 'hi world of code coverage with cover age';
+
+//############################################################################
+// Lissajous Spiral App       mX4 Script Studio
+//############################################################################
+//TODO: Button with stop event, change color and save bitmap as png
+//TODO: transfer the Algo to a LED Matrix on Arduino ex. I^2C Adafruit Shield!!
+
+{TYPE <Type declarations>} 
+
+  var aform: TForm;
+      FWait, switch: Boolean;
+      FValueA: Float;
+      FValueB: Float;
+      ComPorts: TStrings;
+      mystatic: TStaticText;
+
+
+//<FUNCTION>
+//<PROCEDURE> 
+
+procedure stopClick(sender: TObject);
+begin
+  writeln('lissajous demo stopped');
+  FWait:= true;
+end;  
+
+
+procedure CreateAForm;
+ //diaform:= CreateMessageDialog('my fast form perform',mtconfirmation, []);
+ var myimage: TImage;
+begin
+   FValueA:= 3.0;
+   FValueB:= 1.4;
+   FWait:= false;
+   aform:= CreateMessageDialog('lissajous Spiral - Click to Stop or KeyPress',mtwarning,
+                                        [mball, mbyes, mbhelp, mbok]);
+   with aform do begin
+     caption:= 'lissajous Architect Demo';
+     setBounds(50,50,800,850)
+     Formstyle:= fsStayontop;
+     Color:= clRed; //1266;
+     Canvas.Brush.Color:= clBlack; //clBlue;
+     Canvas.Brush.Style:= bsSolid;
+     Canvas.Pen.Color:= clWhite;
+     onclick:= @stopclick;
+   end;  
+   //with TImage.create(aform) do begin
+   myimage:= TImage.create(aform)
+   with myimage do begin
+     parent:= aform;
+     //ControlStyle := ControlStyle + [csReplicatable, csPannable];
+     setbounds(285,5, 300,100);
+    // myimage.picture.bitmap:= getbitmap(Exepath+'examples\citymax.bmp');
+     picture.loadfromfile(Exepath+'examples\citymax.bmp');
+   //show;
+   end;
+
+   with TLabel.Create(self) do begin
+     parent:= aform;
+     SetBounds(305,20,400,70)
+     font.size:= 34;
+     font.style:= [fsItalic]
+     font.color:= clyellow;
+     caption:= ' lissajous LED Spiral ';
+   end;  
+   aform.show; 
+end;
+
+
+var rx, ry, grad: integer;
+
+procedure TApplication_PaintView(Canvas: TCanvas);
+var
+  xs, ys, i,  x,y: Integer;
+  angle, phi: Float;
+begin
+  //rx:= 150
+  //ry:= 150
+  canvas.pen.width:= 5;
+
+  if FWait then Exit;
+   FValueB:= FValueB + 0.001;
+   //Canvas.FillStyle := 'rgba(0,0,99,0.08)';
+   //if switch then      // Clear background
+     // Canvas.FillRect(rect(0,90, aForm.Width, aForm.Height));
+   if grad mod 64 = 0 then      // Clear background
+      Canvas.FillRect(rect(0,90, aForm.Width, aForm.Height));
+
+   //Draw our framerate on the screen
+    xs:= aForm.width div 2;
+    ys:= aForm.Height div 2;
+  //for grad:= 0 to 1800 do begin
+  // Canvas.BeginPath;
+  phi:=180/Pi*grad;
+  x:=round(rx*cos(phi))+xs;
+  y:=round(ry*sin(phi))+ys;
+  //canvas.brush.pen
+  //Canvas.Pixels[x,y].size
+  Canvas.Pixels[x,y]:= clred;
+  Canvas.Pixels[x+1,y+1]:= clred;
+  Canvas.Pixels[x-1,y-1]:= clyellow;
+ 
+  //end;
+  inc(grad)
+  if grad mod 400 = 0 then begin
+    rx:= 10;
+    ry:= 10;
+  end else begin 
+   // grad:= 10;
+  //writeln(inttostr(grad));
+  inc(rx)
+  inc(ry)
+  end;
+  //Canvas.StrokeStyle := '#FFF';
+end;
+
+
+function SplitToken(const Text: string; SplitChar: Char;
+                          var First, Last: string): Boolean;
+var  SplitPos: Integer;
+begin
+  Result:= False;
+  SplitPos:= Pos(SplitChar, Text);
+  if SplitPos = 0 then Exit;
+  First:= Trim(Copy(Text, 1, SplitPos -1));
+  Last:= Trim(Copy(Text, SplitPos +1, Length(Text) -SplitPos));
+  Result:= (First <>'') and (Last <>'');
+end;
+
+ var amd: TMatrixGL;
+
+
+Begin  //Main
+//<Executable statements>
+  //TOutlookExport_Spy;
+  Writeln('');
+  ComPorts:= TStringlist.Create;
+  try
+    EnumComPorts(ComPorts);
+    Writeln('Start COM Port Command of Arduino COM: '+ComPorts[0]);  
+  except
+    Writeln('No COM Ports');
+  end;    
+  ComPorts.Free;
+//<Definitions>  
+  //ares:= TResolver.create;
+ { with TResolver.create do begin
+   //writeln(inttostr(GetHostByName(gethostname)));
+    Free;
+   end;  }
+
+   rx:= 10
+   ry:= 10
+   CreateAForm;
+   repeat 
+     TApplication_PaintView(aform.canvas);
+     switch:= NOT switch;   //repaint each second
+     Sleep(20);
+   until isKeyPressed or FWait;
+   //CL.AddDelphiFunction('Procedure MatrixInvert( var M : TMatrixGL)');
+   MatrixInvert(amd);
+ 
+END. 
+
+http://www.mathematische-basteleien.de/lissajous.html#Beschreibung%20der%20Grundfiguren
+
+
+procedure erdbahn(rx,ry: integer);
+var grad: integer;
+phi: real;
+begin
+xs:=breite div 2;
+ys:=breite div 2;
+for grad:=0 to 1800 do
+begin
+phi:=180/Pi*grad;
+x:=round(rx*cos(phi))+xs;
+y:=round(ry*sin(phi))+ys;
+form1.Canvas.Pixels[x,y]:=clgreen;
+end;
+end;
+
+unit uPSI_delphi_arduino_Unit1;
+{
+   arduino tester
+}
+interface
+ 
+uses
+   SysUtils
+  ,Classes
+  ,uPSComponent
+  ,uPSRuntime
+  ,uPSCompiler
+  ;
+ 
+type 
+(*----------------------------------------------------------------------------*)
+  TPSImport_delphi_arduino_Unit1 = class(TPSPlugin)
+  protected
+    procedure CompileImport1(CompExec: TPSScript); override;
+    procedure ExecImport1(CompExec: TPSScript; const ri: TPSRuntimeClassImporter); override;
+  end;
+ 
+ 
+{ compile-time registration functions }
+procedure SIRegister_TForm1(CL: TPSPascalCompiler);
+procedure SIRegister_delphi_arduino_Unit1(CL: TPSPascalCompiler);
+
+{ run-time registration functions }
+procedure RIRegister_TForm1(CL: TPSRuntimeClassImporter);
+procedure RIRegister_delphi_arduino_Unit1(CL: TPSRuntimeClassImporter);
+
+procedure Register;
+
+implementation
+
+
+uses
+   Windows
+  ,Messages
+  ,Variants
+  ,Graphics
+  ,Controls
+  ,Forms
+  ,Dialogs
+  ,StdCtrls
+  ,ComCtrls
+  ,CPort
+  ,CPortCtl
+  ,Menus
+  ,delphi_arduino_Unit1
+  ;
+ 
+ 
+procedure Register;
+begin
+  RegisterComponents('Pascal Script', [TPSImport_delphi_arduino_Unit1]);
+end;
+
+(* === compile-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TForm1(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TForm', 'TForm1') do
+  with CL.AddClassN(CL.FindClass('TForm'),'TledForm') do
+  begin
+    RegisterProperty('btn_connect', 'TButton', iptrw);
+    RegisterProperty('ComPort1', 'TComPort', iptrw);
+    RegisterProperty('StatusBar1', 'TStatusBar', iptrw);
+    RegisterProperty('btn_Setup', 'TButton', iptrw);
+    RegisterProperty('chk_led1', 'TCheckBox', iptrw);
+    RegisterProperty('chk_led2', 'TCheckBox', iptrw);
+    RegisterProperty('chk_led3', 'TCheckBox', iptrw);
+    RegisterProperty('chk_led4', 'TCheckBox', iptrw);
+    RegisterProperty('chk_led5', 'TCheckBox', iptrw);
+    RegisterProperty('btn_loop', 'TButton', iptrw);
+    RegisterProperty('Label1', 'TLabel', iptrw);
+    RegisterProperty('Label2', 'TLabel', iptrw);
+    RegisterProperty('Label3', 'TLabel', iptrw);
+    RegisterProperty('Label4', 'TLabel', iptrw);
+    RegisterProperty('Label5', 'TLabel', iptrw);
+    RegisterProperty('Label6', 'TLabel', iptrw);
+    RegisterProperty('Label7', 'TLabel', iptrw);
+    RegisterProperty('Label8', 'TLabel', iptrw);
+    RegisterProperty('Label9', 'TLabel', iptrw);
+    RegisterProperty('Label10', 'TLabel', iptrw);
+    RegisterProperty('Label11', 'TLabel', iptrw);
+    RegisterProperty('Label12', 'TLabel', iptrw);
+    RegisterMethod('Procedure btn_connectClick( Sender : TObject)');
+    RegisterMethod('Procedure btn_SetupClick( Sender : TObject)');
+    RegisterMethod('Procedure FormCreate( Sender : TObject)');
+    RegisterMethod('Procedure chk_led1Click( Sender : TObject)');
+    RegisterMethod('Procedure chk_led2Click( Sender : TObject)');
+    RegisterMethod('Procedure chk_led3Click( Sender : TObject)');
+    RegisterMethod('Procedure chk_led4Click( Sender : TObject)');
+    RegisterMethod('Procedure chk_led5Click( Sender : TObject)');
+    RegisterMethod('Procedure FormClose( Sender : TObject; var Action : TCloseAction)');
+    RegisterMethod('Procedure btn_loopClick( Sender : TObject)');
+  end;
+end;
+
+
+
+
+ 
+  http://i1-win.softpedia-static.com/screenshots/maXbox_5.png?1381322021
+  
+    RegisterMethod('Constructor Create(AOwner: TComponent)');
+    RegisterConstructor(@TJvMail.Create, 'Create');
+  
+  
+   RegisterMethod('Procedure Free');
+   RegisterMethod(@TJvMail.Destroy, 'Free');
+   
+   Here is an animation that explains how a cardioid is produced. The method of drawing a cardioid is similar to that of the circle but the formulae for calculating the position of the X and Y coordinates are different:
+
+r:=1-(cos(i)* c);
+y:=sin(i)*r;
+x:=cos(i) * r
+   
+
+
+----app_template_loaded_code----

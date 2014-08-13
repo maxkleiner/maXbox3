@@ -1,0 +1,425 @@
+Program TestFormRoboter;
+
+//#sign max: APSN21: 18.12.2013 15:50:37 
+//#path:E:\maxbox\maxbox3\examples\
+//TODO: test all forms in sequence
+//http://theroadtodelphi.wordpress.com/2010/12/06/generating-qr-codes-with-delphi/
+//check the helpfile \docs\THotlog.chm  , #locs:119
+
+Const
+   UrlGoogleQrCode='http://chart.apis.google.com/chart?chs=%dx%d&cht=qr&chld=%s&chl=%s';
+   AFILENAME= 'mX3QRCode3.png';
+   QDATA= 'this is maXland on a maXbox stream dream firebox';
+  
+type
+  TQrImage_ErrCorrLevel=(L,M,Q,H);
+
+//...invoke a HTTP Post request?  
+procedure TForm1_Button1Click(Sender: TObject);
+var
+  data: TIdMultiPartFormDataStream;
+  IdHTTP1: TIdHTTP;
+begin
+  data:= TIdMultiPartFormDataStream.Create;
+  try
+    { add the used parameters for the script }
+    data.AddFormField('param1', 'value1');
+    data.AddFormField('param2', 'value2');
+    data.AddFormField('param3', 'value3');
+    { Call the Post method of TIdHTTP and read the result into TMemo }
+    Memo2.Lines.Text:= IdHTTP1.Post2('http://localhost/script.php', data);
+  finally
+    data.Free;
+  end;
+end;  
+  
+  
+function DownloadJPGToBitmap(const URL : string; ABitmap: TBitmap): Boolean;
+var
+  idHttp: TIdHTTP;
+  ImgStream: TMemoryStream;
+  JpgImage: TJPEGImage;
+ begin
+     Result:= False;
+     ImgStream:= TMemoryStream.Create;
+     try
+       idHttp:= TIdHTTP.Create(nil);
+       try
+         idHttp.Get1(URL, ImgStream);
+       finally
+         idHttp.Free;
+       end;
+       ImgStream.Position:= 0;
+       JpgImage:= TJPEGImage.Create;
+       try
+         JpgImage.LoadFromStream(ImgStream);
+         ABitmap.Assign(JpgImage);
+       finally
+         Result:= True;
+         JpgImage.Free;
+       end;
+     finally
+       ImgStream.Free;
+     end;
+ end;
+ 
+  
+procedure TFileRunTest;
+var RunAttach: TFileRun;
+begin
+  RunAttach:= TFileRun.Create(NIL);
+    try
+     RunAttach.FileName:= ExePath+'firstdemo.txt';
+     RunAttach.Operation:= 'open';
+     RunAttach.Directory:= Exepath; //txtPath.Text;
+     RunAttach.Parameters := '';
+     RunAttach.ShowCmd := scShowNormal;
+     RunAttach.Execute;
+     //runattach.browsedlg;
+    finally
+     RunAttach.Free;
+  end;  
+end;
+
+//TODO:#1 Returns the Image direct of the last modification of the given File
+ var image2: TImage;
+
+begin
+  Writeln(datetimetostr(FileTimeGMT(exepath+'maxbox3.exe')));
+   
+  //http://www.softwareschule.ch/images/Ekon17_2013.jpg
+  image2:= TImage.create(self); 
+  DownloadJPGToBitmap('http://www.softwareschule.ch/images/Ekon17_2013.jpg',
+                              Image2.Picture.Bitmap);
+  with TCustomDrawForm.create(self) do begin
+    width:=800;
+    height:=800;
+    //image1.height:= 600; 
+    image1.picture.bitmap:= image2.picture.bitmap;
+    //CustomDraw1Click(self);  
+    //Selection1Click(self);
+    Background1.click;
+    bitmap1.click;
+    Tile1.click;
+    Showmodal;           
+    Free;                
+  end;
+  image2.Free;  
+  
+  //if IsTCPPortOpen(80,'192.168.1.53') then
+   if IsTCPPortOpen(80,getIP(getHostName)) then
+       writeln('Port Open Started') else 
+       writeln('Port not open');
+  
+   maxCalcF('SQRT(PI)');
+   PrintF('gcd %d * lcm %d = %d ',[gcd(4,6), lcm(4,6), 4*6]);
+     //SetAlias(Alias, aAliasDir);
+     //SetBde('\DRIVERS\PARADOX\INIT','NET DIR',aNetDir);
+     //SetBde('\SYSTEM\INIT','LOCAL SHARE','TRUE');
+End.  
+
+
+
+     with TCustomDrawForm.create(self) do begin
+       image1.height:= 600; //add properties
+       SelectionBackground1Click(self)
+       Drawing1Click(self)'
+       showmodal;           //add methods
+       free;                //free it
+     end;
+  
+  myform 
+
+In order to make your life easier, the unit HotLog.pas declares an instance of THotLog, and calls its constructor automatically, as soon as your programm is loaded (in fact, as soon as the HotLog unit's part of your programm is loaded).
+
+This instance is called "hLog". It is the object instance you'll use to access HotLog.pas/ThotLog properties and routines.
+All the following examples will allways use it. However, and as stated before, THotLog being an object, you can declare as many instances of it as you want.
+
+// and the written result will be :
+
+********************************************************************************
+>>>> Start HotLogTest.exe  v 1.0.0.4                         2004-03-09 23:38:54
+           From : C:\Program Files\Borland\Delphi9\Projects\HotLog\
+           Prms : (No params)
+
+(....)
+
+<<<< Stop  HotLogTest.exe                                    2004-03-09 23:38:55
+********************************************************************************
+
+
+const
+UrlGoogleQrCode='http://chart.apis.google.com/chart?chs=%dx%d&cht=qr&chld=%s&chl=%s';
+QrImgCorrStr   : array [TQrImage_ErrCorrLevel] of string=('L','M','Q','H');
+ 
+procedure WinInet_HttpGet(const Url: string;Stream:TStream);
+const
+BuffSize = 1024*1024;
+var
+  hInter   : HINTERNET;
+  UrlHandle: HINTERNET;
+  BytesRead: DWORD;
+  Buffer   : Pointer;
+begin
+  hInter := InternetOpen('', INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
+  if Assigned(hInter) then
+  begin
+    Stream.Seek(0,0);
+    GetMem(Buffer,BuffSize);
+    try
+        UrlHandle := InternetOpenUrl(hInter, PChar(Url), nil, 0, INTERNET_FLAG_RELOAD, 0);
+        if Assigned(UrlHandle) then
+        begin
+          repeat
+            InternetReadFile(UrlHandle, Buffer, BuffSize, BytesRead);
+            if BytesRead>0 then
+             Stream.WriteBuffer(Buffer^,BytesRead);
+          until BytesRead = 0;
+          InternetCloseHandle(UrlHandle);
+        end;
+    finally
+      FreeMem(Buffer);
+    end;
+    InternetCloseHandle(hInter);
+  end
+end;
+ 
+//this function return a Stream (PngImage inside) with a Qr code.
+procedure GetQrCode(Width,Height:Word;Correction_Level:TQrImage_ErrCorrLevel;const Data:string;StreamImage : TMemoryStream);
+Var
+ EncodedURL  : string;
+begin
+  EncodedURL:=Format(UrlGoogleQrCode,[Width,Height,QrImgCorrStr[Correction_Level],HTTPEncode(Data)]);
+  WinInet_HttpGet(EncodedURL,StreamImage);
+end;
+
+
+http://www.delphi-central.com/callback.aspx
+
+
+How about something like this:
+
+$url =~ m|([^/]+)/?$|;
+my $end_of_url = $1;
+
+The $ on the end anchors the regular expression to the end of the string. The [^/] means anything that's not a slash and the + after means I want one or more things that are not slashes. Notice that this is in a capture group which are marked with parentheses.
+
+I end the regular expression with /? which means that there may or may not be a slash on the very end of the string. I've put my regular expression between m| and |, so I can use forward slashes without having to constantly escape them.
+
+The last part of the URL is now in $1 and I can set my own scalar variable to save this Result.
+share|improve this answer
+
+  
+procedure GetQrCodeImage(Width,Height: Word; Correct_Level: string;
+           const Data:string; aimage: TImage; apath: string);
+var
+  encodedURL: string;
+  idhttp: TIdHttp;// THTTPSend;
+  pngStream: TMemoryStream;
+begin
+  encodedURL:= Format(UrlGoogleQrCode,[Width,Height, Correct_Level, HTTPEncode(Data)]);
+  //WinInet_HttpGet(EncodedURL,StreamImage);
+  idHTTP:= TIdHTTP.Create(NIL)
+  pngStream:= TMemoryStream.create;
+  with TLinearBitmap.Create do try
+    idHTTP.Get1(EncodedURL, pngStream)
+    pngStream.Position:= 0;
+    LoadFromStream2(pngStream,'PNG');
+    aImage.Picture:= NIL;
+    AssignTo(aimage.picture.bitmap);
+    SaveToFile(apath);
+    //OpenDoc(apath);
+  finally
+    Dispose;
+    Free;
+    idHTTP.Free
+    pngStream.Free;
+  end;
+end;
+
+procedure GetQrCode3(Width,Height: Word; Correct_Level: string;
+           const Data:string; apath: string);
+var
+  encodedURL: string;
+  idhttp: TIdHttp;// THTTPSend;
+  png: TLinearBitmap;//TPNGObject;
+  pngStream: TMemoryStream;
+begin
+  encodedURL:= Format(UrlGoogleQrCode,[Width,Height, Correct_Level, HTTPEncode(Data)]);
+  //WinInet_HttpGet(EncodedURL,StreamImage);
+  idHTTP:= TIdHTTP.Create(NIL)
+  pngStream:= TMemoryStream.create;
+  with TLinearBitmap.Create do try
+    idHTTP.Get1(EncodedURL, pngStream)
+    pngStream.Position:= 0;
+    LoadFromStream2(pngStream,'PNG');
+    //aImage.Picture:= NIL;
+    //AssignTo(aimage.picture.bitmap);
+    SaveToFile(apath);
+    OpenDoc(apath);
+  finally
+    Dispose;
+    Free;
+    idHTTP.Free
+    pngStream.Free;
+  end;
+end;
+
+//BDE Install Test
+
+procedure TForm1.BtnSetupClick(Sender: TObject);
+var aAliasDir, aNetDir:String;
+begin
+  Application.ProcessMessages;
+  aAliasDir:=EditDataDir.Text;
+  aNetDir:=EditNetDir.Text;
+
+//  aAliasDir:='E:\SAS\Daten';
+//  aNetFileDir:='E:\';
+//  ShowMessage(ExpandUNCFileName(aAliasDir));
+
+  if trim(aAliasDir)='' then raise Exception.Create('Geben Sie bitte das Datenverzeichnis an.');
+  if trim(aNetDir)='' then raise Exception.Create('Geben Sie bitte das Netzverzeichnis an.');
+  if not DirectoryExists(aAliasDir) then raise Exception.Create('Das Datenverzeichnis konnnte nicht gefunden werden.');
+  if not DirectoryExists(aNetDir) then raise Exception.Create('Das Netzverzeichnis konnnte nicht gefunden werden.');
+
+  try
+     Screen.Cursor:=crHourGlass;
+     SetAlias(Alias, aAliasDir);
+     SetBde('\DRIVERS\PARADOX\INIT','NET DIR',aNetDir);
+     SetBde('\SYSTEM\INIT','LOCAL SHARE','TRUE');
+//     SetBde('\DRIVERS\PARADOX\TABLE CREATE','BLOCK SIZE','4096'); // Standard 2048 KB
+//     SetBde('\DRIVERS\PARADOX\TABLE CREATE','LEVEL','7');
+     SetBde('\DRIVERS\PARADOX\INIT','LANGDRIVER','ANSIINTL'); // ANSIINTL ist der Kurzname für Pdox ANSI Intl
+     SetBde('\SYSTEM\INIT','LANGDRIVER','ANSIINTL');
+      // soll angeblich die Performance verbessern
+     SetBde('\System\Init','MAXFILEHANDLES','100'); // (Standard: 48)
+     SetBde('\System\Init','MAXBUFSIZE','2048'); // Cachepuffer in KB (Standard: 2048 KB)
+     SetBde('\System\Init','MINBUFSIZE','128');
+
+     //SetBde('\System\Init','MEMSIZE','64'); // max. BDE-Speicher (Standard: 16 MB)
+     //SetBde('\System\Init','SHAREDMEMSIZE','8192'); // gemeinsam benutzter Speicher (Standard: 2048 KB)
+
+  finally
+     Screen.Cursor:=crDefault;
+  end;
+
+  MessageDlg('Ihre Einstellungen für diesen Rechner wurden gespeichert.'#13#13'Das Setup-Programm wird jetzt beendet.',mtInformation,[mbOk],0);
+  Close;
+
+(*
+  // Versionen der redirector-files testen (nur Win 95)
+  if Win32Platform = VER_PLATFORM_WIN32_WINDOWS then CheckRedirector;
+   // Registry checken
+  case Win32Platform of
+    VER_PLATFORM_WIN32_WINDOWS: CheckWin95Registry;
+    VER_PLATFORM_WIN32_NT:      CheckWinNTRegistry;
+  end;
+   // Neustart
+  if RebootRequired then RestartDialog(0, nil, ew_RestartWindows);
+*)
+end;
+
+procedure CheckWinNTRegistry;
+var Reg: TRegistry;
+begin
+  Reg:=TRegistry.Create;
+  try
+      Reg.RootKey:=HKey_Local_Machine;
+      // für NT-Server (siehe Microsoft Knowledge Base Artikel 129202, 126026, 219022)
+      //Disable opportunistic locking & caching
+      CheckRegistryEntry(Reg, Services + 'LanmanServer\Parameters', 'EnableOpLocks', 1, 0, 0);
+      CheckRegistryEntry(Reg, Services + 'LanmanServer\Parameters', 'CachedOpenLimit', 1, 0, 0);
+
+      // für Windows 2000/2003-Server und XP Professionial (siehe Microsoft Knowledge Base Artikel 296264)
+      CheckRegistryEntry(Reg, Services + 'MRXSmb\Parameters', 'OplocksDisabled', 0, 1, 0);
+
+      // NT-Workstation
+      //Disable opportunistic locking & caching
+      CheckRegistryEntry(Reg, Services + 'LanmanWorkStation\Parameters', 'UseOpportunisticLocking', 1, 0, 0);
+//      CheckRegistryEntry(Reg, Services + 'LanmanWorkStation\Parameters', 'UtilizeNtCaching', 1, 0, 0);
+      //Make sure NetWare popups are enabled on NT-Workstation to avoid a documented issue
+//      CheckRegistryEntry(Reg, Services + 'NWCWorkstation\Parameters', 'DisablePopup', 1, 0, 0);
+  finally
+      Reg.Free
+  end
+end;
+
+    six spaces!
+    Findtext:= lv.Items.item[lv.ItemIndex].SubItems[1]; //'End.';
+
+
+hier nun die Zugangsdaten zur eValuation Plattform.
+
+procedure SIRegister_TCustomDrawForm(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TForm', 'TCustomDrawForm') do
+  with CL.AddClassN(CL.FindClass('TForm'),'TCustomDrawForm') do
+  begin
+    RegisterProperty('TV', 'TTreeView', iptrw);
+    RegisterProperty('ImageList', 'TImageList', iptrw);
+    RegisterProperty('MainMenu1', 'TMainMenu', iptrw);
+    RegisterProperty('Drawing1', 'TMenuItem', iptrw);
+    RegisterProperty('Font1', 'TMenuItem', iptrw);
+    RegisterProperty('Background1', 'TMenuItem', iptrw);
+    RegisterProperty('Color1', 'TMenuItem', iptrw);
+    RegisterProperty('Bitmap1', 'TMenuItem', iptrw);
+    RegisterProperty('DefaultDrawing1', 'TMenuItem', iptrw);
+    RegisterProperty('OnCustomDraw1', 'TMenuItem', iptrw);
+    RegisterProperty('OnCustomDrawItem1', 'TMenuItem', iptrw);
+    RegisterProperty('BrushStyle1', 'TMenuItem', iptrw);
+    RegisterProperty('Solid1', 'TMenuItem', iptrw);
+    RegisterProperty('Clear1', 'TMenuItem', iptrw);
+    RegisterProperty('Horizontal1', 'TMenuItem', iptrw);
+    RegisterProperty('Vertical1', 'TMenuItem', iptrw);
+    RegisterProperty('FDiagonal1', 'TMenuItem', iptrw);
+    RegisterProperty('BDiagonal1', 'TMenuItem', iptrw);
+    RegisterProperty('Cross1', 'TMenuItem', iptrw);
+    RegisterProperty('DiagCross1', 'TMenuItem', iptrw);
+    RegisterProperty('File1', 'TMenuItem', iptrw);
+    RegisterProperty('Exit1', 'TMenuItem', iptrw);
+    RegisterProperty('N2', 'TMenuItem', iptrw);
+    RegisterProperty('TVFontDialog', 'TFontDialog', iptrw);
+    RegisterProperty('Tile1', 'TMenuItem', iptrw);
+    RegisterProperty('Stretch1', 'TMenuItem', iptrw);
+    RegisterProperty('None1', 'TMenuItem', iptrw);
+    RegisterProperty('Selection1', 'TMenuItem', iptrw);
+    RegisterProperty('SelectedFontDialog', 'TFontDialog', iptrw);
+    RegisterProperty('BkgColorDialog', 'TColorDialog', iptrw);
+    RegisterProperty('SelBkgColorDialog', 'TColorDialog', iptrw);
+    RegisterProperty('SelectionBackground1', 'TMenuItem', iptrw);
+    RegisterProperty('ButtonColor1', 'TMenuItem', iptrw);
+    RegisterProperty('ButtonSize1', 'TMenuItem', iptrw);
+    RegisterProperty('ButtonColorDialog', 'TColorDialog', iptrw);
+    RegisterProperty('Image1', 'TImage', iptrw);
+    RegisterProperty('TreeView1', 'TMenuItem', iptrw);
+    RegisterProperty('Color2', 'TMenuItem', iptrw);
+    RegisterProperty('TVColorDialog', 'TColorDialog', iptrw);
+    RegisterProperty('CustomDraw1', 'TMenuItem', iptrw);
+    RegisterProperty('Font2', 'TMenuItem', iptrw);
+    RegisterMethod('Procedure FormCreate( Sender : TObject)');
+    RegisterMethod('Procedure TVCustomDraw( Sender : TCustomTreeView; const ARect : TRect; var DefaultDraw : Boolean)');
+    RegisterMethod('Procedure TVCustomDrawItem( Sender : TCustomTreeView; Node : TTreeNode; State : TCustomDrawState; var DefaultDraw : Boolean)');
+    RegisterMethod('Procedure TVGetImageIndex( Sender : TObject; Node : TTreeNode)');
+    RegisterMethod('Procedure TVGetSelectedIndex( Sender : TObject; Node : TTreeNode)');
+    RegisterMethod('Procedure Exit1Click( Sender : TObject)');
+    RegisterMethod('Procedure Selection1Click( Sender : TObject)');
+    RegisterMethod('Procedure Color1Click( Sender : TObject)');
+    RegisterMethod('Procedure SelectionBackground1Click( Sender : TObject)');
+    RegisterMethod('Procedure Solid1Click( Sender : TObject)');
+    RegisterMethod('Procedure None1Click( Sender : TObject)');
+    RegisterMethod('Procedure OnCustomDraw1Click( Sender : TObject)');
+    RegisterMethod('Procedure OnCustomDrawItem1Click( Sender : TObject)');
+    RegisterMethod('Procedure TVExpanded( Sender : TObject; Node : TTreeNode)');
+    RegisterMethod('Procedure ButtonColor1Click( Sender : TObject)');
+    RegisterMethod('Procedure ButtonSize1Click( Sender : TObject)');
+    RegisterMethod('Procedure Drawing1Click( Sender : TObject)');
+    RegisterMethod('Procedure Color2Click( Sender : TObject)');
+    RegisterMethod('Procedure CustomDraw1Click( Sender : TObject)');
+    RegisterMethod('Procedure Font2Click( Sender : TObject)');
+  end;
+end;
+
+
+
+----app_template_loaded_code----

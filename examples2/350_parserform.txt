@@ -1,0 +1,466 @@
+PROGRAM Duallist_ParserForm_Natural_Interaction_ChartPlot;
+CONST 
+//<Constant declarations>   TestBed, locs=119
+  TEXTOUT = ' hi time traveler ';
+  FILENAME = 'maxbox3.exe';
+
+{TYPE 
+<Type declarations>} 
+
+VAR 
+  i, N, SN: integer;
+  getlist: TStringList;
+
+//procedure StrtoList(s: string; const List: TStrings; const delimiter: char=';');
+procedure StrtoList(s: string; const List: TStrings; const delimiter: char);
+var tmp : string;
+    i   : integer;
+begin
+  List.BeginUpdate;
+  if delimiter = '' then delimiter:= ';';
+  try
+   List.Clear;
+   while pos(delimiter, s) > 0 do begin
+     i := pos(delimiter, s);
+     tmp := Copy(s, 1, i - 1);
+     Delete(s, 1, i);
+     List.Add(tmp);
+   end;
+   if s <> '' then
+     List.Add(s);
+  finally
+   List.EndUpdate;
+  end;
+end;
+
+function TJvPlaylist_GetPath(Value: string; Position: Integer): string;
+var
+  I: Integer;
+  ShowDrive, ShowExtension, ShowNumbers: boolean;
+begin
+  Result := Value;
+  if not ShowDrive then begin
+    I := Pos(':', Result);
+    if I > 0 then
+      Result := Copy(Result, I + 1, Length(Result));
+  end;
+  if not ShowExtension then
+    Result := ChangeFileExt(Result, '');
+  if ShowNumbers then
+    Result := IntToStr(Position + 1) + '. ' + Result;
+end;
+
+procedure TJvPlaylist_SortBySongName;
+var
+  A, B, C: Integer;
+   FItems: TStringList;
+    FShowExtension: Boolean;
+    FRefresh: Boolean;
+    FShowDrive: Boolean;
+    Items: TStrings;
+    mb: TListBox;
+begin
+  FRefresh:= True;
+  //with FItems do begin
+  for A := 0 to Items.Count - 1 do begin
+    C := A;
+    for B := A to Items.Count - 1 do
+      if ExtractFileName(Items[B]) < ExtractFileName(Items[C]) then
+        C := B;
+    Items.Exchange(A, C);
+  end;
+  FRefresh := False;
+  mb.Refresh;
+  //end;
+end;
+
+
+
+procedure runDuallistForm;
+//var acap: TCaption;
+var getList: TStringlist;
+    dlist: TJvDualListDialog;
+begin
+  getList:= TStringlist.create;
+   if PeBorFormNames(Exepath+FILENAME, getList) then
+       //for i:= 1 to getList.count-1 do 
+         writeln('forms found');
+    {dlist:= TJvDualListDialog.create(self);
+    TForm(dlist).Setbounds(10,10,400,400);
+    dlist.execute
+    dlist.free;}
+  with TJvDualListDialog.create(self) do begin
+    list1:= getList;
+    okbtncaption:= 'Dual OK';
+    //TJvDualListDialog(setbounds
+    title:= 'mX3 Form Names';
+    //width:= 700;
+    Execute;
+    //showmodal;
+    Free;
+  end;
+  getlist.Free;  
+end; 
+
+
+procedure runParserForm;
+//var acap: TCaption;
+begin
+  with TJvHTMLParserForm.create(self) do begin
+    //list1:= getList;
+    //SetBounds(10,10,350,200)
+    //okbtncaption:= 'Dual OK';
+    //TJvDualListDialog(setbounds
+    caption:= 'mX3 HTMLParser Form';
+    Showmodal;
+    //showmodal;
+    Free;
+  end;
+end; 
+
+
+procedure runYearGridForm;
+//var acap: TCaption;
+var it: Int64;
+begin
+  with TYearGridEditForm.create(self) do begin
+    //list1:= getList;
+    //SetBounds(10,10,350,200)
+    //okbtncaption:= 'Dual OK';
+    //TJvDualListDialog(setbounds
+    caption:= 'mX3 YearGrid Form';
+    Showmodal;
+    //FormShow(self);
+    //showmodal;
+    Free;
+  end;
+  for it:= 1 to 32 do
+    printF('Bin exponent with SHL: 2^%d = %d',[it, it SHL it DIV it]);
+end; 
+
+//TYearGridEditForm
+var 
+  aFrm: TForm;
+  mT: TTimer;
+  tB: TTrackBar;
+  statBar1: TStatusBar;
+
+//**************************Event Handlers*******************************
+procedure TFrm1_trackSpeedChange(Sender: TObject);
+begin
+  //mt.Interval:= 1000 div tB.Position;
+  writeln(intToStr(1000 div tB.Position));
+end;
+
+procedure TFrm1_closeForm(Sender: TObject; var Action: TCloseAction);
+begin
+  {if mt <> NIL then begin
+    mT.enabled:= false;
+    mT.Free;
+    mT:= NIL;
+  end;}
+  ///afrm.Free;  
+  action:= caFree;
+  afrm:= NIL;
+end;
+
+procedure TFrm1_CloseClick(Sender: TObject);
+begin
+  afrm.Close;
+end;
+
+procedure TFrm1_PauseClick(Sender: TObject);
+begin
+  {if mT <> NIL then
+    mt.enabled:= not mt.enabled; }
+end;
+
+//**************************Form Builder*******************************
+procedure loadForm;
+begin
+  aFrm:= TForm.Create(self);
+  //mT:= TTimer.Create(self);
+  //mt.onTimer:= @TFrm1_timerRedrawTimer;
+  //mt.interval:= MILLISECONDS;
+  //mt.free;  in on close            
+  with aFrm do begin
+    Caption:= '********** Form Chart Template ***********';  
+    height:= 510;
+    width:= 700;
+    Position:= poScreenCenter;
+    //Color:= clBlack;
+    onClose:= @TFrm1_closeForm;
+    //onPaint:= @TFrm1_FormPaint;
+    Canvas.Pen.color:= clBlue;
+    Canvas.Pen.Width:= 15;
+    Show;
+    canvas.brush.bitmap:= getBitmapObject(Exepath+'examples\images\bmp47.bmp');
+    Canvas.FillRect(Rect(600,300,100,100));
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(310,390,150,55);
+    caption:= 'Pause';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'JVPOWEREDBYJVCL'); 
+    mXButton(05,05,width+200, height,12,12,handle);
+    //event handler
+    onClick:= @TFrm1_PauseClick;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(480,390,150,55);
+    caption:= 'Close';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP'); 
+    mXButton(05,05,width, height,12,12,handle);
+    onClick:= @TFrm1_CloseClick;
+  end;
+  tB:= TTrackBar.create(aFrm);
+  with tB do begin
+    parent:= aFrm;
+    setBounds(40,402,230,40);
+    Min:= 10; Max:= 100
+    Frequency:= 10
+    Position:= 1000 div 50;
+    linesize:= 4;
+    ThumbLength:= 30;
+    SetFocus;
+    OnChange:= @TFrm1_trackSpeedChange;
+  end;
+  statbar1:= TStatusBar.Create(aFrm);
+  with statbar1 do begin
+    parent:= aFrm;
+    showhint:= true;
+    hint:= 'this is a LED BoX';
+    Panels.add;
+      panels.items[0].width:= 200;
+      panels.items[0].text:= '200';
+    Panels.add;
+      panels.items[1].width:= 150;
+      panels.items[1].text:= '150';
+  end;
+  with TJvChart.create(aFrm) do begin
+    parent:= aFrm;
+    setBounds(10,10,230,300);
+    DisplayBars;
+    //RegisterProperty('Data', 'TJvChartData', iptr);
+    //data;
+    //GraphHeader
+    PlotGraph;
+  end;
+end;  
+
+BEGIN  //Main
+//<Executable statements>
+ runDuallistForm;
+ runParserForm;
+ runYearGridForm;
+ loadForm;
+
+ //writeln(floattostr(CPUUsage))
+ with TJvCpuUsage2.create(self) do
+   writeln('cpu '+floattostr(usage));
+ writeln(floattostr(kmtonm(23.3)))
+ writeln(floattostr(AttoPascal(10.3)))
+ writeln(floattostr(metretoFeet(10.0)))
+ writeln('PascalToBar  '+floattoStr(PascalToBar(47.5)));
+ writeln('PascalToAt   '+floattoStr(PascalToAt(47.5)));
+ writeln('PascalToTorr '+floattoStr(PascalToTorr(47.5)));
+ 
+  N:= 2; SN:= 1000;
+  {for i:= 1 to round(power(2,N)) do begin 
+    Writeln(intToStr(i)+TEXTOUT + DateTimeToStr(AddHours(Now,-i)));
+    Delay(SN);   //speed of time machine
+  end;}
+  getList:= TStringlist.create;
+     if IsValidPeFile(Exepath+FILENAME) then writeln ('Valid PE File!');
+     if PeVerifyCheckSum(Exepath+FILENAME) then writeln ('Valid CheckSum File!');
+     
+     if PeExportedFunctions(Exepath+FILENAME,  getList) then
+       for i:= 1 to getList.count-1 do 
+         writeln(getlist.strings[i]);
+     getList.Clear; 
+     if PeExportedNames(Exepath+FILENAME, getList) then
+       for i:= 1 to getList.count-1 do 
+         writeln(getlist.strings[i]);
+     getList.Clear; 
+     if PeBorFormNames(Exepath+FILENAME, getList) then
+       for i:= 1 to getList.count-1 do 
+         writeln(getlist.strings[i]);
+     getList.Clear; 
+     if PeResourceKindNames(Exepath+FILENAME, rtIcon, getList) then
+       for i:= 1 to getList.count-1 do 
+         writeln(getlist.strings[i]);
+      if PeDoesImportLibrary(Exepath+FILENAME,Exepath+'dmath.dll',false)
+       then writeln ('Import Lib!');
+    getList.Free;
+   Writeln(TEXTOUT + DateTimeToStr(AddHours(Now,-(round(power(2,24))))));
+//<Definitions>  
+END. 
+
+
+(* === compile-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJvHTMLParserForm(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TJvForm', 'TJvHTMLParserForm') do
+  with CL.AddClassN(CL.FindClass('TJvForm'),'TJvHTMLParserForm') do begin
+    RegisterProperty('ListBox1', 'TListBox', iptrw);
+    RegisterProperty('GroupBox1', 'TGroupBox', iptrw);
+    RegisterProperty('edKeyword', 'TEdit', iptrw);
+    RegisterProperty('Label1', 'TLabel', iptrw);
+    RegisterProperty('edStartTag', 'TEdit', iptrw);
+    RegisterProperty('Label2', 'TLabel', iptrw);
+    RegisterProperty('edEndTag', 'TEdit', iptrw);
+    RegisterProperty('Label3', 'TLabel', iptrw);
+    RegisterProperty('Label4', 'TLabel', iptrw);
+    RegisterProperty('Label5', 'TLabel', iptrw);
+    RegisterProperty('cbTakeText', 'TComboBox', iptrw);
+    RegisterProperty('edMustBe', 'TEdit', iptrw);
+    RegisterProperty('btnAdd', 'TButton', iptrw);
+    RegisterProperty('btnRemove', 'TButton', iptrw);
+    RegisterProperty('OkBtn', 'TButton', iptrw);
+    RegisterProperty('CancelBtn', 'TButton', iptrw);
+    RegisterMethod('Procedure edKeywordChange( Sender : TObject)');
+    RegisterMethod('Procedure Button1Click( Sender : TObject)');
+    RegisterMethod('Procedure ListBox1Click( Sender : TObject)');
+    RegisterMethod('Procedure Button2Click( Sender : TObject)');
+    RegisterMethod('Procedure edStartTagChange( Sender : TObject)');
+    RegisterMethod('Procedure edEndTagChange( Sender : TObject)');
+    RegisterMethod('Procedure cbTakeTextChange( Sender : TObject)');
+    RegisterMethod('Procedure edMustBeChange( Sender : TObject)');
+    RegisterMethod('Procedure OkBtnClick( Sender : TObject)');
+    RegisterMethod('Procedure CancelBtnClick( Sender : TObject)');
+    RegisterMethod('Procedure LoadFromStr( Value : TStrings)');
+    RegisterMethod('Procedure SaveToStr( Value : TStrings)');
+  end;
+end;
+
+----app_template_loaded_code----
+
+(* === compile-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJvDualListDialog(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TJvComponent', 'TJvDualListDialog') do
+  with CL.AddClassN(CL.FindClass('TJvComponent'),'TJvDualListDialog') do begin
+    RegisterMethod('Constructor Create( AOwner : TComponent)');
+    RegisterMethod('Function Execute : Boolean');
+    RegisterProperty('Ctl3D', 'Boolean', iptrw);
+    RegisterProperty('Sorted', 'Boolean', iptrw);
+    RegisterProperty('Title', 'string', iptrw);
+    RegisterProperty('Label1Caption', 'TCaption', iptrw);
+    RegisterProperty('Label2Caption', 'TCaption', iptrw);
+    RegisterProperty('OkBtnCaption', 'TCaption', iptrw);
+    RegisterProperty('CancelBtnCaption', 'TCaption', iptrw);
+    RegisterProperty('HelpBtnCaption', 'TCaption', iptrw);
+    RegisterProperty('HelpContext', 'THelpContext', iptrw);
+    RegisterProperty('List1', 'TStrings', iptrw);
+    RegisterProperty('List2', 'TStrings', iptrw);
+    RegisterProperty('ShowHelp', 'Boolean', iptrw);
+  end;
+end;
+
+
+(* === compile-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TImageForm(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TForm', 'TImageForm') do
+  with CL.AddClassN(CL.FindClass('TForm'),'TImageForm') do begin
+    RegisterProperty('DirectoryList', 'TDirectoryListBox', iptrw);
+    RegisterProperty('DriveCombo', 'TDriveComboBox', iptrw);
+    RegisterProperty('PathLabel', 'TLabel', iptrw);
+    RegisterProperty('FileEdit', 'TEdit', iptrw);
+    RegisterProperty('ImagePanel', 'TPanel', iptrw);
+    RegisterProperty('Image', 'TImage', iptrw);
+    RegisterProperty('FileListBox', 'TFileListBox', iptrw);
+    RegisterProperty('ImageName', 'TLabel', iptrw);
+    RegisterProperty('FilterCombo', 'TFilterComboBox', iptrw);
+    RegisterProperty('StretchCheck', 'TCheckBox', iptrw);
+    RegisterProperty('FilePics', 'TJvPicClip', iptrw);
+    RegisterProperty('FormStorage', 'TJvFormStorage', iptrw);
+    RegisterProperty('OkBtn', 'TButton', iptrw);
+    RegisterProperty('CancelBtn', 'TButton', iptrw);
+    RegisterProperty('Label2', 'TLabel', iptrw);
+    RegisterProperty('Label3', 'TLabel', iptrw);
+    RegisterProperty('Label4', 'TLabel', iptrw);
+    RegisterProperty('Label5', 'TLabel', iptrw);
+    RegisterProperty('PreviewBtn', 'TSpeedButton', iptrw);
+    RegisterMethod('Procedure FileListBoxClick( Sender : TObject)');
+    RegisterMethod('Procedure StretchCheckClick( Sender : TObject)');
+    RegisterMethod('Procedure FormCreate( Sender : TObject)');
+    RegisterMethod('Procedure FileListBoxChange( Sender : TObject)');
+    RegisterMethod('Procedure FileListBoxDblClick( Sender : TObject)');
+    RegisterMethod('Procedure FormDestroy( Sender : TObject)');
+    RegisterMethod('Procedure PreviewBtnClick( Sender : TObject)');
+    RegisterMethod('Procedure OkBtnClick( Sender : TObject)');
+    RegisterProperty('FileName', 'string', iptrw);
+  end;
+end;
+
+procedure SIRegister_TYearGridEditForm(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TJvForm', 'TYearGridEditForm') do
+  with CL.AddClassN(CL.FindClass('TJvForm'),'TYearGridEditForm') do
+  begin
+    RegisterProperty('Panel1', 'TPanel', iptrw);
+    RegisterProperty('BitBtn1', 'TBitBtn', iptrw);
+    RegisterProperty('BitBtn2', 'TBitBtn', iptrw);
+    RegisterProperty('MemoText', 'TMemo', iptrw);
+    RegisterProperty('BtnLoad', 'TButton', iptrw);
+    RegisterProperty('BtnSave', 'TButton', iptrw);
+    RegisterProperty('OpenDialog', 'TOpenDialog', iptrw);
+    RegisterProperty('SaveDialog', 'TSaveDialog', iptrw);
+    RegisterMethod('Procedure BtnLoadClick( Sender : TObject)');
+    RegisterMethod('Procedure BtnSaveClick( Sender : TObject)');
+    RegisterMethod('Procedure FormShow( Sender : TObject)');
+  end;
+end;
+
+
+
+http://www.softwareschule.ch/download/maxbox_blix_the_programmer.pdf
+
+  
+  timec:= round(power(2,30)/24);
+  writeln(inttoStr(timec div 365));
+  writeln(intToStr(Round(Power(2,30)/24/365)));
+  writeln(inttoStr(round(power(2,12)) div 24));
+  maxcalcF('170*24');
+  
+  Energy = MemC * Work
+  W = KEt - KEº
+
+
+http://petshopboxstudio.com/goodies/free-vector-character-the-programmer/
+http://lifehacker.com/5401954/programmer-101-teach-yourself-how-to-code
+
+----code_cleared_checked----
+
+ 
+
+There are a lot of opinions out there, but there's no 88not one “best” language. Here's the thing to
+consider: In the end, language doesn't matter THAT much. Understanding data and control
+structures, algorithms, metrics, modelling and design patterns does matter very much. Every
+language, even a simple scripting language, will have elements that you'll use in other languages
+as well and will help 88your understanding. maXbox is build on Object Pascal and is similar to Java or C++ 88, a
+well known and mighty language.
+Script: Examples/336_digiclock2.txt
+Feedback @
+max@kleiner.com
+Literature:
+Kleiner et al., Patterns konkret, 2003, Software & Support
+Links of maXbox Tutorials:
+http://www.softwareschule.ch/maxbox.htm
+http://sourceforge.net/projects/maxbox
+http://sourceforge.net/apps/mediawiki/maxbox/
+http://en.wikipedia.org/wiki/Time_travel
+
+myform
+
+
+  
+  
+

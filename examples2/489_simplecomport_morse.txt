@@ -1,0 +1,272 @@
+program simpleComport_MORSIX;
+//for maXdrive #sign:Administrator: PC08: 13/08/2014 11:23:57 AM 
+//shows a class in use and a procedure
+// uncomment DirectCOMCall;
+
+{uses
+  Windows, Classes, SysUtils, AfComPortCore;
+
+type
+  TSimpleComPort = class(TObject)
+  private
+    FComPort: TAfComPortCore;
+    procedure PortEvent(Sender: TAfComPortCore; EventKind:TAfCoreEvent;Data: DWORD);
+  public
+       constructor Create;
+       destructor Destroy; override;
+       procedure Open(PortNumber: Integer; const Parameters: String);
+       procedure WriteString(const S: String);
+       procedure ReadString(var S: String);
+   end; }
+
+{ TSimpleComPort }
+{constructor TSimpleComPort.Create;
+begin
+  FComPort := TAfComPortCore.Create;
+  FComPort.OnPortEvent := PortEvent;
+  FComPort.DirectWrite := True;
+end;
+
+destructor TSimpleComPort.Destroy;
+begin
+  FComPort.Free;
+  inherited Destroy;
+end;
+
+procedure TSimpleComPort.Open(PortNumber: Integer; const Parameters: String);
+var DCB: TDCB;
+  C: array[0..255] of Char;
+begin
+  StrPCopy(C, Parameters);
+  ZeroMemory(@DCB, Sizeof(DCB));
+  Win32Check(BuildCommDCB(C, DCB));
+  FComPort.DCB := DCB;
+  FComPort.OpenComPort(PortNumber);
+  Writeln(Format('Port initialized: COM%d: %s', [PortNumber, Parameters]));
+end;
+
+procedure TSimpleComPort.PortEvent(Sender: TAfComPortCore;
+  EventKind: TAfCoreEvent; Data: DWORD);
+
+   procedure DisplayData;
+  var
+  S: String;
+  Count: DWORD;
+begin
+  Count := FComPort.ComStatus.cbInQue;
+  SetString(S, nil, Count);
+  FComPort.ReadData(Pointer(S)^, Count);
+  Write(S);
+end;
+
+begin
+  case EventKind of
+    ceLineEvent:
+      begin
+        if Data and EV_RXCHAR <> 0 then
+          DisplayData;
+        if Data and (not EV_RXCHAR) <> 0 then
+          Write(Format(#13#10'Line error: %.8xh'#13#10, [Data])); 
+      end;
+    ceNeedReadData:
+      DisplayData;
+  end;
+end;
+
+procedure TSimpleComPort.WriteString(const S: String);
+begin
+  FComPort.WriteData(Pointer(S)^, Length(S));
+end;
+
+procedure TSimpleComPort.ReadString(var S: String);
+begin
+  FComPort.ReadData(Pointer(S)^, Length(S));
+end; }
+
+
+var
+  StdIn: THandle;
+  InputBuffer: TInputRecord;
+  InputEvents, ConsoleMode: DWORD;
+  SimpleComPort: TSimpleComPort;
+  
+  //TODO: getcomport query as loop
+  //TODO: find auto free COM and pass to proc as loop
+  
+  procedure TPortForm1_AfComPort1DataRecieved(Sender: TObject; Count: Integer);
+  var strb: string;
+  begin
+   //TAfComPort(sender).ReadString);
+  try
+    //AfTerminal1.WriteString(inttoStr(ord(AfComPort1.ReadChar)));
+    write(TAfComPort(sender).ReadChar); //is buffer empty
+  except
+    raise;
+  end
+end;
+
+procedure DirectCOMCall;
+var key: byte;
+    mcount: byte;
+begin
+ with TAfComPort.create(NIL) do begin
+    //core:= core1; 
+    comnumber:= 1;
+    BaudRate:= br9600; //br9600;
+    {Parity:= None;
+    Databits:= db8;
+    Stopbits:= sbone;
+    flowcontrol:= fwnone; }
+    //checkClose;
+    Open;
+    //autoopen:= true;
+    //active:= true;
+    ExecuteCOMDialog;
+    //AddStringToLog
+     //  OnDataRecived:= @TPortForm1_AfComPort1DataRecieved;
+    //writeString('1');
+    // writedatastring('1',1);
+    //putchar
+  {for i:= 0 to 255 do begin
+    writeChar(chr(i));
+    writeln(chr(i))
+    //writeln('read it: '+readchar)
+    end;}
+    //writeChar(chr(ord(49)));
+    //writeChar('1');
+    {PWM Emulator--------------------}
+   writeString('1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A'+
+    '1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A');
+   //writeString('111111A111111111A11111111A111111111A111111A111111111A');
+   //-- .- -..- -... --- -..-
+   memo2.setfocus;
+   mcount:= 0;
+   repeat 
+     key:= random(2);
+     inc(mcount);
+     writeln(itoa(key));
+     writeChar('1');
+     //sleep(1333)
+     //MORSIX -> just a sim tester - no pause between words or sentence
+     if key = 1 then begin    //1(.):3(-) - you can add total sleep time between  wpm
+       sleep(75)   //500
+       MakeSound(700, 75, 60,'');
+     end
+       else begin
+        sleep(25);
+        MakeSound(700, 25, 60,'');    //freq shift
+     end;  
+     writeChar('A');
+       if key = 1 then 
+       sleep(5)
+       else sleep(55);         //75+5 = 25+55
+     if mcount mod (random(20)+15) = 0 then begin 
+       sleep(250);  //average on word code
+       writeln('word stop')
+     end;  
+   until isKeypressed; 
+   try
+    writeln('read it: '+readchar)
+    writeln(itoa(ord(readchar)))
+    writeln(itoa(ord('1')))
+   except 
+     //((writeChar('A');
+    Close;
+    FreeOnRelease;
+    end;
+  Close;
+  FreeOnRelease;
+ end;
+    // show a possible cast to core
+    //TAfComPortCore(Afcomport1).DirectWrite:= True;
+    //OnDataRecived:= @TPortForm1_AfComPort1DataRecieved;
+end; 
+
+   var AfComPort1: TAfComPort;
+        core1: TAfComPortCore;
+        key: char;
+        strb: string;
+        i: integer;
+  
+begin
+  {SetConsoleTitle('AsyncFree NonVCL example, press ESC to exit');
+  StdIn:= GetStdHandle(STD_INPUT_HANDLE);
+  writeln(inttostr(stdin));
+  if StdIn = INVALID_HANDLE_VALUE then RaiseLastWin32Error;
+  Win32Check(GetConsoleMode(StdIn, ConsoleMode));
+  Win32Check(SetConsoleMode(StdIn, ConsoleMode and (not ENABLE_ECHO_INPUT)));}
+
+  if IsCOMPort then begin
+    SimpleComPort:= TSimpleComPort.Create;
+  //SimpleComPort.Open(1, 'baud=115200 parity=N data=8 stop=1');
+    SimpleComPort.Open(1, 'baud=9600 parity=N data=8 stop=1');
+    sleep(1000)
+    //SimpleComPort.WriteString('111111111111111111111111A');
+    SimpleComPort.WriteString('1');
+    sleep(1500)
+    SimpleComPort.WriteString('A');
+    SimpleComPort.ReadString(strb)
+    writeln('back '+strb)
+    SimpleComPort.Free;
+   end;
+  {while True do
+    if ReadConsoleInput(StdIn, InputBuffer, 1, InputEvents) then
+    case InputBuffer.EventType of
+      KEY_EVENT:
+        with InputBuffer.Event.KeyEvent do if bKeyDown then
+          case AsciiChar of
+            #08, #10, #13, #32..#255:
+              SimpleComPort.WriteString(AsciiChar);
+            #27:
+              Break;
+          end;
+    end;}
+    //EV_RXCHAR
+  //IsPortAvailable
+  for i := 1 to 64 do
+    if IsCOM(i) then
+      writeln('COM: ' + IntToStr(i)+ ' available'); 
+  
+  DirectCOMCall;
+    {repeat
+      MakeSound(500, 4000, 50,'');
+    until iskeypressed; }
+  memo2.readonly:= false;
+
+End.
+
+
+Ref: maXbox
+
+-- .- -..- -... --- -..-
+
+
+1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A
+
+http://tpapro.sourceforge.net/Faq.html
+
+
+file-type = 'file' 'of' component-type
+
+   component-type = type-denoter
+
+   domain-type = type-identifier
+
+   new-ordinal-type = enumerated-type | subrange-type
+
+   new-pointer-type = '^' domain-type | '@' domain-type
+
+   new-structured-type =
+      [ 'packed' ] array-type |
+      [ 'packed' ] record-type |
+      [ 'packed' ] set-type |
+      [ 'packed' ] file-type |
+      [ 'packed' ] list-type |
+                         object-type |
+                         string-type
+
+   new-type = new-ordinal-type | new-structured-type | new-pointer-type
+
+   type-denoter = type-identifier | new-type
+
+   type-identifier = identifier

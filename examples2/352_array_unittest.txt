@@ -1,0 +1,725 @@
+PROGRAM Unittest;
+
+//file of :///E:/maxbox/maxbox3/exercices/tjvchartdemo13071259.htm
+// purpose: shows unit test with preprocessing define and asserts
+// now with debugoutstring of Win API
+
+{$define UNIT_TESTS}
+
+
+CONST 
+//<Constant declarations>   TestBed, locs=408
+  TEXTOUT = ' hi time test traveler ';
+  FILENAME = 'maxbox3.exe';
+
+Var 
+  i, N, SN: integer;
+  getlist: TStringList;
+  //gp: TGridpanel;
+
+//procedure StrtoList(s: string; const List: TStrings; const delimiter: char=';');
+procedure StrtoList(s: string; const List: TStrings; const delimiter: char);
+var tmp : string;
+    i   : integer;
+begin
+  List.BeginUpdate;
+  if delimiter = '' then delimiter:= ';';
+  try
+   List.Clear;
+   while pos(delimiter, s) > 0 do begin
+     i := pos(delimiter, s);
+     tmp := Copy(s, 1, i - 1);
+     Delete(s, 1, i);
+     List.Add(tmp);
+   end;
+   if s <> '' then
+     List.Add(s);
+  finally
+   List.EndUpdate;
+  end;
+  //frame3d
+end;
+
+function TJvPlaylist_GetPath(Value: string; Position: Integer): string;
+var
+  I: Integer;
+  ShowDrive, ShowExtension, ShowNumbers: boolean;
+begin
+  Result := Value;
+  if not ShowDrive then begin
+    I := Pos(':', Result);
+    if I > 0 then
+      Result := Copy(Result, I + 1, Length(Result));
+  end;
+  if not ShowExtension then
+    Result := ChangeFileExt(Result, '');
+  if ShowNumbers then
+    Result := IntToStr(Position + 1) + '. ' + Result;
+end;
+
+procedure TJvPlaylist_SortBySongName;
+var
+  A, B, C: Integer;
+   FItems: TStringList;
+    FShowExtension: Boolean;
+    FRefresh: Boolean;
+    FShowDrive: Boolean;
+    Items: TStrings;
+    mb: TListBox;
+begin
+  FRefresh:= True;
+  //with FItems do begin
+  for A := 0 to Items.Count - 1 do begin
+    C := A;
+    for B := A to Items.Count - 1 do
+      if ExtractFileName(Items[B]) < ExtractFileName(Items[C]) then
+        C := B;
+    Items.Exchange(A, C);
+  end;
+  FRefresh := False;
+  mb.Refresh;
+  //end;
+end;
+
+procedure runDuallistForm;
+//var acap: TCaption;
+var getList: TStringlist;
+begin
+  getList:= TStringlist.create;
+   if PeBorFormNames(Exepath+FILENAME, getList) then
+       //for i:= 1 to getList.count-1 do 
+         writeln('forms found');
+    {dlist:= TJvDualListDialog.create(self);
+    TForm(dlist).Setbounds(10,10,400,400);
+    dlist.execute
+    dlist.free;}
+  with TJvDualListDialog.create(self) do begin
+    list1:= getList;
+    okbtncaption:= 'Dual OK';
+    //TJvDualListDialog(setbounds
+    title:= 'mX3 Form Names';
+    //width:= 700;
+    Execute;
+    //showmodal;
+    Free;
+  end;
+  getlist.Free;  
+end; 
+
+procedure runParserForm;
+//var acap: TCaption;
+begin
+  with TJvHTMLParserForm.create(self) do begin
+    //list1:= getList;
+    //SetBounds(10,10,350,200)
+    //okbtncaption:= 'Dual OK';
+    //TJvDualListDialog(setbounds
+    caption:= 'mX3 HTMLParser Form';
+    Showmodal;
+    //showmodal;
+    Free;
+  end;
+end; 
+
+procedure runYearGridForm;
+//var acap: TCaption;
+var it: Int64;
+begin
+  with TYearGridEditForm.create(self) do begin
+    //list1:= getList;
+    //SetBounds(10,10,350,200)
+    //okbtncaption:= 'Dual OK';
+    caption:= 'mX3 YearGrid Form';
+    Showmodal;
+    //FormShow(self);
+    //showmodal;
+    Free;
+  end;
+  for it:= 1 to 32 do
+    printF('Bin exponent with SHL: 2^%d = %d',[it, it SHL it DIV it]);
+end; 
+
+
+//******************************TStatArray**********************************33
+//type
+  //TStatArray = array of double;
+var
+//TStatArray = class
+  StatArray: TStatArray;
+  //protected
+   //FFirst:Boolean;
+   FGrows: Boolean; // false=rolling average (circular buffer mode), true=average or sd of any number of samples (array grows without limit)
+   FValues: Array of Double;
+   FLength, // Array absolute size (may still be no data even if this is >0)
+   FIndex,  // Where will the next sample be stored into the array?
+   FCount:  // How many valid samples are in the array right now?
+      Integer;
+(*   procedure SetLen(aLength:Integer);
+    procedure AddValue(aValue:Double);
+      function Average:Double;
+      function StandardDeviation:Double;
+      property Grows:Boolean read FGrows write FGrows; // false=rolling average, true=average ALL samples (grows to fit)
+      property Length:Integer read FLength write SetLen;
+    property Count:Integer read FCount;
+    //property First:Boolean read FFirst;
+      procedure Reset; // Clear everything!
+      constructor Create; overload;
+    constructor Create(initialLength:Integer); overload;
+    destructor Destroy; override;
+
+uses  Windows, // OutputDebugString
+      SysUtils, // FloatToStr
+      Math;  //  VCL's statistics routines. StdDev, etc.
+
+// Begin Rolling Average      *)
+
+procedure  TStatArray_Create; // overload;
+begin
+   //FFirst := true;
+   FLength := 0;
+   FIndex := 0;
+   FCount:= 0;
+   FGrows := true;
+   SetLength(FValues,0);   
+end;
+
+procedure TStatArray_Reset;
+var
+ i:Integer;
+begin
+    FIndex := 0;
+    FCount := 0;
+    for i := 0 to FLength-1 do begin
+      FValues[i] := -999.0; // debug helper.
+    end;
+    //FFirst := true;
+end;
+
+procedure TStatArray_Create2(initialLength:Integer); // overload;
+begin
+//   FFirst := true;
+   SetLength(FValues,initialLength);
+   if (initialLength>0) then
+      FGrows := false
+   else
+      FGrows := true; 
+   FLength := initialLength;
+   FIndex := 0;
+   FCount:= 0;
+end;
+
+procedure  TStatArray_Destroy;
+begin
+  SetLength(FValues,0);
+end;
+
+function TStatArray_Average: Double;
+var
+ last,i:Integer;
+ sum:Double;
+begin
+ if FCount <= 0 then begin
+    result := 0;
+ end else begin
+    sum := 0;
+    if (FCount>FLength) then
+        last :=FLength-1
+    else
+        last :=FCount-1;
+    for i := 0 to last do begin
+       sum := sum + FValues[i];
+    end;
+    result := sum / (last+1);
+ end;
+end;
+
+function TStatArray_StandardDeviation:Double;
+var
+ i:Integer;
+// sum:Double;
+ TempArray:Array of Double;
+begin
+  if (FCount <= 0) then
+      result := 0
+  else if (FCount >= FLength) then begin
+      result := StdDev( FValues )
+  end else begin
+      SetLength(TempArray,FCount);
+      for i := 0 to FCount-1 do begin
+          TempArray[i] := FValues[i];
+      end;
+      result := StdDev( TempArray );
+      SetLength(TempArray,0);
+  end;
+end;
+
+procedure TStatArray_AddValue(aValue:Double);
+//var
+// i:Integer;
+begin
+ (*if FFirst then begin
+    FFirst := false;
+    FIndex := 0;
+    FValues[0] := aValue;
+    FCount := 1;
+ end else begin*)
+
+ // First time in we might need to create an array:
+  if FIndex>= FLength then begin
+     Assert(FGrows,'illegal condition'); // Illegal condition.
+     FLength := FIndex+1;
+     SetLength( FValues,FLength); // uninitialized, as of yet.
+  end;
+
+  FValues[FIndex] := aValue;
+  Inc(FIndex);
+  Inc(FCount);
+  if (not FGrows) then begin // circular?
+    if (FIndex>=FLength) then begin
+        FIndex := 0;
+        //FCount := FLength;//FCount does not exceed FLength in wraparounds.
+    end;
+  end else begin // grow after, in doublings of size, scales better!
+    if (FIndex>=FLength) then begin
+      FLength := FLength * 2;
+      SetLength( FValues,FLength); // uninitialized, as of yet.
+{$ifdef DEBUG_ASSERTIONS}  
+      Assert(FLength<20000); // Debug limit
+{$endif}      
+    end;
+  end;
+end;
+
+procedure TStatArray_SetLen(aLength:Integer);
+begin
+  if(aLength<1) then
+      aLength := 1;
+  FLength := aLength;
+  SetLength(FValues, FLength);
+end;
+
+// End Stats
+
+{$ifdef UNIT_TESTS}
+
+    procedure _outs(s:String);
+    begin
+        writeln('OutputDebugString '+(PChar(s)));
+        OutputDebugString(PChar(s));
+    end;
+    procedure _outd(d:Double);
+    begin
+        writeln('OutputDebugString '+(PChar(FloatToStr(d))));
+        OutputDebugString(PChar(FloatToStr(d)));
+     end;
+
+procedure StatsUnitTests;
+var
+    diff: Double;
+    a1: TStatArray;
+    (*procedure _outs(s:String);
+    begin
+        OutputDebugString(PChar(s));
+    end;
+    procedure _outd(d:Double);
+    begin
+        OutputDebugString(PChar(FloatToStr(d)));
+    end;*)
+begin
+   _outs('StatsUnitTests begins');
+   a1 := TStatArray.Create1(0); // Growing array.
+   a1.AddValue( 3.5 );
+   a1.AddValue( 1.5 );
+   a1.AddValue( 25.5 );
+   a1.AddValue( 100.5 );
+   _outd( a1.Average );
+
+   diff := Abs(((3.5+1.5+25.5+100.5)/4.0)-a1.Average);
+   Assert(diff<0.001,' diff false');
+   a1.Reset;
+   Assert(Abs(a1.Average)<0.0001,'false');
+
+   a1.AddValue( 3.5 );
+   a1.AddValue( 1.5 );
+   a1.AddValue( 25.5 );
+   a1.AddValue( 100.5 );
+   _outd( a1.Average );
+
+   diff:= Abs(((3.5+1.5+25.5+100.5)/4.0)-a1.Average);
+   Assert(diff<0.001,'diff false');
+   _outd( a1.StandardDeviation );
+   Assert(trunc(a1.StandardDeviation)=46,'false StandardDeviation in unit test');
+   a1.Free;
+   _outs('StatsUnitTests succesfully ends');   
+end; 
+
+{$endif UNIT_TESTS}
+
+
+BEGIN  //Main
+//<Executable statements>
+ {runDuallistForm;
+ runParserForm;
+ runYearGridForm;}
+ maxform1.intfNavigator1Click(self);
+ //writeln(floattostr(CPUUsage))
+ with TJvCpuUsage2.create(self) do
+   writeln('cpu '+floattostr(usage));
+ writeln(floattostr(kmtonm(23.3)))
+ writeln(floattostr(AttoPascal(10.3)))
+ writeln(floattostr(metretoFeet(10.0)))
+ writeln('PascalToBar  '+floattoStr(PascalToBar(47.5)));
+ writeln('PascalToAt   '+floattoStr(PascalToAt(47.5)));
+ writeln('PascalToTorr '+floattoStr(PascalToTorr(47.5)));
+ 
+  N:= 2; SN:= 1000;
+  {for i:= 1 to round(power(2,N)) do begin 
+    Writeln(intToStr(i)+TEXTOUT + DateTimeToStr(AddHours(Now,-i)));
+    Delay(SN);   //speed of time machine
+  end;}
+  getList:= TStringlist.create;
+     if IsValidPeFile(Exepath+FILENAME) then writeln ('Valid PE File!');
+     if PeVerifyCheckSum(Exepath+FILENAME) then writeln ('Valid CheckSum File!');
+     
+     if PeExportedFunctions(Exepath+FILENAME,  getList) then
+       for i:= 1 to getList.count-1 do 
+         writeln(getlist.strings[i]);
+     getList.Clear; 
+     if PeExportedNames(Exepath+FILENAME, getList) then
+       for i:= 1 to getList.count-1 do 
+         writeln(getlist.strings[i]);
+     getList.Clear; 
+     if PeBorFormNames(Exepath+FILENAME, getList) then
+       for i:= 1 to getList.count-1 do 
+         writeln(getlist.strings[i]);
+     getList.Clear; 
+     if PeResourceKindNames(Exepath+FILENAME, rtIcon, getList) then
+       for i:= 1 to getList.count-1 do 
+         writeln(getlist.strings[i]);
+      if PeDoesImportLibrary(Exepath+FILENAME,Exepath+'dmath.dll',false)
+       then writeln ('Import Lib!');
+    getList.Free;
+   Writeln(TEXTOUT + DateTimeToStr(AddHours(Now,-(round(power(2,24))))));
+//<Definitions> 
+
+   speak2('lets start unit test');
+
+   StatsUnitTests; 
+
+   speak2('this is the voice: test finished');
+
+END. 
+
+
+
+----app_template_loaded_code----
+
+
+http://www.softwareschule.ch/download/maxbox_blix_the_programmer.pdf
+
+  
+  timec:= round(power(2,30)/24);
+  writeln(inttoStr(timec div 365));
+  writeln(intToStr(Round(Power(2,30)/24/365)));
+  writeln(inttoStr(round(power(2,12)) div 24));
+  maxcalcF('170*24');
+  
+  Energy = MemC * Work
+  W = KEt - KEº
+
+
+http://petshopboxstudio.com/goodies/free-vector-character-the-programmer/
+http://lifehacker.com/5401954/programmer-101-teach-yourself-how-to-code
+
+----code_cleared_checked----
+
+ 
+
+There are a lot of opinions out there, but there's no 88not one “best” language. Here's the thing to
+consider: In the end, language doesn't matter THAT much. Understanding data and control
+structures, algorithms, metrics, modelling and design patterns does matter very much. Every
+language, even a simple scripting language, will have elements that you'll use in other languages
+as well and will help 88your understanding. maXbox is build on Object Pascal and is similar to Java or C++ 88, a
+well known and mighty language.
+Script: Examples/336_digiclock2.txt
+Feedback @
+max@kleiner.com
+Literature:
+Kleiner et al., Patterns konkret, 2003, Software & Support
+Links of maXbox Tutorials:
+http://www.softwareschule.ch/maxbox.htm
+http://sourceforge.net/projects/maxbox
+http://sourceforge.net/apps/mediawiki/maxbox/
+http://en.wikipedia.org/wiki/Time_travel
+
+myform
+
+
+//***************************** TStatArray
+
+{-----------------------------------------------------------------------------
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at
+http://www.mozilla.org/MPL/MPL-1.1.html
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either expressed or implied. See the License for
+the specific language governing rights and limitations under the License.
+
+The Original Code is: JvChartDemoFm.Pas, released on 2002-10-04.
+
+The Initial Developer of the Original Code is AABsoft and Mårten Henrichson.
+(C) 1996 AABsoft and Mårten Henrichson.
+All Rights Reserved.
+
+Contributor(s): -
+
+Last Modified: 2004-01-07
+  Modified 2003 Warren Postma
+
+You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
+located at http://jvcl.delphi-jedi.org
+
+Description:
+  TStatArray - Statistics, Rolling average helper class.
+
+Known Issues:
+  This version is part of JvChartDemo.
+-----------------------------------------------------------------------------}
+
+unit StatsClasses;
+
+
+interface
+
+
+type
+
+TStatArray = class
+  protected
+   //FFirst:Boolean;
+   FGrows:Boolean; // false=rolling average (circular buffer mode), true=average or sd of any number of samples (array grows without limit)
+   FValues: Array of Double;
+   FLength, // Array absolute size (may still be no data even if this is >0)
+   FIndex,  // Where will the next sample be stored into the array?
+   FCount:  // How many valid samples are in the array right now?
+      Integer;
+
+
+   procedure SetLen(aLength:Integer);
+
+
+  public
+    procedure AddValue(aValue:Double);
+
+    function Average:Double;
+
+    function StandardDeviation:Double;
+
+    property Grows:Boolean read FGrows write FGrows; // false=rolling average, true=average ALL samples (grows to fit)
+
+    property Length:Integer read FLength write SetLen;
+    property Count:Integer read FCount;
+    //property First:Boolean read FFirst;
+
+    procedure Reset; // Clear everything!
+
+    constructor Create; overload;
+    constructor Create(initialLength:Integer); overload;
+    destructor Destroy; override;
+end;
+
+implementation
+
+uses  Windows, // OutputDebugString
+      SysUtils, // FloatToStr
+      Math;  //  VCL's statistics routines. StdDev, etc.
+
+// Begin Rolling Average
+
+constructor  TStatArray.Create; // overload;
+begin
+   //FFirst := true;
+   FLength := 0;
+   FIndex := 0;
+   FCount:= 0;
+   FGrows := true;
+   SetLength(FValues,0);   
+end;
+
+procedure TStatArray.Reset;
+var
+ i:Integer;
+begin
+    FIndex := 0;
+    FCount := 0;
+    for i := 0 to FLength-1 do begin
+      FValues[i] := -999.0; // debug helper.
+    end;
+    //FFirst := true;
+end;
+
+constructor TStatArray.Create(initialLength:Integer); // overload;
+begin
+//   FFirst := true;
+   SetLength(FValues,initialLength);
+   if (initialLength>0) then
+      FGrows := false
+   else
+      FGrows := true; 
+   FLength := initialLength;
+   FIndex := 0;
+   FCount:= 0;
+end;
+
+
+destructor   TStatArray.Destroy;
+begin
+  SetLength(FValues,0);
+end;
+
+
+function TStatArray.Average:Double;
+var
+ last,i:Integer;
+ sum:Double;
+begin
+ if FCount <= 0 then begin
+    result := 0;
+ end else begin
+    sum := 0;
+    if (FCount>FLength) then
+        last :=FLength-1
+    else
+        last :=FCount-1;
+    for i := 0 to last do begin
+       sum := sum + FValues[i];
+    end;
+    result := sum / (last+1);
+ end;
+end;
+
+function TStatArray.StandardDeviation:Double;
+var
+ i:Integer;
+// sum:Double;
+ TempArray:Array of Double;
+begin
+  if (FCount <= 0) then
+      result := 0
+  else if (FCount >= FLength) then begin
+      result := Math.StdDev( FValues )
+  end else begin
+      SetLength(TempArray,FCount);
+      for i := 0 to FCount-1 do begin
+          TempArray[i] := FValues[i];
+      end;
+      result := Math.StdDev( TempArray );
+      SetLength(TempArray,0);
+  end;
+end;
+
+procedure    TStatArray.AddValue(aValue:Double);
+//var
+// i:Integer;
+begin
+ (*if FFirst then begin
+    FFirst := false;
+    FIndex := 0;
+    FValues[0] := aValue;
+    FCount := 1;
+ end else begin*)
+
+ // First time in we might need to create an array:
+  if FIndex>=Length then begin
+     Assert(FGrows); // Illegal condition.
+     FLength := FIndex+1;
+     SetLength( FValues,FLength); // uninitialized, as of yet.
+  end;
+
+  FValues[FIndex] := aValue;
+  Inc(FIndex);
+  Inc(FCount);
+  if (not FGrows) then begin // circular?
+    if (FIndex>=FLength) then begin
+        FIndex := 0;
+        //FCount := FLength;//FCount does not exceed FLength in wraparounds.
+    end;
+  end else begin // grow after, in doublings of size, scales better!
+    if (FIndex>=FLength) then begin
+      FLength := FLength * 2;
+      SetLength( FValues,FLength); // uninitialized, as of yet.
+{$ifdef DEBUG_ASSERTIONS}  
+      Assert(FLength<20000); // Debug limit
+{$endif}      
+    end;
+  end;
+
+end;
+
+procedure TStatArray.SetLen(aLength:Integer);
+begin
+  if(aLength<1) then
+      aLength := 1;
+  FLength := aLength;
+  SetLength(FValues, FLength);
+
+end;
+
+
+// End Stats
+
+
+//{$ifdef UNIT_TESTS}
+procedure StatsUnitTests;
+var
+   diff:Double;
+    a1:TStatArray;
+    procedure _outs(s:String);
+    begin
+        OutputDebugString(PChar(s));
+    end;
+    procedure _outd(d:Double);
+    begin
+        OutputDebugString(PChar(FloatToStr(d)));
+    end;
+    
+begin
+   _outs('StatsUnitTests begins');
+
+   a1 := TStatArray.Create(0); // Growing array.
+   a1.AddValue( 3.5 );
+   a1.AddValue( 1.5 );
+   a1.AddValue( 25.5 );
+   a1.AddValue( 100.5 );
+   _outd( a1.Average );
+
+   diff := Abs(((3.5+1.5+25.5+100.5)/4.0)-a1.Average);
+   Assert(diff<0.001);
+
+   a1.Reset;
+   Assert(Abs(a1.Average)<0.0001);
+
+   a1.AddValue( 3.5 );
+   a1.AddValue( 1.5 );
+   a1.AddValue( 25.5 );
+   a1.AddValue( 100.5 );
+   _outd( a1.Average );
+
+   diff := Abs(((3.5+1.5+25.5+100.5)/4.0)-a1.Average);
+   Assert(diff<0.001);
+
+   _outd( a1.StandardDeviation );
+   Assert(trunc(a1.StandardDeviation)=46);
+
+   _outs('StatsUnitTests ends');   
+end;
+
+initialization
+    StatsUnitTests;
+
+//{$endif}
+
+
+end.

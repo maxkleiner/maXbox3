@@ -1,0 +1,389 @@
+PROGRAM Statistic_AllCards_Grid;
+//shows lotto tips, cards and all the binominal coefficients , #locs:259
+
+Const
+   CROW = 6;
+   CCOL = 10;
+   LotNR = 6;
+   LotRANGE = 45;
+
+Type 
+   TLottolist = array[1..lotNR] of byte;
+   TLottStat = array[1..lotRANGE] of integer;
+
+Var 
+//<Variable declarations>
+    quadrat,square: extended;
+    iz, i, j: integer;
+    flable: shortstring;
+    larr: TLottolist; 
+    comblist: TStringList;
+    sGrid1: TStringGrid;  
+    mForm: Tform;
+    aCard: TCard;
+      //   cards0: array[0..19] of TCard;   //0..15
+
+
+procedure CardMouseMove(Sender: TObject; Shift: TShiftState; X,Y:Integer);
+begin
+  //if (sender = mForm) and (assigned(acard)=true) then begin
+  if assigned(acard) then begin
+    //cards0[4*(i-10)+suit1].top:= X;
+    acard.top:= Y;  //on form
+    acard.left:= X;
+  end;
+  //  writeln(inttostr(x)) //debug
+  mform.canvas.Refresh;
+end;  
+
+procedure CardMouseDown(Sender: TObject; 
+          Button: TMouseButton;Shift: TShiftState; X,Y: Integer);
+begin
+  mform.onMouseMove:= @CardMouseMove;
+end;  
+
+procedure CardMouseUp(Sender: TObject; Button: TMouseButton;
+          Shift: TShiftState; X,Y: Integer);
+begin
+  mform.onMouseMove:= NIL;
+end;  
+
+
+//<FUNCTION> //<PROCEDURE> 
+procedure CreateDrawForm;
+begin
+  mForm:= TForm.create(self);
+  with mForm do begin
+    FormStyle:= fsStayOnTop;
+    Position:= poScreenCenter;
+    color:= clred;
+    Caption:= 'Max Lotto Card Coefficient Statistics';
+    Width:= 800;
+    Height:= 650;
+    BorderStyle:= bsDialog;
+    Cursor:= crHandPoint;
+    onMouseMove:= @cardMouseMove;
+ 
+     //onClose:= @FormClose;
+    Show
+  end;
+  sGrid1:= TStringGrid.Create(self);
+  {sGrid1.parent:= mForm;
+  with sGrid1 do begin
+    defaultColwidth:= 60;
+    defaultRowheight:= 60;
+    height:= 415;
+    width:= ;       
+    colcount:= CCOL+1;  
+    rowcount:= CROW+1;
+    top:= 20;
+    borderStyle:= bsNone;
+    GridLineWidth:= 8;
+    scrollbars:= false;
+  end;} 
+ end;
+
+function TForm1_makecard(L,T:Integer; newvalue:TCardValue; newSuit:TShortSuit):TCard;
+{create and set position for a card}
+begin
+  result:= TCard.Create(mform);
+  with result do begin
+    parent:= mform;
+    top:=T; left:=L;
+    setcard(newvalue,newSuit);
+    //bringToFront;
+    onmouseDown:= @CardMouseDown
+    onmouseUp:= @CardMouseUp
+  end;
+end;
+
+procedure cardSetTest;
+var suit1,i: integer;
+   cards0: array[0..11] of TCard;
+   startx,starty:integer;
+   suit:TShortSuit;   // TShortSuit=(CardS,CardD,CardC,CardH);
+   suits: set of TShortSuit;
+begin
+  //for suit1:= low(TShortSuit) to high(TShortSuit) do  won't work
+   starty:= 1;
+   for i:= 11 to 13 do begin 
+     startx:= 100;
+     starty:= starty + 120;
+     for suit1:= 0 to 3 do begin
+       cards0[4*(i-11)+suit1]:= TForm1_makecard(startx,starty,i,TShortSuit(suit1));
+       startx:= startx+100;  //overlap=50
+     end;
+   end;
+   suit:= CardC;
+   writeln(inttoStr(high(cards0))) //debug 
+   writeln(inttoStr(ord(suit))) 
+   writeln(inttoStr(ord(TShortSuit(suit1))))  
+end;
+
+
+procedure cardSetTestEasy;
+var  suit: TShortSuit;   //(CardS,CardD,CardC,CardH);
+     suit1,i,stx,sty: integer;
+     //cards0: array[0..19] of TCard;   //0..15
+begin
+   sty:=-70;
+   for i:= 10 to 14 do begin  //10 to 14
+     stx:= 100;
+     sty:= sty+110;
+     for suit1:= 0 to 3 do begin
+       aCard:= TForm1_makecard(stx,sty,i,TShortSuit(suit1));
+       //cards0[4*(i-10)+suit1]:= TForm1_makecard(stx,sty,i,TShortSuit(suit1));
+       stx:= stx+90;  //overlap=50
+     end;
+   end;
+end;
+
+procedure cardSetSpecial;
+var  suit: TShortSuit;   //(CardS,CardD,CardC,CardH);
+     suit1,i,stx,sty: integer;
+     //cards0: array[0..19] of TCard;   //0..15
+begin
+   sty:=200;
+   for i:= 13 to 14 do begin  //10 to 14
+     stx:= 320;
+     sty:= sty+110;
+     for suit1:= 0 to 3 do begin
+       aCard:= TForm1_makecard(stx,sty,i,TShortSuit(suit1));
+       //cards0[4*(i-10)+suit1]:= TForm1_makecard(stx,sty,i,TShortSuit(suit1));
+       stx:= stx+90;  //overlap=50
+     end;
+   end;
+end;
+
+
+procedure putNumbers(vrange: byte);
+var ti, z, myrand: byte;
+    dup: boolean;
+begin
+  ti:= 1;
+  Randomize
+  //if vrange < lotnr then vrange:= 6; 
+  repeat
+    myrand:= Random(vrange)+1;     
+    dup:= false;
+    for z:= 1 to lotnr do 
+      if (larr[z] = myrand) then dup:= true;
+    if (not dup) then begin
+      larr[ti]:= myrand;
+      //lstat[myrand]:= lstat[myrand] + 1;
+      ti:= ti + 1;
+    end;
+  until ti = lotnr + 1
+end;  
+
+procedure FillGrid;
+var i: byte;
+begin
+  j:= 1
+  with sGrid1 do begin
+    for i:= 1 to lotrange do begin
+      for iz:= 1 to lotnr do
+        if larr[iz] = i then
+          Cells[((i+CCOL-1) mod CCOL)+1, j]:= intToStr(i);
+      if i mod CCOL = 0 then
+       inc(j)
+    end;
+    Font.Size:= 40;
+    Cells[6,5]:= '!!!';
+  end;  
+end;
+
+function GetBigIntFact(aval: byte): string;
+  //unit mybigint
+var mbResult: TMyBigInt;
+    i: integer;
+begin
+  mbResult:= TMyBigInt.Create(1);
+  try
+    for i:= 1  to aval do 
+      //mbResult.Multiply(mbresult, mbresult);
+      mbResult.Multiply1(mbresult, i);
+    Result:= mbResult.ToString;
+  finally 
+    //FreeAndNil(mbResult);
+    mbResult.Free;
+  end;
+end;
+
+function getPermutation(npr, k: integer): extended; 
+//2. Permutation(Variation without repeating) = nPr = n!/(n-k)!
+begin
+  result:= (Fact(npr)/Fact(npr-k));
+  //test 4 of 10 = 5040 = NPR(10,4)
+end;
+
+function getCombination(npr, k: integer): extended; 
+//3. Combination (binominal coefficient)= nCr = nPr / k!
+begin
+  result:= (Fact(npr)/Fact(npr-k)/Fact(k));
+  //ncr:= npr/round(fact(ncr))
+  //test 4 of 20 = 4845 = NCR(20,4)
+end;
+
+ 
+BEGIN  //Main
+//<Executable statements>
+  {x:= 100;
+  quadrat:= power(x,2); 
+  writeln(format('%f', [quadrat]))
+  writeln(format('%s',[inttobin(97 XOR 223)]))}
+
+  CreateDrawForm;
+  PutNumbers(lotrange)
+  FillGrid;  
+  
+  writeln(floattoStr(getPermutation(45,6)))
+  writeln(floattoStr(getCombination(45,6)))
+  writeln(floattoStr(getCombination(45,22)))
+  comblist:= TStringlist.create;
+  for i:= 1 to LotRANGE do
+    comblist.add(Format('case: %d is %f',[i, getCombination(45,i)]));
+  for i:= 1 to LotRANGE do
+    Writeln(comblist[i-1]);
+  comblist.Free;  
+  for i:= 1 to lotnr do 
+    Write(inttostr(larr[i])+ ' ');
+    
+    //cardSetTest;
+    cardSetTestEasy
+    cardSetSpecial
+    
+    writeln(formatBigInt(powerBig(2,1000)))
+    //writeln(formatBigInt(BigExp('2','1000')))
+
+End. 
+
+-----------------------------------------------------
+     {for i:= 1 to 10 do
+       for j:= 1 to 10 do begin
+         //printf('%d',[j])
+           write(inttostr(j*i)+ '  ')
+           if j=10 then writeln('')
+        end
+        writeln('')
+     for i:= 1 to 10 do
+       for j:= 1 to 10 do begin
+         //printf('%d',[j])
+           ein:= j*i;
+           if (ein < 10) and (j<7) then
+             write(inttostr(ein)+ '    ')
+             else 
+             write(inttostr(ein)+ '  ')
+          if j=10 then writeln('')
+        end}
+       // big fact 70 = 1.1978571669969891796072783721689e+100
+
+        
+  00000000000000000000000100101100 XOR
+  00000000000000000000000100101100
+                         000000000
+
+----app_template_loaded----
+
+Corrections of V 3.5 beta
+
+cid:  182  winmemory: Twinmemory
+cid:  183  winmemory.#0: TLabel
+cid:  184  winmemory_1: Twinmemory
+cid:  185  winmemory_1.#0: TLabel
+
+
+  Dealing with Big Numbers (Integers)
+  -----------------------------------
+  
+  As you may know there's no simple solution to print or store big numbers, for example you want to compute fact(70), your calculator shows:
+  fact(70) = 1.197857166996989179607721689e+100
+  
+  but the maximum range on Delphi depends on your operating system types, means nowadays an int64 range is the big int.
+  Now that the "signed" Words are finally up-to-par with the unsigned integer types, Delphi 4 introduces a new 64-bits integer type, called Int64, with a whopping range of -2^63..2^63 - 1  
+
+ Another way is to use the type extended, but the limitation is precision like
+   
+        Writeln(FloatToStr(Fact(70)))
+ 
+    it only shows 
+    1.2E+0100
+
+With a BigInt Library (bigintlib) you'll see the full range of Fact(70):
+
+119785716699698917960727837216890987364589381425464755536628009582789845319680000000000000000
+    
+The call respectively the calculation goes like this:
+
+function GetBigIntFact(aval: byte): string;
+//call of unit mybigint
+var mbRes: TMyBigInt;
+    i: integer;
+begin
+  mbRes:= TMyBigInt.Create(1);
+  try
+    //multiplication of factor
+    for i:= 1  to aval do 
+      mbRes.Multiply1(mbresult, i);
+    Result:= mbRes.ToString;
+  finally 
+    //FreeAndNil(mbResult);
+    mbRes.Free;
+  end;
+end;
+    
+Or you want the power of 100        
+2^100=
+126765060022822940149670376
+  
+The definition of the function could be the following:
+
+function GetBigIntPower(aval: integer): string;
+var mbResult: TMyBigInt;
+     i: integer;
+begin
+  mbResult:= TMyBigInt.Create(1);
+  try
+    for i:= 1 to aval do 
+      mbResult.Multiply1(mbresult, 2);
+    Result:= mbResult.ToString;
+  finally 
+    mbResult.Free;
+  end;
+end;
+  
+  
+At least one really big, it's 2^1000
+
+107150860718626732094842504906000181056140481170557443750388370351051124936122493198378815695858127594672917553146825187145285692314043598457757469857480393456777482425421074605062371141877954182154749894126739876755916554394607706291
+
+
+the class of the unit from swiss delphi:
+
+  TMyBigInt = class
+  private
+    Len: Integer;
+    Value: AnsiString;
+    procedure Trim;
+    procedure Shift(k: Integer);
+    procedure MultiplyAtom(Multiplier1: TMyBigInt; Multiplier2: Integer);
+  public
+    constructor Create(iValue: Integer = 0);
+    procedure Add(Addend1, Addend2: TMyBigInt);
+    procedure Multiply(Multiplier1, Multiplier2: TMyBigInt); overload;
+    procedure Multiply(Multiplier1: TMyBigInt; Multiplier2: Integer); overload;
+    function ToString: string;
+    procedure CopyFrom(mbCopy: TMyBigInt);
+  end;
+    
+    
+    Before the LTO flag commit:
+
+Sketch uses 26,628 bytes (82%) of program storage space. Maximum is 32,256 bytes.
+Global variables use 984 bytes (48%) of dynamic memory, leaving 1,064 bytes for local variables. Maximum is 2,048 bytes.
+
+After:
+
+Sketch uses 72,984 bytes (226%) of program storage space. Maximum is 32,256 bytes.
+Global variables use 1,222 bytes (59%) of dynamic memory, leaving 826 bytes for local variables. Maximum is 2,048 bytes.
+

@@ -1,0 +1,1733 @@
+//*************************************************************************
+//Example of the memo load and save capabilities of the VCL
+//Task: Code the button with Open a Video!
+//Get the text and write your sinmemo memories, #locs=1144
+//#perf>16:52:17.519
+//#head@Administrator: PC08: 05/08/2014 04:58:44 PM E:\maxbox3\mXGit39988\maxbox3\examples\370_synedittester.txt 
+//*************************************************************************
+
+program SynMemo_Form_Demo;
+
+const LEFTBASE = 20;
+      TOPBASE = 25; 
+      MEDIAPATH =  '..\maxbox3\examples\mymemomemoire.txt';
+
+var 
+  mymemo: TSynMemo;
+  mpanel: TPanel;
+  mPlayer: TMediaPlayer;
+  inFrm: TForm;  
+  mbtn3: TBitBtn;
+  Lstbox: TListbox;
+  stat: TStatusbar;
+  cal: TCalendar;
+  selectedFile: string;
+
+  
+Function getRandomText: string;
+var i, getback: integer;
+begin
+  for i:= 1 to 1400 do begin
+    getback:=  random(58)+65
+    if (getback < 91) OR (getback > 96) then
+      result:= result + Chr(getback) +Chr(32)
+  end;
+end;  
+
+function GetPart(const part, input, aformat: string): string;
+var
+  I: Integer;
+begin
+  for I := 1 to Length(aformat) do
+    if Uppercase(aformat[I]) = Uppercase(part) then
+      Result := Result + input[I];
+end;
+
+function GetDay(const input, aformat: string): string;
+begin
+  Result := GetPart('d', input, aformat);
+  //Format('0%0:s', [Result]);
+  if Length(Result) = 1 then 
+     Result:= Format('0%0:s', [Result]);
+end;
+
+function GetMonth(const input, aformat: string): string;
+begin
+  Result := GetPart('m', input, aformat);
+  if Length(Result) = 1 then Result := Format('0%0:s', [Result]);
+end;
+
+function GetYear(const input, aformat: string): string;
+begin
+  Result := GetPart('y', input, aformat);
+end;
+
+function ConvertToMyLocalSettings(const input, aformat: string): string;
+begin
+  Result := Format('%0:s/%1:s/%2:s', 
+  [GetDay(input, aformat), GetMonth(input, aformat), GetYear(input, aformat)]);
+end;
+
+
+  
+//Event Handler - Closure  
+Procedure GetMediaData(self: TObject);
+begin
+  //memocaretpos(
+  if PromptForFileName(selectedFile,
+                       'Text files (*.txt)|*.txt',
+                       '',
+                       'Select your mX3 test file',
+                       ExePath+'examples\', False)  // Means not a Save dialog !
+   then begin
+     // Display this full file/path value
+     ShowMessage('Selected file = '+selectedFile);
+     Stat.simpletext:= selectedFile;
+     mymemo.lines.LoadFromFile(selectedFile);
+     // Split this full file/path value into its constituent parts
+     //writeln('PromptForFileName_28: Res of processpath '+tmp)
+   end;
+end;  
+  
+//Event Handler - Closure
+Procedure BtnSaveClick(self: TObject);
+begin
+  //mymemo.lines.savetofile(ExePath+'\examples\mymemomemoire.txt');
+  mymemo.lines.SaveToFile(selectedFile);
+  Stat.simpletext:= selectedFile+ ' has been saved' ;
+end; 
+
+//Const EM_LINEFROMCHAR = $400 + 25;
+
+Procedure memocaretpos(memo: TMemo; var col, row: integer);
+var i: integer;
+begin
+  //mymemo.lines.savetofile(ExePath+'\examples\mymemomemoire.txt');
+  row:= sendmessage(memo.handle, EM_LINEFROMCHAR, -1, 0);
+  col:= memo.selstart;
+  if row> 0 then
+   for i:= 0 to row-1 do
+     col:= col - length(memo.lines[i])-2;
+  //mymemo.lines.SaveToFile(selectedFile);
+  Stat.simpletext:= selectedFile+ ' caret has been saved' ;
+end; 
+
+procedure CloneMenu(const FromMenu: TMenuItem; ToMenu: TMenuItem);
+var
+ idx: integer;
+ Item: TMenuItem;
+begin
+  ToMenu.Clear;
+  if FromMenu.Count <= 0 then exit;
+  for idx:= 0 to pred(FromMenu.Count) do begin
+     Item:= TMenuItem.Create(ToMenu);
+     with FromMenu.Items[idx] do begin
+        Item.Caption:= Caption;
+        Item.OnClick:= OnClick;
+        Item.Tag:= Tag;
+        //Item.AutoCheck:= AutoCheck;
+        Item.ShortCut:= ShortCut;
+      end;
+     ToMenu.Add(Item);
+   end;
+  ToMenu.Visible:= FromMenu.Visible;
+end;
+
+function FileSamePath(const FileName: string; const TestPath: string): boolean;
+var
+ s1, s2: string;
+begin
+  result:= FALSE;
+  s1:= ExtractFilePath(FileName);
+  s2:= ExtractFilePath(TestPath);
+  if (s1 = s2) then
+   result:= TRUE
+  else
+   if (s1 = '') then
+    result:= FileExists(s2 +FileName);
+end;
+
+
+
+
+(*float convertToF(float temperatureC)
+35 {
+36 return (temperatureC * 9.0 / 5.0) + 32.0;
+37 }*)
+
+function getfiletimestamp(afile: string): string;
+var handle: integer;
+begin
+  //seterrormode();
+  result:= '';
+  handle:= fileopen(afile,0)
+  try
+    result:= datetimetostr(filedatetodatetime(filegetdate(handle)));
+  finally
+    fileclose(handle)
+  end;  
+end;
+
+function convertToF(temperatureC: float): float;
+begin
+  result:= (temperatureC * 9.0 / 5.0) + 32.0;
+end;
+
+Procedure SetForm;
+var
+  mbtn, mbtn2: TBitBtn;
+  mi, mi1, mi2, mi3: TMenuItem;
+  mt: TMainMenu;
+  mlbl, mlbl1: TLabel; 
+  mspas: TSynPasSyn;
+  mymemo2: TSynEdit;
+
+begin
+  inFrm:= TForm.Create(self);
+  mLbl:= TLabel.create(inFrm);
+  mLbl1:= TLabel.create(inFrm);
+  mPanel:= TPanel.Create(inFrm);
+  stat:= TStatusbar.Create(inFrm);
+  Lstbox:= TListbox.create(inFrm);
+  mymemo:= TSynMemo.create(inFrm);
+  //mymemo2:= TSynEdit.create(inFrm);
+
+  with inFrm do begin
+    caption:= '********MediaMonster3************';  
+    height:= 610;
+    width:= 980;
+    //color:= clred;
+    Position:= poScreenCenter;
+    //onClose:= @CloseClick;
+    brush.style:= bsDiagCross;
+    Show;
+  end;
+  with mPanel do begin
+     caption:= '*****maXboxTV*****';  
+     Parent:= inFrm;  
+     SetBounds(LEFTBASE+10,TOPBASE+40,420,400)
+     color:= clsilver;
+     font.color:= clyellow;
+     font.size:= 30;
+     Show;
+  end; 
+  
+  mspas:= TSynPasSyn.create(self);
+  mspas.StringAttri:= 1;//InternalSaveDefaultValues; ??
+  mspas.Enabled:= true;
+  
+  //mspas.KeywordAttribute:= 4;
+  
+  writeln('highlander attrib count '+intToStr(mspas.AttrCount));
+  with mymemo do begin
+    Parent:= inFrm;
+    SetBounds(LEFTBASE+450, TOPBASE+40, 465, 400)
+    font.size:= 12;
+    //color:= clYellow;
+    wordwrap:= true;
+    scrollbars:= ssvertical;
+    RightEdgeColor:= clred;
+    if extractFileName(maxform1.appname) = '370_synedit.txt' then begin
+      Options:= +[eoShowSpecialChars];
+      ActiveLineColor:= clyellow;
+      maxform1.tbtnUseCase.caption:= 'SynScript'; 
+      //maxform1.ShellStyle1Click(self)
+    end else   
+      ActiveLineColor:= clgreen;
+   
+    //WordWrapGlyph    
+    //selectedColor:= clyellow;
+    //borderStyle:= bsdialog;
+    //Options
+    Gutter.ShowLineNumbers:= true;
+    Gutter.BorderColor:= clred;
+    
+    //memo1.Gutter.BorderStyle:=bsSingle;    //---> reflection to box!
+    //memo1.Gutter.BorderColor:= clred;      //---> reflection to box!
+    //memo1.Gutter.BorderColor:= clsilver;   //---> reflection to box!
+    //memo1.Gutter.ShowLineNumbers:= true;   //---> reflection to box!
+    
+    highlighter:= mspas;
+     //memo1.Options:= +[SYNEDIT_DEFAULT_OPTIONS];
+       //memo1.RightEdgeColor := clSilver;
+    //lines.loadfromfile(ExePath+'\examples\mymemomemoire.txt');
+    lines.loadfromfile(ExePath+'\examples\003_pas_motion.txt');
+   
+    //onclick:= @ChangeSong;  
+  end;
+  //mspas.Free;
+  
+  mBtn:= TBitBtn.Create(inFrm)
+  with mBtn do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 590, TOPBASE+ 460,150, 40);
+    caption:= 'Open Text';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'OPENFOLDER'); 
+    //event handler
+    onclick:= @GetMediaData;
+  end;
+  mBtn2:= TBitBtn.Create(inFrm)
+  with mBtn2 do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 430, TOPBASE+460,150, 40);
+    caption:= 'Open Video';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'FLOPPY'); 
+    //event handler
+    //onclick:= @GetVideoData;
+  end;
+  mBtn3:= TBitBtn.Create(inFrm)
+  with mBtn3 do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 750, TOPBASE+460,150, 40);
+    caption:= 'Save Text';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'PREVIEWGLYPH'); 
+    //event handler
+    onclick:= @BtnSaveClick;
+  end;
+  cal:= TCalendar.Create(self);
+  with cal do begin
+    enabled:= true;
+    updateCalendar
+    Parent:= inFrm;
+    top:= 100;
+    left:= 50;
+    CalendarDate:= Now;
+  end;
+
+  with mlbl do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+15,TOPBASE-15,180,20);
+    font.size:= 28;
+    font.color:= clred;
+    //font.style:= [fsunderline]
+    caption:= 'MediaMemoApp';
+  end;  
+  with mlbl1 do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+495,TOPBASE-1,180,20);
+    font.size:= 20;
+    font.color:= clred;
+    caption:= 'SynMemo Text File:';
+  end;  
+  mt:= TMainMenu.Create(infrm)
+  with mt do begin
+   //parent:= frmMon;
+  end;  
+  mi:= TMenuItem.Create(mt)
+  mi1:= TMenuItem.Create(mt)
+  mi2:= TMenuItem.Create(mt)
+  mi3:= TMenuItem.Create(mi)
+  with mi do begin
+    //parent:= frmMon;
+    Caption:='Play Media';
+    Name:='ITEM';
+    mt.Items.Add(mi);   
+    //onclick:= @GetMediaData;
+  end;
+  with mi1 do begin
+    //parent:= frmMon;
+    Caption:='Show Video';
+    Name:='ITEM2';
+    mt.Items.Add(mi1) ;
+    //onclick:= @GetVideoData
+  end;
+  with mi2 do begin
+    //parent:= frmMon;
+    Caption:='Open CD Player';
+    Name:='ITEM3';
+    mt.Items.Add(mi2);
+    //onclick:= @OPenCD;
+  end;
+  with mi3 do begin
+    Caption:='Open maXbook';
+    Name:='ITEM4';
+    //mi.Items[0].add(mi3);
+  end;
+  with Stat do begin
+    parent:= inFrm;
+    stat.SimplePanel:= true;
+  end;
+  MPlayer:= TMediaPlayer.create(self);
+  with MPlayer do begin
+    parent:= inFrm; 
+    height:= 38;
+    top:= TOPBASE + 460;
+    left:= LEFTBASE+ 10;
+    Display:= mPanel;   //for video show
+  end;
+end; 
+
+Procedure regExPathfinder2(Pathin, fileout, firstp, aregex,
+                                    ext: string; asort: boolean);
+//Find all directories above and including the current one
+var
+  dirList, rlist, linelst: TStringList;
+  i, fhandle, cntr, ftot, offset, linecnt: integer;
+  fstr: string;
+begin
+  screen.cursor:= CRhourglass;
+  dirList:= TStringList.Create;
+  ftot:= 0;
+  offset:= 0;
+   if not FileExists(fileout) then begin
+      fhandle:= FileCreate(fileout)
+      FileClose(fhandle)
+   end;
+  try
+    //FindDirectories(dirList, ExePath);
+    GetDirList(pathin,dirlist,true)
+    rlist:= TStringlist.create;
+    rlist.add('mX RegEx SONAR Code Pattern Search in '+pathin); 
+    rlist.add(S_RepeatChar(90,'*')); 
+       
+  for i:= 0 to dirlist.count-1 do begin
+   // for i:= 0 to 10 - 1 do begin
+    //fstr:= loadFileasString(dirlist[i]);
+//fstr:= loadFileasString('C:\maXbook\maxbox3\mX3999\maxbox3\source\JCL\source\JclGraphics_test.pas'); 
+    //{extback:= PathFindExtension(dirlist[i]);
+      //S_ShellExecute(exepath+'maxbox3.exe',dirlist[i],seCMDOpen);
+   if ExtractFileExt(dirlist[i]) = ext then 
+     with TRegExpr.Create do try 
+      fstr:= loadFileasString(dirlist[i]);
+      linelst:= TStringlist.create;
+      linelst.loadfromfile(dirlist[i]);
+      linecnt:= linelst.count-1;
+      linelst.Free;
+      //firstp; //'extends';  //public
+      //gstr2:= ' Category, CheckId, Status, Created' 'implements'; 
+      modifierS:= false; //!non greedy  code around clock
+      modifierI:= true;  //case insens
+      //Expression:= gstr+'.*([\d]+,[\d]).*?'; //array
+      //Expression:= '.*([\d]+).*?';     //all numb
+      //Expression:= '.*([\d],).*?';     //all numbs and signs
+      //Expression:= '.*[a-zA-Z_]\(\w[\d]+\)*?';     //numbers in name (X1)
+      //Expression:= '.*\([\d]\).*?';     //magic numbs just one parameter!
+      //Expression:= '.*\([\d]+\)*?';     //magic numbs after (
+      //Expression:= '.*\([\d]+,[\d]\)*?';     //numbs more than one in para
+      //Expression:= '.*[a-zA-Z_]\([\w][\d]+\)*?';   //magic numbs with X1)
+      //Expression:= gstr+'.*[a-zA-Z_]\([*,\d]+\)'+gstr2+'*?';  //mnumbs allwith N(d(d))
+      Expression:= firstp+aregex;  //mnumbs allwith N(d(d))
+      cntr:= 0;
+      if asort then
+        rlist.Sorted:= true;   //before dup!
+        rlist.duplicates:= true; //false is dupIgnore; ?
+      //rlist.Add(Format(inttoStr(i)+' Fileto: %s ',[dirlist[i]]));
+      //TODO: count the files which has regex found! change savestring
+       
+      if Exec(fstr) then 
+       try //save console out count categories
+           rlist.Add(Format(inttoStr(i+offset)+' filein: %s ',[dirlist[i]]));
+            savestring(extractfilepath(fileout)+inttostr(i+offset)+'_'
+                     +extractfilename(dirlist[i])+'.txt',fstr);
+         Repeat 
+           rlist.add(Match[0]); 
+           inc(cntr);
+         Until Not ExecNext; 
+           inc(ftot);
+           rlist.Add(Format('distSortMetrics: %d found %d of tot %d',
+                                              [cntr,ftot, rlist.count-2]));
+       except
+         showmessage('''Exception in regex Review svnnavi'')');
+       end;    
+    finally 
+      //writeln(inttostr(cntr)+ ' search total: '+gstr+' '+gstr2);
+      Free;
+      //rlist.Free;
+    end; //with try
+    //S_ShellExecute(exepath+'maxbox3.exe',dirlist[i],seCMDOpen);
+    //writeln('*************** open '+dirlist[i]);
+      //writeln(inttostr(cntr)+ ' search total of '+gstr+' '+gstr2);
+     PrintF('Search Metrics: %d of lines %d from %s to %s of %s',
+                   [cntr, linecnt, firstp,aregex , extractfilename(dirlist[i])])
+     //memo2.lines.savetofile(AWORKPATH2+extractfilename(dirlist[i])+'.txt');
+  end; //for dirlist loop
+    rlist.SavetoFile(fileout);
+    writeln('File Saved at: '+fileout+' of total '+inttostr(i)+' files');
+  finally 
+    dirList.Free;
+    rlist.Free;
+    screen.cursor:= CRdefault;
+    SearchandOpenDoc(fileout);
+  end;//for
+end;  
+
+
+ procedure mywait(waitms: integer);
+ var t: integer;
+ begin  
+   t:= getTickCount;
+    repeat
+      //writeln('this is escape mywait');
+      application.processmessages;
+      //sleep(1000);
+    until getTickCount >= (t+waitms);
+  end;
+
+ function isNTFS: boolean; //override;
+ begin
+   result:= NtfsReparsePointsSupported(Extractfiledrive('C')+'\')
+ end;
+    
+ function isNTFS2(const atr: string): boolean; //override;
+ begin
+   result:= NtfsReparsePointsSupported(Extractfiledrive('C')+'\')
+ end;
+   
+
+
+procedure WriteDataSetToCSV(DataSet: TDataSet; FileName: String);
+var
+  List: TStringList;
+  S: String;
+  I: Integer;
+begin
+  List := TStringList.Create;
+  try
+    DataSet.First;
+    while not DataSet.Eof do begin
+      S := '';
+      for I := 0 to DataSet.FieldCount - 1 do begin
+        if S > '' then
+          S := S + ',';
+        S := S + '"' + DataSet.Fields[I].AsString + '"';
+      end;
+      List.Add(S);
+      DataSet.Next;
+    end;
+  finally
+    List.SaveToFile(FileName);
+    List.Free;
+  end;
+end;
+
+procedure SIRegister_BackgroundWorker(CL: TStrings);
+begin
+  //EBackgroundWorker;
+  //TBackgroundWorker');
+  //TWorkEvent2', 'Procedure ( Worker : TBackgroundWorker)');
+  //TWorkProgressEvent', 'Procedure ( Worker : TBackgroundWorker; Pe'
+   //+'rcentDone : Integer)');
+  //TWorkCompleteEvent', 'Procedure ( Worker : TBackgroundWorker; Ca'
+   //+'ncelled : Boolean)');
+  //TWorkFeedbackEvent', 'Procedure ( Worker : TBackgroundWorker; Fe'
+   //+'edbackID, FeedbackValue : Integer)');
+  //SIRegister_TBackgroundWorker(CL);
+ //CL.AddDelphiFunction('Procedure Register');
+   //TProfilerTimer
+  //TTimeUnit
+    //TTimeInfo
+      //11TProfilerNotifyEvent
+      
+      //DefaultResType
+      //TWave
+      //     TMultimediaTimer
+      
+    //TMS2StrFormat', '( msHMSh, msHMS, msMSh, msMS, msSh, msS, msAh, '
+   //+'msA )');
+  //TPCMChannel', '( cMono, cStereo )');
+  //TPCMSamplesPerSec', '( ss8000Hz, ss11025Hz, ss22050Hz, ss44100Hz'
+   //+', ss48000Hz )');
+  //(/(/TPCMBitsPerSample', '( bs8Bit, bs16Bit )');
+  //TPCMFormat', '( nonePCM, Mono8Bit8000Hz, Stereo8bit8000Hz, Mono1'
+   {+'6bit8000Hz, Stereo16bit8000Hz, Mono8bit11025Hz, Stereo8bit11025Hz, Mono16b'
+   +'it11025Hz, Stereo16bit11025Hz, Mono8bit22050Hz, Stereo8bit22050Hz, Mono16b'
+   +'it22050Hz, Stereo16bit22050Hz, Mono8bit44100Hz, Stereo8bit44100Hz, Mono16b'
+   +'it44100Hz, Stereo16bit44100Hz, Mono8bit48000Hz, Stereo8bit48000Hz, Mono16b'
+   +'it48000Hz, Stereo16bit48000Hz )');}
+  //TWaveDeviceFormats', 'set of TPCMFormat');
+  //TWaveOutDeviceSupport', '( dsVolume, dsStereoVolume, dsPitch, ds'
+   //+'PlaybackRate, dsPosition, dsAsynchronize, dsDirectSound )');
+  //TWaveOutDeviceSupports', 'set of TWaveOutDeviceSupport');
+  //TWaveOutOption', '( woSetVolume, woSetPitch, woSetPlaybackRate )');
+  //TWaveOutOptions', 'set of TWaveOutOption');
+  //TStreamOwnership', '( soReference, soOwned )');
+  //TWaveStreamState', '( wssReady, wssReading, wssWriting, wssWriti'
+   //+'ngEx )');
+  //PRawWave', '^TRawWave // will not work');
+  //TRawWave', 'record pData : Pointer; dwSize : DWORD; end');
+  //CL.AddClassN(CL.FindClass('TOBJECT'),'EWaveAudioError');
+  //CL.AddClassN(CL.FindClass('TOBJECT'),'EWaveAudioSysError');
+  //CL.AddClassN(CL.FindClass('TOBJECT'),'EWaveAudioInvalidOperation');
+  //TWaveAudioEvent', 'Procedure ( Sender : TObject)');
+  //TWaveAudioGetFormatEvent', 'Procedure ( Sender : TObject; var pW'
+  // +'aveFormat : PWaveFormatEx; var FreeIt : Boolean)');
+  //TWaveAudioGetDataEvent', 'Function ( Sender : TObject; const Buf'
+   //+'fer : Pointer; BufferSize : DWORD; var NumLoops : DWORD) : DWORD');
+  //TWaveAudioGetDataPtrEvent', 'Function ( Sender : TObject; var Bu'
+   //+'ffer : Pointer; var NumLoops : DWORD; var FreeIt : Boolean) : DWORD');
+  //TWaveAudioDataReadyEvent', 'Procedure ( Sender : TObject; const '
+   //+'Buffer : Pointer; BufferSize : DWORD; var FreeIt : Boolean)');
+  //TWaveAudioLevelEvent', 'Procedure ( Sender : TObject; Level : In'
+   //+'teger)');
+  //TWaveAudioFilterEvent', 'Procedure ( Sender : TObject; const Buf'
+   //+'fer : Pointer; BufferSize : DWORD)');
+  //GetWaveAudioInfo( mmIO : HMMIO; var pWaveFormat : PWaveFormatEx; var DataSize, DataOffset : DWORD) : Boolean');
+  //CreateWaveAudio( mmIO : HMMIO; const pWaveFormat : PWaveFormatEx; var ckRIFF, ckData : TMMCKInfo) : Boolean');
+  //CloseWaveAudio( mmIO : HMMIO; var ckRIFF, ckData : TMMCKInfo)');
+  //GetStreamWaveAudioInfo( Stream : TStream; var pWaveFormat : PWaveFormatEx; var DataSize, DataOffset : DWORD) : Boolean');
+  //CreateStreamWaveAudio( Stream : TStream; const pWaveFormat : PWaveFormatEx; var ckRIFF, ckData : TMMCKInfo) : HMMIO');
+  //OpenStreamWaveAudio( Stream : TStream) : HMMIO');
+ //CalcWaveBufferSize( const pWaveFormat:PWaveFormatEx; Duration : DWORD) : DWORD');
+  //GetAudioFormat( FormatTag : Word) : String');
+  //GetWaveAudioFormat( const pWaveFormat : PWaveFormatEx) : String');
+  //GetWaveAudioLength( const pWaveFormat:PWaveFormatEx; DataSize :DWORD) : DWORD');
+  //GetWaveAudioBitRate( const pWaveFormat : PWaveFormatEx) : DWORD');
+  //GetWaveAudioPeakLevel( const Data : Pointer; DataSize : DWORD; const pWaveFormat : PWaveFormatEx) : Integer');
+  //InvertWaveAudio( const Data : Pointer; DataSize : DWORD; const pWaveFormat : PWaveFormatEx) : Boolean');
+  //SilenceWaveAudio( const Data : Pointer; DataSize : DWORD; const pWaveFormat : PWaveFormatEx) : Boolean');
+  //ChangeWaveAudioVolume( const Data : Pointer; DataSize : DWORD; const pWaveFormat : PWaveFormatEx; Percent : Integer) : Boolean');
+  //MixWaveAudio( const RawWaves : PRawWave; Count : Integer; const pWaveFormat : PWaveFormatEx; Buffer : Pointer; BufferSize : DWORD) : Boolean');
+  //ConvertWaveFormat( const srcFormat : PWaveFormatEx; srcData : Pointer; srcDataSize : DWORD; const dstFormat : PWaveFormatEx; var dstData : Pointer; var dstDataSize : DWORD) : Boolean');
+ //SetPCMAudioFormat( const pWaveFormat : PWaveFormatEx; Channels : TPCMChannel; SamplesPerSec : TPCMSamplesPerSec; BitsPerSample : TPCMBitsPerSample)');
+  //SetPCMAudioFormatS( const pWaveFormat : PWaveFormatEx; PCMFormat : TPCMFormat)');
+  //GetPCMAudioFormat( const pWaveFormat : PWaveFormatEx) : TPCMFormat');
+  //GetWaveDataPositionOffset( const pWaveFormat : PWaveFormatEx; Position : DWORD) : DWORD');
+  //MS2Str( Milliseconds : DWORD; Fmt : TMS2StrFormat) : String');
+  //WaitForSyncObject( SyncObject : THandle; Timeout : DWORD) : DWORD');
+  //mmioStreamProc( lpmmIOInfo : PMMIOInfo; uMsg, lParam1, lParam2 : DWORD) : LRESULT');
+   
+      
+      
+ 
+end;
+
+  procedure acopy(ast: string);
+  begin
+    ast:= ast + 'appendcopy';
+  end;  
+
+  procedure aref(var ast: string);
+  begin
+    ast:= ast + 'appendref';
+  end;  
+  
+  procedure arefconst(const ast: string);
+  begin
+    ast:= ast + 'appendconst';
+    //writeln('inside const '+ast)
+  end;  
+  
+ { Proc [151] Export: AREFCONST -1 @18
+ [0] PUSHTYPE 19(String) // 1
+ [5] ASSIGN Base[1], Base[-1]
+ [16] CALC Base[1] + ['appendconst']
+ [43] ASSIGN Base[-1], Base[1]
+ [54] POP // 0
+ [55] RET }
+  
+ function arefconst2(const ast: string): string;
+  begin
+    result:= ast + 'appendconst';
+    //writeln('inside const '+ast)
+  end;  
+  
+ function getShortname(filename: string): string;
+  var pfilename: array[0..2048] of char;
+  begin
+    //getshortpathname((filename),pchar(pfilename),2048);
+     //result:= ast + 'appendconst';
+    //writeln('inside const '+ast)
+  end;  
+  
+  function IsFlagSet( dwTestForFlag, dwFlagSet : DWORD) : Boolean;
+begin
+  result := ((dwTestForFlag and dwFlagSet) = dwTestForFlag);
+end;
+
+
+procedure SetFlag( const dwThisFlag : DWORD; var dwFlagSet : DWORD; aSet : Boolean);
+begin
+  if aSet
+  then dwFlagSet := dwFlagSet or dwThisFlag
+  else dwFlagSet := dwFlagSet and not dwThisFlag;
+end;
+
+function TrimNetResource(UNC : string) : string;
+var
+  i, n : integer;
+begin
+  Result:=UNC;
+  if Length(UNC)>0 then begin
+    i:=0;
+    n:=0;
+    repeat
+      inc(i);
+     // inc(n,ord(UNC[i]='\'));
+      n:= n + ord(UNC[i]='\');
+      
+    until (i=Length(UNC)) or (n=4);
+    if n=4 then Result:=Copy(UNC,1,i-1)
+  end;
+end;
+
+type
+  //TDrivesProperty = array['A'..'Z'] of boolean;
+  //TDrivesProperty = array[ord('A')..ord('Z')] of boolean;
+  //TDrivesProperty = array[1..24] of boolean;
+//7const
+  //DriveName : array[0..3] of char = 'A:'+#0+#0;
+  //DriveName =  'A:'+#0+#0;
+
+
+
+procedure GetFreeDrives(var FreeDrives : TDrivesProperty);
+var
+  //d : char;
+  d : byte;
+//const
+  DriveName : array[0..3] of char; // = 'A:'+#0+#0;
+  //DriveName =  'A:'+#0+#0;
+
+begin
+  for d:= ord('C') to ord('Z') do begin
+    DriveName[0]:= chr(d);
+    //FreeDrives[d]:=GetDriveType(@DriveName)<2;
+  end;
+end;
+
+function CalculateTimeout( aBasis : DWORD) : DWORD;
+// Berechnet ein variables Timeout, welches um den Wert aBasis streut (± 25%)
+// Ein variables Timeout kann in bestimmten Fällen die Warscheinlichkeit
+// von Kollisionen vermindern und sorgt damit für bessere Skalierbarkeit
+var i : Integer;
+begin
+  case aBasis of
+    0 :  result := aBasis;
+    INFINITE : result := aBasis;
+   else
+    ASSERT((1.0*aBasis) < (1.25*MAXINT),'check not ');  // sonst Algorithmus anpassen
+    end;
+    i:= max( aBasis, 0);
+    i := round(i * 0.75) + Random(i div 2);  // Timeout = aBasis ± 25%
+    result := DWORD(i);
+  //end;
+end;
+
+var
+  k : int64;  // Quarzfrequenz des Timers (1193180Hz)
+  DelayMinTime : longint;   { Nur lesen! Eigenzeit der Delay-Routine
+                              in Mikrosekunden. Verzögerungen der PrecDelay-
+                              Routine unterhalb dieses Wertes sind nicht
+                              möglich. Wert ist rechnerabhängig. }
+  
+
+
+procedure PrecCount(var t : int64);
+begin
+  QueryPerformanceCounter(t);
+end;
+
+function DeltaPrecCount(var t1, t2 : int64) : longint;
+begin
+  result:= t2-t1;
+end;
+
+function DeltaPrecTime(var t1, t2 : int64) : longint;
+var
+  D : extended;
+begin
+  D:=t2-t1;
+  result:= round(1000000*D/k);
+end;
+
+procedure PrecDelay(MicroSeconds : longint);
+var
+  n, t1, t2 : int64;
+begin
+  if MicroSeconds>DelayMinTime then MicroSeconds:=MicroSeconds-DelayMinTime
+                               else MicroSeconds:=0;
+  if MicroSeconds>0 then begin
+    n:=round((k/1000000)*MicroSeconds);
+    PrecCount(t1);
+    repeat
+      PrecCount(t2);
+    until (t2-t1)>=n;
+  end;
+end;
+
+procedure GetDelayMinTime;
+{ Ermittlung der Eigenzeit der PrecDelay-Routine aus 16 Delay-Durchläufen }
+var
+  i : word;
+  t : longint;
+  TP1, TP2 : int64;
+begin
+  DelayMinTime:=0;
+  PrecDelay(2);
+  t:=0;
+  for i:=0 to 15 do
+  begin
+    PrecCount(TP1);
+    PrecDelay(2);
+    PrecCount(TP2);
+    t:=t+DeltaPrecTime(TP1,TP2);
+  end;
+  DelayMinTime:=(t div 16)-2;
+end;
+
+procedure SIRegister_dwsXPlatformTester;
+// var //tt: Tfile;
+     //tx: TPath;
+begin
+ //cLineTerminator','Char').SetString( #10);
+ //cLineTerminators','String').SetString( #13#10);
+ //INVALID_HANDLE_VALUE','LongInt').SetInt( DWORD ( - 1 ));
+  //SIRegister_TFixedCriticalSection(CL);
+  //SIRegister_TMultiReadSingleWrite(CL);
+  //SetDecimalSeparator( c : Char)');
+  //GetDecimalSeparator : Char');
+  writeln('GetDecimalSeparator '+GetDecimalSeparator)
+  //CL.AddTypeS('TCollectFileProgressEvent', 'Procedure ( const directory : Strin'
+   //+'g; var skipScan : Boolean)');
+ //CollectFiles( const directory, fileMask : UnicodeString; list : TStrings; recurseSubdirectories : Boolean; onProgress : TCollectFileProgressEvent)');
+  //NativeInt', 'Integer');
+  //CL.AddTypeS('PNativeInt', '^NativeInt // will not work');
+  //NativeUInt', 'Cardinal');
+  //CL.AddTypeS('PNativeUInt', '^NativeUInt // will not work');
+  //CL.AddTypeS('TBytes', 'array of Byte');
+  //CL.AddTypeS('RawByteString', 'UnicodeString');
+  //CL.AddTypeS('PNativeInt', '^NativeInt // will not work');
+  //CL.AddTypeS('PUInt64', '^UInt64 // will not work');
+  //SIRegister_TPath(CL);
+  //SIRegister_TFile(CL);
+  //SIRegister_TdwsThread(CL);
+  //GetSystemMilliseconds : Int64');
+  //UTCDateTime : TDateTime');
+  writeln('UTCDateTime '+datetimetoStr(UTCDateTime));
+  //UnicodeFormat( const fmt : UnicodeString; const args : array of const) : UnicodeString');
+  //UnicodeCompareStr( const S1, S2 : UnicodeString) : Integer');
+  //AnsiCompareText( const S1, S2 : UnicodeString) : Integer');
+  //AnsiCompareStr( const S1, S2 : UnicodeString) : Integer');
+  //UnicodeComparePChars( p1 : PChar; n1 : Integer; p2 : PChar; n2 : Integer) : Integer;');
+  //UnicodeComparePChars1( p1, p2 : PChar; n : Integer) : Integer;');
+  //UnicodeLowerCase( const s : UnicodeString) : UnicodeString');
+  writeln('UnicodeLowerCase '+UnicodeLowerCase('eStrinG'));
+  
+  //UnicodeUpperCase( const s : UnicodeString) : UnicodeString');
+  //ASCIICompareText( const s1, s2 : UnicodeString) : Integer');
+  //ASCIISameText( const s1, s2 : UnicodeString) : Boolean');
+  //InterlockedIncrement( var val : Integer) : Integer');
+  //InterlockedDecrement( var val : Integer) : Integer');
+  //FastInterlockedIncrement( var val : Integer)');
+  //FastInterlockedDecrement( var val : Integer)');
+  //InterlockedExchangePointer( var target : ___Pointer; val : ___Pointer) : ___Pointer');
+  //SetThreadName( const threadName : Char; threadID : Cardinal)');
+  //OutputDebugString( const msg : UnicodeString)');
+  //WriteToOSEventLog( const logName, logCaption, logDetails : UnicodeString; const logRawData : RawByteString);');
+  //TryTextToFloat( const s : PChar; var value : Extended; const formatSettings : TFormatSettings) : Boolean');
+  //VarCopy( out dest : Variant; const src : Variant)');
+  //VarToUnicodeStr( const v : Variant) : UnicodeString');
+  //LoadTextFromBuffer( const buf : TBytes) : UnicodeString');
+  //LoadTextFromStream( aStream : TStream) : UnicodeString');
+  //LoadTextFromFile( const fileName : UnicodeString) : UnicodeString');
+  //SaveTextToUTF8File( const fileName, text : UnicodeString)');
+  //OpenFileForSequentialReadOnly( const fileName : UnicodeString) : THandle');
+  //OpenFileForSequentialWriteOnly( const fileName : UnicodeString) : THandle');
+  //CloseFileHandle( hFile : THandle)');
+  //FileCopy( const existing, new : UnicodeString; failIfExists : Boolean) : Boolean');
+  //FileMove( const existing, new : UnicodeString) : Boolean');
+  //copyfile
+  //dwsFileDelete( const fileName : String) : Boolean');
+  //FileRename( const oldName, newName : String) : Boolean');
+  //dwsFileSize( const name : String) : Int64');
+  //FileDateTime( const name : String) : TDateTime');
+  //DirectSet8087CW( newValue : Word) : Word');
+  //DirectSetMXCSR( newValue : Word) : Word');
+  //TtoObject( const T: byte) : TObject');
+  //TtoPointer( const T: byte) : ___Pointer');
+  //GetMemForT(var T: byte; Size : integer)');
+  //FindDelimiter( const Delimiters, S : string; StartIdx : Integer) : Integer');
+end;
+
+
+procedure SIRegister_AdPacket;
+begin
+ //TPacketStartCond', '( scString, scAnyData )');
+  //TPacketEndCond', '( ecString, ecPacketSize )');
+  //TPacketEndSet', 'set of TPacketEndCond');
+ //EscapeCharacter','String').SetString( '\');
+ //WildCardCharacter','String').SetString( '?');
+ {adpDefEnabled','Boolean');
+ adpDefIgnoreCase','Boolean');
+ adpDefIncludeStrings','Boolean');
+ adpDefAutoEnable','Boolean');
+ adpDefStartCond','string').SetString('scString');
+ adpDefTimeOut','LongInt').SetInt( 2184);
+ apdDefFlushOnTimeout','Boolean').SetInt( 2184);
+  CL.AddClassN(CL.FindClass('TOBJECT'),'TApdDataPacket');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'TApdDataPacketManager');
+  SIRegister_TApdDataPacketManagerList(CL);
+  SIRegister_TApdDataPacketManager(CL);}
+  //TPacketMode', '( dpIdle, dpWaitStart, dpCollecting )');
+  //TPacketNotifyEvent', 'Procedure ( Sender : TObject; Data : TObject; Size : Integer)');
+  //TStringPacketNotifyEvent', 'Procedure ( Sender : TObject; Data : string)');
+  //SIRegister_TApdDataPacket(CL);
+  //SearchComPort
+ 
+  
+end;
+
+
+procedure SIRegister_AdPortTester;
+begin
+  //TParity', '( pNone, pOdd, pEven, pMark, pSpace )');
+  //TDeviceLayer', '( dlWin32, dlWinsock )');
+  //TDeviceLayers', 'set of TDeviceLayer');
+  //TBaudRate', 'LongInt');
+  //TTapiMode', '( tmNone, tmAuto, tmOn, tmOff )');
+  //TPortState', '( psClosed, psShuttingDown, psOpen )');
+  //THWFlowOptions', '( hwfUseDTR, hwfUseRTS, hwfRequireDSR, hwfRequireCTS )');
+  //THWFlowOptionSet', 'set of THWFlowOptions');
+  //TSWFlowOptions', '( swfNone, swfReceive, swfTransmit, swfBoth )');
+  //TFlowControlState', '( fcOff, fcOn, fcDsrHold, fcCtsHold, fcDcdH'
+   //+'old, fcXOutHold, fcXInHold, fcXBothHold )');
+  //TTraceLogState', '( tlOff, tlOn, tlDump, tlAppend, tlClear, tlPause )');
+  //TTriggerEvent', 'Procedure ( CP : TObject; Msg, TriggerHandle, Data : Word)');
+  //TTriggerAvailEvent', 'Procedure ( CP : TObject; Count : Word)');
+  //TTriggerDataEvent', 'Procedure ( CP : TObject; TriggerHandle : Word)');
+  //TTriggerStatusEvent', 'Procedure ( CP : TObject; TriggerHandle : Word)');
+  //TTriggerTimerEvent', 'Procedure ( CP : TObject; TriggerHandle : Word)');
+  //TTriggerLineErrorEvent', 'Procedure ( CP : TObject; Error : Word; LineBreak : Boolean)');
+  //TWaitCharEvent', 'Procedure ( CP : TObject; C : Char)');
+  //TPortCallback', 'Procedure ( CP : TObject; Opening : Boolean)');
+  //TApdCallbackType', '( ctOpen, ctClosing, ctClosed )');
+  //TPortCallbackEx', 'Procedure ( CP : TObject; CallbackType : TApdCallbackType)');
+  //PUserListEntry', '^TUserListEntry // will not work');
+  //TUserListEntry', 'record Handle : THandle; OpenClose : TPortCall'
+   //+'back; OpenCloseEx : TPortCallbackEx; IsEx : Boolean; end');
+  //TApThreadBoost', '( tbNone, tbPlusOne, tbPlusTwo )');
+ {CL.AddConstantN('adpoDefDeviceLayer','string').SetString('dlWin32');
+ CL.AddConstantN('adpoDefPromptForPort','Boolean');
+ CL.AddConstantN('adpoDefComNumber','LongInt').SetInt( 0);
+ CL.AddConstantN('adpoDefBaudRt','LongInt').SetInt( 19200);
+ //CL.AddConstantN('adpoDefParity','integer').SetSet(pNone);
+ CL.AddConstantN('adpoDefDatabits','LongInt').SetInt( 8);
+ CL.AddConstantN('adpoDefStopbits','LongInt').SetInt( 1);
+ CL.AddConstantN('adpoDefInSize','LongInt').SetInt( 4096);
+ CL.AddConstantN('adpoDefOutSize','LongInt').SetInt( 4096);}
+ //CL.AddConstantN('adpoDefOpen','Boolean').SetInt( 4096);
+ //CL.AddConstantN('adpoDefAutoOpen','Boolean').SetInt( 4096);
+ //CL.AddConstantN('adpoDefBaseAddress','LongInt').SetInt( 0);
+ {CL.AddConstantN('adpoDefTapiMode','').SetString( tmAuto);
+ CL.AddConstantN('adpoDefDTR','Boolean').SetString( tmAuto);
+ CL.AddConstantN('adpoDefRTS','Boolean').SetString( tmAuto);
+ CL.AddConstantN('adpoDefTracing','').SetString( tlOff);}
+ (*CL.AddConstantN('adpoDefTraceSize','LongInt').SetInt( 10000);
+ CL.AddConstantN('adpoDefTraceName','String').SetString( 'APRO.TRC');
+ CL.AddConstantN('adpoDefTraceHex','string').SetString( 'APRO.TRC');
+ CL.AddConstantN('adpoDefTraceAllHex','string').SetString( 'APRO.TRC');
+ //CL.AddConstantN('adpoDefLogging','').SetString( tlOff);
+ CL.AddConstantN('adpoDefLogSize','LongInt').SetInt( 10000);
+ CL.AddConstantN('adpoDefLogName','String').SetString( 'APRO.LOG');
+ CL.AddConstantN('adpoDefLogHex','string').SetString( 'APRO.LOG');
+ CL.AddConstantN('adpoDefLogAllHex','string').SetString( 'APRO.LOG');
+ CL.AddConstantN('adpoDefUseMSRShadow','string').SetString( 'APRO.LOG');
+ CL.AddConstantN('adpoDefUseEventWord','string').SetString( 'APRO.LOG');
+ CL.AddConstantN('adpoDefSWFlowOptions','string').SetString(' swfNone');
+ CL.AddConstantN('adpoDefXonChar','Char').SetString( #17);
+ CL.AddConstantN('adpoDefXoffChar','Char').SetString( #19);
+ CL.AddConstantN('adpoDefBufferFull','LongInt').SetInt( 0);
+ CL.AddConstantN('adpoDefBufferResume','LongInt').SetInt( 0);
+ CL.AddConstantN('adpoDefTriggerLength','LongInt').SetInt( 1);
+ CL.AddConstantN('adpoDefCommNotificationLevel','LongInt').SetInt( 10);
+ CL.AddConstantN('adpoDefRS485Mode','Boolean').SetInt( 10); *)
+  //SIRegister_TApdCustomComPort(CL);
+  //SIRegister_TApdComPort(CL);
+ //CL.AddDelphiFunction('Function ComName( const ComNumber : Word) : ShortString');
+ //CL.AddDelphiFunction('Function SearchComPort( const C : TComponent) : TApdCustomComPort');
+  //ComName
+  //SearchComPort
+ 
+end;
+
+
+
+
+
+  var mystr, path_in, file_out, gstr2, theregex, checkstr: string;
+          firsts, seconds, resname: string;
+          wavstr: TStream;
+          i: integer;
+          t: int64;
+          a,b: byte;
+          a1, b1: boolean;
+          //axt: TNamedPipe;
+          //apt: TProcessOption; TStartupInfo; TProcess;
+ 
+begin
+  memo2.font.size:= 14;
+  
+  //SetForm;
+  //MapDrive
+  //GetStreamAsText
+  //MakeFileOpen
+  
+  //mymemo.lines.text:= getRandomText;
+  //SearchAndOpenDoc(ExePath+MEDIAPATH)
+  //mylistview:= TFormListView.Create(self);
+  //exit;
+  maxform1.color:= clsilver;
+  
+  Writeln(ConvertToMyLocalSettings('05/04/2010', 'dd/mm/yyyy'));
+  Writeln(ConvertToMyLocalSettings('05-04-2010', 'dd-mm-yyyy'));
+  Writeln(ConvertToMyLocalSettings('5-4-2010', 'd-m-yyyy'));
+  Writeln(ConvertToMyLocalSettings('4-5-2010', 'm-d-yyyy'));
+  Writeln(ConvertToMyLocalSettings('4-07-2010', 'm-dd-yyyy'));
+  Writeln(ConvertToMyLocalSettings('06/04/2010', 'dd/MM/yyyy'));
+  {repeat 
+  beep;
+       
+  until isKeypressed;  }
+  
+  mystr:= 'this is the m@x that rocks';
+  writeln('Copy2SymbDel1: '+Copy2SymbDel(mystr, '@'));
+  writeln('Copy2SymbDel2: '+mystr);
+  
+ // news to 3.9.9.97
+  
+  //makeresult is NTFS
+  
+  if NtfsReparsePointsSupported(Extractfiledrive('C')+'\') then 
+    writeln('NTFS supported');
+    
+    if isNTFS then
+      writeln('NTFS supported');
+    
+    
+    with TSerial.create(self) do begin
+      rectimeout:= 3000;
+      free;
+    end;
+    
+    //if getkeystate
+    {repeat
+    if getasynckeystate(VK_ESCAPE And $01) = $01 then 
+      writeln('this is escape') else writeln('no escape ');
+      application.processmessages;
+      sleep(1000);
+    until iskeypressed;}  
+    
+    //checkprivilege
+    
+    ///mcisendCommand
+    writeln(exepath)
+    writeln('file stamp '+getfiletimestamp(exepath+'maxbox3.exe'));
+    
+    //if openprocesstoken
+    //sendmessagetimeout
+    writeln(timetostr(time))
+    mywait(3000);
+    writeln(timetostr(time))
+    
+    path_in:= 'C:\maXbook\maxbox3\mX3999\maxbox3\source\JCL\source\';
+    file_out:= 'C:\maXbook\maxbox3\mX3999\SWS2014\regexout2.txt';
+    gstr2:= ''
+    theregex:= '.*[a-zA-Z_]\([*,\d]+\)'+gstr2+'*?'
+    //findSVNDirFilesRegExCheckandOpen2(pstring, '', theregex,'.pas', false);
+  
+   // regExPathfinder(path_in, file_out, '', theregex,'.pas', false);  //sort = true
+
+// mX3 executed: 6/15/2014 8:33:26 PM  Runtime: 0:1:1.760  Memoryload: 52% use
+// mX3 executed: 6/15/2014 8:38:20 PM  Runtime: 0:1:1.589  Memoryload: 52% use
+
+      //TBackgroundWorker
+      //TProfiler
+      //TWavePlayer
+      
+    checkstr:= '2: C:\maXbook\maxbox3\mXfileChangeToday_list.txt  414 - 9:14';
+     //writeln('Copy2Symbpath: '+Copy2SymbDel(checkstr, '.'));
+    
+    //for file change today 
+     firsts:= Copy2SymbDel(checkstr, ' ');
+     writeln(checkstr);
+     seconds:= Copy2SymbDel(checkstr, ' ');
+     writeln(seconds);
+     //-------------------------
+     
+     writeln('Copy2Symbpath space : '+Copy2SymbDel(checkstr, ' '));
+    
+      writeln(ReplaceRegExpr('([ ]+)',checkstr,'',true)); //show only last extract
+ 
+      writeln(ReplaceRegExpr('([^/]+)?/',checkstr,'',true)); //show only last extract
+
+        checkstr:= '2: C:\maXbook\maxbox3\mXfileChangeToday_list.txt  414 - 9:14';
+        writeln(ReplaceRegExpr('[:alnum:]',checkstr,'',true)); //show only last extract
+
+     writeln(gethostip)
+     resname:= 'PROMOTE';
+     //resname:= 'BACK';
+     
+     wavstr:= TMemorystream.create;
+     if GetResourceName(wavstr, resname) then 
+       writeln('plax wave ');
+         writeln(resname);
+     wavstr.Free;
+     
+     writeln(botostr(PlayWaveResource(resname)));
+     
+     for i:= 18 downto 1 do writeln(inttostr(i));
+     
+     resname:= 'PROMOTE123';
+     writeln(resname[1]);
+     
+     resname:= ' PROMOTE123';
+     writeln(resname);
+     while (length(resname) > 0) and (resname[1]= ' ') do delete(resname,1,1);
+     writeln(resname);
+     for i:= length(resname) downto 1 do write(resname[i]);
+     
+     for t:= 1 to 32 do
+    printF('Bin exponent with SHL: 2^%d = %d',[t, t SHL t DIV t]);
+
+  resname:= 'pass'
+  acopy(resname);
+  writeln(resname)
+ 
+  aref(resname);
+  writeln(resname)
+   resname:= resname+'ui';
+   arefconst(resname);
+  writeln(resname)
+ 
+   writeln(arefconst2(resname));
+    a:= 13;
+    b:= 12;
+    
+    //writeln(botostr(a not b))
+
+    writeln(botostr(a = not b))
+     writeln(botostr(a = not not b))
+    writeln(botostr(a <> b))
+    
+    writeln(botostr((a = not b) = (a <> b)));  //false
+  
+    a1:= true; b1:= false;
+    writeln(botostr((a1 = not b1) = (a1 <> b1)));
+ 
+    a1:= true; b1:= false;
+    writeln(botostr(not(a1 = b1) = (a1 <> b1)));
+    
+    a:= 11; b:= 12;
+    writeln(botostr(not(a = b) = (a <> b)));
+    
+    //application.messagebox('this is','ErrorMX',MB_ICONHAND);
+    
+     //ExecuteCommand('cmd','/k dir /B '+
+     //'C:\maXbook\maxbox3\mX3999\maxbox3\examples\*.txt > allexamples.txt')
+  //SearchAndOpenDoc('C:\maXbook\maxbox3\mX3999\maxbox3\examples\allexampleslist2.txt')                
+        writeln(floattostr(combination(45,6)))
+        //GetVersionInfo
+     //GetProductType
+     //IPStrSize
+     //TWsNotifyEvent
+     
+     
+     QueryPerformanceFrequency(k);
+    SIRegister_dwsXPlatformTester;
+    
+    with TApdDataPacketManager.create(TApdCustomComPort.create(self)) do begin
+      writeln(botostr(inevent));
+      free;
+      end;
+      
+    with TADOVersion.Create(TBetterADODataSet.create(self)) do begin
+      writeln(Oledbversion)
+      writeln(Odbcversion)
+      writeln(BetterADSVersion)
+      
+      free
+     end;   
+     
+End.
+
+PL SQL Tool
+
+
+· Trivadis PL/SQL Code Checker
+
+plugins in sonar:        
+ Plugins
+Plugin 	Version 	Description
+.NET Core [dotnet] 	2.0 	Plugin that defines the core APIs for the .NET Ecosystem.
+.NET FxCop [dotnetfxcop] 	2.0 	Plugin that runs FxCop analyses to check .NET assemblies against rule violations.
+.NET Gallio [dotnetgallio] 	2.0 	Plugin that executes unit tests and computes code coverage on .NET assemblies.
+.NET Gendarme [dotnetgendarme] 	2.0 	Plugin that runs Gendarme analyses to check .NET assemblies against rule violations.
+.NET NDeps [dotnetndeps] 	2.0 	Plugin that runs NDeps on .NET assemblies to construct Dependency Matrix.
+C# Core [csharp] 	2.0 	Plugin that defines the core APIs for the C# Plugins.
+C# StyleCop [csharpstylecop] 	2.0 	Plugin that runs StyleCop analyses to check C# sources against rule violations.
+C++ (SonarSource) [cpp] 	1.2 	Enable analysis and reporting on C++ projects.
+Checkstyle [checkstyle] 	1.1 	Analyze Java code with Checkstyle 5.6.
+Cobertura [cobertura] 	1.1 	Get code coverage with Cobertura.
+Delphi [delphi] 	0.1 	Enables analysis of Delphi projects into Sonar
+Findbugs [findbugs] 	1.1 	Analyze Java code with Findbugs 2.0.1.
+JaCoCo [jacoco] 	1.1 	Get code coverage with JaCoCo.
+Java [java] 	1.1 	This plugin brings core support to the Java language on Sonar.
+PMD [pmd] 	1.1 	Analyze Java code with PMD 4.3.
+Squid for Java [squidjava] 	1.1 	Default Sonar Java rule engine.
+Surefire [surefire] 	1.1 	Get results of unit tests with Surefire.
+Total Quality [totalquality] 	1.1 	Provides an overall measure of the quality of the project, linking code quality, design, architecture, and testing (Unit and Integration).
+Web [web] 	1.2 	Analyze web code.
+
+
+2.6 	Mar 28, 2014 	Makes the plugin compatible with multi-language analysis introduced in SonarQube 4.2, adds new coding rules and supports CREATE and ALTER DDL 	3.7.1+ (LTS)
+
+ PL/SQL
+The PL/SQL plugin enables analysis and reporting on Oracle PL/SQL projects.
+Ultimate: 	Included
+Enterprise: 	Included
+Professional: 	€ 3,200
+Community: 	€ 3,200
+All prices for one license per year per instance including support, upgrades, maintenance.
+Buy full license
+Get trial key
+Download and documentation.
+
+
+Headquarters
+
+SonarSource SA
+
+Carrefour de Rive 2
+1207 Geneva
+Switzerland
+Tel: +41 (0)22 510 2424
+R&D
+
+SonarSource France
+
+550 avenue Jean Morin
+FR-74800 La Roche sur Foron
+France
+Sales Admin
+
+SonarSource
+
+Sales Administration
+
+P.O. Box 3764
+1211 Geneva 3
+Switzerland
+
+
+http://www.softwareschule.ch/download/arduino_training.pdf
+
+//-------------------------------------------------
+
+source is tlistview
+target is tform
+
+Procedure TfMerit.SourceLVStartDrag(Sender: TObject;
+var DragObject: TDragObject);
+var TargetLV:TListView;
+begin
+// TargetLV:=nejak urcit dle potreby
+  TargetLV.BeginDrag(True)
+end;
+
+Procedure TfMerit.SourceLVMouseDown(Sender: TObject;
+Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+MouseIsDown:=True;
+end;
+
+Procedure TfMerit.SourceLVMouseUp(Sender: TObject; Button: TMouseButton;
+Shift: TShiftState; X, Y: Integer);
+begin
+MouseIsDown:=False;
+if (Sender as TListView).Dragging then
+(Sender as TListView).EndDrag(False);
+end;
+
+Procedure TfMerit.SourceLVMouseMove(Sender: TObject; Shift: TShiftState;
+X, Y: Integer);
+begin
+if (Sender.ClassNameIs('TListView')) then
+begin
+if MouseIsDown and ((Sender as TListView).SelCount>0) then
+(Sender as TListView).BeginDrag(True);
+end;
+end;
+
+
+Procedure TfMerit.TargetLVDragOver(Sender, Source: TObject; X,
+Y: Integer; State: TDragState; var Accept: Boolean);
+var T:TListView;
+begin
+T:=Sender as TListView;
+Accept:=Assigned(T.GetItemAt(X,Y));
+end;
+
+
+Procedure TfMerit.TargetLVDragDrop(Sender, Source: TObject; X,
+Y: Integer);
+var It:TListItem;
+LV1,LV2:TListView;
+begin
+LV1:=Source as TListView;
+LV2:=Sender as TListview;
+
+It:=LV2.GetItemAt(X,Y);
+if Assigned(It) then
+begin
+// zpracuj polozku ze zdrojoveho listview
+end;
+end;
+
+
+Procedure TControlParentR(Self: TControl; var T:TWinControl); begin T:= Self.Parent; end;
+Procedure TControlParentW(Self: TControl; T: TWinControl); begin Self.Parent:= T; end;
+    RegisterPropertyHelper(@TControlParentR, @TControlParentW, 'PARENT');
+    RegisterProperty('Parent', 'TWinControl', iptRW);
+
+Procedure TTXPTool.LVPFFDblClick(Sender: TObject);
+var
+tmpList : TListItem;
+fn ; string;
+ft : integer;
+fs : integer;
+begin
+tmpList := LVPFF.Selected;
+if tmplist<>nil then
+begin
+  fn := tmpList.Caption
+  ft := tmpList.SubItems.Strings[1];
+  fs := tmpList.SubItems.Strings[3];
+  if pos('Wave', ft)>0 then
+    PlayThisOne1Click(nil);
+  if pos('Jpg', ft)>0 then
+    ShowJpg1Click(nil);
+  if pos('Targa', ft)>0 then
+    ShowTga1Click(nil);
+  if pos('Pcx', ft)>0 then
+    ShowPcx1Click(nil);
+  if pos('Mission Sound Collection', ft)>0 then
+    ShowPwf1Click(nil);
+end;
+end;
+
+
+  #date-05/08/2014 04:58:44 PM
+  date-01.06.2013 10:20:08
+  
+Topic:
+SynEdit change markers (yellow or green line on gutter)
+
+does anyone know how to add "change markers" functionality to SynEdit? I mean those lines, green for modified & saved, yellow for modified & unsaved parts of document... here is an example from other
+
+Yes, I've added it to my copy of SynEdit. I originally snagged the code from another project.
+
+It is broken across (at least) two different units IIRC.
+
+You need to modify SynEditTextBuffer.pas as well as SynEdit.pas.
+
+The code is rather complex because you need to modify several spots in SynEditTextBuffer.pas as well as 1 or 2 spots in SynEdit.pas.
+
+The original project I snagged the code from was being very ambitious in that they were trying to develop code folding and line blocking (as shown in your image) as well.
+
+I couldn't get the code folding to work reliably so I dropped that mod and just used the line change code. I believe that dropping the code folding also dropped the line blocking.
+
+The name of that project is SynEditSudio, it from a Chinese website, but I believe the Firefox translator plugins work pretty well in converting it.
+
+EDIT: contact me directly if you want to get a copy of my changes.
+
+HTH Ryan.
+
+I decided to have a concerted effort to get the excellent DWScript (Delph Web Script DWS) integrated into a simple IDE using SynEdit. DWScript is currently being agressively developed and has a number of advantages over other Pascal Script libraries, however it does not contain an editor or any IDE example beyond a simple memo control to prove execution capability. It does contain a number of hooks for editor / debugger integration and in fact when DWS was reawakened a while ago, releases did contain an example of a SynEdit / DWS2 (as it was then) integration. An example can be found in the file dws2src20-20030907.zip in the \dws2rel\dwstools\idedialog\source where there is a 'mini-IDE' with editor window, call stack, breakpoint window etc. Really nice. I did get this working some months ago using an old SynEdit and the DWS2 that was included in this file.
+
+So, I have now tried achieve this (or a similar) ide using the latest SynEdit (downloaded from SVN) and the latest DWScript (also from the SVN). Both libraries are installed fine into XE and their demos run fine. I then tried taking the ide example from the old "\dws2rel\dwstools\idedialog\source" and updating the code but much has changed. Frustratingly, not so much has changed that I gave up quickly - I tried searching for the various 'old' type definitions in old source and matching them up with 'new' definitions. Finally though, after several hours mired in code I decided that someone, somewhere must surely have been down this route?
+
+Has anyone got an example of a DWScript - SynEdit integration using recent DWScript code please? I'm very happy with something simple that I can learn / build upon. Thanks
+
+Moderne Informationstechnik ist aus der modernen Welt nicht mehr wegzudenken. Der Wissenschafts-Journalist Ranga Yogeshwar will mit einem Projekt eine Initiative anstoßen, die Begeisterung für die IT wecken und die Mündigkeit der Nutzer stärken will.
+
+Informatiker und IT-Fachleute werden in Deutschland dringend gesucht, aber mit dem Nachwuchs hapert es trotz zahlreicher Bemühungen. Mit der Initiative "Jeder kann programmieren" wollen das Fraunhofer IUK und der Wissenschaftsjournalist Ranga Yogeshwar nun einen Aufruf starten, die digitale Gesellschaft aktiv mitzugestalten.
+
+Die Initiative will eine Plattform für Projekte, neue Ideen und den Erfahrungsaustausch in Deutschland bieten. Die Aufforderung, Programmiersprachen zu erlernen, richte sich nicht nur an eine kleine Gruppe von Nerds, sagte Bundeswirtschaftsminister Sigmar Gabriel (SPD) am Dienstag in Berlin. Es gehe auch darum, wie wir mit den neuen Möglichkeiten in der digitalen Welt umgehen und sie nutzen, aber auch die Risiken in den neuen Technologien erkennen. Daran werde sich entscheiden, wie wir in der Zukunft als mündige Bürger leben und unsere Wirtschaft wettbewerbsfähig halten.
+
+Es komme heute kaum eine Branche hierzulande noch ohne die Kernkompetenz der Informatik und IT aus, sagte Volker Smid, Digital-Chef der Holtzbrinck Publishing Group. Nach Angaben des Bitkom sind rund Zweidrittel der Informatiker hierzulande außerhalb von IT-Unternehmen tätig. Für diese Themenfelder müsse die Neugier geweckt werden. "Das ist eine einmalige Chance."
+"Förster, Pastoren und Nonnen"
+
+Deutschland ist ein Land fähiger Ingenieure, sagte Martin Hofmann, Technik-Chef der Volkswagen AG. "Wir haben es über Jahrzehnte hinweg geschafft, für den Maschinenbau Begeisterung über Spielzeug wie Märklin und Fischertechnik zu wecken." Das müsse heute auch für die Informatik gelingen. Dabei könne die Industrie, aber auch die Verbände unterstützend wirken.
+
+
+http://sourceforge.net/p/forge/community-docs/Migrating%20MediaWiki%20from%20Hosted%20Apps/
+
+unendlich in  space
+ewig in time
+
+Dear software manufacturer,
+
+your software maXbox is listed in the heise software directory at <http://www.heise.de/download/maxbox-1176464.html>. You did grant us permission to offer it on our download servers.
+
+We would like to inform you that our automatic virus checks (done in co-operation with AV-Test GmbH) with more than 40 virus scanners indicate a possible infection in version 3.9.9.96 (maxbox3.zip).
+
+This is the detailed report:
+
+============================================================
+
+Scan report of: 125157-maxbox3.zip
+
+Ahnlab -
+Avast -
+AVG -
+Avira -
+Bitdefender -
+Command W32/Hupigon.C.gen!Eldorado
+Command (Online) W32/Hupigon.C.gen!Eldorado
+Eset Nod32 -
+Fortinet -
+F-Prot W32/Hupigon.C.gen!Eldorado
+G Data -
+Ikarus -
+K7 Computing -
+Kaspersky -
+Kaspersky (Online) -
+McAfee -
+McAfee (BETA) -
+McAfee (Online) -
+McAfee GW Edition (Online) -
+Microsoft -
+Norman -
+Panda -
+Panda (Online) -
+QuickHeal Suspicious (warning)
+Rising -
+Sophos -
+Sophos (Online) -
+Symantec -
+Symantec (BETA) -
+ThreatTrack -
+Total Defense -
+Trend Micro -
+Trend Micro (Cons.) -
+Trend Micro (CPR) -
+VBA32 -
+VirusBuster -
+
+============================================================
+
+The following updates have been used for the test (all times in UTC):
+
+Ahnlab sdscan-console.zip 2014-06-24 05:20
+Avast av5stream.zip 2014-06-24 09:40
+AVG avg10cmd1191a7186.zip 2014-06-23 04:55
+Avira vdf_fusebundle.zip 2014-06-24 09:20
+Bitdefender bdc.zip 2014-06-24 09:25
+Command antivir-v2-z-201406240638.zip 2014-06-24 07:25
+Command (Online) antivir-v2-z-201406240638.zip 2014-06-24 07:25
+Eset Nod32 minnt3.exe 2014-06-24 08:00
+Fortinet vir_high 2014-06-24 00:35
+F-Prot antivir.def 2014-06-24 07:55
+G Data bd.zip 2014-06-24 09:15
+Ikarus t3sigs.vdb 2014-06-24 08:45
+K7 Computing K7Cmdline.zip 2014-06-23 14:20
+Kaspersky kdb-i386-cumul.zip 2014-06-24 05:50
+Kaspersky (Online) kdb-i386-cumul.zip 2014-06-24 05:50
+McAfee avvdat-7478.zip 2014-06-23 16:05
+McAfee (BETA) avvwin_netware_betadat.zip 2014-06-24 07:15
+McAfee (Online) avvdat-7478.zip 2014-06-23 16:05
+McAfee GW Edition (Online) mfegw-cmd-scanner-windows.zip 2014-06-23 17:20
+Microsoft mpam-fe.exe 2014-06-24 08:20
+Norman nse7legacy.zip 2014-06-24 07:05
+Panda pav.zip 2014-06-24 08:55
+Panda (Online) pav.zip 2014-06-24 08:55
+QuickHeal qhadvdef.zip 2014-06-23 20:50
+Rising RavDef.zip 2014-06-17 01:20
+Sophos ides.zip 2014-06-24 09:05
+Sophos (Online) ides.zip 2014-06-24 09:05
+Symantec streamset.zip 2014-06-24 09:40
+Symantec (BETA) symrapidreleasedefsv5i32.exe 2014-06-24 09:10
+ThreatTrack CSE39VT-EN-30602-F.sbr.sgn 2014-06-24 08:05
+Total Defense fv_nt86.exe 2014-06-24 07:50
+Trend Micro itbl1435000900.zip 2014-06-24 09:45
+Trend Micro (Cons.) hctbl1434800295.zip 2014-06-24 03:55
+Trend Micro (CPR) lpt882.zip 2014-06-24 07:55
+VBA32 vba32w-latest.rar 2014-06-24 09:15
+VirusBuster vdb.zip 2014-06-23 22:30
+
+
+We will recheck your software. In the meantime it will not be available on our download servers.
+
+Greetings,
+your heise software team
+
+
+Your new tool is available at http://sourceforge.net/p/maxbox/wikimax/
+
+
+Grundsätzliches zur Entwicklung von Programmiersprachen
+Sprachschöpfer
+
+Grundsätzliches zur Entwicklung von Programmiersprachen Eine Programmiersprache zu entwickeln ist nicht trivial. Das liegt weniger an der technischen Herausforderung, denn nie zuvor war es einfacher, sich mit populären Werkzeuge einen Parser generieren zu lassen. Es liegt viel mehr daran, dass man sich nur zu gut überlegen muss, wie diese Sprache aussehen soll und welche Ziele man damit zu erreichen gedenkt. Denn es gilt, allzu viele Entscheidungen zu treffen, die das Potenzial einer Sprache signifikant beeinflussen können.
+
+Wer sich daran macht – aus welchen Gründen auch immer –, eine eigene Programmiersprache zu entwickeln, muss eines sicherlich mitbringen: Er oder sie muss Entscheidungen treffen und mit Kompromissen leben können. Eine Programmiersprache ist nämlich das Fundament aller darauf aufbauenden Programme. Das ist durchaus vergleichbar mit unserer Sprache, von der Philosoph Ludwig Wittgenstein sagt: "Die Grenzen meiner Sprache bedeuten die Grenzen meiner Welt." Zum Beispiel gestaltet es sich relativ schwierig, Objektorientierung in einer nicht objektorientierten Sprache umzusetzen. Sicherlich gibt es Mittel und Wege, das zu tun, aber es ist dann womöglich nicht effizient genug.
+
+Dem scheint zu widersprechen, dass die ersten Übersetzer für C++ als Präprozessoren für C-Compiler realisiert wurden. Das heißt tatsächlich, dass C (mit seinen Funktionszeigern, funktionsübergreifenden Sprüngen et cetera) sehr wohl für die Implementierung der Objektorientierung geeignet ist, aber es wäre nie jemand auf die Idee gekommen, diese freiwillig einzusetzen, weil C einen nun wirklich nicht dazu einlädt. Alles was eine Sprache nicht beherrscht, lässt sich also entweder gar nicht oder nur mit enormem Aufwand für bestimmte Aufgaben beschreiben. Eine Programmiersprache tut also gut daran, die Zieldomäne mit eigenem Vokabular und Idiomen zu unterstützen. Je spezieller die Domäne ist, desto mehr kann man sich dabei deren Vokabular bedienen; je weiter sie gefasst ist, desto allgemeiner muss auch das Vokabular sein.
+
+Aber egal, ob der Sprachentwickler eine Domain Specific Language (DSL) für ein konkretes Problemfeld schreiben will oder eher eine General Purpose Language (GPL) schaffen möchte, mit der sich viele Anforderungen bewältigen lassen, für alle gelten zunächst die gleichen Anforderungen: Der Entwickler muss wissen, was er der Sprache abverlangen können will.
+
+Die andere Satzlehre
+
+Zu den am einfachsten und gleichzeitig schwierigsten festzulegenden Eigenschaften einer Sprache gehört die Syntax. Einfach sind diesbezügliche Entscheidung deswegen, weil man "nur" die äußere Form der Sprache bestimmen muss: Bezeichner, Schlüsselwörter, Satzzeichen, Operatoren et cetera. Schwierig wird das Aussehen dadurch, dass es neben den technischen Aspekten nur eine Frage des Geschmacks ist, für was man sich entscheidet. Leider scheint bei Geschmacksfragen jeder eine eigene Meinung zu haben, was immer wieder zu völlig überflüssigen Streitereien führt.
+
+Rein technisch gesehen gibt es schon bei der Wahl der Zeichen schier unbegrenzte Optionen. Aber obwohl es dafür den Unicode gibt, nutzen ihn nicht viele. Damit sind in unseren Breiten neben dem normalen Alphabet nicht nur die Umlaute zulässig, sondern auch Akzente wie beim Vektorpfeil. Dass sie aber kaum Anwendung finden, mag vielerlei Gründe haben, wobei einer davon sicherlich der ist, dass die meisten Anwender erst gar nicht wissen, wie man diese Sonderzeichen eingeben kann.
+
+Java hat hier Federführendes geleistet, indem die Sprache den Unicode nicht nur für den Programmtext akzeptierte. Leider wurde dabei versäumt, das Dateiformat für Textdateien eindeutig festzulegen, sodass es gelegentlich zu Fehlern bei der Interpretation der Zeichen kommt. Darüber hinaus taucht das Problem auf, dass eine Java-Klasse eine korrespondierende Klassendatei gleichen Namens hat. Benutzt man etwa einen Umlaut in einem Klassennamen, mag das zwar noch funktionieren, sobald man aber diese Klassendateien auf ein anderes Betriebssystem kopiert, kann es passieren, dass eben diese Datei unauffindbar ist.
+
+Da jeder spätestens ab dem ersten Schuljahr mit Mathematik konfrontiert wird, bietet es sich an, für alle mathematischen Aufgaben eine vergleichbare Notation zu wählen. So wird aus der Multiplikation a · b eben a * b, weil sich der Asteriskus zum einen auf der Tastatur findet und zum anderen eine gewisse Ähnlichkeit zum Multiplikationspunkt hat.
+
+Bei den Vergleichsoperation tut man sich bereits etwas schwerer, etwas Passendes auf der Tastatur zu finden. Aus <, ? und ? wird mal <, <=, > beziehungsweise >=, was vielleicht noch eingängig erscheinen mag. Bei Vergleichen mit = und ? tut man sich schon etwas schwerer, und so finden sich für die Ungleichheit die Varianten !=, /=, |=, =/= oder <>; was immer die Tastatur und der ASCII-Code hergeben.
+
+Das größte Problem scheint aber die Zuweisung in imperativen Sprachen zu sein. Besonders Anfänger tun sich schwer damit, dass das, was sie als Vergleich kennen (a = b), in sich von C ableitenden Sprachen als Zuweisung gilt und der Vergleich selbst seltsam anmutend mit zwei Gleichzeichen geschrieben wird (a == b). Sprachen mit Algol-Herkunft wie Pascal verwenden deshalb zur Unterscheidung für die Zuweisung :=. Fortran nutzt für die Zuweisung zwar auch das Gleichzeichen (a = b), für alle Vergleiche kommen dafür aber nur Namen zum Einsatz (a .EQ. b oder a .LT. b).
+
+Ohnehin stellt sich die Frage, ob man lieber mit Namen oder Operatoren arbeitet. Beispielsweise kann man sich unter a mod b vielleicht noch etwas vorstellen, derweil es mit a % b fast unmöglich scheint. Mit Ausnahme der Standardoperatoren +, -, · und / tut man sich schon recht schwer mit den Symbolen. In Scala etwa gibt es die Operatoren /: und :\. Wie man gleich sieht, handelt es sich dabei um die beiden Funktionen foldLeft und foldRight. Die imperativen Programmierer können sich vielleicht unter den gesprächigeren Varianten nichts vorstellen, aber die funktionalen Entwickler wissen sehr wohl, was damit gemeint ist.
+
+Ein spezielles Thema im Zusammenhang mit der Syntax ist das Format. Die meisten Sprachen sind formatfrei. Das heißt, dass nichts dagegen spricht, alles ohne Leerzeichen in eine einzige Zeile zu schreiben. Unter den aktuellen Sprachen verlangt einzig Python, dass ein Programm vernünftig gesetzt wird – zumindest was das Einrücken betrifft.
+
+def greet(name):
+       print 'Hallo', name
+
+greet('Python')
+
+Die vorgegebene Syntax entscheidet also auch darüber, wie konsistent das Erscheinungsbild der Quelltexte ist. Beispielsweise ist es in Perl den Variablen $v, @a, %m und &f sofort anzusehen, dass es sich um ein Skalar, eine Liste, eine Hash-Map beziehungsweise eine Funktion handelt. Oder während sich in Java Instanzvariablen optional durch ein this anführen (this.v) und Klassenvariablen sowohl über die Klasse direkt (C.v) als auch über jedes Objekt dieser Klasse (o.v) ansprechen lassen, beginnen in Ruby Instanzvariablen immer mit einem "Klammeraffen" (@v), derweil statische Klassenvariablen mit zwei davon beginnen (@@v).
+
+Bezüglich der Syntax gehen die Meinungen also weit auseinander. Für die einen ist es das A und O einer Sprache, für andere nur Tinnef. Die Syntax entscheidet allerdings darüber, ob sich ein Programm einfach lesen lässt oder nicht. Und nachdem man Programmen nachsagt, sie werden deutlich öfter gelesen als geschrieben, scheint eine sorgfältige Wahl der Syntax durchaus sinnvoll. Allerdings wären mehrere tausend Mannjahre an Diskussionen darüber erspart geblieben, wohin denn die geschweiften Klammern zu setzen sind, wenn sich die Herren Kernighan und Ritchie nicht nur dazu durchgerungen hätten, die Klammern wie im C-Buch nach oben zu setzen, sondern auch den Compiler dazu motiviert hätten, das zu überprüfen und zu erzwingen.
+
+Grammatikalische Spitzfindigkeiten
+
+Selbst wenn alle Ungereimtheiten auf lexikalischer Ebene gelöst sind, kann es immer noch welche auf syntaktischer Ebene geben. So enthält die C#-Spezifikation das folgende Beispiel, das diese Probleme schön demonstriert:
+
+F(G<A, B>(7));
+
+Bei dem Ausdruck kann es sich um die Funktion F handeln, die zwei boolesche Parameter hat, die mit den Argumenten G < A und B > (7) aufgerufen wird. Genauso gut kann es aber auch die Funktion F sein, die nur einen Parameter hat, bei dem es sich um die generische Funktion G<A, B> mit den beiden Typ-Parametern A und B handelt, die einen einzelnen Parameter hat. Die Regeln in C# sagen tatsächlich, dass Letzteres der Fall ist.
+
+F(G<A, B>7);
+F(G<A, B>>7);
+
+Variiert man die Ausdrücke und eliminiert beispielsweise die runden Klammern, handelt es sich tatsächlich um eine zweistellige Funktion F mit den Argumenten G < A und B > 7, was auch im zweiten Fall mit B >> 7 gilt.
+
+Ein anderes Beispiel ist, bei dem es sich auch um nichts Generisches handelt, da hier die Leerzeichen ebenso wenig eine Rolle spielen:
+
+x = F<A> + y
+
+Hier sagt die Spezifikation, dass es sich um die Vergleichsoperatoren handelt und der Ausdruck so ausgewertet wird, als stünde dort:
+
+x = (F < A) > (+y)
+
+An dieser Stelle zeigt sich also, wie schwierig eine Grammatik werden kann, wenn Zeichen beziehungsweise Token für völlig unterschiedliche Bedeutungen wiederverwendet werden.
+
+Neben der Syntax tritt das Problem auf, wie der Entwickler die Sprache eventuell um Funktionen erweitern kann, ohne dabei die darauf aufbauende Code-Basis anfassen zu müssen. Dazu bieten sich beispielsweise Annotationen an, die etwa bei Java und C# zu finden sind. Mit ihnen kann man Konstruktionen markieren, sodass sie bei der Übersetzung (oder zur Laufzeit) zu unterschiedlichen Interpretationen führen. Beispielsweise kann man für die Zugriffskontrolle relevante Schlüsselwörter wie public oder private als Annotation umsetzen.
+
+Ist einem ein Sachverhalt wichtig genug, kann man ihn auch als Schlüsselwort implementieren. So hat Java 50 Schlüsselwörter. Im Gegensatz dazu gibt es in C# schon 77 Schlüsselwörter und 23 Kontextschlüsselwörter. Von Typbezeichnern über Literale und Konstanten bis hin zu Annotationen ist alles dabei. Unabhängig davon, ob 100 Schlüsselwörter zu viel des Guten sind, schafft man es in der Regel nicht, später noch ein fehlendes hinzuzufügen.
+
+Die Einführung der Enumerationen in Java haben schön demonstriert, wie fatal ein nachträglich eingeführtes Schlüsselwort sein kann. Das dazu ausgesuchte Wort enum war anscheinend so beliebt und so oft in Benutzung, dass es unmöglich war, es einfach zu ergänzen. Das hat dazu geführt, dass seit seiner Einführung die Source-Version von Java-Quellen anzugeben ist, um das Schlüsselwort zu aktivieren. Diese Probleme führen auch dazu, dass man Schlüsselwörter lieber wiederverwendet, als neue einzuführen. Im Zusammenhang mit den Generics wurden in Java die Schlüsselwörter extends und super für die Varianz von Klassen wiederverwendet, in C# die Wörter in und out.
+
+Auch auf anderer Ebene finden sich Beispiele für Eigenschaften, die sich nur schwer im Nachhinein umsetzen ließen. So findet sich sich neuerdings öfter das Prinzip, dass alles ein Objekt ist. Das hat Konsequenzen, denn so gibt es ja keine primitiven Datentypen mehr. Es obliegt damit dem Compiler herauszufinden, wann sich diese Objekte optimieren und in primitive Operationen transformieren lassen. Dabei ist vorteilhaft, dass der Compiler die Implementierung vollständig verbergen und im "schlimmsten" Fall auch austauschen kann.
+
+Möchte man beispielsweise beliebig große ganze Zahlen unterstützen, lässt sich das sicherlich immer über eine geeignete Implementierung erreichen. Um dabei die Unterstützung des Prozessors nicht zu verlieren, der zumindest im Bereich eines 32-Bit- oder 64-Bit-Integer unschlagbar schnelle Maschinenbefehle anbietet, könnte man ja erst beim Überschreiten dieser 32-Bit- beziehungsweise 64-Bit-Bereiche auf die beliebig langen Zahlen zurückgreifen. Dadurch wird allerdings schon eine Addition um ein Vielfaches aufwendiger, ist doch zu unterscheiden, ob etwa zwei 32-Bit-Zahlen oder zwei beliebig große Zahlen oder eine Mischung davon zu berechnen sind. Und da sich die Größe der Zahlen zur Laufzeit nach Belieben verändern kann, gibt es zur Übersetzungszeit kaum eine Möglichkeit für den Compiler, unterstützend einzugreifen.
+
+Das zeigt deutlich, dass eine Großzügigkeit auf der einen Seite unter Umständen gravierende Einbußen auf der anderen Seite zur Folge hat. Diese Abhängigkeit kennt man etwa auch bei Architekturen und ihren Qualitätsmerkmalen. Alles hat eben seinen Preis, und deshalb muss man sich gut überlegen, welches Attribut man zugunsten eines anderen opfert. Und dabei muss einem klar sein, dass man in der Regel eben nicht alles haben kann.
+Konform mit den Erwartungen
+
+Eine wichtige Frage, die sich beim Gestalten einer Programmiersprache stellt, ist die nach dem Zielpublikum. Handelt es sich bei den Anwendern um Gelegenheitsbenutzer oder Programmierexperten, soll die Sprache sowohl Anfängern oder Profis bei der Arbeit helfen, soll die Lernkurve eher steil oder flach verlaufen? Nur in diesem Zusammenhang lässt sich die Frage beantworten, welche Erwartungen an die Sprache gestellt werden.
+
+Das nachfolgende Beispiel zeigt schön, dass es auch in Sprachen, die für den täglichen Gebrauch gedacht sind, zu Unterschieden zwischen dem, was die Sprache bietet, und dem, was die Entwickler erwarten, kommen kann. Beispielsweise liefern Java oder C# immer wieder "schöne" Überraschungen.
+
+long i = 2 000 000 000 + 2 000 000 000;
+
+Wer glaubt, dass vier Milliarden die Antwort ist, hat übersehen, dass die Konstanten nur int-Werte sind und das dementsprechend auch die Addition eine int-Addition ist – und nicht, wie einen das long glauben machen könnte, eine long-Addition. Damit wird erst das int-Ergebnis berechnet (-294.967.296) und dann erst dieses zu einem long umgewandelt.
+
+Ganze Bücher sind damit gefüllt, was man alles falsch machen kann, wobei dabei sicherlich C die meisten Möglichkeiten bietet. Aber auch die vermeintlich sicheren Sprachen wie Java und C# bieten – wie eben gezeigt – ausreichend Spielraum für Fehl-Erwartungen. Dazu kommen noch stiefmütterlich behandelte Themen wie Gleitkommazahlen. So ist vielen Entwicklern nicht klar, dass (und warum) diese nicht dazu geeignet sind, Geldbeträge zu speichern oder der Additionsoperator + nicht wie bei den ganzen Zahlen assoziativ ist. So müsste, wenn es denn wichtig genug ist, der Compiler bei jeder kritischen Anwendung warnend eingreifen.
+
+
+
+Qual der Wahl beim Paradigma
+
+Immer bestimmt die Anwendungslandschaft die Wichtigkeit von Eigenschaften. Damit stellt sich die Frage, wie man seine Aufgaben zu lösen gedenkt. Auch wenn das imperative Paradigma gefällig ist, um Abläufe zu programmieren, hilft die Objektorientierung doch dabei, diese Programme besser zu strukturieren und in eigenverantwortliche Objekte zu gruppieren. Die Objektorientierung hat aber ebenfalls nicht immer gehalten, was sich der eine oder andere davon versprochen haben mag. Die Welt in Objekten zu sehen ist sicherlich manchmal hilfreich, hat aber auch gravierende Nachteile. Da die Objekte auf einem Zustand operieren, treten nämlich Nebeneffekte auf, die im Zusammenhang mit nebenläufigen Anwendungen zunehmend problematischer werden.
+
+In der funktionalen Programmierung tauchen solche Nebeneffekte im Gegensatz dazu nie auf, da Funktionen definitionsgemäß für gleiche Eingabewerte immer das exakt gleiche Ergebnis liefern. Und das sogar unabhängig davon, in welcher Reihenfolge man die Eingabewerte berechnet – also auch wenn sie gleichzeitig berechnet werden. So hat die funktionale Programmierung mit Scala oder F# auf den modernen Plattformen eine Renaissance erlebt, die auch den "Oldies" wie Haskell oder Lisp wieder zu neuen Ehren verhilft.
+
+Wie erwähnt lassen sich sowohl objektorientierte als auch funktionale Features in anderen Sprachen
+formulieren, aber erst mit einer vernünftigen Unterstützung lässt sich das selbstverständlich und effizient umsetzen. Die Wahl des Paradigmas spielt also eine entscheidende Rolle, wie Aufgaben "natürlich" gelöst werden. Viele Probleme lassen sich viel besser deklarativ als imperativ programmieren. Zum Beispiel kann man Grammatiken von Sprachen einfach in Form von Deklarationen definieren. Sicherlich lässt sich das auch oft über Bibliotheken umsetzen, aber dann sind zur Laufzeit Fehlerprüfungen durchzuführen, die normalerweise schon ein Compiler prüfen kann.
+
+Die Liste der zur Auswahl stehenden Programmierparadigmen, für die es jeweils mehrere Programmiersprachen gibt, ist auch auszugsweise schon lang:
+
+    imperatives Paradigma mit strukturierter, prozeduraler und modularer Programmierung und abstrakten Datentypen
+    funktionales Paradigma
+    deklarative Paradigmen mit logischer Programmierung und der Programmierung mit Constraints
+    objektorientiertes Paradigma
+    Programmieren mit Komponenten und Agenten
+    aspektorientierte Programmierung
+    generative Programmierung
+    generische Programmierung
+    Daten- und datenstromorientierte Programmierung
+
+Nur wenige Programmiersprachen bedienen sich dabei tatsächlich mehrerer Paradigmen. Man darf nicht vergessen, dass jedes Paradigma eigene Idiome hat, die erst einmal gelernt werden wollen. Darüber hinaus ist für jede Aufgabe zu überlegen, welches Paradigma am besten geeignet ist. Wer nur einen Hammer hat, für den ist alles ein Nagel, heißt es. Das gilt auch für die konkrete Auswahl der zur Verfügung stehenden Paradigmen. Wer einen ganzen Werkzeugkasten hat, ist dann vielleicht überfordert.
+Auf die Schnelle
+
+Ungeachtet der Domäne ist zu überlegen, wie sich ein Programm ausführen lässt. Eine Variante ist die Übersetzung des Quelltexts in ein ausführbares Artefakt. Dabei spielt es keine Rolle, ob dieses direkt auf der Hardware laufen kann oder eine virtuelle Maschine (VM) zum Einsatz kommt. Entscheidend ist dabei, dass in der Regel ein expliziter Übersetzungsschritt einzuleiten ist, der nur bei erfolgreicher Durchführung das Artefakt liefert, das dann explizit auszuführen ist.
+
+Der Erfolg vieler Skriptsprachen ist dem Umstand geschuldet, dass deren Interpreter den Editier-und-Ablauf-Zyklus minimieren. Im Zusammenhang mit Webapplikationen sind etwa nur ein paar Dateien in ein Verzeichnis zu kopieren, und schon ist die Anwendung verfügbar. Im Extremfall lässt sich also eine fehlerhafte Datei einfach an Ort und Stelle korrigieren: kein Übersetzen, kein Verpacken, kein Deployment und auch sonst nichts. Sicherlich hat das auch Nachteile, aber die gefühlten Vorteile scheinen zu überwiegen.
+
+Skriptsprachen haben immer einen besonderen Reiz, wenn es schnell gehen muss. Das haben auch die Entwickler von D oder Skala erkannt, denn deren Sprachen lassen sich sowohl in Skriptform nutzen als auch zu ausführbaren Dateien übersetzen. In D verhindert zudem ein geeigneter Caching-Mechanismus, das einmal abgelaufene Dateien – solange sie unverändert sind – erneut "übersetzen" werden.
+
+Darüber hinaus haben viele Skriptsprachen Eigenschaften, die in den "statischen" Sprachen eher seltener zu finden sind. Beispielsweise liefert in Perl der Ausdruck 1 + "1" den Wert 2, denn + arbeitet dort mit Zahlen, und die Zeichenkette "1" lässt sich in eine Zahl konvertieren; 1 + "a" liefert dementsprechend 1. Viele dieser Sprachen dulden auch, dass sich einer Variablen nacheinander Werte unterschiedlicher Typen zuordnen lassen. Ob das sinnvoll ist oder nicht, entscheidet einzig und alleine der Sprachdesigner.
+Ein Frage des Typs
+
+Ein Typsystems soll sicherstellen, dass der Anwender keinen Unfug anstellen kann, den der Sprachdesigner nicht billigt – egal ob beabsichtigt oder aus Versehen. Ein Typsystem kann in der Sprache integriert sein, lässt sich aber genau so gut als externes Werkzeug anbieten. Es bestimmt, wie Typen zugeordnet und interpretiert werden: Typen lassen sich explizit angeben oder aus dem Kontext ermitteln; sie können statisch (zur Übersetzungszeit) oder dynamisch (zur Laufzeit) zugeordnet werden; Typen können streng oder eher schwach sein; Die Gleichheit von Typen lässt sich über den Namen oder die Struktur bestimmen; Typen können von anderen Größen abhängig sein. Die Möglichkeiten kann der Entwickler nach Belieben kombinieren und gegebenenfalls weiterentwickeln (Pluggable Type Systems).
+
+Das Typsystem entscheidet unter anderem darüber, wie viele Fehler und in welchem Detaillierungsgrad zur Übersetzungszeit oder Laufzeit erkannt werden können. Unabhängig vom Typsystem kann man natürlich nicht auf Tests verzichten, aber möglicherweise sind bei einem schwächeren Typsystem bestimmte Tests verstärkt durchzuführen, um Laufzeitfehler in der Produktion zu vermeiden.
+
+Da viele Entwickler erfahrungsgemäß speziell bei redundanter Information schreibfaul sind, ist Typinferenz ein beliebtes Feature. Dabei versucht der Übersetzer oder Interpreter so viel wie möglich eigenständig, über beteiligte Typen zu erfahren. Der Vorteil dabei ist, dass sich bei komplizierten Typen tatsächlich der vollständige Typ ermitteln lässt. Der Nachteil ist der, dass der Leser nicht mehr lesen kann, um welchen Typ es sich handelt; aber da helfen einem ja die Entwicklungsumgebungen.
+
+Apropos redundante Information: In vielen Sprachen muss man gelegentlich explizit einen Typ zuweisen, damit der Compiler glücklich und zufrieden ist.
+
+if (o instanceof C) {
+    ((C) o).methodOfC();
+}
+
+In dem Java-Beispiel ist dem Leser klar, dass nach der instanceof-Prüfung die Variable o vom Typ C ist. Dennoch ist für den Java-Compiler eine Typumwandlung vorzunehmen, sodass sich die Methode aus der Klasse C benutzen lässt. Das ist aus Sicht der neueren Sprachen einfach nicht mehr nötig und erlaubt
+
+if (o instanceof C) {
+    o.methodOfC();
+}
+
+zu schreiben. Denn der Compiler, der meist ohnehin eine Flussanalyse durchführen muss, kann den Typ von o sicher ermitteln und so den Aufruf ohne explizite Typumwandlung erlauben.
+
+Wie auch immer das Typsystem aussehen mag, es beantwortet nicht automatisch die Frage, welche Typen mit der Sprache ausgeliefert werden sollen. Typischerweise enthält eine Sprache immer ganze Zahlen mit den typischen Operationen. Aber ob Fließkommazahlen, komplexe Zahlen, Brüche, Vektoren, Matrizen et cetera nötig sind, ist schon fraglich. An der Stelle ist also immer zu entscheiden, was in die Sprache kommt und was in die Bibliothek – vorausgesetzt, dass es überhaupt einen Mechanismus zur Erweiterung des Funktionsumfangs gibt.
+
+
+Im Dienst der Übersetzung
+
+Wenn die Sprache definiert ist, ist noch der Übersetzer zu schreiben. Das gestaltet sich heutzutage so einfach wie nie zuvor. Werkzeuge wie ANTLR oder Rats! erlauben es, Grammatiken zu definieren und daraus Parser generieren zu lassen, die fast eigenständig abstrakte Syntaxbäume erstellen. Frameworks wie Xtext generieren die Entwicklungsumgebung gleich mit, mit Syntaxhervorhebung und Code-Vervollständigung.
+
+Jetzt stellt sich nur noch die Frage, auf welcher Plattform die Kompilierung der Sprache laufen soll. Die GNU Compiler Collection (GCC) etwa kann Code für quasi beliebige Prozessoren generieren. Dazu ist nur der abstrakte Syntaxbaum in die interne Repräsentation, die Register Transfer Language (RTL), zu überführen. Dann kümmern sich die Backends inklusive Optimierungen um den Rest. Wann immer es einen neuen Prozessor gibt, speziell auch für den Embedded-Bereich, kann man davon ausgehen, dass der Hersteller eine Anbindung für GCC liefert oder aber zumindest unterstützt.
+
+Eine Alternative dazu stellt LLVM dar. Hier erzeugt das Frontend ähnlich wie bei der GCC Code für die virtuelle Maschine. Im Gegensatz zur GCC kann man die LLVM so konfigurieren, dass sie ausführbaren Code erzeugt oder den VM-Code erst zur Laufzeit bindet.
+
+Natürlich kann man alles auch selbst entwickeln, allerdings ist man meist mit nur einem Prozessor mehr als ausgelastet. Und die Spitzfindigkeiten eines Prozessors sind nicht zu unterschätzen. Hier kann es eine gute Idee zu sein, Code für die JVM oder die CLR zu übersetzen. Der Bytecode ist übersichtlich, relativ gut strukturiert und sozusagen frei von Nebeneffekten. Denn er wird ja erst zur Laufzeit in ausführbaren Maschinencode übersetzt. Und dieser ist – insbesondere bei Java – äußerst zufriedenstellend.
+
+Sowohl die eine als auch die andere VM sind für die mitgelieferten Bibliotheken optimiert, wissen beispielsweise die SIMD-Befehle (Single Instruction, Multiple Data) aktueller Prozessoren zu nutzen. Das hat ebenfalls einen Haken: Da die Optimierungen oft nur an die konkreten, mit der VM ausgelieferten Bibliotheken gekoppelt sind, muss die eigene Sprache, um solche Möglichkeiten ausnutzen zu können, diese Bibliotheken auch unterstützen. "Leider", muss man sagen, denn deren Schnittstellen sind oft suboptimal, zu allgemein gehalten und haben meist eine andere Struktur als die, die man sich wünschen würde. Auch braucht man noch eine Option, sich die "Altlasten" passend zu machen.
+
+In Kotlin, einer JVM-Sprache von JetBrains, sind etwa Referenzen R, die null werden können, explizit mit R? als solche zu deklarieren. Damit kann der Compiler zu jedem Zeitpunkt prüfen, ob die null möglich und zulässig ist. In Kombination mit Java-Klassen gibt es nun aber das Problem, dass man diese Information dort nicht hat. Im ersten Schritt wurde diese klassenweise nachgetragen, aber das Unterfangen stellte sich als Fass ohne Boden heraus. Das Problem scheint aber insofern gelöst worden zu sein, dass es ein Werkzeug gibt, dass die Information analytisch aus Klassendateien extrahiert.
+Kontakt zur Außenwelt
+
+Ist die Sprache definiert und implementiert, fehlt nur noch die richtige Entwicklungsumgebung. Hier hat Java Wegweisendes hervorgebracht. Will man also eine konkurrenzfähige oder akzeptierte Sprache schaffen, kommt man nicht um die entsprechenden Editoren oder IDE-Plug-ins herum: Syntaxhervorhebung (Syntax Highlighting) ist da das Mindeste, automatische Code-Vervollständigung (Code Completion) das Nötigste und alles andere mehr oder weniger unentbehrlich.
+
+Damit ist es aber nicht getan. Um vernünftig entwickeln zu können, braucht man eine Infrastruktur, die den Entwicklern eine Möglichkeit gibt, Rückmeldungen abzugeben, Verbesserungsvorschläge einzubringen und Erfahrungen auszutauschen. Hat man die Community aber erst mal auf seiner Seite, ist diese bereit, heilige Kriege zu führen. Genauso energisch wie Pythons Zwangseinrückung vom Rest der Welt angegriffen wird, genau so vehement verteidigt sie die Python-Gemeinde.
+
+Bis es aber so weit ist, muss man sich immer wieder mit der "anderen" Seite auseinandersetzen. Da wird (meist anonym in ungebührlichem Ton) angeprangert, dass der Typ hinter der Variablen steht (x : T) statt davor (T x); die Klammern auf der gleichen Zeile stehen statt darunter; Methodennamen mit einem GroßbuchStaben beginnen statt mit einem kleinbuchStaben; Operatoren überladen werden können oder auch nicht – oder das ganze umgekehrt.
+
+Ist das aber mal geklärt, gibt es viele Programmierer, die sich vom Neuen angezogen fühlen und es besser zu machen wünschen, es irgend jemandem zeigen oder einfach nur mitmachen wollen. Und begabte Softwareentwickler gibt es viele. Die haben auch viele Ideen und breit gefächerte Erfahrungen. Hier tut man gut daran, ihren Ideen und Erfahrungen eine Plattform zu geben, durchaus auch, um den einen oder anderen Entwickler zeigen zu lassen, was er kann.
+
+Unabhängig davon tut es einer Programmiersprache gut, wenn sie sich mit einer Person assoziieren lässt, vor allem wenn kein Unternehmen dahinter steht. Bei Java war es James Gosling, und als er Java im Zuge der Übernahme von Sun durch Oracle verlassen hatte, schien alles plötzlich nicht mehr so recht vorwärts gehen zu wollen. Glücklicherweise hat sich das nun wieder geändert. C# hatte Anders Hejlsberg, aber der erweckte den Eindruck, nicht ganz so nötig zu sein, weil hinter ihm die Marke Microsoft stand. So macht es Linus Torwalds richtig: Jeder darf für Linux entwickeln, was er will, aber letztlich entscheidet er, was in den Kern kommt und was nicht.
+
+Eine Community, die keine Führung hat, kommt auch nicht so schnell zu einem oder auch mal zu keinem Ende. Ein gutes Beispiel dafür sind die Sprachen, die an ein Standardisierungskomitee übergeben wurden. Hier wird versucht, es allen rechtzumachen, was in der Regel zu politischen Irrungen und Wirrungen führt.
+
+
+Fazit
+
+Als Sprachdesigner darf man grundsätzlich machen, was man will. Will man aber eine Sprache schaffen, die zu den großen gehören oder als ebensolche akzeptiert werden soll, muss man Kompromisse eingehen und sicherstellen, dass die Sprache gefällt. Dazu müssen möglicherweise alle Zeichen auf der Tastatur sein, wahrscheinlich die Blöcke durch geschweifte Klammern eingeschlossen werden, sämtliche Schlüsselwörter bekannt und der Mehrwert des Alleinstellungsmerkmals ausreichend groß sein.
+
+Unabhängig davon braucht der Srachschöpfer eine genügend große Community, denn viele Programmierprobleme werden über Suchmaschinen gelöst. Und die liefern nur genügend Stoff, wenn sich eine ausreichende Anzahl Entwickler damit beschäftigt. Vielleicht wäre es deshalb nicht verkehrt, die Sprache für JVM und CLR zu schreiben. Denn damit stehen bekannte, weit verbreitete Plattformen zur Verfügung, mit denen man alles machen kann – insbesondere verschiedene problemorientierte Sprachen miteinander kombinieren.
+
+Über die wirklich wichtigen Programmiersprachen kann man ja sagen, was man will, aber sie sind fertig. Das sollte eine Sprache bei ihrer Einführung auch sein. Und selbst wenn über die Lebensdauer der Sprachen noch die eine oder andere Änderung vorzunehmen ist, sollte das nur behutsam erfolgen, möglichst ohne die bestehende Codebasis zu gefährden. Das gilt nicht nur für den Quellcode, sondern auch für eine etwaige Binärkompatibilität. Dass sich beispielsweise die Programmiersprache Java so zögerlich weiterentwickelt, liegt ja nicht daran, dass es zu wenige Einfälle gäbe, sondern daran, dass unter keinen Umständen die riesige Codebasis bei einer Änderung tangiert werden darf.
+
+Und vielleicht muss es auch nur Spaß bereiten. Yukihiro Matsumoto wollte schon immer mal eine Programmiersprache schreiben, und daraus ist Ruby geworden. Guido van Rossum brauchte eine bessere Alternative zu C und der Bourne Shell, um das Amoeba-Betriebssystem zu administrieren, und schuf Python. Larry Wall musste Log-Dateien auswerten und war erst zufrieden, als er Perl geschaffen hatte. Also wenn (nicht nur) der geneigte Leser etwas braucht, wozu die optimale Unterstützung fehlt, mache er es doch einfach -- und erzähle dann darüber. Der Rest ergibt sich von ganz alleine. (ane)
+
+Michael Wiedeking
+ist Gründer und Geschäftsführer der MATHEMA Software GmbH, Veranstalter des Herbstcampus und Herausgeber des "KaffeeKlatsch" – eines kostenlosen PDF-Magazins rund um Softwareentwicklungsthemen. Am liebsten aber "sammelt" er Programmiersprachen und beschäftigt sich mit ihrem Design und ihrer Implementierung.
+
+
+https://sourceforge.net/p/maxbox/wikimax/main/
+
+http://warezltd.net/music_albums/rapidgator_nazareth_rock_n_roll_telephone_2cd_2014_gravewish-356557/ 
+
+Ferienwohnung
+
+Seeuferstraße 82-84
+9210 Pörtschach
+
+Apich, Bungalows
+Ferienwohnung
+
+Seeuferstraße 82-84
+9210 Pörtschach
+
+Lieber Max
+Es hätte sogar zwei Stationen zum Aussteigen in Meggen. :-)
+Ich käme Dich dann schon holen.
+
+Ja, ich bekam nur maXbox3.exe nach dem Entpacken, die mir einen Text gibt ...
+
+Aber ich habe bei Wikipedia nachgesehen: Checkers ist eigentlich unser Dame-Spiel, das wir auf dem Schachbrett spielen.:
+http://de.wikipedia.org/wiki/Dame_%28Spiel%29#Checkers
+
+Während ich wohl die Mühle gezeigt hatte:
+http://de.wikipedia.org/wiki/M%C3%BChle_%28Spiel%29
+Die befindet sich oft auf der Rückseite eines Schachspiels. Ein Leser von Mikro- & Kleincomputer, Ralph Gasser,  hatte damals auf meine Initiative hin den Beginn, also das Setzen, programmiert - oder das Endspiel mit dem Hüpfen oder beides.
+Er hat dann in den Staaten das ganze Spiel auf Computer gebracht. Es ist nicht zu schlagen ... Wahrscheinlich ergibt auch Maschine gegen Maschine Unentschieden.
+
+Wenn man nicht weiter denkt, zeigt Wikipedia mit dem Satz "Rot am Zug. Gewinn in 165 Zügen" einen Blödsinn,denn wenn rot mit (von unten links gesehen) den 4. Stein (nach oben) zieht, gewinnt rot in 3 Zügen, meint man. Oder findest Du irgend einen Ausweg für Blau? Ich schon, und dieser Zug führt dann wohl zu den 165 Zügen ...
+Ich hatte Ritzungen für Mühle auch in griechischen Tempeln gefunden, nur stammt das vielleicht von den Römern ab ...
+
+
+Solving Nine Men's Morris
+Das ist von Ralph Gasser. Leider hat er die Anfänge und das Heft nicht erwähnt, doch können wir es dort lesen. :-)
+Hier gefunden:
+http://www.mathematische-basteleien.de/muehle.htm
+
+Am letzten Sonntag sind Kathrin und ich wieder nach Zug gewandert, diesmal aber über Umweg an die Reuss = 32 km. Doch vor unseren Ferien in Russland (River-Boat Moskauf-St. Petersburg) lief ich mit meinem Sohn (48) die Marathonstrecke von 42,2 km ohne Probleme (die er aber hatte .., obwohl er früher Marathons absolvierte). Mal sehen, ob ich jemand finde, der mir hilft zu trainieren ...
+
+Herzlich grüsst Dich
+Ernst
+
+
+Lieber Ernst
+
+Danke deiner Ausführungen, das Spiel das du aber uns gezeigt und auch gesiegt hast war nicht die Mühle, es war mit Hüpfen und schlagen als quadratisches Brettspiel.
+So wie Gasser hatte ich auch seinerzeit (1995) das 4-Gewinnt im  mini-max Algorithmus umgesetzt, aktuell vorhanden in der maXbox als Plugin.
+gewinnt rot in 3 Zügen, meint man. > in der Tat weil blau sonst eine Mühle aktiviert.
+du meinst also  e4-e5 ist der logisch nächste ansonsten eben blau mühle macht
+
+ Ich denke die Befreiung ist von mitte links blau zu rechts also a4-b4 denn ca. im 7 zug muss auch rot wieder weg und blau hat einen freiheitsgrad mehr...
+ 
+ c3-c4 müsste früher kommen, nein geht auch nicht!
+ also ich bleib bei e4-e5 und dann a4-b4 und weiter mit a1-a4
+ 
+ apropos Brettspiele, in der maXbox sind einige umgesetzt, auch ein othello in 3D OpenGL.
+ 
+ Nächste Woche gehen wir für eine Woche nach Kärnten, dann komm ich dich besuchen
+ 
+ es grüsst dich, Max 
+ 
+ 
+ In der Setzphase des Mühlespiels sind durch regelkonformes spielen 2.541.436.065 Stellungen möglich.
+
+In der Zugphase sind es 8.904.593.60
+ 
+Nach den Regeln des WMD gibt es im Mühlespiel 11.446.029.666 unterschiedliche Positionen. (Symmetrische Stellungen wurden nicht mitgezählt) 
+
+52,7% dieser Mühle-Stellungen (6,03 Milliarden) sind Remis.
+
+ 
+ 
+ 
+ 
+ 1. e4-e5 2. a4-b4
+3. a1-a4 4. c5-c4
+5. b2-d2 6. c4-c5
+7. c3-c4 8. b4-b2
+9. c4-b4 10. c5-c4
+11. a4-a1 12. c4-c3
+13. a1-d1 14. c3-c4
+15. d1-g1 16. c4-c3
+17. g1-g4 18. c3-d3
+19. d2-f2 20. a7-a4 
+
+
+
+

@@ -1,0 +1,482 @@
+{**********************************************************************
+ * Project  : Data Logger App DLP 
+ * App Name : 301_LED_Arduino3.txt, delphi_leds.pde :loc's = 292 
+ * Purpose  : Demonstrates TJvLogFile Unit
+ * Date     : 09/26/2012  -  10:07
+ * History  : convert TJvLogFile Library to maXbox Aug 2012
+ *          : include TJvLogFileMainForm, close also logfile otherwise crash
+ * Task     : Set the Save Path as const in code 
+ **********************************************************************}
+
+Program Data_Logger_Box;
+
+{@BOOL WINAPI MessageBeep(
+  __in  UINT uType  );}
+//TThreadFunction = function(P: Pointer): Longint; stdcall;
+//Procedure ExecuteThread(afunc: TThreadFunction; var thrOK: boolean);
+
+function MessageBoxTimeOut(hWnd: HWND; lpText, lpCaption:PChar; uType: UINT;
+                wLanguageId: WORD; dwMilliseconds: DWORD): Integer;
+             external 'MessageBoxTimeoutA@user32.dll stdcall';
+  
+Const
+  BACKMAP = 'examples\images\bmp47.bmp';
+  //BACKMAP = 'examples\images\bmp33.bmp';
+  SAVEPATH = 'examples\LED_datalogger_300.txt';
+  
+type
+  TByteArr = array of byte;
+  
+var
+  mytimestamp: TDateTime;
+  osType: TIdWin32Type;
+
+procedure getMaxBoxIni;
+var Ini: TIniFile;   
+    except_state, execute_state: string;  
+begin
+  Ini:= TIniFile.Create(ExePath+'maxboxdef.ini');
+  try
+    except_state:= Ini.ReadString('Form', 'EXCEPTIONLOG','');
+    execute_state:= Ini.ReadString('Form', 'EXECUTESHELL','');
+  finally
+    writeln('inifile sysdata test: '+(except_state)+ ' '+(execute_state))
+    ini.Free;
+  end;
+end;
+
+procedure PrintList(Value: TStringList);
+var I, Line, Pagenum: Integer;
+begin
+  //let's print
+  //if Assigned(FOnBeginPrint) then
+    //FOnBeginPrint(Self);
+  line:= 0;
+  Printer.BeginDoc;
+  Pagenum:= 1;
+  for I:= 0 to Value.Count - 1 do begin
+    //if Assigned(FOnProgress) then
+      //FOnProgress(Self, I + 1, Value.Count);
+    Line:= Line + Printer.Canvas.TextHeight(Value[I]);
+    if Line + Printer.Canvas.TextHeight(Value[I]) > Printer.PageHeight then begin
+      Line:= Printer.Canvas.TextHeight(Value[I]);
+      Printer.NewPage;
+      Inc(PageNum);
+      //if Assigned(FOnNextPage) then
+        //FOnNextPage(Self, PageNum);
+    end;
+    Printer.Canvas.TextOut(0, Line, Value[I]);
+  end;
+  Printer.EndDoc;
+  //if Assigned(FOnFinishedPrint) then
+    //FOnFinishedPrint(Self);
+end;
+
+
+//*******************************Data Logger*****************************//
+var FLogFileName: string;
+    logFrm: TForm;
+    StatusBar1: TStatusBar;
+    JvLogFile1: TJvLogFile;
+    btnStart, btnShow, btnReset: TBitBtn;
+    lblActive, lblInactive: TLabel;
+
+
+procedure TJvLog_StopLogging;
+begin
+  btnStart.Tag:= 0;
+  lblActive.Visible:= false;
+  lblInactive.Visible:= true;
+  btnStart.Caption:= '&Start';
+  JvLogFile1.SaveToFile(FLogFileName);
+end;
+
+procedure TJvLog_ResetLogging;
+begin
+  TJvLog_StopLogging;
+  DeleteFile(FLogFileName);
+  JvLogFile1.Clear;
+end;
+
+procedure TJvLog_StartLogging;
+begin
+  if FileExists(FLogFileName) then
+    JvLogFile1.LoadFromFile(FLogFileName);
+  btnStart.Caption:= '&Stop';
+  btnStart.Tag:= 1;
+  lblActive.Visible:= true;
+  lblInactive.Visible:= false;
+end;
+
+
+//****************************** Event Handlers *****************************//
+procedure TJvLogFMainForm_FormCreate(Sender: TObject);
+begin
+  FLogFileName:= ChangeFileExt(Application.ExeName,'.log');
+end;
+
+procedure TJvLogFMainForm_FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  ///logfrm.Free; //JvLogFile1.Close;
+  JvLogFile1.Free;
+  action:= caFree;
+  logfrm:= NIL;
+  Writeln('Logger has been closed');
+end;
+
+procedure TJvLogFMainForm_btnStartClick(Sender: TObject);
+begin
+  if btnStart.Tag = 0 then begin
+    TJvLog_StartLogging
+    StatusBar1.panels[0].text:= 'Logger has been started';
+  end else begin
+    TJvLog_StopLogging;
+    StatusBar1.panels[0].text:= 'Logger has been stoped';
+  end;
+end;
+
+procedure TJvLogFMainForm_btnShowClick(Sender: TObject);
+begin
+  if btnStart.Tag = 1 then
+    //btnStart.Click; // stop logging
+    TJvLogFMainForm_btnStartClick(self);
+  JvLogFile1.ShowLog('mX Mouse Move Log');
+end;
+
+procedure TJvLogFMainForm_FormMouseMove(Sender: TObject; Shift:TShiftState; X,Y: Integer);
+begin
+  if btnStart.Tag = 1 then
+    JvLogFile1.Add(DateTimeToStr(Now),'Mouse Move',Format('X:%d, Y:%d',[X,Y]));
+  writeln(Format('mX JvLogFile Demo - X:%d, Y:%d',[X,Y]));
+end;
+
+procedure TJvLogFMainForm_btnResetClick(Sender: TObject);
+begin
+  TJvLog_ResetLogging;
+end;
+
+
+//*******************************Data Logger Form Builder********************//
+procedure InitComPortForm;
+begin
+
+  JvLogFile1:= TJvLogFile.Create(self);
+  btnStart:= TBitBtn.create(self); //cause of mouse move event!
+ 
+ logFrm:= TForm.create(self);
+ with logFrm do begin
+   //FormStyle := fsStayOnTop;
+   Position:= poScreenCenter;
+   caption:='Data Logger LED BOX';
+   //color:= clsilver;
+   width:= 700;
+   height:= 550;
+   //onMouseDown:= @FormMouseDown;
+   //onCreate:= @TForm1_FormCreate;        
+   onClose:=  @TJvLogFMainForm_FormClose;
+   onMouseMove:= @TJvLogFMainForm_FormMouseMove;
+   Show;
+   canvas.brush.bitmap:= getBitmapObject(Exepath+'examples\images\bmp47.bmp');
+   Canvas.FillRect(Rect(600,400,210,100));
+   //onMouseMove:= @TJvLogFMainForm_FormMouseMove;
+ end;
+   TJvLogFMainForm_FormCreate(logfrm)
+
+ btnShow:=  TBitBtn.create(logfrm);
+ with btnShow do begin
+   parent:= logfrm;
+   setbounds(500,440,150,55)
+   font.size:= 12;
+   glyph.LoadFromResourceName(HINSTANCE,'Knownfile'); //LEDbulbon
+   mXButton(05,05,width, height,12,12,handle);
+   caption:= '&Show Log';
+   onClick:= @TJvLogFMainForm_btnShowClick;
+ end;
+ with btnStart do begin
+   Parent:= logfrm;
+   setbounds(180,440,150, 55);
+   caption:= 'S&tart Logger';
+   font.size:= 12;
+   glyph.LoadFromResourceName(getHINSTANCE,'CL_MPNEXT');
+   mXButton(05,05,width, height,12,12,handle);
+   onClick:= @TJvLogFMainForm_btnStartClick;
+ end;
+ btnReset:= TBitBtn.create(logfrm);
+ with btnReset do begin
+   Parent:= logfrm;
+   setbounds(340,440,150, 55);
+   Hint:= 'Pulls back and resets recording'
+   ShowHint:= True;
+   caption:= '&Reset Log';
+   font.size:= 12;
+   glyph.LoadFromResourceName(getHINSTANCE,'CL_MPSTOP');
+   mXButton(05,05,width, height,12,12,handle);
+   onClick:= @TJvLogFMainForm_btnResetClick;
+ end;
+ with TDateTimePicker.Create(self) do begin
+    parent:= logfrm;
+    //color //time:= now;
+    date;
+    top:= 100;
+    left:= 15;
+    calalignment:= albottom;
+  end;
+  lblActive:= TLabel.create(logfrm)
+  with lblactive do begin
+    parent:= logfrm;
+     setBounds(40,50,336,13)
+     Caption:= 'Move the mouse across the form to generate log messages'
+     Font.Charset:= DEFAULT_CHARSET;
+     Font.Color:= clMaroon;
+     Font.Size:= 13;
+     Font.Name:= 'MS Shell Dlg 2';
+     //Font.Name:= 'MS Sans Serif';
+     Font.Style:= [fsBold];
+  end;
+  lblInactive:= TLabel.create(logfrm);
+  with lblInactive do begin
+    parent:= logfrm;
+     setBounds(40,50,329,13)
+     Caption:= 'Click on the Start button to start generating log messages'
+     Font.Color:= clNavy;
+     Font.Size:= 13;
+     Font.Name:= 'MS Shell Dlg 2';
+     Font.Style:= [fsBold];
+  end;
+
+  statusbar1:= TStatusBar.create(self);
+  with statusbar1 do begin
+    parent:= logFrm;
+    //simplepanel:= true;
+    showhint:= true;
+    hint:= 'Data Logger States';
+     Panels.add;
+     panels.items[0].width:= 200;
+     panels.items[0].text:= 'Data Log';
+     Panels.add;
+     panels.items[1].width:= 150;
+     panels.items[1].text:= 'Logger State';
+  end;
+end; 
+   
+
+begin   //main of LED LOGGER APP
+   //InifileRead;
+   //ProcessMessagesOFF;
+   getMaxBoxIni;
+   writeln('Thread ID :'+intToStr(CurrentThreadID))
+   writeln('Process ID :'+intToStr(CurrentProcessID))
+   writeln('machine name is: '+getHostName)
+   writeln('user name is: '+getUserName)
+   osType:= Win32Type;
+   writeln('OS Type is: '+intToStr(ord(osType)));
+   mytimestamp:= GetFileCreationTime(exepath+'maxbox3.exe')
+   writeln(DateTimeToStr(mytimestamp)+' for maXbox3 file')
+   //SearchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter16.pdf')
+   //ExecuteCommand('cmd','/k dir *.*')
+    with TComport.Create(self) do begin   //TestCase
+      //cleanupinstance;
+      Open;
+      writeln('com handle '+inttostr(handle));
+      codepage;
+      buffer;
+      writeln('of com port '+getnamepath);
+      if connected then writeln(' com connect on');
+      Close;
+      Free;
+    end;
+    InitComPortForm; 
+    maxform1.mxNavigator.color:= clyellow;
+    //printImage(getbitmapObject(Exepath+backmap),bscentered); 
+    //getEnvironmentInfo;
+End. 
+
+
+type
+  TJvLogFileMainForm = class(TForm)
+    JvLogFile1: TJvLogFile;
+    btnStart: TButton;
+    btnShow: TButton;
+    lblActive: TLabel;
+    btnReset: TButton;
+    lblInactive: TLabel;
+    procedure FormCreate(Sender: TObject);
+    procedure btnStartClick(Sender: TObject);
+    procedure btnShowClick(Sender: TObject);
+    procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
+    procedure btnResetClick(Sender: TObject);
+  private
+    { Private declarations }
+    FLogFileName:string;
+    procedure StartLogging;
+    procedure StopLogging;
+    procedure ResetLogging;
+  end;
+  
+//-----------------------------------------------------------------------
+  * Controls the state (ON/OFF) of 5 LEDs connected to an Arduino Board
+  * on Digital Pins 2,3,4,5,6 thru the serial comm
+ *
+ * Created April 02 2009
+ * copyleft 2009 Roberto Ramirez <beta@thepenguincult.com>
+ * Full Source code at http://www.thepenguincult.com/proyectos/arduino-delphi-control/
+ *
+ *}
+
+/*
+ * Delphi LEDs Control
+ * -----------------
+ * Turns on and off 5 light emitting diodes(LED) connected to digital  
+ * pins 2 thru 6. The LEDs will be controlled using check boxes on Delphi
+ * that sends serial data to Arduino Board.
+ *
+ * IMPORTANT!!: Don't forget to download the Delphi PC Example that controls the leds connected to arduino board.
+ *
+ * Created April 02 2009
+ * copyleft 2009 Roberto Ramirez <beta@thepenguincult.com>
+ * Full Source code at http://www.thepenguincult.com/proyectos/arduino-delphi-control/
+ * 
+ */
+
+int val = 0;       // variable to store the data from the serial port
+int ledPin1 = 2;   // LED connected to digital pin 2
+int ledPin2 = 3;   // LED connected to digital pin 3
+int ledPin3 = 4;   // LED connected to digital pin 4
+int ledPin4 = 5;   // LED connected to digital pin 5
+int ledPin5 = 6;   // LED connected to digital pin 6
+
+void setup() {
+
+  pinMode(ledPin1,OUTPUT);    // declare the LED's pin as output
+  pinMode(ledPin2,OUTPUT);    // declare the LED's pin as output
+  pinMode(ledPin3,OUTPUT);    // declare the LED's pin as output
+  pinMode(ledPin4,OUTPUT);    // declare the LED's pin as output
+  pinMode(ledPin5,OUTPUT);    // declare the LED's pin as output
+
+  Serial.begin(9600);        // connect to the serial port
+}
+
+void loop () {
+  val = Serial.read();      // read the serial port
+
+  
+  if (val !=-1){
+
+    if (val=='1'){
+      digitalWrite(ledPin1,HIGH);
+    }
+    
+    else if (val=='A'){
+      digitalWrite(ledPin1,LOW);
+      }
+    
+    if (val=='2'){
+      digitalWrite(ledPin2,HIGH);
+    }
+
+    else if (val=='B'){
+      digitalWrite(ledPin2,LOW);
+      }
+
+    if (val=='3'){
+      digitalWrite(ledPin3,HIGH);
+    }
+
+    else if (val=='C'){
+      digitalWrite(ledPin3,LOW);
+      }
+
+    if (val=='4'){
+      digitalWrite(ledPin4,HIGH);
+    }
+
+    else if (val=='D'){
+      digitalWrite(ledPin4,LOW);
+      }
+
+    if (val=='5'){
+      digitalWrite(ledPin5,HIGH);
+    }
+
+    else if (val=='E'){
+      digitalWrite(ledPin5,LOW);
+      }
+   
+    //Serial.println();
+  }
+}
+----------------------------------------------------------------------
+//----------------------------------Code Notes------------------------
+unit Unit1;
+interface
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, ComCtrls, CPort, CPortCtl, Menus;
+  
+  
+------------------------------------------------
+Windows crashed again. I am the Blue Screen of Death. No one hears your screams.
+Three things are certain: Death, taxes, and lost data. Guess which has occurred.
+There is no place like 127.0.0.1 
+
+http://en.wikipedia.org/wiki/Sneakers_%281992_film%29
+
+
+procedure maXCalc_demo;
+begin
+  printF('this is %.6f',[maXcalc('ln(2)+fact(388)+2!')]); 
+  printF('this is %.6f',[maXcalc('(4!)^(3!)')]); 
+  printF('this is %.6f',[maXcalc('4!+4!')]); 
+  printF('this is %.6f',[maXcalc('log(22)')]); 
+  printF('this is logN %.6f',[maXcalc('2%256')]);
+  writeln('ln(e): '+floattostr(maXcalc('ln(e)')))
+  writeln(floattostr(maXcalc('e+10^6')))
+  printF('addition theorem %.18f ',[maXcalc('sin(2.5/2)')])
+  printF('addition theorem %.18f ',[maXcalc('sqrt(1/2*(1-cos(2.5)))')])
+  printF('addition theorem2 %22.18f ',[maXcalc('cos(2.5/2)')])
+  printF('addition theorem2 %22.18f ',[maXcalc('sqrt(1/2*(1+cos(2.5)))')])
+  maXcalcF('2%256+2^10');
+end; 
+
+50000  = 0.693137180659968
+100000 = 0.693142180584982
+500000 = 0.693146180561005
+10^6   = 0.693146680560255
+5*10^6 = 0.693147080560068
+50*10^6= 0.693147170560399    //Runtime: 0:28:22.422
+ln(2)  = 0.693147180559945
+
+(* zeta:= 0;
+     for i:= 1 to 50000 do 
+       if i mod 2 = 0 then
+         zeta:= zeta - 1/i else
+         zeta:= zeta + 1/i;
+       writeln('harmonic alternate to ln(2): '+floattostr(zeta))  
+       writeln(floattostr(maxcalc('ln(2)')))
+       writeln(floattostr(ln2))    *)
+   
+http://www.hitekdev.com/delphi/BITMAPANIMATION.html
+
+  {-------O B S E R V E R  Pattern ------------------------}
+  type
+    TStObserverAction = procedure(aInputData : TObject) of object;
+  
+  TStObserver = class
+      private
+        FEventTable : TList;
+      protected
+        function  GetObserver(Index : Integer) : TStObserverAction;
+        procedure SetObserver(Index : Integer; InObserver : TStObserverAction);
+        function  GetCount : Integer;
+      public
+        constructor Create;
+        destructor  Destroy; override;
+        procedure Add(aHandler : TStObserverAction);
+        procedure Remove(aIndex : Integer);
+        procedure Notify(aInputData : TObject);
+        property  Handler[aIndex : Integer] : TStObserverAction
+                     read GetObserver write SetObserver;
+        property  Count : Integer read GetCount;
+    end;
+  

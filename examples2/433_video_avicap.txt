@@ -1,0 +1,1885 @@
+//demo for media player component
+//loads a file, bitmap , mp3, video and so on
+//{$R+}{$D-,L-,O+,Q-,R-,Y-,S-} loc's=222, App_187
+//unit AviCap; -->unit uPSI_AviCap;
+
+
+program MediaPlayer3_AVICAP_capture;
+
+(* Externals from AVICAP.DLL *)
+//function capGetDriverDescription; external AVICAP32 name 'capGetDriverDescriptionA';
+//function capCreateCaptureWindow;  external AVICAP32 name 'capCreateCaptureWindowA';
+
+
+//const
+  //AVICAP32 = 'AVICAP32.dll'
+
+function capCreateCaptureWindowATest(lpszWindowName : pchar;
+    dwStyle : longint;
+    x : integer;
+    y : integer;
+    nWidth : integer;
+    nHeight : integer;
+    ParentWin : HWND;
+    nId : integer): HWND;
+    //stdcall external 'AVICAP32.DLL';
+    external 'capCreateCaptureWindowA@avicap32.dll stdcall';
+
+    //function  MyGetTickCount: Longint;
+      // external 'GetTickCount@kernel32.dll stdcall';
+    
+
+type TWeekDays = (Monday, Tuesday, Wednesday,
+                     Thursday, Friday, Saturday, Sunday);
+
+var 
+  //ms: TStringGrid;
+  //mg: TDrawGrid;
+  selectedFile: string;
+  //mm: TMenu;
+  handle: THandle;
+  //mynote: TNoteBook;
+  bmp: TBitmap;
+  mpanel: TPanel;
+  mPlayer: TMediaPlayer;
+  
+  
+var hWndC : THandle;
+
+ //CL.AddConstantN('WS_CHILD','LongWord').SetUInt( $40000000);
+ //CL.AddConstantN('WS_MINIMIZE','LongWord').SetUInt( $20000000);
+ //CL.AddConstantN('WS_VISIBLE','LongWord').SetUInt( $10000000);
+ const //WS_CHILD = $40000000;
+       //WS_VISIBLE = $10000000;
+       //WM_CAP_START = $5000; //WM_USER;
+       WM_CAP_DRIVER_CONNECT = WM_CAP_START + 10;
+       WM_CAP_DRIVER_DISCONNECT = WM_CAP_START + 11;
+       WM_CAP_SET_CALLBACK_FRAME  = (WM_CAP_START+  5);
+     
+
+ 
+
+procedure TForm1_Capture(Sender: TObject);
+begin
+  hWndC := 0;
+  
+  writeln('frame graber handle '+inttoStr(capGrabFrame(hinstance)))
+
+ //hWndC := capCreateCaptureWindowATest('My Own Capture Window',
+ hWndC := capCreateCaptureWindow('My Own maXfilm Capture Window',
+
+    WS_CHILD or WS_VISIBLE ,
+    0,0,
+    mPanel.Width,
+    mPanel.Height,
+    mPanel.Handle,
+    0);
+
+  if hWndC <> 0 then begin
+    showmessage(' screen capture failed - el grito the scream');
+    SendMessage(hWndC, WM_CAP_DRIVER_CONNECT, 0, 0); 
+  end;
+end;
+
+procedure TForm1_FormCreate(Sender: TObject);
+begin
+  hWndC := 0;
+end;
+
+procedure TForm1_StopClick(Sender: TObject);
+begin
+  if hWndC <> 0 then begin
+    SendMessage(hWndC, WM_CAP_DRIVER_DISCONNECT, 0, 0); 
+    hWndC := 0;
+  end;
+end;
+
+  
+
+function GetTextFromFile(const AFile: String; var ReturnString: string): boolean;
+var
+  fileStream: TFileStream;
+begin
+  result:= false;
+  if not fileExists(AFile) then exit;
+  FileStream:= TFileStream.Create(AFile, fmOpenRead);
+    writeln(inttostr(filestream.size));
+  try
+    if FileStream.Size > 0 then begin
+      SetLength(ReturnString, FileStream.Size);
+      fileStream.Seek(0, soBeginning);
+      writeln(inttostr(filestream.size));
+      FileStream.Read(ReturnString, FileStream.Size); 
+      result:= true;
+    end;
+  finally
+    FileStream.Free;
+  end; //try
+end;
+
+procedure openFileSystem;
+var s: string;
+begin
+  if GetTextFromFile('c:\rocklist.txt',s) then
+    ShowMessage(s);
+     //Memo2.text:= s;
+     //writeln('this is');   
+     Writeln(inttoStr(SW_Show)) 
+  end;
+
+function LoadBitMap: TBitmap;
+begin
+  Bmp:= TBitmap.Create;
+  try
+    Bmp.LoadFromFile(ExePath+'examples\citymax.bmp');
+    //vFrm.Canvas.Brush.Bitmap:= Bitmap;
+    //vFrm.Canvas.FillRect(Rect(10,10,180,150));
+  finally
+    //vFrm.Canvas.Brush.Bitmap:= NIL;
+    //vFrm.Free;
+    result:= bmp;
+  end;
+end; 
+
+procedure CloseClick(Sender: TObject; var action: TCloseAction);
+begin
+  //Form1.Close;  free 308 kByte
+  if MessageDlg('Wanna Leave?',mtConfirmation,[mbYes, mbNo],0) = mrYes then begin
+     //form1.Free;
+    MPlayer.Close;
+    MPlayer.Free;
+    TForm1_StopClick(self);
+    //bmp.Free;
+    action:= caFree;
+    writeln('capture closed ');
+    //ShowMessage('Now you see the hits of mX3');
+    //ExecuteCommand('http://www.softwareschule.ch/maxboxshow.htm','')
+ end else
+    Action:= caNone;
+end;
+
+procedure GetMediaData(self: TObject);
+begin
+  TForm1_Capture(Self);
+ if PromptForFileName(selectedFile,
+                      'Media files (*.mp3)|*.mp3|*.mpg)|*.mpg', //and others
+                      '', 'Select your mX3 media file',
+                      'D:\kleiner2005\download', False) //false: not Save dialog!
+   then begin
+     // Display this full file/path value
+      mPanel.caption:= 'Selected file: '+ExtractFileName(selectedFile);     
+      MPlayer.AutoEnable:= false;
+      //MPlayer.EnabledButtons := [];
+      MPlayer.EnabledButtons:= [btPause, btStop, btPlay];
+      //MPlayer.Refresh;
+      MPlayer.filename:= selectedFile;
+      //ExePath+'examples\airmaxloop3.mp3';
+      //VIDEO... MPlayer.filename:= ExePath+'examples\*.mpeg';
+      MPlayer.Close;
+      MPlayer.Wait:= true;
+      MPlayer.Open;
+      MPlayer.Play;
+   end;
+end;
+
+type TVideoHDRPtr = integer;
+
+
+function FrameCallbackFunction(AHandle: hWnd; VIDEOHDR: TVideoHDRPtr): bool;
+ // stdcall;
+var
+  I: integer;
+  form1: TForm;
+  FBitmap: TBitmap;
+  FJpeg: TJpegImage;
+  FCapHandle: THandle;
+  PICWIDTH, PICHEIGHT, SUBLINEHEIGHT, EXTRAHEIGHT: integer;
+begin
+  result:= true;
+
+  with form1 do begin
+  try
+    //ConvertCodecToRGB(FCodec, VideoHDR^.lpData, @FBuf2, PICWIDTH, PICHEIGHT);
+
+    //for I:= 1 to PICHEIGHT do FBuf1[I]:= FBuf2[PICHEIGHT- (I- 1)];
+    //SetBitmapBits(FBitmap.Handle, PICWIDTH* PICHEIGHT* SizeOf(DWord), @FBuf1);
+
+    FBitmap.Canvas.Brush.Color:= clWhite;
+    FBitmap.Canvas.Font.Color:= clRed;
+    FBitmap:= TBitmap.Create;
+  FBitmap.Width:= PICWIDTH;
+  FBitmap.Height:= PICHEIGHT+ SUBLINEHEIGHT+ EXTRAHEIGHT;
+  FBitmap.PixelFormat:= pf32Bit;
+  FBitmap.Canvas.Font.Assign(mPanel.Font);
+  FBitmap.Canvas.Brush.Style:= bssolid;
+  FBitmap.Canvas.Rectangle(0, PICHEIGHT, PICWIDTH, PICHEIGHT+ SUBLINEHEIGHT);
+
+
+    FJpeg.Assign(FBitmap);
+
+    FJpeg.CompressionQuality:= 85;
+    FJpeg.ProgressiveEncoding:= true;
+    FJpeg.SaveToFile('c:\capture\mXwebcam.jpg');
+    
+    //    WM_CAP_SET_CALLBACK_FRAME       = (WM_CAP_START+  5);
+        SendMessage(FCapHandle, WM_CAP_SET_CALLBACK_FRAME, 0, 0);
+  except
+  end;
+  end;
+end;
+
+
+procedure SetForm;
+var
+  inFrm: TForm;
+  mbutton: TBitBtn;
+begin
+   inFrm:= TForm.Create(self);
+   with inFrm do begin
+      caption:= '********MediaMax3************';  
+      height:= 610;
+      width:= 610;
+      //color:= clred;
+      Position:= poScreenCenter;
+      onClose:= @CloseClick;
+      show;
+   end;
+   mPanel:= TPanel.Create(inFrm);
+   with mPanel do begin
+     caption:= '********maXboxTV********';  
+     parent:= inFrm;  
+     SetBounds(80,80,410,410)
+     color:= clred;
+     show;
+   end; 
+  mButton:= TBitBtn.Create(inFrm)
+  with mButton do begin
+    Parent:= inFrm;
+    setbounds(420,510,150, 45);
+    caption:= 'Open Media';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'OPENFOLDER'); 
+    //event handler
+    onclick:= @GetMediaData;
+  end;
+  MPlayer:= TMediaPlayer.create(self);
+  MPlayer.parent:= inFrm;
+  MPlayer.top:= 20;
+  MPlayer.left:= 10;
+  Mplayer.Display:= mPanel;   //for video
+  MPlayer.AutoEnable:= false;
+  //mplayer.next;
+  MPlayer.EnabledButtons:= [btPause,btStop];
+  
+  // TMPBtnType = (btPlay, btPause, btStop, btNext, btPrev, btStep, btBack, btRecord, btEject);
+  //TButtonSet = set of TMPBtnType;
+   {property EnabledButtons: TButtonSet read FEnabledButtons write SetEnabledButtons
+      default [btPlay, btPause, btStop, btNext, btPrev, btStep, btBack,
+               btRecord, btEject];}
+ // CL.AddTypeS('TMPBtnType','(btPlay,btPause,btStop,btNext,btPrev,btStep,btBack,btRecord, btEject)');
+  //CL.AddTypeS('TButtonSet', 'set of TMPBtnType');
+             
+   
+  //MPlayer.open;
+  //LoadBitMap;
+end;
+
+function DisplayElements(sopt: TSelectDirOpts): string;
+ var
+   element : TSelectDirOpt;
+ begin
+   //for element in sopt do
+   if element in sopt then
+     //result:= result + IntToStr(element) + ' | ';
+ end;
+ 
+
+var cdinfo: TJclCdMediaInfo;
+    mdir: string;
+    a,b: boolean;
+    it: integer;
+    sopts: TSelectDirOpts;
+    SomeDay: TWeekDays;
+    vmsgbtn: tMsgDlgBtn;
+    tst: TStringlist;
+    
+
+begin
+  //openFileSystem
+  //loadbitmap;
+  SetForm;
+  //writeln(gethostbyname('www.kleiner.ch'))
+   writeln('Instance: '+intToStr(getHinstance))
+   writeln('Procid: '+intToStr(getProcessid))
+   writeln('Processors: '+inttostr(GetNumberOfProcessors)) 
+  {Handle:= FindWindow('TMaxForm1','');
+  if Handle <> 0 then 
+    Showmessage('maXbox is alive')}
+   // type   TJclCdMediaInfo = (miProduct, miIdentity, miUPC);
+    //  CL.AddTypeS('TJclCdMediaInfo', '( miProduct, miIdentity, miUPC )');
+    cdinfo:= miproduct;  
+   { if IsMediaPresentInDrive('F') then begin
+      writeln('CD in drive');
+      writeln(GetCdInfo(miproduct, 'F'));
+    end;}  
+      mdir:= ExePath;
+   // CL.AddTypeS('TSelectDirOpt', '( sdAllowCreate, sdPerformCreate, sdPrompt )');
+   //CL.AddTypeS('TSelectDirOpts', 'set of TSelectDirOpt');
+
+     sopts:= sopts + [sdprompt, sdallowcreate];
+     sopts:= sopts - [sdallowcreate];
+     //sopts:= sopts + [sdallowcreate];
+     
+     if sdAllowcreate in sopts then writeln('included');
+     //writeln(inttoStr(sdprompt));
+     //if SelectDirectory(mdir, [sdprompt, sdallowcreate], 1) then
+       //writeln(' set of select dir true: '+mdir);
+       
+        //ExecuteCommand('cmd','/k dir *.*')
+    writeln(booltostr(false and true,true));
+    a:= false; b:= true;
+    writeln(booleantoString((a and b) = b));
+    //for SomeDay:= Monday to Sunday do
+      //if succ(monday) = Tuesday then
+      //ShowMessage('Tuesday is after monday!');
+      Writeln(StringReplace('this is Max','max', 'box',[rfReplaceAll, rfIgnoreCase]));
+    vmsgbtn:= mbyes;  
+    if MessageDlg('Learning about Sets!', mtInformation, [mbYes, mbOk, mbCancel], 0)
+         = mrOk then writeln('this is in set... ');  
+           //in [mrYes, mrOK] then writeln('this is in set... '); 
+  tst:= TStringlist.create;
+  GetSystemPaths(tst);
+  for it:= 1 to tst.count-1 do 
+   writeln(tst[it]);
+  tst.Free; 
+   
+  
+End.
+
+
+(* === compile-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_AviCap(CL: TPSPascalCompiler);
+begin
+ CL.AddConstantN('WM_USER','LongWord').SetUInt( $0400);
+ CL.AddConstantN('WM_CAP_START','LongWord').SetUint($0400);
+ CL.AddConstantN('WM_CAP_END','longword').SetUint($0400+85);
+ //WM_CAP_START+  85
+ //    WM_CAP_SET_CALLBACK_CAPCONTROL  = (WM_CAP_START+  85);
+
+ CL.AddDelphiFunction('Function capSetCallbackOnError( hwnd : THandle; fpProc : LongInt) : LongInt');
+ Function capSetCallbackOnStatus( hwnd : THandle; fpProc : LongInt) : LongInt');
+ Function capSetCallbackOnYield( hwnd : THandle; fpProc : LongInt) : LongInt');
+ Function capSetCallbackOnFrame( hwnd : THandle; fpProc : LongInt) : LongInt');
+ Function capSetCallbackOnVideoStream( hwnd : THandle; fpProc : LongInt) : LongInt');
+ Function capSetCallbackOnWaveStream( hwnd : THandle; fpProc : LongInt) : LongInt');
+ Function capSetCallbackOnCapControl( hwnd : THandle; fpProc : LongInt) : LongInt');
+ Function capSetUserData( hwnd : THandle; lUser : LongInt) : LongInt');
+ Function capGetUserData( hwnd : THandle) : LongInt');
+ Function capDriverConnect( hwnd : THandle; I : Word) : LongInt');
+ Function capDriverDisconnect( hwnd : THandle) : LongInt');
+ Function capDriverGetName( hwnd : THandle; szName : LongInt; wSize : Word) : LongInt');
+ Function capDriverGetVersion( hwnd : THandle; szVer : LongInt; wSize : Word) : LongInt');
+ Function capDriverGetCaps( hwnd : THandle; s : LongInt; wSize : Word) : LongInt');
+ Function capFileSetCaptureFile( hwnd : THandle; szName : LongInt) : LongInt');
+ Function capFileGetCaptureFile(hwnd : THandle; szName : LongInt; wSize:Word) : LongInt');
+ Function capFileAlloc( hwnd : THandle; dwSize : LongInt) : LongInt');
+ Function capFileSaveAs( hwnd : THandle; szName : LongInt) : LongInt');
+ Function capFileSetInfoChunk( hwnd : THandle; lpInfoChunk : LongInt) : LongInt');
+ Function capFileSaveDIB( hwnd : THandle; szName : LongInt) : LongInt');
+ Function capEditCopy( hwnd : THandle) : LongInt');
+ Function capSetAudioFormat( hwnd : THandle; s : LongInt; wSize : Word) : LongInt');
+ Function capGetAudioFormat( hwnd : THandle; s : LongInt; wSize : Word) : LongInt');
+ Function capGetAudioFormatSize( hwnd : THandle) : LongInt');
+ Function capDlgVideoFormat( hwnd : THandle) : LongInt');
+ Function capDlgVideoSource( hwnd : THandle) : LongInt');
+ Function capDlgVideoDisplay( hwnd : THandle) : LongInt');
+ Function capDlgVideoCompression( hwnd : THandle) : LongInt');
+ Function capGetVideoFormat( hwnd : THandle; s : LongInt; wSize : Word) : LongInt');
+ Function capGetVideoFormatSize( hwnd : THandle) : LongInt');
+ Function capSetVideoFormat( hwnd : THandle; s : LongInt; wSize : Word) : LongInt');
+ Function capPreview( hwnd : THandle; f : Word) : LongInt');
+ Function capPreviewRate( hwnd : THandle; wMS : Word) : LongInt');
+ Function capOverlay( hwnd : THandle; f : Word) : LongInt');
+ Function capPreviewScale( hwnd : THandle; f : Word) : LongInt');
+ Function capGetStatus( hwnd : THandle; s : LongInt; wSize : Word) : LongInt');
+ Function capSetScrollPos( hwnd : THandle; lpP : LongInt) : LongInt');
+ Function capGrabFrame( hwnd : THandle) : LongInt');
+ Function capGrabFrameNoStop( hwnd : THandle) : LongInt');
+ Function capCaptureSequence( hwnd : THandle) : LongInt');
+ Function capCaptureSequenceNoFile( hwnd : THandle) : LongInt');
+ Function capCaptureStop( hwnd : THandle) : LongInt');
+ Function capCaptureAbort( hwnd : THandle) : LongInt');
+ Function capCaptureSingleFrameOpen( hwnd : THandle) : LongInt');
+ Function capCaptureSingleFrameClose( hwnd : THandle) : LongInt');
+ Function capCaptureSingleFrame( hwnd : THandle) : LongInt');
+ Function capCaptureGetSetup( hwnd : THandle; s : LongInt; wSize : Word) : LongInt');
+ Function capCaptureSetSetup( hwnd : THandle; s : LongInt; wSize : Word) : LongInt');
+ Function capSetMCIDeviceName( hwnd : THandle; szName : LongInt) : LongInt');
+ Function capGetMCIDeviceName( hwnd : THandle; szName : LongInt; wSize : Word) : LongInt');
+ Function capPaletteOpen( hwnd : THandle; szName : LongInt) : LongInt');
+ Function capPaletteSave( hwnd : THandle; szName : LongInt) : LongInt');
+ Function capPalettePaste( hwnd : THandle) : LongInt');
+ Function capPaletteAuto( hwnd : THandle; iFrames : Word; iColors : LongInt) : LongInt');
+ Function capPaletteManual( hwnd : THandle; fGrab : Word; iColors : LongInt) : LongInt');
+  //CL.AddTypeS('PCapDriverCaps', '^TCapDriverCaps // will not work');
+  CL.AddTypeS('TCapDriverCaps', 'record wDeviceIndex : WORD; fHasOverlay : BOOL'
+   +'; fHasDlgVideoSource : BOOL; fHasDlgVideoFormat : BOOL; fHasDlgVideoDispla'
+   +'y : BOOL; fCaptureInitialized : BOOL; fDriverSuppliesPalettes : BOOL; hVid'
+   +'eoIn : THANDLE; hVideoOut : THANDLE; hVideoExtIn : THANDLE; hVideoExtOut : THANDLE; end');
+  //CL.AddTypeS('PCapStatus', '^TCapStatus // will not work');
+  CL.AddTypeS('TCapStatus', 'record uiImageWidth : UINT; uiImageHeight : UINT; '
+   +'fLiveWindow : BOOL; fOverlayWindow : BOOL; fScale : BOOL; ptScroll : TPOIN'
+   +'T; fUsingDefaultPalette : BOOL; fAudioHardware : BOOL; fCapFileExists : BO'
+   +'OL; dwCurrentVideoFrame : DWORD; dwCurrentVideoFramesDropped : DWORD; dwCu'
+   +'rrentWaveSamples : DWORD; dwCurrentTimeElapsedMS : DWORD; hPalCurrent : HP'
+   +'ALETTE; fCapturingNow : BOOL; dwReturn : DWORD; wNumVideoAllocated : WORD;'
+   +' wNumAudioAllocated : WORD; end');
+  //CL.AddTypeS('PCaptureParms', '^TCaptureParms // will not work');
+  CL.AddTypeS('TCaptureParms', 'record dwRequestMicroSecPerFrame : DWORD; fMake'
+   +'UserHitOKToCapture : BOOL; wPercentDropForError : WORD; fYield : BOOL; dwI'
+   +'ndexSize : DWORD; wChunkGranularity : WORD; fUsingDOSMemory : BOOL; wNumVi'
+   +'deoRequested : WORD; fCaptureAudio : BOOL; wNumAudioRequested : WORD; vKey'
+   +'Abort : WORD; fAbortLeftMouse : BOOL; fAbortRightMouse : BOOL; fLimitEnabl'
+   +'ed : BOOL; wTimeLimit : WORD; fMCIControl : BOOL; fStepMCIDevice : BOOL; d'
+   +'wMCIStartTime : DWORD; dwMCIStopTime : DWORD; fStepCaptureAt2x : BOOL; wSt'
+   +'epCaptureAverageFrames : WORD; dwAudioBufferSize : DWORD; fDisableWriteCac'
+   +'he : BOOL; AVStreamMaster : WORD; end');
+ // CL.AddTypeS('PCapInfoChunk', '^TCapInfoChunk // will not work');
+  //CL.AddTypeS('TCapInfoChunk', 'record fccInfoID : FOURCC; lpData : LongInt; cbData : LongInt; end');
+ CL.AddConstantN('CONTROLCALLBACK_PREROLL','LongInt').SetInt( 1);
+ CL.AddConstantN('CONTROLCALLBACK_CAPTURING','LongInt').SetInt( 2);
+ Function capCreateCaptureWindow( lpszWindowName : PChar; dwStyle : DWord; x, y : Integer; nWidth, nHeight : Integer; hwndParent : THandle; nID : Integer) : THandle');
+ Function capGetDriverDescription( wDriverIndex : DWord; lpszName : PChar; cbName : Integer; lpszVer : PChar; cbVer : Integer) : Boolean');
+ CL.AddConstantN('IDS_CAP_BEGIN','LongInt').SetInt( 300);
+ CL.AddConstantN('IDS_CAP_END','LongInt').SetInt( 301);
+ CL.AddConstantN('IDS_CAP_INFO','LongInt').SetInt( 401);
+ CL.AddConstantN('IDS_CAP_OUTOFMEM','LongInt').SetInt( 402);
+ CL.AddConstantN('IDS_CAP_FILEEXISTS','LongInt').SetInt( 403);
+ CL.AddConstantN('IDS_CAP_ERRORPALOPEN','LongInt').SetInt( 404);
+ CL.AddConstantN('IDS_CAP_ERRORPALSAVE','LongInt').SetInt( 405);
+ CL.AddConstantN('IDS_CAP_ERRORDIBSAVE','LongInt').SetInt( 406);
+ CL.AddConstantN('IDS_CAP_DEFAVIEXT','LongInt').SetInt( 407);
+ CL.AddConstantN('IDS_CAP_DEFPALEXT','LongInt').SetInt( 408);
+ CL.AddConstantN('IDS_CAP_CANTOPEN','LongInt').SetInt( 409);
+ CL.AddConstantN('IDS_CAP_SEQ_MSGSTART','LongInt').SetInt( 410);
+ CL.AddConstantN('IDS_CAP_SEQ_MSGSTOP','LongInt').SetInt( 411);
+ CL.AddConstantN('IDS_CAP_VIDEDITERR','LongInt').SetInt( 412);
+ CL.AddConstantN('IDS_CAP_READONLYFILE','LongInt').SetInt( 413);
+ CL.AddConstantN('IDS_CAP_WRITEERROR','LongInt').SetInt( 414);
+ CL.AddConstantN('IDS_CAP_NODISKSPACE','LongInt').SetInt( 415);
+ CL.AddConstantN('IDS_CAP_SETFILESIZE','LongInt').SetInt( 416);
+ CL.AddConstantN('IDS_CAP_SAVEASPERCENT','LongInt').SetInt( 417);
+ CL.AddConstantN('IDS_CAP_DRIVER_ERROR','LongInt').SetInt( 418);
+ CL.AddConstantN('IDS_CAP_WAVE_OPEN_ERROR','LongInt').SetInt( 419);
+ CL.AddConstantN('IDS_CAP_WAVE_ALLOC_ERROR','LongInt').SetInt( 420);
+ CL.AddConstantN('IDS_CAP_WAVE_PREPARE_ERROR','LongInt').SetInt( 421);
+ CL.AddConstantN('IDS_CAP_WAVE_ADD_ERROR','LongInt').SetInt( 422);
+ CL.AddConstantN('IDS_CAP_WAVE_SIZE_ERROR','LongInt').SetInt( 423);
+ CL.AddConstantN('IDS_CAP_VIDEO_OPEN_ERROR','LongInt').SetInt( 424);
+ CL.AddConstantN('IDS_CAP_VIDEO_ALLOC_ERROR','LongInt').SetInt( 425);
+ CL.AddConstantN('IDS_CAP_VIDEO_PREPARE_ERROR','LongInt').SetInt( 426);
+ CL.AddConstantN('IDS_CAP_VIDEO_ADD_ERROR','LongInt').SetInt( 427);
+ CL.AddConstantN('IDS_CAP_VIDEO_SIZE_ERROR','LongInt').SetInt( 428);
+ CL.AddConstantN('IDS_CAP_FILE_OPEN_ERROR','LongInt').SetInt( 429);
+ CL.AddConstantN('IDS_CAP_FILE_WRITE_ERROR','LongInt').SetInt( 430);
+ CL.AddConstantN('IDS_CAP_RECORDING_ERROR','LongInt').SetInt( 431);
+ CL.AddConstantN('IDS_CAP_RECORDING_ERROR2','LongInt').SetInt( 432);
+ CL.AddConstantN('IDS_CAP_AVI_INIT_ERROR','LongInt').SetInt( 433);
+ CL.AddConstantN('IDS_CAP_NO_FRAME_CAP_ERROR','LongInt').SetInt( 434);
+ CL.AddConstantN('IDS_CAP_NO_PALETTE_WARN','LongInt').SetInt( 435);
+ CL.AddConstantN('IDS_CAP_MCI_CONTROL_ERROR','LongInt').SetInt( 436);
+ CL.AddConstantN('IDS_CAP_MCI_CANT_STEP_ERROR','LongInt').SetInt( 437);
+ CL.AddConstantN('IDS_CAP_NO_AUDIO_CAP_ERROR','LongInt').SetInt( 438);
+ CL.AddConstantN('IDS_CAP_AVI_DRAWDIB_ERROR','LongInt').SetInt( 439);
+ CL.AddConstantN('IDS_CAP_COMPRESSOR_ERROR','LongInt').SetInt( 440);
+ CL.AddConstantN('IDS_CAP_AUDIO_DROP_ERROR','LongInt').SetInt( 441);
+ CL.AddConstantN('IDS_CAP_STAT_LIVE_MODE','LongInt').SetInt( 500);
+ CL.AddConstantN('IDS_CAP_STAT_OVERLAY_MODE','LongInt').SetInt( 501);
+ CL.AddConstantN('IDS_CAP_STAT_CAP_INIT','LongInt').SetInt( 502);
+ CL.AddConstantN('IDS_CAP_STAT_CAP_FINI','LongInt').SetInt( 503);
+ CL.AddConstantN('IDS_CAP_STAT_PALETTE_BUILD','LongInt').SetInt( 504);
+ CL.AddConstantN('IDS_CAP_STAT_OPTPAL_BUILD','LongInt').SetInt( 505);
+ CL.AddConstantN('IDS_CAP_STAT_I_FRAMES','LongInt').SetInt( 506);
+ CL.AddConstantN('IDS_CAP_STAT_L_FRAMES','LongInt').SetInt( 507);
+ CL.AddConstantN('IDS_CAP_STAT_CAP_L_FRAMES','LongInt').SetInt( 508);
+ CL.AddConstantN('IDS_CAP_STAT_CAP_AUDIO','LongInt').SetInt( 509);
+ CL.AddConstantN('IDS_CAP_STAT_VIDEOCURRENT','LongInt').SetInt( 510);
+ CL.AddConstantN('IDS_CAP_STAT_VIDEOAUDIO','LongInt').SetInt( 511);
+ CL.AddConstantN('IDS_CAP_STAT_VIDEOONLY','LongInt').SetInt( 512);
+ CL.AddConstantN('IDS_CAP_STAT_FRAMESDROPPED','LongInt').SetInt( 513);
+ CL.AddConstantN('AVICAP32','String').SetString( 'AVICAP32.dll');
+end;
+
+
+
+///////////////////Code Snippets
+
+
+{function TranslateSLLVerifyToInternal(Mode: Integer): TIdSSLVerifyModeSet;
+begin
+  Result := [];
+  if LogicalAnd(Mode, OPENSSL_SSL_VERIFY_PEER) then Result := Result + [sslvrfPeer];
+  if LogicalAnd(Mode, OPENSSL_SSL_VERIFY_FAIL_IF_NO_PEER_CERT) then Result := Result + [sslvrfFailIfNoPeerCert];
+  if LogicalAnd(Mode, OPENSSL_SSL_VERIFY_CLIENT_ONCE) then Result := Result + [sslvrfClientOnce];
+end;}
+
+function LogicalAnd(A, B: Integer): Boolean;
+begin
+  Result := (A and B) = B;
+end;
+
+
+//---------------------------------------------------------
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  MediaPlayer1.Close;
+  MediaPlayer1.FileName := 'c:\music\test.mp3';
+  MediaPlayer1.Open;
+end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  MediaPlayer1.Close;
+  MediaPlayer1.FileName := 'c:\music\test.mp3';
+  MediaPlayer1.Open; 
+  MediaPlayer1.Play;
+end;
+
+procedure TForm2.btOpenClick(Sender: TObject);
+var
+  OpenMediaDialog : TOpenDialog;
+begin
+  OpenMediaDialog := TOpenDialog.Create(Self);
+  OpenMediaDialog.Filter := 'All Video Files (*.avi)|*.avi';
+  // There are avi files in
+  // C:\Documents and Settings\All Users\Documents\RAD Studio\6.0\Demos\DelphiWin32\VCLWin32\CoolStuff.
+  if OpenMediaDialog.Execute() then begin
+    { Assign a file to the media player. }
+    MediaPlayer1.FileName := OpenMediaDialog.FileName;
+ 
+    { Check if the file exists and is not a directory. }
+    if (FileExists(OpenMediaDialog.FileName)) and
+       (not DirectoryExists(OpenMediaDialog.FileName)) then begin
+      { Open the files. }
+      MediaPlayer1.Wait := true;
+      MediaPlayer1.Open;
+      MediaPlayer1.Play;
+ 
+      { Override automatic button controlling. }
+      MediaPlayer1.EnabledButtons :=
+        [TMPBtnType.btPause, TMPBtnType.btStop, TMPBtnType.btPlay];
+ 
+      { Enable the Stop button. }
+      btStop.Enabled := true;
+      btOpen.Enabled := false;
+    end;
+  end;
+ 
+  OpenMediaDialog.Free;
+end;
+ 
+procedure TForm2.btStopClick(Sender: TObject);
+begin
+  { Stop and close the media. }
+  MediaPlayer1.Stop;
+  MediaPlayer1.Close;
+ 
+  MediaPlayer1.EnabledButtons := [];
+ 
+  { Enable Open button again. }
+  btOpen.Enabled := true;
+end;
+ 
+procedure TForm2.FormCreate(Sender: TObject);
+begin
+  { Disable all buttons. }
+  MediaPlayer1.AutoEnable := false;
+  MediaPlayer1.EnabledButtons := [];
+end;
+ 
+procedure TForm2.MediaPlayer1PostClick(Sender: TObject;
+  Button: TMPBtnType);
+begin
+  if Button = TMPBtnType.btStop then
+     btStop.Click;
+end;
+
+function FrameCallbackFunction(AHandle: hWnd; VIDEOHDR: TVideoHDRPtr): bool; stdcall;
+var
+  I: integer;
+begin
+  result:= true;
+
+  with form1 do begin
+  try
+    ConvertCodecToRGB(FCodec, VideoHDR^.lpData, @FBuf2, PICWIDTH, PICHEIGHT);
+
+    for I:= 1 to PICHEIGHT do FBuf1[I]:= FBuf2[PICHEIGHT- (I- 1)];
+    SetBitmapBits(FBitmap.Handle, PICWIDTH* PICHEIGHT* SizeOf(DWord), @FBuf1);
+
+    FBitmap.Canvas.Brush.Color:= clWhite;
+    FBitmap.Canvas.Font.Color:= clRed;
+
+    FJpeg.Assign(FBitmap);
+
+    FJpeg.CompressionQuality:= 85;
+    FJpeg.ProgressiveEncoding:= true;
+    FJpeg.SaveToFile('c:\webcam.jpg');
+
+    SendMessage(FCapHandle, WM_CAP_SET_CALLBACK_FRAME, 0, 0);
+  except
+  end;
+  end;
+end;
+
+
+
+------------------------------------------------------
+Programmers never die, they just GOSUB without RETURN 
+
+http://delphi.pjh2.de/
+
+
+Stack Exchange
+sign up log in tour help careers 2.0
+
+Stack Overflow
+
+    Questions
+    Tags
+    Tour
+    Users
+
+    Ask Question
+
+Take the 2-minute tour ×
+Stack Overflow is a question and answer site for professional and enthusiast programmers. It's 100% free, no registration required.
+Getting a snapshot from a webcam with Delphi
+up vote 6 down vote favorite
+4
+	
+
+I need to get a regular snapshot from a webcam in Delphi. Speed is not a problem (once a second is fine). I have tried demo code from based on stuff from http://delphi.pjh2.de but I can't get it to work. It compiles and runs OK but the callback function never fires.
+
+I don't have a real webcam but am running instead a simulator. The simulator works (I can see the video using Skype) but not with the test app. I don't really know where to start looking...
+
+Can anyone be bothered to try this code? (Apologies for the voluminous post - couldn't find how or if you can attach files - a zip file is available here.)
+
+Alternatively, any webcam demo code would be appreciated, preferably with a known good EXE as well as source.
+
+program WebCamTest;
+
+uses
+  Forms,
+  WebCamMainForm in 'WebCamMainForm.pas' {Form1},
+  yuvconverts in 'yuvconverts.pas';
+
+//{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.CreateForm(TForm1, Form1);
+  Application.Run;
+end.
+
+
+unit WebCamMainForm;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
+  Dialogs, ExtCtrls, YUVConverts, StdCtrls, JPeg {, TntStdCtrls} ;
+
+const
+  WM_CAP_START = WM_USER;
+  WM_CAP_DRIVER_CONNECT       = WM_CAP_START+ 10;
+
+  WM_CAP_SET_PREVIEW          = WM_CAP_START+ 50;
+  WM_CAP_SET_OVERLAY          = WM_CAP_START+ 51;
+  WM_CAP_SET_PREVIEWRATE      = WM_CAP_START+ 52;
+
+  WM_CAP_GRAB_FRAME_NOSTOP    = WM_CAP_START+ 61;
+  WM_CAP_SET_CALLBACK_FRAME   = WM_CAP_START+ 5;
+  WM_CAP_GET_VIDEOFORMAT      = WM_CAP_START+ 44;
+
+  WM_CAP_DLG_VIDEOFORMAT      = WM_CAP_START+ 41;
+
+  PICWIDTH= 640;
+  PICHEIGHT= 480;
+  SUBLINEHEIGHT= 18;
+  EXTRAHEIGHT= 400;
+
+type
+  TVIDEOHDR= record
+    lpData: Pointer; // address of video buffer
+    dwBufferLength: DWord; // size, in bytes, of the Data buffer
+    dwBytesUsed: DWord; // see below
+    dwTimeCaptured: DWord; // see below
+    dwUser: DWord; // user-specific data
+    dwFlags: DWord; // see below
+    dwReserved1, dwReserved2, dwReserved3: DWord; // reserved; do not use
+  end;
+  TVIDEOHDRPtr= ^TVideoHDR;
+
+  DWordDim= array[1..PICWIDTH] of DWord;
+
+  TForm1 = class(TForm)
+    Timer1: TTimer;
+    Panel1: TPanel;
+    procedure FormDestroy(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormActivate(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
+  private
+    FCapHandle: THandle;
+    FCodec: TVideoCodec;
+    FBuf1, FBuf2: array[1..PICHEIGHT] of DWordDim;
+    FBitmap: TBitmap;
+    FJpeg: TJPegImage;
+    { Private-Deklarationen }
+  public
+    { Public-Deklarationen }
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+//{$R *.dfm}
+
+
+function capCreateCaptureWindow(lpszWindowName: LPCSTR;
+  dwStyle: DWORD;
+  x, y,
+  nWidth,
+  nHeight: integer;
+  hwndParent: HWND;
+  nID: integer): HWND; stdcall;
+  external 'AVICAP32.DLL' name 'capCreateCaptureWindowA';
+
+
+function FrameCallbackFunction(AHandle: hWnd; VIDEOHDR: TVideoHDRPtr): bool; stdcall;
+var
+  I: integer;
+begin
+  result:= true;
+
+  with form1 do begin
+  try
+    ConvertCodecToRGB(FCodec, VideoHDR^.lpData, @FBuf2, PICWIDTH, PICHEIGHT);
+
+    for I:= 1 to PICHEIGHT do FBuf1[I]:= FBuf2[PICHEIGHT- (I- 1)];
+    SetBitmapBits(FBitmap.Handle, PICWIDTH* PICHEIGHT* SizeOf(DWord), @FBuf1);
+
+    FBitmap.Canvas.Brush.Color:= clWhite;
+    FBitmap.Canvas.Font.Color:= clRed;
+
+    FJpeg.Assign(FBitmap);
+
+    FJpeg.CompressionQuality:= 85;
+    FJpeg.ProgressiveEncoding:= true;
+    FJpeg.SaveToFile('c:\webcam.jpg');
+
+    SendMessage(FCapHandle, WM_CAP_SET_CALLBACK_FRAME, 0, 0);
+  except
+  end;
+  end;
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TForm1.FormCreate(Sender: TObject);
+var  BitmapInfo: TBitmapInfo;
+begin
+  Timer1.Enabled := false;
+
+  FBitmap:= TBitmap.Create;
+  FBitmap.Width:= PICWIDTH;
+  FBitmap.Height:= PICHEIGHT+ SUBLINEHEIGHT+ EXTRAHEIGHT;
+  FBitmap.PixelFormat:= pf32Bit;
+  FBitmap.Canvas.Font.Assign(Panel1.Font);
+  FBitmap.Canvas.Brush.Style:= bssolid;
+  FBitmap.Canvas.Rectangle(0, PICHEIGHT, PICWIDTH, PICHEIGHT+ SUBLINEHEIGHT);
+
+  FJpeg:= TJpegImage.Create;
+
+  FCapHandle:= capCreateCaptureWindow('Video', WS_CHILD or WS_VISIBLE, 0, 0, PICWIDTH, PICHEIGHT, Panel1.Handle, 1);
+  SendMessage(FCapHandle, WM_CAP_DRIVER_CONNECT, 0, 0);
+  SendMessage(FCapHandle, WM_CAP_SET_PREVIEWRATE, 15000, 0);
+  sendMessage(FCapHandle, WM_CAP_SET_OVERLAY, 1, 0);
+  SendMessage(FCapHandle, WM_CAP_SET_PREVIEW, 1, 0);
+
+  // SendMessage(FCapHandle, WM_CAP_DLG_VIDEOFORMAT,1,0);     // -this was commented out
+
+  FillChar(BitmapInfo, SizeOf(BitmapInfo), 0);
+  SendMessage(FCapHandle, WM_CAP_GET_VIDEOFORMAT, SizeOf(BitmapInfo), Integer(@BitmapInfo));
+  FCodec:= BICompressionToVideoCodec(bitmapinfo.bmiHeader.biCompression);
+  if FCodec<> vcUnknown then begin
+    Timer1.Enabled:= true;
+  end;
+end;
+
+
+procedure TForm1.FormDestroy(Sender: TObject);
+begin
+  FBitmap.Free;
+  FJpeg.Free;
+end;
+
+
+procedure TForm1.FormActivate(Sender: TObject);
+begin
+  if FCodec= vcUnknown then
+    showMessage('unknown compression');
+  FBitmap.Height:= PICHEIGHT+ SUBLINEHEIGHT;
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TForm1.Timer1Timer(Sender: TObject);
+begin
+  SendMessage(FCapHandle, WM_CAP_SET_CALLBACK_FRAME, 0, integer(@FrameCallbackFunction));
+  SendMessage(FCapHandle, WM_CAP_GRAB_FRAME_NOSTOP, 1, 0); // ist hintergrundlauff?hig
+end;
+
+end.
+
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = 'Form1'
+  ClientHeight = 301
+  ClientWidth = 562
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  OnActivate = FormActivate
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Panel1: TPanel
+    Left = 48
+    Top = 16
+    Width = 185
+    Height = 145
+    Caption = 'Panel1'
+    TabOrder = 0
+  end
+  object Timer1: TTimer
+    OnTimer = Timer1Timer
+    Left = 464
+    Top = 24
+  end
+end
+
+{**************************************************************************************************}
+{                                                                                                  }
+{  YUVConverts                                                                                     }
+{                                                                                                  }
+{  The contents of this file are subject to the Y Library Public License Version 1.0 (the          }
+{  "License"); you may not use this file except in compliance with the License. You may obtain a   }
+{  copy of the License at http://delphi.pjh2.de/                                                   }
+{                                                                                                  }
+{  Software distributed under the License is distributed on an "AS IS" basis, WITHOUT WARRANTY OF  }
+{  ANY KIND, either express or implied. See the License for the specific language governing        }
+{  rights and limitations under the License.                                                       }
+{                                                                                                  }
+{  The Original Code is: YUVConverts.pas, part of CapDemoC.dpr.                                    }
+{  The Initial Developer of the Original Code is Peter J. Haas (libs@pjh2.de). Portions created    }
+{  by Peter J. Haas are Copyright (C) 2000-2005 Peter J. Haas. All Rights Reserved.                }
+{                                                                                                  }
+{  Contributor(s):                                                                                 }
+{                                                                                                  }
+{  You may retrieve the latest version of this file at the homepage of Peter J. Haas, located at   }
+{  http://delphi.pjh2.de/                                                                          }
+{                                                                                                  }
+{**************************************************************************************************}
+
+// For history see end of file
+
+//{$ALIGN ON, $BOOLEVAL OFF, $LONGSTRINGS ON, $IOCHECKS ON, $WRITEABLECONST OFF, //$OVERFLOWCHECKS OFF}
+//{$RANGECHECKS OFF, $TYPEDADDRESS ON, $MINENUMSIZE 1}
+
+unit yuvconverts;
+
+interface
+uses
+  Windows;
+
+type
+  TVideoCodec = (vcUnknown, vcRGB, vcYUY2, vcUYVY, vcBTYUV, vcYVU9, vcYUV12, vcY8, vcY211);
+
+const
+  BI_YUY2  = $32595559;  // 'YUY2'
+  BI_UYVY  = $59565955;  // 'UYVY'
+  BI_BTYUV = $50313459;  // 'Y41P'
+  BI_YVU9  = $39555659;  // 'YVU9'  planar
+  BI_YUV12 = $30323449;  // 'I420'  planar
+  BI_Y8    = $20203859;  // 'Y8  '
+  BI_Y211  = $31313259;  // 'Y211'
+
+function BICompressionToVideoCodec(Value: DWord): TVideoCodec;
+
+function ConvertCodecToRGB(Codec: TVideoCodec; Src, Dst: Pointer; AWidth, AHeight: Integer): Boolean;
+
+implementation
+
+function BICompressionToVideoCodec(Value: DWord): TVideoCodec;
+begin
+  case Value of
+    BI_RGB, BI_BITFIELDS: Result := vcRGB;   // no RLE
+    BI_YUY2:              Result := vcYUY2 ;
+    BI_UYVY:              Result := vcUYVY ;
+    BI_BTYUV:             Result := vcBTYUV;
+    BI_YVU9:              Result := vcYVU9;
+    BI_YUV12:             Result := vcYUV12;
+    BI_Y8:                Result := vcY8;
+    BI_Y211:              Result := vcY211;
+  else
+    Result := vcUnknown;
+  end;
+end;
+
+const
+  // RGB255 ColorFAQ
+  fY  =  298.082 / 256;
+  fRU =  0;
+  fGU = -100.291 / 256;
+  fBU =  516.411 / 256;
+  fRV =  408.583 / 256;
+  fGV = -208.120 / 256;
+  fBV =  0;
+
+{  // RGB219 ColorFAQ           too dark
+  fY  =  256 / 256;
+  fRU =  0;
+  fGU =  -86.132 / 256;
+  fBU =  443.506 / 256;
+  fRV =  350.901 / 256;
+  fGV = -178.738 / 256;
+  fBV =  0; }
+
+{  // Earl            same like RGB255
+  fY  =  1.164;
+  fRU =  0;
+  fGU = -0.392;
+  fBU =  2.017;
+  fRV =  1.596;
+  fGV = -0.813;
+  fBV =  0;
+}
+
+// |R|   |fY fRU fRV|   |Y|   | 16|
+// |G| = |fY fGU fGV| * |U| - |128|
+// |B|   |fY fBU fBV|   |V|   |128|
+
+type
+  TYUV = packed record
+    Y, U, V, F1: Byte;
+  end;
+
+  PBGR32 = ^TBGR32;
+  TBGR32 = packed record
+    B, G, R, A: Byte;
+  end;
+
+function YUVtoBGRAPixel(AYUV: DWord): DWord;
+var
+  ValueY, ValueU, ValueV: Integer;
+  ValueB, ValueG, ValueR: Integer;
+begin
+  ValueY := TYUV(AYUV).Y - 16;
+  ValueU := TYUV(AYUV).U - 128;
+  ValueV := TYUV(AYUV).V - 128;
+
+  ValueB := Trunc(fY * ValueY + fBU * ValueU);  // fBV = 0
+  if ValueB > 255 then
+    ValueB := 255;
+  if ValueB <   0 then
+    ValueB :=   0;
+
+  ValueG := Trunc(fY * ValueY + fGU * ValueU + fGV * ValueV);
+  if ValueG > 255 then
+    ValueG := 255;
+  if ValueG <   0 then
+    ValueG :=   0;
+
+  ValueR := Trunc(fY * ValueY + fRV * ValueV);  // fRU = 0
+  if ValueR > 255 then
+    ValueR := 255;
+  if ValueR <   0 then
+    ValueR :=   0;
+
+  with TBGR32(Result) do begin
+    B := ValueB;
+    G := ValueG;
+    R := ValueR;
+    A := 0;
+  end;
+end;
+
+type
+  TDWordRec = packed record
+  case Integer of
+    0: (B0, B1, B2, B3: Byte);
+    1: (W0, W1: Word);
+  end;
+
+// UYVY
+// YUV 4:2:2 (Y sample at every pixel, U and V sampled at every second pixel
+// horizontally on each line). A macropixel contains 2 pixels in 1 DWord.
+// 16 Bits per Pixel, 4 Byte Macropixel
+// U0 Y0 V0 Y1
+procedure UYVYtoRGB(Src, Dst: Pointer; AWidth, AHeight: Integer);
+type
+  PUYVY = ^TUYVY;
+  TUYVY = packed record
+    U, Y0, V, Y1: Byte;
+  end;
+
+var
+  x, y: Integer;
+  w: Integer;
+  SrcPtr: PDWord;
+  DstPtr: PDWord;
+  SrcLineSize: Integer;
+  DstLineSize: Integer;
+  YUV: DWord;
+  b: Byte;
+begin
+  SrcLineSize := AWidth * 2;
+  DstLineSize := AWidth * 4;
+
+  // Dst is Bottom Top Bitmap
+  Inc(PByte(Dst), (AHeight - 1) * DstLineSize);
+
+  w := (AWidth div 2) - 1;      { TODO : bei ungeraden Breiten fehlt letztes Pixel }
+  for y := 0 to AHeight - 1 do begin
+    SrcPtr := Src;
+    DstPtr := Dst;
+    for x := 0 to w do begin
+      YUV := SrcPtr^;
+      // First Pixel
+      b := TDWordRec(YUV).B0;
+      TDWordRec(YUV).B0 := TDWordRec(YUV).B1;
+      TDWordRec(YUV).B1 := b;
+
+      DstPtr^ := YUVtoBGRAPixel(YUV);
+      Inc(DstPtr);
+      // Second Pixel
+      TDWordRec(YUV).B0 := TDWordRec(YUV).B3;
+      DstPtr^ := YUVtoBGRAPixel(YUV);
+      Inc(DstPtr);
+      Inc(SrcPtr);
+    end;
+    Dec(PByte(Dst), DstLineSize);
+    Inc(PByte(Src), SrcLineSize);
+  end;
+end;
+
+// YUY2, YUNV, V422
+// YUV 4:2:2 as for UYVY but with different component ordering within the DWord
+// macropixel.
+// 16 Bits per Pixel, 4 Byte Macropixel
+// Y0 U0 Y1 V0
+procedure YUY2toRGB(Src, Dst: Pointer; AWidth, AHeight: Integer);
+var
+  x, y: Integer;
+  w: Integer;
+  SrcPtr: PDWord;
+  DstPtr: PDWord;
+  SrcLineSize: Integer;
+  DstLineSize: Integer;
+  YUV: DWord;
+  b: Byte;
+begin
+  SrcLineSize := AWidth * 2;
+  DstLineSize := AWidth * 4;
+
+  // Dst is Bottom Top Bitmap
+  Inc(PByte(Dst), (AHeight - 1) * DstLineSize);
+
+  w := (AWidth div 2) - 1;      { TODO : bei ungeraden Breiten fehlt letztes Pixel }
+  for y := 0 to AHeight - 1 do begin
+    SrcPtr := Src;
+    DstPtr := Dst;
+    for x := 0 to w do begin
+      YUV := SrcPtr^;
+      // First Pixel
+      b := TDWordRec(YUV).B2;                  //  Y0 U Y1 V -> Y0 U V Y1
+      TDWordRec(YUV).B2 := TDWordRec(YUV).B3;
+      TDWordRec(YUV).B3 := b;
+
+      DstPtr^ := YUVtoBGRAPixel(YUV);
+      Inc(DstPtr);
+      // Second Pixel
+      TDWordRec(YUV).B0 := TDWordRec(YUV).B3;
+      DstPtr^ := YUVtoBGRAPixel(YUV);
+      Inc(DstPtr);
+      Inc(SrcPtr);
+    end;
+    Dec(PByte(Dst), DstLineSize);
+    Inc(PByte(Src), SrcLineSize);
+  end;
+end;
+
+// BTYUV, I42P
+// YUV 4:1:1 (Y sample at every pixel, U and V sampled at every fourth pixel
+// horizontally on each line). A macropixel contains 8 pixels in 3 DWords.
+// 16 Bits per Pixel, 12 Byte Macropixel
+// U0 Y0 V0 Y1 U4 Y2 V4 Y3 Y4 Y5 Y6 Y7
+procedure BTYUVtoRGB(Src, Dst: Pointer; AWidth, AHeight: Integer);
+type
+  PBTYUVPixel = ^TBTYUVPixel;
+  TBTYUVPixel = packed record
+    U0, Y0, V0, Y1, U4, Y2, V4, Y3, Y4, Y5, Y6, Y7: Byte;
+  end;
+
+var
+  x, y: Integer;
+  w: Integer;
+  SrcPtr: PBTYUVPixel;
+  DstPtr: PDWord;
+  SrcLineSize: Integer;
+  DstLineSize: Integer;
+  YUV: DWord;
+  SrcPixel: TBTYUVPixel;
+begin
+  SrcLineSize := ((AWidth + 7) div 8) * (3 * 4);
+  DstLineSize := AWidth * 4;
+
+  w := AWidth - 1;
+  for y := 0 to AHeight - 1 do begin
+    SrcPtr := Src;
+    DstPtr := Dst;
+    x := w;
+    while x > 0 do begin
+      // read macropixel
+      SrcPixel := SrcPtr^;
+      // First 4 Pixel
+      TYUV(YUV).U := SrcPixel.U0;
+      TYUV(YUV).V := SrcPixel.V0;
+
+      TYUV(YUV).Y := SrcPixel.Y0;
+      DstPtr^ := YUVtoBGRAPixel(YUV);
+      Inc(DstPtr);
+      Dec(x);
+      if x <= 0 then
+        Break;
+
+      TYUV(YUV).Y := SrcPixel.Y1;
+      DstPtr^ := YUVtoBGRAPixel(YUV);
+      Inc(DstPtr);
+      Dec(x);
+      if x <= 0 then
+        Break;
+
+      TYUV(YUV).Y := SrcPixel.Y2;
+      DstPtr^ := YUVtoBGRAPixel(YUV);
+      Inc(DstPtr);
+      Dec(x);
+      if x <= 0 then
+        Break;
+
+      TYUV(YUV).Y := SrcPixel.Y3;
+      DstPtr^ := YUVtoBGRAPixel(YUV);
+      Inc(DstPtr);
+      Dec(x);
+      if x <= 0 then
+        Break;
+
+      // Second 4 Pixel
+      TYUV(YUV).U := SrcPixel.U4;
+      TYUV(YUV).V := SrcPixel.V4;
+
+      TYUV(YUV).Y := SrcPixel.Y4;
+      DstPtr^ := YUVtoBGRAPixel(YUV);
+      Inc(DstPtr);
+      Dec(x);
+      if x <= 0 then
+        Break;
+
+      TYUV(YUV).Y := SrcPixel.Y5;
+      DstPtr^ := YUVtoBGRAPixel(YUV);
+      Inc(DstPtr);
+      Dec(x);
+      if x <= 0 then
+        Break;
+
+      TYUV(YUV).Y := SrcPixel.Y6;
+      DstPtr^ := YUVtoBGRAPixel(YUV);
+      Inc(DstPtr);
+      Dec(x);
+      if x <= 0 then
+        Break;
+
+      TYUV(YUV).Y := SrcPixel.Y7;
+      DstPtr^ := YUVtoBGRAPixel(YUV);
+      Inc(DstPtr);
+
+      Inc(SrcPtr);
+    end;
+    Inc(PByte(Dst), DstLineSize);
+    Inc(PByte(Src), SrcLineSize);
+  end;
+end;
+
+// YVU9
+// 8 bit Y plane followed by 8 bit 4x4 subsampled V and U planes.
+// 9 Bits per Pixel, planar format
+procedure YVU9toRGB(Src, Dst: Pointer; AWidth, AHeight: Integer);
+var
+  x, y, r, l: Integer;
+  w: Integer;
+  SrcYPtr: PByte;
+  SrcUPtr: PByte;
+  SrcVPtr: PByte;
+  DstPtr: PDWord;
+  SrcYLineSize: Integer;
+  SrcUVLineSize: Integer;
+  DstLineSize: Integer;
+  YUV: DWord;
+begin
+  DstLineSize := AWidth * 4;
+
+  SrcYLineSize := AWidth;
+  SrcUVLineSize := (AWidth + 3) div 4;
+
+  // Dst is Bottom Top Bitmap
+  Inc(PByte(Dst), (AHeight - 1) * DstLineSize);
+
+  SrcYPtr := Src;
+  SrcVPtr := PByte(LongInt(SrcYPtr) + SrcYLineSize * AHeight);
+  SrcUPtr := PByte(LongInt(SrcVPtr) + SrcUVLineSize * ((AHeight + 3) div 4));
+
+  w := (AWidth div 4) - 1;      { TODO : bei ungeraden Breiten fehlt letztes Pixel }
+  for y := 0 to (AHeight div 4) - 1 do begin  { TODO : bei ungeraden H?hen fehlt letzte Reihe }
+    for l := 0 to 3 do begin
+      DstPtr := Dst;
+      for x := 0 to w do begin
+        // U and V
+        YUV := (SrcUPtr^ shl 8) or (SrcVPtr^ shl 16);
+        for r := 0 to 3 do begin
+          YUV := (YUV and $00FFFF00) or SrcYPtr^;
+          DstPtr^ := YUVtoBGRAPixel(YUV);
+          Inc(DstPtr);
+          Inc(SrcYPtr);
+        end;
+        Inc(SrcUPtr);
+        Inc(SrcVPtr);
+      end;
+      Dec(PByte(Dst), DstLineSize);
+      if l < 3 then begin
+        Dec(SrcUPtr, SrcUVLineSize);
+        Dec(SrcVPtr, SrcUVLineSize);
+      end;
+    end;
+  end;
+end;
+
+// YUV12, I420, IYUV
+// 8 bit Y plane followed by 8 bit 2x2 subsampled U and V planes.
+// 12 Bits per Pixel, planar format
+procedure YUV12toRGB(Src, Dst: Pointer; AWidth, AHeight: Integer);  // I420, IYUV
+var
+  x, y, l: Integer;
+  w: Integer;
+  SrcYPtr: PByte;
+  SrcUPtr: PByte;
+  SrcVPtr: PByte;
+  DstPtr: PDWord;
+  SrcYLineSize: Integer;
+  SrcUVLineSize: Integer;
+  DstLineSize: Integer;
+  YUV: DWord;
+begin
+  DstLineSize := AWidth * 4;
+
+  SrcYLineSize := AWidth;
+  SrcUVLineSize := (AWidth + 1) div 2;
+
+  // Dst is Bottom Top Bitmap
+  Inc(PByte(Dst), (AHeight - 1) * DstLineSize);
+
+  SrcYPtr := Src;
+  SrcUPtr := PByte(LongInt(SrcYPtr) + SrcYLineSize * AHeight);
+  SrcVPtr := PByte(LongInt(SrcUPtr) + SrcUVLineSize * ((AHeight + 1) div 2));
+
+  w := (AWidth div 2) - 1;      { TODO : bei ungeraden Breiten fehlt letztes Pixel }
+  for y := 0 to (AHeight div 2) - 1 do begin  { TODO : bei ungeraden H?hen fehlt letzte Reihe }
+    for l := 0 to 1 do begin
+      DstPtr := Dst;
+      for x := 0 to w do begin
+        // First Pixel
+        YUV := SrcYPtr^ or (SrcUPtr^ shl 8) or (SrcVPtr^ shl 16);
+        DstPtr^ := YUVtoBGRAPixel(YUV);
+        Inc(DstPtr);
+        Inc(SrcYPtr);
+        // Second Pixel
+        YUV := (YUV and $00FFFF00) or SrcYPtr^;
+        DstPtr^ := YUVtoBGRAPixel(YUV);
+        Inc(DstPtr);
+        Inc(SrcYPtr);
+        Inc(SrcUPtr);
+        Inc(SrcVPtr);
+      end;
+      Dec(PByte(Dst), DstLineSize);
+      if l = 0 then begin
+        Dec(SrcUPtr, SrcUVLineSize);
+        Dec(SrcVPtr, SrcUVLineSize);
+      end;
+    end;
+  end;
+end;
+
+// Y8, Y800
+// Simple, single Y plane for monochrome images.
+// 8 Bits per Pixel, planar format
+procedure Y8toRGB(Src, Dst: Pointer; AWidth, AHeight: Integer);
+var
+  x, y: Integer;
+  w: Integer;
+  SrcPtr: PByte;
+  DstPtr: PDWord;
+  SrcLineSize: Integer;
+  DstLineSize: Integer;
+  Pixel: DWord;
+begin
+  SrcLineSize := AWidth;
+  DstLineSize := AWidth * 4;
+
+  // Dst is Bottom Top Bitmap
+  Inc(PByte(Dst), (AHeight - 1) * DstLineSize);
+
+  w := (AWidth) - 1;
+  for y := 0 to AHeight - 1 do begin
+    SrcPtr := Src;
+    DstPtr := Dst;
+    for x := 0 to w do begin
+      Pixel := SrcPtr^;
+      TDWordRec(Pixel).B1 := TDWordRec(Pixel).B0;
+      TDWordRec(Pixel).B2 := TDWordRec(Pixel).B0;
+      TDWordRec(Pixel).B3 := 0;
+      DstPtr^ := Pixel;
+      Inc(DstPtr);
+      Inc(SrcPtr);
+    end;
+    Dec(PByte(Dst), DstLineSize);
+    Inc(PByte(Src), SrcLineSize);
+  end;
+end;
+
+// Y211
+// Packed YUV format with Y sampled at every second pixel across each line
+// and U and V sampled at every fourth pixel.
+// 8 Bits per Pixel, 4 Byte Macropixel
+// Y0, U0, Y2, V0
+procedure Y211toRGB(Src, Dst: Pointer; AWidth, AHeight: Integer);
+type
+  PYUYV = ^TYUYV;
+  TYUYV = packed record
+    Y0, U, Y2, V: Byte;
+  end;
+
+var
+  x, y: Integer;
+  w : Integer;
+  SrcPtr : PDWord;
+  DstPtr : PDWord;
+  SrcLineSize : Integer;
+  DstLineSize : Integer;
+  YUV: DWord;
+  BGR: DWord;
+  b: Byte;
+begin
+  SrcLineSize := ((AWidth + 3) div 4) * 4;
+  DstLineSize := AWidth * 4;
+
+  // Dst is Bottom Top Bitmap
+  Inc(PByte(Dst), (AHeight - 1) * DstLineSize);
+
+  w := (AWidth div 4) - 1;      { TODO : bei ungeraden Breiten fehlt letztes Pixel }
+  for y := 0 to AHeight - 1 do begin
+    SrcPtr := Src;
+    DstPtr := Dst;
+    for x := 0 to w do begin
+      // Y0 U Y2 V
+      YUV := SrcPtr^;
+      // First and second Pixel
+      b := TDWordRec(YUV).B2;                   // Y0 U Y2 V -> Y0 U V Y2
+      TDWordRec(YUV).B2 := TDWordRec(YUV).B3;
+      TDWordRec(YUV).B3 := b;
+      BGR := YUVtoBGRAPixel(YUV);
+      DstPtr^ := BGR;
+      Inc(DstPtr);
+      DstPtr^ := BGR;
+      Inc(DstPtr);
+
+      // third and fourth
+      TDWordRec(YUV).B0 := TDWordRec(YUV).B3;   // Y0 U V Y2 -> Y2 U V Y2
+      BGR := YUVtoBGRAPixel(YUV);
+      DstPtr^ := BGR;
+      Inc(DstPtr);
+      DstPtr^ := BGR;
+      Inc(DstPtr);
+
+      Inc(SrcPtr);
+    end;
+    Dec(PByte(Dst), DstLineSize);
+    Inc(PByte(Src), SrcLineSize);
+  end;
+end;
+
+function ConvertCodecToRGB(Codec: TVideoCodec; Src, Dst: Pointer; AWidth, AHeight: Integer): Boolean;
+begin
+  Result := True;
+  case Codec of
+    vcYUY2:  YUY2toRGB (Src, Dst, AWidth, AHeight);
+    vcUYVY:  UYVYtoRGB (Src, Dst, AWidth, AHeight);
+    vcBTYUV: BTYUVtoRGB(Src, Dst, AWidth, AHeight);
+    vcYVU9:  YVU9toRGB (Src, Dst, AWidth, AHeight);
+    vcYUV12: YUV12toRGB(Src, Dst, AWidth, AHeight);
+    vcY8:    Y8toRGB   (Src, Dst, AWidth, AHeight);
+    vcY211:  Y211toRGB (Src, Dst, AWidth, AHeight);
+  else
+    Result := False;
+  end;
+end;
+
+//  History:
+//  2005-02-12, Peter J. Haas
+//
+//  2002-02-22, Peter J. Haas
+//   - add YVU9, YUV12 (I420)
+//   - add Y211 (untested)
+//
+//  2001-06-14, Peter J. Haas
+//   - First public version
+//   - YUY2, UYVY, BTYUV (Y41P), Y8
+
+end.
+
+Some message results:
+
+var
+    MsgResult : Integer ;
+
+procedure TForm1.FormCreate(Sender: TObject);
+var  BitmapInfo: TBitmapInfo;
+
+begin
+  Timer1.Enabled := false;
+
+  FBitmap:= TBitmap.Create;
+  FBitmap.Width:= PICWIDTH;
+  FBitmap.Height:= PICHEIGHT+ SUBLINEHEIGHT+ EXTRAHEIGHT;
+  FBitmap.PixelFormat:= pf32Bit;
+  FBitmap.Canvas.Font.Assign(Panel1.Font);
+  FBitmap.Canvas.Brush.Style:= bssolid;
+  FBitmap.Canvas.Rectangle(0, PICHEIGHT, PICWIDTH, PICHEIGHT+ SUBLINEHEIGHT);
+
+  FJpeg:= TJpegImage.Create;
+
+  FCapHandle:= capCreateCaptureWindow('Video', WS_CHILD or WS_VISIBLE, 0, 0, PICWIDTH, PICHEIGHT, Panel1.Handle, 1);   // returns 2558326
+  MsgResult := SendMessage(FCapHandle, WM_CAP_DRIVER_CONNECT, 0, 0);                                                   // returns 0
+  MsgResult := SendMessage(FCapHandle, WM_CAP_SET_PREVIEWRATE, 15000, 0);                                              // returns 1
+  MsgResult := sendMessage(FCapHandle, WM_CAP_SET_OVERLAY, 1, 0);                                                      // returns 0
+  MsgResult := SendMessage(FCapHandle, WM_CAP_SET_PREVIEW, 1, 0);                                                      // returns 0
+
+  // SendMessage(FCapHandle, WM_CAP_DLG_VIDEOFORMAT,1,0);     // -this was commented out
+
+  FillChar(BitmapInfo, SizeOf(BitmapInfo), 0);
+  MsgResult := SendMessage(FCapHandle, WM_CAP_GET_VIDEOFORMAT, SizeOf(BitmapInfo), Integer(@BitmapInfo));              // returns 0
+  FCodec:= BICompressionToVideoCodec(bitmapinfo.bmiHeader.biCompression);                                              // returns vcRGB
+  if FCodec<> vcUnknown then begin
+    Timer1.Enabled:= true;
+  end;
+end;
+
+
+procedure TForm1.FormDestroy(Sender: TObject);
+begin
+  FBitmap.Free;
+  FJpeg.Free;
+end;
+
+
+procedure TForm1.FormActivate(Sender: TObject);
+begin
+  if FCodec= vcUnknown then
+    showMessage('unknown compression');
+  FBitmap.Height:= PICHEIGHT+ SUBLINEHEIGHT;
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TForm1.Timer1Timer(Sender: TObject);
+begin
+MsgResult := SendMessage(FCapHandle, WM_CAP_SET_CALLBACK_FRAME, 0, integer(@FrameCallbackFunction));         // returns 0
+MsgResult := SendMessage(FCapHandle, WM_CAP_GRAB_FRAME_NOSTOP, 1, 0); // ist hintergrundlauff?hig            // returns 0
+end;
+
+delphi callback webcam video-capture vfw
+share|improve this question
+	
+edited Aug 11 '10 at 2:55
+
+	
+asked Aug 11 '10 at 1:29
+rossmcm
+1,8671151
+	
+	 
+	
+Are any of the WM_CAP... messages returning errors? –  Remy Lebeau Aug 11 '10 at 1:59
+	 
+	
+Hi Remy, see my edits to the question - message results are comments out to the right. Thanks. R. –  rossmcm Aug 11 '10 at 2:56
+add comment
+2 Answers
+active oldest votes
+up vote 5 down vote accepted
+	
+
+Your program works for me on Win7 32bits with D2010.
+
+What it does though is raising an exception:
+
+---------------------------
+Project WebCamTest.exe raised exception class EFCreateError with message 
+'Cannot create file "c:\webcam.jpg". Access is denied'.
+---------------------------
+
+which can be corrected by changing
+
+FJpeg.SaveToFile('c:\webcam.jpg');
+
+to
+
+FJpeg.SaveToFile(TPath.GetTempPath + '\webcam.jpg');
+
+And also, it does not display the whole available image, you'd have to enlarge your Panel, recenter or shrink the webcam output.
+
+Update with some code modifications that would make it work per your comments...
+
+  // introducing the RGB array and a buffer
+  TVideoArray = array[1..PICHEIGHT] of array[1..PICWIDTH] of TRGBTriple;
+  PVideoArray = ^TVideoArray;
+
+  TForm1 = class(TForm)
+[...]
+  FBuf24_1: TVideoArray;
+[...]
+
+function FrameCallbackFunction(AHandle: hWnd; VIDEOHDR: TVideoHDRPtr): bool; stdcall;
+var
+  I: integer;
+begin
+  result:= true;
+
+  with form1 do begin
+  try
+    if ConvertCodecToRGB(FCodec, VideoHDR^.lpData, @FBuf2, PICWIDTH, PICHEIGHT) then
+    begin
+      for I:= 1 to PICHEIGHT do FBuf1[I]:= FBuf2[PICHEIGHT- (I- 1)];
+      SetBitmapBits(FBitmap.Handle, PICWIDTH* PICHEIGHT* SizeOf(DWord), @FBuf1);
+    end
+    else
+    begin  // assume RGB
+      for I:= 1 to PICHEIGHT do
+        FBuf24_1[I] := PVideoArray(VideoHDR^.lpData)^[PICHEIGHT-I+1];
+      SetBitmapBits(FBitmap.Handle, PICWIDTH* PICHEIGHT* SizeOf(RGBTriple), @FBuf24_1);
+    end;
+[...]
+
+share|improve this answer
+	
+edited Aug 18 '10 at 1:41
+
+	
+answered Aug 11 '10 at 6:01
+François
+17.3k22464
+	
+	 
+	
+On my system, the message results I get are: WM_CAP_DRIVER_CONNECTMsgResult = false WM_CAP_SET_PREVIEWRATEMsgResult = true WM_CAP_SET_OVERLAYMsgResult = false WM_CAP_SET_PREVIEWMsgResult = false WM_CAP_SET_CALLBACK_FRAMEMsgResult = true WM_CAP_GRAB_FRAME_NOSTOPMsgResult = false and FrameCallbackFunction never fires. It looks as if it is failing to connect. –  rossmcm Aug 12 '10 at 15:42
+	 
+	
+Clearly you cannot connect to the webcam. Have you tried with a capture driver other than 0? It can be from 0 to 9. Maybe you have more than 1 and the webcam is not the index 0? MsgResult := SendMessage(FCapHandle, WM_CAP_DRIVER_CONNECT, x, 0); –  François Aug 12 '10 at 17:20
+	 
+	
+Thanks François. At present I don't have any webcams - just a simulator. The simulator seems to go in that Skype can see the "camera" OK. I tried calling SendMessage(FCapHandle, WM_CAP_DRIVER_CONNECT, x, 0); with x = 0 through 9 and they all returned false. Incidentally - how were you able to format the text as code in the comment? –  rossmcm Aug 12 '10 at 22:34
+	 
+	
+Update - I installed a real webcam. Now, when I execute the SendMessage(FCapHandle, WM_CAP_DRIVER_CONNECT, 0, 0) ; a dialog pops up asking me to select the video capture source. The drop-down only has one entry in it - for the Logitech webcam. When I select this however, I still get the same failure result (false) from SendMessage(FCapHandle, WM_CAP_DRIVER_CONNECT, 0, 0) ;. –  rossmcm Aug 13 '10 at 3:11
+	 
+	
+Hey François, I am tantalizingly close. With a real webcam connected, I can get 1 second snapshots displaying on the panel. Problem is, I need programmatic access to the image. The JPEG file saved is all black. I have tried several other variants of the example code off the web and they all work, but the jpeg is blank. Any ideas? –  rossmcm Aug 16 '10 at 23:51
+show 8 more comments
+up vote 0 down vote
+	
+
+I use a component called TVideoCap. It is for 3, 4, and 5 but it includes source so it is easy to update. It will do exactly what you want. Just do a search for 'TVideoCap'.
+share|improve this answer
+	
+answered Aug 11 '10 at 3:48
+David
+946
+	
+	 
+	
+Thanks, I'll check it out. Do you have any EXE that you have produced using this unit that you can give me that works - I just want to verify that there is nothing inherently wrong with my system. R –  rossmcm Aug 11 '10 at 4:09
+	 
+	
+Hi David, I downloaded VideoCap and installed a real Webcam - my results are the same as in the previous answer above - now that I have a real webcam, then I try to connect to a driver the dialog opens asking me to select the source, but the connect fails anyway –  rossmcm Aug 13 '10 at 3:15
+add comment
+Your Answer
+
+ 
+Sign up or login
+
+Sign up using Google
+
+Sign up using Facebook
+
+Sign up using Stack Exchange
+Post as a guest
+Name
+Email
+
+By posting your answer, you agree to the privacy policy and terms of service.
+Not the answer you're looking for? Browse other questions tagged delphi callback webcam video-capture vfw or ask your own question.
+
+tagged
+delphi × 24320
+callback × 5629
+webcam × 1382
+video-capture × 1014
+vfw × 37
+
+asked
+	
+
+3 years ago
+
+viewed
+	
+
+4236 times
+
+active
+	
+
+3 months ago
+
+    Software Engineer iOS Products Scout24 (m/w)
+    Xmedia AG Berne, Switzerland
+    „NLP developer“ (f/m)
+    HolidayCheck AG Bottighofen, Switzerland /…
+    Product Manager
+    Ink London, United Kingdom
+
+Linked
+2
+Delphi + webcam
+1
+delphi webcam capture : why does it not work on laptop?
+2
+Why does the webcam image appear darker than when it's started from another application?
+Related
+2
+Grabbing snapshots from webcams in ruby
+2
+Video capture dialog keeps popping up with embedded PC webcam delphi app
+1
+How to take snapshot and save to JPEG from webcam using DSPack?
+0
+capDlgVideoSource problems with multiple webcams
+3
+Delphi Webcam Simple Program
+1
+Getting snapshot from webcam in Matlab
+2
+VB.NET and WebCam Select Video Source dialog
+0
+How to get multiple cams connected
+0
+Why is input image from webcam using opencv in python darker than other method?
+1
+How to get a snapshot from a webcam with Delphi7 using VFrames(TVideoImage)
+Hot Network Questions
+
+    Trolling homework questions - sorting
+    why is a=(a+b)-(b=a) a bad choice for swapping two integers?
+    Is there a word for "air can pass through it"?
+
+more hot questions
+question feed
+about help badges blog chat data legal privacy policy jobs advertising info mobile contact us feedback
+Technology 	Life / Arts 	Culture / Recreation 	Science 	Other
+
+    Stack Overflow
+    Server Fault
+    Super User
+    Web Applications
+    Ask Ubuntu
+    Webmasters
+    Game Development
+    TeX - LaTeX
+
+	
+
+    Programmers
+    Unix & Linux
+    Ask Different (Apple)
+    WordPress Answers
+    Geographic Information Systems
+    Electrical Engineering
+    Android Enthusiasts
+    Information Security
+
+	
+
+    Database Administrators
+    Drupal Answers
+    SharePoint
+    User Experience
+    Mathematica
+    more (14)
+
+	
+
+    Photography
+    Science Fiction & Fantasy
+    Seasoned Advice (cooking)
+    Home Improvement
+    more (13)
+
+	
+
+    English Language & Usage
+    Skeptics
+    Mi Yodeya (Judaism)
+    Travel
+    Christianity
+    Arqade (gaming)
+    Bicycles
+    Role-playing Games
+    more (21)
+
+	
+
+    Mathematics
+    Cross Validated (stats)
+    Theoretical Computer Science
+    Physics
+    MathOverflow
+    more (7)
+
+	
+
+    Stack Apps
+    Meta Stack Overflow
+    Area 51
+    Stack Overflow Careers
+
+site design / logo © 2013 stack exchange inc; user contributions licensed under cc-wiki with attribution required
+rev 2013.12.27.1266
+
+
+
+unit Unit1;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
+Dialogs, ExtCtrls, StdCtrls,ShellAPI;
+
+type
+  TForm1 = class(TForm)
+    Button1: TButton;
+    Button2: TButton;
+    Panel1: TPanel;
+    procedure Button1Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+const WM_CAP_START = WM_USER;
+    WM_CAP_STOP = WM_CAP_START + 68;
+    WM_CAP_DRIVER_CONNECT = WM_CAP_START + 10;
+    WM_CAP_DRIVER_DISCONNECT = WM_CAP_START + 11;
+    WM_CAP_SAVEDIB = WM_CAP_START + 25;
+    WM_CAP_GRAB_FRAME = WM_CAP_START + 60;
+    WM_CAP_SEQUENCE = WM_CAP_START + 62;
+    WM_CAP_FILE_SET_CAPTURE_FILEA = WM_CAP_START + 20;
+
+function capCreateCaptureWindowA(lpszWindowName : PCHAR;
+    dwStyle : longint;
+    x : integer;
+    y : integer;
+    nWidth : integer;
+    nHeight : integer;
+    ParentWin : HWND;
+    nId : integer): HWND;
+    stdcall external 'AVICAP32.DLL';
+
+var
+    Form1: TForm1;
+
+implementation
+//{$R *.dfm}
+
+
+var hWndC : THandle;
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+ hWndC := capCreateCaptureWindowA('My Own Capture Window',
+    WS_CHILD or WS_VISIBLE ,
+    0,
+    0,
+    Panel1.Width,
+    Panel1.Height,
+    Panel1.Handle,
+    0);
+
+if hWndC <> 0 then 
+    SendMessage(hWndC, WM_CAP_DRIVER_CONNECT, 0, 0); 
+
+end;
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  hWndC := 0;
+end;
+
+procedure TForm1.Button2Click(Sender: TObject);
+begin
+  if hWndC <> 0 then
+  begin
+    SendMessage(hWndC, WM_CAP_DRIVER_DISCONNECT, 0, 0); 
+    hWndC := 0;
+  end;
+end;
+
+end.
+
+
+http://www.delphibasics.info/home/delphibasicsprojects/directxdelphiwebcamcaptureexample
+
+javascript:decrypt_and_email(0)

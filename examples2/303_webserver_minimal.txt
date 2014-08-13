@@ -1,0 +1,86 @@
+program Motion_HTTPServer_Minimal;
+
+// first httpserver script of webmax of internet series
+// shows subroutines and events section 101 - 120 http examples _101, locs=55
+
+var
+   HTTPServer: TIdCustomHTTPServer;
+
+
+procedure HTTPServerGet(aThr: TIdPeerThread; reqInfo: TIdHTTPRequestInfo;
+                                       respInfo: TIdHTTPResponseInfo);
+var localDoc: string;
+    ByteSent: Cardinal;
+begin
+    localDoc:= ExpandFilename(Exepath+'/web'+ReqInfo.Document);
+    if FileExists(localDoc) then begin
+       ByteSent:= HTTPServer.ServeFile(AThr, RespInfo, LocalDoc);
+       Writeln(Format('Serving file %s (%d bytes / %d bytes sent) to %s:%d',
+          [LocalDoc, ByteSent, FileSizeByName(LocalDoc),
+          aThr.Connection.Socket.Binding.PeerIP, aThr.Connection.Socket.Binding.PeerPort]));
+    end else begin
+      RespInfo.ResponseNo:= 404; //Not found
+      RespInfo.ContentText:=
+        '<html><head><title>Sorry WebBox Error</title></head><body><h1>' +
+      RespInfo.ResponseText + '</h1></body></html>';
+    end; 
+end;
+    
+    
+procedure HTTPServerStartExecute(Sender: TObject);
+begin
+  HTTPServer:= TIdCustomHTTPServer.Create(self)
+  with  HTTPServer do begin
+    if Active then Free;
+    if not Active then begin
+      Bindings.Clear;
+      bindings.Add;
+      bindings.items[0].Port:= 8080;
+      bindings.items[0].IP:= '127.0.0.1';//'192.168.1.53';
+      Active:= true;
+      onCommandGet:= @HTTPServerGet;
+      Writeln(format('Listening for HTTP on %s:%d.',
+                          [Bindings[0].IP, Bindings[0].Port]));
+    end;
+    Showmessage('Close OK to HTTP Server');
+    HTTPServer.Free;
+  end;
+end;
+
+begin //main server App 
+  writeln(GetIpAddress(getHostName))
+  HTTPServerStartExecute(self);
+  Writeln('Server Closed at '+DateTimeToInternetStr(Now, true))
+  //GetTimeZoneInformation
+End.
+
+//***********************************Code Snippets******************
+ (*procedure AccessDenied;
+  begin
+    ResponseInfo.ContentText:=
+      '<html><head><title>Error</title></head><body><h1>Access denied</h1>'#13 +
+      'You do not have sufficient priviligies to access this document.</body></html>';
+    ResponseInfo.ResponseNo:= 403;
+  end;*)
+  
+   (*procedure AuthFailed;
+     begin
+      ResponseInfo.ContentText:=
+      '<html><head><title>Error</title></head><body><h1>Authentication failed</h1>'#13 +
+      'Check the file ip_a.ini to discover the demo password:<br><ul><li>Search for '#13 +
+      '<b>AuthUsername</b> in <b>maXboxMain.pas</b>!</ul></body></html>';
+    ResponseInfo.AuthRealm:= CAUTHENTICATIONREALM; *)
+
+    (*if not HTTPServer.Active then begin
+    HTTPServer.Bindings.Clear;
+    Binding := HTTPServer.Bindings.Add;
+    Binding.Port := StrToIntDef(edPort.text, 80);
+    Binding.IP := '127.0.0.1';
+  end;*)
+  
+     //statusbar1.SimpleText:= 'http active on v1.9';
+     //+ [IdServerInterceptOpenSSL.SSLOptions.Method]
+      //DisplayMessage(Format('OpenSSLVersion is: %s', [getOpenSSLVersion]))
+     
+
+

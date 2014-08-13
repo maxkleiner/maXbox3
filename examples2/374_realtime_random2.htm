@@ -1,0 +1,758 @@
+Version:0.9
+StartHTML:0000000105
+EndHTML:0000089895
+StartFragment:0000001037
+EndFragment:0000089879
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>mXScriptasHTML</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="generator" content="SynEdit HTML exporter" />
+<style type="text/css">
+<!--
+body { color: #000000; background-color: #FFFFFF; }
+.pas1-assembler { }
+.pas1-character { text-decoration: underline; }
+.pas1-comment { color: #000080; font-style: italic; }
+.pas1-float { color: #800080; }
+.pas1-hexadecimal { color: #FF00FF; }
+.pas1-identifier { }
+.pas1-number { color: #FF0000; }
+.pas1-preprocessor { font-style: italic; }
+.pas1-reservedword { color: #000000; font-weight: bold; }
+.pas1-space { }
+.pas1-string { color: #008080; }
+.pas1-symbol { color: #000000; }
+-->
+</style>
+</head>
+<body>
+<!--StartFragment--><pre><code><span class="pas1-reservedword">program</span><span class="pas1-space"> Realtime_Random2_Tutorial;
+
+</span><span class="pas1-comment">//mX3 directory change, preparation for RealTime Tutorial 23
+//shows download with IndySockets on maXbox webbox ex. 109, #locs=395
+//G9 was the band of the Neuk&uuml;hl Epoch!
+//#sign&gt;max: APSN21: 27.06.2013 00:01:52 
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space">  timeGetTimeDLL: Longint;
+   </span><span class="pas1-reservedword">external</span><span class="pas1-space"> </span><span class="pas1-string">'timeGetTime@winmm.dll stdcall'</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">type
+</span><span class="pas1-space">   TCoin = </span><span class="pas1-reservedword">array</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">..</span><span class="pas1-number">1</span><span class="pas1-symbol">] </span><span class="pas1-reservedword">of</span><span class="pas1-space"> </span><span class="pas1-reservedword">shortstring</span><span class="pas1-symbol">;
+
+   TTimeRec = </span><span class="pas1-reservedword">record
+</span><span class="pas1-space">     Second: Integer;
+     Minute: Integer;
+     Hour: Integer;
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+   
+   HMSRec = </span><span class="pas1-reservedword">record
+</span><span class="pas1-space">     Hours: byte;
+     Minutes: byte;
+     Seconds: byte;
+     NotUsed: byte;
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+TGetTime = </span><span class="pas1-reservedword">procedure</span><span class="pas1-symbol">(</span><span class="pas1-reservedword">var</span><span class="pas1-space"> aTime: TTimeRec);
+
+</span><span class="pas1-reservedword">const</span><span class="pas1-space"> mp3song = </span><span class="pas1-string">'G9_vision.mp3'</span><span class="pas1-symbol">;  </span><span class="pas1-comment">//Default
+</span><span class="pas1-space">      NCoins = </span><span class="pas1-number">10</span><span class="pas1-symbol">;
+      NDice = </span><span class="pas1-number">8</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> 
+    idHTTP: TIDHTTP;
+    zipStream: TFileStream;
+    myform: TForm;
+    mygrid: TStringGrid;
+    
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> MSecToTime(mSec: Int64): </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> dt: TDateTime;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  dt:= (mSec/</span><span class="pas1-number">1000</span><span class="pas1-symbol">/</span><span class="pas1-number">86400</span><span class="pas1-symbol">);  </span><span class="pas1-comment">//SecsPerDay;
+</span><span class="pas1-space">  Result:= FormatDateTime(</span><span class="pas1-string">'&quot; song length is:&quot; nn:ss:zzz'</span><span class="pas1-symbol">,dt) ;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TimeFormatDemo;
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  TheLength: LongInt;
+  aplayer: TMediaPlayer; 
+  ahmsrec: HMSrec;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  aplayer.TimeFormat:= tfHMS; </span><span class="pas1-comment">{Set time format - note some devices don’t support tfHMS }
+</span><span class="pas1-space">  TheLength:= aplayer.Length; </span><span class="pas1-comment">{ Store length of currently loaded media in var }
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> aHMSRec </span><span class="pas1-comment">{(TheLength)}</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin</span><span class="pas1-comment">{ Typecast TheLength as HMSRec record }
+</span><span class="pas1-space">    writeln(IntToStr(longint(Hours))); </span><span class="pas1-comment">{ Display Hours in Label1 }
+</span><span class="pas1-space">    writeln(IntToStr(Minutes)); </span><span class="pas1-comment">{ Display Minutes }
+</span><span class="pas1-space">    writeln(IntToStr(Seconds)); </span><span class="pas1-comment">{ Display Seconds }
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> ParkMillerDemo;
+</span><span class="pas1-comment">//http://home.comcast.net/~JamesMClark5/Pascal/Random.htm
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> C: boolean;
+    I, Tails, D1, D2: integer;
+    aCoin: TCoin;
+    Seed: longint;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    write(</span><span class="pas1-string">'Seed value = '</span><span class="pas1-symbol">+floattoStr(</span><span class="pas1-float">456.45</span><span class="pas1-symbol">));
+    Seed:= Round(time); </span><span class="pas1-comment">//Readln(Seed);
+</span><span class="pas1-space">    PMrandomize(Seed);
+    aCoin[</span><span class="pas1-number">0</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'head'</span><span class="pas1-symbol">;
+    aCoin[</span><span class="pas1-number">1</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'tail'</span><span class="pas1-symbol">;
+    writeln(</span><span class="pas1-string">''</span><span class="pas1-symbol">);
+    writeln(</span><span class="pas1-string">'Tossing '</span><span class="pas1-space"> +inttoStr(NCoins)+</span><span class="pas1-string">' coins:'</span><span class="pas1-symbol">);
+    Tails:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> I:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> NCoins </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">       C:= Brand(</span><span class="pas1-float">0.5</span><span class="pas1-symbol">);
+       write(aCoin[integer(C)]+</span><span class="pas1-string">'  '</span><span class="pas1-symbol">);
+       </span><span class="pas1-reservedword">if</span><span class="pas1-space"> C </span><span class="pas1-reservedword">then</span><span class="pas1-space"> inc(Tails);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    writeln(</span><span class="pas1-string">' '</span><span class="pas1-symbol">);
+    </span><span class="pas1-comment">//intToStr(NCoins-Tails)
+</span><span class="pas1-space">    writeln(inttoStr(Tails)+</span><span class="pas1-string">' tails and '</span><span class="pas1-symbol">+intToStr(NCoins-Tails)+ </span><span class="pas1-string">' heads'</span><span class="pas1-symbol">);
+    writeln(</span><span class="pas1-string">''</span><span class="pas1-symbol">);
+    writeln(</span><span class="pas1-string">'Tossing '</span><span class="pas1-symbol">+inttoStr(NDice)+ </span><span class="pas1-string">' pairs of dice:'</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> I:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> NDice </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        D1:= Irand(</span><span class="pas1-number">6</span><span class="pas1-symbol">)+</span><span class="pas1-number">1</span><span class="pas1-symbol">;
+        D2:= Irand(</span><span class="pas1-number">6</span><span class="pas1-symbol">)+</span><span class="pas1-number">1</span><span class="pas1-symbol">;      
+        write(</span><span class="pas1-string">' '</span><span class="pas1-symbol">+inttostr(D1)+ </span><span class="pas1-string">'+'</span><span class="pas1-symbol">+ inttostr(D2)+ </span><span class="pas1-string">'='</span><span class="pas1-symbol">+ inttoStr(D1+D2));
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    writeln(</span><span class="pas1-character">#13#10</span><span class="pas1-symbol">);
+    writeln(</span><span class="pas1-string">'Six random angles between 180 and 270 degrees:'</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> I:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">6</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-comment">//write(floattoStr(Rrand));
+</span><span class="pas1-space">      </span><span class="pas1-comment">//write(floattoStr(180 + 90*Rrand)+'    ');
+</span><span class="pas1-space">      write(format(</span><span class="pas1-string">'%.3f  '</span><span class="pas1-symbol">,[</span><span class="pas1-number">180</span><span class="pas1-symbol">+</span><span class="pas1-number">90</span><span class="pas1-symbol">*Rrand]));
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    writeln(</span><span class="pas1-character">#13#10</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;    
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> DelayLEDLoop;
+</span><span class="pas1-comment">//http://www.arduino.cc
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> ledValue: boolean;
+    ledSwitchTime, leddiff, atime: longint;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  leddiff:= </span><span class="pas1-number">1000</span><span class="pas1-symbol">;
+  ledswitchtime:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+  ledValue:= false;
+  </span><span class="pas1-comment">//MillisecondsElapsed;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">Repeat
+</span><span class="pas1-space">    atime:= MilliSecondOfTheDay(now)-ledSwitchTime;
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> atime &gt; leddiff </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      ledValue:= </span><span class="pas1-reservedword">NOT</span><span class="pas1-space"> ledValue;
+      </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ledValue </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        maxform1.imglogo.show;
+        writeln(</span><span class="pas1-string">'LED is ON  at: '</span><span class="pas1-symbol">+timetoStr(time));
+      </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin</span><span class="pas1-space"> 
+        writeln(</span><span class="pas1-string">'LED is OFF at: '</span><span class="pas1-symbol">+timetoStr(time));
+        maxform1.imglogo.hide;
+      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+      </span><span class="pas1-comment">//digitalWrite(ledPin, ledValue);
+</span><span class="pas1-space">      ledswitchtime:= MilliSecondOfTheDay(Now);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">until</span><span class="pas1-space"> isKeyPressed;
+   </span><span class="pas1-comment">//memo2.setFocus;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> DelayNoLoop;
+</span><span class="pas1-comment">//http://www.arduino.cc
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> ledValue: boolean;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  ledValue:= false;
+  </span><span class="pas1-reservedword">Repeat
+</span><span class="pas1-space">    ledValue:= </span><span class="pas1-reservedword">NOT</span><span class="pas1-space"> ledValue;
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ledValue </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      maxform1.imglogo.show;
+      maxform1.imglogobox.hide;
+      writeln(</span><span class="pas1-string">'LED is ON  at: '</span><span class="pas1-symbol">+timetoStr(time));
+      Delay(</span><span class="pas1-number">1000</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">else</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin</span><span class="pas1-space"> 
+      writeln(</span><span class="pas1-string">'LED is OFF at: '</span><span class="pas1-symbol">+timetoStr(time));
+      maxform1.imglogo.hide;
+      maxform1.imglogobox.show;
+      Delay(</span><span class="pas1-number">1000</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    </span><span class="pas1-comment">//digitalWrite(ledPin, ledValue);
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">until</span><span class="pas1-space"> isKeyPressed;
+  maxform1.imglogo.show;
+  maxform1.imglogobox.show;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-comment">//Event Stream Data Simulation  ESDS
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> letStreamDataWork;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> biglist: TStringList;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  biglist:= TStringList.create;
+  memo2.setfocus;
+  writeln(getbigPI)
+  </span><span class="pas1-reservedword">repeat</span><span class="pas1-space"> 
+    biglist.add(</span><span class="pas1-string">'Value for mem[%d] enter : '
+</span><span class="pas1-space">                   +inttoStr(RandomRange(</span><span class="pas1-number">500</span><span class="pas1-symbol">,</span><span class="pas1-number">100000000</span><span class="pas1-symbol">)));
+    biglist.add(getbigPI+getbigPI+getbigPI+getbigPI)
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TJvMemoryInfos.Create(self) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      writeln(</span><span class="pas1-string">'Available Mem '</span><span class="pas1-symbol">+FreeMemory);
+      Free;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;   
+  </span><span class="pas1-reservedword">until</span><span class="pas1-space"> isKeypressed;
+  writeln(</span><span class="pas1-string">'elements of biglist '</span><span class="pas1-symbol">+intToStr(biglist.count))
+  writeln(</span><span class="pas1-string">'capacity of biglist '</span><span class="pas1-symbol">+intToStr(biglist.capacity))
+  biglist.Free; </span><span class="pas1-comment">//destruct
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+ 
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> letStreamDataWorkRefresh;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> biglist: TStringList;
+  jvmem: TJvMemoryInfos;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  biglist:= TStringList.create;
+  memo2.setfocus;
+  writeln(getbigPI)
+  jvmem:= TJvMemoryInfos.Create(self);
+  </span><span class="pas1-reservedword">repeat</span><span class="pas1-space"> 
+    biglist.add(</span><span class="pas1-string">'Value for mem[%d] enter : '
+</span><span class="pas1-space">                   +inttoStr(RandomRange(</span><span class="pas1-number">500</span><span class="pas1-symbol">,</span><span class="pas1-number">100000000</span><span class="pas1-symbol">)));
+    biglist.add(getbigPI+getbigPI+getbigPI+getbigPI)
+    jvmem.Refresh(self);
+    writeln(</span><span class="pas1-string">'Available Mem: '</span><span class="pas1-symbol">+jvmem.FreeMemory);
+  </span><span class="pas1-reservedword">until</span><span class="pas1-space"> isKeypressed;
+  writeln(</span><span class="pas1-string">'elements of biglist '</span><span class="pas1-symbol">+intToStr(biglist.count))
+  writeln(</span><span class="pas1-string">'capacity of biglist '</span><span class="pas1-symbol">+intToStr(biglist.capacity))
+  biglist.Free; </span><span class="pas1-comment">//destruct
+</span><span class="pas1-space">  jvmem.Free;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> Randmax2;
+</span><span class="pas1-comment">//http://home.comcast.net/~JamesMClark5/Pascal/Random.htm
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  R: byte;
+  I: integer;
+  sout: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  writeln(</span><span class="pas1-string">''</span><span class="pas1-symbol">);
+  R:= </span><span class="pas1-number">71</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> I:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">272</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     R:= ((longint(</span><span class="pas1-number">628</span><span class="pas1-symbol">)*R + </span><span class="pas1-number">157</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">AND</span><span class="pas1-space"> </span><span class="pas1-hexadecimal">$3FF</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">SHR</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">;
+     sout:= sout + Format(</span><span class="pas1-string">'%-*.3d'</span><span class="pas1-symbol">,[</span><span class="pas1-number">5</span><span class="pas1-symbol">,R]);
+     </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (I </span><span class="pas1-reservedword">mod</span><span class="pas1-space"> </span><span class="pas1-number">16</span><span class="pas1-symbol">)=</span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> sout:= sout+</span><span class="pas1-character">#13#10</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  writeln(sout)
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> LoopTest;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space"> Randomize; 
+ </span><span class="pas1-reservedword">REPEAT
+</span><span class="pas1-space">  </span><span class="pas1-comment">//TextAttr:=Random(256);
+</span><span class="pas1-space">    Writeln(inttoStr(random(</span><span class="pas1-number">256</span><span class="pas1-symbol">*</span><span class="pas1-number">256</span><span class="pas1-symbol">)));
+ </span><span class="pas1-reservedword">UNTIL</span><span class="pas1-space"> isKeypressed;  </span><span class="pas1-comment">//on memo2 output
+</span><span class="pas1-space"> </span><span class="pas1-reservedword">IF</span><span class="pas1-space"> isKeypressed </span><span class="pas1-reservedword">THEN</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'key has been pressed!'</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> DrawonForm(Sender: TObject);
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  X,Y,i: Integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  </span><span class="pas1-comment">//myform.WindowState:= wsMaximized;
+</span><span class="pas1-space">  myform.Canvas.Pen.Width:= </span><span class="pas1-number">5</span><span class="pas1-symbol">;
+  myform.Canvas.Pen.Style:= psDot;
+  Randomize;
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">50</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    X:= X + </span><span class="pas1-number">4</span><span class="pas1-symbol">;
+    Y:= Y + </span><span class="pas1-number">4</span><span class="pas1-symbol">;
+    myform.Canvas.Pen.Color:= Random(</span><span class="pas1-number">65535</span><span class="pas1-symbol">);
+    myform.Canvas.Rectangle(X,Y,X + Random(</span><span class="pas1-number">400</span><span class="pas1-symbol">),Y+Random(</span><span class="pas1-number">400</span><span class="pas1-symbol">));
+    myForm.ScrollBy(</span><span class="pas1-number">1</span><span class="pas1-symbol">,</span><span class="pas1-number">1</span><span class="pas1-symbol">);
+    inc(x); inc(y);
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> mygettime(</span><span class="pas1-reservedword">var</span><span class="pas1-space"> aTime: TTimeRec);
+</span><span class="pas1-reservedword">begin</span><span class="pas1-space">  </span><span class="pas1-comment">//dummy
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  aTime: TTimeRec;
+  Handle: THandle;
+  GetTime: TGetTime;
+  aTimeFormat: TMPTimeFormats;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> doGetkernelTimeTest;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> addr: longint;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Handle:= LoadLibrary(</span><span class="pas1-string">'winmm.dll'</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> Handle &lt;&gt; </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    addr:= GetProcAddress(Handle, </span><span class="pas1-string">'timeGetTime'</span><span class="pas1-symbol">);
+    gettime:= @myGettime;
+    </span><span class="pas1-reservedword">if</span><span class="pas1-space"> addr </span><span class="pas1-comment">{@GetTime}</span><span class="pas1-space"> &lt;&gt; </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-comment">{nil}</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">       GetTime(aTime);
+       </span><span class="pas1-reservedword">with</span><span class="pas1-space"> aTime </span><span class="pas1-reservedword">do
+</span><span class="pas1-space">          WriteLn(</span><span class="pas1-string">'The time is '</span><span class="pas1-symbol">+inttostr(Hour)+ </span><span class="pas1-string">':'</span><span class="pas1-symbol">+inttostr(Minute));
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  FreeLibrary(Handle);
+ </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm1GridClick(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  showMessageBig(</span><span class="pas1-string">'Grid has been clicked'</span><span class="pas1-symbol">);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm1Button1Click(Sender: TObject);
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  I,J,X,Y: Word;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  I:= </span><span class="pas1-number">0</span><span class="pas1-symbol">; J:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+  myform.Canvas.Textout(</span><span class="pas1-number">20</span><span class="pas1-symbol">,</span><span class="pas1-number">235</span><span class="pas1-symbol">,S_RepeatChar(</span><span class="pas1-number">90</span><span class="pas1-symbol">,</span><span class="pas1-string">' '</span><span class="pas1-symbol">));
+  </span><span class="pas1-reservedword">while</span><span class="pas1-space"> I &lt; </span><span class="pas1-number">64000</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Randomize;
+    </span><span class="pas1-reservedword">while</span><span class="pas1-space"> J &lt; </span><span class="pas1-number">64000</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      Y:= Random(J);
+      Inc(J);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    X:= Random(I);
+    mygrid.Cells[</span><span class="pas1-number">3</span><span class="pas1-symbol">,</span><span class="pas1-number">3</span><span class="pas1-symbol">]:= intToStr(X);
+    Inc(I);
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-comment">//TForm(sender).Canvas.TextOut(10, 10, 'handler is finished');
+</span><span class="pas1-space">  myform.Canvas.TextOut(</span><span class="pas1-number">20</span><span class="pas1-symbol">, </span><span class="pas1-number">235</span><span class="pas1-symbol">, </span><span class="pas1-string">'The Ignore Button1Click handler is finished'</span><span class="pas1-symbol">);
+  </span><span class="pas1-comment">//writeln(objectToStr(sender));
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm1Button2Click(Sender: TObject);
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  I,J,X,Y: Word;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  I:= </span><span class="pas1-number">0</span><span class="pas1-symbol">; J:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+  myform.Canvas.Textout(</span><span class="pas1-number">20</span><span class="pas1-symbol">,</span><span class="pas1-number">255</span><span class="pas1-symbol">,S_RepeatChar(</span><span class="pas1-number">90</span><span class="pas1-symbol">,</span><span class="pas1-string">' '</span><span class="pas1-symbol">));
+  </span><span class="pas1-reservedword">while</span><span class="pas1-space"> I &lt; </span><span class="pas1-number">64000</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Randomize;
+    </span><span class="pas1-reservedword">while</span><span class="pas1-space"> J &lt; </span><span class="pas1-number">64000</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      Y:= Random(J);
+      Inc(J);
+      </span><span class="pas1-comment">//Application.ProcessMessages;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    X:= Random(I);
+    mygrid.Cells[</span><span class="pas1-number">3</span><span class="pas1-symbol">,</span><span class="pas1-number">3</span><span class="pas1-symbol">]:= intToStr(X);
+    Inc(I);
+    Application.ProcessMessages;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  myform.Canvas.TextOut(</span><span class="pas1-number">20</span><span class="pas1-symbol">, </span><span class="pas1-number">255</span><span class="pas1-symbol">, </span><span class="pas1-string">'The Process Button2Click handler is finished'</span><span class="pas1-symbol">);
+  </span><span class="pas1-comment">//drawOnForm(self);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> DoFormCreate(Sender: TObject);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> j, it: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   ProcessMessagesOFF;  </span><span class="pas1-comment">//to test events
+</span><span class="pas1-space">   myform:= TForm.create(self);
+   myform.setbounds(</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">600</span><span class="pas1-symbol">,</span><span class="pas1-number">320</span><span class="pas1-symbol">);
+   myform.caption:= </span><span class="pas1-string">'Process Messages Demo'</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TButton.create(myform) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      caption:= </span><span class="pas1-string">'&amp;Ignore Messages'</span><span class="pas1-symbol">;
+      parent:= myform;
+      SetBounds(</span><span class="pas1-number">300</span><span class="pas1-symbol">,</span><span class="pas1-number">235</span><span class="pas1-symbol">,</span><span class="pas1-number">100</span><span class="pas1-symbol">,</span><span class="pas1-number">40</span><span class="pas1-symbol">)
+      onClick:= @TForm1Button1Click;
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TButton.create(myform) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin</span><span class="pas1-symbol">;
+     caption:= </span><span class="pas1-string">'&amp;Process Messages'</span><span class="pas1-symbol">;
+     parent:= myform;
+     SetBounds(</span><span class="pas1-number">430</span><span class="pas1-symbol">,</span><span class="pas1-number">235</span><span class="pas1-symbol">,</span><span class="pas1-number">100</span><span class="pas1-symbol">,</span><span class="pas1-number">40</span><span class="pas1-symbol">)
+     onClick:= @TForm1Button2Click;
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+   mygrid:= TStringGrid.create(myform);
+   </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mygrid </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     parent:= myform;
+     height:=</span><span class="pas1-number">200</span><span class="pas1-symbol">;
+     width:=</span><span class="pas1-number">400</span><span class="pas1-symbol">;
+     j:= </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+     </span><span class="pas1-reservedword">for</span><span class="pas1-space"> it:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">4</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">       </span><span class="pas1-reservedword">for</span><span class="pas1-space"> j:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">4</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> 
+         Cells[j,it]:= inttostr(it*j);
+     </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    onclick:= @TForm1GridClick;
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TJvStarfield.Create(myform) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     parent:= myform;
+     stars:= </span><span class="pas1-number">300</span><span class="pas1-symbol">;
+     maxSpeed:= </span><span class="pas1-number">12</span><span class="pas1-symbol">;
+     setBounds(</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">200</span><span class="pas1-symbol">,myform.width,</span><span class="pas1-number">20</span><span class="pas1-symbol">);
+     active:= true; 
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+   myform.color:= clyellow;
+   myform.showmodal;
+   mygrid.Free;
+   myform.Free;
+   ProcessMessagesON;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> timeres: DWord;
+  
+</span><span class="pas1-reservedword">begin</span><span class="pas1-space">   </span><span class="pas1-comment">{@main}
+</span><span class="pas1-space">  ProcessMessagesON;
+  </span><span class="pas1-comment">//ProcessMessagesOFF;
+</span><span class="pas1-space">  </span><span class="pas1-comment">//mp3song1:= ExtractWord(5,myurl,['/']);
+</span><span class="pas1-space">  Randmax2;
+  ParkMillerDemo;
+  ShowmessageBig(</span><span class="pas1-string">'You should press a key on output window to stop loop!'</span><span class="pas1-symbol">);
+  memo2.setfocus;
+  </span><span class="pas1-comment">//LoopTest;
+</span><span class="pas1-space">  Writeln(</span><span class="pas1-string">''</span><span class="pas1-symbol">);
+  </span><span class="pas1-comment">//DelayLEDLoop;
+</span><span class="pas1-space">  </span><span class="pas1-comment">//DelayNoLoop;
+</span><span class="pas1-space">  dogetkerneltimeTest;
+  timeres:= timeGetTime;
+  Sleep(</span><span class="pas1-number">1000</span><span class="pas1-symbol">);
+  Writeln(</span><span class="pas1-string">'mX4 '</span><span class="pas1-symbol">+inttostr(timeGetTime-timeres));
+  timeres:= timeGetTimeDLL;
+  Sleep(</span><span class="pas1-number">1000</span><span class="pas1-symbol">);
+  Writeln(</span><span class="pas1-string">'DLL: '</span><span class="pas1-symbol">+inttostr(timeGetTimeDLL-timeres));
+  DoFormCreate(self);
+  </span><span class="pas1-comment">//letStreamDataWorkRefresh;
+</span><span class="pas1-reservedword">End</span><span class="pas1-symbol">.
+
+
+
+more G9 songs:
+</span><span class="pas1-string">'http://max.kleiner.com/download/olemosbruja.mp3'
+'http://www.kleiner.ch/kleiner/download/G9_whitemagic.mp3'
+'http://www.kleiner.ch/kleiner/download/G9_japan.mp3'
+'http://www.kleiner.ch/kleiner/download/G9_lordofdarkness.mp3'</span><span class="pas1-symbol">;
+</span><span class="pas1-string">'http://www.kleiner.ch/kleiner/download/G9_nowage.mp3'</span><span class="pas1-symbol">;
+</span><span class="pas1-string">'http://www.kleiner.ch/kleiner/download/G9_olemosbruja.mp3'</span><span class="pas1-symbol">;
+</span><span class="pas1-string">'http://www.kleiner.ch/kleiner/download/G9_playchess.mp3'</span><span class="pas1-symbol">;
+</span><span class="pas1-string">'http://www.kleiner.ch/kleiner/download/G9_vision.mp3'</span><span class="pas1-symbol">;
+</span><span class="pas1-string">'http://www.kleiner.ch/kleiner/download/G9_zeitraum.mp3'</span><span class="pas1-symbol">;
+
+
+
+---code_cleared_checked---
+
+</span><span class="pas1-reservedword">BEGIN
+</span><span class="pas1-space"> Randomize; 
+ </span><span class="pas1-reservedword">REPEAT
+</span><span class="pas1-space">  TextAttr:=Random(</span><span class="pas1-number">256</span><span class="pas1-symbol">);
+  Write(</span><span class="pas1-string">'Hilfe'</span><span class="pas1-symbol">)
+ </span><span class="pas1-reservedword">UNTIL</span><span class="pas1-space"> KEYPRESSED
+</span><span class="pas1-reservedword">END</span><span class="pas1-symbol">.
+
+Hallo,
+Post by Hilmar Bunjes
+Hallo,
+ich bin gerade am programmieren (Java, d&uuml;rfte hierf&uuml;r aber egal sein)
+und brauche einen Algorithmus f&uuml;r einen Zufallszahlengenerator, der
+reproduzierbare Zufallszahlen erzeugt. Also ich brauche eine vern&uuml;nftige
+Verteilung der Zufallszahlen, muss aber die M&ouml;glichkeit haben, bei
+gleichem Startwert auch immer die gleich Folge an Zufallszahlen zu
+bekommen. Der Startwert sollte sich ver&auml;ndern lassen.
+von Steve Schafer, TeamB (Borland)
+
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> RandSeed: longint;
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> Random: double;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-identifier">RandSeed := </span><span class="pas1-number">134775813</span><span class="pas1-space"> * RandSeed + </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+result := (RandSeed </span><span class="pas1-reservedword">xor</span><span class="pas1-space"> </span><span class="pas1-hexadecimal">$80000000</span><span class="pas1-symbol">) / </span><span class="pas1-float">4294967296.0</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">if</span><span class="pas1-space"> Result &lt; </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-identifier">Result := Result + </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+Gr&uuml;&szlig;e,
+Joachim
+
+
+http:</span><span class="pas1-comment">//www.pup.ethz.ch/et3.html
+
+</span><span class="pas1-identifier">Zufallszahlen
+
+
+Randomize;   </span><span class="pas1-comment">(* Zufallszahlengenerator initialisieren *)
+
+</span><span class="pas1-identifier">Zufall, Ungewiheit, Gluck, Pech </span><span class="pas1-comment">{ sind das nicht ziemlich diuse Begrie? Eher
+aus dem Bereich der Wahrsager als dem der Wissenschaftler? Eine wissenschaftliche Untersuchung
+des Zufalls ist moglich, und sie begann mit der Analyse von Glucksspielen
+durch B. Pascal, C. Huygens, Jakob Bernoulli und P. Fermat4. Diese Analyse hat den
+Wahrscheinlichkeitskalkul hervorgebracht, der lange fur einen unbedeutenden Zweig der
+Mathematik gehalten wurde. Einen ersten Erfolg erzielte der Kalkul in der statistischen
+Mechanik durch Untersuchungen von L. Boltzmann und J.W. Gibbs5: Die  }
+</span><span class="pas1-symbol">&quot;
+Menge von
+Zufall\, die </span><span class="pas1-reservedword">in</span><span class="pas1-space"> einem Liter Luft ist, wird durch den Begri der Entropie gemessen. Der
+nachste groe Erfolg ist mit der Entwicklung der Quantentheorie verknupft. Heutzutage
+ist der Zufall </span><span class="pas1-reservedword">in</span><span class="pas1-space"> wissenschaftlichen Theorien fast uberall prasent: Rauschen </span><span class="pas1-reservedword">in</span><span class="pas1-space"> der
+Signalubertragung, Ausbreitung von Epidemien, Entwicklung von Borsenkursen, chaotisches
+Verhalten von nichtlinearen Systemen, Spieltheorie, Wetterprognosen, : : : .
+
+
+Die Zufallszahlen, die ein Computersystem erstellen kann, sind nat&uuml;rlich keine echten Zufallszahlen.Sie werden aus der Systemzeit berechnet.Der Zufallsgenerator sollte beim Programmstart initialisiert werden:
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm1.CreateForm(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Randomize;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+ 
+
+Jetzt k&ouml;nnen eigentlich recht problemlos Zufallszahlen erstellt werden und zwar mit dem Befehl Random:
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm1.Button1Click(Sender: TObject);
+</span><span class="pas1-reservedword">const
+</span><span class="pas1-space">  ZufallBereich = </span><span class="pas1-number">5</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  Caption:=IntToStr(Random(Zufallsbereich));
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+ 
+http:</span><span class="pas1-comment">//www.math.uni-frankfurt.de/~numerik/lehre/Vorlesungen/pros-12/Zufallszahlen%20und%20Benford/ran-shell.pdf
+
+</span><span class="pas1-identifier">http:</span><span class="pas1-comment">//home.comcast.net/~JamesMClark5/Pascal/Random.htm
+
+
+</span><span class="pas1-identifier">Guten Tag Heini
+Ja richtig, die Funktion hat einen pseudo Zufalls Term, wobei die Initialisierung mit Randomize massgebend ist.
+Damit Zufallszahlen erzeugt werden k&ouml;nnen, behilft sich Random der aktuellen Uhrzeit </span><span class="pas1-reservedword">in</span><span class="pas1-space"> msec, die sich ja laufend &auml;ndert. Weiter existiert die Prozedur Randomize, die den Zufallsgenerator initialisiert. Diese muss vor der Verwendung von Random einmal aufgerufen werden. Die Initalisierung des Zufallsgenerators erfolgt durch einfachen Aufruf der Prozedur Randomize (ohne Parameter).
+Die Zufallszahlen, die ein Computersystem erstellen kann, sind nat&uuml;rlich keine echten Zufallszahlen. Sie lassen sich aus der Systemzeit berechnen. Der Zufallsgenerator sollte beim Programmstart eben initialisiert werden.
+Das ist wirklich ein spannendes Thema, wir haben bei den Kryptologen immer wieder &uuml;ber Rausch- oder eben Zufallsgeneratoren gesprochen.
+Heutzutage ist der Zufall </span><span class="pas1-reservedword">in</span><span class="pas1-space"> wissenschaftlichen Theorien fast &uuml;berall pr&auml;sent: Rauschen </span><span class="pas1-reservedword">in</span><span class="pas1-space"> der Signaluebertragung, Ausbreitung von Epidemien, Entwicklung von B&ouml;rsenkursen, chaotisches
+Verhalten von nichtlinearen Systemen, Spieltheorie, Wetterprognosen und eben Kryptologie.
+Ich versuche noch den Source Code rauszufinden, leider ist er im System </span><span class="pas1-reservedword">Unit</span><span class="pas1-space"> nicht einsehbar, da er im Kernel steckt.
+Aber so ungef&auml;hr k&ouml;nnte er so aussehen:
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> RandSeed: longint;
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> Random: double;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-identifier">RandSeed := </span><span class="pas1-number">134775813</span><span class="pas1-space"> * RandSeed + </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+result := (RandSeed </span><span class="pas1-reservedword">xor</span><span class="pas1-space"> </span><span class="pas1-hexadecimal">$80000000</span><span class="pas1-symbol">) / </span><span class="pas1-float">4294967296.0</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">if</span><span class="pas1-space"> Result &lt; </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">then
+</span><span class="pas1-identifier">Result := Result + </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+Mehr &uuml;ber den Zufall findest du auf
+http:</span><span class="pas1-comment">//www.math.uni-frankfurt.de/~numerik/lehre/Vorlesungen/pros-12/Zufallszahlen%20und%20Benford/ran-shell.pdf
+</span><span class="pas1-identifier">es gr&uuml;sst dich, Max
+
+Hello Arduino-Friends,
+
+</span><span class="pas1-reservedword">as</span><span class="pas1-space"> byproduct </span><span class="pas1-reservedword">of</span><span class="pas1-space"> a resuch project I have made a little driver </span><span class="pas1-reservedword">for</span><span class="pas1-space"> the arduino motorshield  modified from Stepper.cpp </span><span class="pas1-reservedword">of</span><span class="pas1-space"> Tom Igoe.
+Half </span><span class="pas1-reservedword">and</span><span class="pas1-space"> full step modus, endless run </span><span class="pas1-reservedword">and</span><span class="pas1-space"> a run </span><span class="pas1-reservedword">for</span><span class="pas1-space"> n steps both </span><span class="pas1-reservedword">with</span><span class="pas1-space"> the possebility </span><span class="pas1-reservedword">of</span><span class="pas1-space"> a hardware interrupt </span><span class="pas1-reservedword">is</span><span class="pas1-space"> possible,  driving DC motors, too.
+
+The methodes are:
+  
+initialisation:
+</span><span class="pas1-comment">//DC-motors
+</span><span class="pas1-identifier">Motorshield myMotorshield(PWM_PIN_A,PWM_PIN_B,BRAKE_PIN_A,BRAKE_PIN_B,DIR_PIN_A,DIR_PIN_B,DC-Delay&lt;</span><span class="pas1-number">0</span><span class="pas1-symbol">..</span><span class="pas1-number">2</span><span class="pas1-symbol">^</span><span class="pas1-number">16</span><span class="pas1-symbol">&gt;ms,AD-Resolution (</span><span class="pas1-number">2</span><span class="pas1-symbol">^&lt;x&gt;));
+DC-Delay prevents short circuit bey changing dc-motor direction
+</span><span class="pas1-comment">//stepper-motors
+</span><span class="pas1-identifier">Motorshield myMotorshield(stepsPerRevolution,PWM_PIN_A,PWM_PIN_B,BRAKE_PIN_A,BRAKE_PIN_B,DIR_PIN_A,DIR_PIN_B,MODUS &lt;HALF&gt;&lt;FULL&gt;,AD-Resolution (</span><span class="pas1-number">2</span><span class="pas1-symbol">^&lt;x&gt;));
+
+setup:
+
+DC:
+  myMotorshield.setDC(MOTOR &lt;MOTA&gt;&lt;MOTB&gt;,PWM&lt;</span><span class="pas1-number">0</span><span class="pas1-symbol">..</span><span class="pas1-number">1023</span><span class="pas1-symbol">&gt;); </span><span class="pas1-comment">//sing of PWM codes direction
+
+</span><span class="pas1-identifier">stop/run:
+myMotorshield.setDCbrake(MOTOR &lt;MOTA&gt;&lt;MOTB&gt;,&lt;STOP&gt;&lt;GOON&gt;);
+
+Stepper:
+void myMotorshield.setSpeed(Speed </span><span class="pas1-reservedword">in</span><span class="pas1-space"> </span><span class="pas1-number">1</span><span class="pas1-symbol">/s)
+
+void myMotorshield.step(Steps &lt;+-&gt;&lt;</span><span class="pas1-number">1</span><span class="pas1-symbol">..</span><span class="pas1-number">1023</span><span class="pas1-symbol">&gt;&lt;</span><span class="pas1-number">0</span><span class="pas1-symbol">&gt; </span><span class="pas1-number">0</span><span class="pas1-space"> codes endless run, Interrupt pin ) setting interrupt pin </span><span class="pas1-reservedword">to</span><span class="pas1-space"> LOW </span><span class="pas1-reservedword">for</span><span class="pas1-space"> more than </span><span class="pas1-number">1</span><span class="pas1-space"> step movement stops
+
+Examples </span><span class="pas1-reservedword">for</span><span class="pas1-space"> each mode are included.
+
+Best regards from Germany Tobi
+ 
+Here </span><span class="pas1-reservedword">is</span><span class="pas1-space"> a </span><span class="pas1-reservedword">program</span><span class="pas1-space"> that demonstrates how </span><span class="pas1-reservedword">to</span><span class="pas1-space"> use the PMrand </span><span class="pas1-reservedword">unit</span><span class="pas1-symbol">:
+
+</span><span class="pas1-reservedword">program</span><span class="pas1-space"> Rand3;
+</span><span class="pas1-reservedword">uses</span><span class="pas1-space"> PMrand;
+
+</span><span class="pas1-reservedword">type
+</span><span class="pas1-space">    TCoin = </span><span class="pas1-reservedword">array</span><span class="pas1-symbol">[boolean] </span><span class="pas1-reservedword">of</span><span class="pas1-space"> </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">[</span><span class="pas1-number">4</span><span class="pas1-symbol">];
+
+</span><span class="pas1-reservedword">const
+</span><span class="pas1-space">    Coin: TCoin = (</span><span class="pas1-string">'head'</span><span class="pas1-symbol">, </span><span class="pas1-string">'tail'</span><span class="pas1-symbol">);
+    NCoins = </span><span class="pas1-number">10</span><span class="pas1-symbol">;
+    NDice = </span><span class="pas1-number">8</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">    Seed: longint;
+    C: boolean;
+    I, Tails, D1, D2: integer;
+
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    write(</span><span class="pas1-string">'Seed value = '</span><span class="pas1-symbol">);  Readln(Seed);
+    PMrandomize(Seed);
+    writeln;
+    writeln(</span><span class="pas1-string">'Tossing '</span><span class="pas1-symbol">, NCoins, </span><span class="pas1-string">' coins:'</span><span class="pas1-symbol">);
+    Tails:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> I:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> NCoins </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        C:= Brand(</span><span class="pas1-float">0.5</span><span class="pas1-symbol">);
+        write(Coin[C]:</span><span class="pas1-number">5</span><span class="pas1-symbol">);
+        </span><span class="pas1-reservedword">if</span><span class="pas1-space"> C </span><span class="pas1-reservedword">then</span><span class="pas1-space"> inc(Tails);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    writeln;
+    writeln(Tails, </span><span class="pas1-string">' tails and '</span><span class="pas1-symbol">, NCoins-Tails, </span><span class="pas1-string">' heads'</span><span class="pas1-symbol">);
+
+    writeln;
+    writeln(</span><span class="pas1-string">'Tossing '</span><span class="pas1-symbol">, NDice, </span><span class="pas1-string">' pairs of dice:'</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> I:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> NDice </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        D1:= Irand(</span><span class="pas1-number">6</span><span class="pas1-symbol">)+</span><span class="pas1-number">1</span><span class="pas1-symbol">;
+        D2:= Irand(</span><span class="pas1-number">6</span><span class="pas1-symbol">)+</span><span class="pas1-number">1</span><span class="pas1-symbol">;
+        write(</span><span class="pas1-string">' '</span><span class="pas1-symbol">, D1, </span><span class="pas1-string">'+'</span><span class="pas1-symbol">, D2, </span><span class="pas1-string">'='</span><span class="pas1-symbol">, D1+D2);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    writeln;
+
+    writeln;
+    writeln(</span><span class="pas1-string">'Six random angles between 180 and 270 degrees:'</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">for</span><span class="pas1-space"> I:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">6</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        write(</span><span class="pas1-number">180</span><span class="pas1-space"> + </span><span class="pas1-number">90</span><span class="pas1-symbol">*Rrand :</span><span class="pas1-number">8</span><span class="pas1-symbol">:</span><span class="pas1-number">3</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    writeln;
+    readln;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">.
+
+Notice how the structured constant named </span><span class="pas1-string">'Coin'</span><span class="pas1-space"> </span><span class="pas1-reservedword">is</span><span class="pas1-space"> used </span><span class="pas1-reservedword">to</span><span class="pas1-space"> translate the boolean values false </span><span class="pas1-reservedword">and</span><span class="pas1-space"> true </span><span class="pas1-reservedword">to</span><span class="pas1-space"> the </span><span class="pas1-reservedword">string</span><span class="pas1-space"> values </span><span class="pas1-string">'head'</span><span class="pas1-space"> </span><span class="pas1-reservedword">and</span><span class="pas1-space"> </span><span class="pas1-string">'tail'</span><span class="pas1-symbol">.  Notice also how we can use an expression </span><span class="pas1-reservedword">to</span><span class="pas1-space"> modify the range </span><span class="pas1-reservedword">of</span><span class="pas1-space"> a random variable by </span><span class="pas1-string">'rescaling'</span><span class="pas1-space"> the random </span><span class="pas1-reservedword">function</span><span class="pas1-symbol">.  </span><span class="pas1-reservedword">For</span><span class="pas1-space"> example, the expression &quot;</span><span class="pas1-number">180</span><span class="pas1-space"> + </span><span class="pas1-number">90</span><span class="pas1-symbol">*Rrand&quot; obtains a range </span><span class="pas1-reservedword">of</span><span class="pas1-space"> </span><span class="pas1-number">180</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">270</span><span class="pas1-symbol">; but Rrand by itself has a range </span><span class="pas1-reservedword">of</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-float">1.</span><span class="pas1-space">  </span><span class="pas1-reservedword">To</span><span class="pas1-space"> determine the new range from the old range, substitute the old range limits </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">and</span><span class="pas1-space"> </span><span class="pas1-number">1</span><span class="pas1-space"> into the expression, like this:
+
+    </span><span class="pas1-number">180</span><span class="pas1-space"> + </span><span class="pas1-number">90</span><span class="pas1-symbol">*</span><span class="pas1-number">0</span><span class="pas1-space"> = </span><span class="pas1-number">180
+</span><span class="pas1-space">    </span><span class="pas1-number">180</span><span class="pas1-space"> + </span><span class="pas1-number">90</span><span class="pas1-symbol">*</span><span class="pas1-number">1</span><span class="pas1-space"> = </span><span class="pas1-number">270
+
+</span><span class="pas1-symbol">(Since Rrand returns a real value, </span><span class="pas1-number">90</span><span class="pas1-symbol">*Rrand becomes a real value, even though </span><span class="pas1-number">90</span><span class="pas1-space"> </span><span class="pas1-reservedword">is</span><span class="pas1-space"> an integer; </span><span class="pas1-reservedword">and</span><span class="pas1-space"> likewise the addition </span><span class="pas1-reservedword">is</span><span class="pas1-space"> real, even though </span><span class="pas1-number">180</span><span class="pas1-space"> </span><span class="pas1-reservedword">is</span><span class="pas1-space"> an integer.) 
+
+A typical output </span><span class="pas1-reservedword">of</span><span class="pas1-space"> this demo </span><span class="pas1-reservedword">program</span><span class="pas1-space"> </span><span class="pas1-reservedword">is</span><span class="pas1-symbol">:
+
+Seed value = </span><span class="pas1-number">45
+
+</span><span class="pas1-identifier">Tossing </span><span class="pas1-number">10</span><span class="pas1-space"> coins:
+ tail head tail head head head tail head head tail
+</span><span class="pas1-number">4</span><span class="pas1-space"> tails </span><span class="pas1-reservedword">and</span><span class="pas1-space"> </span><span class="pas1-number">6</span><span class="pas1-space"> heads
+
+Tossing </span><span class="pas1-number">8</span><span class="pas1-space"> pairs </span><span class="pas1-reservedword">of</span><span class="pas1-space"> dice:
+ </span><span class="pas1-number">2</span><span class="pas1-symbol">+</span><span class="pas1-number">5</span><span class="pas1-symbol">=</span><span class="pas1-number">7</span><span class="pas1-space"> </span><span class="pas1-number">6</span><span class="pas1-symbol">+</span><span class="pas1-number">6</span><span class="pas1-symbol">=</span><span class="pas1-number">12</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">+</span><span class="pas1-number">5</span><span class="pas1-symbol">=</span><span class="pas1-number">7</span><span class="pas1-space"> </span><span class="pas1-number">4</span><span class="pas1-symbol">+</span><span class="pas1-number">4</span><span class="pas1-symbol">=</span><span class="pas1-number">8</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">+</span><span class="pas1-number">4</span><span class="pas1-symbol">=</span><span class="pas1-number">6</span><span class="pas1-space"> </span><span class="pas1-number">4</span><span class="pas1-symbol">+</span><span class="pas1-number">4</span><span class="pas1-symbol">=</span><span class="pas1-number">8</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">+</span><span class="pas1-number">5</span><span class="pas1-symbol">=</span><span class="pas1-number">7</span><span class="pas1-space"> </span><span class="pas1-number">5</span><span class="pas1-symbol">+</span><span class="pas1-number">5</span><span class="pas1-symbol">=</span><span class="pas1-number">10
+
+</span><span class="pas1-identifier">Six random angles between </span><span class="pas1-number">180</span><span class="pas1-space"> </span><span class="pas1-reservedword">and</span><span class="pas1-space"> </span><span class="pas1-number">270</span><span class="pas1-space"> degrees:
+ </span><span class="pas1-float">192.458</span><span class="pas1-space"> </span><span class="pas1-float">218.372</span><span class="pas1-space"> </span><span class="pas1-float">244.797</span><span class="pas1-space"> </span><span class="pas1-float">229.822</span><span class="pas1-space"> </span><span class="pas1-float">266.799</span><span class="pas1-space"> </span><span class="pas1-float">206.902
+
+</span><span class="pas1-reservedword">If</span><span class="pas1-space"> you enter a seed value </span><span class="pas1-reservedword">of</span><span class="pas1-space"> </span><span class="pas1-number">45</span><span class="pas1-symbol">, you will always get this output; </span><span class="pas1-reservedword">and</span><span class="pas1-space"> </span><span class="pas1-reservedword">if</span><span class="pas1-space"> you enter a seed value </span><span class="pas1-reservedword">of</span><span class="pas1-space"> </span><span class="pas1-number">91</span><span class="pas1-symbol">, you will always get some other output.  But </span><span class="pas1-reservedword">if</span><span class="pas1-space"> you enter a seed value </span><span class="pas1-reservedword">of</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-symbol">, the output will always be different, because the </span><span class="pas1-reservedword">program</span><span class="pas1-space"> will actually use a seed taken from the computer</span><span class="pas1-string">'s clock time.
+
+</span><span class="pas1-identifier">Most programs that use the PMrand </span><span class="pas1-reservedword">unit</span><span class="pas1-space"> will </span><span class="pas1-reservedword">not</span><span class="pas1-space"> call the PMrandomize </span><span class="pas1-reservedword">procedure</span><span class="pas1-symbol">, because the </span><span class="pas1-reservedword">initialization</span><span class="pas1-space"> section </span><span class="pas1-reservedword">of</span><span class="pas1-space"> PMrand calls PMrandomize </span><span class="pas1-reservedword">to</span><span class="pas1-space"> start the random sequence from the computer</span><span class="pas1-string">'s clock -- and this is what most programs need.  
+
+
+
+</span><span class="pas1-identifier">Real-time systems have evolved over the past decades </span><span class="pas1-reservedword">in</span><span class="pas1-space"> a relatively calm manner - performance has increased, one can say dramatically, but the main paradigms were pretty stable since the mid </span><span class="pas1-number">80</span><span class="pas1-identifier">s. This has changed now. The big change that </span><span class="pas1-reservedword">is</span><span class="pas1-space"> moving into the embedded field </span><span class="pas1-reservedword">is</span><span class="pas1-space"> multicore - </span><span class="pas1-reservedword">and</span><span class="pas1-space"> that </span><span class="pas1-reservedword">is</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> an adaptation </span><span class="pas1-reservedword">of</span><span class="pas1-space"> our current methods but a re-design from scratch </span><span class="pas1-reservedword">in</span><span class="pas1-space"> quite a few cases - notably </span><span class="pas1-reservedword">of</span><span class="pas1-space"> our way </span><span class="pas1-reservedword">of</span><span class="pas1-space"> thinking about real-time. Precisely this area </span><span class="pas1-reservedword">of</span><span class="pas1-space"> real-time embedded multicore has been a long-time focus </span><span class="pas1-reservedword">of</span><span class="pas1-space"> James Anderson</span><span class="pas1-string">'s Real-Time Systems Group from the Department of Computer Science, University of North Carolina at Chapel Hill, covering a wide range from multicore RT, embedded applications, testing to certification issues. OSADL and the Real Time Linux Foundation Working Group gratefully acknowledge Prof. Anderson'</span><span class="pas1-identifier">s offer </span><span class="pas1-reservedword">to</span><span class="pas1-space"> host this year</span><span class="pas1-string">'s workshop at the University of North Carolina at Chapel Hill.
+
+</span><span class="pas1-identifier">Linux </span><span class="pas1-reservedword">in</span><span class="pas1-space"> embedded systems </span><span class="pas1-reservedword">is</span><span class="pas1-space"> well established, ranging from consumer electronics </span><span class="pas1-reservedword">to</span><span class="pas1-space"> network devices </span><span class="pas1-reservedword">and</span><span class="pas1-space"> increasingly industrial applications including safety related systems. The technological resources suitable </span><span class="pas1-reservedword">for</span><span class="pas1-space"> high-availability, real-time, </span><span class="pas1-reservedword">and</span><span class="pas1-space"> safety critical systems have been continuously expanding </span><span class="pas1-reservedword">and</span><span class="pas1-space"> improving - allowing </span><span class="pas1-reservedword">to</span><span class="pas1-space"> cover the entire development life cycle </span><span class="pas1-reservedword">of</span><span class="pas1-space"> industrial projects based </span><span class="pas1-reservedword">on</span><span class="pas1-space"> open-source tools. At the core </span><span class="pas1-reservedword">of</span><span class="pas1-space"> this development </span><span class="pas1-reservedword">is</span><span class="pas1-space"> the availability </span><span class="pas1-reservedword">of</span><span class="pas1-space"> stable operating systems </span><span class="pas1-reservedword">with</span><span class="pas1-space"> reliable real-time properties. Extending </span><span class="pas1-reservedword">and</span><span class="pas1-space"> improving these real-time properties </span><span class="pas1-reservedword">of</span><span class="pas1-space"> open-source RTOS </span><span class="pas1-reservedword">is</span><span class="pas1-space"> continuous research </span><span class="pas1-reservedword">and</span><span class="pas1-space"> development effort that OSADL documents </span><span class="pas1-reservedword">in</span><span class="pas1-space"> the form </span><span class="pas1-reservedword">of</span><span class="pas1-space"> the annual Real Time Linux Workshop. 
+
+
+A real-time system </span><span class="pas1-reservedword">is</span><span class="pas1-space"> a </span><span class="pas1-reservedword">type</span><span class="pas1-space"> </span><span class="pas1-reservedword">of</span><span class="pas1-space"> hardware </span><span class="pas1-reservedword">or</span><span class="pas1-space"> software that operates </span><span class="pas1-reservedword">with</span><span class="pas1-space"> a time constraint.
+
+A hard real-time system (also known </span><span class="pas1-reservedword">as</span><span class="pas1-space"> an immediate real-time system) </span><span class="pas1-reservedword">is</span><span class="pas1-space"> hardware </span><span class="pas1-reservedword">or</span><span class="pas1-space"> software that must operate within the confines </span><span class="pas1-reservedword">of</span><span class="pas1-space"> a stringent deadline. The application may be considered </span><span class="pas1-reservedword">to</span><span class="pas1-space"> have failed </span><span class="pas1-reservedword">if</span><span class="pas1-space"> it does </span><span class="pas1-reservedword">not</span><span class="pas1-space"> complete its </span><span class="pas1-reservedword">function</span><span class="pas1-space"> within the allotted time span. Examples </span><span class="pas1-reservedword">of</span><span class="pas1-space"> hard real-time systems include components </span><span class="pas1-reservedword">of</span><span class="pas1-space"> pacemakers, anti-lock brakes </span><span class="pas1-reservedword">and</span><span class="pas1-space"> aircraft control systems.
+
+
+SuperPascal </span><span class="pas1-reservedword">is</span><span class="pas1-space"> based </span><span class="pas1-reservedword">on</span><span class="pas1-space"> Niklaus Wirth</span><span class="pas1-string">'s '</span><span class="pas1-identifier">sequential language </span><span class="pas1-reservedword">Pascal</span><span class="pas1-symbol">, extending it </span><span class="pas1-reservedword">with</span><span class="pas1-space"> features </span><span class="pas1-reservedword">for</span><span class="pas1-space"> safe </span><span class="pas1-reservedword">and</span><span class="pas1-space"> efficient concurrency. </span><span class="pas1-reservedword">Pascal</span><span class="pas1-space"> itself was used heavily </span><span class="pas1-reservedword">as</span><span class="pas1-space"> a publication language </span><span class="pas1-reservedword">in</span><span class="pas1-space"> the </span><span class="pas1-number">1970</span><span class="pas1-identifier">s; it was used </span><span class="pas1-reservedword">to</span><span class="pas1-space"> teach structured programming practices </span><span class="pas1-reservedword">and</span><span class="pas1-space"> featured </span><span class="pas1-reservedword">in</span><span class="pas1-space"> text books, </span><span class="pas1-reservedword">for</span><span class="pas1-space"> example, </span><span class="pas1-reservedword">on</span><span class="pas1-space"> compilers[</span><span class="pas1-number">2</span><span class="pas1-symbol">] </span><span class="pas1-reservedword">and</span><span class="pas1-space"> programming languages.[</span><span class="pas1-number">3</span><span class="pas1-symbol">] Brinch Hansen had earlier developed the language Concurrent </span><span class="pas1-reservedword">Pascal</span><span class="pas1-symbol">,[</span><span class="pas1-number">4</span><span class="pas1-symbol">] one </span><span class="pas1-reservedword">of</span><span class="pas1-space"> the earliest concurrent languages </span><span class="pas1-reservedword">for</span><span class="pas1-space"> the design </span><span class="pas1-reservedword">of</span><span class="pas1-space"> operating systems </span><span class="pas1-reservedword">and</span><span class="pas1-space"> real-time control systems.
+
+
+FP-RTOS
+
+A realtime kernel </span><span class="pas1-reservedword">for</span><span class="pas1-space"> embedded development. Primarily developed </span><span class="pas1-reservedword">for</span><span class="pas1-space"> ARM devices. Written entirely </span><span class="pas1-reservedword">in</span><span class="pas1-space"> </span><span class="pas1-reservedword">Pascal</span><span class="pas1-space"> </span><span class="pas1-reservedword">and</span><span class="pas1-space"> </span><span class="pas1-reservedword">inline</span><span class="pas1-space"> </span><span class="pas1-reservedword">assembler</span><span class="pas1-symbol">.
+
+    Preemptive multitasking
+    Synchronization primitives(Mutex, Critical section, spinlock, </span><span class="pas1-reservedword">and</span><span class="pas1-space"> signals)
+    Threadsafe queue </span><span class="pas1-reservedword">and</span><span class="pas1-space"> delays
+    Optional safety features: Deadlock detection, priority inheritance, etc 
+
+
+</span><span class="pas1-reservedword">If</span><span class="pas1-space"> we are going </span><span class="pas1-reservedword">to</span><span class="pas1-space"> depend </span><span class="pas1-reservedword">on</span><span class="pas1-space"> real-time programming systems
+</span><span class="pas1-reservedword">in</span><span class="pas1-space"> our daily lives, we must be able </span><span class="pas1-reservedword">to</span><span class="pas1-space"> find such obscure
+errors before the systems are put into operation.
+Fortunately, a compiler can de.tect many </span><span class="pas1-reservedword">of</span><span class="pas1-space"> these errors
+</span><span class="pas1-reservedword">if</span><span class="pas1-space"> processes </span><span class="pas1-reservedword">and</span><span class="pas1-space"> monitors are represented by a structured
+notation </span><span class="pas1-reservedword">in</span><span class="pas1-space"> a high-level programming language. </span><span class="pas1-reservedword">In</span><span class="pas1-space"> addition,
+we must exclude low-level machine features (registers,
+addresses, </span><span class="pas1-reservedword">and</span><span class="pas1-space"> interrupts) from the language </span><span class="pas1-reservedword">and
+</span><span class="pas1-identifier">let a </span><span class="pas1-reservedword">virtual</span><span class="pas1-space"> machine control them. </span><span class="pas1-reservedword">If</span><span class="pas1-space"> we want real-time
+systems </span><span class="pas1-reservedword">to</span><span class="pas1-space"> be highly reliable, we must stop programming
+them </span><span class="pas1-reservedword">in</span><span class="pas1-space"> assembly language. (The use </span><span class="pas1-reservedword">of</span><span class="pas1-space"> hardware protection
+mechanisms </span><span class="pas1-reservedword">is</span><span class="pas1-space"> merely an expensive, inadequate way
+</span><span class="pas1-reservedword">of</span><span class="pas1-space"> making arbitrary mac.\line language </span><span class="pas1-string">'programs behave
+</span><span class="pas1-identifier">almost </span><span class="pas1-reservedword">as</span><span class="pas1-space"> predictably </span><span class="pas1-reservedword">as</span><span class="pas1-space"> compiled programs.)
+
+
+The </span><span class="pas1-reservedword">asm</span><span class="pas1-space"> timeGetTime </span><span class="pas1-reservedword">end</span><span class="pas1-space"> </span><span class="pas1-reservedword">function</span><span class="pas1-space"> retrieves the system time, </span><span class="pas1-reservedword">in</span><span class="pas1-space"> milliseconds. The system time </span><span class="pas1-reservedword">is</span><span class="pas1-space"> the time elapsed since Windows was started.
+Parameters
+
+This </span><span class="pas1-reservedword">function</span><span class="pas1-space"> has no parameters.
+Return value
+
+Returns the system time, </span><span class="pas1-reservedword">in</span><span class="pas1-space"> milliseconds.
+Remarks
+
+The only difference between this </span><span class="pas1-reservedword">function</span><span class="pas1-space"> </span><span class="pas1-reservedword">and</span><span class="pas1-space"> the timeGetSystemTime </span><span class="pas1-reservedword">function</span><span class="pas1-space"> </span><span class="pas1-reservedword">is</span><span class="pas1-space"> that timeGetSystemTime </span><span class="pas1-reservedword">uses</span><span class="pas1-space"> the MMTIME structure </span><span class="pas1-reservedword">to</span><span class="pas1-space"> return the system time. The timeGetTime </span><span class="pas1-reservedword">function</span><span class="pas1-space"> has less overhead than timeGetSystemTime.
+
+Note that the value returned by the timeGetTime </span><span class="pas1-reservedword">function</span><span class="pas1-space"> </span><span class="pas1-reservedword">is</span><span class="pas1-space"> a DWORD value. The return value wraps around </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-space"> every </span><span class="pas1-number">2</span><span class="pas1-symbol">^</span><span class="pas1-number">32</span><span class="pas1-space"> milliseconds, which </span><span class="pas1-reservedword">is</span><span class="pas1-space"> about </span><span class="pas1-float">49.71</span><span class="pas1-space"> days. This can cause problems </span><span class="pas1-reservedword">in</span><span class="pas1-space"> code that directly </span><span class="pas1-reservedword">uses</span><span class="pas1-space"> the timeGetTime return value </span><span class="pas1-reservedword">in</span><span class="pas1-space"> computations, particularly where the value </span><span class="pas1-reservedword">is</span><span class="pas1-space"> used </span><span class="pas1-reservedword">to</span><span class="pas1-space"> control code execution. You should always use the difference between two timeGetTime return values </span><span class="pas1-reservedword">in</span><span class="pas1-space"> computations.
+
+The </span><span class="pas1-reservedword">default</span><span class="pas1-space"> precision </span><span class="pas1-reservedword">of</span><span class="pas1-space"> the timeGetTime </span><span class="pas1-reservedword">function</span><span class="pas1-space"> can be five milliseconds </span><span class="pas1-reservedword">or</span><span class="pas1-space"> more, depending </span><span class="pas1-reservedword">on</span><span class="pas1-space"> the machine. You can use the timeBeginPeriod </span><span class="pas1-reservedword">and</span><span class="pas1-space"> timeEndPeriod functions </span><span class="pas1-reservedword">to</span><span class="pas1-space"> increase the precision </span><span class="pas1-reservedword">of</span><span class="pas1-space"> timeGetTime. </span><span class="pas1-reservedword">If</span><span class="pas1-space"> you </span><span class="pas1-reservedword">do</span><span class="pas1-space"> so, the minimum difference between successive values returned by timeGetTime can be </span><span class="pas1-reservedword">as</span><span class="pas1-space"> large </span><span class="pas1-reservedword">as</span><span class="pas1-space"> the minimum period value </span><span class="pas1-reservedword">set</span><span class="pas1-space"> using timeBeginPeriod </span><span class="pas1-reservedword">and</span><span class="pas1-space"> timeEndPeriod. Use the QueryPerformanceCounter </span><span class="pas1-reservedword">and</span><span class="pas1-space"> QueryPerformanceFrequency functions </span><span class="pas1-reservedword">to</span><span class="pas1-space"> measure short time intervals at a high resolution,
+
+
+
+</span><span class="pas1-reservedword">Dynamic</span><span class="pas1-space"> Loading
+You can access routines </span><span class="pas1-reservedword">in</span><span class="pas1-space"> a </span><span class="pas1-reservedword">library</span><span class="pas1-space"> through direct calls </span><span class="pas1-reservedword">to</span><span class="pas1-space"> Win32 APIs, including LoadLibrary, FreeLibrary,
+</span><span class="pas1-reservedword">and</span><span class="pas1-space"> GetProcAddress. These functions are declared </span><span class="pas1-reservedword">in</span><span class="pas1-space"> Windows.pas. </span><span class="pas1-reservedword">on</span><span class="pas1-space"> Linux, they are implemented </span><span class="pas1-reservedword">for
+</span><span class="pas1-identifier">compatibility </span><span class="pas1-reservedword">in</span><span class="pas1-space"> SysUtils.pas; the actual Linux OS routines are dlopen, dlclose, </span><span class="pas1-reservedword">and</span><span class="pas1-space"> dlsym (all declared </span><span class="pas1-reservedword">in</span><span class="pas1-space"> libc; see
+the man pages </span><span class="pas1-reservedword">for</span><span class="pas1-space"> more information). </span><span class="pas1-reservedword">In</span><span class="pas1-space"> this </span><span class="pas1-reservedword">case</span><span class="pas1-symbol">, use procedural-</span><span class="pas1-reservedword">type</span><span class="pas1-space"> variables </span><span class="pas1-reservedword">to</span><span class="pas1-space"> reference the imported routines.
+</span><span class="pas1-reservedword">For</span><span class="pas1-space"> example,
+When you import routines this way, the </span><span class="pas1-reservedword">library</span><span class="pas1-space"> </span><span class="pas1-reservedword">is</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> loaded </span><span class="pas1-reservedword">until</span><span class="pas1-space"> the code containing the call </span><span class="pas1-reservedword">to</span><span class="pas1-space"> LoadLibrary
+executes. The </span><span class="pas1-reservedword">library</span><span class="pas1-space"> </span><span class="pas1-reservedword">is</span><span class="pas1-space"> later unloaded by the call </span><span class="pas1-reservedword">to</span><span class="pas1-space"> FreeLibrary. This allows you </span><span class="pas1-reservedword">to</span><span class="pas1-space"> conserve memory </span><span class="pas1-reservedword">and</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> run
+your </span><span class="pas1-reservedword">program</span><span class="pas1-space"> even when some </span><span class="pas1-reservedword">of</span><span class="pas1-space"> the libraries it </span><span class="pas1-reservedword">uses</span><span class="pas1-space"> are </span><span class="pas1-reservedword">not</span><span class="pas1-space"> present.
+
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> ProcessMessages;
+The ProcessMessages method interrupts the execution </span><span class="pas1-reservedword">of</span><span class="pas1-space"> your application so that
+Windows can respond </span><span class="pas1-reservedword">to</span><span class="pas1-space"> events. </span><span class="pas1-reservedword">For</span><span class="pas1-space"> example, the user might want </span><span class="pas1-reservedword">to</span><span class="pas1-space"> move a form </span><span class="pas1-reservedword">on
+</span><span class="pas1-identifier">the screen </span><span class="pas1-reservedword">while</span><span class="pas1-space"> your application </span><span class="pas1-reservedword">is</span><span class="pas1-space"> doing some complex processing that would
+ordinarily prevent Windows from responding </span><span class="pas1-reservedword">to</span><span class="pas1-space"> keyboard </span><span class="pas1-reservedword">or</span><span class="pas1-space"> mouse events. By calling
+ProcessMessages, your application permits Windows </span><span class="pas1-reservedword">to</span><span class="pas1-space"> process these events at the time
+ProcessMessages </span><span class="pas1-reservedword">is</span><span class="pas1-space"> called. The ProcessMessages method cycles the Windows </span><span class="pas1-reservedword">message</span><span class="pas1-space"> loop
+</span><span class="pas1-reservedword">until</span><span class="pas1-space"> it </span><span class="pas1-reservedword">is</span><span class="pas1-space"> empty </span><span class="pas1-reservedword">and</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> returns control </span><span class="pas1-reservedword">to</span><span class="pas1-space"> your application.
+Example
+This example </span><span class="pas1-reservedword">uses</span><span class="pas1-space"> two buttons that are long enough </span><span class="pas1-reservedword">to</span><span class="pas1-space"> accommodate lengthy captions
+</span><span class="pas1-reservedword">on</span><span class="pas1-space"> a form. When the user clicks the button </span><span class="pas1-reservedword">with</span><span class="pas1-space"> the caption Ignore Messages, the code
+begins </span><span class="pas1-reservedword">to</span><span class="pas1-space"> generate a long series </span><span class="pas1-reservedword">of</span><span class="pas1-space"> random numbers. </span><span class="pas1-reservedword">If</span><span class="pas1-space"> the user tries </span><span class="pas1-reservedword">to</span><span class="pas1-space"> resize the form
+</span><span class="pas1-reservedword">while</span><span class="pas1-space"> the handler </span><span class="pas1-reservedword">is</span><span class="pas1-space"> running, nothing happens </span><span class="pas1-reservedword">until</span><span class="pas1-space"> the handler </span><span class="pas1-reservedword">is</span><span class="pas1-space"> finished. When the
+user clicks the button </span><span class="pas1-reservedword">with</span><span class="pas1-space"> the caption Process Messages, more random numbers are
+generated, but Windows can still respond </span><span class="pas1-reservedword">to</span><span class="pas1-space"> a series </span><span class="pas1-reservedword">of</span><span class="pas1-space"> mouse events, such </span><span class="pas1-reservedword">as</span><span class="pas1-space"> resizing
+the form.
+Note How quickly these event handlers run depends </span><span class="pas1-reservedword">on</span><span class="pas1-space"> the microprocessor </span><span class="pas1-reservedword">of</span><span class="pas1-space"> your
+computer. A </span><span class="pas1-reservedword">message</span><span class="pas1-space"> appears </span><span class="pas1-reservedword">on</span><span class="pas1-space"> the form informing you when the handler has finished
+executing.
+
+
+
+</span><span class="pas1-float">02.07.2013</span><span class="pas1-space"> </span><span class="pas1-float">11.30</span><span class="pas1-symbol">-</span><span class="pas1-float">14.00</span><span class="pas1-space"> , Brasserie Lipp, Uraniastrasse </span><span class="pas1-number">9</span><span class="pas1-symbol">, Z&uuml;rich
+
+F&uuml;r das Internet der Dinge entwickeln
+Max Kleiner, kleiner kommunikation
+
+Viele sehen im Internet </span><span class="pas1-reservedword">of</span><span class="pas1-space"> Things vor allem eines: ein gigantisches Potenzial f&uuml;r neue Gesch&auml;ftsmodelle. Bald wird die ganze Welt programmierbar sein. Jedes EBike, jede Waschmaschine, Kaffeemaschine, jeder Blutdruckmesser oder jede Armbanduhr wird irgendwie vernetzt sein. Ger&auml;te werden untereinander als Physical Computing kommunizieren, sich aufeinander abstimmen. Man geht also nicht mehr ins Internet, sondern das Internet ist Teil von uns, Sensoren messen meinen Blutzucker und berechnen so die n&auml;chste Krankenkassenpr&auml;mie.Es kann auch sein, dass intelligente Geb&auml;ude so st&ouml;ranf&auml;llig werden, dass der Fahrstuhl des Grauens Wirklichkeit wird.Nette Spielereien oder der Anfang einer neuen solargetriebenen Manufakturindustrie inklusive </span><span class="pas1-number">3</span><span class="pas1-identifier">D-Drucker und Roboter </span><span class="pas1-reservedword">in</span><span class="pas1-space"> der Altersbetreuung
+
+Max Kleiner wird konkret und bespricht, wie mit Android ein Arduino Board gesteuert wird:
+
+    REST als Command Protocol
+    Web </span><span class="pas1-reservedword">to</span><span class="pas1-space"> Serial Applications
+    Microcontrollers
+    Aktoren und Sensoren
+    RFIDs sind &uuml;berall
+     
+
+</span></code></pre><!--EndFragment--></body>
+</html>

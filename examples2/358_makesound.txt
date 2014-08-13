@@ -1,0 +1,408 @@
+//************************************************
+PROGRAM MakeSoundAndSaveAsWave;
+
+//Procedure MakeSound(Frequency{Hz}, Duration{mSec}: Integer; Volume: TVolumeLevel; savefilePath: string);
+
+CONST 
+//<Constant declarations>   locs=155  of the XRTL Lib and the makeSound of mX3 Lib
+  TEXTOUT = ' hi time traveler ';
+  FILENAME = 'maxbox3.exe';
+
+{TYPE 
+<Type declarations>}        
+
+VAR 
+  i, N, SN: integer;
+  getlist: TStringList;
+  bigint, bigintres: TXRTLInteger;
+  freqlist: TStringlist;
+
+
+//procedure StrtoList(s: string; const List: TStrings; const delimiter: char=';');
+procedure StrtoList(s: string; const List: TStrings; const delimiter: char);
+var tmp : string;
+    i   : integer;
+begin
+  List.BeginUpdate;
+  if delimiter = '' then delimiter:= ';';
+  try
+   List.Clear;
+   while pos(delimiter, s) > 0 do begin
+     i := pos(delimiter, s);
+     tmp := Copy(s, 1, i - 1);
+     Delete(s, 1, i);
+     List.Add(tmp);
+   end;
+   if s <> '' then
+     List.Add(s);
+  finally
+   List.EndUpdate;
+  end;
+end;
+
+procedure runDuallistForm;
+//var acap: TCaption;
+var getList: TStringlist;
+    dlist: TJvDualListDialog;
+begin
+  getList:= TStringlist.create;
+   if PeBorFormNames(Exepath+FILENAME, getList) then
+         writeln('forms mX3 found');
+    {dlist:= TJvDualListDialog.create(self);
+    TForm(dlist).Setbounds(10,10,400,400);
+    dlist.execute
+    dlist.free;}
+  with TJvDualListDialog.create(self) do begin
+    list1:= getList;
+    //okbtncaption:= 'Dual OK';
+    //TJvDualListDialog(setbounds
+    title:= 'mX3 Form Names';
+    Execute;
+    //showmodal;
+    Free;
+  end;
+  getlist.Free;  
+end; 
+
+
+procedure runPatchForm;
+//var acap: TCaption;
+begin
+  with TFoPatch.create(self) do begin
+    //list1:= getList;
+    SetBounds(10,10,350,200)
+    //okbtncaption:= 'Dual OK';
+    //TJvDualListDialog(setbounds
+    caption:= 'mX3 Patch Form';
+    Showmodal;
+    Free;
+  end;
+end; 
+
+function BigMulu2(aone, atwo: string): string;
+var bigint, bigint1, bigintres: TXRTLInteger;
+begin
+  XRTLFromString(aone, bigint, 10);
+  XRTLFromString(atwo, bigint1, 10);
+  XRTLMul(bigint,bigint1,bigintres);
+  result:= XRTLToString(bigintres,10,10);
+end;  
+
+function BigExp2(aone, atwo: string): string;
+var bigint, bigint1, bigintres: TXRTLInteger;
+begin
+  XRTLFromString(aone, bigint, 10);
+  XRTLFromString(atwo, bigint1, 10);
+  XRTLExp(bigint,bigint1,bigintres);
+  result:= XRTLToString(bigintres,10,10);
+end;  
+
+
+BEGIN  //Main
+//<Executable statements>
+   runDuallistForm;
+ //runPatchForm;
+   //Arraylength(bigint,40)
+   SetLength(bigint, 10); //dynamic array
+   for i:= 0 to arrayLength(bigint)-1 do
+     bigint[i]:= i;
+   for i:= 0 to arrayLength(bigint)-1 do
+     write(inttoStr(bigint[i]));
+    
+    //we multiply  123456789 * 123456789
+     XRTLFromString('123456789', bigint, 10);
+    writeln(inttostr(XRTLUMul(bigint,bigint,bigintres)));
+    writeln('result of bigInt: '+XRTLToString(bigintres,10,10));
+    //result of bigint: 15241578750190521
+    writeln(floattoStr(123456789.0 * 123456789.0));
+  
+  writeln('Float Test '+format('%.18f',[power(310,25)]));  
+  //assert(format('%.18f',[power(310,25)])='1.92327924899313583E62','this is float false');        
+  writeln('PascalToBar  '+floattoStr(PascalToBar(47.5)));
+  writeln('PascalToAt   '+floattoStr(PascalToAt(47.5)));
+  writeln('PascalToTorr '+floattoStr(PascalToTorr(47.5)));
+  maXcalcF('6017+3385+550');
+ 
+  N:= 2; SN:= 1000;
+   Writeln(TEXTOUT + DateTimeToStr(AddHours(Now,-(round(power(2,24))))));
+   //<Definitions>  
+   //XMLSafe
+   //ReturnMIMEType
+   //MIMETypeApplication
+   writeln(bignumber('123456789','123456789'));
+   MakeSound(440, 1000, 60,'');
+   MakeSound(440, 1000, 60,Exepath+'kammertontest.wav');
+   
+   // procedure MakeComplexSound(N:integer {stream # to use}; freqlist:TStrings; Duration{mSec}: Integer;
+   //                         pinknoise: boolean; Volume: TVolumeLevel);
+
+  //procedure SetComplexSoundElements(freqedt,Phaseedt,AmpEdt,WaveGrp:integer);
+   SetComplexSoundElements(500,90,60,1);
+   //Procedure AddComplexSoundObjectToList(newf,newp,newa,news:integer; freqlist: TStrings);');
+   
+  //if listbox1.items.count=0 then AddObjectToList(440,0,500,0); {no entry, make one}
+  
+   freqlist:=TStringlist.create;
+
+   AddComplexSoundObjectToList(440,0,500,0,freqlist);
+  
+    //nextstream:=(streaminuse+1) mod 2;
+    //MakeComplexSound(0, freqlist, 1000, true, 60); //just in progress!
+
+    freqlist.Free;
+    
+    Voice(powerBig(2,50));     //Async with Voice2()
+END. 
+
+
+{*************** PlayBtnClick **********}
+procedure TForm1.PlayBtnClick(Sender: TObject);
+var
+  nextstream:integer;
+  freqlist:TStringlist;
+  i:integer;
+  dur:integer;
+begin
+  freqlist:=TStringlist.create;
+  with listbox1 do
+  if items.count>0 then
+  begin
+    for i:=0 to items.count-1 do if checked[i] {copy only the checked frequencies}
+    then freqlist.addobject(items[i],items.objects[i]);
+    nextstream:=(streaminuse+1) mod 2;
+    if freqlist.count>0 then
+    begin
+      dur:=duration.position;
+      if unitsgrp.itemindex=1 then dur:=dur*1000;
+      if dur=0 then dur:=1000;  {continuous, generate 1 second's worth}
+      MakeComplexSound(nextstream, freqlist, dur{1000}, Volbar.position);
+      stopbtnclick(sender);
+      playing:=true;
+      streaminuse:=nextstream;
+      MsPlaySound;
+    end
+    else stopbtnclick(sender);
+    freqlist.free;
+  end;
+end;
+
+
+
+
+
+(* === compile-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_xrtl_math_Integer(CL: TPSPascalCompiler);
+begin
+  CL.AddTypeS('TXRTLInteger', 'array of Integer');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'EXRTLMathException');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'EXRTLExtendInvalidArgument');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'EXRTLDivisionByZero');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'EXRTLExpInvalidArgument');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'EXRTLInvalidRadix');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'EXRTLInvalidRadixDigit');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'EXRTLRootInvalidArgument');
+ CL.AddConstantN('BitsPerByte','LongInt').SetInt( 8);
+ BitsPerDigit','LongInt').SetInt( 32);
+ SignBitMask','LongWord').SetUInt( $80000000);
+ Function XRTLAdjustBits( const ABits : Integer) : Integer');
+ Function XRTLLength( const AInteger : TXRTLInteger) : Integer');
+ Function XRTLDataBits( const AInteger : TXRTLInteger) : Integer');
+ Procedure XRTLBitPosition( const BitIndex : Integer; var Index, Mask : Integer)');
+ Procedure XRTLBitSet( var AInteger : TXRTLInteger; const BitIndex : Integer)');
+ Procedure XRTLBitReset( var AInteger : TXRTLInteger; const BitIndex : Integer)');
+ Function XRTLBitGet( const AInteger : TXRTLInteger; const BitIndex : Integer) : Integer');
+ Function XRTLBitGetBool( const AInteger : TXRTLInteger; const BitIndex : Integer) : Boolean');
+ Function XRTLExtend(const AInteger: TXRTLInteger;ADataBits:Integer;Sign:Integer;var AResult:TXRTLInteger) : Integer');
+ Function XRTLZeroExtend( const AInteger : TXRTLInteger; ADataBits : Integer; var AResult : TXRTLInteger) : Integer');
+ Function XRTLSignExtend( const AInteger : TXRTLInteger; ADataBits : Integer; var AResult : TXRTLInteger) : Integer');
+ Function XRTLSignStrip(const AInteger: TXRTLInteger; var AResult: TXRTLInteger;const AMinDataBits: Integer):Integer');
+ Procedure XRTLNot( const AInteger : TXRTLInteger; var AResult : TXRTLInteger)');
+ Procedure XRTLOr( const AInteger1, AInteger2 : TXRTLInteger; var AResult : TXRTLInteger)');
+ Procedure XRTLAnd( const AInteger1, AInteger2 : TXRTLInteger; var AResult : TXRTLInteger)');
+ Procedure XRTLXor( const AInteger1, AInteger2 : TXRTLInteger; var AResult : TXRTLInteger)');
+ Function XRTLSign( const AInteger : TXRTLInteger) : Integer');
+ Procedure XRTLZero( var AInteger : TXRTLInteger)');
+ Procedure XRTLOne( var AInteger : TXRTLInteger)');
+ Procedure XRTLMOne( var AInteger : TXRTLInteger)');
+ Procedure XRTLTwo( var AInteger : TXRTLInteger)');
+ Function XRTLNeg( const AInteger : TXRTLInteger; var AResult : TXRTLInteger) : Integer');
+ Function XRTLAbs( const AInteger : TXRTLInteger; var AResult : TXRTLInteger) : Integer');
+ Procedure XRTLFullSum( const A, B, C : Integer; var Sum, Carry : Integer)');
+ Function XRTLAdd( const AInteger1, AInteger2 : TXRTLInteger; var AResult : TXRTLInteger) : Integer;');
+ Function XRTLAdd1( const AInteger1 : TXRTLInteger; const AInteger2 : Int64; var AResult : TXRTLInteger) : Integer;');
+ Function XRTLSub( const AInteger1, AInteger2 : TXRTLInteger; var AResult : TXRTLInteger) : Integer;');
+ Function XRTLSub1( const AInteger1 : TXRTLInteger; const AInteger2 : Int64; var AResult : TXRTLInteger) : Integer;');
+ Function XRTLCompare( const AInteger1, AInteger2 : TXRTLInteger) : Integer;');
+ Function XRTLCompare1( const AInteger1 : TXRTLInteger; const AInteger2 : Int64) : Integer;');
+ Function XRTLUMul( const AInteger1, AInteger2 : TXRTLInteger; var AResult : TXRTLInteger) : Integer');
+ Function XRTLMulAdd( const AInteger1, AInteger2, AInteger3 : TXRTLInteger; var AResult : TXRTLInteger) : Integer');
+ Function XRTLMul( const AInteger1, AInteger2 : TXRTLInteger; var AResult : TXRTLInteger) : Integer');
+ Procedure XRTLDivMod( const AInteger1, AInteger2 : TXRTLInteger; var QResult, RResult : TXRTLInteger)');
+ Procedure XRTLSqr( const AInteger : TXRTLInteger; var AResult : TXRTLInteger)');
+ Procedure XRTLSqrt( const AInteger : TXRTLInteger; var AResult : TXRTLInteger)');
+ Procedure XRTLRoot( const AInteger1, AInteger2 : TXRTLInteger; var AResult : TXRTLInteger)');
+ Procedure XRTLRootApprox( const AInteger1, AInteger2 : TXRTLInteger; var ALowApproxResult, AHighApproxResult : TXRTLInteger)');
+ Procedure XRTLURootApprox( const AInteger1, AInteger2 : TXRTLInteger; var ALowApproxResult, AHighApproxResult : TXRTLInteger)');
+ Procedure XRTLExp( const AInteger1, AInteger2 : TXRTLInteger; var AResult : TXRTLInteger)');
+ Procedure XRTLExpMod( const AInteger1, AInteger2, AInteger3 : TXRTLInteger; var AResult : TXRTLInteger)');
+ Procedure XRTLSLBL( const AInteger : TXRTLInteger; const BitCount : Integer; var AResult : TXRTLInteger)');
+ Procedure XRTLSABL( const AInteger : TXRTLInteger; const BitCount : Integer; var AResult : TXRTLInteger)');
+ Procedure XRTLRCBL( const AInteger : TXRTLInteger; const BitCount : Integer; var AResult : TXRTLInteger)');
+ Procedure XRTLSLDL( const AInteger : TXRTLInteger; const DigitCount : Integer; var AResult : TXRTLInteger)');
+ Procedure XRTLSADL( const AInteger : TXRTLInteger; const DigitCount : Integer; var AResult : TXRTLInteger)');
+ Procedure XRTLRCDL( const AInteger : TXRTLInteger; const DigitCount : Integer; var AResult : TXRTLInteger)');
+ Procedure XRTLSLBR( const AInteger : TXRTLInteger; const BitCount : Integer; var AResult : TXRTLInteger)');
+ Procedure XRTLSABR( const AInteger : TXRTLInteger; const BitCount : Integer; var AResult : TXRTLInteger)');
+ Procedure XRTLRCBR( const AInteger : TXRTLInteger; const BitCount : Integer; var AResult : TXRTLInteger)');
+ Procedure XRTLSLDR( const AInteger : TXRTLInteger; const DigitCount : Integer; var AResult : TXRTLInteger)');
+ Procedure XRTLSADR( const AInteger : TXRTLInteger; const DigitCount : Integer; var AResult : TXRTLInteger)');
+ Procedure XRTLRCDR( const AInteger : TXRTLInteger; const DigitCount : Integer; var AResult : TXRTLInteger)');
+ Function XRTLToHex( const AInteger : TXRTLInteger; Digits : Integer) : string');
+ Function XRTLToBin( const AInteger : TXRTLInteger; Digits : Integer) : string');
+ Function XRTLToString( const AInteger : TXRTLInteger; Radix : Integer; Digits : Integer) : string');
+ Procedure XRTLFromHex( const Value : string; var AResult : TXRTLInteger)');
+ Procedure XRTLFromBin( const Value : string; var AResult : TXRTLInteger)');
+ Procedure XRTLFromString( const Value : string; var AResult : TXRTLInteger; Radix : Integer)');
+ Procedure XRTLAssign(const AInteger : TXRTLInteger; var AResult : TXRTLInteger);');
+ Procedure XRTLAssign1( const Value : Integer; var AResult : TXRTLInteger);');
+ Procedure XRTLAssign2( const Value : Int64; var AResult : TXRTLInteger);');
+ Procedure XRTLAppend(const ALow, AHigh: TXRTLInteger; var AResult: TXRTLInteger)');
+ Procedure XRTLSplit( const AInteger : TXRTLInteger; var ALow, AHigh : TXRTLInteger; LowDigits : Integer)');
+ Function XRTLGetMSBitIndex( const AInteger : TXRTLInteger) : Integer');
+ Procedure XRTLMinMax( const AInteger1, AInteger2 : TXRTLInteger; var AMinResult, AMaxResult : TXRTLInteger)');
+ Procedure XRTLMin( const AInteger1, AInteger2 : TXRTLInteger; var AResult : TXRTLInteger);');
+ Procedure XRTLMin1( const AInteger1 : TXRTLInteger; const AInteger2 : Integer; var AResult : TXRTLInteger);');
+ Procedure XRTLMax( const AInteger1, AInteger2 : TXRTLInteger; var AResult : TXRTLInteger);');
+ Procedure XRTLMax1( const AInteger1 : TXRTLInteger; const AInteger2 : Integer; var AResult : TXRTLInteger);');
+ Procedure XRTLGCD( const AInteger1, AInteger2 : TXRTLInteger; var AResult : TXRTLInteger)');
+ Procedure XRTLSwap( var AInteger1, AInteger2 : TXRTLInteger)');
+ Procedure XRTLFactorial(const AInteger: TXRTLInteger; var AResult: TXRTLInteger)');
+ Procedure XRTLFactorialMod( const AInteger1, AInteger2 : TXRTLInteger; var AResult : TXRTLInteger)');
+end;
+
+
+----app_template_loaded_code----
+
+(* === compile-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJvDualListDialog(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TJvComponent', 'TJvDualListDialog') do
+  with CL.AddClassN(CL.FindClass('TJvComponent'),'TJvDualListDialog') do begin
+    RegisterMethod('Constructor Create( AOwner : TComponent)');
+    RegisterMethod('Function Execute : Boolean');
+    RegisterProperty('Ctl3D', 'Boolean', iptrw);
+    RegisterProperty('Sorted', 'Boolean', iptrw);
+    RegisterProperty('Title', 'string', iptrw);
+    RegisterProperty('Label1Caption', 'TCaption', iptrw);
+    RegisterProperty('Label2Caption', 'TCaption', iptrw);
+    RegisterProperty('OkBtnCaption', 'TCaption', iptrw);
+    RegisterProperty('CancelBtnCaption', 'TCaption', iptrw);
+    RegisterProperty('HelpBtnCaption', 'TCaption', iptrw);
+    RegisterProperty('HelpContext', 'THelpContext', iptrw);
+    RegisterProperty('List1', 'TStrings', iptrw);
+    RegisterProperty('List2', 'TStrings', iptrw);
+    RegisterProperty('ShowHelp', 'Boolean', iptrw);
+  end;
+end;
+
+
+(* === compile-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TImageForm(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TForm', 'TImageForm') do
+  with CL.AddClassN(CL.FindClass('TForm'),'TImageForm') do begin
+    RegisterProperty('DirectoryList', 'TDirectoryListBox', iptrw);
+    RegisterProperty('DriveCombo', 'TDriveComboBox', iptrw);
+    RegisterProperty('PathLabel', 'TLabel', iptrw);
+    RegisterProperty('FileEdit', 'TEdit', iptrw);
+    RegisterProperty('ImagePanel', 'TPanel', iptrw);
+    RegisterProperty('Image', 'TImage', iptrw);
+    RegisterProperty('FileListBox', 'TFileListBox', iptrw);
+    RegisterProperty('ImageName', 'TLabel', iptrw);
+    RegisterProperty('FilterCombo', 'TFilterComboBox', iptrw);
+    RegisterProperty('StretchCheck', 'TCheckBox', iptrw);
+    RegisterProperty('FilePics', 'TJvPicClip', iptrw);
+    RegisterProperty('FormStorage', 'TJvFormStorage', iptrw);
+    RegisterProperty('OkBtn', 'TButton', iptrw);
+    RegisterProperty('CancelBtn', 'TButton', iptrw);
+    RegisterProperty('Label2', 'TLabel', iptrw);
+    RegisterProperty('Label3', 'TLabel', iptrw);
+    RegisterProperty('Label4', 'TLabel', iptrw);
+    RegisterProperty('Label5', 'TLabel', iptrw);
+    RegisterProperty('PreviewBtn', 'TSpeedButton', iptrw);
+    RegisterMethod('Procedure FileListBoxClick( Sender : TObject)');
+    RegisterMethod('Procedure StretchCheckClick( Sender : TObject)');
+    RegisterMethod('Procedure FormCreate( Sender : TObject)');
+    RegisterMethod('Procedure FileListBoxChange( Sender : TObject)');
+    RegisterMethod('Procedure FileListBoxDblClick( Sender : TObject)');
+    RegisterMethod('Procedure FormDestroy( Sender : TObject)');
+    RegisterMethod('Procedure PreviewBtnClick( Sender : TObject)');
+    RegisterMethod('Procedure OkBtnClick( Sender : TObject)');
+    RegisterProperty('FileName', 'string', iptrw);
+  end;
+end;
+
+
+http://www.softwareschule.ch/download/maxbox_blix_the_programmer.pdf
+
+  
+  timec:= round(power(2,30)/24);
+  writeln(inttoStr(timec div 365));
+  writeln(intToStr(Round(Power(2,30)/24/365)));
+  writeln(inttoStr(round(power(2,12)) div 24));
+  maxcalcF('170*24');
+  
+  Energy = MemC * Work
+  W = KEt - KEº
+
+
+http://petshopboxstudio.com/goodies/free-vector-character-the-programmer/
+http://lifehacker.com/5401954/programmer-101-teach-yourself-how-to-code
+
+----code_cleared_checked----
+
+ 
+There are a lot of opinions out there, but there's no 88not one “best” language. Here's the thing to
+consider: In the end, language doesn't matter THAT much. Understanding data and control
+structures, algorithms, metrics, modelling and design patterns does matter very much. Every
+language, even a simple scripting language, will have elements that you'll use in other languages
+as well and will help 88your understanding. maXbox is build on Object Pascal and is similar to Java or C++ 88, a
+well known and mighty language.
+Script: Examples/336_digiclock2.txt
+Feedback @
+max@kleiner.com
+Literature:
+Kleiner et al., Patterns konkret, 2003, Software & Support
+Links of maXbox Tutorials:
+http://www.softwareschule.ch/maxbox.htm
+http://sourceforge.net/projects/maxbox
+http://sourceforge.net/apps/mediawiki/maxbox/
+http://en.wikipedia.org/wiki/Time_travel
+
+
+// arduino mail:
+
+But this doesn't seem to have any effect!!
+>
+> Especially since once HardwareSerial.cpp has been compiled,
+>
+> changing  the "main" sketch containing
+>
+> #define
+> SERIAL_BUFFER_SIZE
+>
+> the IDE reports : Using previously compiled:
+> /,,,/HardwareSerial.cpp.o
+>
+> Why is this? Can this approach be used?
+>
+>
+>
+> IMHO this is exactly the reason, why this approach does not work. HardwareSerial.cpp is compiled separately. So the compiler is not aware of any definitions made in the sketch.
+>
+> Best regards
+>
+> Stefan

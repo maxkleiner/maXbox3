@@ -1,0 +1,735 @@
+Version:0.9
+StartHTML:0000000105
+EndHTML:0000076349
+StartFragment:0000001037
+EndFragment:0000076333
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>mXScriptasHTML</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="generator" content="SynEdit HTML exporter" />
+<style type="text/css">
+<!--
+body { color: #000000; background-color: #FFFFFF; }
+.pas1-assembler { }
+.pas1-character { text-decoration: underline; }
+.pas1-comment { color: #000080; font-style: italic; }
+.pas1-float { color: #800080; }
+.pas1-hexadecimal { color: #FF00FF; }
+.pas1-identifier { }
+.pas1-number { color: #FF0000; }
+.pas1-preprocessor { font-style: italic; }
+.pas1-reservedword { color: #000000; font-weight: bold; }
+.pas1-space { }
+.pas1-string { color: #008080; }
+.pas1-symbol { color: #000000; }
+-->
+</style>
+</head>
+<body>
+<!--StartFragment--><pre><code><span class="pas1-reservedword">PROGRAM</span><span class="pas1-space"> DigiClocks2;
+
+</span><span class="pas1-comment">// kind of an Idea from bitbox, locs= 625; 13Intf;
+// Clock Composition art work
+// digiclock from the book delphi software praxis, modified on mX by max 
+
+</span><span class="pas1-reservedword">Const
+</span><span class="pas1-space">  PicPath = </span><span class="pas1-string">'\examples\images\'</span><span class="pas1-symbol">;
+  FBOX = </span><span class="pas1-number">4</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">VAR</span><span class="pas1-space"> 
+</span><span class="pas1-comment">//&lt;Variable declarations&gt;
+</span><span class="pas1-space">  frmMon: TForm;
+  ShowDate, ShowTime: boolean;
+  pg,py,pr: </span><span class="pas1-reservedword">Array</span><span class="pas1-symbol">[</span><span class="pas1-number">0</span><span class="pas1-symbol">..</span><span class="pas1-number">5</span><span class="pas1-symbol">] </span><span class="pas1-reservedword">of</span><span class="pas1-space"> TPaintBox;
+  div_dbl: double;
+  a,b,bin1, bin2, bin3: integer;
+  wd: word;
+  Image1: TImage;
+  frmsg: TStringGrid;
+  stat: TStatusbar;
+  panstep: TPanel;
+  Progress: TProgressBar;
+  tm1: TTimer;          
+    ilGreen: TCustomImageList;  
+    ilYellow: TCustomImageList;
+    ilRed: TCustomImageList;
+    panRed, panYell, panGreen: TPanel;       </span><span class="pas1-comment">//Panel und Bildkomponenten je Farbe
+</span><span class="pas1-space">    pr5, pr4, pr3, pr2, pr1, pr0: TPaintBox;
+    py5, py4, py3, py2, py1, py0: TPaintBox;
+    pg5, pg4, pg3, pg2, pg1, pg0: TPaintBox;
+    pan: TPanel;
+    mm1: TMainMenu;      
+    mPrg, mmEnde, mAnsicht: TMenuItem;
+    mmDatum, mmZeit: TMenuItem;
+  
+    zeit: </span><span class="pas1-reservedword">Array</span><span class="pas1-symbol">[</span><span class="pas1-number">1</span><span class="pas1-symbol">..</span><span class="pas1-number">6</span><span class="pas1-symbol">] </span><span class="pas1-reservedword">of</span><span class="pas1-space"> byte;
+    pb: </span><span class="pas1-reservedword">Array</span><span class="pas1-symbol">[</span><span class="pas1-number">1</span><span class="pas1-symbol">..</span><span class="pas1-number">6</span><span class="pas1-symbol">] </span><span class="pas1-reservedword">of</span><span class="pas1-space"> TPaintBox;
+    pb1, pb2, pb3, pb4, pb5, pb6: TPaintBox; </span><span class="pas1-comment">//PaintBoxen zur Zifferndarstellung
+</span><span class="pas1-space">    imgL: TCustomImageList;
+    digTimer: TTimer;  
+    Panel1: TPanel;
+    Label1: TLabel;
+  </span><span class="pas1-comment">//  procedure FormActivate(Sender: TObject);
+</span><span class="pas1-space">    </span><span class="pas1-comment">//procedure TimerTimer(Sender: TObject);
+
+//&lt;FUNCTION&gt;
+//&lt;PROCEDURE&gt; 
+</span><span class="pas1-reservedword">Procedure</span><span class="pas1-space"> AllBooleanPattern(aX, aY: integer);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    Writeln(</span><span class="pas1-character">#13#10</span><span class="pas1-symbol">+</span><span class="pas1-string">'************** All Booolean Functions **************'</span><span class="pas1-symbol">);
+    PrintF(</span><span class="pas1-string">'%-36s 01 False'</span><span class="pas1-symbol">,[inttobin(</span><span class="pas1-number">0</span><span class="pas1-symbol">)])
+    PrintF(</span><span class="pas1-string">'%-36s 02 AND'</span><span class="pas1-symbol">,[inttobin(aX </span><span class="pas1-reservedword">AND</span><span class="pas1-space"> aY)])
+    PrintF(</span><span class="pas1-string">'%-36s 03 Inhibit'</span><span class="pas1-symbol">,[inttobin(aX </span><span class="pas1-reservedword">AND</span><span class="pas1-space"> </span><span class="pas1-reservedword">NOT</span><span class="pas1-space"> aY)])
+    PrintF(</span><span class="pas1-string">'%-36s 04 Prepend'</span><span class="pas1-symbol">,[inttobin(aX)])
+    PrintF(</span><span class="pas1-string">'%-36s 05 Praesect'</span><span class="pas1-symbol">,[inttobin(</span><span class="pas1-reservedword">NOT</span><span class="pas1-space"> aX </span><span class="pas1-reservedword">AND</span><span class="pas1-space"> aY)])
+    PrintF(</span><span class="pas1-string">'%-36s 06 Postpend'</span><span class="pas1-symbol">,[inttobin(aY)])
+    PrintF(</span><span class="pas1-string">'%-36s 07 XOR'</span><span class="pas1-symbol">,[inttobin(aX </span><span class="pas1-reservedword">XOR</span><span class="pas1-space"> aY)])
+    PrintF(</span><span class="pas1-string">'%-36s 08 OR'</span><span class="pas1-symbol">,[inttobin(aX </span><span class="pas1-reservedword">OR</span><span class="pas1-space"> aY)])
+    PrintF(</span><span class="pas1-string">'%-36s 09 NOR'</span><span class="pas1-symbol">,[inttobin(</span><span class="pas1-reservedword">NOT</span><span class="pas1-symbol">(aX </span><span class="pas1-reservedword">OR</span><span class="pas1-space"> aY))])
+    PrintF(</span><span class="pas1-string">'%-36s 10 Aequival'</span><span class="pas1-symbol">,[inttobin((</span><span class="pas1-reservedword">NOT</span><span class="pas1-space"> aX </span><span class="pas1-reservedword">OR</span><span class="pas1-space"> aY)</span><span class="pas1-reservedword">AND</span><span class="pas1-symbol">(</span><span class="pas1-reservedword">NOT</span><span class="pas1-space"> aY </span><span class="pas1-reservedword">OR</span><span class="pas1-space"> aX))])
+    PrintF(</span><span class="pas1-string">'%-36s 11 NegY'</span><span class="pas1-symbol">,[inttobin(</span><span class="pas1-reservedword">NOT</span><span class="pas1-space"> aY)])
+    PrintF(</span><span class="pas1-string">'%-36s 12 ImplicatY'</span><span class="pas1-symbol">,[inttobin(aX </span><span class="pas1-reservedword">OR</span><span class="pas1-space"> </span><span class="pas1-reservedword">NOT</span><span class="pas1-space"> aY)])
+    PrintF(</span><span class="pas1-string">'%-36s 13 NegX'</span><span class="pas1-symbol">,[inttobin(</span><span class="pas1-reservedword">NOT</span><span class="pas1-space"> aX)])
+    PrintF(</span><span class="pas1-string">'%-36s 14 ImplicatX'</span><span class="pas1-symbol">,[inttobin(</span><span class="pas1-reservedword">NOT</span><span class="pas1-space"> aX </span><span class="pas1-reservedword">OR</span><span class="pas1-space"> aY)])
+    PrintF(</span><span class="pas1-string">'%-36s 15 NAND'</span><span class="pas1-symbol">,[inttobin(</span><span class="pas1-reservedword">NOT</span><span class="pas1-symbol">(aX </span><span class="pas1-reservedword">AND</span><span class="pas1-space"> aY))])
+    PrintF(</span><span class="pas1-string">'%-36s 16 True'</span><span class="pas1-symbol">,[inttobin(</span><span class="pas1-reservedword">NOT</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-symbol">)])
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">function</span><span class="pas1-space"> getBmp(apath: </span><span class="pas1-reservedword">string</span><span class="pas1-symbol">): TBitmap;
+  </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    result:= TBitmap.Create;
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> result </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">try
+</span><span class="pas1-space">      LoadFromFile(apath);
+    </span><span class="pas1-reservedword">finally
+</span><span class="pas1-space">      </span><span class="pas1-comment">//Free;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-comment">//////////////////// digi clock rock
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> DigiTForm1_FormActivate(Sender: TObject);
+</span><span class="pas1-comment">//Startinit on Form
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i,t: integer;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  pb[</span><span class="pas1-number">1</span><span class="pas1-symbol">]:=pb1; pb[</span><span class="pas1-number">2</span><span class="pas1-symbol">]:=pb2; pb[</span><span class="pas1-number">3</span><span class="pas1-symbol">]:=pb3;
+  pb[</span><span class="pas1-number">4</span><span class="pas1-symbol">]:=pb4; pb[</span><span class="pas1-number">5</span><span class="pas1-symbol">]:=pb5; pb[</span><span class="pas1-number">6</span><span class="pas1-symbol">]:=pb6;
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">6</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> zeit[i]:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+  imgL:= TCustomImageList.Create(self);
+  ReadComponentResFile(ExePath+picpath+</span><span class="pas1-string">'MyImageClockList7Segment.dat'</span><span class="pas1-symbol">, imgl);
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> imgL </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-comment">//@Bitmap.DrawMode:= dmBlend  //assign; setbounds
+</span><span class="pas1-space">     Height:= </span><span class="pas1-number">50</span><span class="pas1-symbol">;
+     Width:= </span><span class="pas1-number">30</span><span class="pas1-symbol">;
+    </span><span class="pas1-comment">{for t:= 0 to 9 do //image, mask
+       Add(getbmp(exePath+picpath+'7seg'+inttostr(t)+'.bmp'),
+                    getbmp(exePath+picpath+'7segaus.bmp'));}</span><span class="pas1-space"> 
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  WriteComponentResFile(ExePath+picpath+</span><span class="pas1-string">'MyImageClockList7Segment.dat'</span><span class="pas1-symbol">, imgL);
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> DigiTForm1_TimerTimer(Sender: TObject);
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> i: integer; 
+    s,s1: </span><span class="pas1-reservedword">String</span><span class="pas1-symbol">;
+    t: TDateTime;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  t:= Now;
+  </span><span class="pas1-comment">//Formate, 6-parts of s
+</span><span class="pas1-space">  DateTimeToString(s,</span><span class="pas1-string">'hhmmss'</span><span class="pas1-symbol">,t);
+  </span><span class="pas1-comment">//Number assign and draw
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">6</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    s1:= MidStr(s,i,</span><span class="pas1-number">1</span><span class="pas1-symbol">);
+    zeit[i]:= strToInt(s1);
+    imgL.Draw(pb[i].Canvas,</span><span class="pas1-number">1</span><span class="pas1-symbol">,</span><span class="pas1-number">1</span><span class="pas1-symbol">,zeit[i],true);
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-comment">//////////////////////digi clock end
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm1_FormShow(Sender: TObject);
+</span><span class="pas1-comment">//Programm-Starteinstellungen
+</span><span class="pas1-reservedword">var</span><span class="pas1-space">  mask, image: TBitmap;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-comment">// Make sure that transparency pixel in the image is taken
+</span><span class="pas1-space"> </span><span class="pas1-comment">//MyImage.Picture.Bitmap.TransparentMode:= tmFixed;
+</span><span class="pas1-space"> </span><span class="pas1-comment">{ ilGreen:= TBitmap32List.Create(self);
+    with ilGreen do begin
+        //Bitmap.DrawMode:= dmBlend
+        bitmaps.add;
+        bitmap[0]:= getbitmap32(exepath+'\examples\images\green0.bmp');
+    end;}
+</span><span class="pas1-space">  pg[</span><span class="pas1-number">0</span><span class="pas1-symbol">]:=pg0; pg[</span><span class="pas1-number">1</span><span class="pas1-symbol">]:=pg1; pg[</span><span class="pas1-number">2</span><span class="pas1-symbol">]:=pg2; pg[</span><span class="pas1-number">3</span><span class="pas1-symbol">]:=pg3; pg[</span><span class="pas1-number">4</span><span class="pas1-symbol">]:=pg4; pg[</span><span class="pas1-number">5</span><span class="pas1-symbol">]:=pg5;
+  py[</span><span class="pas1-number">0</span><span class="pas1-symbol">]:=py0; py[</span><span class="pas1-number">1</span><span class="pas1-symbol">]:=py1; py[</span><span class="pas1-number">2</span><span class="pas1-symbol">]:=py2; py[</span><span class="pas1-number">3</span><span class="pas1-symbol">]:=py3; py[</span><span class="pas1-number">4</span><span class="pas1-symbol">]:=py4; py[</span><span class="pas1-number">5</span><span class="pas1-symbol">]:=py5;
+  pr[</span><span class="pas1-number">0</span><span class="pas1-symbol">]:=pr0; pr[</span><span class="pas1-number">1</span><span class="pas1-symbol">]:=pr1; pr[</span><span class="pas1-number">2</span><span class="pas1-symbol">]:=pr2; pr[</span><span class="pas1-number">3</span><span class="pas1-symbol">]:=pr3; pr[</span><span class="pas1-number">4</span><span class="pas1-symbol">]:=pr4; pr[</span><span class="pas1-number">5</span><span class="pas1-symbol">]:=pr5;
+  ShowDate:=true; ShowTime:=true; 
+  ilGreen:= TCustomImageList.Create(self);
+  </span><span class="pas1-comment">//ReadComponentResFile('MyImageClockList.dat', ilGreen);
+</span><span class="pas1-space">  image:= getbitmap(exepath+picpath+</span><span class="pas1-string">'green0.bmp'</span><span class="pas1-symbol">)
+  mask:= getbitmap(exepath+picpath+</span><span class="pas1-string">'green1.bmp'</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> ilGreen </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">       Height:= </span><span class="pas1-number">39</span><span class="pas1-symbol">; Width:= </span><span class="pas1-number">39</span><span class="pas1-symbol">;
+       Add(image,</span><span class="pas1-reservedword">NIL</span><span class="pas1-symbol">);
+       Add(mask,</span><span class="pas1-reservedword">NIL</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  ilyellow:= TCustomImageList.Create(self);
+  image:= getbitmap(exepath+picpath+</span><span class="pas1-string">'yellow0.bmp'</span><span class="pas1-symbol">)
+  mask:= getbitmap(exepath+picpath+</span><span class="pas1-string">'yellow1.bmp'</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> ilyellow </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">       Height:= </span><span class="pas1-number">39</span><span class="pas1-symbol">; Width:= </span><span class="pas1-number">39</span><span class="pas1-symbol">;
+       Add(image,</span><span class="pas1-reservedword">NIL</span><span class="pas1-symbol">);
+       Add(mask,</span><span class="pas1-reservedword">NIL</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  ilred:= TCustomImageList.Create(self);
+  image:= getbitmap(exepath+picpath+</span><span class="pas1-string">'red0.bmp'</span><span class="pas1-symbol">)
+  mask:= getbitmap(exepath+picpath+</span><span class="pas1-string">'red1.bmp'</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> ilred </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      Height:= </span><span class="pas1-number">39</span><span class="pas1-symbol">; Width:= </span><span class="pas1-number">39</span><span class="pas1-symbol">;
+      Add(image,</span><span class="pas1-reservedword">NIL</span><span class="pas1-symbol">);
+      Add(mask,</span><span class="pas1-reservedword">NIL</span><span class="pas1-symbol">);
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-comment">//WriteComponentResFile('MyImageClockList.dat', ilGreen);
+</span><span class="pas1-space">  </span><span class="pas1-comment">//ReadComponentResFile('MyImageClockList.dat', ilGreen);
+</span><span class="pas1-space">  </span><span class="pas1-comment">//tm1.Enabled:=true;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm1_tm1Timer(Sender: TObject);
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  i,zh,zm,zs,p: integer;
+  t,m,j,hh,mm,ss,ms: Word;
+  mtime: TDateTime;
+  s,s1,s2: </span><span class="pas1-reservedword">String</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  mtime:= Now; s:= </span><span class="pas1-string">''</span><span class="pas1-symbol">;
+  DecodeDate(mTime,j,m,t);
+  DecodeTime(mTime,hh,mm,ss,ms);
+  DateTimeToString(s1,</span><span class="pas1-string">'dd.mm.yyyy'</span><span class="pas1-symbol">,mTime);
+  DateTimeToString(s2,</span><span class="pas1-string">' hh:mm:ss'</span><span class="pas1-symbol">,mTime);
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ShowDate </span><span class="pas1-reservedword">then</span><span class="pas1-space"> s:=s+s1; </span><span class="pas1-comment">//+#9;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> ShowTime </span><span class="pas1-reservedword">then</span><span class="pas1-space"> s:=s+s2;
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> s=</span><span class="pas1-string">''</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> s:=</span><span class="pas1-string">' ... the real binarytime ... '</span><span class="pas1-symbol">;
+  pan.Caption:= s;
+  p:= </span><span class="pas1-number">1</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">for</span><span class="pas1-space"> i:= </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-reservedword">to</span><span class="pas1-space"> </span><span class="pas1-number">5</span><span class="pas1-space"> </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin</span><span class="pas1-space"> </span><span class="pas1-comment">//Binaries cut and draw
+</span><span class="pas1-space">    </span><span class="pas1-comment">//zh:=0; if (hh and p)&lt;&gt;0 then zh:=1;
+</span><span class="pas1-space">    </span><span class="pas1-comment">//zm:=0; if (mm and p)&lt;&gt;0 then zm:=1;
+</span><span class="pas1-space">    </span><span class="pas1-comment">//zs:=0; if (ss and p)&lt;&gt;0 then zs:=1;
+</span><span class="pas1-space">    zh:=(hh </span><span class="pas1-reservedword">and</span><span class="pas1-space"> p) </span><span class="pas1-reservedword">shr</span><span class="pas1-space"> i;
+    zm:=(mm </span><span class="pas1-reservedword">and</span><span class="pas1-space"> p) </span><span class="pas1-reservedword">shr</span><span class="pas1-space"> i;
+    zs:=(ss </span><span class="pas1-reservedword">and</span><span class="pas1-space"> p) </span><span class="pas1-reservedword">shr</span><span class="pas1-space"> i;
+    </span><span class="pas1-comment">//pr[i].canvas.draw(Rect.Left, Rect.Top, TBitmap(ilRed[0]));
+</span><span class="pas1-space">    </span><span class="pas1-comment">//py[i].canvas.draw(Rect.Left, Rect.Top, TBitmap(ilRed[0]));
+</span><span class="pas1-space">    </span><span class="pas1-comment">//pg[i].canvas.draw(Rect.Left, Rect.Top, TBitmap(ilRed[0]));
+</span><span class="pas1-space">    ilRed.Draw(pr[i].Canvas,</span><span class="pas1-number">1</span><span class="pas1-symbol">,</span><span class="pas1-number">2</span><span class="pas1-symbol">,zh,true);
+    ilYellow.Draw(py[i].Canvas,</span><span class="pas1-number">1</span><span class="pas1-symbol">,</span><span class="pas1-number">2</span><span class="pas1-symbol">,zm,true);
+    ilGreen.Draw(pg[i].Canvas,</span><span class="pas1-number">1</span><span class="pas1-symbol">,</span><span class="pas1-number">2</span><span class="pas1-symbol">,zs,true);
+
+    frmsg.Cells[</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">1</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'Dez'</span><span class="pas1-symbol">;
+    frmsg.Cells[</span><span class="pas1-number">1</span><span class="pas1-symbol">,</span><span class="pas1-number">1</span><span class="pas1-symbol">]:= inttoStr(hh);
+    frmsg.Cells[</span><span class="pas1-number">2</span><span class="pas1-symbol">,</span><span class="pas1-number">1</span><span class="pas1-symbol">]:= inttoStr(mm);
+    frmsg.Cells[</span><span class="pas1-number">3</span><span class="pas1-symbol">,</span><span class="pas1-number">1</span><span class="pas1-symbol">]:= inttoStr(ss);
+    frmsg.Cells[</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">2</span><span class="pas1-symbol">]:= </span><span class="pas1-string">'Hex'</span><span class="pas1-symbol">;
+    frmsg.Cells[</span><span class="pas1-number">1</span><span class="pas1-symbol">,</span><span class="pas1-number">2</span><span class="pas1-symbol">]:= inttohex(hh,</span><span class="pas1-number">3</span><span class="pas1-symbol">);
+    frmsg.Cells[</span><span class="pas1-number">2</span><span class="pas1-symbol">,</span><span class="pas1-number">2</span><span class="pas1-symbol">]:= inttohex(mm,</span><span class="pas1-number">3</span><span class="pas1-symbol">);
+    frmsg.Cells[</span><span class="pas1-number">3</span><span class="pas1-symbol">,</span><span class="pas1-number">2</span><span class="pas1-symbol">]:= inttohex(ss,</span><span class="pas1-number">3</span><span class="pas1-symbol">);
+    Progress.Position:= (hh * </span><span class="pas1-number">60</span><span class="pas1-symbol">)+mm;
+    panStep.Caption:= formatFloat(</span><span class="pas1-string">'0'</span><span class="pas1-symbol">,(((hh*</span><span class="pas1-number">60</span><span class="pas1-symbol">)+mm)/</span><span class="pas1-number">1440</span><span class="pas1-symbol">)*</span><span class="pas1-number">100</span><span class="pas1-symbol">)+</span><span class="pas1-string">' %'</span><span class="pas1-symbol">; </span><span class="pas1-comment">//prorgess
+</span><span class="pas1-space">    p:= p*</span><span class="pas1-number">2</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm1_mmDatumClick(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  mmDatum.Checked:= </span><span class="pas1-reservedword">not</span><span class="pas1-space"> mmDatum.Checked;
+  ShowDate:= mmDatum.Checked;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> TForm1_mmZeitClick(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  mmZeit.Checked:= </span><span class="pas1-reservedword">not</span><span class="pas1-space"> mmZeit.Checked;
+  ShowTime:= mmZeit.Checked;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> btnCloseClick(Sender: TObject);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">  stat.SimpleText:= </span><span class="pas1-string">'Closed Clicked'</span><span class="pas1-symbol">;
+  </span><span class="pas1-comment">//il.Free;
+</span><span class="pas1-space">  frmMon.Close;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> CloseClick(Sender: TObject; </span><span class="pas1-reservedword">var</span><span class="pas1-space"> action: TCloseAction);
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   </span><span class="pas1-comment">//if MessageDlg('Wanna Leave?',mtConfirmation,[mbYes, mbNo],0)= mrYes then begin
+</span><span class="pas1-space">   </span><span class="pas1-comment">//form1.Free; //bmp.Free;
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> digtimer &lt;&gt; </span><span class="pas1-reservedword">NIL</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    digtimer.enabled:= false;
+    digtimer.Free;
+    digtimer:= </span><span class="pas1-reservedword">NIL</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">if</span><span class="pas1-space"> tm1 &lt;&gt; </span><span class="pas1-reservedword">NIL</span><span class="pas1-space"> </span><span class="pas1-reservedword">then</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    tm1.enabled:= false;
+    tm1.Free;
+    tm1:= </span><span class="pas1-reservedword">NIL</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+   action:= caFree;
+   imgL.Free;
+   ilGreen.Free;
+   ilRed.Free;
+   ilyellow.Free;
+   frmMon:= </span><span class="pas1-reservedword">NIL</span><span class="pas1-symbol">;
+   screen.cursor:= crDefault;
+   </span><span class="pas1-comment">//showmessage('free');
+</span><span class="pas1-space">   writeln(</span><span class="pas1-string">'Digi Free and Closer test finished'</span><span class="pas1-symbol">);
+   </span><span class="pas1-comment">//end else
+</span><span class="pas1-space">     </span><span class="pas1-comment">//Action:= caNone;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+
+
+</span><span class="pas1-comment">//*************************Form Create********************************//
+</span><span class="pas1-reservedword">procedure</span><span class="pas1-space"> InitCreateForms;
+</span><span class="pas1-reservedword">var</span><span class="pas1-space"> panImg, panR: TPanel;
+    </span><span class="pas1-comment">//mis : array[0..3] of TMenuItem;
+</span><span class="pas1-reservedword">begin
+</span><span class="pas1-space"> </span><span class="pas1-comment">// seq --&gt; panel-image-drawgrid-bitmap
+</span><span class="pas1-space">  </span><span class="pas1-comment">//panimg1.DoubleBuffered:= true;
+</span><span class="pas1-space">  
+ frmMon:= TForm.Create(self);
+ </span><span class="pas1-reservedword">with</span><span class="pas1-space"> frmMon </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">   </span><span class="pas1-comment">//FormStyle := fsStayOnTop;
+</span><span class="pas1-space">   Position:= poScreenCenter;
+   BorderIcons:= [biSystemMenu, biMinimize];
+   BorderStyle:= bsSingle;
+   PixelsPerInch:= </span><span class="pas1-number">96</span><span class="pas1-symbol">;
+   caption:=</span><span class="pas1-string">'4 Digi Binary Clocks'</span><span class="pas1-symbol">;
+   color:= clred;
+   width:= </span><span class="pas1-number">650</span><span class="pas1-symbol">;
+   height:= </span><span class="pas1-number">540</span><span class="pas1-symbol">;
+   Menu:= mm1;
+   Show;
+   onClose:= @CloseClick;
+ </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  Screen.cursor:= crHourGlass;
+ 
+  Panel1:= TPanel.Create(frmMon)
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> panel1 </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent:= frmMon;
+    SetBounds(</span><span class="pas1-number">18</span><span class="pas1-symbol">,</span><span class="pas1-number">18</span><span class="pas1-symbol">,</span><span class="pas1-number">241</span><span class="pas1-symbol">,</span><span class="pas1-number">65</span><span class="pas1-symbol">);
+    BevelOuter:= bvLowered;
+    Color:= clBlack;
+    TabOrder:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+  pb1:= TPaintBox.Create(frmMon);
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> pb1 </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      parent:= panel1;
+      SetBounds(</span><span class="pas1-number">8</span><span class="pas1-symbol">,</span><span class="pas1-number">8</span><span class="pas1-symbol">,</span><span class="pas1-number">30</span><span class="pas1-symbol">,</span><span class="pas1-number">50</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+    pb2:= TPaintBox.Create(frmMon);
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> pb2 </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      parent:= panel1;
+      SetBounds(</span><span class="pas1-number">40</span><span class="pas1-symbol">,</span><span class="pas1-number">8</span><span class="pas1-symbol">,</span><span class="pas1-number">30</span><span class="pas1-symbol">,</span><span class="pas1-number">50</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+    pb3:= TPaintBox.Create(frmMon);
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> pb3 </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      parent:= panel1;
+      SetBounds(</span><span class="pas1-number">88</span><span class="pas1-symbol">,</span><span class="pas1-number">8</span><span class="pas1-symbol">,</span><span class="pas1-number">30</span><span class="pas1-symbol">,</span><span class="pas1-number">50</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+    pb4:= TPaintBox.Create(frmMon);
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> pb4 </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      parent:= panel1;
+      SetBounds(</span><span class="pas1-number">120</span><span class="pas1-symbol">,</span><span class="pas1-number">8</span><span class="pas1-symbol">,</span><span class="pas1-number">30</span><span class="pas1-symbol">,</span><span class="pas1-number">50</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+    pb5:= TPaintBox.Create(frmMon);
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> pb5 </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      parent:= panel1;
+      SetBounds(</span><span class="pas1-number">168</span><span class="pas1-symbol">,</span><span class="pas1-number">8</span><span class="pas1-symbol">,</span><span class="pas1-number">30</span><span class="pas1-symbol">,</span><span class="pas1-number">50</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+    pb6:= TPaintBox.Create(frmMon);
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> pb6 </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      parent:= panel1;
+      SetBounds(</span><span class="pas1-number">200</span><span class="pas1-symbol">,</span><span class="pas1-number">8</span><span class="pas1-symbol">,</span><span class="pas1-number">30</span><span class="pas1-symbol">,</span><span class="pas1-number">50</span><span class="pas1-symbol">);
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TLabel.Create(self) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      SetBounds(</span><span class="pas1-number">74</span><span class="pas1-symbol">,</span><span class="pas1-number">12</span><span class="pas1-symbol">,</span><span class="pas1-number">10</span><span class="pas1-symbol">,</span><span class="pas1-number">38</span><span class="pas1-symbol">);
+      parent:= panel1;
+      Caption:= </span><span class="pas1-string">':'</span><span class="pas1-symbol">;
+      Font.Charset:= ANSI_CHARSET;
+      Font.Color:= clGreen;
+      Font.Height:= -</span><span class="pas1-number">27</span><span class="pas1-symbol">;
+      Font.Name:= </span><span class="pas1-string">'Arial Black'</span><span class="pas1-symbol">;
+      Font.Style:= [fsBold];
+      ParentFont:= False;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TLabel.Create(self) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      SetBounds(</span><span class="pas1-number">154</span><span class="pas1-symbol">,</span><span class="pas1-number">12</span><span class="pas1-symbol">,</span><span class="pas1-number">10</span><span class="pas1-symbol">,</span><span class="pas1-number">38</span><span class="pas1-symbol">);
+      parent:= panel1;
+      Caption:= </span><span class="pas1-string">':'</span><span class="pas1-symbol">;
+      Font.Charset:= ANSI_CHARSET;
+      Font.Color:= clGreen;
+      Font.Height:= -</span><span class="pas1-number">27</span><span class="pas1-symbol">;
+      Font.Name:= </span><span class="pas1-string">'Arial Black'</span><span class="pas1-symbol">;
+      Font.Style:= [fsBold];
+      ParentFont:= False;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    
+  </span><span class="pas1-comment">//////////digi binary controls 
+</span><span class="pas1-space">  Pan:= TPanel.Create(frmMon)   </span><span class="pas1-comment">//just set text time
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> pan </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent:= frmMon;
+    SetBounds(</span><span class="pas1-number">18</span><span class="pas1-symbol">,</span><span class="pas1-number">350</span><span class="pas1-symbol">,</span><span class="pas1-number">312</span><span class="pas1-symbol">,</span><span class="pas1-number">45</span><span class="pas1-symbol">);
+    </span><span class="pas1-comment">//BevelOuter:= bvLowered;
+</span><span class="pas1-space">    BevelOuter:= bvLowered
+    </span><span class="pas1-comment">//Color:= clBtnHighlight;
+</span><span class="pas1-space">    Font.Style:= [fsBold];
+    Font.Size:= </span><span class="pas1-number">20</span><span class="pas1-symbol">;
+    Font.Color:= clred;
+    Color:= clBlack;
+    TabOrder:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+ 
+  Panred:= TPanel.Create(frmMon)
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> panred </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent:= frmMon;
+    SetBounds(</span><span class="pas1-number">18</span><span class="pas1-symbol">,</span><span class="pas1-number">150</span><span class="pas1-symbol">,</span><span class="pas1-number">240</span><span class="pas1-symbol">,</span><span class="pas1-number">40</span><span class="pas1-symbol">);
+    BevelOuter:= bvLowered;
+    </span><span class="pas1-comment">//transparent;
+</span><span class="pas1-space">    Color:= clwhite;
+    TabOrder:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+  pr5:= TPaintBox.Create(frmMon);
+    pr5.parent:= panred;
+    pr5.SetBounds(</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">);
+    pr4:= TPaintBox.Create(frmMon);
+    pr4.parent:= panred;
+    pr4.SetBounds(</span><span class="pas1-number">40</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">);
+    pr3:= TPaintBox.Create(frmMon);
+    pr3.parent:= panred;
+    pr3.SetBounds(</span><span class="pas1-number">80</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">);
+    pr2:= TPaintBox.Create(frmMon);
+    pr2.parent:= panred;
+    pr2.SetBounds(</span><span class="pas1-number">120</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">);
+    pr1:= TPaintBox.Create(frmMon);
+    pr1.parent:= panred;
+    pr1.SetBounds(</span><span class="pas1-number">160</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">);
+    pr0:= TPaintBox.Create(frmMon);
+    pr0.parent:= panred;
+    pr0.SetBounds(</span><span class="pas1-number">200</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">);
+
+  Panyell:= TPanel.Create(frmMon)
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> panyell </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent:= frmMon;
+    SetBounds(</span><span class="pas1-number">18</span><span class="pas1-symbol">,</span><span class="pas1-number">200</span><span class="pas1-symbol">,</span><span class="pas1-number">240</span><span class="pas1-symbol">,</span><span class="pas1-number">40</span><span class="pas1-symbol">);
+    BevelOuter:= bvLowered;
+    Color:= clWhite;
+    TabOrder:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+  py5:= TPaintBox.Create(frmMon);
+    py5.parent:= panyell;
+    py5.SetBounds(</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">);
+  py4:= TPaintBox.Create(frmMon);
+    py4.parent:= panyell;
+    py4.SetBounds(</span><span class="pas1-number">40</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">);
+  py3:= TPaintBox.Create(frmMon);
+    py3.parent:= panyell;
+    py3.SetBounds(</span><span class="pas1-number">80</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">);
+  py2:= TPaintBox.Create(frmMon);
+    py2.parent:= panyell;
+    py2.SetBounds(</span><span class="pas1-number">120</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">);
+  py1:= TPaintBox.Create(frmMon);
+    py1.parent:= panyell;
+    py1.SetBounds(</span><span class="pas1-number">160</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">);
+  py0:= TPaintBox.Create(frmMon);
+    py0.parent:= panyell;
+    py0.SetBounds(</span><span class="pas1-number">200</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">);
+
+  Pangreen:= TPanel.Create(frmMon)
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> pangreen </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    parent:= frmMon;
+    SetBounds(</span><span class="pas1-number">18</span><span class="pas1-symbol">,</span><span class="pas1-number">250</span><span class="pas1-symbol">,</span><span class="pas1-number">240</span><span class="pas1-symbol">,</span><span class="pas1-number">40</span><span class="pas1-symbol">);
+    BevelOuter:= bvLowered;
+    Color:= clWhite;
+    TabOrder:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+  pg5:= TPaintBox.Create(frmMon);
+    pg5.parent:= pangreen;
+    pg5.SetBounds(</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">);
+  pg4:= TPaintBox.Create(frmMon);
+    pg4.parent:= pangreen;
+    pg4.SetBounds(</span><span class="pas1-number">40</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">);
+  pg3:= TPaintBox.Create(frmMon);
+    pg3.parent:= pangreen;
+    pg3.SetBounds(</span><span class="pas1-number">80</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">);
+  pg2:= TPaintBox.Create(frmMon);
+    pg2.parent:= pangreen;
+    pg2.SetBounds(</span><span class="pas1-number">120</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">);
+  pg1:= TPaintBox.Create(frmMon);
+    pg1.parent:= pangreen;
+    pg1.SetBounds(</span><span class="pas1-number">160</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">);
+  pg0:= TPaintBox.Create(frmMon);
+    pg0.parent:= pangreen;
+    pg0.SetBounds(</span><span class="pas1-number">200</span><span class="pas1-symbol">,</span><span class="pas1-number">0</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">,</span><span class="pas1-number">39</span><span class="pas1-symbol">);
+  
+  DigiTForm1_FormActivate(Self);
+  digtimer:= TTimer.Create(self);
+  digtimer.enabled:= true;
+  digtimer.onTimer:= @DigiTForm1_TimerTimer;
+  digtimer.interval:= </span><span class="pas1-number">1000</span><span class="pas1-symbol">;
+  
+  TForm1_FormShow(Self);
+  tm1:= TTimer.Create(self);
+  tm1.enabled:= true;
+  tm1.onTimer:= @TForm1_tm1Timer;
+  tm1.interval:= </span><span class="pas1-number">1000</span><span class="pas1-symbol">;
+
+  PanR:= TPanel.create(frmMon);
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> PanR </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      parent:= frmMon;
+      setBounds(</span><span class="pas1-number">472</span><span class="pas1-symbol">,</span><span class="pas1-number">9</span><span class="pas1-symbol">,</span><span class="pas1-number">155</span><span class="pas1-symbol">,</span><span class="pas1-number">450</span><span class="pas1-symbol">);
+      BevelOuter:= bvLowered
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TBitBtn.Create(frmMon) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      Parent:= frmMon;        
+      SetBounds(</span><span class="pas1-number">488</span><span class="pas1-symbol">,</span><span class="pas1-number">30</span><span class="pas1-symbol">,</span><span class="pas1-number">121</span><span class="pas1-symbol">,</span><span class="pas1-number">30</span><span class="pas1-symbol">)        </span><span class="pas1-comment">//30
+</span><span class="pas1-space">      Caption:= </span><span class="pas1-string">'Load Clock'
+</span><span class="pas1-space">      Hint:= </span><span class="pas1-string">'Load your own clock picture!'</span><span class="pas1-symbol">;
+      ShowHint:= true;
+      glyph.LoadFromResourceName(getHINSTANCE,</span><span class="pas1-string">'CL_MPEJECT'</span><span class="pas1-symbol">); 
+      </span><span class="pas1-comment">//OnClick:= @BtnPictureLoad;
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TBitBtn.Create(frmMon) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      Parent:= frmMon;        
+      SetBounds(</span><span class="pas1-number">488</span><span class="pas1-symbol">,</span><span class="pas1-number">68</span><span class="pas1-symbol">,</span><span class="pas1-number">121</span><span class="pas1-symbol">,</span><span class="pas1-number">30</span><span class="pas1-symbol">)       </span><span class="pas1-comment">//68
+</span><span class="pas1-space">      glyph.LoadFromResourceName(getHINSTANCE,</span><span class="pas1-string">'CL_MPSTEP'</span><span class="pas1-symbol">); 
+      Caption:= </span><span class="pas1-string">'New Clock'
+</span><span class="pas1-space">      </span><span class="pas1-comment">//Enabled:= False
+</span><span class="pas1-space">      </span><span class="pas1-comment">//OnClick:= @btnNewClockClick
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TBitBtn.Create(frmMon) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      Parent:= frmMon;        
+      SetBounds(</span><span class="pas1-number">488</span><span class="pas1-symbol">,</span><span class="pas1-number">420</span><span class="pas1-symbol">,</span><span class="pas1-number">121</span><span class="pas1-symbol">,</span><span class="pas1-number">30</span><span class="pas1-symbol">)
+      glyph.LoadFromResourceName(getHINSTANCE,</span><span class="pas1-string">'CL_MPSTOP'</span><span class="pas1-symbol">); 
+      Caption:= </span><span class="pas1-string">'Close'
+</span><span class="pas1-space">      OnClick:= @btnCloseClick
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+    panstep:= TPanel.Create(frmMon); 
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> panstep </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      Parent:= frmMon;        
+      SetBounds(</span><span class="pas1-number">488</span><span class="pas1-symbol">,</span><span class="pas1-number">120</span><span class="pas1-symbol">,</span><span class="pas1-number">121</span><span class="pas1-symbol">,</span><span class="pas1-number">25</span><span class="pas1-symbol">)
+      BevelOuter:= bvLowered
+      Caption:= </span><span class="pas1-string">'0 %'
+</span><span class="pas1-space">      Color:= clyellow;</span><span class="pas1-comment">//$30809000;
+</span><span class="pas1-space">      </span><span class="pas1-comment">//Color:= 8404992
+</span><span class="pas1-space">    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+   frmsg:= TStringGrid.Create(frmMon);
+   </span><span class="pas1-reservedword">with</span><span class="pas1-space"> frmsg </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">    </span><span class="pas1-comment">//SetBounds(512,320,79,79)  
+</span><span class="pas1-space">     parent:= frmMon;
+     Left:= </span><span class="pas1-number">500</span><span class="pas1-symbol">; Top:= </span><span class="pas1-number">320</span><span class="pas1-symbol">;
+     Width:= </span><span class="pas1-number">95</span><span class="pas1-symbol">; Height:= </span><span class="pas1-number">79</span><span class="pas1-symbol">;
+     ColCount:= </span><span class="pas1-number">4
+</span><span class="pas1-space">     DefaultColWidth:= </span><span class="pas1-number">22
+</span><span class="pas1-space">     DefaultRowHeight:= </span><span class="pas1-number">18
+</span><span class="pas1-space">     FixedCols:= </span><span class="pas1-number">0
+</span><span class="pas1-space">     RowCount:= </span><span class="pas1-number">4
+</span><span class="pas1-space">     FixedRows:= </span><span class="pas1-number">0
+</span><span class="pas1-space">   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TJvAnalogClock.Create(frmMon) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin</span><span class="pas1-space"> 
+    parent:= PanR;
+    bevelwidth:= </span><span class="pas1-number">0</span><span class="pas1-symbol">;
+    colormin:= clblue;
+    </span><span class="pas1-comment">//timeoffSet:= -60;
+</span><span class="pas1-space">    align:= alclient;
+    ColorHr:= clRed;
+    </span><span class="pas1-comment">//WidthHandHr:= 1;
+</span><span class="pas1-space">    ColorHandHr:= clRed;
+    ColorHandMin:= clRed;
+    setBounds(</span><span class="pas1-number">28</span><span class="pas1-symbol">,</span><span class="pas1-number">5</span><span class="pas1-symbol">,</span><span class="pas1-number">100</span><span class="pas1-symbol">,</span><span class="pas1-number">100</span><span class="pas1-symbol">);
+    centercol:= clyellow; </span><span class="pas1-comment">//cldarkblue32; //clwebgold; 
+</span><span class="pas1-space">    centersize:= </span><span class="pas1-number">8</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;  
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TLabel.Create(frmMon) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     Parent:= PanR;        
+     SetBounds(</span><span class="pas1-number">18</span><span class="pas1-symbol">,</span><span class="pas1-number">140</span><span class="pas1-symbol">,</span><span class="pas1-number">50</span><span class="pas1-symbol">,</span><span class="pas1-number">18</span><span class="pas1-symbol">)
+     Caption:= </span><span class="pas1-string">'Progress:'
+</span><span class="pas1-space">     bringtofront;
+  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+  </span><span class="pas1-reservedword">with</span><span class="pas1-space"> TLabel.Create(frmMon) </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     Parent:= PanR;        
+     SetBounds(</span><span class="pas1-number">18</span><span class="pas1-symbol">,</span><span class="pas1-number">290</span><span class="pas1-symbol">,</span><span class="pas1-number">50</span><span class="pas1-symbol">,</span><span class="pas1-number">18</span><span class="pas1-symbol">)
+     Caption:= </span><span class="pas1-string">'Navigation:'
+</span><span class="pas1-space">  </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+   
+  mm1:= TMainMenu.Create(frmMon);
+    mPrg:= TMenuItem.Create(frmMon);
+    mPrg.Caption:= </span><span class="pas1-string">'Program'</span><span class="pas1-symbol">;
+    mm1.Items.Add(mPrg);
+    </span><span class="pas1-comment">//mm1.Items[0].Add(mPrg);
+</span><span class="pas1-space">    mmEnde:= TMenuItem.Create(frmmon)
+    </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mmEnde </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">      </span><span class="pas1-comment">//parent:= mPrg;
+</span><span class="pas1-space">      Caption:= </span><span class="pas1-string">'Shotdown'
+</span><span class="pas1-space">      tag:= mprg;
+      </span><span class="pas1-comment">//submenu.add
+</span><span class="pas1-space">      </span><span class="pas1-comment">//items[0].add(mprg);
+</span><span class="pas1-space">      OnClick:= @btnCloseClick;
+    </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+     mprg.add(mmende);
+      </span><span class="pas1-comment">//SubItem:= TMenuItem.Create(MainMenu1);
+</span><span class="pas1-space">      </span><span class="pas1-comment">//MainMenu1.Items[0].Add(SubItem);
+</span><span class="pas1-space">      </span><span class="pas1-comment">//mPrg.Items[mmEnde];
+</span><span class="pas1-space">      mAnsicht:= TMenuItem.Create(frmMon);
+      mAnsicht.Caption:= </span><span class="pas1-string">'View'</span><span class="pas1-symbol">;
+      mm1.Items.Add(mAnsicht);
+      mmDatum:= TMenuItem.Create(mAnsicht);
+      </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mmdatum </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        Caption:= </span><span class="pas1-string">'Date'</span><span class="pas1-symbol">;
+        Checked:= True;
+        OnClick:= @TForm1_mmDatumClick;
+      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+      mAnsicht.Add(mmdatum);
+      mmZeit:= TMenuItem.Create(mAnsicht);
+      </span><span class="pas1-reservedword">with</span><span class="pas1-space"> mmZeit </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">        Caption:= </span><span class="pas1-string">'Time'</span><span class="pas1-symbol">;
+        Checked:= True;
+        OnClick:= @TForm1_mmZeitClick;
+      </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+      mAnsicht.Add(mmzeit);
+      frmMon.Menu:= mm1;
+  
+   stat:= TStatusbar.Create(FrmMon);
+   </span><span class="pas1-reservedword">with</span><span class="pas1-space"> Stat </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     parent:= frmMon;
+     stat.SimplePanel:= true;
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+   stat.SimpleText:=</span><span class="pas1-string">'Clock Composition is running ...at: '</span><span class="pas1-symbol">+DateTimeToInternetStr(now, true);
+   Progress:= TProgressBar.Create(frmMon);
+   </span><span class="pas1-reservedword">with</span><span class="pas1-space"> progress </span><span class="pas1-reservedword">do</span><span class="pas1-space"> </span><span class="pas1-reservedword">begin
+</span><span class="pas1-space">     parent:= frmMon;
+     Align:= alBottom;
+     </span><span class="pas1-comment">//step:= 10;
+</span><span class="pas1-space">     Max:= (</span><span class="pas1-number">24</span><span class="pas1-symbol">*</span><span class="pas1-number">60</span><span class="pas1-symbol">);
+   </span><span class="pas1-reservedword">end</span><span class="pas1-symbol">;
+</span><span class="pas1-reservedword">end</span><span class="pas1-symbol">; 
+
+
+</span><span class="pas1-reservedword">BEGIN</span><span class="pas1-space">  </span><span class="pas1-comment">//Main  APP
+//&lt;Executable statements&gt;
+</span><span class="pas1-space">   div_dbl:= </span><span class="pas1-float">5.0</span><span class="pas1-space"> / </span><span class="pas1-float">2.0</span><span class="pas1-symbol">; </span><span class="pas1-comment">// 2.500000
+</span><span class="pas1-space">   writeln(Format(</span><span class="pas1-string">'%0.6f'</span><span class="pas1-symbol">, [div_dbl]))
+   div_dbl:= </span><span class="pas1-number">20</span><span class="pas1-space"> </span><span class="pas1-reservedword">mod</span><span class="pas1-space"> </span><span class="pas1-number">3</span><span class="pas1-symbol">;  </span><span class="pas1-comment">// 2.00000
+</span><span class="pas1-space">   writeln(Format(</span><span class="pas1-string">'%f'</span><span class="pas1-symbol">, [div_dbl]))
+   a:= </span><span class="pas1-number">5</span><span class="pas1-symbol">; b:= </span><span class="pas1-number">6</span><span class="pas1-symbol">;
+   </span><span class="pas1-reservedword">if</span><span class="pas1-space"> </span><span class="pas1-reservedword">not</span><span class="pas1-space"> (A&lt;&gt;B) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'even'</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">else
+</span><span class="pas1-space">                    writeln(</span><span class="pas1-string">'odd'</span><span class="pas1-symbol">);   
+   </span><span class="pas1-reservedword">if</span><span class="pas1-space"> (A=B) </span><span class="pas1-reservedword">then</span><span class="pas1-space"> writeln(</span><span class="pas1-string">'even'</span><span class="pas1-symbol">) </span><span class="pas1-reservedword">else
+</span><span class="pas1-space">                    writeln(</span><span class="pas1-string">'odd'</span><span class="pas1-symbol">);   
+
+   </span><span class="pas1-comment">// wholee ASCII Table
+</span><span class="pas1-space">   </span><span class="pas1-comment">{ writeln(Chr(67))
+   for i:= 0 to 255 do
+     writeln(format('wert %d %s',[i, Chr(i)]))}
+</span><span class="pas1-space">    writeln(Format(</span><span class="pas1-string">'%s'</span><span class="pas1-symbol">,[inttobin(</span><span class="pas1-number">97</span><span class="pas1-symbol">)]))
+    writeln(Format(</span><span class="pas1-string">'%s'</span><span class="pas1-symbol">,[inttobin(</span><span class="pas1-number">223</span><span class="pas1-symbol">)]))
+    writeln(Format(</span><span class="pas1-string">'%s'</span><span class="pas1-symbol">,[inttobin(</span><span class="pas1-number">97</span><span class="pas1-space"> </span><span class="pas1-reservedword">XOR</span><span class="pas1-space"> </span><span class="pas1-number">223</span><span class="pas1-symbol">)]))
+    bin1:= </span><span class="pas1-number">97</span><span class="pas1-symbol">; bin2:= </span><span class="pas1-number">223</span><span class="pas1-symbol">;
+    bin3:= bin1 </span><span class="pas1-reservedword">XOR</span><span class="pas1-space"> bin2;
+    writeln(Format(</span><span class="pas1-string">'%s'</span><span class="pas1-symbol">,[IntToBin(bin3)]))
+    writeln(</span><span class="pas1-string">' '</span><span class="pas1-symbol">);
+    wd:= </span><span class="pas1-number">150</span><span class="pas1-symbol">;
+    writeln(</span><span class="pas1-string">'first     '</span><span class="pas1-symbol">+IntToBin(wd))
+    writeln(IntToStr(wd))
+    </span><span class="pas1-comment">//double the value
+</span><span class="pas1-space">    wd:= wd </span><span class="pas1-reservedword">SHL</span><span class="pas1-space"> </span><span class="pas1-number">1
+</span><span class="pas1-space">    writeln(</span><span class="pas1-string">'double '</span><span class="pas1-symbol">+IntToBin(wd))
+    writeln(IntToStr(wd))
+    </span><span class="pas1-comment">//half the value
+</span><span class="pas1-space">    wd:= wd </span><span class="pas1-reservedword">SHR</span><span class="pas1-space"> </span><span class="pas1-number">1
+</span><span class="pas1-space">    writeln(</span><span class="pas1-string">'half     '</span><span class="pas1-symbol">+IntToBin(wd))
+    writeln(IntToStr(wd))
+    </span><span class="pas1-comment">//init the value
+</span><span class="pas1-space">    writeln(</span><span class="pas1-string">'init      '</span><span class="pas1-symbol">+IntToBin(wd))
+    writeln(</span><span class="pas1-string">'          '</span><span class="pas1-symbol">+IntToBin(wd </span><span class="pas1-reservedword">XOR</span><span class="pas1-space"> wd))
+
+    AllBooleanPattern(</span><span class="pas1-number">10</span><span class="pas1-symbol">,</span><span class="pas1-number">12</span><span class="pas1-symbol">);
+    InitCreateForms;
+
+</span><span class="pas1-reservedword">END</span><span class="pas1-symbol">. 
+
+
+       (A&lt;&gt;B)  </span><span class="pas1-reservedword">NOT</span><span class="pas1-space"> --&gt; A=B
+        </span><span class="pas1-number">0</span><span class="pas1-space">  </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-number">1</span><span class="pas1-space">       </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-number">0
+</span><span class="pas1-space">        </span><span class="pas1-number">0</span><span class="pas1-space">  </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-number">0
+</span><span class="pas1-space">        </span><span class="pas1-number">1</span><span class="pas1-space">  </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-number">0
+</span><span class="pas1-space">        </span><span class="pas1-number">1</span><span class="pas1-space">  </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-number">0</span><span class="pas1-space"> </span><span class="pas1-number">1</span><span class="pas1-space">       </span><span class="pas1-number">1</span><span class="pas1-space"> </span><span class="pas1-number">1
+</span><span class="pas1-space">        
+        </span><span class="pas1-comment">//19.8. um 16 Uhr PT1 Update
+</span><span class="pas1-space">        
+  </span><span class="pas1-reservedword">XOR</span><span class="pas1-space"> App      
+  </span><span class="pas1-number">0110</span><span class="pas1-space"> </span><span class="pas1-number">0001
+</span><span class="pas1-symbol">^ </span><span class="pas1-number">1101</span><span class="pas1-space"> </span><span class="pas1-number">1111
+</span><span class="pas1-symbol">-----------
+  </span><span class="pas1-number">1011</span><span class="pas1-space"> </span><span class="pas1-number">1110
+</span><span class="pas1-space">        
+        
+  </span><span class="pas1-number">00000000000000000000000100101100</span><span class="pas1-space"> </span><span class="pas1-reservedword">XOR
+</span><span class="pas1-space">  </span><span class="pas1-number">00000000000000000000000100101100
+</span><span class="pas1-space">                         </span><span class="pas1-number">000000000
+</span><span class="pas1-space">                         
+</span><span class="pas1-number">00000000000000000000000000000000</span><span class="pas1-space">     </span><span class="pas1-number">01</span><span class="pas1-space"> False
+</span><span class="pas1-number">00000000000000000000000000001000</span><span class="pas1-space">     </span><span class="pas1-number">02</span><span class="pas1-space"> </span><span class="pas1-reservedword">AND
+</span><span class="pas1-number">00000000000000000000000000000010</span><span class="pas1-space">     </span><span class="pas1-number">03</span><span class="pas1-space"> Inhibit
+</span><span class="pas1-number">00000000000000000000000000001010</span><span class="pas1-space">     </span><span class="pas1-number">04</span><span class="pas1-space"> Prepend
+</span><span class="pas1-number">00000000000000000000000000000100</span><span class="pas1-space">     </span><span class="pas1-number">05</span><span class="pas1-space"> Praesect
+</span><span class="pas1-number">00000000000000000000000000001100</span><span class="pas1-space">     </span><span class="pas1-number">06</span><span class="pas1-space"> Postpend
+</span><span class="pas1-number">00000000000000000000000000000110</span><span class="pas1-space">     </span><span class="pas1-number">07</span><span class="pas1-space"> </span><span class="pas1-reservedword">XOR
+</span><span class="pas1-number">00000000000000000000000000001110</span><span class="pas1-space">     </span><span class="pas1-number">08</span><span class="pas1-space"> </span><span class="pas1-reservedword">OR
+</span><span class="pas1-number">11111111111111111111111111110001</span><span class="pas1-space">     </span><span class="pas1-number">09</span><span class="pas1-space"> NOR
+</span><span class="pas1-number">11111111111111111111111111111001</span><span class="pas1-space">     </span><span class="pas1-number">10</span><span class="pas1-space"> Aequival
+</span><span class="pas1-number">11111111111111111111111111110011</span><span class="pas1-space">     </span><span class="pas1-number">11</span><span class="pas1-space"> NegY
+</span><span class="pas1-number">11111111111111111111111111111011</span><span class="pas1-space">     </span><span class="pas1-number">12</span><span class="pas1-space"> ImplicatY
+</span><span class="pas1-number">11111111111111111111111111110101</span><span class="pas1-space">     </span><span class="pas1-number">13</span><span class="pas1-space"> NegX
+</span><span class="pas1-number">11111111111111111111111111111101</span><span class="pas1-space">     </span><span class="pas1-number">14</span><span class="pas1-space"> ImplicatX
+</span><span class="pas1-number">11111111111111111111111111110111</span><span class="pas1-space">     </span><span class="pas1-number">15</span><span class="pas1-space"> NAND
+</span><span class="pas1-number">11111111111111111111111111111111</span><span class="pas1-space">     </span><span class="pas1-number">16</span><span class="pas1-space"> True                         
+
+----app_template_loaded----
+
+  </span><span class="pas1-comment">{K:= add(getbmp(exepath+picpath+'7seg0.bmp'),getbmp(exepath+picpath+'7segaus.bmp'));
+    k:= add(getbmp(exepath+'\examples\images\7seg1.bmp'),getbmp(exepath+'\examples\images\7segaus.bmp'));
+    add(getbmp(exepath+'\examples\images\7seg2.bmp'),getbmp(exepath+'\examples\images\7segaus.bmp'));
+    add(getbmp(exepath+'\examples\images\7seg3.bmp'),getbmp(exepath+'\examples\images\7segaus.bmp'));
+    add(getbmp(exepath+'\examples\images\7seg4.bmp'),getbmp(exepath+'\examples\images\7segaus.bmp'));
+    add(getbmp(exepath+'\examples\images\7seg5.bmp'),getbmp(exepath+'\examples\images\7segaus.bmp'));
+    add(getbmp(exepath+'\examples\images\7seg6.bmp'),getbmp(exepath+'\examples\images\7segaus.bmp'));
+    add(getbmp(exepath+'\examples\images\7seg7.bmp'),getbmp(exepath+'\examples\images\7segaus.bmp'));
+    add(getbmp(exepath+'\examples\images\7seg8.bmp'),getbmp(exepath+'\examples\images\7segaus.bmp'));
+    add(getbmp(exepath+'\examples\images\7seg9.bmp'),getbmp(exepath+'\examples\images\7segaus.bmp'));}
+</span><span class="pas1-identifier">Let’s say you have placed Image list </span><span class="pas1-reservedword">and</span><span class="pas1-space"> an Image </span><span class="pas1-reservedword">on</span><span class="pas1-space"> your form </span><span class="pas1-reservedword">and</span><span class="pas1-space"> populated the list </span><span class="pas1-reservedword">with</span><span class="pas1-space"> few state images
+	
+</span><span class="pas1-reservedword">var
+</span><span class="pas1-space">  MyImageList: TImageList;
+  MyImage: TImage;
+Canvas
+
+That </span><span class="pas1-reservedword">is</span><span class="pas1-space"> probably the easiest </span><span class="pas1-reservedword">case</span><span class="pas1-symbol">. Lets draw an image </span><span class="pas1-reservedword">on</span><span class="pas1-space"> canvas </span><span class="pas1-reservedword">of</span><span class="pas1-space"> some control (OwnerDraw situation) </span><span class="pas1-reservedword">and</span><span class="pas1-space"> also center it. X, Y are top left corner </span><span class="pas1-reservedword">of</span><span class="pas1-space"> the future image </span><span class="pas1-reservedword">and</span><span class="pas1-space"> Width </span><span class="pas1-reservedword">is</span><span class="pas1-space"> a width </span><span class="pas1-reservedword">of</span><span class="pas1-space"> the rectangle we want </span><span class="pas1-reservedword">to</span><span class="pas1-space"> center image </span><span class="pas1-reservedword">in</span><span class="pas1-symbol">.
+MyImageIndex </span><span class="pas1-reservedword">is</span><span class="pas1-space"> an index </span><span class="pas1-reservedword">of</span><span class="pas1-space"> the image </span><span class="pas1-reservedword">in</span><span class="pas1-space"> the Image List.
+?
+</span><span class="pas1-number">1
+</span><span class="pas1-space">	
+MyImageList.Draw(Canvas, X + Width </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-space"> - MyImageList.Width </span><span class="pas1-reservedword">div</span><span class="pas1-space"> </span><span class="pas1-number">2</span><span class="pas1-symbol">, Y, MyImageIndex, dsNormal, itImage);
+TImage
+
+Being a little bit more complex, it does require some extra code.
+	
+</span><span class="pas1-comment">// Make sure that any prior state is cleared.
+// If you do not do that with transparency enabled, you would see
+// images on top of each other
+</span><span class="pas1-identifier">MyImage.Picture.Bitmap := </span><span class="pas1-reservedword">nil</span><span class="pas1-symbol">;
+</span><span class="pas1-comment">// Make sure that transparency pixel in the image is taken
+// in consideration
+</span><span class="pas1-identifier">MyImage.Picture.Bitmap.TransparentMode := tmFixed;
+MyImage.Picture.Bitmap.TransparentColor := clWhite;
+</span><span class="pas1-comment">// Load image from the Image list into TImage
+</span><span class="pas1-identifier">MyImageList.GetBitmap(MyImageIndex, MyImage.Picture.Bitmap);
+</span></code></pre><!--EndFragment--></body>
+</html>

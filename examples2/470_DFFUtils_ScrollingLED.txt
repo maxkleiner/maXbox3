@@ -1,0 +1,548 @@
+
+unit U_ScrollingLEDs3;
+{Copyright  © 2001-2003, Gary Darby,  www.DelphiForFun.org
+ This program may be used or modified for any non-commercial purpose
+ so long as this original notice remains in place.
+ All other rights are reserved
+ }
+
+{Scrolling LEDs program simulates those scrolling signs frequently used for
+ advertising messages}
+
+interface
+{uses
+Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  StdCtrls, ExtCtrls, ComCtrls;}
+
+type
+TLedchar=record
+ch:array of array of byte; {character image}
+charwidth:byte;  {width of character in LED units}
+end;
+
+  var
+ // TForm1 = class(TForm)
+    Image1: TImage;
+    OpenDialog1: TOpenDialog;
+    ColorDialog1: TColorDialog;
+    LedGrp: TGroupBox;
+    LEDPixelsUD: TUpDown;
+    LEDSizeEdt: TEdit;
+    Label3: TLabel;
+    LEDColorBtn: TButton;
+    LEDOffColorBtn: TButton;
+    ShapeGrp: TRadioGroup;
+    BoardColorBtn: TButton;
+    ShowTextBtn: TButton;
+    StopBtn: TButton;
+    SpeedBar: TTrackBar;
+    Label2: TLabel;
+    MessagePages: TPageControl;
+    Textpage: TTabSheet;
+    DateTimePage: TTabSheet;
+    Label1: TLabel;
+    TextEdt: TEdit;
+    DTFormatGrp: TRadioGroup;
+    LoadFontBtn: TButton;
+    FontLbl: TLabel;
+    NewScreenBox: TCheckBox;
+    Minimizebtnclick: TButton;
+    StatusBar1: TStatusBar;
+         procedure TForm1_ShowTextBtnClick(Sender: TObject);
+         procedure LoadFontBtnClick(Sender: TObject);
+         procedure TForm1_FormActivate(Sender: TObject);
+         procedure BoardColorBtnClick(Sender: TObject);
+         procedure LEDColorBtnClick(Sender: TObject);
+         procedure LEDSizeEdtChange(Sender: TObject);
+         procedure LEDOffColorBtnClick(Sender: TObject);
+         procedure StopBtnClick(Sender: TObject);
+         procedure ShapeGrpClick(Sender: TObject);
+         procedure SpeedBarChange(Sender: TObject);
+         procedure TForm1_FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+         procedure TForm1_MinimizebtnclickClick(Sender: TObject);
+         procedure TForm1_NewScreenBoxClick(Sender: TObject);
+         procedure TForm1_MessagePagesDrawTab(Control: TCustomTabControl;
+               TabIndex: Integer; const Rect: TRect; Active: Boolean);
+         //private
+         { Private declarations }
+         //public
+         { Public declarations }
+         function loadfont(fname:string):boolean;
+         procedure DrawBlankColumn(c:TCanvas; x1:integer);
+         function drawLED(c:TCanvas; startx:integer; chr1:char):integer;
+         procedure animate(b:Tbitmap; s:string; image:TImage);
+         function getdatetimestring:string;
+         //end;
+
+var
+   Form1: TForm;
+   chars:array[0..255] of TLedchar;
+             fontheight, maxcharwidth,nbrchars:integer;
+             BoardColor,LEDOnColor,LEDOffColor:TColor; {Colors}
+         LEDSize:integer;  {LED pixel size}
+         RoundLED:boolean; {LED Shape}
+         DelayMS:integer; {Scrolling speed}
+         running:boolean;  {message is running}
+      
+
+implementation
+
+//uses U_LEDWindow;
+
+//{$R *.DFM}
+{*************************** DrawBlankColumn *******************}
+procedure DrawBlankColumn(c:TCanvas; x1:integer);
+{Draw a single column of LEDs in the off state at X1, return width in pixels}
+var
+x2,y1,y2,i:integer;
+begin
+with c do
+begin
+pen.width:=2;
+       pen.color:=BoardColor;
+       brush.color:=Boardcolor;
+       y1:=0;
+       y2:=LEDSize;
+       x2:=x1+LEDSize;
+for i:= 0 to fontheight-1 do
+begin
+rectangle(x1,y1,x2,y2);
+         brush.color:=LEDOffColor;
+If roundLED then ellipse(x1+1,y1+1,x2-1,y2-1)
+else rectangle(x1,y1,x2,y2);
+         //inc(y1,ledsize);
+         //inc(y2,ledsize);
+end;
+end;
+end;
+
+{*************** DrawLED ******************}
+function drawLED(c:TCanvas; startx:integer; chr1:char):integer;
+{Draw LED character chr at startx - return the width in pixels}
+var
+i,j:integer;
+  x1,x2,y1,y2:TColor;
+begin
+with c  do
+begin
+pen.width:=2;
+    pen.color:=BoardColor;
+for i:= 0 to fontheight-1 do
+if chars[ord(chr1)].charwidth>0 then
+begin
+y1:=i*LEDSize;
+        y2:=y1+LEDSize;
+
+for j:= 0 to high(chars[ord(chr1)].ch[i]) do
+begin
+brush.color:=Boardcolor;
+          x1:=startx+j*ledsize;
+          x2:=x1+LEDSize;
+if x1>=0 then
+Begin
+if RoundLEd then rectangle(x1,y1,x2,y2);
+if chars[ord(chr1)].ch[i][j]>0 then brush.color:=LEDOnColor
+else brush.color:=LEDOffColor;
+If RoundLED then ellipSe(x1+1,y1+1,x2-1,y2-1)
+else rectangle(x1,y1,x2,y2);
+end;
+end;
+
+{Now draw a blank column as spacer}
+//Inc(x1,LEDSize);
+        drawblankcolumn(c,x1);
+end;
+end;
+   result := (chars[ord(chr1)].charwidth+1)*LEDSize;
+end;
+
+
+function getline:string;  {retrieve a line - skip comment lines}
+var
+comment:boolean;
+f:textfile;
+begin
+comment:=true;
+          result:='';
+repeat
+//readln(f,result);
+if (length(result)>=2) and (copy(result,1,2)='!!') then
+else  comment:=false;
+until eof or (comment=false);
+end;
+
+procedure errmsg(msg:string); {Show error msg}
+begin
+showmessage(msg);
+          //result:=false;
+end;
+
+
+
+{************* LoadFont ****************}
+function loadfont(fname:string):boolean;
+{Load a new font}
+var
+f:textfile;
+  i,j,k:integer;
+  charwidth,chrnbr:integer;
+  line:string;
+  errcode:integer;
+  ext:string;
+
+{Loadfont Local routines}
+(*function getline:string;  {retrieve a line - skip comment lines}
+var
+comment:boolean;
+begin
+comment:=true;
+          result:='';
+repeat
+readln(f,result);
+if (length(result)>=2) and (copy(result,1,2)='!!') then
+else  comment:=false;
+until eof(f) or (comment=false);
+end; *)
+
+(*procedure errmsg(msg:string); {Show error msg}
+begin
+showmessage(msg);
+          result:=false;
+end;*)
+
+begin  {LoadFont}
+result:=true;
+  ext:=extractfileext(fname);
+  assignfile(f,fname);
+  reset(f);
+begin
+line:=trim(getline);
+    val(line,fontheight,errcode);
+if errcode<>0 then errmsg('Invalid font FontHeight');
+    inc(fontheight); {add room for a top row for internal leading}
+line:=trim(getline);
+    val(line,maxcharwidth,errcode);
+if errcode<>0 then errmsg('Invalid font MaxCharWidth');
+    line:=trim(getline);
+    val(line,nbrchars,errcode);
+if errcode<>0 then errmsg('Invalid font NbrChars');
+for i:=1 to Nbrchars do
+begin
+if result=false then break;
+      line:=trim(getline);
+{' ' is used to define the space character}
+if (length(line)=3) and (line=''' ''')  then line:=' ';
+      chrnbr:=ord(line[1]);
+begin
+setlength(chars[chrnbr].ch,fontheight);
+        line:=trim(getline);
+        val(line,charwidth,errcode);
+        chars[chrnbr].charwidth:=charwidth;
+if errcode<>0
+then errmsg('Invalid font CharWidth');
+         setlength(chars[chrnbr].ch[0],charwidth);
+for j:= 1 to fontheight-1 do   {start at 1 to leave 0th row blank}
+begin
+line:=getline;
+if length(line)<charwidth then line:=line+stringofchar(' ',charwidth);
+          setlength(chars[chrnbr].ch[j],charwidth);
+for k:= 1 to charwidth do
+if line[k]='#' then chars[chrnbr].ch[j][k-1]:=1
+else chars[chrnbr].ch[j][k-1]:=0;
+end;
+end;
+end;
+end;
+  closefile(f);
+if chars[ord(' ')].charwidth=0 then {no space char defined, the normal case}
+begin {make one}
+charwidth:=maxcharwidth div 2 - 1;
+    chars[ord(' ')].charwidth:=charwidth;
+    setlength(chars[ord(' ')].ch,fontheight);
+for j:=0 to fontheight-1 do setlength(chars[ord(' ')].ch[j],charwidth);
+end;
+If result then Fontlbl.caption:='Current Font: '+extractfilename(fname)
+else FontLbl.caption:='No valid font loaded';
+end; {Loadfont}
+
+{************** FormActivate ***************}
+procedure TForm1_FormActivate(Sender: TObject);
+var s:string;
+begin
+with opendialog1 do
+begin
+initialdir:=extractfilepath(application.exename);
+if fileexists(initialdir+'\arial.LED') then loadfont(initialdir+'\arial.LED')
+else
+if execute  then loadfont(filename)
+else
+begin
+showmessage('No LED font found, program stopped');
+      form1.close;
+end;
+end;
+
+  //LEDSize:=LEDPixelsUD.position;
+  LEDOnColor:=clRed;
+  LEDOffColor:=$400040; {dark maroon}
+BoardColor:=clBlack;
+If shapeGRP.itemindex=0 then RoundLED:=true
+else RoundLED:=False;
+  DelayMS:=1000 div Speedbar.position;
+  Stopbtn.left:=ShowtextBtn.left;
+  Stopbtn.top:=ShowtextBtn.top;
+  form1.doublebuffered:=true;
+With DTFormatGrp do
+begin
+datetimetostring(s,'mmm dd hh:nn ampm',now); items[0]:=s;
+    datetimetostring(s,'hh:nn ampm',now); items[1]:=s;
+    datetimetostring(s,'dddd, mmm dd, yyyy  hh:nn ampm',now); items[2]:=s;
+end;
+end;
+
+function getdatetimestring:string;
+begin
+result:='????????';
+case dtformatgrp.itemindex of
+0: datetimetostring(result,'mmm dd hh:nn ampm      ',now);
+    1: datetimetostring(result,'hh:nn ampm      ',now);
+    2: datetimetostring(result,'dddd, mmm dd, yyyy  hh:nn ampm      ',now);
+end;
+end;
+var  prevtime:TDatetime;
+
+
+function minutechanged:boolean;
+var newtime:integer;
+begin
+newtime:=trunc(time*secsperday/60);
+if newtime <>prevtime then
+begin
+result:=true;
+        prevtime:=newtime;
+end
+else result:=false;
+end;
+
+
+{************** Animate ****************}
+procedure animate(b:Tbitmap; s:string;  image:TImage);
+{run the message image until tag <>0}
+var
+i:integer;
+  startx:integer;
+  charwidth:integer;
+  prevtime:TDatetime;
+  sx:integer;
+
+{function minutechanged:boolean;
+var newtime:integer;
+begin
+newtime:=trunc(time*secsperday/60);
+if newtime <>prevtime then
+begin
+result:=true;
+        prevtime:=newtime;
+end }
+//else result:=false;
+//end;
+
+begin
+startx:=0;
+WITH IMAGE DO
+setbounds(left,top,width,b.height);
+
+  image.canvas.rectangle(0,0,image.width,image.height);
+  image.picture.assign(b);
+
+{draw initial image}
+for i:= 1 to length(s) do
+begin
+charwidth:=drawled(b.canvas, startx, s[i]);
+    startx:=startx+charwidth;
+end;
+  image.Canvas.copyrect(rect(0,0,b.width,b.height),b.canvas,rect(0,0,b.width,b.height));
+  application.processmessages;
+{one time  - to save image for website  b.savetofile('HiYall.bmp');}
+{Now scroll it}
+startx:=0;
+  prevtime:=0;
+repeat
+if (messagepages.activepage=Datetimepage) and minutechanged then
+begin
+{get new date time string}
+s:=getdatetimestring;
+      sx:=0;
+for i:= 1 to length(s) do
+begin
+charwidth:=drawled(b.canvas, sx, s[i]);
+        sx:=sx+charwidth;
+end;
+      image.Canvas.copyrect(rect(0,0,b.width,b.height),b.canvas,rect(0,0,b.width,b.height));
+      image.update;
+end;
+    //inc(startx,ledsize);
+if startx > b.width then startx:=0;
+    Image.canvas.copyrect(rect(0,0,b.width-startx,b.height),b.canvas,
+                           rect(startx,0,b.width,b.height));
+    Image.canvas.copyrect(rect(b.width-startx,0,b.width,b.height),b.canvas,
+                            rect(0,0,startx,b.height));
+
+    application.processmessages;
+    sleep(Delayms);
+until form1.tag<>0;
+end;
+
+
+function messagewidth(s:string):integer;
+var
+i:integer;
+begin
+result:=0;
+for i:= 1 to length(s) do
+result:=result+chars[ord(s[i])].charwidth+1;
+    result:=result*LEDsize;
+end;
+
+
+{******************* ShowtextBtnClick ************}
+procedure TForm1_ShowTextBtnClick(Sender: TObject);
+var
+s:string;
+  i, j :integer;
+  b:TBitmap;
+  prevtime:integer;
+
+
+{function messagewidth(s:string):integer;
+var
+i:integer;
+begin
+result:=0;
+for i:= 1 to length(s) do
+result:=result+chars[ord(s[i])].charwidth+1;
+    result:=result*LEDsize;
+end;}
+
+
+begin      //main
+form1.tag:=0;
+
+  messagepages.enabled:=false;
+  messagepages.Font.color:=clgray;
+  LEDGrp.enabled:=false;
+  ledgrp.font.color:=clgray;
+  ledcolorbtn.enabled:=false;
+  ledoffcolorbtn.enabled:=false;
+  boardcolorbtn.enabled:=false;
+  stopbtn.visible:=true;
+
+  running:=true;
+if messagepages.activepage=textpage then s:=textedt.text
+else s:=getdatetimestring;
+  b:=TBitmap.create;
+  b.height:=fontheight*LEDsize;
+  b.width:=messagewidth(s);
+if newscreenbox.checked then {show message on a separate form}
+begin
+    //ledform.clientheight:=b.height;
+    form1.windowstate:=wsminimized;
+    //ledform.show;
+    //animate(b,s,ledform.image1);
+    //ledform.hide;
+end
+else animate(b,s,image1);
+  stopbtn.visible:=false;
+  messagepages.enabled:=true;
+  messagepages.font.color:=clblack;
+  LEDGrp.enabled:=true;
+  ledgrp.font.color:=clblack;
+  ledcolorbtn.enabled:=true;
+  ledoffcolorbtn.enabled:=true;
+  boardcolorbtn.enabled:=true;
+  b.free;
+  running:=false;
+end;
+
+{**************** LoadFontBtnClick *************}
+procedure LoadFontBtnClick(Sender: TObject);
+var  savestate:boolean;
+begin
+savestate:=running;
+if running then form1.tag:=1;
+If opendialog1.execute then loadfont(opendialog1.filename);
+if savestate then TForm1_ShowTextBtnClick(sender);
+end;
+
+{**************** BoardColorBtnClick ****************}
+procedure BoardColorBtnClick(Sender: TObject);
+begin If colordialog1.execute then boardcolor:=colordialog1.color; end;
+
+{************** LEDColorBtnClick ****************}
+procedure LEDColorBtnClick(Sender: TObject);
+begin  If colordialog1.execute then LEDOncolor:=colordialog1.color; end;
+
+{************* LEDSizeEdtChange ***************}
+procedure LEDSizeEdtChange(Sender: TObject);
+begin   //LEDSize:=LEDPixelsUD.position;  
+end;
+
+{**************** LEDOffColorBrnClick *************}
+procedure LEDOffColorBtnClick(Sender: TObject);
+begin  If colordialog1.execute then LEDOffcolor:=colordialog1.color; end;
+
+{**************** StopBtnClick ***************}
+procedure StopBtnClick(Sender: TObject);
+begin    form1.tag:=1;  end;
+
+{************** ShapeGrpClick ************}
+procedure ShapeGrpClick(Sender: TObject);
+begin
+If shapeGRP.itemindex=0 then RoundLED:=true  else RoundLED:=False;
+end;
+{******************* SpeedBarChange *************}
+procedure SpeedBarChange(Sender: TObject);
+begin
+DelayMs:=1000 div speedbar.position;
+if speedbar.position=speedbar.max then DelayMs:=5;
+end;
+{*************** FormClosrQuery ****************}
+procedure TForm1_FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+form1.tag:=1; {to stop message in case it's scrolling}
+canclose:=true;
+end;
+
+{****************** Minimizebtnclick **********}
+procedure TForm1_MinimizebtnclickClick(Sender: TObject);
+{minimize this form}
+begin  form1.windowstate:=wsMinimized;  end;
+
+{***************** NewScreenBoxCkick **********}
+procedure TForm1_NewScreenBoxClick(Sender: TObject);
+var savestate:boolean;
+begin
+savestate:=running;
+if running then form1.tag:=1;
+  application.processmessages;
+if savestate then TForm1_ShowTextBtnClick(sender);
+end;
+
+{************** MessagepagesDrawTab *******************}
+procedure TForm1_MessagePagesDrawTab(Control: TCustomTabControl;
+{Draw tabs in gray if control is disabled - no other way to do it?}
+TabIndex: Integer; const Rect: TRect; Active: Boolean);
+begin
+with TPageControl(control), form1.canvas do
+begin
+if enabled then pen.color:=clred else pen.color:=clgray;
+If tabindex=0 then textout(rect.left+4, rect.top+4, 'Message')
+else textout(rect.left+4, rect.top+4, 'Date/Time');
+end;
+end;
+
+end.
+
+
+
+----code_cleared_checked_clean----

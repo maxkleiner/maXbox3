@@ -1,0 +1,312 @@
+Program SynapseMime;
+
+//#net>D25.1DNS: ; local IPs: fe80::39cb:cc4a:b4e7:9e03%20,fe80::25d2:cdb2:b4d2:1291%21,192.168.25.1,192.168.18.1; local IP: 192.168.25.12f:3f57:fed7%12,192.168.1.40,192.168.25.1,192.168.18.1,2001:0:5ef5:79fd:8e0:42f:3f57:fed7; local IP: 192.168.1.40
+//TODO: just missing a mime file; search and get one
+
+{interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  StdCtrls, mimemess, mimepart, ComCtrls;
+type
+  TForm1 = class(TForm)
+    Edit1: TEdit;
+    Button1: TButton;
+    Label1: TLabel;
+    Memo1: TMemo;
+    Button2: TButton;
+    Label2: TLabel;
+    TreeView1: TTreeView;
+      procedure Button1Click(Sender: TObject);
+      procedure FormCreate(Sender: TObject);
+      procedure FormDestroy(Sender: TObject);
+      procedure Button2Click(Sender: TObject);
+      procedure TreeView1Change(Sender: TObject; Node: TTreeNode);
+  private   }
+    { Private declarations }
+ //   procedure AddMimeNode(const parent: TTreeNode; const part: TMimepart);
+ // public
+  var aMime: TMimemess;
+    aMemo1: TMemo;
+    Button2: TButton;
+    Label2: TLabel;
+    TreeView1: TTreeView;
+    acomp: TComponent;
+    aFrm: TForm;
+    statbar1: TStatusbar;
+    { Public declarations }
+ // end;
+
+//var
+  //Form1: TForm1;
+//implementation
+
+//{$R *.DFM}
+
+//var   node: TTreeNode;
+
+
+procedure TForm1_AddMimeNode(const parent: TTreeNode; const part: TMimepart);
+var
+  s: string;
+  node: TTreeNode;
+  n: integer;
+begin
+  s:= format('%-24s %-15s %-s',[part.primary + '/' + part.secondary,part.filename,part.description]);
+  node:= TreeView1.Items.AddChild(parent, s);
+  node.Data:= part;
+  for n:= 0 to part.GetSubPartCount - 1 do
+    TForm1_AddMimeNode(node, part.getsubpart(n));
+end;
+
+procedure TForm1_Button1Click(Sender: TObject);
+begin
+  amime.Clear;
+  amemo1.Clear;
+  amime.Lines.LoadFromFile(Exepath+'firstdemo.txt');
+  //amime.Lines.LoadFromFile(Exepath+'IVCLScanner.xml');
+  //amime.Lines.LoadFromFile(Exepath+'synapsemimedemo.txt');
+   
+  amime.DecodeMessage;
+  ShowMessage(datetimetostr(amime.Header.Date));
+
+  Treeview1.Items.Clear;
+  TForm1_AddMimeNode(nil, amime.MessagePart);
+  Treeview1.FullExpand;
+end;
+
+procedure TForm1_FormCreate(Sender: TObject);
+begin
+  amime:=TMimemess.create;
+end;
+
+procedure TForm1_FormDestroy(Sender: TObject; var Action: TCloseAction);
+begin
+  amime.free;
+    action:= caFree;
+    afrm:= NIL;
+    writeln('mime form and obj closed');
+end;
+
+procedure TForm1_Button2Click(Sender: TObject);
+var
+  f:string;
+begin
+  with TMimePart(Treeview1.Selected.data) do begin
+  //with TMimePart(Treeview1.Selected) do begin
+     f:=filename;
+      if f=''
+        then f:='synapsemimedemo.txt';
+      //f:='c:/'+f;
+      f:= Exepath+f;
+      Decodepart;
+      decodedlines.SaveToFile(f);
+    end;
+    statbar1.panels.items[0].text:= 'synapsemimedemo.txt saved'
+end;
+
+//procedure TForm1_TreeView1Change(Sender: TObject);
+
+procedure TForm1_TreeView1Change(Sender: TObject; Node: TTreeNode);
+begin
+  amemo1.Lines.assign(TMimepart(Node.Data).Lines);
+end;
+
+
+procedure loadMimeForm;
+   var tB: TTrackBar;
+      //statBar1: TStatusBar;
+       NewColumn: TListColumn; 
+       image, mask, mask1: TBitmap;
+
+  begin
+    aFrm:= TForm.Create(self);
+    //mT:= TTimer.Create(self);
+    //mt.onTimer:= @TFrm1_timerRedrawTimer;
+    //mt.interval:= MILLISECONDS;
+    //mt.free;  in on close            
+    with aFrm do begin
+      Caption:= '********** maXcalc - in the beginning was number ***********';  
+      //top:= 30;
+      SetBounds(249, 130,672,560);
+      Position:= poScreenCenter;
+      //Color:= clBlack;
+      onClose:= @TForm1_FormDestroy;
+      //OnCreate = @TForm1_FormCreate;
+      Canvas.Pen.color:= clBlue;
+      Canvas.Pen.Width:= 15;
+      BorderIcons:= [biSystemMenu, biMinimize];
+      BorderStyle:= bsSingle;
+      borderWidth:= 4;
+      scaled:= true;
+     // onMouseDown:= @FormMouseDown;
+
+      //Textheight('20');
+      //activecontrol
+      Show;
+      //canvas.draw(0,200, getbitmap(Exepath+'\examples\citymax.bmp'));
+      //Show;
+    end;
+    
+    TForm1_FormCreate(self);
+    
+   with TLabel.Create(aFrm) do begin
+    parent:= aFrm;
+    SetBounds(8,56,47,16);
+    Caption:= 'Part-list:';
+  end;
+   with TLabel.Create(aFrm) do begin
+    parent:= aFrm;
+    SetBounds(8,192,61,16);
+    Caption:= 'RAW part:';
+  end;
+  {object Edit1: TEdit
+    Left = 8
+    Top = 8
+    Width = 553
+    Height = 24
+    TabOrder = 0
+    Text = 'filename'
+  end}
+   with TBitBtn.Create(aFrm) do begin
+      Parent:= aFrm;
+      setbounds(576,8,75, 35);
+      caption:= 'Load';
+      font.size:= 12;
+      glyph.LoadFromResourceName(getHINSTANCE,'TWWINTL'); 
+      mXButton(05,05,width, height,12,12,handle);
+      onClick:= @TForm1_Button1Click;
+    end;
+   with TBitBtn.Create(aFrm) do begin
+      Parent:= aFrm;
+      setbounds(8,416,641, 35);
+      caption:= ' save selected decoded part to file (default filename is '#39'mimedem' +
+      'o.txt'#39')';
+      font.size:= 12;
+      glyph.LoadFromResourceName(getHINSTANCE,'TWWINTL'); 
+      mXButton(05,05,width, height,12,12,handle);
+      onClick:= @TForm1_Button2Click;
+    end;
+
+  aMemo1:= TMemo.create(afrm);
+  with aMemo1 do begin
+      Parent:= aFrm;
+      setbounds(8,208,641, 193);
+      ScrollBars:= ssBoth;
+      TabOrder:= 2;
+  end;
+  TreeView1:= TTreeView.create(afrm);
+  with treeView1 do begin
+      Parent:= aFrm;
+      setbounds(8,72,641, 113);
+      ReadOnly:= True;
+      Indent:= 19;
+      OnChange:= @TForm1_TreeView1Change;
+      onAddition;
+      //onCustomDraw;
+      TabOrder:= 4
+  end;
+    
+    statbar1:= TStatusBar.Create(aFrm);
+    with statbar1 do begin
+      parent:= aFrm;
+      showhint:= true;
+       parentcolor:= false;
+       color:= clred;
+      //panels.color:= clnavy;
+      //sizeGrip
+      hint:= 'this is a LED BoX in maXcalc';
+      Panels.add;
+        panels.items[0].width:= 200;
+        panels.items[0].text:= '200 solve the puzzle';
+      Panels.add;
+        panels.items[1].width:= 150;
+        panels.items[1].text:= '150 get the solution';
+    end;
+ end;   
+  
+
+begin
+ //wwScanDate
+   loadMimeForm;
+end.  
+
+  memo1 and memo2 is keyword!
+
+
+object Form1: TForm1
+  Left = 249
+  Top = 130
+  Width = 672
+  Height = 480
+  Caption = 'Form1'
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -13
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  PixelsPerInch = 120
+  TextHeight = 16
+  object Label1: TLabel
+    Left = 8
+    Top = 56
+    Width = 47
+    Height = 16
+    Caption = 'Part-list:'
+  end
+  object Label2: TLabel
+    Left = 8
+    Top = 192
+    Width = 61
+    Height = 16
+    Caption = 'RAW part:'
+  end
+  object Edit1: TEdit
+    Left = 8
+    Top = 8
+    Width = 553
+    Height = 24
+    TabOrder = 0
+    Text = 'filename'
+  end
+  object Button1: TButton
+    Left = 576
+    Top = 8
+    Width = 75
+    Height = 25
+    Caption = 'Load'
+    TabOrder = 1
+    OnClick = Button1Click
+  end
+  object Memo1: TMemo
+    Left = 8
+    Top = 208
+    Width = 641
+    Height = 193
+    ScrollBars = ssBoth
+    TabOrder = 2
+  end
+  object Button2: TButton
+    Left = 8
+    Top = 416
+    Width = 641
+    Height = 25
+    Caption = 
+      'save selected decoded part to file (default filename is '#39'mimedem' +
+      'o.txt'#39')'
+    TabOrder = 3
+    OnClick = Button2Click
+  end
+  object TreeView1: TTreeView
+    Left = 8
+    Top = 72
+    Width = 641
+    Height = 113
+    ReadOnly = True
+    Indent = 19
+    OnChange = TreeView1Change
+    TabOrder = 4
+  end
+end

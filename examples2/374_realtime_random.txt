@@ -1,0 +1,459 @@
+program Realtime_Random;
+
+//mX3 directory change, preparation for RealTime Tutorial 23
+//shows download with IndySockets on maXbox webbox ex. 109, #locs=214
+//G9 was the band of the Neukühl Epoch!
+//#sign>max: APSN21: 11.10.2013 11:07:05 
+
+ {$Define AT}
+
+ {$Define ATA=512}
+
+ {$Define ATAT=time}
+
+
+type
+    TCoin = array[0..1] of shortstring;
+
+const mp3song = 'G9_vision.mp3';  //Default
+      NCoins = 10;
+      NDice = 8;
+      ATA=512;
+
+var mXpath: string;
+    idHTTP: TIDHTTP;
+    zipStream: TFileStream;
+    RandSeed: longint;
+    //int2: TLargeInteger;
+   // xmlIssue: TXMLDocument;
+   //at: Flags;
+    
+
+function MSecToTime(mSec: Int64): string;
+var dt: TDateTime;
+begin
+  dt:= (mSec/1000/86400);  //SecsPerDay;
+  Result:= FormatDateTime('" song length is:" nn:ss:zzz',dt) ;
+end; 
+
+
+procedure ParkMillerDemo;
+//http://home.comcast.net/~JamesMClark5/Pascal/Random.htm
+var C: boolean;
+    I, Tails, D1, D2: integer;
+    aCoin: TCoin;
+    Seed: longint;
+begin
+    write('Seed value = '+floattoStr(456.45));
+    Seed:= Round(time); //Readln(Seed);
+    PMrandomize(Seed);
+    aCoin[0]:= 'head';
+    aCoin[1]:= 'tail';
+  
+    writeln('');
+    writeln('Tossing ' +inttoStr(NCoins)+' coins:');
+    Tails:= 0;
+    for I:= 1 to NCoins do begin
+        C:= Brand(0.5);
+        write(aCoin[integer(C)]+ '  ');
+        if C then inc(Tails);
+    end;
+    writeln(' ');
+    //intToStr(NCoins-Tails)
+    writeln(inttoStr(Tails)+' tails and '+intToStr(NCoins-Tails)+ ' heads');
+    writeln('');
+    writeln('Tossing '+inttoStr(NDice)+ ' pairs of dice:');
+    for I:= 1 to NDice do begin
+        D1:= Irand(6)+1;
+        D2:= Irand(6)+1;      
+        write(' '+inttostr(D1)+ '+'+ inttostr(D2)+ '='+ inttoStr(D1+D2));
+    end;
+    writeln('');
+    writeln('');
+    writeln('Six random angles between 180 and 270 degrees:');
+    for I:= 1 to 6 do begin
+    //write(floattoStr(Rrand));
+      //write(floattoStr(180 + 90*Rrand)+'    ');
+      write(format('%.3f  ',[180+90*Rrand]));
+    end;
+    writeln('');
+    writeln('');
+    //readln;
+end;    
+
+
+procedure DelayLEDLoop;
+//http://www.arduino.cc
+var
+    ledValue: boolean;
+    ledSwitchTime, ledintervall, atime: longint;
+begin
+  ledintervall:= 1000;
+  ledswitchtime:= 0;
+  ledValue:= false;
+  //MillisecondsElapsed;
+  Repeat
+    atime:= MilliSecondOfTheDay(now)-ledSwitchTime;
+    if atime > ledintervall then begin
+    ledValue:= NOT ledValue;
+    if ledValue then begin
+      maxform1.imglogo.show;
+      writeln('LED is ON  at: '+timetoStr(time));
+    end else begin 
+      writeln('LED is OFF at: '+timetoStr(time));
+      maxform1.imglogo.hide;
+    end;
+    //digitalWrite(ledPin, ledValue);
+    ledswitchtime:= MilliSecondOfTheDay(now);
+    end;
+  until isKeyPressed;
+    //memo2.setFocus;
+    //readln;
+end;
+
+
+procedure DelayNoLoop;
+//http://www.arduino.cc
+var
+  ledValue: boolean;
+begin
+  ledValue:= false;
+  //MillisecondsElapsed;
+  Repeat
+    ledValue:= NOT ledValue;
+    if ledValue then begin
+      maxform1.imglogo.show;
+      maxform1.imglogobox.hide;
+      writeln('LED is ON  at: '+timetoStr(time));
+      delay(1000);
+    end else begin 
+      writeln('LED is OFF at: '+timetoStr(time));
+      maxform1.imglogo.hide;
+      maxform1.imglogobox.show;
+      delay(1000);
+    end;
+    //digitalWrite(ledPin, ledValue);
+  until isKeyPressed;
+  maxform1.imglogo.show;
+  maxform1.imglogobox.show;
+end;
+
+
+procedure Randmax2;
+//http://home.comcast.net/~JamesMClark5/Pascal/Random.htm
+var
+  R: byte;
+  I: integer;
+  sout: string;
+begin
+    writeln('');
+    R:= 71;
+    for I:= 1 to 272 do begin
+       R:= ((longint(628)*R + 157) AND $3FF) SHR 2;
+       sout:= sout + Format('%-*.3d',[5,R]);
+       if (I mod 16)=0 then sout:= sout+#13#10;
+    end;
+  writeln(sout)
+end;
+
+
+procedure LoopTest;
+begin
+ Randomize; 
+ REPEAT
+  //TextAttr:=Random(256);
+    Writeln(inttoStr(random(256*256)));
+ UNTIL isKEYPRESSED;  //on memo2 output
+ if isKeypressed then writeln('key has been pressed!');
+end;
+
+
+  
+begin   {@main}
+  mXpath:= extractfilepath(application.exename)
+  //mp3song1:= ExtractWord(5,myurl,['/']);
+  Randmax2;
+  ParkMillerDemo;
+  ShowmessageBig('You should press a key on the output window to stop it!');
+  memo2.setfocus;
+  //LoopTest;
+  Writeln('');
+  DelayLEDLoop;
+  //DelayNoLoop;
+  //ShowMessage(adjustlineBreaks('You should press key CR on the output window to stop it!'));
+   //AddTerminateProc
+   //AnsiStrScan
+   //IsPathDelimiter
+    // Writeln('this is '+ATA=512);
+
+   {$IFDEF ATA=512}
+    //then
+     Writeln('this is '+inttoStr(ATA));
+   {$EndIF}  
+   
+   {$IFDEF ATAT=time}
+    //then
+     //Writeln('this is '+timetoStr(ATAT));
+   {$EndIF}  
+    //I64ToCardinals
+    //CardinalsToI64
+    
+    with TJvMail.create(self) do begin
+      readmail;
+      sendmail(true);
+      //simplemapi
+    end;  
+    //GetSystemIcon
+    //SHDeleteFiles
+    //openspecialfolder
+    //ShellExec
+    //ShellExecAndWait
+    //ShellFindExecutable
+      //ShellOpenAs
+    
+End.
+
+
+
+more G9 songs:
+'http://max.kleiner.com/download/olemosbruja.mp3'
+'http://www.kleiner.ch/kleiner/download/G9_whitemagic.mp3'
+'http://www.kleiner.ch/kleiner/download/G9_japan.mp3'
+'http://www.kleiner.ch/kleiner/download/G9_lordofdarkness.mp3';
+'http://www.kleiner.ch/kleiner/download/G9_nowage.mp3';
+'http://www.kleiner.ch/kleiner/download/G9_olemosbruja.mp3';
+'http://www.kleiner.ch/kleiner/download/G9_playchess.mp3';
+'http://www.kleiner.ch/kleiner/download/G9_vision.mp3';
+'http://www.kleiner.ch/kleiner/download/G9_zeitraum.mp3';
+
+
+
+---code_cleared_checked---
+
+BEGIN
+ Randomize; 
+ REPEAT
+  TextAttr:=Random(256);
+  Write('Hilfe')
+ UNTIL KEYPRESSED
+END.
+
+Hallo,
+Post by Hilmar Bunjes
+Hallo,
+ich bin gerade am programmieren (Java, dürfte hierfür aber egal sein)
+und brauche einen Algorithmus für einen Zufallszahlengenerator, der
+reproduzierbare Zufallszahlen erzeugt. Also ich brauche eine vernünftige
+Verteilung der Zufallszahlen, muss aber die Möglichkeit haben, bei
+gleichem Startwert auch immer die gleich Folge an Zufallszahlen zu
+bekommen. Der Startwert sollte sich verändern lassen.
+von Steve Schafer, TeamB (Borland)
+
+var RandSeed: longint;
+function Random: double;
+begin
+RandSeed := 134775813 * RandSeed + 1;
+result := (RandSeed xor $80000000) / 4294967296.0;
+if Result < 0 then
+Result := Result + 1;
+end;
+
+Grüße,
+Joachim
+
+
+http://www.pup.ethz.ch/et3.html
+
+Zufallszahlen
+
+Um in Pascal Zufallszahlen erzeugen zu können, steht die Funktion Random (von engl. random = zufällig) zur Verfügung. Damit Zufallszahlen erzeugt werden können, behilft sich Random der aktuellen Uhrzeit, die sich ja laufend ändert. Weiter existiert die Prozedur Randomize, die den Zufallsgenerator initialisiert. Diese muss vor der Verwendung von Random einmal aufgerufen werden. Die Initalisierung des Zufallsgenerators erfolgt durch einfachen Aufruf der Prozedur Randomize (ohne Parameter).
+
+Randomize;   (* Zufallszahlengenerator initialisieren *)
+
+Zufall, Ungewiheit, Gluck, Pech { sind das nicht ziemlich diuse Begrie? Eher
+aus dem Bereich der Wahrsager als dem der Wissenschaftler? Eine wissenschaftliche Untersuchung
+des Zufalls ist moglich, und sie begann mit der Analyse von Glucksspielen
+durch B. Pascal, C. Huygens, Jakob Bernoulli und P. Fermat4. Diese Analyse hat den
+Wahrscheinlichkeitskalkul hervorgebracht, der lange fur einen unbedeutenden Zweig der
+Mathematik gehalten wurde. Einen ersten Erfolg erzielte der Kalkul in der statistischen
+Mechanik durch Untersuchungen von L. Boltzmann und J.W. Gibbs5: Die  }
+"
+Menge von
+Zufall\, die in einem Liter Luft ist, wird durch den Begri der Entropie gemessen. Der
+nachste groe Erfolg ist mit der Entwicklung der Quantentheorie verknupft. Heutzutage
+ist der Zufall in wissenschaftlichen Theorien fast uberall prasent: Rauschen in der
+Signalubertragung, Ausbreitung von Epidemien, Entwicklung von Borsenkursen, chaotisches
+Verhalten von nichtlinearen Systemen, Spieltheorie, Wetterprognosen, : : : .
+
+
+Die Zufallszahlen, die ein Computersystem erstellen kann, sind natürlich keine echten Zufallszahlen.Sie werden aus der Systemzeit berechnet.Der Zufallsgenerator sollte beim Programmstart initialisiert werden:
+
+procedure TForm1.CreateForm(Sender: TObject);
+begin
+  Randomize;
+end;
+ 
+
+Jetzt können eigentlich recht problemlos Zufallszahlen erstellt werden und zwar mit dem Befehl Random:
+
+procedure TForm1.Button1Click(Sender: TObject);
+const
+  ZufallBereich = 5;
+begin
+  Caption:=IntToStr(Random(Zufallsbereich));
+end;
+ 
+http://www.math.uni-frankfurt.de/~numerik/lehre/Vorlesungen/pros-12/Zufallszahlen%20und%20Benford/ran-shell.pdf
+
+http://home.comcast.net/~JamesMClark5/Pascal/Random.htm
+
+
+Guten Tag Heini
+Ja richtig, die Funktion hat einen pseudo Zufalls Term, wobei die Initialisierung mit Randomize massgebend ist.
+Damit Zufallszahlen erzeugt werden können, behilft sich Random der aktuellen Uhrzeit in msec, die sich ja laufend ändert. Weiter existiert die Prozedur Randomize, die den Zufallsgenerator initialisiert. Diese muss vor der Verwendung von Random einmal aufgerufen werden. Die Initalisierung des Zufallsgenerators erfolgt durch einfachen Aufruf der Prozedur Randomize (ohne Parameter).
+Die Zufallszahlen, die ein Computersystem erstellen kann, sind natürlich keine echten Zufallszahlen. Sie lassen sich aus der Systemzeit berechnen. Der Zufallsgenerator sollte beim Programmstart eben initialisiert werden.
+Das ist wirklich ein spannendes Thema, wir haben bei den Kryptologen immer wieder über Rausch- oder eben Zufallsgeneratoren gesprochen.
+Heutzutage ist der Zufall in wissenschaftlichen Theorien fast überall präsent: Rauschen in der
+Signaluebertragung, Ausbreitung von Epidemien, Entwicklung von Börsenkursen, chaotisches
+Verhalten von nichtlinearen Systemen, Spieltheorie, Wetterprognosen und eben Kryptologie.
+Ich versuche noch den Source Code rauszufinden, leider ist er im System Unit nicht einsehbar, da er im Kernel steckt.
+Aber so ungefähr könnte er so aussehen:
+var RandSeed: longint;
+function Random: double;
+begin
+RandSeed := 134775813 * RandSeed + 1;
+result := (RandSeed xor $80000000) / 4294967296.0;
+if Result < 0 then
+Result := Result + 1;
+end;
+Mehr über den Zufall findest du auf
+http://www.math.uni-frankfurt.de/~numerik/lehre/Vorlesungen/pros-12/Zufallszahlen%20und%20Benford/ran-shell.pdf
+es grüsst dich, Max
+
+Hello Arduino-Friends,
+
+as byproduct of a resuch project I have made a little driver for the arduino motorshield  modified from Stepper.cpp of Tom Igoe.
+Half and full step modus, endless run and a run for n steps both with the possebility of a hardware interrupt is possible,  driving DC motors, too.
+
+The methodes are:
+  
+initialisation:
+//DC-motors
+Motorshield myMotorshield(PWM_PIN_A,PWM_PIN_B,BRAKE_PIN_A,BRAKE_PIN_B,DIR_PIN_A,DIR_PIN_B,DC-Delay<0..2^16>ms,AD-Resolution (2^<x>));
+DC-Delay prevents short circuit bey changing dc-motor direction
+//stepper-motors
+Motorshield myMotorshield(stepsPerRevolution,PWM_PIN_A,PWM_PIN_B,BRAKE_PIN_A,BRAKE_PIN_B,DIR_PIN_A,DIR_PIN_B,MODUS <HALF><FULL>,AD-Resolution (2^<x>));
+
+setup:
+
+DC:
+  myMotorshield.setDC(MOTOR <MOTA><MOTB>,PWM<0..1023>); //sing of PWM codes direction
+
+stop/run:
+myMotorshield.setDCbrake(MOTOR <MOTA><MOTB>,<STOP><GOON>);
+
+Stepper:
+void myMotorshield.setSpeed(Speed in 1/s)
+
+void myMotorshield.step(Steps <+-><1..1023><0> 0 codes endless run, Interrupt pin ) setting interrupt pin to LOW for more than 1 step movement stops
+
+Examples for each mode are included.
+
+Best regards from Germany
+
+Tobi
+ 
+Here is a program that demonstrates how to use the PMrand unit:
+
+program Rand3;
+uses PMrand;
+
+type
+    TCoin = array[boolean] of string[4];
+
+const
+    Coin: TCoin = ('head', 'tail');
+    NCoins = 10;
+    NDice = 8;
+
+var
+    Seed: longint;
+    C: boolean;
+    I, Tails, D1, D2: integer;
+
+begin
+    write('Seed value = ');  Readln(Seed);
+    PMrandomize(Seed);
+
+    writeln;
+    writeln('Tossing ', NCoins, ' coins:');
+    Tails:= 0;
+    for I:= 1 to NCoins do begin
+        C:= Brand(0.5);
+        write(Coin[C]:5);
+        if C then inc(Tails);
+    end;
+    writeln;
+    writeln(Tails, ' tails and ', NCoins-Tails, ' heads');
+
+    writeln;
+    writeln('Tossing ', NDice, ' pairs of dice:');
+    for I:= 1 to NDice do begin
+        D1:= Irand(6)+1;
+        D2:= Irand(6)+1;
+        write(' ', D1, '+', D2, '=', D1+D2);
+    end;
+    writeln;
+
+    writeln;
+    writeln('Six random angles between 180 and 270 degrees:');
+    for I:= 1 to 6 do begin
+        write(180 + 90*Rrand :8:3);
+    end;
+    writeln;
+    
+    readln;
+end.
+
+Notice how the structured constant named 'Coin' is used to translate the boolean values false and true to the string values 'head' and 'tail'.  Notice also how we can use an expression to modify the range of a random variable by 'rescaling' the random function.  For example, the expression "180 + 90*Rrand" obtains a range of 180 to 270; but Rrand by itself has a range of 0 to 1.  To determine the new range from the old range, substitute the old range limits 0 and 1 into the expression, like this:
+
+    180 + 90*0 = 180
+    180 + 90*1 = 270
+
+(Since Rrand returns a real value, 90*Rrand becomes a real value, even though 90 is an integer; and likewise the addition is real, even though 180 is an integer.) 
+
+A typical output of this demo program is:
+
+Seed value = 45
+
+Tossing 10 coins:
+ tail head tail head head head tail head head tail
+4 tails and 6 heads
+
+Tossing 8 pairs of dice:
+ 2+5=7 6+6=12 2+5=7 4+4=8 2+4=6 4+4=8 2+5=7 5+5=10
+
+Six random angles between 180 and 270 degrees:
+ 192.458 218.372 244.797 229.822 266.799 206.902
+
+If you enter a seed value of 45, you will always get this output; and if you enter a seed value of 91, you will always get some other output.  But if you enter a seed value of 0, the output will always be different, because the program will actually use a seed taken from the computer's clock time.
+
+Most programs that use the PMrand unit will not call the PMrandomize procedure, because the initialization section of PMrand calls PMrandomize to start the random sequence from the computer's clock -- and this is what most programs need.  
+
+
+EKON 14 Recap
+
+September 29, 2010 in Delphi, Mono, MonoDevelop, Prism
+
+Right now I’m on my way back home from the Entwickler-Konferenz (EKON) 14 in Darmstadt, Germany. Jim is still there, but I have other duties so I left a day before the conference ends officially.
+
+I had two sessions, the first yesterday was about Delphi Prism language specialties where I talked about cool features like class contracts and also interface delegation. Today I talked about multi platform development with Delphi Prism, concentrating on the apple platforms, both the Mac and iOS using Mono and MonoTouch for the iPhone/iPad.
+
+I also sneaked into other sessions. There was a ‘how do I hack VCL programs’ session that really showed some interesting debugging, dumping and assembler-modification to crack a dongle protected native Delphi application as well as Holger Klemt talking about his personal experience with guys cracking is IBExpert software and what he did against that. Also Ray Konopka had a very interesting session about the Ribbon UI in general.
+
+I especially enjoyed Max Kleiners talk about our PascalScript. Until today I didn’t knew he had built sort of a little IDE for it, called maxBox. It’s a scripting toolbox with a *lot* of scripatble functionality. He showed (beside other things) how to download a (free) mp3 file from the internet and directly played it from a little script – it was awesome (the demo, that is. Not the music, actually ;) ). maxBox, just like PascalScript that powers the IDE, is open source and you can get the sources from sourceforge. You can find more information about it here: Softwareschule.ch/Maxbox . So go and check it out, it also brings script debugging and syntax highlighting with it and really is a good start for a little scripting with pascal script. At this point I really like to say thanks to Max. Doing that for the purpose of teaching programming and open sourcing the tool is a nice gesture.
+
+Next speaking opportunity for me is at the Embarcadero CodeRage 5 online conference where I have two sessions on Thursday next week. One is about LINQ with Delphi Prism and the other about Hydra, so join me there if you like to. It’s totally online, so no shoes? No shirt? No problem! ;)
+
+
+gschoch@gs-soft.com,

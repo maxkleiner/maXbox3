@@ -1,0 +1,2429 @@
+{***************************************************************
+ * Project  : System Graphic Function Overview
+ * App Name : 300_treeview_animation tester, loc's = 875 
+ * Purpose  : Demonstrates outline treeview in a tree
+ * Date     : 09/12/2012  -  17:07
+ * History  : convert outline VCL to maXbox Nov 2011
+ *          : system save demo for mX3.9.2, not finished yet!!
+            : animates a sprite cursor, if XP then ProcessMessagesOFF;
+ ****************************************************************}
+
+Program Treeview3_tester3;
+
+{@BOOL WINAPI MessageBeep(
+  __in  UINT uType  );}
+//TThreadFunction = function(P: Pointer): Longint; stdcall;
+//Procedure ExecuteThread(afunc: TThreadFunction; var thrOK: boolean);
+{The main parts of a TreeView are nodes (TTreeNodes), which are a collection of type node (TTreeNode). TTreeNodes are seen as items property of a TreeView, within items are the individual nodes which are of type TTreeNode. A node can be accessed as follows:               
+      MyTreeNode := TreeView1.Items[1]; }
+
+
+
+
+function MessageBoxTimeOut(hWnd: HWND; lpText: PChar; lpCaption: PChar; uType: UINT;
+                wLanguageId: WORD; dwMilliseconds: DWORD): Integer;
+             external 'MessageBoxTimeoutA@user32.dll stdcall';
+  
+procedure CloseClick(Sender: TObject; var action: TCloseAction); forward;
+  
+Const
+  BACKMAP = 'examples\images\bmp47.bmp';
+  //BACKMAP = 'examples\images\bmp33.bmp';
+  BITMAP1 = 'examples\images\empty.bmp';
+  BITMAP2 = 'examples\images\empty.bmp';
+  //BITMAP1 = 'examples\images\bmp21.bmp';  //try another combinations
+  //BITMAP2 = 'examples\images\bmp29.bmp';
+  //BITMAP2 = 'examples\images\bmp33.bmp';
+  SAVEPATH = 'examples\treeview_300.txt';
+  AExponent = 4;
+  ANIMATEDELAY = 6;
+  
+type
+  TByteArr = array of byte;
+  
+var
+  except_state, execute_state: string;  
+  mytimestamp: TDateTime;
+  osType: TIdWin32Type;
+  bfrm: TForm;
+  FMask, FPic, FPicled, FPicRed, FPicGreen, FStorage: TBitMap;
+  FNewRect: TRect; 
+  FOldRect: tRect; //make foldrect local!
+  FirstTime: boolean;
+  tv1,tv2: TTreeView;
+  mt: ttoolwindow;
+  mtd: ttooldockform;
+  distX, distY, glx,gly, step, pct: float;
+  endX, endY, beginX, beginY: integer;
+  //mtt: TToken;
+  // mxt: TAtom;
+  //aint: TIncome;    fjfj  ddd
+  
+  
+  function IntToStr2(X: integer): string;
+var
+  S: string;
+begin
+ Str(X, S);
+ Result := S;
+end;
+
+function StrToInt2(S: string): integer;
+var
+  V, X: integer;
+begin
+ Val(S, V, X);
+ Result := V;
+end;
+
+
+{Windows Date and Time
+Sometimes you need to send a date and time through the Windows API. However, Windows uses its own date and time type: TSystemTime. Convert between TDateTime and TSystemTime using one of the following methods: }
+
+
+
+procedure changetime;
+var
+delphi_datetime: tDateTime;
+windows_datetime: tSystemTime;
+three_years_from_now: tDateTime;
+
+ year, month, day: word;
+  hour, min, sec, msec: word;
+begin
+  delphi_datetime := now;
+  DateTimeToSystemTime( delphi_datetime, windows_datetime );
+  SetSystemTime( windows_datetime );
+  // get the system time
+  GetSystemTime( windows_datetime );
+  delphi_datetime:= SystemTimeToDateTime( windows_datetime );
+  writeln(datetimetoStr(delphi_datetime))
+  
+  // Is it morning or afternoon?
+  DecodeTime( time, hour, min, sec, msec );
+   if hour < 12
+      then ShowMessage( 'Good morning!' )
+           else ShowMessage( 'Good afternoon!' );
+           
+   //if DayOfWeek( date ) in [1, 7]
+   {if DayOfWeek( date ) = (1 OR 7)
+   
+     then ShowMessage( 'Yeah! It''s the weekend!' )
+          else ShowMessage( 'Alas, it is a workday...' )}
+          
+    DecodeDate( date, year, month, day );
+    //inc( year, 3 );
+    YEAR:= year + 3;
+    three_years_from_now := EncodeDate( year, month, day )      
+    writeln('three_years_from_now '+datetimetoStr(three_years_from_now))
+     writeln(FormatDateTime('"Today is" dddd", the" d"th" of mmmm", AD" yyyy.',date));
+    writeln(FormatDateTime('"And the time is" h:mm ampm.',time))
+                   
+end;
+
+
+//And, at last, I would like to share one function that could be util if someone need to display total time greater 23:59 - not provide by Delphi:
+
+    function FullTimeToStr(SUMTime: TDateTime): string;
+    var
+    StrHor,
+    StrMin :string;
+    TotHor :double;
+    begin
+    TotHor := SUMTime *24;
+    if (TotHor -Trunc(TotHor)) > 0.9999 then
+    TotHor := Round(TotHor);
+    StrHor := FormatFloat('##0:', Int(TotHor));
+    StrMin := FormatDateTime('nn:ss', Frac(TotHor)/24);
+    Result := StrHor +StrMin;
+    end;
+
+
+
+procedure SetTokenPrivileges;
+var 
+  hToken1, hToken2, hToken3: THandle;
+  aTokenPrivileges: TTokenPrivileges;
+  aVersion: TOSVERSIONINFO;
+  dt: tDateTime;
+   ts: tTimeStamp;
+begin
+  
+   ts := DateTimeToTimeStamp( now );
+   dt := TimeStampToDateTime( ts );
+  //aVersion.dwOSVersionInfoSize := SizeOf(OSVERSIONINFO);
+  aVersion.dwOSVersionInfoSize := SizeOf(aversion);
+ 
+  GetVersionEx(aVersion);
+  if aVersion.dwPlatformId <> VER_PLATFORM_WIN32_WINDOWS then
+  begin
+    try
+      //OpenProcessToken(GetCurrentProcess, TOKEN_ADJUST_PRIVILEGES, Dword(hToken1));
+      hToken2 := hToken1;
+   // LookupPrivilegeValue(nil, 'SeDebugPrivilege', aTokenPrivileges.Privileges[0].luid);
+      aTokenPrivileges.PrivilegeCount := 1;
+      aTokenPrivileges.Privileges[0].Attributes := SE_PRIVILEGE_ENABLED;
+      hToken3 := 0;
+      //AdjustTokenPrivileges(hToken1, False, TokenPrivileges, 0, PTokenPrivileges(nil)^, hToken3);
+      aTokenPrivileges.PrivilegeCount := 1;
+      aTokenPrivileges.Privileges[0].Attributes := SE_PRIVILEGE_ENABLED;
+      hToken3 := 0;
+      //AdjustTokenPrivileges(hToken2, False, TokenPrivileges, 0, PTokenPrivileges(nil)^, hToken3);
+      CloseHandle(hToken1);
+    except;
+    end;
+  end;
+end;
+
+function Split(Input: string; Deliminator: string; Index: integer): string;
+var
+  StringLoop, StringCount: integer;
+  Buffer: string;
+begin
+  StringCount := 0;
+  for StringLoop := 1 to Length(Input) do
+  begin
+    if (Copy(Input, StringLoop, 1) = Deliminator) then
+    begin
+      Inc(StringCount);
+      if StringCount = Index then
+      begin
+        Result := Buffer;
+        Exit;
+      end
+      else
+      begin
+        Buffer := '';
+      end;
+    end
+    else
+    begin
+      Buffer := Buffer + Copy(Input, StringLoop, 1);
+    end;
+  end;
+  Result := Buffer;
+end;
+
+{constructor TProcessManager.Create;
+begin
+  inherited Create;
+  SetTokenPrivileges;
+end;}
+
+//type
+  //7TProcessManager = class(TObject)
+  //private
+  //7public
+    var
+    Count: integer;
+    ExePathList: array of string;
+    PIDList: array of string;
+    PriorityList: array of string;
+    ThreadList: array of string;
+    //constructor Create;
+    //procedure ListProcesses;
+    //procedure KillProcessByPID(PID: string);
+    //procedure KillProcessByExePath(ExePath: string);
+  //end;
+
+procedure TProcessManager_ListProcesses;
+var
+  Process32: TProcessEntry32;
+  Module32: TModuleEntry32;
+  ProcessSnapshot: THandle;
+  ModuleSnapshot: THandle;
+  SystemDirectory: array[0..261] of char;
+begin
+  Count := -1;
+  //GetWindowsDirectory(@SystemDirectory, 261);
+  ProcessSnapshot := CreateToolHelp32SnapShot(TH32CS_SNAPALL, 0);
+  Process32.dwSize := SizeOf(Process32);
+  Process32First(ProcessSnapshot, Process32);
+  repeat
+    Inc(Count);
+    SetLength(ExePathList, Count + 1);
+    SetLength(ThreadList, Count + 1);
+    SetLength(PIDList, Count + 1);
+    SetLength(PriorityList, Count + 1);
+    ModuleSnapshot := CreateToolHelp32SnapShot(TH32CS_SNAPMODULE, Process32.th32ProcessID);
+    Module32.dwSize := SizeOf(Module32);
+    //Module32First(ModuleSnapshot, Module32);
+   // if Copy((Module32.szExePath), 1, 4) = '\??\' then
+    //begin
+    //ExePathList[Count]:= Copy(string(Module32.szExePath), 5, Length(string(Module32.szExePath)) - 4);
+    (*end
+    else if Copy(string(Module32.szExePath), 1, 11) = '\SystemRoot' then
+    begin
+      ExePathList[Count] := string(SystemDirectory) + Copy(string(Module32.szExePath), 12, Length(string(Module32.szExePath)) - 11);
+    end
+    else }
+    begin
+      //ExePathList[Count] := string(Module32.szExePath);
+    end; *)
+    ThreadList[Count] := IntToStr(Process32.cntThreads);
+    if Process32.th32ProcessID = 0 then
+    begin
+      PIDList[Count] := IntToStr(GetCurrentProcessID);
+    end
+    else
+    begin
+        PIDList[Count] := IntToStr(Process32.th32ProcessID);
+    end;
+    PriorityList[Count] := IntToStr(Process32.pcPriClassBase);
+    CloseHandle(ModuleSnapshot);
+  until not (Process32Next(ProcessSnapshot, Process32));
+  CloseHandle(ProcessSnapshot);
+end;
+
+
+
+procedure getMaxBoxIni;
+var Ini: TIniFile;   
+begin
+  Ini:= TIniFile.Create(ExePath+'maxboxdef.ini');
+  try
+    except_state:= Ini.ReadString('Form', 'EXCEPTIONLOG','');
+    execute_state:= Ini.ReadString('Form', 'EXECUTESHELL','');
+  finally
+    writeln('inifile sysdata test: '+(except_state)+ ' '+(execute_state))
+    ini.Free;
+  end;
+end;
+
+procedure TJvFormAutoSize_Resize(Sender: TObject);
+var
+  WidthRatio, HeightRatio: Double;
+  CompIndex: Integer;
+  FForm: TForm;
+    FActive: Boolean;
+      FOldWidth: Integer;
+    FOldHeight: Integer;
+  FResize: TNotifyEvent;
+begin
+  if FForm = nil then
+    FForm := GetParentForm(Application.Owner as TControl) as TForm;
+  if FActive and (FForm <> nil) then begin
+    // (p3) this code is slightly dangerous: no sanity checks -
+    // values can become really large or really small
+    if (FOldWidth <> 0) and (FOldHeight <> 0) then begin
+      WidthRatio := FForm.Width / FOldWidth;
+      HeightRatio := FForm.Height / FOldHeight;
+      for CompIndex := 0 to FForm.ComponentCount - 1 do begin
+        if FForm.Components[CompIndex] is TControl then begin
+          with FForm.Components[CompIndex] {as TControl} do begin
+            if not (FForm.Components[CompIndex] is TButton) then begin
+              fform.Width := Round(fform.Width * WidthRatio);
+              fform.Height := Round(fform.Height * HeightRatio);
+            end;
+            fform.Left:= Round(fform.Left * WidthRatio);
+            fform.Top:= Round(fform.Top * HeightRatio);
+          end;
+        end;
+      end;
+    end;
+    FOldWidth := FForm.Width;
+    FOldHeight := FForm.Height;
+  end;
+  if FResize<> NIL then
+    FResize(Sender);
+end;
+
+
+
+
+procedure FormDrawBitmap(const fname: String; const x,y: Integer; acanvas: TCanvas);
+var aBmp: TBitmap;
+begin
+  if not FileExists(Fname) then begin
+    ShowMessage('The big bitmap ' + Fname + ' was not found!');
+    Exit;
+  end;
+  aBmp:= TBitmap.Create;
+  try
+    aBmp.LoadFromFile(Fname);
+    //aCanvas.Draw(x,y, aBmp);
+    aCanvas.StretchDraw(Rect(0,0,bfrm.width, bfrm.height), aBmp);
+  finally
+    aBmp.Free;
+  end;
+end; 
+
+procedure BitmapFormCreate(Sender: TObject);
+begin
+  FMask:= TBitMap.Create;
+  FMask.LoadFromFile(exepath+BITMAP2);
+  //FMask.LoadFromFile(exepath+'examples\citymax.bmp');
+  FPic:= TBitMap.Create;
+  FPic.LoadFromFile(exepath+BITMAP1);
+  FPicled:= TBitMap.Create;
+  FPicRed:= TBitMap.Create;
+  FPicGreen:= TBitMap.Create;
+    
+  FPicled.LoadFromFile(Exepath+'\examples\images\yellow1.bmp');
+  FPicRed.LoadFromFile(Exepath+'\examples\images\red1.bmp');
+  FPicGreen.LoadFromFile(Exepath+'\examples\images\green1.bmp');
+  
+  FStorage:= TBitMap.Create;
+  FStorage.Width:= FPic.Width;
+  FStorage.Height:= FPic.Height;
+  Screen.Cursor:= crCross;//loadCursor(hinstance,'Pan_All'); //crCross;
+end;  
+
+function getBitMapObject2(mappath: string): TBitmap;
+begin
+  result:= TBitmap.Create;
+  try 
+    result.LoadFromFile(mappath);
+  finally
+    //result.Free;
+  end;  
+end;  
+
+function FindRootNode(ACaption: String; ATreeView: TTreeView): TTreeNode; 
+var LCount, i: Integer; 
+begin 
+  result := nil; 
+  LCount := 0;
+  //atreeview.items.count-1 do  
+  for i:= 1 to atreeview.items.count-1 do 
+  result.getNextsibling;
+  result.MoveTo(TTreeNode(atreeview), naAddChild);
+  while (LCount < ATreeView.Items.Count) and (result = nil) do begin 
+    if (ATreeView.Items.Item[LCount].Text = ACaption) and (ATreeView.Items.Item[LCount].Parent = nil) then 
+      result := ATreeView.Items.Item[LCount]; 
+    inc(LCount); 
+  end; 
+end;
+
+function FindRootNode2(ACaption: String; ATreeView: TTreeView): TTreeNode; 
+var LCount: Integer; 
+begin 
+  result := nil; 
+  LCount := 0; 
+  while (LCount < ATreeView.Items.Count) and (result = nil) do begin 
+    if (ATreeView.Items.Item[LCount].Text = ACaption)
+       and (ATreeView.Items.Item[LCount].Parent = nil) then 
+      result:= ATreeView.Items.Item[LCount]; 
+    inc(LCount); 
+  end; 
+end;
+
+procedure FindRootCall;
+var LDestNode: TTreeNode; 
+    TreeView1: TTReeView;
+begin 
+  LDestNode := FindRootNode('category', TreeView1); 
+  if LDestNode <> nil then begin 
+    TreeView1.Items.AddChild(LDestNode, 'node1'); 
+    TreeView1.Items.AddChild(LDestNode, 'node2'); 
+  end; 
+end;
+
+procedure AddRootNode;
+var LDestNode: TTreeNode; 
+    TreeView1: TTReeView;
+    Node : TTreeNode;
+begin 
+//function TTreeNodes.Add(Sibling: TTreeNode; const S: string): TTreeNode;
+   Node:=TreeView1.Items.Add(nil,'My Root Node') ;
+   Node.ImageIndex:=0;//now you can change any  property of the node
+  
+  {LDestNode := FindRootNode('category', TreeView1); 
+  if LDestNode <> nil then begin 
+    TreeView1.Items.AddChild(LDestNode, 'node1'); 
+    TreeView1.Items.AddChild(LDestNode, 'node2'); 
+  end;}
+  //in this case we add a child node in the current selected node.
+  if TreeView1.Selected= nil then exit;       
+       Node:=TreeView1.Items.AddChild(TreeView1.Selected,'My Child Node') ;
+       Node.ImageIndex:=0;//now you can change any property of the node 
+end;
+
+
+procedure ADDManyNodes;
+Var
+  Node : TTreeNode;
+  i    : Integer;
+  TreeView1: TTReeView;
+  
+begin
+  TreeView1.Items.BeginUpdate;
+  try
+   for i:=1 to 100 do begin
+     Node:=TreeView1.Items.Add(nil,'My Root Node '+IntToStr(i)) ;
+     Node.ImageIndex:=0;
+   end;
+  finally
+    TreeView1.Items.EndUpdate;
+  end;
+end;
+
+procedure TForm1_FormCloseQuery(
+    Sender: TObject; 
+    var CanClose: Boolean);
+begin
+  case MessageDlg('Save tree items to XML?', 
+                   mtConfirmation, 
+                   [mbYes, mbNo, mbCancel], 0) of
+    mrYes:
+      writeln('Tree2XML(tree)'); 
+    mrNo:
+      CanClose := True;
+    mrCancel:
+      CanClose := False;
+  end;
+end;
+
+
+procedure TForm1_CreateTree(Sender: TObject; TreeView1: TTreeView);
+
+var
+  MyTreeNode1, MyTreeNode2 ,myTreeNode3, myTreeNode4: TTreeNode;
+  //TreeView1: TTreeView;
+begin
+
+  //myTreenode1:= TTreenode.create(TreeView1.items);
+  //mytreenode1.parent:= TreeView1.items;
+  //myTreenode2:= TTreenode.create(TreeView1.items);
+
+with TreeView1.Items do begin
+    Clear; { remove any existing nodes }
+    MyTreeNode1 := Add(nil, 'RootTreeNode1'); { Add a root node }
+    { Add a child node to the node just added }
+    AddChild(MyTreeNode1,'ChildNode1');
+    
+    {Add another root node}
+    MyTreeNode2 := Add(MyTreeNode1, 'RootTreeNode2');
+    {Give MyTreeNode2 to a child }
+    AddChild(MyTreeNode2,'ChildNode2');
+    
+    MyTreeNode3 := Add(MyTreeNode2, 'RootTreeNode3');
+    {Give MyTreeNode2 to a child }
+    AddChild(MyTreeNode3,'ChildNode3');
+    
+    MyTreeNode2:= Add(MyTreeNode3, 'RootTreeNode4');
+    AddChild(MyTreeNode2,'ChildNode2');
+    
+    
+    {Change MyTreeNode2 to ChildNode2 }
+    { and add a child node to it}
+    MyTreeNode2 := TreeView1.Items[3];
+    AddChild(MyTreeNode2,'ChildNode2a');
+    
+    {Add another child to ChildNode2, after ChildNode2a }
+    Add(MyTreeNode2,'ChildNode2b');
+    Add(MyTreeNode2,'ChildNode2c');
+    
+    {add another root node}
+    Add(MyTreeNode1, 'RootTreeNode3');
+    
+    
+    end;
+    Treeview1.FullExpand;
+    
+    with Treeview1 do begin
+       AutoExpand:= True;
+       //Images = ImageList4
+       Indent:= 30;
+       ReadOnly:= True;
+       //TabOrder = 3
+       //OnChange = TreeView1Change
+       //Items.Data = {
+    end; 
+end;
+
+//To delete the selected node...
+procedure TForm1_DeleteTView(Sender: TObject; TreeView1: TTreeView);
+begin
+  TreeView1.Selected.Delete; //Delete the selected node
+end;
+
+//to insert the selected node
+procedure TForm1_InsertTView(Sender: TObject; TreeView1: TTreeView);
+begin
+  TreeView1.items.Insert(TreeView1.Selected,'Another Child'); //Insert a child in the level of the selected node ...
+//if you want to edit the text of the selected node just make a click on the text, edit it and then make another click. Easy !
+  //TreeView1.Items.AddObject(nil,Pages[i].Caption,Pages[i]) ;
+end; 
+
+//The following code shows how to select a node which was stored in the above snippet
+
+procedure TfrmTrees_cmdGoToNodeClick(Sender: TObject; TreeView1: TTreeView);
+var
+  iNodeID   : integer;
+  FoundNode : TTreeNode;
+  iIndex    : Integer ;
+  HTreeItemList: TListBox;
+  
+begin
+  iIndex := HTreeItemList.ItemIndex ;
+  if iIndex = -1 then
+    exit ;
+  iNodeID := StrToIntDef(HTreeItemList.Items.Strings[iIndex],0) ;
+  if(  iNodeID = 0  ) then
+    exit;
+  //FoundNode := TreeView1.Items.GetNode(HTreeItem(iNodeID));
+  if(FoundNode <> nil) then begin
+    FoundNode.Selected := true;
+    TreeView1.SetFocus ;
+  end ;
+end;
+
+procedure TerminateApp;
+begin
+  { Work around shell32 bug: Don't use PostQuitMessage/Application.Terminate
+    here.
+    When ShellExecute is called with the name of a folder, it internally
+    creates a window used for DDE communication with Windows Explorer. After
+    ShellExecute returns, this window eventually receives a posted WM_DDE_ACK
+    message back from the DDE server (Windows Explorer), and in response, it
+    tries to flush the queue of DDE messages by using a PeekMessage loop.
+    Problem is, PeekMessage will return WM_QUIT messages posted with
+    PostQuitMessage regardless of the message range specified, and the loop was
+    not written with this in mind.
+    In previous IS versions, this was causing our WM_QUIT message to be eaten
+    if Application.Terminate was called very shortly after a shellexec [Run]
+    entry was processed (e.g. if DisableFinishedPage=yes).
+    A WM_QUIT message posted with PostMessage instead of PostQuitMessage will
+    not be returned by a GetMessage/PeekMessage call with a message range that
+    does not include WM_QUIT. }
+  PostMessage(0, WM_QUIT, 0, 0);
+end;
+
+
+
+
+
+
+
+//********************************Event Handler*****************************//
+procedure BtnAddClick(Sender: TObject);
+  var
+   sText : shortstring;
+   idx: integer;
+begin
+      {If nothing is selected}
+   if(tv1.selected = NIL) then begin
+         {Does a root node already exist? if( tv_eg1.Items.Count = 0 )}
+    tv1.Selectioncount;
+    tv1.Select(nil,[])
+    tv1.Selected.Selected:=false;
+    //end;
+    with tv1.Selected do
+      //if HasItems then Expand;
+      //tv1.items[1].addchild
+      if(tv1.Items[tv1.selected].item[tv1.selected].text = '') then begin
+            {Add the root node}
+         with tv1 do begin
+           //idx:= items.addchild(0,'Root');
+           idx:= items.Addchild(0,'Root');
+           Showlines:= true;
+           //sorttype
+           //items.item[1]:= items[idx];
+            //debugln('tv_eg1.Selected=',DbgS(tv_eg1.Selected));
+         end;
+      end else begin
+            {There is a root, so user must first select a node}
+         //MessageBeep(  -1  );
+         ShowMessage(  'Select a parent node'  );
+         Exit;
+      end;
+   end 
+   else begin
+         {Get a name for the new node}
+      sText:= 'New xnode';
+      InputQuery('New Node',  'Caption ?', sText  );
+         {Add the node as a child of the selected node}
+     //with tv1.items[tv1.SelectedItem] do
+      //if HasItems then Expand;
+    {with tv1[tv1.SelectedItem] do
+      if HasItems then Expand;
+      with tv1 do begin
+      idx:= selecteditem  //itemindex
+         AddChild(idx,sText);
+         FullExpand;
+      end;}
+   end;
+end;
+
+procedure TForm1_Button1Click(Sender: TObject);
+var panel1: TPanel;
+begin
+ with Panel1 do begin
+   BevelInner:= bvLowered;
+   BevelOuter:= bvRaised;
+   if BevelWidth = 0 then
+     BevelWidth := 2
+   else
+   BevelWidth := 0;
+  end;
+end;
+
+procedure RemoveClick(Sender: TObject);
+var idx: integer;
+begin
+  {Make sure somthing is selected, before trying to delete it}
+   if(tv1.Selected.Selected) then begin
+      //MessageBeep(  -1  );
+      ShowMessage('Nothing selected'  );
+      Exit;
+   end;
+      {Dont allow user to delete the root node}
+  // if(tv1.SelectedItem = 1) then begin
+   if(tv1.Selected.level = 1) then begin
+  
+      //MessageBeep(  -1  );
+      ShowMessage('Cant delete the root node!');
+      Exit;
+   end;
+      {Delete the node}
+     with tv1 do begin
+       idx:= selected  //itemindex
+       //Delete(idx);
+       FullExpand;
+     end;   
+   //tv1.SelectedItem.Delete;
+end;
+
+procedure CloseClick(Sender: TObject; var action: TCloseAction);
+begin
+  FMask.Free;
+  FPic.Free;
+  FPicled.Free;
+  FPicRed.Free;
+  FPicGreen.Free;
+  
+  FStorage.Free;
+  action:= caFree;
+  Screen.Cursor:= crDefault;
+  writeln('Outline Form being closed');
+end;
+
+procedure CloseButtonClick(Sender: TObject);
+begin
+  bfrm.Close; //calls close click
+end;
+
+procedure ClickTestButton(Sender: TObject);
+begin
+  //tv1.SaveToFile(SAVEPATH);
+  //SaveCanvas2(bfrm.Canvas, Exepath+SAVEPATH);
+  //if sender
+  writeln(objectToStr(sender)+' has been hit at: '+Exepath+SAVEPATH);
+  writeln(objectToString(sender)+' has been hit at: '+Exepath+SAVEPATH);
+  if sender is TTreeview then
+   writeln('tv2 hit test at '+tv2.selected.text);
+end;
+
+procedure ClickTestButton2(Sender: TObject);
+begin
+  //tv1.SaveToFile(SAVEPATH);
+  //SaveCanvas2(bfrm.Canvas, Exepath+SAVEPATH);
+  writeln('Outline has been hit at: '+Exepath+SAVEPATH);
+end;
+
+procedure DblClickButton(Sender: TObject);
+begin
+  tv1.SaveToFile(SAVEPATH);
+  //SaveCanvas2(bfrm.Canvas, Exepath+SAVEPATH);
+  writeln('Outline being stored at: '+Exepath+SAVEPATH);
+  bfrm.canvas.draw(300,200, getbitmapObject2(Exepath+'\examples\citymax.bmp'));
+  
+end;
+
+procedure drawE(abeginx, abeginy, endx, endy: integer); 
+{   fill(0, 2);
+  rect(0, 0, width, height);
+  pct += step;
+  if (pct < 1.0) {
+    x = beginX + (pct * distX);
+    y = beginY + (pow(pct, exponent) * distY);  }
+  //fill(255);  //ellipse(x, y, 20, 20);
+var i: integer;  
+begin
+  pct:= 0.0;
+  distX:= endX - beginX;
+  distY:= endY - beginY;
+  for i:= 1 to 100 do begin
+  pct:= pct+ step;
+  if (pct < 1.0) then begin
+    glx:= beginX + (pct * distX);
+    gly:= beginY + (power(pct, AExponent) * distY);
+  end;
+  //  bfrm.repaint;
+  //bfrm.canvas.draw(round(x),round(y), fpic);
+  bfrm.canvas.draw(round(glx)-20,round(gly-20),fPicLed);
+    // BitBlt(FStorage.Canvas.Handle,0,0, FPic.Width, FPic.Height,
+              // bfrm.Canvas.Handle, round(x), round(y), SRCCOPY);
+  delay(ANIMATEDELAY);
+  end;
+end;  
+
+
+procedure drawE2(abeginx, abeginy, endx, endy: integer); 
+var i: integer;  
+begin
+  pct:= 0.0;
+  distX:= endX - beginX;
+  distY:= endY - beginY;
+  for i:= 1 to 100 do begin
+  pct:= pct+ step;
+  if (pct < 1.0) then begin
+    glx:= beginX + (pct * distX);
+    gly:= beginY + (power(pct, AExponent+5) * distY);
+  end;
+  bfrm.canvas.draw(round(glx)-20,round(gly-20), fPicRed);
+  delay(ANIMATEDELAY);
+  end;
+end;  
+
+procedure setup(); 
+{ size(640, 360); noStroke();
+  distX = endX - beginX;
+  distY = endY - beginY; }
+begin
+  beginX:= 20;  // Initial x-coordinate
+  beginY:= 20;  // Initial y-coordinate
+  endX:= 570;   // Final x-coordinate
+  endY:= 320;   // Final y-coordinate
+  glx:= 20.0;        // Current x-coordinate
+  gly:= 20.0;        // Current y-coordinate
+  step:= 0.01;    // Size of each step along the path  100 steps
+  pct:= 0.0;      // Percentage traveled (0.0 to 1.0)
+  distX:= endX - beginX;
+  distY:= endY - beginY;
+end;
+
+
+procedure FormMouseDown(sender: TObject; Button: TMouseButton; 
+                                Shift: TShiftState; vX, vY: Integer);
+begin
+  BitBlt(FStorage.Canvas.Handle,0,0, FPic.Width, FPic.Height,
+               bfrm.Canvas.Handle, FNewRect.Left, FNewRect.Top, SRCCOPY);
+  pct:= 0.0;
+  beginX:= round(glx);
+  beginY:= round(gly);
+  endX:= vX;     //mouseX
+  endY:= vY;
+  
+  bfrm.repaint;
+  //FormDrawBitmap(Exepath+BACKMAP,10,10, bfrm.canvas);
+  drawE(beginx,beginy, endx,endy);
+  drawE2(beginx,beginy, endx,endy);
+  
+end;
+
+procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X,Y: Integer);
+//const FirstTime: boolean = True;
+//var FOldRect: TRect;     //makes a blur and zoom effect
+begin
+  //firsttime:= true;   //move tester
+  { 1) Restore Form1: copy storage onto Form1 at its old location }
+  //FOldRect:= Rect(280, 200, X , Y);
+  if FirstTime then FirstTime:= False
+    else BitBlt(bfrm.Canvas.Handle, FOldRect.Left, FOldRect.Top,
+     FPic.Width,FPic.Height, FStorage.Canvas.Handle,0,0,SRCCOPY);
+  { save old location }
+  FNewRect:= Rect(X, Y, X + FPic.Width, Y + FPic.Height);
+  FOldRect:= FNewRect;
+  { 2) Save copy of Form1: copy rectangle from Form1 to storage at new location.}
+  BitBlt(FStorage.Canvas.Handle,0,0, FPic.Width, FPic.Height,
+         bfrm.Canvas.Handle, FNewRect.Left, FNewRect.Top,  SRCCOPY);
+  { 3) copy the image to Form1 using SRCINVERT }
+  BitBlt(bfrm.Canvas.Handle, FNewRect.Left, FNewRect.Top, FPic.Width, FPic.Height,
+         FPic.Canvas.Handle,0,0, SRCAND);
+end;
+
+
+
+//********************************Form Builder*****************************//
+procedure InitBitmapForm;
+var
+  RootNode: TTreeNode;
+  idx: integer; 
+   myc: TCollection;   
+   //images: TCustomImagelist;
+ 
+begin
+ Setup;
+ bfrm:= TForm.create(self);
+  //mt.free;  in on close
+ with bfrm do begin
+   //FormStyle := fsStayOnTop;
+   Position:= poScreenCenter;
+   caption:='Outline TreeView Demo - DblClick to Save Outline';
+   color:= clwhite;
+   width:= 750;
+   height:= 670;
+   //canvas.Pen.mode:= pmNotXor;
+   onMouseMove:= @FormMouseMove;
+   onMouseDown:= @FormMouseDown;
+   onDblClick:= @DblClickButton;
+   onclick:= @clicktestbutton;
+   onClose:=  @CloseClick;
+   //canvas.brush.bitmap.loadfromfile(Exepath+backmap);
+   Show;
+   canvas.draw(300,200, getbitmapObject2(Exepath+'\examples\citymax.bmp'));
+   //Show;
+ end;
+ 
+ bfrm.canvas.stretchdraw(rect(0,0,bfrm.width,bfrm.height), 
+             getbitmap(Exepath+'\examples\brightfullmoon.bmp'));
+   bfrm.canvas.draw(300,200, getbitmapObject2(Exepath+'\examples\citymax.bmp'));
+   
+
+  tv1:= TTreeView.Create(NIL);
+  with tv1 do begin
+   parent:= bfrm;
+   Loadfromfile(ExePath+SAVEPATH);
+  setbounds(5,170,160, 160);
+   writeln(inttostr(width));
+   FullExpand;
+   //Items[2].addchild('','');
+   //color
+    onclick:= @clicktestbutton;
+    //images.getBitmap(0,getBitmap2(Exepath+BITMAP2));
+   //onclick
+   //images
+  end; 
+ 
+  tv2:= TTreeView.Create(NIL);
+  with tv2 do begin
+   parent:= bfrm;
+   //Loadfromfile(ExePath+SAVEPATH);
+  setbounds(450,170,200, 340);
+   writeln(inttostr(width));
+   FullExpand;
+   //Items[2].addchild('','');
+   //color
+    onclick:= @clicktestbutton;
+    //images.getBitmap(0,getBitmap2(Exepath+BITMAP2));
+   //onclick
+   //images
+ 
+  end; 
+ 
+  //writeln('tv2 hit at '+tv2.selected.text);
+ 
+  TForm1_CreateTree(self, tv2);
+  //tv2.Free;
+ 
+  
+ (* with TStatusPanel.create(self) do begin
+  //parent
+    width:= 200;
+    alignment:= alleft;
+  end;*)
+ 
+ with TBitBtn.create(bfrm) do begin
+   parent:= bfrm;
+   setbounds(550,530,150,55)
+   font.size:= 12;
+   glyph.LoadFromResourceName(HINSTANCE,'CL_MPSTOP');
+   mXButton(05,05,width, height,12,12,handle);
+   caption:= '&Close App';
+   onClick:= @closeButtonClick;
+ end;
+ with TBitBtn.Create(bfrm) do begin
+   Parent:= bfrm;
+   setbounds(230,530,150, 55);
+   caption:= 'A&dd Node';
+   font.size:= 12;
+   glyph.LoadFromResourceName(getHINSTANCE,'CL_MPNEXT');
+   mXButton(05,05,width, height,12,12,handle);
+   onClick:= @BtnAddClick;
+ end;
+ with TBitBtn.Create(bfrm) do begin
+   Parent:= bfrm;
+   setbounds(390,530,150, 55);
+   caption:= '&Delete Node';
+   font.size:= 12;
+   glyph.LoadFromResourceName(getHINSTANCE,'CL_MPPREV');
+   mXButton(05,05,width, height,12,12,handle);
+   onClick:= @RemoveClick;
+ end;
+ FirstTime:= true;
+ 
+  with TStatusPanel.create(NIL) do begin
+    //parent
+    width:= 200;
+    text:= 'status panel';
+    alignment:= alleft;
+  end;
+  
+  with TStatusBar.create(bfrm) do begin
+    parent:= bfrm;
+    simplepanel:= true;
+    color:= clyellow;
+    //align:= alleft;
+    showhint:= true;
+    hint:= 'this is box';
+    //simpletext.font.size:= 12;
+    simpletext:= 'this is status bar';
+    //visible:= true;
+    //width:= 200;
+    //alignment:= alleft;
+    //onclick:= 
+  end;
+  
+  with TRichEdit.Create(bfrm) do begin
+    parent:= bfrm;
+    clear;
+    setbounds(5,350,220,160);
+    //findtext
+    //align:= alclient;
+    wordwrap:= true;
+    color:= clred;
+    font.size:= 12;
+    //Loadfromfile(ExePath+SAVEPATH);
+    //PlainText
+    scrollbars:= true;
+    Lines.Add('This is {b super} real');
+    Lines.LoadfromFile(ExePath+SAVEPATH);
+    with SelAttributes do begin
+      Color:= clGreen;
+      Height:= 10;
+      Style:= [fsBold]; // b
+    end;
+    //print
+    //onclick
+    //SetBounds
+    ///align
+    wanttabs:= true;
+    onclick:= @clicktestbutton;
+      //ondblclick
+    //free;
+    //show; 
+  end; 
+  
+  
+  with TAnalogMeter.create(self) do begin
+  
+    parent:= bfrm;
+    //clear;
+    caption:= 'maXtax';
+    setbounds(230,350,240,220);
+    //tickcolor:= clred;
+    tickcount:= 11;
+    value:= 20;
+    visible;
+    //ctl3d
+    //alignment
+  end;
+  
+end;
+
+  
+procedure PrintList(Value: TStringList);
+var
+  I, Line, Pagenum: Integer;
+begin
+  //let's print
+  //if Assigned(FOnBeginPrint) then
+    //FOnBeginPrint(Self);
+  line := 0;
+  Printer.BeginDoc;
+  Pagenum := 1;
+  for I := 0 to Value.Count - 1 do begin
+    //if Assigned(FOnProgress) then
+      //FOnProgress(Self, I + 1, Value.Count);
+    Line := Line + Printer.Canvas.TextHeight(Value[I]);
+    if Line + Printer.Canvas.TextHeight(Value[I]) > Printer.PageHeight then begin
+      Line := Printer.Canvas.TextHeight(Value[I]);
+      Printer.NewPage;
+      Inc(PageNum);
+      //if Assigned(FOnNextPage) then
+        //FOnNextPage(Self, PageNum);
+    end;
+    Printer.Canvas.TextOut(0, Line, Value[I]);
+  end;
+  Printer.EndDoc;
+  //if Assigned(FOnFinishedPrint) then
+    //FOnFinishedPrint(Self);
+end;
+
+  function maxcalcfunc(a: extended): extended;
+  begin
+    result:= cotan(a);
+  end;  
+  
+function TimeStampInterval(StartStamp, EndStamp: TDateTime): integer;
+var
+  days: Integer;
+  hour, min, s, ms: Word;
+begin
+  days := Trunc(EndStamp - StartStamp); // whole days
+  DecodeTime(EndStamp - StartStamp, hour, min, s, ms);
+  result := (((days * 24 + hour) * 60 + min) * 60 + s) * 1000 + ms;
+end;
+
+procedure maxcalc_demo;
+begin
+  printF('this is %.6f',[maXcalc('ln(2)+fact(388)+2!')]); 
+  printF('this is %.6f',[maXcalc('(4!)^(3!)')]); 
+  printF('this is %.6f',[maXcalc('4!+4!')]); 
+  printF('this is %.6f',[maXcalc('log(22)')]); 
+  printF('this is logN %.6f',[maXcalc('2%256')]);
+  writeln('ln(e): '+floattostr(maXcalc('ln(e)')))
+  writeln(floattostr(maXcalc('e+10^6')))
+  printF('addition theorem %.18f ',[maXcalc('sin(2.5/2)')])
+  printF('addition theorem %.18f ',[maXcalc('sqrt(1/2*(1-cos(2.5)))')])
+  printF('addition theorem2 %22.18f ',[maXcalc('cos(2.5/2)')])
+  printF('addition theorem2 %22.18f ',[maXcalc('sqrt(1/2*(1+cos(2.5)))')])
+  maXcalcF('2%256+2^10');
+end; 
+
+function MainX(Params:string):string;
+var
+  p:integer;  
+  a,b:string;
+begin
+  p:=pos(',',Params);  
+  if p=0 then  
+    Result:=Params    
+  else begin  
+    a:=copy(Params,1,p-1);    
+    b:=copy(Params,p+1,255);
+    if StrToIntDef(b,0)<StrToIntDef(a,0) then    
+      Result:=b      
+    else    
+      Result:=a;
+  end;
+end;
+
+procedure testinnosetup;
+begin
+ //Setup or Uninstall Info functions
+
+ //-GetCmdTail: String;
+ //ParamCount: Integer;
+ //ParamStr(Index: Integer): String;
+
+ //-ActiveLanguage: String;
+
+ {CustomMessage(const MsgName: String): String;
+ FmtMessage(const S: String; const Args: array of String): String;
+ SetupMessage(const ID: TSetupMessageID): String;
+
+ WizardDirValue: String;
+ WizardGroupValue: String;
+ WizardNoIcons: Boolean;
+ WizardSetupType(const Description: Boolean): String;
+ WizardSelectedComponents(const Descriptions: Boolean): String;
+ WizardSelectedTasks(const Descriptions: Boolean): String;
+ WizardSilent: Boolean;
+
+ IsUninstaller: Boolean;
+ UninstallSilent: Boolean; }
+
+ //-CurrentFilename: String;
+ //-CurrentSourceFilename: String;
+
+ //-ExpandConstant(const S: String): String;
+ //-ExpandConstantEx(const S: String; const CustomConst, CustomValue: String): String;
+
+ //-IsComponentSelected(const Components: String): Boolean;
+ //-IsTaskSelected(const Tasks: String): Boolean;
+
+ //-ExtractTemporaryFile(const FileName: String);
+ //-ExtractTemporaryFiles(const Pattern: String): Integer;
+
+ //GetPreviousData(const ValueName, DefaultValueData: String): String;
+ //SetPreviousData(const PreviousDataKey: Integer; const ValueName, ValueData: String): Boolean;
+
+ //-Terminated: Boolean;
+
+ //RegisterExtraCloseApplicationsResource(const DisableFsRedir: Boolean; const AFilename: String): Boolean;
+ //RmSessionStarted: Boolean;
+
+//Exception s
+
+ //Abort;
+ //RaiseException(const Msg: String);
+
+ //-GetExceptionMessage: String;
+  //-ShowExceptionMessage;
+
+//System s
+
+ //-IsAdminLoggedOn: Boolean;
+ //-IsPowerUserLoggedOn: Boolean;
+ //cyGetWindowsVersion;
+ //-GetWindowsVersionEx(var Version: TWindowsVersion);
+ //+GetWindowsVersionString: String;
+
+ //IsWin64: Boolean;
+ //Is64BitInstallMode: Boolean;
+ //-ProcessorArchitecture: TSetupProcessorArchitecture;
+
+ //InstallOnThisVersion(const MinVersion, OnlyBelowVersion: String): Boolean;
+
+ {GetEnv(const EnvVar: String): String;
+ GetUserNameString: String;
+ GetComputerNameString: String;
+
+ GetUILanguage: Integer;
+
+ FontExists(const FaceName: String): Boolean;}
+
+ //FindWindowByClassName(const ClassName: String): HWND;
+ //FindWindowByWindowName(const WindowName: String): HWND;
+ //SendMessage(const Wnd: HWND; const Msg, WParam, LParam: Longint): Longint;
+// PostMessage(const Wnd: HWND; const Msg, WParam, LParam: Longint): Boolean;
+ //-SendNotifyMessage(const Wnd: HWND; const Msg, WParam, LParam: Longint): Boolean;
+ //RegisterWindowMessage(const Name: String): Longint;
+ //SendBroadcastMessage(const Msg, WParam, LParam: Longint): Longint;
+ //PostBroadcastMessage(const Msg, WParam, LParam: Longint): Boolean;
+ //SendNotifyMessage(const Msg, WParam, LParam: Longint): Boolean;
+
+ //CreateMutex(const Name: String);
+ //CheckForMutexes(Mutexes: String): Boolean;
+
+//procedure MakePendingFileRenameOperationsChecksum: String;}
+
+//procedure UnloadDLL(Filename: String);
+ //DLLGetLastError(): Longint;
+
+//String s
+
+ {Chr(B: Byte): Char;
+ Ord(C: Char): Byte;
+ Copy(S: String; Index, Count: Integer): String;
+ Length(s: String): Longint;
+ Lowercase(S: String): String;
+ Uppercase(S: String): String;
+ AnsiLowercase(S: String): String;
+ AnsiUppercase(S: String): String;
+ StringOfChar(c: Char; I : Longint): String;
+procedure Delete(var S: String; Index, Count: Integer);
+procedure Insert(Source: String; var Dest: String; Index: Integer);
+ StringChange(var S: String; const FromStr, ToStr: String): Integer;
+ StringChangeEx(var S: String; const FromStr, ToStr: String; const SupportDBCS: Boolean): Integer;
+ Pos(SubStr, S: String): Integer;
+ AddQuotes(const S: String): String;
+ RemoveQuotes(const S: String): String;
+ ConvertPercentStr(var S: String): Boolean;
+
+ CompareText(const S1, S2: string): Integer;
+ CompareStr(const S1, S2: string): Integer;
+
+ Format(const Format: string; const Args: array of const): string;
+
+ Trim(const S: string): String;
+ TrimLeft(const S: string): String;
+ TrimRight(const S: string): String;
+
+ StrToIntDef(s: string; def: Longint): Longint;
+ StrToInt(s: string): Longint;
+ StrToInt64Def(s: string; def: Int64): Int64;
+ StrToInt64(s: string): Int64;
+ StrToFloat(s: string): Extended;
+ IntToStr(i: Int64): String;
+ FloatToStr(e: extended): String;
+
+ CharLength(const S: String; const Index: Integer): Integer;
+
+ AddBackslash(const S: String): String;
+ RemoveBackslashUnlessRoot(const S: String): String;
+ RemoveBackslash(const S: String): String;
+ AddPeriod(const S: String): String;
+ ChangeFileExt(const FileName, Extension: string): String;
+ ExtractFileExt(const FileName: string): String;
+ ExtractFileDir(const FileName: string): String;
+ ExtractFilePath(const FileName: string): String;
+ ExtractFileName(const FileName: string): String;
+ ExtractFileDrive(const FileName: string): String;
+ ExtractRelativePath(const BaseName, DestName: String): String;
+ ExpandFileName(const FileName: string): String;
+ ExpandUNCFileName(const FileName: string): String;
+
+ GetDateTimeString(const DateTimeFormat: String; const DateSeparator, TimeSeparator: Char): String;
+
+procedure SetLength(var S: String; L: Longint);
+procedure CharToOemBuff(var S: AnsiString);
+procedure OemToCharBuff(var S: AnsiString);
+
+ GetMD5OfString(const S: AnsiString): String;
+ GetMD5OfUnicodeString(const S: String): String;
+ GetSHA1OfString(const S: AnsiString): String;
+ GetSHA1OfUnicodeString(const S: String): String;
+
+ SysErrorMessage(ErrorCode: Integer): String;
+
+ MinimizePathName(const Filename: String; const Font: TFont; MaxLen: Integer): String;
+  }
+//Array s
+
+ //GetArrayLength(var Arr: Array): Longint;
+  //SetArrayLength(var Arr: Array; I: Longint);
+
+//Variant s
+
+ //Null: Variant;
+ //Unassigned: Variant;
+
+ //VarIsEmpty(const V: Variant): Boolean;
+ //VarIsNull(const V: Variant): Boolean;
+ //VarType(const V: Variant): TVarType;
+
+//File System s
+
+ //DirExists(const Name: String): Boolean;
+ //7FileExists(const Name: String): Boolean;
+ //FileOrDirExists(const Name: String): Boolean;
+ {FileSize(const Name: String; var Size: Integer): Boolean;
+ GetSpaceOnDisk(const Path: String; const InMegabytes: Boolean; var Free, Total: Cardinal): Boolean;
+ GetSpaceOnDisk64(const Path: String; var Free, Total: Int64): Boolean;
+
+ FileSearch(const Name, DirList: string): String;
+ FindFirst(const FileName: String; var FindRec: TFindRec): Boolean;
+ FindNext(var FindRec: TFindRec): Boolean;
+procedure FindClose(var FindRec: TFindRec);
+
+ GetCurrentDir: String;
+ SetCurrentDir(const Dir: string): Boolean;
+ GetWinDir: String;
+ GetSystemDir: String;
+ GetSysWow64Dir: String;
+ GetTempDir: String;
+ GetShellFolder(Common: Boolean; const ID: TShellFolderID): String;
+ GetShellFolderByCSIDL(const Folder: Integer; const Create: Boolean): String;
+
+ GetShortName(const LongName: String): String;
+ GenerateUniqueName(Path: String; const Extension: String): String;
+
+ GetVersionNumbers(const Filename: String; var VersionMS, VersionLS: Cardinal): Boolean;
+ GetVersionNumbersString(const Filename: String; var Version: String): Boolean;
+
+ IsProtectedSystemFile(const Filename: String): Boolean;
+
+ GetMD5OfFile(const Filename: String): String;
+ GetSHA1OfFile(const Filename: String): String;
+
+ EnableFsRedirection(const Enable: Boolean): Boolean;
+
+File s
+
+ Exec(const Filename, Params, WorkingDir: String; const ShowCmd: Integer; const Wait: TExecWait; var ResultCode: Integer): Boolean;
+ ExecAsOriginalUser(const Filename, Params, WorkingDir: String; const ShowCmd: Integer; const Wait: TExecWait; var ResultCode: Integer): Boolean;
+ ShellExec(const Verb, Filename, Params, WorkingDir: String; const ShowCmd: Integer; const Wait: TExecWait; var ErrorCode: Integer): Boolean;
+ ShellExecAsOriginalUser(const Verb, Filename, Params, WorkingDir: String; const ShowCmd: Integer; const Wait: TExecWait; var ErrorCode: Integer): Boolean;
+
+ RenameFile(const OldName, NewName: string): Boolean;
+ FileCopy(const ExistingFile, NewFile: String; const FailIfExists: Boolean): Boolean;
+ DeleteFile(const FileName: string): Boolean;
+procedure DelayDeleteFile(const Filename: String; const Tries: Integer);
+ SetNTFSCompression(const FileOrDir: String; Compress: Boolean): Boolean;
+
+ LoadStringFromFile(const FileName: String; var S: AnsiString): Boolean;
+ LoadStringsFromFile(const FileName: String; var S: TArrayOfString): Boolean;
+ SaveStringToFile(const FileName: String; const S: AnsiString; const Append: Boolean): Boolean;
+ SaveStringsToFile(const FileName: String; const S: TArrayOfString; const Append: Boolean): Boolean;
+ SaveStringsToUTF8File(const FileName: String; const S: TArrayOfString; const Append: Boolean): Boolean;
+
+ CreateDir(const Dir: string): Boolean;
+ ForceDirectories(Dir: string): Boolean;
+ RemoveDir(const Dir: string): Boolean;
+ DelTree(const Path: String; const IsDir, DeleteFiles, DeleteSubdirsAlso: Boolean): Boolean;
+
+ CreateShellLink(const Filename, Description, ShortcutTo, Parameters, WorkingDir, IconFilename: String; const IconIndex, ShowCmd: Integer): String;
+
+procedure RegisterServer(const Is64Bit: Boolean; const Filename: String; const FailCriticalErrors: Boolean);
+ UnregisterServer(const Is64Bit: Boolean; const Filename: String; const FailCriticalErrors: Boolean): Boolean;
+procedure RegisterTypeLibrary(const Is64Bit: Boolean; const Filename: String);
+ UnregisterTypeLibrary(const Is64Bit: Boolean; const Filename: String): Boolean
+procedure IncrementSharedCount(const Is64Bit: Boolean; const Filename: String; const AlreadyExisted: Boolean);
+ DecrementSharedCount(const Is64Bit: Boolean; const Filename: String): Boolean;
+procedure RestartReplace(const TempFile, DestFile: String);
+procedure UnregisterFont(const FontName, FontFilename: String);
+ ModifyPifFile(const Filename: String; const CloseOnExit: Boolean): Boolean;
+
+Registry s
+
+ RegKeyExists(const RootKey: Integer; const SubKeyName: String): Boolean;
+ RegValueExists(const RootKey: Integer; const SubKeyName, ValueName: String): Boolean;
+
+ RegGetSubkeyNames(const RootKey: Integer; const SubKeyName: String; var Names: TArrayOfString): Boolean;
+ RegGetValueNames(const RootKey: Integer; const SubKeyName: String; var Names: TArrayOfString): Boolean;
+
+ RegQueryStringValue(const RootKey: Integer; const SubKeyName, ValueName: String; var ResultStr: String): Boolean;
+ RegQueryMultiStringValue(const RootKey: Integer; const SubKeyName, ValueName: String; var ResultStr: String): Boolean;
+ RegQueryDWordValue(const RootKey: Integer; const SubKeyName, ValueName: String; var ResultDWord: Cardinal): Boolean;
+ RegQueryBinaryValue(const RootKey: Integer; const SubKeyName, ValueName: String; var ResultStr: AnsiString): Boolean;
+
+ RegWriteStringValue(const RootKey: Integer; const SubKeyName, ValueName, Data: String): Boolean;
+ RegWriteExpandStringValue(const RootKey: Integer; const SubKeyName, ValueName, Data: String): Boolean;
+ RegWriteMultiStringValue(const RootKey: Integer; const SubKeyName, ValueName, Data: String): Boolean;
+ RegWriteDWordValue(const RootKey: Integer; const SubKeyName, ValueName: String; const Data: Cardinal): Boolean;
+ RegWriteBinaryValue(const RootKey: Integer; const SubKeyName, ValueName: String; const Data: AnsiString): Boolean;
+
+ RegDeleteKeyIncludingSubkeys(const RootKey: Integer; const SubkeyName: String): Boolean;
+ RegDeleteKeyIfEmpty(const RootKey: Integer; const SubkeyName: String): Boolean;
+ RegDeleteValue(const RootKey: Integer; const SubKeyName, ValueName: String): Boolean;
+  }
+//INI File s
+
+ //IniKeyExists(const Section, Key, Filename: String): Boolean;
+ //IsIniSectionEmpty(const Section, Filename: String): Boolean;
+
+ {GetIniBool(const Section, Key: String; const Default: Boolean; const Filename: String): Boolean
+ GetIniInt(const Section, Key: String; const Default, Min, Max: Longint; const Filename: String): Longint;
+ GetIniString(const Section, Key, Default, Filename: String): String;
+
+ SetIniBool(const Section, Key: String; const Value: Boolean; const Filename: String): Boolean;
+ SetIniInt(const Section, Key: String; const Value: Longint; const Filename: String): Boolean;
+ SetIniString(const Section, Key, Value, Filename: String): Boolean;
+
+procedure DeleteIniSection(const Section, Filename: String);
+procedure DeleteIniEntry(const Section, Key, Filename: String);
+
+Custom Setup Wizard Page s
+
+ CreateInputQueryPage(const AfterID: Integer; const ACaption, ADescription, ASubCaption: String): TInputQueryWizardPage;
+ CreateInputOptionPage(const AfterID: Integer; const ACaption, ADescription, ASubCaption: String; Exclusive, ListBox: Boolean): TInputOptionWizardPage;
+ CreateInputDirPage(const AfterID: Integer; const ACaption, ADescription, ASubCaption: String; AAppendDir: Boolean; ANewFolderName: String): TInputDirWizardPage;
+ CreateInputFilePage(const AfterID: Integer; const ACaption, ADescription, ASubCaption: String): TInputFileWizardPage;
+ CreateOutputMsgPage(const AfterID: Integer; const ACaption, ADescription, AMsg: String): TOutputMsgWizardPage;
+ CreateOutputMsgMemoPage(const AfterID: Integer; const ACaption, ADescription, ASubCaption: String; const AMsg: AnsiString): TOutputMsgMemoWizardPage;
+ CreateOutputProgressPage(const ACaption, ADescription: String): TOutputProgressWizardPage;
+ CreateCustomPage(const AfterID: Integer; const ACaption, ADescription: String): TWizardPage;
+
+ CreateCustomForm: TSetupForm;
+
+ PageFromID(const ID: Integer): TWizardPage;
+ PageIndexFromID(const ID: Integer): Integer;
+ ScaleX(X: Integer): Integer;
+ ScaleY(Y: Integer): Integer;
+
+Dialog s
+
+ MsgBox(const Text: String; const Typ: TMsgBoxType; const Buttons: Integer): Integer;
+ SuppressibleMsgBox(const Text: String; const Typ: TMsgBoxType; const Buttons, Default: Integer): Integer;
+ GetOpenFileName(const Prompt: String; var FileName: String; const InitialDirectory, Filter, DefaultExtension: String): Boolean;
+ GetSaveFileName(const Prompt: String; var FileName: String; const InitialDirectory, Filter, DefaultExtension: String): Boolean;
+ BrowseForFolder(const Prompt: String; var Directory: String; const NewFolderButton: Boolean): Boolean;
+ ExitSetupMsgBox: Boolean;       }
+
+//COM Automation objects support s
+
+ //CreateOleObject(const ClassName: string): Variant;
+ //GetActiveOleObject(const ClassName: string): Variant;
+ //IDispatchInvoke(Self: IDispatch; PropertySet: Boolean; const Name: String; Par: array of Variant): Variant;
+ //-!CreateComObject(const ClassID: TGUID): IUnknown;
+// StringToGUID(const S: String): TGUID;
+{procedure OleCheck(Result: HResult);
+procedure CoFreeUnusedLibraries;
+
+Setup Logging s
+
+procedure Log(const S: String);
+
+Other s   }
+
+{procedure Sleep(const Milliseconds: LongInt);
+ Random(const Range: Integer): Integer;
+procedure Beep;
+
+procedure BringToFrontAndRestore;
+
+Deprecated s
+
+ LoadDLL(const DLLName: String; var ErrorCode: Integer): Longint;
+ CallDLLProc(const DLLHandle: Longint; const ProcName: String; const Param1, Param2: Longint; var Result: Longint): Boolean;
+ FreeDLL(const DLLHandle: Longint): Boolean;
+
+ CastStringToInteger(var S: String): Longint;
+ CastIntegerToString(const L: Longint): String; }
+ 
+ //real  func of innno
+ 
+    //NewFileExists(const Name: String): Boolean;
+    //inDirExists(const Name: String): Boolean;
+    //FileOrDirExists(const Name: String): Boolean;
+    //IsDirectoryAndNotReparsePoint(const Name: String): Boolean;
+    //GetIniString(const Section, Key: String; Default: String; const Filename: String): String;
+    //GetIniInt(const Section, Key: String; const Default, Min, Max: Longint; const Filename: String): Longint;
+    //GetIniBool(const Section, Key: String; const Default: Boolean; const Filename: String): Boolean;
+    //IniKeyExists(const Section, Key, Filename: String): Boolean;
+    //IsIniSectionEmpty(const Section, Filename: String): Boolean;
+    //SetIniString(const Section, Key, Value, Filename: String): Boolean;
+    //SetIniInt(const Section, Key: String; const Value: Longint; const Filename: String): Boolean;
+    //SetIniBool(const Section, Key: String; const Value: Boolean; const Filename: String): Boolean;
+ //DeleteIniEntry(const Section, Key, Filename: String);
+ //DeleteIniSection(const Section, Filename: String);
+    //GetEnv(const EnvVar: String): String;
+    //GetCmdTail: String;
+    //GetCmdTailEx(StartIndex: Integer): String;
+    //NewParamCount: Integer;
+    //NewParamStr(Index: Integer): string;
+    //AddQuotes(const S: String): String;
+    //RemoveQuotes(const S: String): String;
+    //inGetShortName(const LongName: String): String;
+    //inGetWinDir: String;
+    //inGetSystemDir: String;
+    //GetSysWow64Dir: String;
+    //GetSysNativeDir(const IsWin64: Boolean): String;
+    //inGetTempDir: String;
+    //StringChange(var S: String; const FromStr, ToStr: String): Integer;
+    //StringChangeEx(var S: String; const FromStr, ToStr: String;
+  //const SupportDBCS: Boolean): Integer;
+    //AdjustLength(var S: String; const Res: Cardinal): Boolean;
+    //UsingWinNT: Boolean;
+    //ConvertConstPercentStr(var S: String): Boolean;
+    //ConvertPercentStr(var S: String): Boolean;
+    //ConstPos(const Ch: Char; const S: String): Integer;
+    //SkipPastConst(const S: String; const Start: Integer): Integer;
+    //RegQueryStringValue(H: HKEY; Name: PChar; var ResultStr: String): Boolean;
+    //RegQueryMultiStringValue(H: HKEY; Name: PChar; var ResultStr: String): Boolean;
+    //RegValueExists(H: HKEY; Name: PChar): Boolean;
+    //RegCreateKeyExView(const RegView: TRegView; hKey: HKEY; lpSubKey: PChar;
+  {Reserved: DWORD; lpClass: PChar; dwOptions: DWORD; samDesired: REGSAM;
+  lpSecurityAttributes: PSecurityAttributes; var phkResult: HKEY;
+  lpdwDisposition: PDWORD): Longint;}
+    //RegOpenKeyExView(const RegView: TRegView; hKey: HKEY; lpSubKey: PChar;
+  {ulOptions: DWORD; samDesired: REGSAM; var phkResult: HKEY): Longint;
+    RegDeleteKeyView(const RegView: TRegView; const Key: HKEY; const Name: PChar): Longint;
+    RegDeleteKeyIncludingSubkeys(const RegView: TRegView; const Key: HKEY; const Name: PChar): Longint; }
+    //RegDeleteKeyIfEmpty(const RegView: TRegView; const RootKey: HKEY; const SubkeyName: PChar): Longint;
+    //GetShellFolderPath(const FolderID: Integer): String;
+    //IsAdminLoggedOn: Boolean;
+    //IsPowerUserLoggedOn: Boolean;
+    //IsMultiByteString(const S: AnsiString): Boolean;
+    //FontExists(const FaceName: String): Boolean;
+{$IFNDEF IS_D5}
+//procedure FreeAndNil(var Obj);
+    //SafeLoadLibrary(const Filename: String; ErrorMode: UINT): HMODULE;
+{$ENDIF}
+    //GetUILanguage: LANGID;
+    //RemoveAccelChar(const S: String): String;
+    //GetTextWidth(const DC: HDC; S: String; const Prefix: Boolean): Integer;
+    //AddPeriod(const S: String): String;
+    //GetExceptMessage: String;
+    //GetPreferredUIFont: String;
+    //IsWildcard(const Pattern: String): Boolean;
+    //WildcardMatch(const Text, Pattern: PChar): Boolean;
+    //IntMax(const A, B: Integer): Integer;
+    //Win32ErrorString(ErrorCode: Integer): String;
+{$IFNDEF UNICODE}
+ //GetLeadBytes(var ALeadBytes: TLeadByteSet);
+{$ENDIF}
+{$IFNDEF IS_D3}
+    //inCompareMem(P1, P2: Pointer; Length: Integer): Boolean;
+{$ENDIF}
+    //DeleteDirTree(const Dir: String): Boolean;
+    //SetNTFSCompression(const FileOrDir: String; Compress: Boolean): Boolean;
+    //AddToWindowMessageFilterEx(const Wnd: HWND; const Msg: UINT);
+{$IFNDEF UNICODE}
+//type
+  //TSysCharSet = set of AnsiChar;
+    //inCharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean;
+{$ENDIF}
+    //ShutdownBlockReasonCreate(Wnd: HWND; const Reason: String): Boolean;
+    //ShutdownBlockReasonDestroy(Wnd: HWND): Boolean;
+    //TryStrToBoolean(const S: String; var BoolResult: Boolean): Boolean;
+    //WaitMessageWithTimeout(const Milliseconds: DWORD);
+    //MoveFileReplace(const ExistingFileName, NewFileName: String): Boolean;
+    //TryEnableAutoCompleteFileSystem(Wnd: HWND);
+    
+    // inAddBackslash(const S: String): String;
+    //PathChangeExt(const Filename, Extension: String): String;
+    //PathCharCompare(const S1, S2: PChar): Boolean;
+    //PathCharIsSlash(const C: Char): Boolean;
+    //PathCharIsTrailByte(const S: String; const Index: Integer): Boolean;
+    //PathCharLength(const S: String; const Index: Integer): Integer;
+    //inPathCombine(const Dir, Filename: String): String;
+    //PathCompare(const S1, S2: String): Integer;
+    //PathDrivePartLength(const Filename: String): Integer;
+    //PathDrivePartLengthEx(const Filename: String; const IncludeSignificantSlash: Boolean): Integer;
+    //inPathExpand(const Filename: String): String;
+    //PathExtensionPos(const Filename: String): Integer;
+    //PathExtractDir(const Filename: String): String;
+    //PathExtractDrive(const Filename: String): String;
+    //PathExtractExt(const Filename: String): String;
+    //PathExtractName(const Filename: String): String;
+    //PathExtractPath(const Filename: String): String;
+    //PathIsRooted(const Filename: String): Boolean;
+    //PathLastChar(const S: String): PChar;
+    //PathLastDelimiter(const Delimiters, S: string): Integer;
+    //PathLowercase(const S: String): String;
+    //PathNormalizeSlashes(const S: String): String;
+    //PathPathPartLength(const Filename: String; const IncludeSlashesAfterPath: Boolean): Integer;
+    //PathPos(Ch: Char; const S: String): Integer;
+    //PathStartsWith(const S, AStartsWith: String): Boolean;
+    //PathStrNextChar(const S: PChar): PChar;
+    //PathStrPrevChar(const Start, Current: PChar): PChar;
+    //PathStrScan(const S: PChar; const C: Char): PChar;
+    //inRemoveBackslash(const S: String): String;
+    //RemoveBackslashUnlessRoot(const S: String): String;
+    //TWindowDisabler
+     //UpdateHorizontalExtent(const ListBox: TCustomListBox);
+ //MinimizePathName(const Filename: String; const Font: TFont; MaxLen: Integer): String;
+  //AppMessageBox(const Text, Caption: PChar; Flags: Longint): Integer;
+  //MsgBoxP(const Text, Caption: PChar; const Typ: TMsgBoxType;
+  //const Buttons: Cardinal): Integer;
+  //inMsgBox(const Text, Caption: String; const Typ: TMsgBoxType;
+  //const Buttons: Cardinal): Integer;
+  //MsgBoxFmt(const Text: String; const Args: array of const;
+  //const Caption: String; const Typ: TMsgBoxType; const Buttons: Cardinal): Integer;
+  //ReactivateTopWindow;
+  //SetMessageBoxCaption(const Typ: TMsgBoxType; const NewCaption: PChar);
+  //SetMessageBoxRightToLeft(const ARightToLeft: Boolean);
+  //SetMessageBoxCallbackFunc(const AFunc: TMsgBoxCallbackFunc; const AParam: LongInt);
+
+
+
+end;
+
+
+{const
+  IDTRYAGAIN = 10;
+  IDCONTINUE = 11;}
+
+function GetMessageBoxResultText(const AResult: Integer): String;
+begin
+  case AResult of
+    IDOK: Result := 'OK';
+    IDCANCEL: Result := 'Cancel';
+    IDABORT: Result := 'Abort';
+    IDRETRY: Result := 'Retry';
+    IDIGNORE: Result := 'Ignore';
+    IDYES: Result := 'Yes';
+    IDNO: Result := 'No';
+    IDTRYAGAIN: Result := 'Try Again';
+    IDCONTINUE: Result := 'Continue';
+  else
+    Result := IntToStr(AResult);
+  end;
+  //TSimpleExpression
+end;
+
+ 
+ var    myus: TUserfunction;
+        aobj: TObject;
+        //mylog: TFoLog;
+        mst: shortstring;
+        //mst2: s8;
+        i: integer;
+        bitstyle: TBitmapstyle;
+        UserSpaceAvail, TotalSpaceAvail, DiskSize: Comp; {disk size}
+        shdig: TSHA1Digest;
+
+begin   //main of animationbox
+   //InifileRead;
+   ProcessMessagesON;
+   getMaxBoxIni;
+   writeln('Thread ID :'+intToStr(CurrentThreadID))
+   writeln('Process ID :'+intToStr(CurrentProcessID))
+   writeln('machine name is: '+getHostName)
+   writeln('user name is: '+getUserName)
+   osType:= Win32Type;
+   writeln('OS Type is: '+intToStr(ord(osType)));
+   mytimestamp:= GetFileCreationTime(exepath+'maxbox3.exe')
+   writeln(DateTimeToStr(mytimestamp)+' for maXbox3 file')
+   //SearchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter16.pdf')
+   //ExecuteCommand('cmd','/k dir *.*')
+   BitmapFormCreate(self);
+   InitBitmapForm;
+   //FormDrawBitmap(Exepath+BACKMAP,10,10, bfrm.canvas);
+   
+   //bfrm.canvas.brush.bitmap.loadfromfile(Exepath+backmap);
+   //bfrm.canvas.draw(300,200, getbitmapObject(Exepath+backmap));
+   
+    //Form1.Canvas.Brush.Bitmap := Bitmap;
+    //Form1.Canvas.FillRect(Rect(0,0,100,100));
+   //abmap:= getbitmapObject(Exepath+backmap);
+   //GrayscaleBitmap(abmap);
+   //bfrm.canvas.brush.bitmap:= abmap;
+
+   bfrm.canvas.brush.bitmap:= getbitmapObject(Exepath+backmap);
+   bfrm.Canvas.FillRect(Rect(400,300,100,100));
+ 
+   //bfrm.canvas.top:= 200;
+   //bfrm.canvas.brush.bitmap.width:= 300;
+   //FormDrawBitmap(BITMAP2,540,10, bfrm.canvas);
+   CurrencyFormat;
+   //VarComplexToPolar
+   //CheckSynchronize
+    if isMultiThread then writeln('multi');
+    //maXbox
+    myus:= @maxcalcfunc;
+    
+    with TJvMathParser.create do begin
+      //registeruserfunction('maxcalcfunc', myus);
+      execute('4+6')
+      Free;
+    end; 
+    
+    //TObject.instancesize
+    with TPersistent.Create do begin
+      //cleanupinstance;
+      //classname
+      writeln(getnamepath);
+      Free;
+    end;
+  
+    with TComport.Create(self) do begin
+      //cleanupinstance;
+      //classname
+      try
+        open;
+      except
+      end  
+      writeln('com handle '+inttostr(handle));
+      codepage;
+      buffer;
+      writeln('of com port '+getnamepath);
+      if connected then writeln(' com connect');
+      close;
+      Free;
+    end;
+  
+    aobj:= TObject.Create;
+    freeandnil2(aobj);
+    //RIRegister_StGenLog_Routines
+    //Function HexifyBlock( var Buffer, BufferSize : Integer) : string');
+    //HexifyBlock( var Buffer, BufferSize : Integer) : string');
+    //maxform1.CB1SCList.color:= clred;
+    maxform1.mxNavigator.color:= clyellow;
+    
+    //JvFormLog
+    with TJvLogFile.Create(self) do begin
+      add('first','second','third');
+     //parent:= bfrm;
+     //showlog('maxbox');
+     free;
+    end;
+    bitstyle:= bsCentered;
+    //printimage(getbitmapObject(Exepath+backmap),bscentered); 
+    writeln(inttostr(vk_back))
+    writeln(inttostr(vk_F1))
+    //formatmasktext
+    //MaskGetMaskSave
+    GetEnvironmentInfo;
+    //FindFilesDlg(StartIn: string; SpecialFolder: TJvSpecialFolder; UseFolder: Boolean): Boolean;
+    //FindFilesDlg(Exepath, sfPrograms, true);
+    //getrandomstring
+    //copyfile
+    //CreateTempFile
+    
+    {DeleteVolumeLabel}
+//function DeleteVolumeLabel(Drive : AnsiChar) : Cardinal;
+{-Deletes an existing volume label on Drive. Returns 0 for success,
+  or OS error code.}
+   //DeleteVolumeLabel(Drive : AnsiChar) : Cardinal;
+
+{EnumerateDirectories}
+//procedure EnumerateDirectories(const StartDir : AnsiString; FL : TStrings; {!!.02}
+  //                             SubDirs : Boolean;
+    //                           IncludeItem : TIncludeItemFunc);
+{-Retrieves the complete path name of directories on requested file
+  system path.}
+  //EnumerateDirectories
+  
+  writeln('DriveDelim= '+DriveDelim) 
+
+{EnumerateFiles}
+//procedure EnumerateFiles(const StartDir : AnsiString; FL : TStrings;   {!!.02}
+  //                       SubDirs : Boolean;
+    //                     IncludeItem : TIncludeItemFunc);
+{-Retrieves the complete path name of files in a requested file system path.}
+
+  //EnumerateFiles
+{FileHandlesLeft}
+ //FileHandlesLeft(MaxHandles : Cardinal) : Cardinal;
+{-Return the number of available file handles.}
+
+{FileMatchesMask}
+   //FileMatchesMask(const FileName, FileMask : AnsiString ) : Boolean;
+{-see if FileName matches FileMask}
+
+{FileTimeToStDateTime}
+  //FileTimeToStDateTime(FileTime : LongInt) : TStDateTimeRec;
+{-Converts a DOS date-time value to TStDate and TStTime values.}
+
+{FindNthSlash}
+  //FindNthSlash( const Path : AnsiString; n : Integer ) : Integer;
+{ return the position of the character just before the nth slash }
+  writeln('FindNthSlash '+inttostr(FindNthSlash(Exepath, 9)));
+
+{FlushOsBuffers}
+   //FlushOsBuffers(Handle : Integer) : Boolean;
+{-Flush the OS buffers for the specified file handle.}
+
+{GetCurrentUser}
+  //GetCurrentUser : AnsiString;
+{-Obtains current logged in username}
+
+{GetDiskClass}
+ //GetDiskClass(Drive : AnsiChar) : DiskClass;
+{-Return the disk class for the specified drive.}
+{GetDiskInfo}
+  //GetDiskInfo(Drive : AnsiChar; var ClustersAvailable, TotalClusters,
+    //                 BytesPerSector, SectorsPerCluster : Cardinal) : Boolean;
+{-Return technical information about the specified drive.}
+{GetDiskSpace}
+ //GetDiskSpace(Drive : AnsiChar;
+   //               var UserSpaceAvail  : Comp;           {space available to user}
+     //             var TotalSpaceAvail : Comp;           {total space available}
+       //           var DiskSize        : Comp) : Boolean;{disk size}
+{-Return space information about the drive.}
+
+ if GetDiskSpace('C',UserSpaceAvail,TotalSpaceAvail,DiskSize) then
+     printF('UserSpaceAvail: %d TotalSpaceAvail: %d DiskSize: %d',
+         [UserSpaceAvail div 1024,TotalSpaceAvail div 1024,DiskSize div 1024]);
+{
+
+{GetFileCreateDate}
+ //GetFileCreateDate(const FileName : AnsiString) :
+  //TDateTime;
+{-Obtains file system time of file creation.}
+
+{GetFileLastAccess}
+ //StGetFileLastAccess(const FileName : AnsiString) :
+  //TDateTime;
+{-Obtains file system time of last file access.}
+
+{GetFileLastModify}
+ //GetFileLastModify(const FileName : AnsiString) :
+  //TDateTime;
+{-Obtains file system time of last file modification.}
+
+{GetHomeFolder}
+ //GetHomeFolder(aForceSlash : Boolean) : AnsiString;
+{-Obtains the "Home Folder" for the current user}
+
+{$IFNDEF CBuilder}
+{GetLongPath}
+ //GetLongPath(const APath : AnsiString) : AnsiString;
+{-Returns the long filename version of a provided path.}
+{$ENDIF}
+
+{GetMachineName}
+  //GetMachineName : AnsiString;
+{-Returns the "Machine Name" for the current computer }
+  //gethostname
+{GetMediaID}
+  //GetMediaID(Drive : AnsiChar; var MediaIDRec : MediaIDType) : Cardinal;
+{-Get the media information (Volume Label, Serial Number) for the specified drive}
+
+{GetParentFolder}
+ //GetParentFolder(const APath : AnsiString; aForceSlash : Boolean) : AnsiString;
+{-return the parent directory for the provided directory }
+
+{GetShortPath}
+ //GetShortPath(const APath : AnsiString) : AnsiString;
+{-Returns the short filename version of a provided path.}
+
+{GetSystemFolder}
+ //GetSystemFolder(aForceSlash : Boolean) : AnsiString;
+{-Returns the path to the Windows "System" folder".)
+
+{GetTempFolder}
+ //GetTempFolder(aForceSlash : boolean) : AnsiString;
+{-Returns the path to the system temporary folder.}
+
+{GetWindowsFolder}
+ //StGetWindowsFolder(aForceSlash : boolean) : AnsiString;
+{-Returns the path to the main "Windows" folder.}
+
+{GetWorkingFolder}
+ //GetWorkingFolder(aForceSlash : boolean) : AnsiString;
+{-Returns the current working directory.}
+
+{GlobalDateTimeToLocal}
+ //GlobalDateTimeToLocal(const UTC: TStDateTimeRec; MinOffset: Integer): TStDateTimeRec; {!!.02}
+{-adjusts a global date/time (UTC) to the local date/time}
+
+{IsDirectory}
+ //StIsDirectory(const DirName : AnsiString) : Boolean;
+{-Return True if DirName is a directory.}
+{IsDirectoryEmpty}
+ //IsDirectoryEmpty(const S : AnsiString) : Integer;
+{-checks if there are any entries in the directory}
+{IsDriveReady}
+ //IsDriveReady(Drive : AnsiChar) : Boolean;
+{-determine if requested drive is accessible }
+{IsFile}
+ //IsFile(const FileName : AnsiString) : Boolean;
+{-Determines if the provided path specifies a file.}
+{IsFileArchive}
+ //IsFileArchive(const S : AnsiString) : Integer;
+{-checks if file's archive attribute is set}
+{IsFileHidden}
+ //IsFileHidden(const S : AnsiString) : Integer;
+{-checks if file's hidden attribute is set}
+{IsFileReadOnly}
+  //IsFileReadOnly(const S : AnsiString) : Integer;
+{-checks if file's readonly attribute is set}
+{IsFileSystem}
+ //IsFileSystem(const S : AnsiString) : Integer;
+{-checks if file's system attribute is set}
+{LocalDateTimeToGlobal}
+ //LocalDateTimeToGlobal(const DT1: TStDateTimeRec; MinOffset: Integer): TStDateTimeRec; {!!.02}
+{-adjusts a local date/time to the global (UTC) date/time}
+{ReadVolumeLabel}
+ //ReadVolumeLabel(var VolName : AnsiString; Drive : AnsiChar) : Cardinal;
+{-Get the volume label for the specified drive.}
+{SameFile}
+ //SameFile(const FilePath1, FilePath2 : AnsiString; var ErrorCode : Integer) : Boolean;
+{-Return True if FilePath1 and FilePath2 refer to the same physical file.}
+{SetMediaID} {!!!! does not work on NT/2000 !!!!}
+ //SetMediaID(Drive : AnsiChar; var MediaIDRec : MediaIDType) : Cardinal;
+{-Set the media ID record for the specified drive.}
+
+{SplitPath}
+ //SplitPath(const APath : AnsiString; Parts : TStrings);
+{-Splits the provided path into its component sub-paths}
+
+{StDateTimeToFileTime}
+ //StDateTimeToFileTime(const FileTime : TStDateTimeRec) : LongInt;  {!!.02}
+{-Converts an TStDate and TStTime to a DOS date-time value.}
+{StDateTimeToUnixTime}
+ //StDateTimeToUnixTime(const DT1 : TStDateTimeRec) : Longint;   {!!.02}
+{-converts a TStDateTimeRec to a time in Unix base (1970)}
+{UnixTimeToStDateTime}
+ //UnixTimeToStDateTime(UnixTime : Longint) : TStDateTimeRec;
+{-converts a time in Unix base (1970) to a TStDateTimeRec}
+
+{ValidDrive}
+ //ValidDrive(Drive : AnsiChar) : Boolean;
+{-Determine if the drive is a valid drive.}
+
+{WriteVolumeLabel}
+ //WriteVolumeLabel(const VolName : AnsiString; Drive : AnsiChar) : Cardinal;
+{-Sets the volume label for the specified drive.}
+  //DataSetSortedSearch
+  
+    writeln(inttostr2(23));
+   // writeln(strtoint2('23'));
+   
+   maxcalc_demo;
+   
+   maXcalcF('ln(e)');
+   //dpGetTempFolder
+   //GetTempFile
+   
+//function GetSomeFileInfo( aFile : string; aWhatInfo : TSomeFileInfo) : string');
+    writeln(GetSomeFileInfo(exepath+'maxbox3.exe', fi_DisplayType));
+    writeln(TBGetTempFolder+' '+TBGetTempFile+' '
+           +TBGetModuleFilename+inttostr(TBGetFileSize(exepath+'maxbox3.exe',1)));
+    
+    for i:= 1 to 255 do 
+      mst:= mst + 'a';
+      writeln(mst)
+    //mst:=' this is short';
+    writeln(mst[250]);
+    //{$H-}
+    //     writeln('just '+shortstring(JustExtensionS(exepath+'maxbox3.exe')));
+    
+    ActivatePrevInstance('maxform1','maxbox3');
+    //TrimCharsS('jk','fgg');
+    //XorString('tz','this is short');
+    //ScrambleS('this is short','tz');
+    //FloatToStringS
+    //FastValPrep('this is short');
+    //writeln(HexLS(1001));
+    //DegsMin(1.345);
+      //CharToHex('k','A');
+     { with TJvAnimation.create do begin
+      free
+      end;}
+      
+      // CreateShellLink
+      //         DelTree
+       //IsProtectedSystemFile
+       //Null
+       
+      // TIBDATASET
+     // TIBCUSTOMDATASET
+      // nativestring
+      //THitTest
+    writeln(mainX('this is exe with a large path of it ,this is path as a second')) 
+      writeln(windir)
+    //ExpandMacro('%WINDIR%\Media\notify.wav');
+    if PlaySound(windir+'\Media\notify.wav', 0, SND_FILENAME or SND_SYNC) then
+    writeln('sound');
+    // then     ScriptResult:=SCRIPT_OK  
+      //TFile 
+      {with TMemoryFile.create('myfile.txt') do begin
+      free
+      end;}
+      
+      //TFindRec
+      //TOneShotTimer
+      
+    writeln(itoa(ComputeFileCRC32(exepath+'\maxbox3.exe')));
+    //writeln(itoa(CRC32(exepath+'\maxbox3.exe')));
+    writeln(itoa(Crc32OfFile(exepath+'\maxbox3.exe')));
+    writeln(inttohex(250630300,2));
+    writeln(IntToHex(CRC32OfFile(exepath+'\maxbox3.exe'),4));
+    writeln(intToHex(ComputeFileCRC32(exepath+'\maxbox3.exe'),2));
+   
+    // CL.AddTypeS('TMD5Digest', 'array[0..15] of Byte;');
+     //CL.AddTypeS('TSHA1Digest', 'array[0..19] of Byte;');
+    writeln(sha1(exepath+'\maxbox3.exe'))
+    shdig:= GetSHA1OfFile(false,exepath+'\maxbox3.exe'); 
+    //for i:= 0 to 19 do write(itoa(shdig[i])+' '); 
+    //writeln('');
+    for i:= 0 to 19 do write(bytetohex(shdig[i])); 
+    //Initole //CoInitialize
+    //GetParamString
+    writeln(inttoStr(ResourceNameToInt('BEACH')));
+    changetime;  
+End.   
+
+http://www.be-precision.com/products/precision-builder/express/webhelp/en/topics/PSSyntax.htm
+
+------------------------------------------------
+Windows crashed again. I am the Blue Screen of Death. No one hears your screams.
+Three things are certain: Death, taxes, and lost data. Guess which has occurred.
+There is no place like 127.0.0.1 
+
+http://en.wikipedia.org/wiki/Sneakers_%281992_film%29
+
+with WebOutline.Outline.Items do
+  begin
+    {The following example code for adding nodes came from the Delphi 7 Help
+     for TTreeView. Apologies for lack of imagination.}
+
+    Clear; { remove any existing nodes }
+    MyTreeNode1:= Add(nil,ExtendFakeData('RootTreeNode0'));{ Add a root node }
+    { Add a child node to the node just added }
+    AddChild(MyTreeNode1,ExtendFakeData('ChildNode0'));
+
+    {Add another root node}
+    MyTreeNode2 := Add(MyTreeNode1, ExtendFakeData('RootTreeNode1'));
+    {add a child }
+    AddChild(MyTreeNode2,ExtendFakeData('ChildNode1'));
+
+    {Reuse MyTreeNode2}
+    { and add a child node to it}
+    MyTreeNode2 := WebOutline.Outline.Items[3];
+    AddChild(MyTreeNode2,ExtendFakeData('ChildNode1a'));
+
+    {Add a sibling}
+    Add(MyTreeNode2,ExtendFakeData('ChildNode1b'));
+
+    {add another root node}
+    Add(MyTreeNode1, ExtendFakeData('RootTreeNode2'));
+  end;
+end;
+
+procedure RotateBitmap(var htmpBitmapDC: TBitmap; var lWidth : Longint;
+                  var lHeight : Longint; lRadians : real; origmap: TBitmap);
+var
+         I,J : Longint;               // loop counter
+         //htmpBitmapDC : Longint;    // DC of the new bitmap
+         lSine,lCosine : extended;          // sine,cosine used in rotation
+         X1,X2,X3,Y1,Y2,Y3 : Longint;     // used in calculating new bitmap dimensions
+         lMinX,lMaxX,lMinY,lMaxY: Longint;  
+         lNewWidth,lNewHeight : Longint;  // width of new bitmap
+         lSrcX,lSrcY  : Longint;   // x,y pixel coord we are blitting from the source image
+         myrect: TRect;
+begin
+   // create a compatible DC from the one just brought
+   // compute the sine/cosinse of the radians used to // rotate this image
+    //tbmpDC:= tbmp.handle;
+   lSine := Sin(lRadians);
+   lCosine := Cos(lRadians);
+   // compute the size of the new bitmap being created
+   X1 := Round(-lHeight * lSine);
+   Y1 := Round(lHeight * lCosine);
+   X2 := Round(lWidth * lCosine - lHeight * lSine);
+   Y2 := Round(lHeight * lCosine + lWidth * lSine);
+   X3 := Round(lWidth * lCosine);
+   Y3 := Round(lWidth * lSine);
+   // figure out the max/min size of the new bitmap
+   lMinX := Min(0, Min(X1, Min(X2, X3)));
+   lMinY := Min(0, Min(Y1, Min(Y2, Y3)));
+   lMaxX := Max(X1, Max(X2, X3));
+   lMaxY := Max(Y1, Max(Y2, Y3));
+   // set the new bitmap width/height
+   lNewWidth:= lMaxX - lMinX;
+   lNewHeight:= lMaxY - lMinY;
+   // create a new bitmap based upon the new width/height of the // rotated bitmap
+   //hNewBitmap := CreateCompatibleBitmap(hBitmapDC, lNewWidth, lNewHeight);
+   htmpBitmapDC.height:= lNewHeight;
+   htmpBitmapDC.width:= lNewWidth;
+   //myRect:= Rect(0,0,lwidth,lheight); 
+   //bfrm.Canvas.BrushCopy(MyRect, Image1.Picture.Bitmap, MyRect, clred);
+   For I:= 0 To lNewWidth do begin
+     For J:= 0 To lNewHeight do begin
+       lSrcX:= Round((J + lMinX) * lCosine + (I + lMinY) * lSine);
+       lSrcY:= Round((I + lMinY) * lCosine - (J + lMinX) * lSine);
+       If (lSrcX >= 0) And (lSrcX <= lWidth) And
+          (lSrcY >= 0) And (lSrcY <= lHeight) Then begin
+         BitBlt(htmpBitmapDC.canvas.handle,J,I,lnewheight,lnewwidth,origmap.canvas.handle, lSrcX,lSrcY, SRCCOPY);
+        end;
+     end;
+  end;
+  //Image1.Refresh; 
+  lWidth:= htmpBitmapDC.width;
+  lHeight:= htmpBitmapDC.height;
+End;
+      
+procedure TForm1_RotateTest2(Sender: TObject);
+var
+ lRadians: real;
+ tbmpDC, H,W, Degrees: longint;
+ mybitmap: TBitmap;
+ MyRect: TRect;
+begin
+  mybitmap:= TBitmap.create;
+  mybitmap.loadfromfile(exepath+'examples\citymax.bmp')
+  image1.width:= mybitmap.width;
+  image1.height:= mybitmap.height;
+  //Image1.Picture.BitMap.PixelFormat:= pf24bit; 
+  Image1.Picture.BitMap:= mybitmap;
+  //mybitmap.Free;
+  Degrees:= 45;
+  lRadians:= PI * Degrees / 180;
+  W:= Image1.Picture.Width;
+  H:= Image1.Picture.Height;
+  //W:= Image1.Width;
+  //H:= Image1.Height;
+  mybitmap:= TBitmap.create;
+  RotateBitmap(mybitmap, W, H, lRadians, Image1.Picture.Bitmap);
+  myRect:= Rect(0,0,W,H); 
+  //bfrm.Canvas.CopyRect(MyOther,mybitmap.Canvas,MyRect);
+  Image1.Width:= W;
+  Image1.Height:= H;
+  Image1.Picture.Bitmap.Width:= W;
+  Image1.Picture.Bitmap.Height:= H;
+  //Image1.Picture.bitmap:= mybitmap;
+  BitBlt(Image1.Picture.Bitmap.Canvas.Handle,0,0,W,H,mybitmap.canvas.handle,0,0,SRCCopy);
+  //bfrm.Canvas.BrushCopy(MyRect, Image1.Picture.Bitmap, MyRect, clRed);
+  //for j:= 1 to image1.height do
+    //image1.Picture.Bitmap.Canvas.pixels[j,j]:= clred; //test line
+  mybitmap.Free;
+  Image1.Refresh; 
+end;
+
+
+
+procedure CurrencyFormat;
+var fSettings: TFormatSettings;
+begin
+  GetLocaleFormatSettings(LOCALE_SYSTEM_DEFAULT, fSettings);
+  writeln(fsettings.timeAMString);
+  writeln(fsettings.longDateFormat);
+  writeln(fsettings.shortDateFormat);
+    //writeln(currtostrF
+  writeln('currtostrFS 1234.56 formats with setting as = '+
+             CurrToStrFS(1234.5678989, ffCurrency, 4, fSettings));
+             writeln(FloatToStrF(1234.5678989, ffCurrency, 6, 6));
+  writeln('currtostrFS and back as = '+
+             CurrToStrFS(strToCurr('1234.5678989'), ffCurrency, 4, fSettings));
+end; 
+
+procedure maxcalc_demo;
+begin
+  printF('this is %.6f',[maXcalc('ln(2)+fact(388)+2!')]); 
+  printF('this is %.6f',[maXcalc('(4!)^(3!)')]); 
+  printF('this is %.6f',[maXcalc('4!+4!')]); 
+  printF('this is %.6f',[maXcalc('log(22)')]); 
+  printF('this is logN %.6f',[maXcalc('2%256')]);
+  writeln('ln(e): '+floattostr(maXcalc('ln(e)')))
+  writeln(floattostr(maXcalc('e+10^6')))
+  printF('addition theorem %.18f ',[maXcalc('sin(2.5/2)')])
+  printF('addition theorem %.18f ',[maXcalc('sqrt(1/2*(1-cos(2.5)))')])
+  printF('addition theorem2 %22.18f ',[maXcalc('cos(2.5/2)')])
+  printF('addition theorem2 %22.18f ',[maXcalc('sqrt(1/2*(1+cos(2.5)))')])
+  maXcalcF('2%256+2^10');
+end; 
+
+50000  = 0.693137180659968
+100000 = 0.693142180584982
+500000 = 0.693146180561005
+10^6   = 0.693146680560255
+5*10^6 = 0.693147080560068
+50*10^6= 0.693147170560399    //Runtime: 0:28:22.422
+ln(2)  = 0.693147180559945
+
+(* zeta:= 0;
+     for i:= 1 to 50000 do 
+       if i mod 2 = 0 then
+         zeta:= zeta - 1/i else
+         zeta:= zeta + 1/i;
+       writeln('harmonic alternate to ln(2): '+floattostr(zeta))  
+       writeln(floattostr(maxcalc('ln(2)')))
+       writeln(floattostr(ln2))    *)
+   
+
+type
+  //PThreadSortArray = ^TThreadSortArray;
+  //TThreadSortArray = array[0..MaxInt div SizeOf(Integer) - 1] of Integer;
+  TSortArray =  array[1..ARRSIZE] of Integer;
+
+
+  TSortThread = class(TThread)
+  strict private
+    FBox: TPaintBox;
+    //FSortArray: PThreadSortArray;
+    FSortArray: TSortArray;
+    FSize: Integer;
+    FA, FB, FI, FJ: Integer;
+    Fbolthslowmotion: boolean;
+    procedure DoVisualSwap;
+    procedure Setbolthslowmotion(const Value: boolean);
+  protected
+    procedure Execute; override;
+    procedure VisualSwap(A, B, I, J: Integer);
+    procedure Sort(var A: array of Integer); virtual; abstract;
+  public
+    constructor Create(Box: TPaintBox; var SortArray: TSortArray);
+    property  bolTHslowmotion: boolean read Fbolthslowmotion write Setbolthslowmotion;
+
+  end;
+
+
+procedure SIRegister_TThreadSortForm(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TForm', 'TThreadSortForm') do
+  with CL.AddClassN(CL.FindClass('TForm'),'TThreadSortForm') do
+  begin
+    RegisterProperty('BubbleSortBox', 'TPaintBox', iptrw);
+    RegisterProperty('SelectionSortBox', 'TPaintBox', iptrw);
+    RegisterProperty('QuickSortBox', 'TPaintBox', iptrw);
+    RegisterProperty('Bevel1', 'TBevel', iptrw);
+    RegisterProperty('Bevel2', 'TBevel', iptrw);
+    RegisterProperty('Bevel3', 'TBevel', iptrw);
+    RegisterProperty('StartBtn', 'TButton', iptrw);
+    RegisterProperty('Label1', 'TLabel', iptrw);
+    RegisterProperty('Label2', 'TLabel', iptrw);
+    RegisterProperty('Label3', 'TLabel', iptrw);
+    RegisterProperty('BitBtn1slowmotion', 'TBitBtn', iptrw);
+    RegisterMethod('Procedure StartBtnClick( Sender : TObject)');
+    RegisterMethod('Procedure BubbleSortBoxPaint( Sender : TObject)');
+    RegisterMethod('Procedure SelectionSortBoxPaint( Sender : TObject)');
+    RegisterMethod('Procedure QuickSortBoxPaint( Sender : TObject)');
+    RegisterMethod('Procedure FormCreate( Sender : TObject)');
+    RegisterMethod('Procedure FormDestroy( Sender : TObject)');
+    RegisterMethod('Procedure FormKeyPress( Sender: TObject; var Key: Char)');
+    RegisterMethod('Procedure BitBtn1slowmotionClick( Sender : TObject)');
+    RegisterMethod('Procedure ThreadDone( Sender : TObject)');
+    RegisterProperty('mouse', 'boolean', iptrw);
+  end;
+end;
+
+
+
+
+***********************************Thread Class *****************************
+  TThread = class
+  private
+{$IFDEF MSWINDOWS}
+    FHandle: THandle;
+    FThreadID: THandle;
+{$ENDIF}
+{$IFDEF LINUX}
+    // ** FThreadID is not THandle in Linux **
+    FThreadID: Cardinal;
+    FCreateSuspendedSem: TSemaphore;
+    FInitialSuspendDone: Boolean;
+{$ENDIF}
+    FCreateSuspended: Boolean;
+    FTerminated: Boolean;
+    FSuspended: Boolean;
+    FFreeOnTerminate: Boolean;
+    FFinished: Boolean;
+    FReturnValue: Integer;
+    FOnTerminate: TNotifyEvent;
+    FSynchronize: TSynchronizeRecord;
+    FFatalException: TObject;
+    procedure CallOnTerminate;
+    class procedure Synchronize(ASyncRec: PSynchronizeRecord; QueueEvent: Boolean = False); overload;
+{$IFDEF MSWINDOWS}
+    function GetPriority: TThreadPriority;
+    procedure SetPriority(Value: TThreadPriority);
+{$ENDIF}
+{$IFDEF LINUX}
+    // ** Priority is an Integer value in Linux
+    function GetPriority: Integer;
+    procedure SetPriority(Value: Integer);
+    function GetPolicy: Integer;
+    procedure SetPolicy(Value: Integer);
+{$ENDIF}
+    procedure SetSuspended(Value: Boolean);
+  protected
+    procedure CheckThreadError(ErrCode: Integer); overload;
+    procedure CheckThreadError(Success: Boolean); overload;
+    procedure DoTerminate; virtual;
+    procedure Execute; virtual; abstract;
+    procedure Queue(AMethod: TThreadMethod); overload;
+    procedure Synchronize(AMethod: TThreadMethod); overload;
+    property ReturnValue: Integer read FReturnValue write FReturnValue;
+    property Terminated: Boolean read FTerminated;
+  public
+    constructor Create(CreateSuspended: Boolean);
+    destructor Destroy; override;
+    procedure AfterConstruction; override;
+    procedure Resume;
+    procedure Suspend;
+    procedure Terminate;
+    function WaitFor: LongWord;
+    class procedure Queue(AThread: TThread; AMethod: TThreadMethod); overload;
+    class procedure RemoveQueuedEvents(AThread: TThread; AMethod: TThreadMethod);
+    class procedure StaticQueue(AThread: TThread; AMethod: TThreadMethod);
+    class procedure Synchronize(AThread: TThread; AMethod: TThreadMethod); overload;
+    class procedure StaticSynchronize(AThread: TThread; AMethod: TThreadMethod);
+    property FatalException: TObject read FFatalException;
+    property FreeOnTerminate: Boolean read FFreeOnTerminate write FFreeOnTerminate;
+{$IFDEF MSWINDOWS}
+    property Handle: THandle read FHandle;
+    property Priority: TThreadPriority read GetPriority write SetPriority;
+{$ENDIF}
+{$IFDEF LINUX}
+    // ** Priority is an Integer **
+    property Priority: Integer read GetPriority write SetPriority;
+    property Policy: Integer read GetPolicy write SetPolicy;
+{$ENDIF}
+    property Suspended: Boolean read FSuspended write SetSuspended;
+{$IFDEF MSWINDOWS}
+    property ThreadID: THandle read FThreadID;
+{$ENDIF}
+{$IFDEF LINUX}
+    // ** ThreadId is Cardinal **
+    property ThreadID: Cardinal read FThreadID;
+{$ENDIF}
+    property OnTerminate: TNotifyEvent read FOnTerminate write FOnTerminate;
+  end;
+  
+  
+8 Tipps für die richtige Business-Software-Auswahl!
+
+Die Auswahl einer Business Software lässt verschiedene Lösungswege zu, selten gibt es ein klares “Falsch”. Einige abenteuerliche Ansätze die geradewegs und unbeirrbar zu den bekannten Projektschwierigkeiten führen, sollte man aber vermeiden. Unsere 8 Tipps für die Auswahl der Business-Software-Lösung helfen Ihnen, die richtige Lösung sowie den passenden Software-Partner zu finden:
+
+    Ganzes Angebot!
+    Gehen Sie von der ganzen Angebotspalette aus und entscheiden Sie sich nicht zu schnell für einen Anbieter.
+    Prozesse!
+    Analysieren Sie zuerst die Prozesse und definieren Sie dann die funktionale Abdeckung der Anforderungen.
+    Zukunft!
+    Versuchen Sie auch die Anpassungen des Systems an zukünftige Bedürfnisse abzuschätzen.
+    Potenzial des Partners!
+    Beurteilen Sie das Potenzial des Systemlieferanten.
+    Referenzen!
+    Besuchen Sie Referenzkunden mit ähnlichen Anforderungen. Verlassen Sie sich nicht einfach auf Aussagen von Kollegen und Partnern.
+    Drum prüfe wer sich bindet?
+    Hinter der evaluierten Lösung stehen immer auch Menschen mit denen Sie in den nächsten zehn Jahren zu tun haben. Beziehen Sie daher Aspekte wie «Sympathie und Chemie» in die Überlegungen ein.
+    Ressourcen!
+    Nehmen Sie sich Zeit! Die Einführung eines ERP-Systems braucht Zeit und das Management muss voll und ganz hinter dem Projekt stehen und die nötigen Ressourcen dazu freigeben.
+    Schulung, Schulung, Schulung!
+    Und ganz wichtig: Unterschätzen Sie nicht die Anwender-Schulung. Sie ist wichtig und braucht Zeit!
+
+ 
+http://www.hitekdev.com/delphi/BITMAPANIMATION.html
+
+void draw() 
+{
+  fill(0, 2);
+  rect(0, 0, width, height);
+  pct += step;
+  if (pct < 1.0) {
+    x = beginX + (pct * distX);
+    y = beginY + (pow(pct, exponent) * distY);
+  }
+  fill(255);
+  ellipse(x, y, 20, 20);
+}
+
+function FindRootNode(ACaption: String; ATreeView: TTreeView): TTreeNode; 
+var LCount: Integer; 
+begin 
+  result := nil; 
+  LCount := 0; 
+  while (LCount < ATreeView.Items.Count) and (result = nil) do 
+  begin 
+    if (ATreeView.Items.Item[LCount].Text = ACaption) and (ATreeView.Items.Item[LCount].Parent = nil) then 
+      result := ATreeView.Items.Item[LCount]; 
+    inc(LCount); 
+  end; 
+end;
+
+...
+
+var LDestNode: TTreeNode; 
+begin 
+  LDestNode := FindRootNode('category', TreeView1); 
+  if LDestNode <> nil then 
+  begin 
+    TreeView1.Items.AddChild(LDestNode, 'node1'); 
+    TreeView1.Items.AddChild(LDestNode, 'node2'); 
+  end; 
+end;
+
+Loading TTreeView items from XML
+Once we have the XML representation of the tree view items, we can use it to populate the tree view. When the application starts, the XML2Tree procedure is called to construct the tree. The tree parameter is a reference to a TTreeView component we are populating; the XMLDoc parameter points to a TXMLDocument component. In this case we are using the TXMLDocument component dropped on a form.
+
+procedure XML2Tree(
+          tree   : TTreeView; 
+          XMLDoc : TXMLDocument);
+var
+  iNode : IXMLNode;
+
+  procedure ProcessNode(
+        Node : IXMLNode; 
+        tn   : TTreeNode);
+  var
+    cNode : IXMLNode;
+  begin
+    if Node = nil then Exit;
+    with Node do
+    begin
+      tn := tree.Items.AddChild(tn, Attributes['text']);
+      tn.ImageIndex := Integer(Attributes['imageIndex']);
+      tn.StateIndex := Integer(Attributes['stateIndex']);
+    end;
+
+
+    cNode := Node.ChildNodes.First;
+    while cNode <> nil do
+    begin
+      ProcessNode(cNode, tn);
+      cNode := cNode.NextSibling;
+    end;
+  end; (*ProcessNode*)
+begin
+  tree.Items.Clear;
+  XMLDoc.FileName := ChangeFileExt(ParamStr(0),'.XML');
+  XMLDoc.Active := True;
+
+  iNode := XMLDoc.DocumentElement.ChildNodes.First;
+
+  while iNode <> nil do
+  begin
+    ProcessNode(iNode,nil);
+    iNode := iNode.NextSibling;
+  end;
+
+  XMLDoc.Active := False;
+end;
+
+
+http://jedi.grizzlydev.com/www/art_usingtreeviews.html
+
+In modern times, a configuration file has to be an XML standard so you want to parse that file to get the elements from corresponding nodes. 
+Answer:
+
+
+First you have to import the Type library. This will create a wrapper class for that component and all you have to do is to name it in uses in your unit. 
+I used msxml.dll(Version 2.0) to install the XML parsing components in the IDE through the Import Type Library option. 
+See for more details: 
+
+Importing XML DOM Parser in Delphi /ID 2021 
+
+
+Second we produce a simple XML file like a configuration file: 
+(Name the file myconfig.xml) 
+(Strange things happen (cause the xml interpreter in d3k-editor) with a well-formed file after submit the article, so I had to cancel first tags between databases and databases ) 
+please download the file: http://max.kleiner.com/myconfig.xml 
+****************************************************************************** 
+----Simple Browser started----
+
+// Run asynchronously (wait for process to exit) and use pipes so we can read the output pipe
+  hProcess.Options := hProcess.Options + [poWaitOnExit, poUsePipes];
+  // Now run:
+  
+  http://www.delphibasics.info/home/delphibasicssnippets/processunitbyaphexwithexample
+  
+  http://www.jrsoftware.org/ishelp/index.php?topic=scriptfunctions

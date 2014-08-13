@@ -1,0 +1,1100 @@
+//Example of REST memo load and save capabilities of the VCL
+//Task: Code the button with Open a Video!
+//Get the text and write your memo memories, #locs=8668
+
+program Memo_Form_Demo;
+
+const LEFTBASE = 20;
+      TOPBASE = 25; 
+      MEDIAPATH =  '..\maxbox3\examples\mymemomemoire.txt';
+      
+      BaseUrl = 'http://ecs.amazonaws.com/onca/xml?';
+      
+
+var 
+  mymemo: TMemo;
+  mpanel: TPanel;
+  mPlayer: TMediaPlayer;
+  inFrm: TForm;  
+  mbtnSave, mBtnGenerate, mBtnGet: TBitBtn;
+   
+  mBtnModify: TButton;
+  mBtnCompact: TButton;
+   
+  Lstbox: TListbox;
+  stat: TStatusbar;
+  cal: TCalendar;
+  selectedFile: string;
+  
+  
+
+procedure btnBookInfoClick(Sender: TObject);
+var
+  strUrl, strXml, strBookid: string;
+  IdHTTP1: TIdHTTP;
+  xmlt: TJvXMLTree;
+  axmlnode: TJvXMLNode;
+  aval: variant;
+  zipStream: TFileStream;
+
+begin
+
+{Paperback
+Publisher: Software + Support (September 30, 2003)
+Language: German
+ISBN-10: 3935042469
+ISBN-13: 978-3935042468
+Product Dimensions: 9.3 x 6.7 x 1 inches
+Shipping Weight: 1.8 pounds }
+
+  //strBookid:= '3935042469';
+  strBookid:= '0782143423';      //from example
+
+  strUrl := BaseURL;
+  strUrl := strUrl + 'Service=AWSECommerceService&';
+  strUrl := strUrl + 'AWSAccessKeyId=0JE9C2T2RN684MDM6G02&';
+  strUrl := strUrl + 'AssociateTag=devconn-20&';
+  strUrl := strUrl + 'Operation=ItemLookup&';
+  strUrl := strUrl + 'ItemId=' + strBookid + '&';
+  strUrl := strUrl + 'ResponseGroup=Large';
+
+  //zipStream:= TFileStream.create(Exepath+'restbook.xml', fmCreate)
+  IdHTTP1:= TIdHTTP.create(self);;
+  try
+    strXml := IdHTTP1.Get(strUrl);
+  //idhttp1.get1(strUrl, zipStream)
+  except
+    raiseLastException;
+  end;  
+  SaveString(Exepath+'restbook.xml',strXML);
+  xmlt:= TJvXMLTree.Create('xmldocu',aval, axmlnode);
+
+  xmlt.LoadFromFile(Exepath+'restbook.xml');
+  writeln('Restbook Back '+xmlt.text);
+
+  //Treeview1.Items.Clear;
+  //DomToTree (XMLDocument1.DocumentElement, nil, TreeView1);
+  xmlt.Free;
+  //zipStream.Free;
+end;
+
+function GetSystemPathSHL(Folder: Integer) : TFilename ;
+
+{   Call this function with one of the constants declared above. }
+
+var
+    //PIDL    : PItemIDList ;
+    //Path    : LPSTR ;
+    //AMalloc : IMalloc ;
+    myfile: TFileName;
+
+begin
+
+   //WriteStringToStream
+     //SHBrowseforfolder
+  //findfilesdlg
+   //getsystempath
+{Path := StrAlloc (MAX_PATH) ;
+
+SHGetSpecialFolderLocation (Application.Handle, Folder, PIDL) ;
+if SHGetPathFromIDList (PIDL, Path) then
+    begin
+    Result := IncludeTrailingPathDelimiter (Path) ;
+    end
+else
+    begin
+    Result := '' ;
+    end ;    ;
+SHGetMalloc(AMalloc) ;
+AMalloc.Free (PIDL) ;
+StrDispose (Path) ;                }
+end;
+
+function GetCommonDocumentsFolder : TFilename ;
+
+begin
+  //browseforfolder
+  //CSIDL_COMMON_DOCUMENTS
+  Result := GetSystemPathSH(CSIDL_COMMON_DOCUMENTS) ;
+end ;
+
+function TFormMap_GetIniFileName: string;
+var
+  strFolder: string;
+begin
+  SetLength (strFolder, 250);
+  //ShGetFolderPath (0, CSIDL_PERSONAL, 0, 0, PChar(strFolder));
+  //GetSystemPath
+  SetLength (strFolder, StrLen(PChar(strFolder)));
+  strFolder := strFolder + PathDelim;
+  Result := strFolder +
+    ChangeFileExt (ExtractFileName(ParamStr(0)), '.ini');
+end;
+
+
+
+procedure TFormMap_FormCreate(Sender: TObject);
+var
+  inifileName: string;
+  inifile: TMemIniFile;
+  googleMapKey: string;
+
+begin
+  inifileName := TFormMap_GetIniFileName;
+  inifile:= TMemIniFile.Create (iniFilename);
+  googleMapKey := inifile.ReadString('googlemap', 'devkey', '');
+  if googleMapKey = '' then
+    {raise} Exception.Create ('Missing dev key');
+end;
+
+
+
+procedure TFormMap_btnGeocodingClick(Sender: TObject);
+var
+  I: Integer;
+  strResponse, str1, str2: string;
+  sList, sListCity: TStringList;
+  cdsTown: TClientDataSet;
+  IdHTTP1: TIdHTTP;
+  myuri: TIDUri;
+begin
+  //cdsTown.Active:= False;
+  cdsTown.Close;
+  
+  cdsTown.CreateDataSet;
+  cdsTown.Open;
+
+  //cdsTown.Active := True;
+  sList := TStringList.Create;
+
+  for I := 0 to sListCity.Count - 1 do begin
+    //ListBox1.ItemIndex := I;
+    Application.ProcessMessages;
+    if Length (sListCity.Names[I]) > 2 then
+    begin
+      myuri:=  TIDUri.create('http://maps.google.com/maps/geo?q=' +
+          (sListCity.Names[I]) + '&output=csv&key=' + 'googleMapKey');
+   
+      {strResponse := IdHTTP1.Get(TIDUri.UrlEncode(
+          'http://maps.google.com/maps/geo?q=' +
+          (sListCity.Names[I]) + '&output=csv&key=' + googleMapKey));}
+      
+      strResponse := IdHTTP1.Get(myuri.UrlEncode(
+          'http://maps.google.com/maps/geo?q=' +
+          (sListCity.Names[I]) + '&output=csv&key=' + 'googleMapKey'));
+    
+      myuri.Free;
+      sList.LineBreak := ',';
+      sList.Text := strResponse;
+      str1 := sList[2];
+      str2 := sList[3];
+      cdsTown.AppendRecord([sListCity.Names[I],
+        StrToFloat (str1), StrToFloat (str2),
+        Length (sListCity.ValueFromIndex[I])]);
+      Sleep (150);
+    end;
+  end;
+  sList.Free;
+end;
+
+//Creating an Issue
+procedure AddIssue;
+var
+  xmlStream     : TMemoryStream;
+  tempArray     : array[0..10000] of char;
+  xmlIssue      : String;
+  apiAccessKey  : String;
+  HttpClient    : TIDHttp;
+begin
+  apiAccessKey := 'a1234567abcde12121a11a123456a12a12ab123ab'; ///Api user key example
+  xmlStream := TMemoryStream.Create; //Create the XML stream
+
+  //Create and set the Http Client component
+  HttpClient := TIDHttp.Create(nil);
+  //HttpClient.ContentType:= 'text/xml';
+  //HttpClient.URL:= 'http://localhost:3000/issues.xml?key='+apiAccessKey;
+  //HTTPClient.Get2('http://127.0.0.1')
+  HTTPClient.Get2('http://localhost:3000/issues.xml?key='+apiAccessKey);
+  try
+    xmlIssue :=
+        '<?xml version="1.0"?>' +
+        '<issue>' +
+        '  <project_id>1</project_id>'+
+        '  <tracker_id>1</tracker_id>'+
+        '  <status_id>1</status_id>'+
+        '  <priority_id>1</priority_id>'+
+        '  <author_id>1</author_id>'+
+        '  <start_date>2011-10-09</start_date>'+
+        '  <subject>Created in DELPHI</subject>'+
+        '  <description>Issue created in DELPHI using Redmine REST API</description>'+
+        '  <custom_fields type="array">' + // adding custom fields
+        '       <custom_field id="1">'+
+        '           <value>12121212</value>'+
+        '       </custom_field>'+
+        '       <custom_field id="2">'+
+        '           <value>2010-10-09</value>'+
+        '       </custom_field>'+
+        '  </custom_fields>'+
+        '</issue>';
+
+    // Fill the stream with the xmlIssue
+    //FillChar( temparray, SizeOf( temparray ), #0 );
+    //strpcopy( temparray, xmlIssue );
+    xmlStream.WriteBufferAC( temparray, length(xmlIssue) );
+    xmlStream.Seek( 0, soFromBeginning);
+
+    // set the xml stream and post
+    //HttpClient.SendStream:=xmlStream;
+    try
+      //HttpClient.Post;
+    except
+      raise;
+    end;
+  finally
+    xmlStream.Free;
+    HttpClient.Free;
+  end;
+end;
+
+//Listing Issue
+(*procedure GetIssue(issueId: String);
+var
+  apiAccessKey: String;
+  HttpClient: THttpCli;
+  xmlIssue: TXMLDocument;
+begin
+    Memo.Lines.Clear; //using TMemo to show the result
+    apiAccessKey := 'a1234567abcde12121a11a123456a12a12ab123ab'; //Api user key example
+
+    xmlIssue := TXMLDocument.Create(Self); //Creating XML document. Self = TForm
+
+    //Create and set the Http Client component
+    HttpClient := THttpCli.Create(nil);
+    HttpClient.ContentTypePost := 'text/xml';
+    HttpClient.URL:= 'http://localhost:3000/issues/'+issueId+'.xml?key='+apiAccessKey;
+
+    HttpClient.RcvdStream := TStringStream.Create(''); //Create the Stream
+    try
+      try
+        //Get the Issue and show some properties in TMemo
+        HttpClient.Get;
+        xmlIssue.LoadFromStream(HttpClient.RcvdStream);
+        xmlIssue.Active := True;
+
+        Memo.Lines.Add('Id = ' + xmlIssue.DocumentElement.ChildNodes['id'].NodeValue);
+        Memo.Lines.Add('Project id = ' + xmlIssue.DocumentElement.ChildNodes['project'].AttributeNodes['id'].NodeValue);
+        Memo.Lines.Add('Project Name = ' + xmlIssue.DocumentElement.ChildNodes['project'].AttributeNodes['name'].NodeValue);
+        Memo.Lines.Add('Tracker id = ' + xmlIssue.DocumentElement.ChildNodes['tracker'].AttributeNodes['id'].NodeValue);
+        Memo.Lines.Add('Tracker name = ' + xmlIssue.DocumentElement.ChildNodes['tracker'].AttributeNodes['name'].NodeValue);
+      Except
+        raise;
+      end;
+    finally
+      HttpClient.Free;
+      xmlIssue.Free;
+    end;
+end;  *)
+
+  
+
+  
+Function getRandomText: string;
+var i, getback: integer;
+begin
+  for i:= 1 to 1400 do begin
+    getback:=  random(58)+65
+    if (getback < 91) OR (getback > 96) then
+      result:= result + Chr(getback) +Chr(32)
+  end;
+end;  
+  
+//Event Handler - Closure  
+Procedure GetMediaData(self: TObject);
+begin
+  if PromptForFileName(selectedFile,
+                       'Text files (*.txt)|*.txt',
+                       '',
+                       'Select your mX3 test file',
+                       ExePath+'examples\', False)  // Means not a Save dialog !
+   then begin
+     // Display this full file/path value
+     ShowMessage('Selected file = '+selectedFile);
+     Stat.simpletext:= selectedFile;
+     mymemo.lines.LoadFromFile(selectedFile);
+     // Split this full file/path value into its constituent parts
+     //writeln('PromptForFileName_28: Res of processpath '+tmp)
+   end;
+end;  
+  
+//Event Handler - Closure
+procedure BtnSaveClick(self: TObject);
+begin
+  //mymemo.lines.savetofile(ExePath+'\examples\mymemomemoire.txt');
+  mymemo.lines.SaveToFile(selectedFile);
+  Stat.simpletext:= selectedFile+ ' has been saved';
+end; 
+
+
+procedure MemoToXml(Xml: TXmlVerySimple);
+begin
+  Xml.Text:= Memo1.Text;
+end;
+
+procedure ShowXml(Xml: TXmlVerySimple);
+var
+  Stream: TMemoryStream;
+begin
+  Stream := TMemoryStream.Create;
+  Xml.SaveToStream(Stream);
+  Stream.Position := 0;
+  Memo1.Lines.LoadFromStream(Stream);
+  Stream.Free;
+end;
+
+
+procedure BtnCompactClick(Sender: TObject);
+var
+  Xml: TXmlVerySimple;
+begin
+  // Load XML from Memo1
+  Xml := TXmlVerySimple.Create;
+  MemoToXml(Xml);
+  Xml.Ident := '';
+  ShowXml(Xml);
+  Xml.Free;
+
+  mBtnCompact.Enabled := False;
+  mBtnSave.Enabled := True;
+end;
+
+procedure BtnGenerateClick(Sender: TObject);
+var
+  Xml: TXmlVerySimple;
+  Node, Child, SubChild: TXmlNode;
+begin
+  Xml := TXmlVerySimple.Create;
+  Xml.Header.Attribute['encoding'] := 'utf-8';
+
+  Xml.Root.NodeName := 'catalog';
+  Xml.Root.AddChild('book').SetAttribute('id', 'bk101').
+    AddChild('author').SetText('Gambardella, Matthew').Parent.
+    AddChild('title').SetText('XML Developer''s Guide').Parent.
+    AddChild('description').SetText('An in-depth look at creating XML applications.');
+
+  Xml.Root.AddChild('book').SetAttribute('id', 'bk102').SetAttribute('lang','en').
+    AddChild('author').SetText('Ralls, Kim').Parent.
+    AddChild('title').SetText('Midnight Rain').Parent.
+    AddChild('description').SetText('A former architect battles corporate zombies, '+
+      'an evil sorceress, and her own childhood to become queen of the world.');
+
+  Node := Xml.Root.AddChild('book');
+  Node.Attribute['id'] := 'bk103';
+
+  Child := Node.AddChild('author');
+  Child.Text := 'Corets, Eva';
+
+  Child := Node.AddChild('title');
+  Child.Text := 'Maeve Ascendant';
+
+  Child := Node.AddChild('description');
+  Child.Text := 'After the "collapse" of a <nanotechnology> society in England, ' +
+  'the young survivors lay the foundation for a new society.';
+
+  Child := Node.AddChild('keywords');
+  SubChild := Child.AddChild('keyword');
+  SubChild.Text := 'fantasy';
+  SubChild := Child.AddChild('keyword');
+  SubChild.Text := 'technology';
+  SubChild := Child.AddChild('keyword');
+  SubChild.Text := 'england';
+
+  ShowXml(Xml);
+  Xml.Free;
+
+  mBtnGenerate.Enabled := False;
+  mBtnModify.Enabled := True;
+end;
+
+
+procedure BtnGetClick(Sender: TObject);
+var
+  Xml: TXmlVerySimple;
+begin
+  // Load XML from Memo1
+  Xml := TXmlVerySimple.Create;
+  MemoToXml(Xml);
+
+  ShowMessage(Xml.Root.Find2('book', 'id', 'bk103').Find('description').Text);
+
+  Xml.Free;
+  mBtnGet.Enabled := False;
+end;
+
+procedure BtnModifyClick(Sender: TObject);
+var
+  Xml: TXmlVerySimple;
+  Node, BookNode: TXmlNode;
+  Nodes, AllNodes: TXmlNodeList;
+  Index: Integer;
+begin
+  // Load XML from Memo1
+  Xml := TXmlVerySimple.Create;
+
+  Index := Memo1.Lines.Count - 1;
+
+  // Add a new book
+  Memo1.Lines.Insert(Index, '<book id=bk104><author rate=">5">Corets, Eva</author><description/>' +
+   '<keywords /></book>');
+
+  MemoToXml(Xml);
+
+  // Add a <keywords> section to every book if not exists
+  Nodes := Xml.Root.FindNodes('book');
+  
+  //for Node in Nodes do
+    if not assigned(Node.Find('keywords')) then
+      Node.AddChild('keywords');
+  Nodes.Free;
+
+  // Add a new keyword to a certain book (id=bk102)
+  Xml.Root.Find2('book', 'id', 'bk102').Find('keywords').
+    AddChild('keyword').SetText('no-muerto').SetAttribute('lang', 'es').Parent.
+    AddChild('keyword').SetText('zombies').Parent.AddChild('keywrd').SetText('flombies');
+
+
+  // Add new keyword attribute (lang=en) to every book
+  AllNodes := Xml.Root.FindNodes('book');
+{  for BookNode in AllNodes do begin
+    Nodes := BookNode.Find('keywords').FindNodes('keyword');
+    for Node in Nodes do
+      if not Node.HasAttribute('lang') then
+        Node.Attribute['lang'] := 'en';
+    Nodes.Free;
+  end;}
+  AllNodes.Free;
+
+  // Delete a node
+  Node := Xml.Root.Find2('book', 'id', 'bk102').Find('author');
+
+  // remove node from parent childnodes, the node itself will be freed then
+  if assigned(Node) then
+      Node.Parent.ChildNodes.Remove(Node);
+
+  ShowXml(Xml);
+
+  Xml.Free;
+  mBtnModify.Enabled := False;
+  mBtnCompact.Enabled := True;
+end;
+
+
+
+
+procedure SetForm;
+var
+  mbtn2: TBitBtn;
+  mi, mi1, mi2, mi3: TMenuItem;
+  mt: TMainMenu;
+  mlbl, mlbl1: TLabel; 
+
+begin
+  inFrm:= TForm.Create(self);
+  mLbl:= TLabel.Create(inFrm);
+  mLbl1:= TLabel.Create(inFrm);
+  mPanel:= TPanel.Create(inFrm);
+  stat:= TStatusbar.Create(inFrm);
+  Lstbox:= TListbox.Create(inFrm);
+  mymemo:= TMemo.Create(inFrm);
+
+  with inFrm do begin
+    caption:= '********MediaMonster3************';  
+    height:= 610;
+    width:= 980;
+    //color:= clred;
+    Position:= poScreenCenter;
+    //onClose:= @CloseClick;
+    Show;
+  end;
+  with mPanel do begin
+     caption:= '*****maXboxTV*****';  
+     Parent:= inFrm;  
+     SetBounds(LEFTBASE+10,TOPBASE+40,460,400)
+     color:= clsilver;
+     font.color:= clyellow;
+     font.size:= 30;
+     Show;
+  end; 
+  
+  with mymemo do begin
+    Parent:= inFrm;
+    SetBounds(LEFTBASE+490, TOPBASE+40, 420, 400)
+    font.size:= 14;
+    color:= clYellow;
+    wordwrap:= true;
+    scrollbars:= ssvertical;
+    //lines.loadfromfile(ExePath+'\examples\mymemomemoire.txt');
+    //onClick:= @ChangeSong;  
+  end;
+  
+  mBtnCompact:= TBitBtn.Create(inFrm)
+  with mBtnCompact do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 590, TOPBASE+ 460,150, 40);
+    caption:= 'Compact Text';
+    font.size:= 12;
+    //glyph.LoadFromResourceName(getHINSTANCE,'OPENFOLDER'); 
+    //event handler
+    onclick:= @GetMediaData;
+  end;
+
+  
+  mBtnGenerate:= TBitBtn.Create(inFrm)
+  with mBtnGenerate do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 590, TOPBASE+ 460,150, 40);
+    caption:= 'Open Text';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'OPENFOLDER'); 
+    //event handler
+    onclick:= @GetMediaData;
+  end;
+  mBtnGet:= TBitBtn.Create(inFrm)
+  with mBtnGet do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 430, TOPBASE+460,150, 40);
+    caption:= 'Open Video';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'FLOPPY'); 
+    //event handler
+    //onclick:= @GetVideoData;
+  end;
+  mBtnSave:= TBitBtn.Create(inFrm)
+  with mBtnSave do begin
+    Parent:= inFrm;
+    setbounds(LEFTBASE+ 750, TOPBASE+460,150, 40);
+    caption:= 'Save Text';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'PREVIEWGLYPH'); 
+    //event handler
+    onclick:= @BtnSaveClick;
+  end;
+  cal:= TCalendar.Create(self);
+  with cal do begin
+    enabled:= true;
+    updateCalendar
+    Parent:= inFrm;
+    top:= 100;
+    left:= 50;
+    CalendarDate:= Now;
+  end;
+
+  with mlbl do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+15,TOPBASE-15,180,20);
+    font.size:= 28;
+    font.color:= clred;
+    //font.style:= [fsunderline]
+    caption:= 'XMLMediaMemoApp';
+  end;  
+  with mlbl1 do begin
+    parent:= inFrm;
+    setbounds(LEFTBASE+495,TOPBASE-1,180,20);
+    font.size:= 20;
+    font.color:= clred;
+    caption:= 'Text File:';
+  end;  
+  mt:= TMainMenu.Create(infrm)
+  with mt do begin
+   //parent:= frmMon;
+  end;  
+  mi:= TMenuItem.Create(mt)
+  mi1:= TMenuItem.Create(mt)
+  mi2:= TMenuItem.Create(mt)
+  mi3:= TMenuItem.Create(mi)
+  with mi do begin
+    //parent:= frmMon;
+    Caption:='Play Media';
+    Name:='ITEM';
+    mt.Items.Add(mi);   
+    //OnClick:= @GetMediaData;
+  end;
+  with mi1 do begin
+    //parent:= frmMon;
+    Caption:='Show Video';
+    Name:='ITEM2';
+    mt.Items.Add(mi1) ;
+    //OnClick:= @GetVideoData
+  end;
+  with mi2 do begin
+    //parent:= frmMon;
+    Caption:='Open CD Player';
+    Name:='ITEM3';
+    mt.Items.Add(mi2);
+    //OnClick:= @OPenCD;
+  end;
+  with mi3 do begin
+    Caption:='Open maXbook';
+    Name:='ITEM4';
+    //mi.Items[0].add(mi3);
+  end;
+  with Stat do begin
+    parent:= inFrm;
+    stat.SimplePanel:= true;
+  end;
+  MPlayer:= TMediaPlayer.Create(self);
+  with MPlayer do begin
+    parent:= inFrm; 
+    height:= 38;
+    top:= TOPBASE + 460;
+    left:= LEFTBASE+ 10;
+    Display:= mPanel;   //for video show
+  end;
+end; 
+
+var afold: string;
+  
+ 
+begin
+  memo2.font.size:= 14;
+  SetForm;
+  mymemo.lines.text:= getRandomText;
+  //SearchAndOpenDoc(ExePath+MEDIAPATH)
+  //mylistview:= TFormListView.Create(self);
+  //exit;
+  btnBookInfoClick(self);
+
+  maxform1.color:= clsilver;
+  //browseforfolder(application.handle,'test browse',afold);
+End.
+
+//-------------------------------------------------
+
+source is tlistview
+target is tform
+
+procedure TfMerit.SourceLVStartDrag(Sender: TObject;
+var DragObject: TDragObject);
+var TargetLV:TListView;
+begin
+// TargetLV:=nejak urcit dle potreby
+  TargetLV.BeginDrag(True)
+end;
+
+procedure TfMerit.SourceLVMouseDown(Sender: TObject;
+Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+MouseIsDown:=True;
+end;
+
+procedure TfMerit.SourceLVMouseUp(Sender: TObject; Button: TMouseButton;
+Shift: TShiftState; X, Y: Integer);
+begin
+MouseIsDown:=False;
+if (Sender as TListView).Dragging then
+(Sender as TListView).EndDrag(False);
+end;
+
+procedure TfMerit.SourceLVMouseMove(Sender: TObject; Shift: TShiftState;
+X, Y: Integer);
+begin
+if (Sender.ClassNameIs('TListView')) then
+begin
+if MouseIsDown and ((Sender as TListView).SelCount>0) then
+(Sender as TListView).BeginDrag(True);
+end;
+end;
+
+
+procedure TfMerit.TargetLVDragOver(Sender, Source: TObject; X,
+Y: Integer; State: TDragState; var Accept: Boolean);
+var T:TListView;
+begin
+T:=Sender as TListView;
+Accept:=Assigned(T.GetItemAt(X,Y));
+end;
+
+
+procedure TfMerit.TargetLVDragDrop(Sender, Source: TObject; X,
+Y: Integer);
+var It:TListItem;
+LV1,LV2:TListView;
+begin
+LV1:=Source as TListView;
+LV2:=Sender as TListview;
+
+It:=LV2.GetItemAt(X,Y);
+if Assigned(It) then
+begin
+// zpracuj polozku ze zdrojoveho listview
+end;
+end;
+
+
+procedure TControlParentR(Self: TControl; var T:TWinControl); begin T:= Self.Parent; end;
+procedure TControlParentW(Self: TControl; T: TWinControl); begin Self.Parent:= T; end;
+    RegisterPropertyHelper(@TControlParentR, @TControlParentW, 'PARENT');
+    RegisterProperty('Parent', 'TWinControl', iptRW);
+
+procedure TTXPTool.LVPFFDblClick(Sender: TObject);
+var
+tmpList : TListItem;
+fn ; string;
+ft : integer;
+fs : integer;
+begin
+tmpList := LVPFF.Selected;
+if tmplist<>nil then
+begin
+  fn := tmpList.Caption
+  ft := tmpList.SubItems.Strings[1];
+  fs := tmpList.SubItems.Strings[3];
+  if pos('Wave', ft)>0 then
+    PlayThisOne1Click(nil);
+  if pos('Jpg', ft)>0 then
+    ShowJpg1Click(nil);
+  if pos('Targa', ft)>0 then
+    ShowTga1Click(nil);
+  if pos('Pcx', ft)>0 then
+    ShowPcx1Click(nil);
+  if pos('Mission Sound Collection', ft)>0 then
+    ShowPwf1Click(nil);
+end;
+end;
+
+
+
+
+unit AmazonBooks_MainForm;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, ComCtrls, xmldom, XMLIntf, IdBaseComponent, IdComponent,
+  IdTCPConnection, IdTCPClient, IdHTTP, msxmldom, XMLDoc, oxmldom;
+
+type
+  TFormAmBooks = class(TForm)
+    edISBN: TEdit;
+    btnBookInfo: TButton;
+    TreeView1: TTreeView;
+    XMLDocument1: TXMLDocument;
+    IdHTTP1: TIdHTTP;
+    btnExpand: TButton;
+    procedure btnBookInfoClick(Sender: TObject);
+    procedure btnExpandClick(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  FormAmBooks: TFormAmBooks;
+
+implementation
+
+//{$R *.dfm}
+
+uses
+  CanXmlHelpers;
+
+const
+  BaseUrl = 'http://ecs.amazonaws.com/onca/xml?';
+
+procedure TFormAmBooks.btnBookInfoClick(Sender: TObject);
+var
+  strUrl, strXml, strBookid: string;
+begin
+  strBookid := edISBN.Text;
+
+  strUrl := BaseURL;
+  strUrl := strUrl + 'Service=AWSECommerceService&';
+  strUrl := strUrl + 'AWSAccessKeyId=0JE9C2T2RN684MDM6G02&';
+  strUrl := strUrl + 'AssociateTag=devconn-20&';
+  strUrl := strUrl + 'Operation=ItemLookup&';
+  strUrl := strUrl + 'ItemId=' + strBookid + '&';
+  strUrl := strUrl + 'ResponseGroup=Large';
+
+  strXml := IdHTTP1.Get(strUrl);
+  XMLDocument1.LoadFromXML(strXml);
+
+  Treeview1.Items.Clear;
+  DomToTree (XMLDocument1.DocumentElement, nil, TreeView1);
+end;
+
+procedure TFormAmBooks.btnExpandClick(Sender: TObject);
+begin
+  TreeView1.FullExpand;
+end;
+
+end.
+
+
+
+program SimpleRestRequestSample;
+
+//{$APPTYPE CONSOLE}
+
+//{$R *.res}
+
+uses
+  System.SysUtils,
+  Classes,
+  RestRequest in 'RestRequest.pas';
+
+var RestReq: TRestRequest;
+    RestResp: THttpResponse;
+    putParams: TStringList;
+begin
+  try
+    try
+      putParams := TStringList.Create();
+      putParams.Add('title=Buy milk');
+      putParams.Add('due-date=01/01/2013 00:00:00');
+      RestReq := TRestRequest.Create().Domain('localhost').Path('todo').WithCredentials('test', 'test');
+      RestResp := RestReq.Put(putParams);
+      if RestResp.ResponseCode = 201 then WriteLn('Your todo was added!');
+    finally
+      RestReq.Free;
+    end;
+  except
+    on E: Exception do
+      Writeln(E.ClassName, ': ', E.Message);
+  end;
+end.
+
+http://jamiei.com/blog/2013/01/simple-rest-client-for-delphi/
+
+http://www.redmine.org/projects/redmine/wiki/Rest_api_with_delphi
+
+//Creating an Issue
+procedure AddIssue;
+var
+  xmlStream     : TMemoryStream;
+  tempArray     : array[0..10000] of char;
+  xmlIssue      : String;
+  apiAccessKey  : String;
+  HttpClient    : THttpCli;
+begin
+  apiAccessKey := 'a1234567abcde12121a11a123456a12a12ab123ab'; ///Api user key example
+  xmlStream := TMemoryStream.Create; //Create the XML stream
+
+  //Create and set the Http Client component
+  HttpClient := THttpCli.Create(nil);
+  HttpClient.ContentTypePost := 'text/xml';
+  HttpClient.URL:= 'http://localhost:3000/issues.xml?key='+apiAccessKey;
+  try
+    xmlIssue :=
+        '<?xml version="1.0"?>' +
+        '<issue>' +
+        '  <project_id>1</project_id>'+
+        '  <tracker_id>1</tracker_id>'+
+        '  <status_id>1</status_id>'+
+        '  <priority_id>1</priority_id>'+
+        '  <author_id>1</author_id>'+
+        '  <start_date>2011-10-09</start_date>'+
+        '  <subject>Created in DELPHI</subject>'+
+        '  <description>Issue created in DELPHI using Redmine REST API</description>'+
+        '  <custom_fields type="array">' + // adding custom fields
+        '       <custom_field id="1">'+
+        '           <value>12121212</value>'+
+        '       </custom_field>'+
+        '       <custom_field id="2">'+
+        '           <value>2010-10-09</value>'+
+        '       </custom_field>'+
+        '  </custom_fields>'+
+        '</issue>';
+
+    // Fill the stream with the xmlIssue
+    FillChar( temparray, SizeOf( temparray ), #0 );
+    strpcopy( temparray, xmlIssue );
+    xmlStream.Write( temparray, length(xmlIssue) );
+    xmlStream.Seek( 0, soFromBeginning);
+
+    // set the xml stream and post
+    HttpClient.SendStream:=xmlStream;
+    try
+      HttpClient.Post;
+    except
+      raise;
+    end;
+  finally
+    xmlStream.Free;
+    HttpClient.Free;
+  end;
+end;
+
+//Listing Issue
+procedure GetIssue(issueId: String);
+var
+  apiAccessKey: String;
+  HttpClient: THttpCli;
+  xmlIssue: TXMLDocument;
+begin
+    Memo.Lines.Clear; //using TMemo to show the result
+    apiAccessKey := 'a1234567abcde12121a11a123456a12a12ab123ab'; //Api user key example
+
+    xmlIssue := TXMLDocument.Create(Self); //Creating XML document. Self = TForm
+
+    //Create and set the Http Client component
+    HttpClient := THttpCli.Create(nil);
+    HttpClient.ContentTypePost := 'text/xml';
+    HttpClient.URL:= 'http://localhost:3000/issues/'+issueId+'.xml?key='+apiAccessKey;
+
+    HttpClient.RcvdStream := TStringStream.Create(''); //Create the Stream
+    try
+      try
+        //Get the Issue and show some properties in TMemo
+        HttpClient.Get;
+        xmlIssue.LoadFromStream(HttpClient.RcvdStream);
+        xmlIssue.Active := True;
+
+        Memo.Lines.Add('Id = ' + xmlIssue.DocumentElement.ChildNodes['id'].NodeValue);
+        Memo.Lines.Add('Project id = ' + xmlIssue.DocumentElement.ChildNodes['project'].AttributeNodes['id'].NodeValue);
+        Memo.Lines.Add('Project Name = ' + xmlIssue.DocumentElement.ChildNodes['project'].AttributeNodes['name'].NodeValue);
+        Memo.Lines.Add('Tracker id = ' + xmlIssue.DocumentElement.ChildNodes['tracker'].AttributeNodes['id'].NodeValue);
+        Memo.Lines.Add('Tracker name = ' + xmlIssue.DocumentElement.ChildNodes['tracker'].AttributeNodes['name'].NodeValue);
+      Except
+        raise;
+      end;
+    finally
+      HttpClient.Free;
+      xmlIssue.Free;
+    end;
+end;
+
+
+unit GeoLocationForm;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, IdBaseComponent, IdComponent, IdUri, IdTCPConnection, IdTCPClient, IdHTTP,
+  StdCtrls, xmldom, XMLIntf, msxmldom, XMLDoc, DB, DBClient, Grids, DBGrids,
+  IdCustomTCPServer, IdCustomHTTPServer, IdHTTPServer, IdContext, ExtCtrls,
+  OleCtrls, SHDocVw, IniFiles, ComCtrls;
+
+type
+  TFormMap = class(TForm)
+    btnGetTowns: TButton;
+    ListBox1: TListBox;
+    IdHTTP1: TIdHTTP;
+    btnGeocoding: TButton;
+    cdsTown: TClientDataSet;
+    DataSource1: TDataSource;
+    DBGrid1: TDBGrid;
+    ClientDataSet1: TClientDataSet;
+    procedure btnGetTownsClick(Sender: TObject);
+    procedure btnGeocodingClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+  private
+    sListCity: tStringList;
+    inifile: TMemIniFile;
+    googleMapKey: string;
+    function GetIniFileName: string;
+  end;
+
+var
+  FormMap: TFormMap;
+
+implementation
+
+uses
+  SHFolder, ShellApi;
+
+//{$R *.dfm}
+
+procedure TFormMap.btnGeocodingClick(Sender: TObject);
+var
+  I: Integer;
+  strResponse, str1, str2: string;
+  sList:TStringList;
+begin
+  cdsTown.Active := False;
+  cdsTown.CreateDataSet;
+  cdsTown.Active := True;
+  sList := TStringList.Create;
+
+  for I := 0 to sListCity.Count - 1 do
+  begin
+    ListBox1.ItemIndex := I;
+    Application.ProcessMessages;
+    if Length (sListCity.Names[I]) > 2 then
+    begin
+      strResponse := IdHTTP1.Get( TIDUri.UrlEncode(
+          'http://maps.google.com/maps/geo?q=' +
+          (sListCity.Names[I]) + '&output=csv&key=' + googleMapKey));
+      sList.LineBreak := ',';
+      sList.Text := strResponse;
+      str1 := sList[2];
+      str2 := sList[3];
+      cdsTown.AppendRecord([sListCity.Names[I],
+        StrToFloat (str1), StrToFloat (str2),
+        Length (sListCity.ValueFromIndex[I])]);
+      Sleep (150);
+    end;
+  end;
+  sList.Free;
+end;
+
+procedure TFormMap.btnGetTownsClick(Sender: TObject);
+var
+  strCity: string;
+  nPos: Integer;
+begin
+  NullStrictConvert := False;
+  NullAsStringValue := '';
+
+  if not Assigned (sListCity) then
+    sListCity := tStringList.Create;
+  sListCity.Clear;
+
+  ClientDataSet1.Active := True;
+  while not ClientDataSet1.EOF do
+  begin
+    strCity := ClientDataSet1['City'] + ', ' + ClientDataSet1['State'] +
+      ', ' + ClientDataSet1['Country'];
+    if (strCity <> '') then
+    begin
+      nPos := sListCity.IndexOfName (strCity);
+      if nPos >= 0 then
+      begin
+        sListCity.ValueFromIndex [nPos] := sListCity.ValueFromIndex [nPos] + '*';
+      end
+      else
+      begin
+        sListCity.Add (strCity + '=*');
+      end;
+    end;
+    ClientDataSet1.Next;
+  end;
+
+  ListBox1.Items := sListCity;
+end;
+
+function TFormMap.GetIniFileName: string;
+var
+  strFolder: string;
+begin
+  SetLength (strFolder, 250);
+  ShGetFolderPath (0,
+    CSIDL_PERSONAL, 0, 0, PChar(strFolder));
+  SetLength (strFolder, StrLen(PChar(strFolder)));
+  strFolder := strFolder + PathDelim;
+  Result := strFolder +
+    ChangeFileExt (ExtractFileName(ParamStr(0)), '.ini');
+end;
+
+procedure TFormMap.FormCreate(Sender: TObject);
+var
+  inifileName: string;
+begin
+  inifileName := GetIniFileName;
+  inifile := TMemIniFile.Create (iniFilename);
+  googleMapKey := inifile.ReadString('googlemap', 'devkey', '');
+  if googleMapKey = '' then
+    raise Exception.Create ('Missing dev key');
+end;
+end.

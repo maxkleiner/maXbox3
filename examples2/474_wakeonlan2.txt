@@ -1,0 +1,331 @@
+//************************************************************************
+Program WakeonLAN_Component;    ///on progress
+//shows the work of WakeOnLAN Thinking in building a component, #locs=199
+//http://en.wikipedia.org/wiki/Wake-on-LAN
+
+
+//Wake-on-LAN (WOL) is an Ethernet computer networking standard that allows a computer to be turned on or awakened by a network message.
+
+
+
+
+
+Function TRNSWakeOnLan_WOL(MacAddress: String): Boolean; 
+ // Envia comando para ligar o computador.
+Var                                       // Necessita Mac Address e o Computador deve estar
+        SendPacket: TidUDPClient;         // Configurado para Wake On Lan.
+        TempMac,
+        TempStr    : String;
+        WolPacket  : String;
+        I,
+        J          : Integer;
+        //magicpac: array[0..17*6-1] of byte;
+        //magicpac: TByteArray;
+        magicpac: TByteArray;
+        //magicpac: string;
+        E: Exception;
+
+
+Begin
+     if Length(MacAddress) = 12 then Begin
+
+        SendPacket:= TidUDPClient.Create(self) //  (SendPacket);
+        SendPacket.Host := '255.255.255.255';
+        SendPacket.Port := 9;
+        //SendPacket.Connect;
+        SendPacket.Active:= true;
+  
+        TempMac := '';
+        TempStr := '';
+
+
+        WolPacket := Chr(StrToInt('$FF')) + Chr(StrToInt('$FF')) + Chr(StrToInt('$FF')) +
+                     Chr(StrToInt('$FF')) + Chr(StrToInt('$FF')) + Chr(StrToInt('$FF'));
+
+        MacAddress := StringReplace(MacAddress,':','',[rfReplaceAll]);
+
+        for i := 1 to 16 do begin
+
+       TempMac := TempMac + Chr(strtoint('$' + MacAddress[1] + MacAddress[2])) + Chr(strtoint('$' + MacAddress[3] + MacAddress[4])) + Chr(strtoint('$' + MacAddress[5] + MacAddress[6])) +
+          Chr(strtoint('$' + MacAddress[7] + MacAddress[8])) + Chr(strtoint('$' + MacAddress[9] + MacAddress[10])) + Chr(strtoint('$' + MacAddress[11] + MacAddress[12]));
+        end;
+
+       WolPacket := WolPacket + TempMac;
+
+       // SendPacket.SendMessage(WolPacket);
+        //SendPacket.Send(WolPacket);
+        writeln('SendPacket.bufferSize before: '+intToStr(SendPacket.bufferSize));
+      
+        try
+          SendPacket.SendBuffer(WolPacket, length(wolPacket));
+        except
+          //raiseLastException;
+          //writeln('send packet error: '+E.message);
+          ShowMessage('Send Packet Error Message: '+ SysErrorMessage(GetLastError)) ;
+        end;
+        //SendPacket.binding
+        writeln('SendPacket.bufferSize after: '+intToStr(SendPacket.bufferSize));
+       
+        //TByteArray !   has a bug?
+        //SendPacket.SendBufferAB(magicpac, sizeOf(magicpac));//length(magicpac));
+        
+        sendPacket.Active:= false;
+        SendPacket.Free;
+        SendPacket:= Nil;
+
+     end;
+
+end;
+
+procedure makeCaption2(leftSide, Rightside:string; form:TForm);
+var
+  Metrics:NonClientMetrics;
+  captionarea,spacewidth,nbrspaces:integer;
+  b:TBitmap;
+begin
+  b:=TBitmap.create;  {to get a canvas}
+  metrics.cbsize:=sizeof(Metrics);
+  //if SystemParametersInfo(SPI_GetNonCLientMetrics, sizeof(Metrics), @metrics,0)
+  //then with metrics  do begin
+    //b.canvas.font.name:=Pchar(@metrics.LFCaptionFont.LfFaceName);
+    with metrics.LFCaptionFont, b.canvas.font do begin
+      height:=LFHeight;
+      if lfweight=700 then style:=[fsbold];
+      if lfitalic<>0 then style:=style+[fsitalic];
+    end;
+    {subtract 3 buttons + Icon + some border space}
+    captionarea:=form.clientwidth-4*metrics.iCaptionwidth-4*metrics.iBorderWidth;;
+    {n = # of spaces to insert}
+    spacewidth:=b.canvas.textwidth(' ');
+    nbrspaces:=(captionarea-b.canvas.textwidth(Leftside + Rightside)) div spacewidth;
+    if nbrspaces>3 then form.caption:=LeftSide+stringofchar(' ',nbrspaces)+RightSide
+    else form.caption:=LeftSide+' '+RightSide;
+  //end;
+  b.free;
+end;
+
+function TAssocExec_Execute:Boolean;
+var
+  reg:TRegistry;
+  temp:String;
+  x:Integer;
+   FFileName:String;
+    FWait:Boolean;
+
+begin
+  result:=false;
+  if (not FileExists(FFileName)) then Exit;
+  if (Length(FFileName)<5) then Exit;
+
+  reg := TRegistry.Create();
+  reg.RootKey:=HKEY_CLASSES_ROOT;
+
+  temp := Copy(FFileName, Length(FFileName)-3, 4);
+  if (not reg.OpenKey(temp, false)) then begin reg.Free; Exit; end;
+
+  temp:=reg.ReadString('');
+  reg.CloseKey();
+
+  if (not reg.OpenKey(temp+'\shell\open\command', false)) then begin reg.Free; Exit; end;
+  temp := reg.ReadString('');
+  reg.CloseKey();
+  reg.Free;
+
+  x := Pos('%', temp);
+  if x = 0 then Exit;
+
+  Delete(temp, x, 2);
+  Insert(FFileName, temp, x);
+
+  x := WinExec(PChar(temp), SW_SHOWNORMAL);
+  if x>31 then result:=true;
+end;
+
+
+
+var mcadr: TStrings;
+    mcadr12: string;
+  
+   begin
+   //Function GetMacAddresses( const Machine : string; const Addresses : TStrings) : Integer
+    
+   mcadr:= TStringlist.create;  
+   if GetMacAddresses(gethostname, mcadr) > 0 then
+     writeln('MAC: '+mcadr.strings[0]);
+     writeln('IP: '+GetIP(gethostname))
+     writeln('GetLocalIPs: '+GetLocalIPs);
+     writeln('DNS: '+GetDNS)
+
+     
+    WakeOnLan(mcadr.strings[0], GetIP(gethostname));
+    
+    //Function DelChar( const pStr : string; const pChar : Char) : string
+    mcadr12:= DelChar(mcadr.strings[0], '-');
+    writeln('MAC to send '+mcadr12);    
+    
+    //if TRNSWakeOnLan_WOL(mcadr.strings[0]) then
+    if TRNSWakeOnLan_WOL(mcadr12) then
+       showMessageBig('just awakening on ParaDice'); 
+ 
+   mcadr.Free;  
+   
+   //WakeOnLan(MAC, IP : string)');
+   
+   //TCommandType
+     //TStreamContentType
+       //TProcOnReceiveCommand
+       //constInterval
+       //DrawMosaicPortion
+     //  CanvasAcceleratorTextWidth(aCanvas: TCanvas; aText: String): Integer;
+    //   CanvasAcceleratorTextWidth(frm.Canvas, 'out of wake');
+         //MsgCommand
+      //CmdLineParam
+           
+    //randomize64    
+    //TElements
+    //TElement   
+   //TElementsType
+   //TExpressionOption
+     //TRecognitionOption
+     //TOCRCarInfo
+      // TElement
+        //TElements
+        //TODBC
+         //TAssocExec
+        // 285_minesweeper2.TXT
+     
+     
+       
+end.
+
+
+Doc:
+
+The magic packet is a broadcast frame containing anywhere within its payload 6 bytes of all 255 (FF FF FF FF FF FF in hexadecimal), followed by sixteen repetitions of the target computer's 48-bit MAC address, for a total of 102 bytes.
+
+Since the magic packet is only scanned for the string above, and not actually parsed by a full protocol stack, it may be sent as any network- and transport-layer protocol, although it is typically sent as a UDP datagram to port 7 or 9, or directly over Ethernet as EtherType 0x0842.[6]
+
+A standard magic packet has the following basic limitations:
+
+    Requires destination computer MAC address (also may require a SecureOn password)
+    Does not provide a delivery confirmation
+    May not work outside of the local network
+    Requires hardware support of Wake-On-LAN on destination computer
+    802.11 wireless interfaces do not maintain a link in low power states and cannot receive a magic packet
+
+The Wake-on-LAN implementation is designed to be very simple and to be quickly processed by the circuitry present on the network interface card with minimal power requirement. Because Wake-on-LAN operates below the IP protocol layer the MAC address is required and makes IP addresses and DNS names meaningless.
+
+
+
+procedure SIRegister_synamisc(CL: TPSPascalCompiler);
+begin
+  AddTypeS('TProxySetting', 'record Host : string; Port : string; Bypass : string; end');
+ Procedure WakeOnLan( MAC, IP : string)');
+ Function GetDNS : string');
+ Function GetIEProxy( protocol : string) : TProxySetting');
+ Function GetLocalIPs : string');
+end;
+
+
+//-----------------------component members--------------------------------
+   property Align;
+    property Alignment;
+    property BevelInner;
+    property BevelOuter;
+    property BorderStyle;
+    property BorderWidth;
+    property Caption;
+    property Color;
+    property Ctl3D;
+    property DragCursor;
+    property DragMode;
+    property Enabled;
+    property Font;
+    property Locked;
+    property ParentColor;
+    property ParentCtl3D;
+    property ParentFont;
+    property ParentShowHint;
+    property PopupMenu;
+    property ShowHint;
+    property TabOrder;
+    property TabStop;
+    property Visible;
+    property ZoomSpeed : Integer read FZoomSpeed write SetZoomSpeed default 10;
+    property ZoomSteps : Integer read FZoomSteps write SetZoomSteps default 20;
+    property ZoomStyle : TZoomStyles read FZoomStyle 
+                                     write SetZoomStyle default zsCenter;
+    property OnClick;
+    property OnDblClick;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEndDrag;
+    property OnEnter;
+    property OnExit;
+    property OnMouseDown;
+    property OnMouseMove;
+    property OnMouseUp;
+    property OnResize;
+  end;
+
+
+procedure SIRegister_TComboSet(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TObject', 'TComboSet') do
+  with CL.AddClassN(CL.FindClass('TObject'),'TComboSet') do begin
+    RegisterProperty('Selected', 'TByteArray64', iptrw);
+    RegisterProperty('RandomRank', 'int64', iptrw);
+    RegisterMethod('Procedure Setup( newR, newN : word; NewCtype : TComboType)');
+    RegisterMethod('Function Getnext : boolean');
+    RegisterMethod('Function GetNextCombo : boolean');
+    RegisterMethod('Function GetNextPermute : boolean');
+    RegisterMethod('Function GetNextComboWithRep : Boolean');
+    RegisterMethod('Function GetNextPermuteWithRep : Boolean');
+    RegisterMethod('Function GetCount : int64');
+    RegisterMethod('Function GetR : integer');
+    RegisterMethod('Function GetN : integer');
+    RegisterMethod('Function GetCtype : TCombotype');
+    RegisterMethod('Function GetNumberSubsets( const RPick, Number : word; const ACtype : TComboType) : int64');
+    RegisterMethod('Function Binomial( const RPick, Number : integer) : int64');
+    RegisterMethod('Function Factorial( const Number : integer) : int64');
+    RegisterMethod('Function GetRCombo( const RPick, Number : integer) : int64');
+    RegisterMethod('Function GetRepRCombo( const RPick, Number : integer) : int64');
+    RegisterMethod('Function GetRPermute( const RPick, Number : integer) : int64');
+    RegisterMethod('Function GetRepRPermute( const RPick, Number : integer) : int64');
+    RegisterMethod('Procedure SetupR( NewR, NewN : word; NewCtype : TComboType)');
+    RegisterMethod('Procedure SetupRFirstLast( NewR, NewN : word; NewCType : TComboType)');
+    RegisterMethod('Function IsValidRSequence : boolean');
+    RegisterMethod('Function ChangeRDirection : boolean');
+    RegisterMethod('Function GetNextPrevR : boolean');
+    RegisterMethod('Function NextR : boolean');
+    RegisterMethod('Function NextLexRPermute : boolean');
+    RegisterMethod('Function NextLexRepRPermute : boolean');
+    RegisterMethod('Function NextLexRCombo : boolean');
+    RegisterMethod('Function NextLexRepRCombo : boolean');
+    RegisterMethod('Function NextCoLexRCombo : boolean');
+    RegisterMethod('Function PrevR : boolean');
+    RegisterMethod('Function PrevCoLexRCombo : boolean');
+    RegisterMethod('Function PrevLexRepRPermute : boolean');
+    RegisterMethod('Function PrevLexRPermute : boolean');
+    RegisterMethod('Function PrevLexRCombo : boolean');
+    RegisterMethod('Function PrevLexRepRCombo : boolean');
+    RegisterMethod('Function RankR : int64');
+    RegisterMethod('Function RankCoLexRCombo : int64');
+    RegisterMethod('Function RankLexRCombo : int64');
+    RegisterMethod('Function RankLexRepRCombo : int64');
+    RegisterMethod('Function RankLexRPermute : int64');
+    RegisterMethod('Function RankLexRepRPermute : int64');
+    RegisterMethod('Function UnRankR( const Rank : int64) : boolean');
+    RegisterMethod('Function UnRankCoLexRCombo( const Rank : int64) : boolean');
+    RegisterMethod('Function UnRankLexRCombo( const Rank : int64) : boolean');
+    RegisterMethod('Function UnRankLexRepRCombo( const Rank : int64) : boolean');
+    RegisterMethod('Function UnRankLexRPermute( const Rank : int64) : boolean');
+    RegisterMethod('Function UnRankLexRepRPermute( const Rank : int64) : boolean');
+    RegisterMethod('Function RandomR( const RPick, Number : int64; const NewCtype : TComboType) : Boolean');
+    RegisterMethod('Function RandomCoLexRCombo( const RPick, Number : int64) : Boolean');
+    RegisterMethod('Function RandomLexRCombo( const RPick, Number : int64) : Boolean');
+    RegisterMethod('Function RandomLexRepRCombo( const RPick, Number : int64) : Boolean');
+    RegisterMethod('Function RandomLexRPermute( const RPick, Number : int64) : Boolean');
+    RegisterMethod('Function RandomLexRepRPermute( const RPick, Number : int64) : Boolean');
+  end;
+end;

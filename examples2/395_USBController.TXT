@@ -1,0 +1,649 @@
+Program Network_Code_Direct_inProgress;
+
+//#sign max: APSN21: 28.09.2013 01:12:23 
+//#path:E:\maxbox\maxbox3\examples\
+//TODO: Save the NetworkGraph to webserver_file as PNG, #locs:349
+//http://theroadtodelphi.wordpress.com/2010/12/06/generating-qr-codes-with-delphi/
+//from the book Software Praxis Delphi
+
+
+//function FT_GetDriverVersion: Integer; //FT_Result;
+  // external 'FT_GetDriverVersion@FTD2XX.dll stdcall';
+   
+
+{  CL.AddTypeS('TFT_Program_Data', 'record Signature1 : DWord; Signature2 : DWor'
+   +'d; Version : DWord; VendorID : Word; ProductID : Word; Manufacturer : PCha'
+   +'r; ManufacturerID : PChar; Description : PChar; SerialNumber : PChar; MaxP'
+   +'ower : Word; PnP : Word; SelfPowered : Word; RemoteWakeup : Word; Rev4 : B'
+   +'yte; IsoIn : Byte; IsoOut : Byte; PullDownEnable : Byte; SerNumEnable : By'
+   +'te; USBVersionEnable : Byte; USBVersion : Word; Rev5 : Byte; IsoInA : Byte'
+   +'; IsoInB : Byte; IsoOutA : Byte; IsoOutB : Byte; PullDownEnable5 : Byte; S'
+   +'erNumEnable5 : Byte; USBVersionEnable5 : Byte; USBVersion5 : Word; AIsHigh'
+   +'Current : Byte; BIsHighCurrent : Byte; IFAIsFifo : Byte; IFAIsFifoTar : By'
+   +'te; IFAIsFastSer : Byte; AIsVCP : Byte; IFBIsFifo : Byte; IFBIsFifoTar : B'
+   +'yte; IFBIsFastSer : Byte; BIsVCP : Byte; UseExtOsc : Byte; HighDriveIOs : '
+   +'Byte; EndpointSize : Byte; PullDownEnableR : Byte; SerNumEnableR : Byte; I'
+   +'nvertTXD : Byte; InvertRXD : Byte; InvertRTS : Byte; InvertCTS : Byte; Inv'
+   +'ertDTR : Byte; InvertDSR : Byte; InvertDCD : Byte; InvertRI : Byte; Cbus0 '
+   +': Byte; Cbus1 : Byte; Cbus2 : Byte; Cbus3 : Byte; Cbus4 : Byte; RIsVCP : B'
+   +'yte; end');
+ CL.AddDelphiFunction('Function GetFTDeviceCount : FT_Result');}
+   
+
+                               
+Const
+   
+   UrlGoogleQrCode='http://chart.apis.google.com/chart?chs=%dx%d&cht=qr&chld=%s&chl=%s';
+   AFILENAME= 'mX3QRCode3.png';
+   QDATA= 'this is maXland on a maXbox stream dream firebox - www.softwareschule.ch';
+   maxp = 100; //max. Anzahl der Kommunikationspartner
+ 
+
+
+{The API requires 3 simple fields be posted to it:
+cht=qr this tells Google to create a QR code;
+chld=M the error correction level of the QR code (see here for more info);
+chs=wxh the width and height of the image to return (eg chs=250x250);
+chl=text the URL encoded text to be inserted into the barcode.}
+
+type
+  TQrImage_ErrCorrLevel=(L,M,Q,H);
+  Punkt=record x,y: integer; end;
+  PListe = Array[1..maxp] of Punkt;
+  Matrix2 = Array[1..maxp] of integer;
+  Matrix = Array[1..maxp] of Matrix2;
+
+
+var
+  dbform: TForm;
+  lbdaten: TListbox;
+  FImage: TImage;
+  sgMatrix: TStringGrid;
+  USBControlRecord:  TFT_Program_Data;
+
+
+  anzKP: integer;               //Anzahl Kommunikationspartner (KP)
+  KP: Array[1..maxp] of string; //Nummern der KP
+  MG: Matrix;                   //Verbindungsmatrix, Gesamt
+
+
+
+procedure GetQrCodeInet(Width,Height: Word; C_Level,apath: string; const Data: string);
+var
+  encodedURL: string;
+  pngStream: TMemoryStream;
+begin
+  encodedURL:= Format(UrlGoogleQrCode,[Width,Height, C_Level, HTTPEncode(Data)]);
+  pngStream:= TMemoryStream.create;
+  HttpGet(EncodedURL, pngStream);   //WinInet
+  with TLinearBitmap.Create do try
+    pngStream.Position:= 0;
+    LoadFromStream2(pngStream,'PNG');
+    SaveToFile(apath);
+    OpenDoc(apath);
+  finally
+    Dispose;
+    Free;
+    pngStream.Free;
+  end;
+end;
+
+
+function StrSplit(Wert:String; x:Integer; z:String):String;
+//Liefert den x. Eintrag des Wertes; Trennzeichen: z
+var
+  sl, sr: String; i, k: Integer;
+begin
+  k:=x; sl:=''; sr:=Wert + z;
+  repeat
+    i:=pos(z,sr); dec(k);
+    sl:=LeftStr(sr, i - 1); sr:=RightStr(sr, Length(sr) - i);
+  Until k = 0;
+  result:= sl;
+end;
+
+procedure LeseKP;
+//Kommunikationspartner auslesen
+//Voraussetzung: Bezeichner sind die Zahlen 1 .. max
+var
+  s0,s1: string;
+  i,n,kp0,maxKP: integer;
+begin
+  maxKP:=0;
+  n:= lbDaten.Items.Count;
+  for i:=1 to n-1 do begin //Liste satzweise iterieren
+    s0:=lbDaten.Items.Strings[i];
+    s1:=StrSplit(s0,4,';'); //KP von
+    kp0:=StrToInt(s1);
+    if kp0>maxKP then maxKP:=kp0; //größten KP suchen
+    s1:=StrSplit(s0,5,';'); //KP nach
+    kp0:=StrToInt(s1);
+    if kp0>maxKP then maxKP:=kp0; //größten KP suchen
+  end;
+  anzKP:=maxKP;
+  for i:=1 to anzKP do begin //Array der KP
+    KP[i]:=IntToStr(i); //KP's erzeugen
+    writeln(kp[i]);
+  end;
+end;
+
+procedure LeseMatrix;
+//Werte in die Matrix übernehmen (ohne Berücksichtigung der Richtung)
+var
+  i,z,s: integer;
+  zDT: TDateTime;
+  hh,mm,ss,ms: word;
+  n,k1,k2,kMin,kMax,zInt: integer;
+  s0: string;
+begin
+  n:=lbDaten.Items.Count;
+  for z:=1 to anzKP do for s:=1 to anzKP do MG[z][s]:=0;
+  for i:=1 to n-1 do begin //ohne erste Zeile
+    s0:=lbDaten.Items.Strings[i];
+    k1:=StrToInt(StrSplit(s0,4,';'));
+    k2:=StrToInt(StrSplit(s0,5,';'));
+    //erster KP ist der Kleinere (ohne Berücksichtigung der Richtung!)
+    kMin:=Min(k1,k2); //erster KP
+    kMax:=Max(k1,k2); //zweiter KP
+    zDT:=StrToTime(StrSplit(s0,3,';'));
+    DecodeTime(zDT,hh,mm,ss,ms);
+    zInt:=hh*60+mm+round(ss/60); //auf volle Minuten runden
+    MG[kMin][kMax]:=MG[kMin][kMax]+zInt;
+  end;
+end;
+
+procedure ZeichneNetz;
+//grafische Ausgabe des Kommunikationsnetzes
+//const pi=3.1415926;
+var
+  p: PListe;
+  mp: Punkt;
+  r,rho,phi: double;
+  i,j,x,y, cl: integer;
+
+begin
+  cl:= $00FDB5B5; //Zeichenfarbe
+  with FImage.Canvas do begin
+    FillRect(Rect(0,0,FImage.Width,FImage.Height));
+    //Mittelpunkt, Radius, Winkel
+    mp.x:=FImage.Width div 2;
+    mp.y:=FImage.Height div 2;
+    r:=165;
+    rho:=360/anzKP;
+    //Koordinaten der Knotenpunkte auf dem Kreis berechnen
+    for i:=1 to anzKP do begin
+      phi:=(i-1)*rho*pi/180;
+      p[i].x:=mp.x+round(r*cos(phi));
+      p[i].y:=mp.y+round(r*sin(phi));
+    end;
+    //Fadengrafik zeichnen
+    Pen.Color:=cl;
+    Pen.Width:=3;
+    for i:=1 to anzKP-1 do
+      for j:=i+1 to anzKP do begin
+        if MG[i][j]>0 then begin //wenn Verbindung existiert
+          MoveTo(p[i].x,p[i].y);
+          LineTo(p[j].x,p[j].y);
+        end;
+      end;
+    //Punkte zeichnen
+    for i:=1 to anzKP do begin
+      x:=p[i].x; y:=p[i].y;
+      Ellipse(x-15,y-15,x+15,y+15);
+    end;
+    //Beschriftung KP-Bezeichner
+    Font.Size:=11; Font.Style:=[fsBold];
+    for i:=1 to anzKP do begin
+      x:=p[i].x-8; y:=p[i].y-8;
+      TextOut(x,y,KP[i]);
+    end;
+  end;
+end;
+
+procedure btnImportClick(Sender: TObject);
+//CSV-Datei importieren
+var p: String;
+  oDlg: TOpenDialog;
+    pc: TPageControl;
+begin
+  //p:=Application.ExeName;
+  //p:=ExtractFilePath(p);
+  //oDlg.InitialDir:=p;
+  //if oDlg.Execute then begin
+    lbDaten.Items.LoadFromFile(Exepath+'examples/kodaten.txt');
+  //end;
+  //pc.ActivePageIndex:=0;
+end;
+
+procedure btnMatrixClick(Sender: TObject);
+//Kommunikationsmatrix aufbauen
+var
+  i,z,s: integer;
+  //sgMatrix: TStringGrid;
+begin
+  LeseKP;
+  sgMatrix.RowCount:=anzKP+1;
+  sgMatrix.ColCount:=anzKP+1;
+  for i:=1 to anzKP do begin //Beschriftung StringGrid
+    sgMatrix.Cells[i,0]:=KP[i];
+    sgMatrix.Cells[0,i]:=KP[i];
+  end;
+  LeseMatrix;
+  for z:=1 to anzKP do //Übernehmen der Werte
+    for s:=1 to anzKP do
+      if MG[z][s]>0 then
+        sgMatrix.Cells[s,z]:=IntToStr(MG[z][s]);
+  //pc.ActivePageIndex:=1;
+end;
+
+
+procedure CreateNetForm;
+ //diaform:= CreateMessageDialog('my fast form perform',mtconfirmation, []);
+var 
+    //dbform: TForm;
+    ard: TRadioGroup;
+    //mimg: TImage;
+begin
+   dbform:= CreateMessageDialog('My Fast Form Template - FFP',mtwarning,
+                                        [mball, mbyes, mbhelp, mbok]);
+   with dbform do begin
+     font.size:= 12;
+     caption:= 'FFP XML Demo';
+     setBounds(50,50,900,800)
+     FormStyle:= fsStayontop;
+     //Color:= 12234;  //clWebGold;//12234;
+     autoScroll:= true;
+   with TLabel.Create(self) do begin
+     parent:= dbform;
+     SetBounds(400,60,500,600)
+     font.size:= 18;
+     //dblist.Add('All Converted to...XML')
+     caption:= 'Network Communication City Graph...';
+   end;  
+   with TRadioGroup.Create(self) do begin
+     parent:= dbform;
+     top:= 110;
+     left:= 20;
+     items.add('first entry of');
+     items.add('second entry off');
+     items.add('third entry off');
+     ItemIndex:= 2; 
+     //writeln(Items.Strings[ItemIndex]); 
+   end;
+  with TBitBtn.Create(self) do begin
+    Parent:= dbform;
+    setbounds(570, 490,190, 40);
+    caption:= 'File to Barcode';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'TASBARCODE'); 
+    //onclick:= @GetMediaData2;
+  end;
+  with TBitBtn.Create(self) do begin
+    Parent:= dbform;
+    setbounds(570, 320,190, 150);
+    caption:= 'File to Barcode';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'JVGAMMAPANELCOLORS'); 
+    //onclick:= @GetMediaData2;
+  end;
+  
+  lbdaten:= TListbox.create(self)
+  with lbdaten do begin
+    Parent:= dbform;
+    setbounds(240, 120,260, 210);
+    caption:= 'File to Network';
+    font.size:= 10;
+  end;  
+  
+  FImage:= TImage.create(self);
+  with FImage do begin
+   parent:= dbform;
+   setbounds(50,360,380,380)
+  end; 
+  
+  sgMatrix:= TStringGrid.create(self);
+  with sgmatrix do begin
+    Parent:= dbform;
+    top:= 560;
+    left:= 460;
+    height:= 180;
+    width:= 400;
+    //setbounds(340, 120,260, 210);
+  end;
+ 
+
+   Show;
+   Canvas.Draw(550,120,getBitMap(Exepath+'\examples\citymax.bmp'));
+
+    //Barcode1.DrawText(dbform.Canvas);  
+
+  end; //dbform
+   //SelectDirectory
+end;
+
+
+
+//TODO:#1 Returns the QR Code direct of the last modification of the given File
+
+begin
+  Writeln(datetimetostr(FileTimeGMT(exepath+'maxbox3.exe')));
+   
+  //GetQrCodeTest(150,150,'Q', 'this is maXland on the maXbox');
+  //call of the script
+  //GetQrCodeInet(150,150,'Q',ExePath+'mX3QRCode_3.png','this is maXland on maXbox');
+ 
+  //call of the Lib
+  //GetQrCode2(150,150,'Q',QDATA, ExePath+AFILENAME);
+  CreateNetForm;
+  btnImportClick(Self);
+  btnMatrixClick(self);
+  
+//Darstellung des Netzes
+  ZeichneNetz;
+  
+  maxCalcF('SQRT(4296)');
+  writeln(StrDec('123345'));
+  
+  //writeln(inttoStr(FT_GetDriverVersion));
+   
+End.  
+
+http://theroadtodelphi.wordpress.com/2010/12/06/generating-qr-codes-with-delphi/
+
+Using the Google Chart Tools / Image Charts (aka Chart API) you can easily generate QR codes, this kind of images are a special type of two-dimensional barcodes. They are also known as hardlinks or physical world hyperlinks.
+
+The QR Codes store up to 4,296 alphanumeric characters of arbitrary text. QR codes can be read by an optical device with the appropriate software. Such devices range from dedicated QR code readers to mobile phones.
+
+
+Using Delphi there are several ways you can generate QR codes - to encode any text (URL, phone number, simple message). QR Codes store up to 4,296 alphanumeric characters of arbitrary text.
+
+The 2D Barcode VCL components is a set of components designed for generating and printing barcode symbols in your Delphi or C++ Builder applications. Use the components set like any other VCL components.
+
+J4L Components includes the QR-code implementation featuring: auto, byte, alpha, numeric and kanji encoding.
+
+The Google Chart Tools (Chart API) also let you generate QR-code images using an HTTP POST or 
+
+All do you need to generate a QrCode is make a get request to this URI
+
+http://chart.apis.google.com/chart?chs=200x200&cht=qr&chld=M&chl=Go+Delphi+Go
+
+uses
+ PngImage,
+ HTTPApp,
+ WinInet;
+ 
+type
+TQrImage_ErrCorrLevel=(L,M,Q,H);
+ 
+const
+UrlGoogleQrCode='http://chart.apis.google.com/chart?chs=%dx%d&cht=qr&chld=%s&chl=%s';
+QrImgCorrStr   : array [TQrImage_ErrCorrLevel] of string=('L','M','Q','H');
+ 
+procedure WinInet_HttpGet(const Url: string;Stream:TStream);
+const
+BuffSize = 1024*1024;
+var
+  hInter   : HINTERNET;
+  UrlHandle: HINTERNET;
+  BytesRead: DWORD;
+  Buffer   : Pointer;
+begin
+  hInter := InternetOpen('', INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
+  if Assigned(hInter) then
+  begin
+    Stream.Seek(0,0);
+    GetMem(Buffer,BuffSize);
+    try
+        UrlHandle := InternetOpenUrl(hInter, PChar(Url), nil, 0, INTERNET_FLAG_RELOAD, 0);
+        if Assigned(UrlHandle) then
+        begin
+          repeat
+            InternetReadFile(UrlHandle, Buffer, BuffSize, BytesRead);
+            if BytesRead>0 then
+             Stream.WriteBuffer(Buffer^,BytesRead);
+          until BytesRead = 0;
+          InternetCloseHandle(UrlHandle);
+        end;
+    finally
+      FreeMem(Buffer);
+    end;
+    InternetCloseHandle(hInter);
+  end
+end;
+ 
+//this function return a Stream (PngImage inside) with a Qr code.
+procedure GetQrCode(Width,Height:Word;Correction_Level:TQrImage_ErrCorrLevel;const Data:string;StreamImage : TMemoryStream);
+Var
+ EncodedURL  : string;
+begin
+  EncodedURL:=Format(UrlGoogleQrCode,[Width,Height,QrImgCorrStr[Correction_Level],HTTPEncode(Data)]);
+  WinInet_HttpGet(EncodedURL,StreamImage);
+end;
+
+
+http://www.delphi-central.com/callback.aspx
+
+ public
+    { Public-Deklarationen }
+    constructor Create(Owner:TComponent); override;
+    destructor Destroy; override;
+    procedure Assign(Source: TPersistent);override;
+
+    procedure DrawBarcode(Canvas:TCanvas);
+    procedure DrawText(Canvas:TCanvas);
+    property CanvasHeight :Integer read GetCanvasHeight;
+    property CanvasWidth :Integer read GetCanvasWidth;
+  published
+    { Published-Deklarationen }
+   { Height of Barcode (Pixel)}
+    property Height : integer read FHeight write SetHeight;
+    property Text   : string read FText write SetText;
+    property Top    : Integer read FTop write SetTop;
+    property Left   : Integer read FLeft write SetLeft;
+   { Width of the smallest line in a Barcode }
+    property Modul  : integer read FModul  write SetModul;
+    property Ratio  : Double read FRatio write SetRatio;
+    property Typ    : TBarcodeType read FTyp write SetTyp default bcCode_2_5_interleaved;
+   { build CheckSum ? }
+    property Checksum:boolean read FCheckSum write SetCheckSum default FALSE;
+    property CheckSumMethod:TCheckSumMethod read FCheckSumMethod write FCheckSumMethod default csmModulo10;
+
+   { 0 - 360 degree }
+    property Angle  :double read FAngle write SetAngle;
+
+    property ShowText:TBarcodeOption read FShowText write SetShowText default bcoNone;
+    property ShowTextFont: TFont read FShowTextFont write SetShowTextFont;
+    property ShowTextPosition: TShowTextPosition read FShowTextPosition write SetShowTextPosition default stpTopLeft;
+    property Width : integer read GetWidth write SetWidth stored False;
+    property Color:TColor read FColor write FColor default clWhite;
+    property ColorBar:TColor read FColorBar write FColorBar default clBlack;
+      property OnChange:TNotifyEvent read FOnChange write FOnChange;
+  end;
+
+function CheckSumModulo10(const data:string):string;
+
+function ConvertMmToPixelsX(const Value:Double):Integer;
+function ConvertMmToPixelsY(const Value:Double):Integer;
+function ConvertInchToPixelsX(const Value:Double):Integer;
+function ConvertInchToPixelsY(const Value:Double):Integer;
+
+TTarArchive Usage
+-----------------
+- Choose a constructor
+- Make an instance of TTarArchive                  TA := TTarArchive.Create (Filename);
+- Scan through the archive                         TA.Reset;
+                                                   WHILE TA.FindNext (DirRec) DO BEGIN
+- Evaluate the DirRec for each file                  ListBox.Items.Add (DirRec.Name);
+- Read out the current file                          TA.ReadFile (DestFilename);
+  (You can ommit this if you want to
+  read in the directory only)                        END;
+- You're done                                      TA.Free;
+
+
+TTarWriter Usage
+----------------
+- Choose a constructor
+- Make an instance of TTarWriter                   TW := TTarWriter.Create ('my.tar');
+- Add a file to the tar archive                    TW.AddFile ('foobar.txt');
+- Add a string as a file                           TW.AddString (SL.Text, 'joe.txt', Now);
+- Destroy TarWriter instance                       TW.Free;
+- Now your tar file is ready.
+
+
+
+The last slash might be optional. Right?
+
+How about something like this:
+
+$url =~ m|([^/]+)/?$|;
+my $end_of_url = $1;
+
+The $ on the end anchors the regular expression to the end of the string. The [^/] means anything that's not a slash and the + after means I want one or more things that are not slashes. Notice that this is in a capture group which are marked with parentheses.
+
+I end the regular expression with /? which means that there may or may not be a slash on the very end of the string. I've put my regular expression between m| and |, so I can use forward slashes without having to constantly escape them.
+
+The last part of the URL is now in $1 and I can set my own scalar variable to save this Result.
+share|improve this answer
+
+  
+procedure GetQrCodeImage(Width,Height: Word; Correct_Level: string;
+           const Data:string; aimage: TImage; apath: string);
+var
+  encodedURL: string;
+  idhttp: TIdHttp;// THTTPSend;
+  pngStream: TMemoryStream;
+begin
+  encodedURL:= Format(UrlGoogleQrCode,[Width,Height, Correct_Level, HTTPEncode(Data)]);
+  //WinInet_HttpGet(EncodedURL,StreamImage);
+  idHTTP:= TIdHTTP.Create(NIL)
+  pngStream:= TMemoryStream.create;
+  with TLinearBitmap.Create do try
+    idHTTP.Get1(EncodedURL, pngStream)
+    pngStream.Position:= 0;
+    LoadFromStream2(pngStream,'PNG');
+    aImage.Picture:= NIL;
+    AssignTo(aimage.picture.bitmap);
+    SaveToFile(apath);
+    //OpenDoc(apath);
+  finally
+    Dispose;
+    Free;
+    idHTTP.Free
+    pngStream.Free;
+  end;
+end;
+
+procedure GetQrCode3(Width,Height: Word; Correct_Level: string;
+           const Data:string; apath: string);
+var
+  encodedURL: string;
+  idhttp: TIdHttp;// THTTPSend;
+  png: TLinearBitmap;//TPNGObject;
+  pngStream: TMemoryStream;
+begin
+  encodedURL:= Format(UrlGoogleQrCode,[Width,Height, Correct_Level, HTTPEncode(Data)]);
+  //WinInet_HttpGet(EncodedURL,StreamImage);
+  idHTTP:= TIdHTTP.Create(NIL)
+  pngStream:= TMemoryStream.create;
+  with TLinearBitmap.Create do try
+    idHTTP.Get1(EncodedURL, pngStream)
+    pngStream.Position:= 0;
+    LoadFromStream2(pngStream,'PNG');
+    //aImage.Picture:= NIL;
+    //AssignTo(aimage.picture.bitmap);
+    SaveToFile(apath);
+    OpenDoc(apath);
+  finally
+    Dispose;
+    Free;
+    idHTTP.Free
+    pngStream.Free;
+  end;
+end;
+
+
+procedure CreateMyFastForm;
+ //diaform:= CreateMessageDialog('my fast form perform',mtconfirmation, []);
+var 
+    //dbform: TForm;
+    ard: TRadioGroup;
+    //mimg: TImage;
+begin
+   dbform:= CreateMessageDialog('My Fast Form Template - FFP',mtwarning,
+                                        [mball, mbyes, mbhelp, mbok]);
+   with dbform do begin
+     font.size:= 12;
+     caption:= 'FFP XML Demo';
+     setBounds(50,50,800,600)
+     FormStyle:= fsStayontop;
+     //Color:= 12234;  //clWebGold;//12234;
+     autoScroll:= true;
+   with TLabel.Create(self) do begin
+     parent:= dbform;
+     SetBounds(400,60,500,600)
+     font.size:= 18;
+     //dblist.Add('All Converted to...XML')
+     caption:= 'QRCode in a Stream Dream...';
+   end;  
+   with TRadioGroup.Create(self) do begin
+     parent:= dbform;
+     top:= 90;
+     left:= 60;
+     items.add('first entry of');
+     items.add('second entry off');
+     items.add('third entry off');
+     ItemIndex:= 2; 
+     //writeln(Items.Strings[ItemIndex]); 
+   end;
+  with TBitBtn.Create(self) do begin
+    Parent:= dbform;
+    setbounds(570, 490,190, 40);
+    caption:= 'File to Barcode';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'TASBARCODE'); 
+    //onclick:= @GetMediaData2;
+  end;
+  with TBitBtn.Create(self) do begin
+    Parent:= dbform;
+    setbounds(570, 320,190, 150);
+    caption:= 'File to Barcode';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'JVGAMMAPANELCOLORS'); 
+    //onclick:= @GetMediaData2;
+  end;
+   Show;
+   Canvas.Draw(400,120,getBitMap(Exepath+'\examples\citymax.bmp'));
+
+  FImage:= TImage.create(self);
+  with FImage do begin
+   parent:= dbform;
+   setbounds(50,210,150,150)
+  end; 
+
+  with Barcode1 do begin
+    Top := 400;
+    Left := 50;
+    Height:= 130;
+    //Barcode1.Width:= 230;
+    //barcode1.assign
+    //Barcode1.Angle := 70;
+    Typ := bcCode_2_5_interleaved;
+    Showtext:= bcoBoth;
+    text:= '0123456789';
+    DrawBarcode(Canvas);
+    Typ := bcCodeEAN128C; //bcCode_2_5_interleaved;
+    Left:= 180;
+    text:= '0123456789';
+    DrawBarcode(Canvas);
+    Typ := bcCode128C; //bcCodePostNet; //,bcCodeEAN128C; //bcCode_2_5_interleaved;
+    Left:= 320;
+    text:= '0123456789';
+    DrawBarcode(Canvas);
+   end;
+    //Barcode1.DrawText(dbform.Canvas);  
+
+  end; //dbform
+   //SelectDirectory
+end;
+  
+----app_template_loaded_code----

@@ -1,0 +1,690 @@
+PROGRAM GraphicSplitter_Spiral;
+
+///////////////////////////////////////////////////////////////////////////
+//  #sign:M max: MAXBOX8: 02.05.2014 15:37:08 
+//  Purpose: Grabs picture out of a big one TextureMap.jpg and splits it  
+//  #path>ples\C:\maXbook\maxbox3\mX3999\maxbox3\examples\                
+//  Lines of Code #locs:499
+///////////////////////////////////////////////////////////////////////////
+
+Const TEXTOUT = 'hi world of code picture ';
+      PICPATH= 'C:\maXbook\maxbox3\mX3999\maxbox3\examples\';
+      PICMAIN= 'C:\maXbook\maxbox3\mX3999\maxbox3\examples\TextureMap.jpg';
+
+//############################################################################
+// Archimedes Spiral Architect
+//############################################################################
+//TODO: Button with stop event, change color and save bitmap as png
+  //TODO: transfer the App to a Pic Matrix!
+
+{type  
+  PROCESS_MEMORY_COUNTERS = record
+    cb : DWORD;
+    PageFaultCount : DWORD;
+    PeakWorkingSetSize : DWORD;
+    WorkingSetSize : DWORD; //Task managers MemUsage number
+    QuotaPeakPagedPoolUsage : DWORD;
+    QuotaPagedPoolUsage : DWORD;
+    QuotaPeakNonPagedPoolUsage : DWORD;
+    QuotaNonPagedPoolUsage : DWORD;
+    PagefileUsage : DWORD; //TaskMan's VM Size number
+    PeakPagefileUsage : DWORD;
+  end;
+  TProcessMemoryCounters = PROCESS_MEMORY_COUNTERS;}
+
+  
+  
+//  function  {**************************************************}
+function GetProcessMemoryInfo(Process: THandle; var MemoryCounters: TProcessMemoryCounters;
+                                    cb: DWORD): BOOL; //stdcall;; 
+     External 'GetProcessMemoryInfo@psapi.dll stdcall';
+     
+ Function OpenProcess2(dwDesiredAccess: DWORD; bInheritHandle:BOOL; dwProcessId: DWORD):THandle;
+     External  'OpenProcess@kernel32.dll stdcall';
+
+
+{TYPE <Type declarations>} 
+
+  var FWait, switch: Boolean;
+      FValueA: Float;
+      FValueB: Float;
+     
+      aFrm: TForm;
+      RB: TRadioGroup; 
+      ProgBar: TProgressBar;
+      statBar: TStatusBar;
+      EDTileSize: TEdit;
+
+
+//<FUNCTION>
+//<PROCEDURE> 
+
+{**************************************************}
+//function GetProcessMemoryInfo; external 'psapi.dll';
+{****************************************************}
+
+function ProcessMemoryUsage(ProcessID : DWORD): DWORD;
+var ProcessHandle : THandle;
+    MemCounters   : TProcessMemoryCounters;
+begin
+  Result:= 0;
+  ProcessHandle:= OpenProcess2(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                               false, ProcessID);
+  try
+    if GetProcessMemoryInfo(ProcessHandle,
+                            MemCounters,
+                            sizeof(MemCounters))
+    then Result:= MemCounters.WorkingSetSize;
+  finally
+    CloseHandle(ProcessHandle);
+  end;
+end;
+
+function ProcessPageUsage(ProcessID : DWORD): DWORD;
+var ProcessHandle : THandle;
+    MemCounters   : TProcessMemoryCounters;
+begin
+  Result:= 0;
+  ProcessHandle:= OpenProcess2(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                               false, ProcessID);
+  try
+    if GetProcessMemoryInfo(ProcessHandle,
+                            MemCounters,
+                            sizeof(MemCounters))
+    then Result:= MemCounters.PagefileUsage;
+  finally
+    CloseHandle(ProcessHandle);
+  end;
+end;
+
+function ProcessAllRec(ProcessID : DWORD): TProcessMemoryCounters;
+var ProcessHandle : THandle;
+    MemCounters   : TProcessMemoryCounters;
+begin
+  //Result:= NULL;
+  ProcessHandle:= OpenProcess2(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                               false, ProcessID);
+  try
+    if GetProcessMemoryInfo(ProcessHandle,
+                            MemCounters,
+                            sizeof(MemCounters))
+    then Result:= MemCounters;
+  finally
+    CloseHandle(ProcessHandle);
+  end;
+end;
+
+Procedure OVCInternationalDemoClass;
+begin
+ with TOvcIntlSup.Create do begin
+    //Function InternationalDate( ForceCentury : Boolean) : string');
+    writeln('InternationalDate: '+InternationalDate(true));
+    //Function InternationalDatePChar( Dest : PChar; ForceCentury : Boolean) : PChar');
+    writeln('InternationalLongDate: '+InternationalLongDate(false,false));
+  //Function InternationalLongDatePChar(Dest:PChar;ShortNames:Boolean;ExcludeDOW:Boolean):PChar');
+    //Function InternationalTime( ShowSeconds : Boolean) : string');
+    writeln('InternationalTime: '+InternationalTime(false));
+    //Function InternationalTimePChar( Dest : PChar; ShowSeconds : Boolean) : PChar');
+    //Function MonthStringToMonth( const S : string; Width : Byte) : Byte');
+    writeln(Country)
+    Free;
+  end;
+  //TerminateProcess( hProcess : THandle; uExitCode : UINT) : BOOL');
+  //GetExitCodeProcess( hProcess : THandle; var lpExitCode : DWORD) : BOOL');
+ //FatalExit( ExitCode : Integer)');
+  //faNormalFile
+ 
+end;    
+
+procedure TApplication_PaintView(Canvas: TCanvas; afrm: TForm);
+var
+  cx, cy, i: Integer;
+  angle,x,y: Float;
+begin
+  if FWait then Exit;
+   FValueB:= FValueB + 0.001;
+   // Clear background
+   //Canvas.FillStyle := 'rgba(0,0,99,0.08)';
+   if switch then
+     Canvas.FillRect(rect(0,90, aFrm.Width, aFrm.Height));
+   //Draw our framerate on the screen
+    cx:= aFrm.width div 2;
+    cy:= aFrm.Height div 2;
+   //Canvas.BeginPath;
+  for i:= 42 downto 0 do begin
+    angle:= FValueB * i;
+    x:= cx + (FValueA + FValueB * angle) * Cos(angle);
+    y:= cy + (FValueA + FValueB * angle) * Sin(angle);
+    if i = 42 then Canvas.MoveTo(round(x), round(y)) 
+      else Canvas.LineTo(round(x),round(y));
+  end;
+  //Canvas.StrokeStyle := '#FFF'; //Canvas.Stroke;
+end;
+
+function CheckIEStartCommand: string;
+begin
+  Application.ProcessMessages;
+  with TRegistry.Create do try
+     rootkey:= HKey_Classes_Root;
+     OpenKey('\htmlfile\shell\open\command',false);
+     try 
+       result:= ReadString('');
+     except
+       result:= ''; 
+     end;
+     CloseKey;
+  finally
+     Free;
+  end;
+end;
+
+function SplitToken(const Text: string; SplitChar: Char;
+                          var First, Last: string): Boolean;
+var  SplitPos: Integer;
+begin
+  Result:= False;
+  SplitPos:= Pos(SplitChar, Text);
+  if SplitPos = 0 then Exit;
+  First:= Trim(Copy(Text, 1, SplitPos -1));
+  Last:= Trim(Copy(Text, SplitPos +1, Length(Text) -SplitPos));
+  Result:= (First <>'') and (Last <>'');
+end;
+
+
+procedure SplitImages(Sender: TObject);
+var pic: TPicture;
+    bmp, bmp2: TBitmap;
+    s, sd, f : Integer;
+    x, y, cnt, idefaul : Integer;
+begin
+   SetCurrentDir(PICPATH);
+   //ExtractFilePath(Application.ExeName));
+   //s:= StrToInt('1024'); //(EDTileSize.Text);
+   idefaul:= 1024;
+   if TryStrToInt(EDTileSize.text,idefaul) then
+     s:= idefaul;
+   pic:= TPicture.Create;
+   cnt:= 0;
+    //writeln(Items.Strings[ItemIndex]); 
+   if RB.itemindex=1 then      //medium
+      f:=2
+   else if RB.itemindex=0 then  //low
+      f:=4
+   else f:=1;
+   sd:=s div f;
+   ProgBar.Position:=0;
+   Screen.Cursor:=crHourGlass;
+   bmp:= TBitmap.Create;
+   bmp.PixelFormat:=pf24bit;
+   bmp.Width:= sd;
+   bmp.Height:= sd;
+   if f<>1 then begin
+      bmp2:=TBitmap.Create;
+      bmp2.PixelFormat:=pf24bit;
+      bmp2.Width:=s;
+      bmp2.Height:=s;
+   end else bmp2:= NIL;
+   statBar.panels.items[0].text:='Loading Jpeg '+PICMAIN+' texture...';
+   //Refresh;
+   pic.LoadFromFile(PICMAIN);
+   x:=0;
+   while x<pic.Width do begin
+      y:=0; 
+      while y<pic.Height do begin
+        if sd<>s then begin
+          bmp2.Canvas.Draw(-x, -y, pic.Graphic);
+          bmp.Canvas.StretchDraw(Rect(0, 0, sd, sd), bmp2);
+        end else bmp.Canvas.Draw(-x, -y, pic.Graphic);
+        statBar.panels.items[1].text:=Format('Generating tile %d-%d...',[x div s,y div s]);
+        //Refresh;
+        bmp.SaveToFile(Format('Tex_%d_%d.bmp', [x div s, y div s]));
+        ProgBar.StepBy(1);
+        Inc(cnt);
+        y:= y + s;
+      end; //Inc(x, s);
+      x:= x+s;
+   end;
+   if assigned(bmp2) then
+      bmp2.Free;
+   bmp.Free;
+   pic.Free;
+   Screen.Cursor:= crDefault;
+   statBar.panels.items[0].text:='Completed!';
+   ShowMessage(inttoStr(cnt)+' Picture Splits Done!');
+end;
+
+      
+procedure TFrm_CloseClick(Sender: TObject);
+begin
+  afrm.Close;
+end;
+
+procedure TFrm_DeleteClick(Sender: TObject);
+begin
+ if MessageDlg('Wanna Delete *.bmp files? at '+PICPATH, 
+        mtConfirmation,[mbYes, mbNo],0) = mrYes then
+          deletefiles(PICPATH,'*.bmp');
+end;  
+
+procedure TFrm_LoadBitmap(Sender: TObject);
+begin
+  afrm.canvas.brush.bitmap:= getBitmapObject(Exepath+'examples\images\citymax.bmp');
+  afrm.Canvas.FillRect(Rect(850,390,600,140));
+
+end;  
+
+procedure TFrm_HideClick(Sender: TObject);
+begin
+  afrm.repaint;
+  //afrm.Canvas.brush.bitmap.free;
+end; 
+
+procedure Tfrm_StaticText1Click(Sender: TObject);
+begin {link to delphiforfun when text is clicked}
+ Screen.Cursor:= crHourGlass;
+ wGet('http://max.kleiner.com/images/texturemap.jpg',PICPATH+'\texturemap.jpg');
+ Screen.Cursor:= crDefault;
+ //OpenDoc(Exepath+'texturemap.jpg');
+end;
+
+
+procedure loadPicForm;
+  var msd:  THelpEvent; //TPopupMode  //TTileMode  //TDefaultMonitor//TShowAction;
+begin
+  aFrm:= TForm.Create(self);
+  with aFrm do begin
+    Caption:= '********** Picture Split Plot Form Template ***********';  
+    height:= 650;
+    width:= 900;
+    Position:= poScreenCenter;
+    FormStyle:= fsStayonTop;
+    //Color:= clBlack;
+    SetDesignVisible(true);
+    //onClose:= @TFrm_closeClick;
+    //onPaint:= @TFrm_FormPaint;
+    Canvas.Pen.color:= clBlue;
+    //manualfloat
+    GetControlsAlignment;
+    EnableAutoRange;
+    pixelsperinch;
+    Show;
+    //MouseWheelHandler
+    //setfocus;
+    //WantChildKey
+    //formstate
+    //showbitmap(GetFormImage);
+    writeln('hasParent: '+booleantoString(hasParent))
+    canvas.brush.bitmap:= getBitmapObject(Exepath+'examples\images\citymax.bmp');
+    Canvas.FillRect(Rect(850,390,600,140));
+  end;
+  
+  with TLabel.create(self) do begin
+    parent:= aFrm;
+    setBounds(18,26,276,32);
+    font.size:= 14;
+    font.color:= clGreen;
+    Caption:= 
+      'This utility will generate 16 1024x1024 (Full) BMP '#13#10'textures from the ' +
+      #39'TextureMap.jpg'#39' file (size 4.28 MB = 4096*4096). '+CRLF+
+      'Get the file from http://max.kleiner.com/images/texturemap.jpg';
+    Font.Charset:= DEFAULT_CHARSET;
+    //Font.Height:= -13;
+    Font.Name:= 'Arial';
+    Font.Style:= [fsItalic];
+    ParentFont:= False;
+  end;
+  with TLabel.create(self) do begin
+    parent:= aFrm;
+    setBounds(650,60,100,30);
+    Caption:= 'Resolution Size: ';
+  end;
+ 
+  RB:= TRadioGroup.Create(self);
+    with RB do begin
+     parent:= afrm;
+     SetBounds(20,260,300,130)
+     font.size:= 14;
+     items.add('Low Resolution Size (256)');
+     items.add('Medium Resolution Size (512)');
+     items.add('Full Resolution Size (1024)');
+     ItemIndex:= 1; 
+     writeln(Items.Strings[ItemIndex]); 
+   end;
+
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(210,520,150,55);
+    caption:= '&Split Picture';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'TCHARTGALLERYPANEL'); 
+    mXButton(05,05,width, height,12,12,handle);
+    //event handler
+    onClick:= @SplitImages;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(700, 520,150, 55);
+    caption:= '&Close';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'TAFTERMINAL'); // CL_MPSTOP'); 
+    mXButton(05,05,width, height,12,12,handle);
+    onClick:= @TFrm_CloseClick;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(380, 520,150, 55);
+    caption:= 'Hide &Bitmap';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'TCHARTGRID'); //CL_MPPREV'); 
+    mXButton(05,05,width, height,12,12,handle);
+    onClick:= @TFrm_HideClick;
+  end;
+  with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(540, 520,150, 55);
+    caption:= '&Delete Bitmaps';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'TAFFILEVIEWER');  
+    mXButton(05,05,width, height,12,12,handle);
+    onClick:= @TFrm_DeleteClick;
+  end;
+    with TBitBtn.Create(aFrm) do begin
+    Parent:= aFrm;
+    setbounds(380, 450,150, 55);
+    caption:= '&Load Bitmap';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'D12');  
+    mXButton(05,05,width, height,12,12,handle);
+    onClick:= @TFrm_LoadBitmap;
+  end;
+
+
+  EDTileSize:= TEdit.create(afrm)
+  with EDTileSize do begin
+    Parent:= aFrm;
+    setbounds(650,25,125,55);
+    text:= '1024';
+    font.size:= 12;
+    //onClick:= @TFrm_EditClick;
+  end;
+  progBar:= TProgressBar.create(aFrm);
+  with progBar do begin
+    parent:= aFrm;
+    setBounds(20,140,550,25);
+    Smooth:= True;
+    TabOrder:= 4;
+    Min:= 0; Max:= 16;
+    //Frequency:= 10;
+    //Position:= 12;
+    //OnChange:= @TFrm_trackSpeedChange;
+  end;
+  statbar:= TStatusBar.Create(aFrm);
+  with statbar do begin
+    parent:= aFrm;
+    showhint:= true;
+    hint:= 'this is a Graphic Split Converter Plotter';
+    Panels.add;
+      panels.items[0].width:= 500;
+      panels.items[0].text:= 'Graphic Plot';
+    Panels.add;
+      panels.items[1].width:= 350;
+      panels.items[1].text:= 'Split mode Resolution last set';
+  end;
+   with TStaticText.create(afrm) do begin
+    setBounds(20,100,200,30);
+    Cursor:= crHandPoint;
+    parent:= aFrm; //frmmon;
+    Color:= clRed;
+    Caption:= 'http://max.kleiner.com/images/texturemap.jpg ';
+    Font.Color:= clBlue;
+    //Font.Height:= 10
+    Font.Style:= [fsUnderline]
+    OnClick:= @Tfrm_StaticText1Click;
+  end;
+ 
+  {pc:= TPageControl.create(self);
+   with pc do begin
+    parent:= afrm;
+    setbounds(28,16,630,400);
+    ActivePage:= TabSheet1;
+    //caption:= 'Graph';
+    TabOrder:= 0
+   end; 
+   TabSheet2:= TTabSheet.create(self)
+     with tabsheet2 do begin
+      parent:= pc;
+      imageindex:= 1;
+      //caption:= 'Graph';
+     end;}
+  
+ end;
+
+
+Begin  //Main
+//<Executable statements>
+  //TOutlookExport_Spy;
+  Writeln('');
+  Writeln('Start Command of IE: '+CheckIEStartCommand);  
+//<Definitions>  
+   //ares:= TResolver.create;
+ { with TResolver.create do begin
+   //writeln(inttostr(GetHostByName(gethostname)));
+    Free;   end;  }
+    {repeat 
+     TApplication_PaintView(aform.canvas);
+     switch:= NOT switch;
+     Sleep(20);
+   until isKeyPressed or FWait;}
+    {with TledForm.create(self) do begin
+    showmodal;
+    free; end;} 
+ // function GetMacAddresses(const Machine: string; const Addresses: TStrings):Integer;
+   OVCInternationalDemoClass;
+   loadPicForm;
+ 
+ //GetProcessMemoryInfo(Process 
+     writeln('mem from dll '+inttostr(ProcessMemoryUsage(GetCurrentProcessID)));
+     writeln('page from dll '+inttostr(ProcessPageUsage(GetCurrentProcessID)));
+     writeln('proc all from dll '
+                 +inttostr(ProcessAllRec(GetCurrentProcessID).workingsetsize));
+     writeln('proc peak workingset '
+                 +inttostr(ProcessAllRec(GetCurrentProcessID).PeakWorkingSetSize div 1024));
+     writeln('proc peak paged use '
+                 +inttostr(ProcessAllRec(GetCurrentProcessID).QuotaPeakPagedPoolUsage));
+     writeln('proc page peak file '
+                 +inttostr(ProcessAllRec(GetCurrentProcessID).PeakPagefileUsage div 1024));
+ 
+    // SplitImages(self);
+     //deletefiles(PICPATH,'*.bmp');
+END. 
+
+http://glscene.sourceforge.net/wikka/HomePage
+
+
+unit FSplitterMain;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, ComCtrls;
+
+type
+  TForm1 = class(TForm)
+    EDFile: TEdit;
+    Button1: TButton;
+    EDTileSize: TEdit;
+    EDMask: TEdit;
+    ProgressBar: TProgressBar;
+    Label1: TLabel;
+    LAAction: TLabel;
+    RBFull: TRadioButton;
+    RBHalf: TRadioButton;
+    RBLow: TRadioButton;
+    procedure Button1Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+//{$R *.dfm}
+
+uses Jpeg, VectorLists;
+
+procedure TForm1.Button1Click(Sender: TObject);
+var
+   pic : TPicture;
+   bmp, bmp2 : TBitmap;
+   s, sd, f : Integer;
+   x, y : Integer;
+begin
+   SetCurrentDir(ExtractFilePath(Application.ExeName));
+
+   s:=StrToInt(EDTileSize.Text);
+   pic:=TPicture.Create;
+
+   if RBHalf.Checked then
+      f:=2
+   else if RBLow.Checked then
+      f:=4
+   else f:=1;
+   sd:=s div f;
+
+   ProgressBar.Position:=0;
+   Screen.Cursor:=crHourGlass;
+
+   bmp:=TBitmap.Create;
+   bmp.PixelFormat:=pf24bit;
+   bmp.Width:=sd;
+   bmp.Height:=sd;
+
+   if f<>1 then begin
+      bmp2:=TBitmap.Create;
+      bmp2.PixelFormat:=pf24bit;
+      bmp2.Width:=s;
+      bmp2.Height:=s;
+   end else bmp2:=nil;
+
+   LAAction.Caption:='Loading Jpeg texture...';
+   LAAction.Visible:=True;
+   Refresh;
+   pic.LoadFromFile(EDFile.Text);
+   x:=0; while x<pic.Width do begin
+      y:=0; while y<pic.Height do begin
+
+         if sd<>s then begin
+            bmp2.Canvas.Draw(-x, -y, pic.Graphic);
+            bmp.Canvas.StretchDraw(Rect(0, 0, sd, sd), bmp2);
+         end else bmp.Canvas.Draw(-x, -y, pic.Graphic);
+         LAAction.Caption:=Format('Generating tile %d-%d...', [x div s, y div s]);
+         Refresh;
+         bmp.SaveToFile(Format(EDMask.Text, [x div s, y div s]));
+         ProgressBar.StepBy(1);
+
+         Inc(y, s);
+      end;
+      Inc(x, s);
+   end;
+
+   bmp2.Free;
+   bmp.Free;
+   pic.Free;
+
+   Screen.Cursor:=crDefault;
+   LAAction.Caption:='Completed!';
+   ShowMessage('Done!');
+   Application.Terminate;
+end;
+
+end.
+
+
+
+//############################################################################
+// Archimedes Spiral App
+//############################################################################
+
+procedure SIRegister_TOvcIntlSup(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TObject', 'TOvcIntlSup') do
+  with CL.AddClassN(CL.FindClass('TObject'),'TOvcIntlSup') do begin
+    RegisterMethod('Constructor Create');
+    Procedure Free');
+    Function CurrentDateString( const Picture : string; Pack : Boolean) : string');
+    Function CurrentDatePChar( Dest : PChar; Picture : PChar; Pack : Boolean) : PChar');
+    Function CurrentTimeString( const Picture : string; Pack : Boolean) : string');
+    Function CurrentTimePChar( Dest : PChar; Picture : PChar; Pack : Boolean) : PChar');
+    Function DateToDateString(const Picture: string; Julian : TStDate; Pack : Boolean) : string');
+    Function DateToDatePChar(Dest:PChar;Picture:PChar;Julian:TStDate; Pack : Boolean) : PChar');
+    Function DateTimeToDatePChar( Dest : PChar; Picture : PChar; DT : TDateTime; Pack : Boolean) : PChar');
+    Function DateStringToDMY( const Picture, S : string; var Day, Month, Year : Integer; Epoch : Integer) : Boolean');
+    Function DatePCharToDMY( Picture, S : PChar; var Day, Month, Year : Integer; Epoch : Integer) : Boolean');
+    Function DateStringIsBlank( const Picture, S : string) : Boolean');
+    Function DatePCharIsBlank( Picture, S : PChar) : Boolean');
+    Function DateStringToDate( const Picture, S : string; Epoch : Integer) : TStDate');
+    Function DatePCharToDate( Picture, S : PChar; Epoch : Integer) : TStDate');
+    Function DayOfWeekToString( WeekDay : TDayType) : string');
+    Function DayOfWeekToPChar( Dest : PChar; WeekDay : TDayType) : PChar');
+    Function DMYtoDateString( const Picture : string; Day, Month, Year : Integer; Pack : Boolean; Epoch : Integer) : string');
+    Function DMYtoDatePChar( Dest : PChar; Picture : PChar; Day, Month, Year : Integer; Pack : Boolean; Epoch : Integer) : PChar');
+    Function InternationalCurrency( FormChar : Char; MaxDigits : Byte; Float, AddCommas, IsNumeric : Boolean) : string');
+    Function InternationalCurrencyPChar( Dest : PChar; FormChar : Char; MaxDigits : Byte; Float, AddCommas, IsNumeric : Boolean) : PChar');
+    Function InternationalDate( ForceCentury : Boolean) : string');
+    Function InternationalDatePChar( Dest : PChar; ForceCentury : Boolean) : PChar');
+    Function InternationalLongDate( ShortNames : Boolean; ExcludeDOW : Boolean) : string');
+    Function InternationalLongDatePChar(Dest:PChar;ShortNames:Boolean; ExcludeDOW:Boolean):PChar');
+    Function InternationalTime( ShowSeconds : Boolean) : string');
+    Function InternationalTimePChar( Dest : PChar; ShowSeconds : Boolean) : PChar');
+    Function MonthStringToMonth( const S : string; Width : Byte) : Byte');
+    Function MonthPCharToMonth( S : PChar; Width : Byte) : Byte');
+    Function MonthToString( Month : Integer) : string');
+    Function MonthToPChar( Dest : PChar; Month : Integer) : PChar');
+    Procedure ResetInternationalInfo');
+    Function TimeStringToHMS(const Picture,S: string;var Hour,Minute,Second: Integer) : Boolean');
+    Function TimePCharToHMS( Picture, S : PChar; var Hour, Minute, Second : Integer) : Boolean');
+    Function TimeStringToTime( const Picture, S : string) : TStTime');
+    Function TimePCharToTime( Picture, S : PChar) : TStTime');
+    Function TimeToTimeString( const Picture : string; T : TStTime; Pack : Boolean) : string');
+    Function TimeToTimePChar(Dest: PChar; Picture : PChar; T : TStTime; Pack : Boolean) : PChar');
+    Function TimeToAmPmString( const Picture : string; T : TStTime; Pack : Boolean) : string');
+    Function TimeToAmPmPChar(Dest: PChar; Picture : PChar; T : TStTime; Pack : Boolean) : PChar');
+    RegisterProperty('AutoUpdate', 'Boolean', iptrw);
+    RegisterProperty('CurrencyLtStr', 'string', iptrw);
+    RegisterProperty('CurrencyRtStr', 'string', iptrw);
+    RegisterProperty('DecimalChar', 'Char', iptrw);
+    RegisterProperty('CommaChar', 'Char', iptrw);
+    RegisterProperty('Country', 'string', iptr);
+    RegisterProperty('CurrencyDigits', 'Byte', iptrw);
+    RegisterProperty('ListChar', 'Char', iptrw);
+    RegisterProperty('SlashChar', 'Char', iptrw);
+    RegisterProperty('TrueChar', 'Char', iptrw);
+    RegisterProperty('FalseChar', 'Char', iptrw);
+    RegisterProperty('YesChar', 'Char', iptrw);
+    RegisterProperty('NoChar', 'Char', iptrw);
+    RegisterProperty('OnWinIniChange', 'TNotifyEvent', iptrw);
+  end;
+end;
+
+
+----app_template_loaded_code----
+
+10 vor 10 kannst Du entweder live am PC schauen
+http://www.srf.ch/livestream/player/srf-1
+
+oder anschliessend an die Sendung:
+http://www.srf.ch/sendungen/10vor10
+
+und am TV in SRF Info
+um 22:30
+oder um 23 Uhr
+
+Wieso dann ausgerechnet um 10 vor 10!?!
+----Simple Browser started----
+----Simple Browser started----
+----Simple Browser started----
