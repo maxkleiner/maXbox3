@@ -164,6 +164,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     function ExecuteConfigDialog: Boolean; dynamic; abstract;
+    function ExecuteCOMDialog: Boolean; dynamic; abstract;
     function InBufUsed: Integer;
     procedure Open; override;
     function OutBufFree: Integer;
@@ -201,6 +202,7 @@ type
     function GetDeviceName: String;
   public
     function ExecuteConfigDialog: Boolean; override;
+    function ExecuteCOMDialog: Boolean; override;
     procedure SetDefaultParameters;
     function SettingsStr: String;
   end;
@@ -879,6 +881,11 @@ begin
 end;
 
 { TAfCustomComPort }
+
+function TAfCustomComPort.ExecuteCOMDialog: Boolean;
+begin
+  result:=  ExecuteConfigDialog;
+end;
 
 function TAfCustomComPort.ExecuteConfigDialog: Boolean;
 var

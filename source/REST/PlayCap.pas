@@ -9,7 +9,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  DirectShow, ExtCtrls, StdCtrls, ComCtrls, ComObj, ActiveX, Menus;
+  {DirectShow,} ExtCtrls, StdCtrls, ComCtrls, ComObj, ActiveX, Menus;
 
 
 

@@ -378,6 +378,8 @@ function IsCOMConnected: Boolean;
   procedure getBox(aurl, extension: string);
   function CheckBox: string;
   function isNTFS: boolean;
+  //procedure doWebCamPic;
+  procedure doWebCamPic(picname: string);
 
   //function RoundTo(const AValue: Extended;
     //             const ADigit: TRoundToEXRangeExtended): Extended;
@@ -423,7 +425,7 @@ uses
   ,LinarBitmap
   ,ExtCtrls
   ,IdcoderMime
-  ,SvcMgr ,WinSvc, ScktCnst, ScktMain
+  ,SvcMgr ,WinSvc, ScktCnst, ScktMain, avicap, uPSI_LinarBitmap
    ,WinInet, winsock, Cport, gsUtils, lazFileUtils, JvStrUtils, JCLNTFS2;
 
   //,Registry
@@ -468,10 +470,62 @@ begin
   end;
 end;
 
-function isNTFS: boolean; 
+function isNTFS: boolean;
  begin
    result:= NtfsReparsePointsSupported(Extractfiledrive('C')+'\')
  end;
+
+
+const  WM_CAP_DRIVER_CONNECT = WM_CAP_START + 10;
+       WM_CAP_DRIVER_DISCONNECT = WM_CAP_START + 11;
+       WM_CAP_SET_CALLBACK_FRAME = (WM_CAP_START+  5);
+
+
+procedure doWebCamPic(picname: string);
+ var hWndC: THandle;
+  FBitmap: TBitmap;
+  DC:HDC;
+  i: integer;
+  mpanel: TPanel;
+begin
+  //hWndC:= 0;
+   FBitmap:= TBitmap.Create;
+    mPanel:= TPanel.Create(maxform1);
+    mpanel.parent:= maxform1;
+    mpanel.SetBounds(20,20,412,412);
+   FBitmap.PixelFormat:= pf32Bit;
+  for i:= 1 to 2 do begin
+  hWndC:= capCreateCaptureWindow('My maXfilm Capture Window',
+    WS_CHILD or WS_VISIBLE , 0,0,
+    mPanel.Width, mPanel.Height,
+    mPanel.Handle, 0);
+     SendMessage(hWndC, WM_CAP_DRIVER_CONNECT, 0, 0);
+   if (hWndC <> 0) and (i= 1) then begin
+       //SendMessage(hwndc, WM_CAP_DRIVER_DISCONNECT, 0, 0);
+       mPanel.Free;
+       mPanel:= TPanel.Create(maxform1);
+      mpanel.parent:= maxform1;
+      mpanel.SetBounds(20,20,420,420)
+     //renewPanel;
+    //SendMessage(hWndC, WM_CAP_DRIVER_CONNECT, 0, 0);
+    end;
+  end;
+    //fbitmap.canvas.Handle, 0);
+    //writeln('frame graber handle: '+inttoStr(hWndc));
+    DC:= GetDc(mpanel.Handle);
+    fbitmap.Width:= mpanel.width;
+    fbitmap.Height:= mpanel.height;
+    BitBlt(FBitmap.Canvas.Handle,0,0,mPanel.Width,mPanel.Height,DC,0,0,SRCCOPY);
+    SaveCanvas2(FBitmap.canvas, picname);
+  // fbitmap.savetofile(Exepath+FOTOFILE);
+    FBitmap.Free;
+    mpanel.free;
+   ShowmessageBig2('Foto saved as '+picname,true);
+   SearchandOpenDoc(picname);
+   capCaptureStop(hWndc);
+  //TForm1_StopFotoClick(self);
+end;
+
 
 
 function IsInternetConnected: Boolean;

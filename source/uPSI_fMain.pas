@@ -6,7 +6,7 @@ as an OpenToolsAPI to modify the maXbox GUI - V3.5 -V3.8.6 , version check
    actual 3.9.8 , new ipport, comport, iphost, appname, open examples, intflist
    locs=   1624   , last is gotoline, intfnavlist, configfileclick
   DoEditorExecuteCommand(EditorCommand: word);
-  Updated to 3.9.9.85 /80/82/91/94/95/96/98 , locs=3722, MBVERIALL, ResetKeyPressed;
+  Updated to 3.9.9.85 /80/82/91/94/95/96/98 , locs=3727, MBVERIALL, ResetKeyPressed;
 }
 
 interface
@@ -659,6 +659,7 @@ begin
     RegisterMethod('procedure CreateDLLStub1Click(Sender: TObject);');
     RegisterMethod('procedure Tutorial28DLL1Click(Sender: TObject);');
     RegisterMethod('procedure ResetKeyPressed;');
+    RegisterMethod('procedure KeyPressedFalse;');
     RegisterMethod('procedure FileChanges1Click(Sender: TObject);');
     RegisterMethod('procedure OpenGLTry1Click(Sender: TObject);');
     RegisterMethod('procedure AllUnitList1Click(Sender: TObject);');
@@ -669,6 +670,8 @@ begin
     RegisterMethod('procedure GetWebScript1Click(Sender: TObject);');
     RegisterMethod('procedure Checkers1Click(Sender: TObject);');
     RegisterMethod('procedure TaskMgr1Click(Sender: TObject);');
+    RegisterMethod('procedure WebCam1Click(Sender: TObject);');
+
 
    //RegisterMethod('procedure defFilereadUpdate;');
       //  procedure defFilereadUpdate;
@@ -3687,6 +3690,7 @@ begin
     RegisterMethod(@TMaxForm1.CreateDLLStub1Click, 'CreateDLLStub1Click');
     RegisterMethod(@TMaxForm1.Tutorial28DLL1Click, 'Tutorial28DLL1Click');
     RegisterMethod(@TMaxForm1.ResetKeyPressed, 'ResetKeyPressed');
+    RegisterMethod(@TMaxForm1.ResetKeyPressed, 'KeyPressedFalse');
     RegisterMethod(@TMaxForm1.FileChanges1Click, 'FileChanges1Click');
     RegisterMethod(@TMaxForm1.OpenGLTry1Click, 'OpenGLTry1Click');
     RegisterMethod(@TMaxForm1.AllUnitList1Click, 'AllUnitList1Click');
@@ -3697,8 +3701,9 @@ begin
     RegisterMethod(@TMaxForm1.GetWebScript1Click, 'GetWebScript1Click');
     RegisterMethod(@TMaxForm1.Checkers1Click, 'Checkers1Click');
     RegisterMethod(@TMaxForm1.TaskMgr1Click, 'TaskMgr1Click');
+    RegisterMethod(@TMaxForm1.WebCam1Click, 'WebCam1Click');
 
-    //  GetWebScript1Click
+     //  GetWebScript1Click
    end;
 end;
 

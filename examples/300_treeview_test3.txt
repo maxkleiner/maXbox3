@@ -76,12 +76,81 @@ begin
  Result := V;
 end;
 
+
+{Windows Date and Time
+Sometimes you need to send a date and time through the Windows API. However, Windows uses its own date and time type: TSystemTime. Convert between TDateTime and TSystemTime using one of the following methods: }
+
+
+
+procedure changetime;
+var
+delphi_datetime: tDateTime;
+windows_datetime: tSystemTime;
+three_years_from_now: tDateTime;
+
+ year, month, day: word;
+  hour, min, sec, msec: word;
+begin
+  delphi_datetime := now;
+  DateTimeToSystemTime( delphi_datetime, windows_datetime );
+  SetSystemTime( windows_datetime );
+  // get the system time
+  GetSystemTime( windows_datetime );
+  delphi_datetime:= SystemTimeToDateTime( windows_datetime );
+  writeln(datetimetoStr(delphi_datetime))
+  
+  // Is it morning or afternoon?
+  DecodeTime( time, hour, min, sec, msec );
+   if hour < 12
+      then ShowMessage( 'Good morning!' )
+           else ShowMessage( 'Good afternoon!' );
+           
+   //if DayOfWeek( date ) in [1, 7]
+   {if DayOfWeek( date ) = (1 OR 7)
+   
+     then ShowMessage( 'Yeah! It''s the weekend!' )
+          else ShowMessage( 'Alas, it is a workday...' )}
+          
+    DecodeDate( date, year, month, day );
+    //inc( year, 3 );
+    YEAR:= year + 3;
+    three_years_from_now := EncodeDate( year, month, day )      
+    writeln('three_years_from_now '+datetimetoStr(three_years_from_now))
+     writeln(FormatDateTime('"Today is" dddd", the" d"th" of mmmm", AD" yyyy.',date));
+    writeln(FormatDateTime('"And the time is" h:mm ampm.',time))
+                   
+end;
+
+
+//And, at last, I would like to share one function that could be util if someone need to display total time greater 23:59 - not provide by Delphi:
+
+    function FullTimeToStr(SUMTime: TDateTime): string;
+    var
+    StrHor,
+    StrMin :string;
+    TotHor :double;
+    begin
+    TotHor := SUMTime *24;
+    if (TotHor -Trunc(TotHor)) > 0.9999 then
+    TotHor := Round(TotHor);
+    StrHor := FormatFloat('##0:', Int(TotHor));
+    StrMin := FormatDateTime('nn:ss', Frac(TotHor)/24);
+    Result := StrHor +StrMin;
+    end;
+
+
+
 procedure SetTokenPrivileges;
 var 
   hToken1, hToken2, hToken3: THandle;
   aTokenPrivileges: TTokenPrivileges;
   aVersion: TOSVERSIONINFO;
+  dt: tDateTime;
+   ts: tTimeStamp;
 begin
+  
+   ts := DateTimeToTimeStamp( now );
+   dt := TimeStampToDateTime( ts );
   //aVersion.dwOSVersionInfoSize := SizeOf(OSVERSIONINFO);
   aVersion.dwOSVersionInfoSize := SizeOf(aversion);
  
@@ -902,6 +971,7 @@ begin
     clear;
     setbounds(5,350,220,160);
     //findtext
+    //align:= alclient;
     wordwrap:= true;
     color:= clred;
     font.size:= 12;
@@ -923,10 +993,27 @@ begin
     onclick:= @clicktestbutton;
       //ondblclick
     //free;
-    //show;
+    //show; 
+  end; 
+  
+  
+  with TAnalogMeter.create(self) do begin
+  
+    parent:= bfrm;
+    //clear;
+    caption:= 'maXtax';
+    setbounds(230,350,240,220);
+    //tickcolor:= clred;
+    tickcount:= 11;
+    value:= 20;
+    visible;
+    //ctl3d
+    //alignment
   end;
-end; 
+  
+end;
 
+  
 procedure PrintList(Value: TStringList);
 var
   I, Line, Pagenum: Integer;
@@ -1868,8 +1955,10 @@ begin   //main of animationbox
     writeln(itoa(ComputeFileCRC32(exepath+'\maxbox3.exe')));
     //writeln(itoa(CRC32(exepath+'\maxbox3.exe')));
     writeln(itoa(Crc32OfFile(exepath+'\maxbox3.exe')));
-    writeln(inttohex(109410193,2));
+    writeln(inttohex(250630300,2));
     writeln(IntToHex(CRC32OfFile(exepath+'\maxbox3.exe'),4));
+    writeln(intToHex(ComputeFileCRC32(exepath+'\maxbox3.exe'),2));
+   
     // CL.AddTypeS('TMD5Digest', 'array[0..15] of Byte;');
      //CL.AddTypeS('TSHA1Digest', 'array[0..19] of Byte;');
     writeln(sha1(exepath+'\maxbox3.exe'))
@@ -1880,7 +1969,7 @@ begin   //main of animationbox
     //Initole //CoInitialize
     //GetParamString
     writeln(inttoStr(ResourceNameToInt('BEACH')));
-      
+    changetime;  
 End.   
 
 http://www.be-precision.com/products/precision-builder/express/webhelp/en/topics/PSSyntax.htm

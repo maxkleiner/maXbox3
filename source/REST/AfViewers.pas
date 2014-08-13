@@ -450,7 +450,7 @@ type
     procedure WMGetDlgCode(var Message: TWMGetDlgCode); message WM_GETDLGCODE;
     procedure WMTimer(var Message: TWMTimer); message WM_TIMER;
   protected
-    procedure CloseLogFile;
+   { procedure CloseLogFile;
     procedure DoBeepChar;
     procedure DoDrawBuffer;
     procedure DoEof; override;
@@ -459,14 +459,14 @@ type
     procedure FlushLogBuffer;
     procedure FocusEndOfBuffer(ScrollToCursor: Boolean);
     function FocusRequest(FocusSource: TAfCLVFocusSource): Boolean; override;
-    procedure GetColorsForThisLine;
+    procedure GetColorsForThisLine; }
     function GetText(LineNumber: Integer; var ColorMode: TAfCLVColorMode;
       var CharColors: TAfCLVCharColors): String; override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure KeyPress(var Key: Char); override;
     procedure Loaded; override;
-    procedure OpenLogFile;
-    procedure WriteToLog(const S: String);
+   // procedure OpenLogFile;
+    //procedure WriteToLog(const S: String);
     function ScrollIntoViewX: Boolean; override;
     property AutoScrollBack: Boolean read FAutoScrollBack write FAutoScrollBack default True;
     property BkSpcMode: TAfTRMBkSpcMode read FBkSpcMode write FBkSpcMode default bmBackDel;
@@ -511,6 +511,18 @@ type
     procedure WriteColorStringAndData(const S: String; BColor, FColor: TAfTRMCharColor;
       UserDataItem: Pointer);
     procedure WriteString(const S: String);
+      procedure CloseLogFile;
+    procedure DoBeepChar;
+    procedure DoDrawBuffer;
+    procedure DoEof; override;
+    procedure DoLoggingChange; dynamic;
+    procedure DoScrBckBufChange;
+    procedure FlushLogBuffer;
+    procedure FocusEndOfBuffer(ScrollToCursor: Boolean);
+    function FocusRequest(FocusSource: TAfCLVFocusSource): Boolean; override;
+    procedure GetColorsForThisLine;
+     procedure OpenLogFile;
+    procedure WriteToLog(const S: String);
   end;
 
   TAfTerminal = class(TAfCustomTerminal)
@@ -531,6 +543,7 @@ type
     property UseScroll;
   published
     property Align;
+    property DisplayCols;
     property AutoScrollBack;
     property BkSpcMode;
     property BorderStyle;

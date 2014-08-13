@@ -33,6 +33,9 @@ procedure RIRegister_TCaptureDrivers(CL: TPSRuntimeClassImporter);
 procedure RIRegister_TImageGrabber(CL: TPSRuntimeClassImporter);
 procedure RIRegister_ImageGrabber(CL: TPSRuntimeClassImporter);
 
+function getVideoDrivers: string;
+
+
 procedure Register;
 
 implementation
@@ -44,12 +47,43 @@ uses
   ,VFW
   ,ImageGrabber
   ;
- 
- 
+
+
 procedure Register;
 begin
   RegisterComponents('Pascal Script', [TPSImport_ImageGrabber]);
 end;
+
+function getVideoDrivers: string;
+//var   ImageGrabber: TImageGrabber;
+  var counter: integer;
+  ImageGrabber: TImageGrabber;
+  alist: TStringlist;
+begin
+   //result:= false;
+   ImageGrabber:= TImageGrabber.Create;
+   alist:= TStringlist.create;
+  { verfügbare Video-Aufnahmetreiber in das das Kombinationsfeld }
+  { CaptureDriverComboBox eintragen }
+{  for Counter:= 0 to ImageGrabber.CaptureDrivers.Count - 1 do begin
+    CaptureDriverComboBox.Items.Add(
+      ImageGrabber.CaptureDrivers[Counter].Name);
+    if ImageGrabber.CaptureDrivers[Counter].Selected then
+      CaptureDriverComboBox.ItemIndex:= Counter;
+  end; }
+  for Counter:= 0 to ImageGrabber.CaptureDrivers.Count - 1 do begin
+    alist.add(inttoStr(counter) + '  '+ImageGrabber.CaptureDrivers[Counter].Name);
+    //if ImageGrabber.CaptureDrivers[Counter].Selected then
+      //CaptureDriverComboBox.ItemIndex:= Counter;
+  end;
+  if counter > 0 then result:= alist.text;
+  ImageGrabber.Free;
+  alist.Free;
+  //ImageGrabber.CaptureDrivers[CaptureDriverComboBox.ItemIndex].Select;
+   //if ImageGrabber.CaptureDrivers[0].Selected then
+     //ImageGrabber.CaptureDrivers[ImageGrabber.CaptureDrivers[0]].Select;
+end;
+
 
 (* === compile-time registration functions === *)
 (*----------------------------------------------------------------------------*)

@@ -1,5 +1,5 @@
 PROGRAM Functionsfor39998_Statistic_AllCards_Grid;
-//shows lotto tips, cards and all the binominal coefficients , #locs:669
+//shows lotto tips, cards and all the binominal coefficients , #locs:817
 
 Const
    CROW = 6;
@@ -21,6 +21,7 @@ Var
     sGrid1: TStringGrid;  
     mForm: Tform;
     aCard: TCard;
+    mtp: TProcess;
     //   cards0: array[0..19] of TCard;   //0..15
 
 
@@ -161,6 +162,16 @@ begin
 end;
 
 
+FUNCTION CurrentSecondOfDay: LongInt;
+VAR Hour, Minute, Second, Sec100: Word;
+BEGIN
+   //wGetTime(Hour, Minute, Second, Sec100);             { Get current time }
+   result:= (LongInt(Hour) * 3600) +
+     (Minute * 60) + Second;                          { Second from midnight }
+END;
+
+
+
 procedure putNumbers(vrange: byte);
 var ti, z, myrand: byte;
     dup: boolean;
@@ -197,6 +208,27 @@ begin
     Cells[6,5]:= '!!!';
   end;  
 end;
+
+procedure SynapseTCP;
+var stcp: TTCPBlockSocket;
+begin
+ stcp:= TTCPBlockSocket.create;
+ try
+   stcp.raiseExcept:= true;
+   stcp.CreateSocket;
+   //stcp.Connect('127.0.0.1','9010');
+   stcp.SetLinger(true, 10);
+   stcp.Bind('127.0.0.1','9010');
+   stcp.Listen;
+   stcp.Exceptcheck;
+   //stcp.Disconnect;
+   stcp.Free;
+   writeln('free TTCPBlockSocket ');
+ except
+   stcp.Free;
+ end;
+end;  
+
 
 function GetBigIntFact(aval: byte): string;
   //unit mybigint
@@ -244,9 +276,9 @@ begin
 end;
 
 
- const HWND_BROADCAST = $FFFF;
+ const HWND_BROADCAST2 = $FFFF;
  //CL.AddConstantN('wnd_Broadcast','').SetString( HWND_BROADCAST);
-   HWND_MESSAGE = -3;
+   HWND_MESSAGE2 = -3;
  
 function _FindFirst(const FileName: String; var FindRec: TFindRec): Boolean;
 var
@@ -549,7 +581,7 @@ end;
    aMB = 1024 * KB; //megabyte
    GB = 1024 * aMB; //gigabyte
 
-function FormatByteSize(const bytes: int64): string;
+function FormatByteSizeX(const bytes: int64): string;
  begin
    if bytes > GB then
      result:= FormatFloat('#.## GB',bytes / GB)
@@ -576,6 +608,118 @@ function FormatByteSize(const bytes: int64): string;
       dlist.Free;
     end;
  end;
+ 
+ const   //WM_CAP_DRIVER_CONNECT = WM_CAP_START + 10;
+         FOTOFILE = 'fotomax33344.png';
+  
+ 
+ procedure doWebCamPicNO_test;
+  var hWndC: THandle;
+  FBitmap: TBitmap;
+  DC:HDC;
+ 
+begin
+  //hWndC:= 0;
+  if hWndC <> 0 then begin
+    //SendMessage(wndback, WM_CAP_DRIVER_DISCONNECT, 0, 0); 
+    //writeln('cap stop set '+inttoStr(capCaptureStop(hWndc)));
+    //mPanel.Handle:= 0;
+    //mPanel.Free;
+    //renewPanel;
+  end;
+   FBitmap:= TBitmap.Create;
+    fbitmap.Width:= 400;
+    fbitmap.Height:= 400;
+   FBitmap.PixelFormat:= pf32Bit;
+  
+  hWndC:= capCreateCaptureWindow('My Own gone maXfilm Capture Window',
+    WS_CHILD or WS_VISIBLE , 0,0,
+    fbitmap.Width, fbitmap.Height,
+    fbitmap.canvas.Handle, 0);
+    //writeln('frame graber handle: '+inttoStr(hWndc));
+  SendMessage(hWndC, WM_CAP_DRIVER_CONNECT, 0, 0); 
+    // DC:= GetDc(fbitmap.Handle);
+   //BitBlt(FBitmap.Canvas.Handle,0,0,fbitmap.Width,fbitmap.Height,hWndC,0,0,SRCCOPY);
+    fbitmap.savetofile(Exepath+FOTOFILE);
+  //SaveCanvas2(FBitmap.canvas, Exepath+FOTOFILE); 
+    FBitmap.Free;
+  ShowmessageBig2('Foto saved as '+FOTOFILE,true);
+  OpenDoc(Exepath+FOTOFILE);
+
+ 
+  //capCaptureStop(hWndc);
+  //TForm1_StopFotoClick(self);
+end;
+
+procedure doWebCamPic2(picname: string);
+ var hWndC: THandle;
+  FBitmap: TBitmap;
+  DC:HDC;
+  i: integer;
+  mpanel: TPanel;
+begin
+  //hWndC:= 0;
+   FBitmap:= TBitmap.Create;
+    mPanel:= TPanel.Create(self);
+    mpanel.parent:= self;
+    mpanel.SetBounds(20,20,412,412)
+   FBitmap.PixelFormat:= pf32Bit;
+  for i:= 1 to 2 do begin
+  hWndC:= capCreateCaptureWindow('My maXfilm Capture Window',
+    WS_CHILD or WS_VISIBLE , 0,0,
+    mPanel.Width, mPanel.Height,
+    mPanel.Handle, 0);
+     SendMessage(hWndC, WM_CAP_DRIVER_CONNECT, 0, 0); 
+   if (hWndC <> 0) and (i= 1) then begin
+       //SendMessage(hwndc, WM_CAP_DRIVER_DISCONNECT, 0, 0);
+       mPanel.Free;
+       mPanel:= TPanel.Create(self);
+      mpanel.parent:= self;
+      mpanel.SetBounds(20,20,420,420)
+     //renewPanel;
+    //SendMessage(hWndC, WM_CAP_DRIVER_CONNECT, 0, 0); 
+    end;
+  end;
+    //fbitmap.canvas.Handle, 0);
+    //writeln('frame graber handle: '+inttoStr(hWndc));
+    DC:= GetDc(mpanel.Handle);
+    fbitmap.Width:= mpanel.width;
+    fbitmap.Height:= mpanel.height;
+    BitBlt(FBitmap.Canvas.Handle,0,0,mPanel.Width,mPanel.Height,DC,0,0,SRCCOPY);
+    SaveCanvas2(FBitmap.canvas, picname); 
+  // fbitmap.savetofile(Exepath+FOTOFILE);
+    FBitmap.Free;
+    mpanel.free;
+   ShowmessageBig2('Foto saved as '+picname,true);
+   OpenDoc(picname);
+   capCaptureStop(hWndc);
+  //TForm1_StopFotoClick(self);
+end;
+
+
+
+(*procedure SavePhoto(Sender: TObject);
+var FBitmap: TBitmap;
+    DC:HDC;
+begin
+  hWndC := 0;
+  {if hWndC <> 0 then begin
+    TForm1_StopFotoClick(self); end;}
+  DC:= GetDc(mPanel.Handle);
+  FBitmap:= TBitmap.Create;
+  FBitmap.Width:= mPanel.Width;
+  FBitmap.Height:= mPanel.Height;
+  FBitmap.PixelFormat:= pf32Bit;
+  mPlayer.Display.PaintTo(FBitmap.Canvas,0,0);
+  BitBlt(FBitmap.Canvas.Handle,0,0,mPanel.Width,mPanel.Height,DC,0,0,SRCCOPY);
+  SaveCanvas2(FBitmap.canvas, Exepath+FOTOFILE); 
+  //FBitmap.SaveToFile('F:\dateienohneback\EKON15\fotomax.bmp');
+  //FBitmap.Canvas.Brush.Style:= bssolid;
+  FBitmap.Free;
+  ShowmessageBig2('Foto saved as '+FOTOFILE,true);
+  OpenDoc(Exepath+FOTOFILE);
+end; *)
+
 
   Const fpath = 'C:\maXbook\maxbox3\mX3999\maxbox3\exercices\';
    //#define WM_SYSCOMMAND                   0x0112
@@ -591,7 +735,7 @@ BEGIN  //Main
   quadrat:= power(x,2); 
   writeln(format('%f', [quadrat]))
   writeln(format('%s',[inttobin(97 XOR 223)]))}
-
+  SynapseTCP;
   CreateDrawForm;
   PutNumbers(lotrange)
   FillGrid; 
@@ -658,17 +802,25 @@ BEGIN  //Main
       writeln('count dir files in: '+exepath+ ': '+itoa(countDirfiles(exepath)));
       if ISInternet then
         getbox('http://www.softwareschule.ch/arduino_training.pdf','pdf');  
-        //try also wGet();
+      
       writeln('Quote of the Day from qotd.nngn.net');
       writeln(S_RepeatChar(90,'*'));
       if ISInternet then
         GetQuoteofDayDirect;
     
       letDLL;  //TESRT
-  
+      //writeln(md5(exepath+'maxbox3.exe'));
+      //writeln(sha256(exepath+'maxbox3.exe','F'));
+      //7f091c97a1536772f7e859c050d0218f10f76df0c960a594ba82e887dc852717 
+      SynapseTCP;
+      doWebCamPic2(ExePath+'mypictest12.png');
 End. 
 
 Doc
+Ref:
+https://www.virustotal.com/en-gb/file/7f091c97a1536772f7e859c050d0218f10f76df0c960a594ba82e887dc852717/analysis/1407179901/
+
+
 
 { We use the Format/FmtStr functions from Delphi 7 because Delphi 2's Format
   raises an exception if the result is more than 4096 characters. }
@@ -689,14 +841,14 @@ end;
      for i:= 1 to 10 do
        for j:= 1 to 10 do begin
          //printf('%d',[j])
-           ein:= j*i;
+           ein:= j*i;                 3333333
            if (ein < 10) and (j<7) then
              write(inttostr(ein)+ '    ')
              else 
              write(inttostr(ein)+ '  ')
           if j=10 then writeln('')
         end}
-       // big fact 70 = 1.1978571669969891796072783721689e+100
+       // big fact 70 = 1.19785716699698913721689e+100
 
         
   00000000000000000000000100101100 XOR
@@ -775,7 +927,7 @@ end;
   
 At least one really big, it's 2^1000
 
-107150860718626948490600018105614048117055744375038837035105112493612249319837881569585812759467291755314682518714528569231404457698574803934567774824605062371141877954182154749897398767555407706291
+10715086071862694849060001810561404811705574437503883703510511249361224931983788156952759467291755314682518714528569231404457698574803934567774824605062371141877954182154749897398767555407706291
 
 
 the class of the unit from swiss delphi:
@@ -1041,3 +1193,93 @@ Do you have a Delphi function that you think should be optimized for speed, size
 What programming challenges you'd like to see? Propose your Delphi programming challenge!
 
 Let others help you: ask Delphi developers to refactor your code or ask for something you do not know how to implement. 
+
+
+
+SHA256: 	7f091c97a1536772f7e859c050d0218f10f76df0c960a594ba82e887dc852717
+File name: 	maXbox3.exe
+Detection ratio: 	2 / 54
+Analysis date: 	2014-08-04 19:18:21 UTC ( 1 minute ago ) 
+
+
+MD5 733be317cd975b0b5a0ed2cb9e15884e
+SHA1 693c7f691584e518e87cf5bffc315a5442777781
+SHA256 7f091c97a1536772f7e859c050d0218f10f76df0c960a594ba82e887dc852717
+ssdeep
+393216:TVh8R/Ur7hV2Rb1JSNxqm69lKOH62NmWQiF9e6:H6/XiNxP6ZHVmWF
+
+imphash 3a8947e567b9ebb7232b5b2bd7469388
+File size 21.5 MB ( 22550016 bytes )
+File type Win32 EXE
+Magic literal
+PE32 executable for MS Windows (GUI) Intel 80386 32-bit
+
+TrID 	Windows ActiveX control (36.4%)
+Inno Setup installer (34.3%)
+InstallShield setup (13.4%)
+Win32 EXE PECompact compressed (generic) (13.0%)
+Win32 Executable (generic) (1.4%)
+Tags
+peexe
+
+VirusTotal metadata
+First submission 2014-08-04 19:18:21 UTC ( 10 minutes ago )
+Last submission 2014-08-04 19:18:21 UTC ( 10 minutes ago )
+File names 	Sunprise mX4
+maXbox3.exe
+maxbox3_9.exe
+
+Commtouch 	W32/Hupigon.C.gen!Eldorado 	20140804
+F-Prot 	W32/Hupigon.C.gen!Eldorado 	20140804
+AVG 		20140804
+AVware 		20140804
+Ad-Aware 		20140804
+AegisLab 		20140804
+Agnitum 		20140804
+AhnLab-V3 		20140804
+AntiVir 		20140804
+Antiy-AVL 		20140804
+Avast 		20140804
+Baidu-International 		20140804
+BitDefender 		20140804
+Bkav 		20140804
+ByteHero 		20140804
+CAT-QuickHeal 		20140804
+CMC 		20140804
+ClamAV 		20140804
+Comodo 		20140804
+DrWeb 		20140804
+ESET-NOD32 		20140804
+Emsisoft 		20140804
+F-Secure 		20140804
+Fortinet 		20140804
+GData 		20140804
+Ikarus 		20140804
+Jiangmin 		20140804
+K7AntiVirus 		20140804
+K7GW 		20140804
+Kaspersky 		20140804
+Kingsoft 		20140804
+Malwarebytes 		20140804
+McAfee 		20140804
+McAfee-GW-Edition 		20140804
+MicroWorld-eScan 		20140804
+Microsoft 		20140804
+NANO-Antivirus 		20140804
+Norman 		20140804
+Panda 		20140804
+Qihoo-360 		20140804
+Rising 		20140804
+SUPERAntiSpyware 		20140804
+Sophos 		20140804
+Symantec 		20140804
+Tencent 		20140804
+TheHacker 		20140803
+TotalDefense 		20140804
+TrendMicro 		20140804
+TrendMicro-HouseCall 		20140804
+VBA32 		20140804
+VIPRE 		20140804
+ViRobot 		20140804
+Zoner 		20140729
+nProtect 		20140804 

@@ -115,6 +115,7 @@ begin
   //with RegClassS(CL,'TAfCustomSerialPort', 'TAfCustomComPort') do
   with CL.AddClassN(CL.FindClass('TAfCustomSerialPort'),'TAfCustomComPort') do begin
     RegisterMethod('Function ExecuteConfigDialog : Boolean');
+    RegisterMethod('Function ExecuteCOMDialog : Boolean');
     RegisterMethod('Procedure SetDefaultParameters');
     RegisterMethod('Function SettingsStr : String');
   end;
@@ -128,8 +129,11 @@ begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
      RegisterMethod('Procedure Free');
       RegisterMethod('Function ExecuteConfigDialog : Boolean');
+      RegisterMethod('Function ExecuteCOMDialog : Boolean');
+
      RegisterMethod('Procedure Open');
      RegisterMethod('Procedure Close');
+     RegisterMethod('Procedure CloseCOM');  //alias
 
     RegisterMethod('Function InBufUsed : Integer');
     RegisterMethod('Function OutBufFree : Integer');
@@ -137,10 +141,16 @@ begin
     RegisterMethod('Procedure PurgeRX');
     RegisterMethod('Procedure PurgeTX');
     RegisterMethod('Function ReadChar : Char');
+    RegisterMethod('Function GetChar : Char');
+    RegisterMethod('Procedure WriteData(const Data; Size: Integer)');
     RegisterMethod('Procedure ReadData( var Buf, Size : Integer)');
+    RegisterMethod('Procedure ReadDataString( var Buf: string; Size : Integer)');
+    RegisterMethod('Procedure WriteDataString(const data: string; Size : Integer)');
     RegisterMethod('Function ReadString : String');
     RegisterMethod('Function SynchronizeEvent( EventKind : TAfComPortEventKind; Data : TAfComPortEventData; Timeout : Integer) : Boolean');
     RegisterMethod('Procedure WriteChar( C : Char)');
+    RegisterMethod('Procedure PutChar( C : Char)');
+
     RegisterMethod('Procedure WriteString( const S : String)');
     RegisterPublishedProperties;
     RegisterProperty('Active', 'Boolean', iptrw);
@@ -167,8 +177,7 @@ begin
   CL.AddTypeS('TAfDatabits', '( db4, db5, db6, db7, db8 )');
   CL.AddTypeS('TAfStopbits', '( sbOne, sbOneAndHalf, sbTwo )');
   CL.AddTypeS('TAfFlowControl', '( fwNone, fwXOnXOff, fwRtsCts, fwDtrDsr )');
-  CL.AddTypeS('TAfComOption', '( coParityCheck, coDsrSensitivity, coIgnoreXOff,'
-   +' coErrorChar, coStripNull )');
+  CL.AddTypeS('TAfComOption', '( coParityCheck, coDsrSensitivity, coIgnoreXOff, coErrorChar, coStripNull )');
   CL.AddTypeS('TAfComOptions', 'set of TAfComOption');
   CL.AddClassN(CL.FindClass('TOBJECT'),'EAfComPortError');
   CL.AddTypeS('TAfComPortEventKind', 'TAfCoreEvent');
@@ -179,7 +188,6 @@ begin
   CL.AddTypeS('TAfCPTErrorEvent', 'Procedure (Sender : TObject; Errors: DWORD)');
 
   // TAfCPTErrorEvent = procedure(Sender: TObject; Errors: DWORD) of object;
-
   // TAfCPTDataReceivedEvent = procedure(Sender: TObject; Count: Integer) of object;
 
   //CL.AddTypeS('TAfCPTErrorEvent', 'Procedure ( Sender : TObject; Errors : DWORD');
@@ -264,9 +272,7 @@ procedure RIRegister_TAfComPort(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TAfComPort) do begin
     RegisterPropertyHelper(@TAfComPortCore_R,@TAfComPortCore_W,'Core');
-
      //RegisterProperty('Core', 'TAfComPortCore', iptrw);
-
   end;
 end;
 
@@ -275,6 +281,7 @@ procedure RIRegister_TAfCustomComPort(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TAfCustomComPort) do begin
     RegisterMethod(@TAfCustomComPort.ExecuteConfigDialog, 'ExecuteConfigDialog');
+    RegisterMethod(@TAfCustomComPort.ExecuteConfigDialog, 'ExecuteCOMDialog');
     RegisterMethod(@TAfCustomComPort.SetDefaultParameters, 'SetDefaultParameters');
     RegisterMethod(@TAfCustomComPort.SettingsStr, 'SettingsStr');
   end;
@@ -288,7 +295,7 @@ begin
      RegisterMethod(@TAfCustomSerialPort.Destroy, 'Free');
      RegisterMethod(@TAfCustomSerialPort.Open, 'Open');
     RegisterMethod(@TAfCustomSerialPort.Close, 'Close');
-
+    RegisterMethod(@TAfCustomSerialPort.Close, 'CloseCOM');
       //RegisterVirtualAbstractMethod(@TAfCustomSerialPort, @!.ExecuteConfigDialog, 'ExecuteConfigDialog');
     RegisterMethod(@TAfCustomSerialPort.InBufUsed, 'InBufUsed');
     RegisterMethod(@TAfCustomSerialPort.OutBufFree, 'OutBufFree');
@@ -296,12 +303,16 @@ begin
     RegisterMethod(@TAfCustomSerialPort.PurgeRX, 'PurgeRX');
     RegisterMethod(@TAfCustomSerialPort.PurgeTX, 'PurgeTX');
     RegisterMethod(@TAfCustomSerialPort.ReadChar, 'ReadChar');
+    RegisterMethod(@TAfCustomSerialPort.ReadChar, 'GetChar');
     RegisterMethod(@TAfCustomSerialPort.ReadData, 'ReadData');
     RegisterMethod(@TAfCustomSerialPort.ReadString, 'ReadString');
     RegisterMethod(@TAfCustomSerialPort.SynchronizeEvent, 'SynchronizeEvent');
     RegisterMethod(@TAfCustomSerialPort.WriteChar, 'WriteChar');
+    RegisterMethod(@TAfCustomSerialPort.WriteChar, 'PutChar');
     RegisterMethod(@TAfCustomSerialPort.WriteString, 'WriteString');
-    RegisterPropertyHelper(@TAfCustomSerialPortActive_R,@TAfCustomSerialPortActive_W,'Active');
+    RegisterMethod(@TAfCustomSerialPort.ReadData, 'ReadDataString');
+    RegisterMethod(@TAfCustomSerialPort.WriteData, 'WriteDataString');
+      RegisterPropertyHelper(@TAfCustomSerialPortActive_R,@TAfCustomSerialPortActive_W,'Active');
     RegisterPropertyHelper(@TAfCustomSerialPortDCB_R,@TAfCustomSerialPortDCB_W,'DCB');
     RegisterPropertyHelper(@TAfCustomSerialPortHandle_R,nil,'Handle');
     RegisterPropertyHelper(@TAfCustomSerialPortCTSHold_R,nil,'CTSHold');

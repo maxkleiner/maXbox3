@@ -86,6 +86,9 @@ procedure SIRegister_AdSelCom(CL: TPSPascalCompiler);
 begin
   SIRegister_TComSelectForm(CL);
  CL.AddDelphiFunction('Function IsPortAvailable( ComNum : Cardinal) : Boolean');
+ CL.AddDelphiFunction('Function IsCOMPortReal( ComNum : Cardinal) : Boolean');
+ CL.AddDelphiFunction('Function IsCOM( ComNum : Cardinal) : Boolean');
+
  //CL.AddConstantN('UseDispatcherForAvail','Boolean').BoolToStr( True);
  //CL.AddConstantN('ShowPortsInUse','Boolean').BoolToStr( True);
 end;
@@ -143,13 +146,14 @@ Begin T := Self.Label1; end;
 procedure RIRegister_AdSelCom_Routines(S: TPSExec);
 begin
  S.RegisterDelphiFunction(@IsPortAvailable, 'IsPortAvailable', cdRegister);
-end;
+  S.RegisterDelphiFunction(@IsPortAvailable, 'IsCOMPortReal', cdRegister);
+  S.RegisterDelphiFunction(@IsPortAvailable, 'IsCOM', cdRegister);
+ end;
 
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TComSelectForm(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TComSelectForm) do
-  begin
+  with CL.Add(TComSelectForm) do begin
     RegisterPropertyHelper(@TComSelectFormLabel1_R,@TComSelectFormLabel1_W,'Label1');
     RegisterPropertyHelper(@TComSelectFormLabel2_R,@TComSelectFormLabel2_W,'Label2');
     RegisterPropertyHelper(@TComSelectFormOkBtn_R,@TComSelectFormOkBtn_W,'OkBtn');

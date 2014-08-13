@@ -279,6 +279,38 @@ begin
  CL.AddConstantN('SM_CXFOCUSBORDER','LongInt').SetInt( 83);
  CL.AddConstantN('SM_CYFOCUSBORDER','LongInt').SetInt( 84);
 
+ CL.AddConstantN('CREATE_SUSPENDED','LongWord').SetUInt( $00000004);
+ CL.AddConstantN('DETACHED_PROCESS','LongWord').SetUInt( $00000008);
+ CL.AddConstantN('CREATE_NEW_CONSOLE','LongWord').SetUInt( $00000010);
+ CL.AddConstantN('NORMAL_PRIORITY_CLASS','LongWord').SetUInt( $00000020);
+ CL.AddConstantN('IDLE_PRIORITY_CLASS','LongWord').SetUInt( $00000040);
+ CL.AddConstantN('HIGH_PRIORITY_CLASS','LongWord').SetUInt( $00000080);
+ CL.AddConstantN('REALTIME_PRIORITY_CLASS','LongWord').SetUInt( $00000100);
+  CL.AddDelphiFunction('Function LocalDiscard( h : THandle) : THandle');
+ CL.AddDelphiFunction('Function GlobalDiscard( h : THandle) : THandle');
+ CL.AddTypeS('tagEVENTMSG', 'record message : UINT; paramL : UINT; paramH : UI'
+   +'NT; time : DWORD; hwnd : HWND; end');
+  CL.AddTypeS('TEventMsg', 'tagEVENTMSG');
+  CL.AddTypeS('EVENTMSG', 'tagEVENTMSG');
+  CL.AddDelphiFunction('Function LoadKeyboardLayout( pwszKLID : PChar; Flags : UINT) : HKL');
+ CL.AddDelphiFunction('Function ActivateKeyboardLayout( hkl : HKL; Flags : UINT) : HKL');
+ CL.AddDelphiFunction('Function UnloadKeyboardLayout( hkl : HKL) : BOOL');
+ CL.AddDelphiFunction('Function GetKeyboardLayoutName( pwszKLID : PChar) : BOOL');
+ CL.AddDelphiFunction('Function GetKeyboardLayoutList( nBuff : Integer; var List: tstringlist) : UINT');
+ CL.AddDelphiFunction('Function GetKeyboardLayout( dwLayout : DWORD) : HKL');
+ CL.AddTypeS('tagMOUSEMOVEPOINT', 'record x : Integer; y : Integer; time : DWORD; dwExtraInfo : DWORD; end');
+  CL.AddTypeS('TMouseMovePoint', 'tagMOUSEMOVEPOINT');
+  CL.AddTypeS('MOUSEMOVEPOINT', 'tagMOUSEMOVEPOINT');
+ CL.AddConstantN('GMMP_USE_DISPLAY_POINTS','LongInt').SetInt( 1);
+ CL.AddConstantN('GMMP_USE_DRIVER_POINTS','LongInt').SetInt( 2);
+ CL.AddDelphiFunction('Function GetMouseMovePoints( cbSize : UINT; var lppt, lpptBuf : TMouseMovePoint; nBufPoints : Integer; resolution : DWORD) : Integer');
+  CL.AddDelphiFunction('Function CreateWindowStation( lpwinsta : PChar; dwReserved, dwDesiredAccess : DWORD; lpsa : PSecurityAttributes) : HWINSTA');
+CL.AddDelphiFunction('Function OpenWindowStation( lpszWinSta : PChar; fInherit : BOOL; dwDesiredAccess : DWORD) : HWINSTA');
+ CL.AddDelphiFunction('Function CloseWindowStation( hWinSta : HWINSTA) : BOOL');
+ CL.AddDelphiFunction('Function SetProcessWindowStation( hWinSta : HWINSTA) : BOOL');
+ CL.AddDelphiFunction('Function GetProcessWindowStation : HWINSTA');
+
+
   CL.AddTypeS('TFNTimerProc', 'TObject');
  CL.AddConstantN('GW_HWNDFIRST','LongInt').SetInt( 0);
  CL.AddConstantN('GW_HWNDLAST','LongInt').SetInt( 1);
@@ -297,6 +329,224 @@ begin
  CL.AddConstantN('EMR_SETVIEWPORTORGEX','LongInt').SetInt( 12);
  CL.AddConstantN('EMR_SETBRUSHORGEX','LongInt').SetInt( 13);
 
+ CL.AddConstantN('FILE_TYPE_UNKNOWN','LongInt').SetInt( 0);
+ CL.AddConstantN('FILE_TYPE_DISK','LongInt').SetInt( 1);
+ CL.AddConstantN('FILE_TYPE_CHAR','LongInt').SetInt( 2);
+ CL.AddConstantN('FILE_TYPE_PIPE','LongInt').SetInt( 3);
+ CL.AddConstantN('FILE_TYPE_REMOTE','LongWord').SetUInt( $8000);
+ CL.AddConstantN('STD_INPUT_HANDLE','LongInt').SetInt( DWORD ( - 10 ));
+ CL.AddConstantN('STD_OUTPUT_HANDLE','LongInt').SetInt( DWORD ( - 11 ));
+ CL.AddConstantN('STD_ERROR_HANDLE','LongInt').SetInt( DWORD ( - 12 ));
+CL.AddConstantN('NOPARITY','LongInt').SetInt( 0);
+ CL.AddConstantN('ODDPARITY','LongInt').SetInt( 1);
+ CL.AddConstantN('EVENPARITY','LongInt').SetInt( 2);
+ CL.AddConstantN('MARKPARITY','LongInt').SetInt( 3);
+ CL.AddConstantN('SPACEPARITY','LongInt').SetInt( 4);
+ CL.AddConstantN('ONESTOPBIT','LongInt').SetInt( 0);
+ CL.AddConstantN('ONE5STOPBITS','LongInt').SetInt( 1);
+ CL.AddConstantN('TWOSTOPBITS','LongInt').SetInt( 2);
+ CL.AddConstantN('IGNORE','LongInt').SetInt( 0);
+ //CL.AddConstantN('INFINITE','LongWord').SetUInt( DWORD ( $FFFFFFFF ));
+
+ CL.AddConstantN('HWND_BROADCAST','LongWord').SetUInt( $FFFF);
+ CL.AddConstantN('wnd_Broadcast','longword').SetInt(HWND_BROADCAST);
+ CL.AddConstantN('HWND_MESSAGE','LongInt').SetInt( HWND ( - 3 ));
+ CL.AddConstantN('DEVICE_NOTIFY_WINDOW_HANDLE','LongInt').SetInt( 0);
+
+
+  CL.AddTypeS('_COORD', 'record X : SHORT; Y : SHORT; end');
+  CL.AddTypeS('TCoord', '_COORD');
+  CL.AddTypeS('COORD', '_COORD');
+  //CL.AddTypeS('PSmallRect', '^TSmallRect // will not work');
+  CL.AddTypeS('_SMALL_RECT', 'record Left : SHORT; Top : SHORT; Right : SHORT; Bottom : SHORT; end');
+  CL.AddTypeS('TSmallRect', '_SMALL_RECT');
+  CL.AddTypeS('SMALL_RECT', '_SMALL_RECT');
+  //CL.AddTypeS('PKeyEventRecord', '^TKeyEventRecord // will not work');
+  CL.AddTypeS('_KEY_EVENT_RECORD', 'record bKeyDown : BOOL; wRepeatCount : Word'
+   +'; wVirtualKeyCode : Word; wVirtualScanCode : Word; end');
+  CL.AddTypeS('TKeyEventRecord', '_KEY_EVENT_RECORD');
+  CL.AddTypeS('KEY_EVENT_RECORD', '_KEY_EVENT_RECORD');
+ CL.AddConstantN('RIGHT_ALT_PRESSED','LongInt').SetInt( 1);
+ CL.AddConstantN('LEFT_ALT_PRESSED','LongInt').SetInt( 2);
+ CL.AddConstantN('RIGHT_CTRL_PRESSED','LongInt').SetInt( 4);
+ CL.AddConstantN('LEFT_CTRL_PRESSED','LongInt').SetInt( 8);
+ CL.AddConstantN('SHIFT_PRESSED','LongWord').SetUInt( $10);
+ CL.AddConstantN('NUMLOCK_ON','LongWord').SetUInt( $20);
+ CL.AddConstantN('SCROLLLOCK_ON','LongWord').SetUInt( $40);
+ CL.AddConstantN('CAPSLOCK_ON','LongWord').SetUInt( $80);
+ CL.AddConstantN('ENHANCED_KEY','LongWord').SetUInt( $100);
+
+  CL.AddTypeS('_MOUSE_EVENT_RECORD', 'record dwMousePosition : TCoord; dwButton'
+   +'State : DWORD; dwControlKeyState : DWORD; dwEventFlags : DWORD; end');
+  CL.AddTypeS('TMouseEventRecord', '_MOUSE_EVENT_RECORD');
+  CL.AddTypeS('MOUSE_EVENT_RECORD', '_MOUSE_EVENT_RECORD');
+ CL.AddConstantN('FROM_LEFT_1ST_BUTTON_PRESSED','LongInt').SetInt( 1);
+ CL.AddConstantN('RIGHTMOST_BUTTON_PRESSED','LongInt').SetInt( 2);
+ CL.AddConstantN('FROM_LEFT_2ND_BUTTON_PRESSED','LongInt').SetInt( 4);
+ CL.AddConstantN('FROM_LEFT_3RD_BUTTON_PRESSED','LongInt').SetInt( 8);
+ CL.AddConstantN('FROM_LEFT_4TH_BUTTON_PRESSED','LongWord').SetUInt( $10);
+ CL.AddConstantN('MOUSE_MOVED','LongInt').SetInt( 1);
+ CL.AddConstantN('DOUBLE_CLICK','LongInt').SetInt( 2);
+   CL.AddTypeS('_INPUT_RECORD', 'record EventType : Word; Reserved : Word; end');
+  CL.AddTypeS('TInputRecord', '_INPUT_RECORD');
+  CL.AddTypeS('INPUT_RECORD', '_INPUT_RECORD');
+  CL.AddConstantN('KEY_EVENT','LongInt').SetInt( 1);
+ CL.AddConstantN('_MOUSE_EVENT','LongInt').SetInt( 2);
+ CL.AddConstantN('WINDOW_BUFFER_SIZE_EVENT','LongInt').SetInt( 4);
+ CL.AddConstantN('MENU_EVENT','LongInt').SetInt( 8);
+ CL.AddConstantN('FOCUS_EVENT','LongWord').SetUInt( $10);
+  CL.AddTypeS('_WINDOW_BUFFER_SIZE_RECORD', 'record dwSize : TCoord; end');
+  CL.AddTypeS('TWindowBufferSizeRecord', '_WINDOW_BUFFER_SIZE_RECORD');
+  CL.AddTypeS('WINDOW_BUFFER_SIZE_RECORD', '_WINDOW_BUFFER_SIZE_RECORD');
+  //CL.AddTypeS('PMenuEventRecord', '^TMenuEventRecord // will not work');
+  CL.AddTypeS('_MENU_EVENT_RECORD', 'record dwCommandId : UINT; end');
+  CL.AddTypeS('TMenuEventRecord', '_MENU_EVENT_RECORD');
+  CL.AddTypeS('MENU_EVENT_RECORD', '_MENU_EVENT_RECORD');
+  //CL.AddTypeS('PFocusEventRecord', '^TFocusEventRecord // will not work');
+  CL.AddTypeS('_FOCUS_EVENT_RECORD', 'record bSetFocus : BOOL; end');
+  CL.AddTypeS('TFocusEventRecord', '_FOCUS_EVENT_RECORD');
+  CL.AddTypeS('FOCUS_EVENT_RECORD', '_FOCUS_EVENT_RECORD');
+
+  CL.AddTypeS('_CONSOLE_SCREEN_BUFFER_INFO', 'record dwSize : TCoord; dwCursorP'
+   +'osition : TCoord; wAttributes : Word; srWindow : TSmallRect; dwMaximumWindowSize : TCoord; end');
+  CL.AddTypeS('TConsoleScreenBufferInfo', '_CONSOLE_SCREEN_BUFFER_INFO');
+  CL.AddTypeS('CONSOLE_SCREEN_BUFFER_INFO', '_CONSOLE_SCREEN_BUFFER_INFO');
+//  CL.AddTypeS('PConsoleCursorInfo', '^TConsoleCursorInfo // will not work');
+  CL.AddTypeS('_CONSOLE_CURSOR_INFO', 'record dwSize : DWORD; bVisible : BOOL; end');
+  CL.AddTypeS('TConsoleCursorInfo', '_CONSOLE_CURSOR_INFO');
+  CL.AddTypeS('CONSOLE_CURSOR_INFO', '_CONSOLE_CURSOR_INFO');
+//  CL.AddTypeS('TFNHandlerRoutine', 'TFarProc');
+ CL.AddConstantN('CTRL_C_EVENT','LongInt').SetInt( 0);
+ CL.AddConstantN('CTRL_BREAK_EVENT','LongInt').SetInt( 1);
+ CL.AddConstantN('CTRL_CLOSE_EVENT','LongInt').SetInt( 2);
+ CL.AddConstantN('CTRL_LOGOFF_EVENT','LongInt').SetInt( 5);
+ CL.AddConstantN('CTRL_SHUTDOWN_EVENT','LongInt').SetInt( 6);
+ CL.AddConstantN('ENABLE_PROCESSED_INPUT','LongInt').SetInt( 1);
+ CL.AddConstantN('ENABLE_LINE_INPUT','LongInt').SetInt( 2);
+ CL.AddConstantN('ENABLE_ECHO_INPUT','LongInt').SetInt( 4);
+ CL.AddConstantN('ENABLE_WINDOW_INPUT','LongInt').SetInt( 8);
+ CL.AddConstantN('ENABLE_MOUSE_INPUT','LongWord').SetUInt( $10);
+ CL.AddConstantN('ENABLE_PROCESSED_OUTPUT','LongInt').SetInt( 1);
+ CL.AddConstantN('ENABLE_WRAP_AT_EOL_OUTPUT','LongInt').SetInt( 2);
+
+  CL.AddTypeS('tagCOMBOBOXINFO', 'record cbSize : DWORD; rcItem : TRect; rcButt'
+   +'on : TRect; stateButton : DWORD; hwndCombo : HWND; hwndItem : HWND; hwndList : HWND; end');
+  CL.AddTypeS('TComboBoxInfo', 'tagCOMBOBOXINFO');
+ CL.AddDelphiFunction('Function GetComboBoxInfo( hwndCombo : HWND; var pcbi : TComboBoxInfo) : BOOL');
+ CL.AddConstantN('GA_MIC','LongInt').SetInt( 1);
+ CL.AddConstantN('GA_PARENT','LongInt').SetInt( 1);
+ CL.AddConstantN('GA_ROOT','LongInt').SetInt( 2);
+ CL.AddConstantN('GA_ROOTOWNER','LongInt').SetInt( 3);
+ CL.AddConstantN('GA_MAC','LongInt').SetInt( 4);
+ CL.AddDelphiFunction('Function GetAncestor( hwnd : HWND; gaFlags : UINT) : HWND');
+ CL.AddDelphiFunction('Function RealChildWindowFromPoint( hwndParent : HWND; ptParentClientCoords : TPoint) : HWND');
+ CL.AddDelphiFunction('Function RealGetWindowClass( hwnd : HWND; pszType : PChar; cchType : UINT) : UINT');
+
+ CL.AddDelphiFunction('Procedure SetLastErrorEx( dwErrCode, dwType : DWORD)');
+ CL.AddDelphiFunction('Procedure NotifyWinEvent( event : DWORD; hwnd : HWND; idObject, idChild : Cardinal)');
+ CL.AddConstantN('CHILDID_SELF','LongInt').SetInt( 0);
+ CL.AddConstantN('INDEXID_OBJECT','LongInt').SetInt( 0);
+ CL.AddConstantN('INDEXID_CONTAINER','LongInt').SetInt( 0);
+ CL.AddConstantN('OBJID_WINDOW','LongWord').SetUInt( $00000000);
+ CL.AddConstantN('OBJID_SYSMENU','LongWord').SetUInt( $FFFFFFFF);
+ CL.AddConstantN('OBJID_TITLEBAR','LongWord').SetUInt( $FFFFFFFE);
+ CL.AddConstantN('OBJID_MENU','LongWord').SetUInt( $FFFFFFFD);
+ CL.AddConstantN('OBJID_CLIENT','LongWord').SetUInt( $FFFFFFFC);
+ CL.AddConstantN('OBJID_VSCROLL','LongWord').SetUInt( $FFFFFFFB);
+ CL.AddConstantN('OBJID_HSCROLL','LongWord').SetUInt( $FFFFFFFA);
+ CL.AddConstantN('OBJID_SIZEGRIP','LongWord').SetUInt( $FFFFFFF9);
+ CL.AddConstantN('OBJID_CARET','LongWord').SetUInt( $FFFFFFF8);
+ CL.AddConstantN('OBJID_CURSOR','LongWord').SetUInt( $FFFFFFF7);
+ CL.AddConstantN('OBJID_ALERT','LongWord').SetUInt( $FFFFFFF6);
+ CL.AddConstantN('OBJID_SOUND','LongWord').SetUInt( $FFFFFFF5);
+ CL.AddConstantN('EVENT_MIN','LongWord').SetUInt( $00000001);
+ CL.AddConstantN('EVENT_MAX','LongWord').SetUInt( $7FFFFFFF);
+ CL.AddConstantN('EVENT_SYSTEM_SOUND','LongWord').SetUInt( $0001);
+ CL.AddConstantN('EVENT_SYSTEM_ALERT','LongWord').SetUInt( $0002);
+ CL.AddConstantN('EVENT_SYSTEM_FOREGROUND','LongWord').SetUInt( $0003);
+ CL.AddConstantN('EVENT_SYSTEM_MENUSTART','LongWord').SetUInt( $0004);
+ CL.AddConstantN('EVENT_SYSTEM_MENUEND','LongWord').SetUInt( $0005);
+ CL.AddConstantN('EVENT_SYSTEM_MENUPOPUPSTART','LongWord').SetUInt( $0006);
+ CL.AddConstantN('EVENT_SYSTEM_MENUPOPUPEND','LongWord').SetUInt( $0007);
+ CL.AddConstantN('EVENT_SYSTEM_CAPTURESTART','LongWord').SetUInt( $0008);
+ CL.AddConstantN('EVENT_SYSTEM_CAPTUREEND','LongWord').SetUInt( $0009);
+ CL.AddConstantN('EVENT_SYSTEM_MOVESIZESTART','LongWord').SetUInt( $000A);
+ CL.AddConstantN('EVENT_SYSTEM_MOVESIZEEND','LongWord').SetUInt( $000B);
+ CL.AddConstantN('EVENT_SYSTEM_CONTEXTHELPSTART','LongWord').SetUInt( $000C);
+ CL.AddConstantN('EVENT_SYSTEM_CONTEXTHELPEND','LongWord').SetUInt( $000D);
+ CL.AddConstantN('EVENT_SYSTEM_DRAGDROPSTART','LongWord').SetUInt( $000E);
+ CL.AddConstantN('EVENT_SYSTEM_DRAGDROPEND','LongWord').SetUInt( $000F);
+ CL.AddConstantN('EVENT_SYSTEM_DIALOGSTART','LongWord').SetUInt( $0010);
+ CL.AddConstantN('EVENT_SYSTEM_DIALOGEND','LongWord').SetUInt( $0011);
+ CL.AddConstantN('EVENT_SYSTEM_SCROLLINGSTART','LongWord').SetUInt( $0012);
+ CL.AddConstantN('EVENT_SYSTEM_SCROLLINGEND','LongWord').SetUInt( $0013);
+ CL.AddConstantN('EVENT_SYSTEM_SWITCHSTART','LongWord').SetUInt( $0014);
+ CL.AddConstantN('EVENT_SYSTEM_SWITCHEND','LongWord').SetUInt( $0015);
+ CL.AddConstantN('EVENT_SYSTEM_MINIMIZESTART','LongWord').SetUInt( $0016);
+ CL.AddConstantN('EVENT_SYSTEM_MINIMIZEEND','LongWord').SetUInt( $0017);
+ CL.AddConstantN('EVENT_OBJECT_CREATE','LongWord').SetUInt( $8000);
+ CL.AddConstantN('EVENT_OBJECT_DESTROY','LongWord').SetUInt( $8001);
+ CL.AddConstantN('EVENT_OBJECT_SHOW','LongWord').SetUInt( $8002);
+ CL.AddConstantN('EVENT_OBJECT_HIDE','LongWord').SetUInt( $8003);
+ CL.AddConstantN('EVENT_OBJECT_REORDER','LongWord').SetUInt( $8004);
+ CL.AddConstantN('EVENT_OBJECT_FOCUS','LongWord').SetUInt( $8005);
+ CL.AddConstantN('EVENT_OBJECT_SELECTION','LongWord').SetUInt( $8006);
+ CL.AddConstantN('EVENT_OBJECT_SELECTIONADD','LongWord').SetUInt( $8007);
+ CL.AddConstantN('EVENT_OBJECT_SELECTIONREMOVE','LongWord').SetUInt( $8008);
+ CL.AddConstantN('EVENT_OBJECT_SELECTIONWITHIN','LongWord').SetUInt( $8009);
+ CL.AddConstantN('EVENT_OBJECT_STATECHANGE','LongWord').SetUInt( $800A);
+ CL.AddConstantN('EVENT_OBJECT_LOCATIONCHANGE','LongWord').SetUInt( $800B);
+ CL.AddConstantN('EVENT_OBJECT_NAMECHANGE','LongWord').SetUInt( $800C);
+ CL.AddConstantN('EVENT_OBJECT_DESCRIPTIONCHANGE','LongWord').SetUInt( $800D);
+ CL.AddConstantN('EVENT_OBJECT_VALUECHANGE','LongWord').SetUInt( $800E);
+ CL.AddConstantN('EVENT_OBJECT_PARENTCHANGE','LongWord').SetUInt( $800F);
+ CL.AddConstantN('EVENT_OBJECT_HELPCHANGE','LongWord').SetUInt( $8010);
+ CL.AddConstantN('EVENT_OBJECT_DEFACTIONCHANGE','LongWord').SetUInt( $8011);
+ CL.AddConstantN('EVENT_OBJECT_ACCELERATORCHANGE','LongWord').SetUInt( $8012);
+ CL.AddConstantN('SOUND_SYSTEM_STARTUP','LongInt').SetInt( 1);
+ CL.AddConstantN('SOUND_SYSTEM_SHUTDOWN','LongInt').SetInt( 2);
+ CL.AddConstantN('SOUND_SYSTEM_BEEP','LongInt').SetInt( 3);
+ CL.AddConstantN('SOUND_SYSTEM_ERROR','LongInt').SetInt( 4);
+ CL.AddConstantN('SOUND_SYSTEM_QUESTION','LongInt').SetInt( 5);
+ CL.AddConstantN('SOUND_SYSTEM_WARNING','LongInt').SetInt( 6);
+ CL.AddConstantN('SOUND_SYSTEM_INFORMATION','LongInt').SetInt( 7);
+ CL.AddConstantN('SOUND_SYSTEM_MAXIMIZE','LongInt').SetInt( 8);
+ CL.AddConstantN('SOUND_SYSTEM_MINIMIZE','LongInt').SetInt( 9);
+ CL.AddConstantN('SOUND_SYSTEM_RESTOREUP','LongInt').SetInt( 10);
+ CL.AddConstantN('SOUND_SYSTEM_RESTOREDOWN','LongInt').SetInt( 11);
+ CL.AddConstantN('SOUND_SYSTEM_APPSTART','LongInt').SetInt( 12);
+ CL.AddConstantN('SOUND_SYSTEM_FAULT','LongInt').SetInt( 13);
+ CL.AddConstantN('SOUND_SYSTEM_APPEND','LongInt').SetInt( 14);
+ CL.AddConstantN('SOUND_SYSTEM_MENUCOMMAND','LongInt').SetInt( 15);
+ CL.AddConstantN('SOUND_SYSTEM_MENUPOPUP','LongInt').SetInt( 16);
+ CL.AddConstantN('CSOUND_SYSTEM','LongInt').SetInt( 16);
+ CL.AddConstantN('ALERT_SYSTEM_INFORMATIONAL','LongInt').SetInt( 1);
+ CL.AddConstantN('ALERT_SYSTEM_WARNING','LongInt').SetInt( 2);
+ CL.AddConstantN('ALERT_SYSTEM_ERROR','LongInt').SetInt( 3);
+ CL.AddConstantN('ALERT_SYSTEM_QUERY','LongInt').SetInt( 4);
+ CL.AddConstantN('ALERT_SYSTEM_CRITICAL','LongInt').SetInt( 5);
+ CL.AddConstantN('CALERT_SYSTEM','LongInt').SetInt( 6);
+ //CL.AddDelphiFunction('Function SetWinEventHook( eventMin, eventMax : DWORD; hmodWinEventProc : HMODULE; pfnWinEventProc : TFNWinEventProc; idProcess, idThread, dwFlags : DWORD) : THandle');
+ CL.AddDelphiFunction('Function UnhookWinEvent( hWinEventHook : THandle) : BOOL');
+ CL.AddConstantN('WINEVENT_OUTOFCONTEXT','LongWord').SetUInt( $0000);
+ CL.AddConstantN('WINEVENT_SKIPOWNTHREAD','LongWord').SetUInt( $0001);
+ CL.AddConstantN('WINEVENT_SKIPOWNPROCESS','LongWord').SetUInt( $0002);
+ CL.AddConstantN('WINEVENT_INCONTEXT','LongWord').SetUInt( $0004);
+ // CL.AddTypeS('PGUIThreadInfo', '^TGUIThreadInfo // will not work');
+  CL.AddTypeS('tagGUITHREADINFO', 'record cbSize : DWORD; flags : DWORD; hwndAc'
+   +'tive : HWND; hwndFocus : HWND; hwndCapture : HWND; hwndMenuOwner : HWND; h'
+   +'wndMoveSize : HWND; hwndCaret : HWND; rcCaret : TRect; end');
+ CL.AddTypeS('TGUIThreadInfo', 'tagGUITHREADINFO');
+ CL.AddConstantN('GUI_CARETBLINKING','LongWord').SetUInt( $00000001);
+ CL.AddConstantN('GUI_INMOVESIZE','LongWord').SetUInt( $00000002);
+ CL.AddConstantN('GUI_INMENUMODE','LongWord').SetUInt( $00000004);
+ CL.AddConstantN('GUI_SYSTEMMENUMODE','LongWord').SetUInt( $00000008);
+ CL.AddConstantN('GUI_POPUPMENUMODE','LongWord').SetUInt( $00000010);
+ CL.AddDelphiFunction('Function GetGUIThreadInfo( idThread : DWORD; var pgui : TGUIThreadinfo) : BOOL');
+ CL.AddDelphiFunction('Function GetWindowModuleFileName( hwnd : HWND; pszFileName : PChar; cchFileNameMax : UINT) : UINT');
+ //CL.AddDelphiFunction('Function GetWindowModuleFileNameA( hwnd : HWND; pszFileName : PAnsiChar; cchFileNameMax : UINT) : UINT');
+ //CL.AddDelphiFunction('Function GetWindowModuleFileNameW( hwnd : HWND; pszFileName : PWideChar; cchFileNameMax : UINT) : UINT');
+
  CL.AddDelphiFunction('Procedure SafeCloseHandle( var Handle : THandle)');
  CL.AddDelphiFunction('Procedure ExchangeInteger( X1, X2 : Integer)');
  CL.AddDelphiFunction('Procedure FillInteger( const Buffer: string; Size, Value : Integer)');
@@ -306,7 +556,10 @@ begin
  CL.AddDelphiFunction('Function RegisterWindowMessage( lpString : PChar) : UINT');
  //CL.AddDelphiFunction('Function DrawEdge( hdc : HDC; var qrc : TRect; edge : UINT; grfFlags : UINT) : BOOL');
   //CL.AddDelphiFunction('Function DrawFrameControl( DC : HDC; const Rect : TRect; uType, uState : UINT) : BOOL');
-
+ CL.AddDelphiFunction('Function PostThreadMessage( idThread : DWORD; Msg : UINT; wParam : WPARAM; lParam : LPARAM) : BOOL');
+  CL.AddDelphiFunction('Function PostAppMessage( idThread : DWORD; Msg : UINT; wParam : WPARAM; lParam : LPARAM) : BOOL');
+ CL.AddDelphiFunction('Function AttachThreadInput( idAttach, idAttachTo : DWORD; fAttach : BOOL) : BOOL');
+ CL.AddDelphiFunction('Function ReplyMessage( lResult : LRESULT) : BOOL');
 
  CL.AddDelphiFunction('Function SetTimer( hWnd : HWND; nIDEvent, uElapse : UINT; lpTimerFunc : TFNTimerProc) : UINT');
  CL.AddDelphiFunction('Function KillTimer( hWnd : HWND; uIDEvent : UINT) : BOOL');
@@ -444,6 +697,7 @@ begin
  //CL.AddDelphiFunction('Function wGetCompressedFileSize( lpFileName : PKOLChar; lpFileSizeHigh : PDWORD) : DWORD');
  CL.AddDelphiFunction('Function wGetComputerName( lpBuffer : PKOLChar; var nSize : DWORD) : BOOL');
  CL.AddDelphiFunction('Function wGetConsoleTitle( lpConsoleTitle : PKOLChar; nSize : DWORD) : DWORD');
+ CL.AddDelphiFunction('Function GetConsoleTitle( lpConsoleTitle : PChar; nSize : DWORD) : DWORD');
  //CL.AddDelphiFunction('Function wGetCurrencyFormat( Locale : LCID; dwFlags : DWORD; lpValue : PKOLChar; lpFormat : PCurrencyFmt; lpCurrencyStr : PKOLChar; cchCurrency : Integer) : Integer');
  CL.AddDelphiFunction('Function wGetCurrentDirectory( nBufferLength : DWORD; lpBuffer : PKOLChar) : DWORD');
  //CL.AddDelphiFunction('Function wGetDateFormat( Locale : LCID; dwFlags : DWORD; lpDate : PSystemTime; lpFormat : PKOLChar; lpDateStr : PKOLChar; cchDate : Integer) : Integer');
@@ -507,6 +761,13 @@ begin
  CL.AddDelphiFunction('Function wSearchPath( lpPath, lpFileName, lpExtension : PKOLChar; nBufferLength : DWORD; lpBuffer : PKOLChar; var lpFilePart : PKOLChar) : DWORD');
  CL.AddDelphiFunction('Function wSetComputerName( lpComputerName : PKOLChar) : BOOL');
  CL.AddDelphiFunction('Function wSetConsoleTitle( lpConsoleTitle : PKOLChar) : BOOL');
+ CL.AddDelphiFunction('Function SetConsoleTitle( lpConsoleTitle : PChar) : BOOL');
+ //CL.AddDelphiFunction('Function GetConsoleTitle( lpConsoleTitle : PChar) : BOOL');
+ CL.AddDelphiFunction('Function GetConsoleMode( stdinConsole: THandle; cmode: Dword) : BOOL');
+ CL.AddDelphiFunction('Function SetConsoleMode( stdinConsole: THandle; cmode: Dword) : BOOL');
+   // Win32Check(GetConsoleMode(StdIn, ConsoleMode));
+ // Win32Check(SetConsoleMode(StdIn, ConsoleMode and (not ENABLE_ECHO_INPUT)));
+
  CL.AddDelphiFunction('Function wSetCurrentDirectory( lpPathName : PKOLChar) : BOOL');
  //CL.AddDelphiFunction('Function wSetDefaultCommConfig( lpszName : PKOLChar; lpCC : PCommConfig; dwSize : DWORD) : BOOL');
  CL.AddDelphiFunction('Function wSetEnvironmentVariable( lpName, lpValue : PKOLChar) : BOOL');
@@ -882,6 +1143,13 @@ begin
  S.RegisterDelphiFunction(@GetCompressedFileSize, 'wGetCompressedFileSize', CdStdCall);
  S.RegisterDelphiFunction(@GetComputerName, 'wGetComputerName', CdStdCall);
  S.RegisterDelphiFunction(@GetConsoleTitle, 'wGetConsoleTitle', CdStdCall);
+ S.RegisterDelphiFunction(@GetConsoleTitle, 'GetConsoleTitle', CdStdCall);
+ S.RegisterDelphiFunction(@GetConsoleMode, 'GetConsoleMode', CdStdCall);
+ S.RegisterDelphiFunction(@SetConsoleMode, 'SetConsoleMode', CdStdCall);
+
+ // Win32Check(GetConsoleMode(StdIn, ConsoleMode));
+ // Win32Check(SetConsoleMode(StdIn, ConsoleMode and (not ENABLE_ECHO_INPUT)));
+
  S.RegisterDelphiFunction(@GetCurrencyFormat, 'wGetCurrencyFormat', CdStdCall);
  S.RegisterDelphiFunction(@GetCurrentDirectory, 'wGetCurrentDirectory', CdStdCall);
  S.RegisterDelphiFunction(@GetDateFormat, 'wGetDateFormat', CdStdCall);
@@ -939,6 +1207,7 @@ begin
  S.RegisterDelphiFunction(@SearchPath, 'wSearchPath', CdStdCall);
  S.RegisterDelphiFunction(@SetComputerName, 'wSetComputerName', CdStdCall);
  S.RegisterDelphiFunction(@SetConsoleTitle, 'wSetConsoleTitle', CdStdCall);
+ S.RegisterDelphiFunction(@SetConsoleTitle, 'SetConsoleTitle', CdStdCall);
  S.RegisterDelphiFunction(@SetCurrentDirectory, 'wSetCurrentDirectory', CdStdCall);
  S.RegisterDelphiFunction(@SetDefaultCommConfig, 'wSetDefaultCommConfig', CdStdCall);
  //S.RegisterDelphiFunction(@SetEnvironmentVariable, 'wSetEnvironmentVariable', CdStdCall);
@@ -1165,7 +1434,25 @@ begin
  S.RegisterDelphiFunction(@GetLastActivePopup, 'GetLastActivePopup', CdStdCall);
  S.RegisterDelphiFunction(@GetMDACVersion2, 'GetMDACVersion2', CdStdCall);
   S.RegisterDelphiFunction(@RegisterWindowMessage, 'RegisterWindowMessage', CdStdCall);
-
+  S.RegisterDelphiFunction(@PostThreadMessage, 'PostThreadMessage', CdStdCall);
+  S.RegisterDelphiFunction(@PostAppMessage, 'PostAppMessage', CdStdCall);
+  S.RegisterDelphiFunction(@AttachThreadInput, 'AttachThreadInput', CdStdCall);
+  S.RegisterDelphiFunction(@ReplyMessage, 'ReplyMessage', CdStdCall);
+//  S.RegisterDelphiFunction(@GlobalDiscard, 'GlobalDiscard', cdRegister);
+// S.RegisterDelphiFunction(@LocalDiscard, 'LocalDiscard', cdRegister);
+  S.RegisterDelphiFunction(@LoadKeyboardLayout, 'LoadKeyboardLayout', CdStdCall);
+ S.RegisterDelphiFunction(@ActivateKeyboardLayout, 'ActivateKeyboardLayout', CdStdCall);
+ S.RegisterDelphiFunction(@UnloadKeyboardLayout, 'UnloadKeyboardLayout', CdStdCall);
+ S.RegisterDelphiFunction(@GetKeyboardLayoutName, 'GetKeyboardLayoutName', CdStdCall);
+ S.RegisterDelphiFunction(@GetKeyboardLayoutList, 'GetKeyboardLayoutList', CdStdCall);
+ S.RegisterDelphiFunction(@GetKeyboardLayout, 'GetKeyboardLayout', CdStdCall);
+//S.RegisterDelphiFunction(@GetMouseMovePoints, 'GetMouseMovePoints', CdStdCall); !!!}
+ S.RegisterDelphiFunction(@CreateWindowStation, 'CreateWindowStation', CdStdCall);
+ S.RegisterDelphiFunction(@OpenWindowStation, 'OpenWindowStation', CdStdCall);
+ S.RegisterDelphiFunction(@CloseWindowStation, 'CloseWindowStation', CdStdCall);
+ S.RegisterDelphiFunction(@SetProcessWindowStation, 'SetProcessWindowStation', CdStdCall);
+ S.RegisterDelphiFunction(@GetProcessWindowStation, 'GetProcessWindowStation', CdStdCall);
+ 
 end;
 
 

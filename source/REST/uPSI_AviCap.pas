@@ -52,6 +52,14 @@ begin
  CL.AddConstantN('WM_USER','LongWord').SetUInt( $0400);
  CL.AddConstantN('WM_CAP_START','LongWord').SetUint($0400);
  CL.AddConstantN('WM_CAP_END','longword').SetUint($0400+85);
+
+ CL.AddConstantN('WM_CAP_DRIVER_CONNECT','longword').setint($0400+10);
+ CL.AddConstantN('WM_CAP_DRIVER_DISCONNECT','longword').setint($0400+11);
+ CL.AddConstantN('WM_CAP_SET_CALLBACK_FRAME','longword').setint($0400+5);
+
+       //WM_CAP_DRIVER_DISCONNECT = WM_CAP_START + 11;
+       //WM_CAP_SET_CALLBACK_FRAME = (WM_CAP_START+  5);
+
  //WM_CAP_START+  85
  //    WM_CAP_SET_CALLBACK_CAPCONTROL  = (WM_CAP_START+  85);
 

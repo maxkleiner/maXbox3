@@ -4,7 +4,7 @@ maXbox
 ****************************************************************
 Release Notes maXbox 3.9.9.98 August 2014
 ****************************************************************
-Add 18 Units, Wav res, RoundTo, OpenOffice, Pipes, GSM2
+Add 36 Units, Wav res, RoundTo, OpenOffice, Pipes, GSM2
 TFixedCriticalSection, XPlatform beta, GCC Command Pipe
 VfW (Video), FindFirst3, ResFiler, AssemblyCache, maXring
 
@@ -40,8 +40,13 @@ VfW (Video), FindFirst3, ResFiler, AssemblyCache, maXring
 975 uPSI_SimpleExpression;
 976 uPSI_unitResourceDetails,
 977 uPSI_unitResFile;
+978 unit uPSI_simpleComport;
+979 uPSI_AfViewershelpers;
+980 unit uPSI_Console;
+981 unit uPSI_AnalogMeter;
+982 unit uPSI_XPrinter,
 
-SHA1: Exe Win 3.9.9.98 693C7F691584E518E87CF5BFFC315A5442777781
+SHA1: Exe Win 3.9.9.98 4C7A84045994D69DA0131D3E518D9B4901F20C5D
 
 
 ****************************************************************

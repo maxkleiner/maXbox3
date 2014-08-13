@@ -1,9 +1,9 @@
 unit uPSI_AfComPortCore;
 {
-  the core
+  the core 2 ext
 }
 interface
- 
+
 uses
    SysUtils
   ,Classes
@@ -11,16 +11,16 @@ uses
   ,uPSRuntime
   ,uPSCompiler
   ;
- 
-type 
+
+type
 (*----------------------------------------------------------------------------*)
   TPSImport_AfComPortCore = class(TPSPlugin)
   protected
     procedure CompileImport1(CompExec: TPSScript); override;
     procedure ExecImport1(CompExec: TPSScript; const ri: TPSRuntimeClassImporter); override;
   end;
- 
- 
+
+
 { compile-time registration functions }
 procedure SIRegister_TAfComPortCore(CL: TPSPascalCompiler);
 procedure SIRegister_TAfComPortWriteThread(CL: TPSPascalCompiler);
@@ -48,8 +48,8 @@ uses
   ,AfCircularBuffer
   ,AfComPortCore
   ;
- 
- 
+
+
 procedure Register;
 begin
   RegisterComponents('Pascal Script', [TPSImport_AfComPortCore]);
@@ -76,6 +76,8 @@ begin
     RegisterMethod('Function PurgeTX : Boolean');
     RegisterMethod('Function ReadData( var Data, Count : Integer) : Integer');
     RegisterMethod('Function WriteData( const Data, Size : Integer) : Boolean');
+    RegisterMethod('Function ReadDataString( var Data: string; Count : Integer) : Integer');
+    RegisterMethod('Function WriteDataString( const Data: string; Size : Integer) : Boolean');
     RegisterProperty('ComNumber', 'Integer', iptr);
     RegisterProperty('DCB', 'TDCB', iptrw);
     RegisterProperty('DirectWrite', 'Boolean', iptrw);
@@ -253,13 +255,11 @@ begin
   end;}
   CL.AddTypeS('_COMSTAT', 'record Flags: TComStateFlags; Reserved: array[0..2] of Byte; cbInQue: word; cbOutQue: word; end');
   //CL.AddTypeS('TComStat', 'record Flags: TComStateFlags; Reserved: array[0..2] of Byte; cbInQue: word; cbOutQue: word; end');
-
-  //{$EXTERNALSYM _COMSTAT}
+   //{$EXTERNALSYM _COMSTAT}
   //TComStat = _COMSTAT;
   //COMSTAT = _COMSTAT;
   CL.AddTypeS('TComStat', '_COMSTAT');
   CL.AddTypeS('COMSTAT', '_COMSTAT');
-
 
   CL.AddTypeS('TAfCoreEvent', '( ceOutFree, ceLineEvent, ceNeedReadData, ceException )');
   CL.AddClassN(CL.FindClass('TOBJECT'),'EAfComPortCoreError');
@@ -272,7 +272,10 @@ begin
   SIRegister_TAfComPortCore(CL);
  CL.AddDelphiFunction('Function FormatDeviceName( PortNumber : Integer) : string');
  CL.AddDelphiFunction('Function BuildCommDCB( lpDef : PChar; var lpDCB : TDCB) : BOOL');
-end;
+  CL.AddDelphiFunction('Function wBuildCommDCB( lpDef : PKOLChar; var lpDCB : TDCB) : BOOL');
+ CL.AddDelphiFunction('Function wBuildCommDCBAndTimeouts( lpDef : PKOLChar; var lpDCB : TDCB; var lpCommTimeouts : TCommTimeouts) : BOOL');
+
+ end;
 
 (* === run-time registration functions === *)
 (*----------------------------------------------------------------------------*)
@@ -356,6 +359,9 @@ procedure RIRegister_AfComPortCore_Routines(S: TPSExec);
 begin
  S.RegisterDelphiFunction(@FormatDeviceName, 'FormatDeviceName', cdRegister);
  S.RegisterDelphiFunction(@BuildCommDCB, 'BuildCommDCB', CdStdCall);
+ S.RegisterDelphiFunction(@BuildCommDCB, 'wBuildCommDCB', CdStdCall);
+ S.RegisterDelphiFunction(@BuildCommDCB, 'wBuildCommDCBAndTimeouts', CdStdCall);
+
 
 end;
 
@@ -378,7 +384,9 @@ begin
     RegisterMethod(@TAfComPortCore.PurgeTX, 'PurgeTX');
     RegisterMethod(@TAfComPortCore.ReadData, 'ReadData');
     RegisterMethod(@TAfComPortCore.WriteData, 'WriteData');
-    RegisterPropertyHelper(@TAfComPortCoreComNumber_R,nil,'ComNumber');
+    RegisterMethod(@TAfComPortCore.ReadData, 'ReadDataString');
+    RegisterMethod(@TAfComPortCore.WriteData, 'WriteDataString');
+      RegisterPropertyHelper(@TAfComPortCoreComNumber_R,nil,'ComNumber');
     RegisterPropertyHelper(@TAfComPortCoreDCB_R,@TAfComPortCoreDCB_W,'DCB');
     RegisterPropertyHelper(@TAfComPortCoreDirectWrite_R,@TAfComPortCoreDirectWrite_W,'DirectWrite');
     RegisterPropertyHelper(@TAfComPortCoreEventMask_R,@TAfComPortCoreEventMask_W,'EventMask');

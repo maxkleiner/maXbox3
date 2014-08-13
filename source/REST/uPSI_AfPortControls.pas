@@ -70,6 +70,30 @@ begin
     RegisterpublishedProperties;
     RegisterProperty('OnClick', 'TNotifyEvent', iptrw);
     RegisterProperty('Caption', 'string', iptrw);
+      RegisterProperty('ItemIndex', 'Integer', iptrw);
+    RegisterProperty('Items', 'TStrings', iptrw);
+    //RegisterProperty('Items', 'TStrings Integer', iptrw);
+     RegisterProperty('Columns', 'Integer', iptrw);
+       RegisterProperty('CAPTION', 'String', iptrw);
+    RegisterProperty('CHECKED', 'BOOLEAN', iptrw);
+    RegisterProperty('COLOR', 'TColor', iptrw);
+    RegisterProperty('FONT', 'TFont', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CTL3D', 'Boolean', iptrw);
+     //RegisterProperty('FONT', 'TFont', iptrw);
+     RegisterProperty('SORTED', 'Boolean', iptrw);
+     RegisterProperty('Visible', 'Boolean', iptrw);
+     RegisterProperty('TEXT', 'String', iptrw);
+    RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
+
+
+   { SetDefaultPropery('Items');
+    property Columns: Integer read FColumns write SetColumns default 1;
+    property ItemIndex: Integer read FItemIndex write SetItemIndex default -1;
+    property Items: TStrings read FItems write SetItems;}
+
+
 
   end;
 end;
@@ -84,6 +108,20 @@ begin
     RegisterProperty('ComPort', 'TAfComPort', iptrw);
     RegisterProperty('Options', 'TAfPortCtlOptions', iptrw);
     RegisterProperty('MaxComPorts', 'SmallInt', iptrw);
+     RegisterpublishedProperties;
+        RegisterProperty('CAPTION', 'String', iptrw);
+    RegisterProperty('CHECKED', 'BOOLEAN', iptrw);
+    RegisterProperty('COLOR', 'TColor', iptrw);
+    RegisterProperty('FONT', 'TFont', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CTL3D', 'Boolean', iptrw);
+     RegisterProperty('FONT', 'TFont', iptrw);
+     RegisterProperty('SORTED', 'Boolean', iptrw);
+     RegisterProperty('Visible', 'Boolean', iptrw);
+     RegisterProperty('TEXT', 'String', iptrw);
+    RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
+
   end;
 end;
 

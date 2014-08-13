@@ -4,7 +4,7 @@ unit IFSI_gsUtils;
 }
 {$I PascalScript.inc}
 interface
- 
+
 uses
    SysUtils
   ,Classes
@@ -12,8 +12,8 @@ uses
   ,uPSRuntime
   ,uPSCompiler
   ;
- 
-type 
+
+type
 (*----------------------------------------------------------------------------*)
   TPSImport_gsUtils = class(TPSPlugin)
   protected
@@ -24,8 +24,8 @@ type
     procedure ExecImport1(CompExec: TPSScript; const ri: TPSRuntimeClassImporter); override;
     procedure ExecImport2(CompExec: TPSScript; const ri: TPSRuntimeClassImporter); override;
   end;
- 
- 
+
+
 
 { compile-time registration functions }
 procedure SIRegister_gsUtils(CL: TPSPascalCompiler);
@@ -44,16 +44,15 @@ uses
   //Dialogs
   //,graphics
   //,gsStdObj
-  gsUtils
-  ;
- 
- 
+  gsUtils, uPSI_ImageGrabber, FileUtils;
+
+
 { compile-time importer function }
 (*----------------------------------------------------------------------------
- Sometimes the CL.AddClassN() fails to correctly register a class, 
+ Sometimes the CL.AddClassN() fails to correctly register a class,
  for unknown (at least to me) reasons
  So, you may use the below RegClassS() replacing the CL.AddClassN()
- of the various SIRegister_XXXX calls 
+ of the various SIRegister_XXXX calls
  ----------------------------------------------------------------------------*)
 function RegClassS(CL: TPSPascalCompiler; const InheritsFrom, Classname: string): TPSCompileTimeClass;
 begin
@@ -67,6 +66,43 @@ procedure OpenDirectory(adir: string);
 begin
    S_ShellExecute('explorer.exe',adir,secmdopen);
 end;
+
+
+ const
+   B = 1; //byte
+   KB = 1024 * B; //kilobyte
+   aMB = 1024 * KB; //megabyte
+   GB = 1024 * aMB; //gigabyte
+
+
+function FormatByteSize(const bytes: int64): string;
+ begin
+   if bytes > GB then
+     result:= FormatFloat('#.## GB',bytes / GB)
+   else
+     if bytes > aMB then
+       result:= FormatFloat('#.## MB',bytes / aMB)
+     else
+       if bytes > KB then
+         result:= FormatFloat('#.## KB',bytes / KB)
+       else
+         result:= FormatFloat('#.## bytes',bytes) ;
+ end;
+ 
+ function countDirfiles(const apath: string): integer;
+ var dlist: TStringlist;
+ begin
+    dlist:= TStringlist.create;
+    try
+      GetDirList(apath,dlist,true);
+      //for i:= 0 to dirlist.count - 1 do
+       //writeln(ExtractFileName(dirlist[i]));
+      result:= dlist.count;
+    finally
+      dlist.Free;
+    end;
+ end;
+
 
 
 (* === compile-time registration functions === *)
@@ -149,6 +185,9 @@ begin
  CL.AddDelphiFunction('function  GetResStringChecked(Ident: string; const Args: array of const): string');
  CL.AddDelphiFunction('Procedure OpenDirectory(adir: string);');
  CL.AddDelphiFunction('Procedure OpenDir(adir: string);');
+  CL.AddDelphiFunction('function getVideoDrivers: string;');
+  CL.AddDelphiFunction('function FormatByteSize(const bytes: int64): string;');
+  CL.AddDelphiFunction('function countDirfiles(const apath: string): integer;');
 
  end;
 
@@ -230,16 +269,18 @@ begin
  S.RegisterDelphiFunction(@GetResStringChecked, 'GetResStringChecked',cdRegister);
  S.RegisterDelphiFunction(@OpenDirectory, 'OpenDirectory', cdRegister);
  S.RegisterDelphiFunction(@OpenDirectory, 'OpenDir', cdRegister);
-
+  S.RegisterDelphiFunction(@getVideoDrivers, 'getVideoDrivers', cdRegister);
+ S.RegisterDelphiFunction(@FormatByteSize, 'FormatByteSize', cdRegister);
+  S.RegisterDelphiFunction(@countDirfiles, 'countDirfiles', cdRegister);
 end;
 
- 
- 
+
+
 { TPSImport_gsUtils }
 (*----------------------------------------------------------------------------*)
 procedure TPSImport_gsUtils.CompOnUses(CompExec: TPSScript);
 begin
-  { nothing } 
+  { nothing }
 end;
 (*----------------------------------------------------------------------------*)
 procedure TPSImport_gsUtils.ExecOnUses(CompExec: TPSScript);

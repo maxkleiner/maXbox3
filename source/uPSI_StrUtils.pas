@@ -308,13 +308,13 @@ begin
  CL.AddTypeS('TSoundexLength', 'Integer');
  CL.AddDelphiFunction('Function Soundex( const AText : string; ALength : TSoundexLength) : string');
   CL.AddTypeS('TSoundexIntLength', 'Integer');
-  CL.AddTypeS('TextFile', 'integer');   //beta in mx3
+  CL.AddTypeS('TextFile', 'string');   //integer beta in mx3
  //  CL.AddTypeS('Text', 'file of char');   //beta in mx3
 
-  CL.AddTypeS('File', 'integer');   //beta in mx3
+  CL.AddTypeS('File', 'string');   //integer beta in mx3
   CL.AddTypeS('TBuffer', 'PChar');   //beta in mx3
   CL.AddTypeS('TTextLineBreakStyle', '(tlbsLF, tlbsCRLF)');   //beta in mx3
-
+ 
   //  TTextLineBreakStyle = (tlbsLF, tlbsCRLF);
 
   //CL.AddTypeS('RandSeed', 'Longint');   //beta in mx3   randseed now a functionvar
@@ -351,8 +351,12 @@ begin
  //file and disk management
  CL.AddDelphiFunction('Procedure MkDir(const s: string)');
  CL.AddDelphiFunction('Procedure ChDir(const s: string)');
+ CL.AddDelphiFunction('Procedure MakeDir(const s: string)');
+ CL.AddDelphiFunction('Procedure ChangeDir(const s: string)');
+
  CL.AddDelphiFunction('Procedure GetDir(d: byte; var s: string)');
  CL.AddDelphiFunction('procedure RmDir(const S: string)');
+ CL.AddDelphiFunction('Function makeFile(const FileName: string): integer)');
 
  CL.AddDelphiFunction('Function FileCreate(const FileName: string): integer)');
  CL.AddDelphiFunction('Function FileOpen(const FileName: string; mode:integer): integer)');
@@ -711,9 +715,13 @@ begin
 
  S.RegisterDelphiFunction(@MkDir,'MkDir', cdRegister);
  S.RegisterDelphiFunction(@ChDir,'ChDir', cdRegister);
+ S.RegisterDelphiFunction(@MkDir,'MakeDir', cdRegister);
+ S.RegisterDelphiFunction(@ChDir,'ChangeDir', cdRegister);
+
  S.RegisterDelphiFunction(@RMDir,'RmDir', cdRegister);
  //S.RegisterDelphiFunction(@System.GetDir,'GetDir', cdRegister);
  S.RegisterDelphiFunction(@FileCreate,'FileCreate', cdRegister);
+ S.RegisterDelphiFunction(@FileCreate,'MakeFile', cdRegister);
  S.RegisterDelphiFunction(@FileClose,'FileClose', cdRegister);
  S.RegisterDelphiFunction(@FileAge, 'FileAge', cdRegister);
  S.RegisterDelphiFunction(@FileGetDate, 'FileGetDate', cdRegister);

@@ -107,10 +107,11 @@
          9527       build 96_1 getwebscript, cycontainer
          9544       build 96_2 backgroundcolor themes fix, backgroundparent, fixing
          9580       build 96_3 5 units, fixing, checkers. DOS syntax
-         9608       build 98  toolbox units,  regex2 
-         9650       build 98_1  processlist,  pipes, GSM, BetterADO 
+         9608       build 98  toolbox units,  regex2
+         9650       build 98_1  processlist,  pipes, GSM, BetterADO
          9661       build 98_2  inno setup functions
          9705       build 98_3 more inno functions, video grabber, 32 units add
+         9733       build 98_4 add async pro tools
                   [the last one before V4 in 2015]
                    V4.0   in  June 2015
  ************************************************************************** }
@@ -520,6 +521,7 @@ type
     SynBatSyn1: TSynBatSyn;
     Checkers1: TMenuItem;
     TaskMgr1: TMenuItem;
+    WebCam1: TMenuItem;
     procedure IFPS3ClassesPlugin1CompImport(Sender: TObject; x: TPSPascalCompiler);
     procedure IFPS3ClassesPlugin1ExecImport(Sender: TObject; Exec: TPSExec; x: TPSRuntimeClassImporter);
     procedure PSScriptCompile(Sender: TPSScript);
@@ -776,6 +778,7 @@ type
     procedure GetWebScript1Click(Sender: TObject);
     procedure Checkers1Click(Sender: TObject);
     procedure TaskMgr1Click(Sender: TObject);
+    procedure WebCam1Click(Sender: TObject);
     //procedure Memo1DropFiles(Sender: TObject; X,Y: Integer; AFiles: TStrings);
   private
     STATSavebefore: boolean;
@@ -1594,6 +1597,7 @@ uses
   uPSI_AfViewers,
   uPSI_AfDataTerminal,
   uPSI_SimplePortMain, //3.9.9.85   //tportform1
+  uPSI_simplecomport,
   uPSI_ovcclock,
   uPSI_o32intlst,
   uPSI_o32ledlabel,
@@ -1830,7 +1834,10 @@ uses
   uPSI_SimpleExpression,
   uPSI_unitResourceDetails,
   uPSI_unitResFile,     ////3.9.9.98_3
-
+  uPSI_Console,
+  //uPSI_PlayCap,
+  uPSI_AnalogMeter,
+  uPSI_XPrinter,
 
     //MDIFrame,
   uPSI_St2DBarC,
@@ -2862,6 +2869,10 @@ begin
  SIRegister_SimpleExpression(X);
  SIRegister_unitResourceDetails(X);
  SIRegister_unitResFile(X);
+ SIRegister_simplecomport(X);
+ SIRegister_Console(X);
+ SIRegister_AnalogMeter(X);
+ SIRegister_XPrinter(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4147,6 +4158,10 @@ begin
   RIRegister_unitResourceDetails(X);
   RIRegister_unitResFile(X);
   RIRegister_unitResourceDetails_Routines(Exec);
+  RIRegister_simplecomport(X);          //3.9.9.98
+  RIRegister_Console_Routines(Exec);
+  RIRegister_AnalogMeter(X);
+  RIRegister_XPrinter(X);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -5221,6 +5236,8 @@ begin
   Sender.AddFunction(@IsCOMConnected, 'function IsCOMPort: Boolean;');
   Sender.AddFunction(@IsService, 'function IsService: Boolean;');
   Sender.AddFunction(@IsNTFS, 'function IsNTFS: Boolean;');
+  Sender.AddFunction(@dowebcampic, 'procedure doWebCamPic(picname: string);');
+  Sender.AddFunction(@dowebcampic, 'procedure WebCamPic(picname: string);');
 
   Sender.AddFunction(@IsApplication, 'function IsApplication: Boolean;');
   Sender.AddFunction(@IsTerminalSession, 'function IsTerminalSession: Boolean;');
@@ -5655,6 +5672,17 @@ begin
  Savebefore1.Checked:= not Savebefore1.Checked;
  if Savebefore1.Checked then STATSavebefore:= true else
    STATSavebefore:= false;
+end;
+
+procedure TMaxForm1.WebCam1Click(Sender: TObject);
+begin
+  //start webcam
+  memo2.Lines.Add(getVideoDrivers +'web cam started - try once');
+  try
+    doWebCamPic(Exepath+'mxwebcampic.png');
+  except
+    memo2.Lines.Add('WebCam failed - try again ');
+  end;
 end;
 
 procedure TMaxForm1.WebScanner1Click(Sender: TObject);
