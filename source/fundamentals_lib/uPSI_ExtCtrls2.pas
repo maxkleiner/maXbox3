@@ -1,6 +1,6 @@
 unit uPSI_ExtCtrls2;
 {
-   enhance to extctrls also tsplitter  and collections
+   enhance to extctrls also tsplitter  and collections  , add constructors
 }
 interface
  
@@ -143,6 +143,31 @@ begin
     RegisterProperty('ONDBLCLICK', 'TNOTIFYEVENT', iptrw);
     RegisterProperty('ONENTER', 'TNOTIFYEVENT', iptrw);
     RegisterProperty('ONEXIT', 'TNOTIFYEVENT', iptrw);
+       RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
+    RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
+    RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
+     RegisterProperty('ONKEYDOWN', 'TKeyEvent', iptrw);
+    RegisterProperty('ONKEYPRESS', 'TKeyPressEvent', iptrw);
+    RegisterProperty('ONKEYUP', 'TKeyEvent', iptrw);
+   RegisterProperty('ALIGNMENT', 'TALIGNMENT', iptrw);
+    RegisterProperty('CAPTION', 'String', iptrw);
+    RegisterProperty('CHECKED', 'BOOLEAN', iptrw);
+    RegisterProperty('COLOR', 'TColor', iptrw);
+    RegisterProperty('FONT', 'TFont', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CTL3D', 'Boolean', iptrw);
+     RegisterProperty('FONT', 'TFont', iptrw);
+     RegisterProperty('SORTED', 'Boolean', iptrw);
+    RegisterProperty('TEXT', 'String', iptrw);
+    RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
+    RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
+    RegisterProperty('MAXLENGTH', 'Integer', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CHARCASE', 'TEditCharCase', iptrw);
+    RegisterProperty('OEMCONVERT', 'Boolean', iptrw);
+
   end;
 end;
 
@@ -150,8 +175,7 @@ end;
 procedure SIRegister_TCustomColorListBox(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TCustomListBox', 'TCustomColorListBox') do
-  with CL.AddClassN(CL.FindClass('TCustomListBox'),'TCustomColorListBox') do
-  begin
+  with CL.AddClassN(CL.FindClass('TCustomListBox'),'TCustomColorListBox') do begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
     RegisterProperty('Style', 'TColorBoxStyle', iptrw);
     RegisterProperty('Colors', 'TColor Integer', iptr);
@@ -173,8 +197,39 @@ begin
     RegisterProperty('ONDBLCLICK', 'TNOTIFYEVENT', iptrw);
     RegisterProperty('ONENTER', 'TNOTIFYEVENT', iptrw);
     RegisterProperty('ONEXIT', 'TNOTIFYEVENT', iptrw);
+       RegisterProperty('Style', 'TColorBoxStyle', iptrw);
+    RegisterProperty('Colors', 'TColor Integer', iptr);
+    RegisterProperty('ColorNames', 'string Integer', iptr);
+    RegisterProperty('Selected', 'TColor', iptrw);
+    RegisterProperty('DefaultColorColor', 'TColor', iptrw);
+    RegisterProperty('NoneColorColor', 'TColor', iptrw);
+    RegisterProperty('OnGetColors', 'TLBGetColorsEvent', iptrw);
+     RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
+    RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
+    RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
+     RegisterProperty('ONKEYDOWN', 'TKeyEvent', iptrw);
+    RegisterProperty('ONKEYPRESS', 'TKeyPressEvent', iptrw);
+    RegisterProperty('ONKEYUP', 'TKeyEvent', iptrw);
+   RegisterProperty('ALIGNMENT', 'TALIGNMENT', iptrw);
+    RegisterProperty('CAPTION', 'String', iptrw);
+    RegisterProperty('CHECKED', 'BOOLEAN', iptrw);
+    RegisterProperty('COLOR', 'TColor', iptrw);
+    RegisterProperty('FONT', 'TFont', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CTL3D', 'Boolean', iptrw);
+     RegisterProperty('FONT', 'TFont', iptrw);
+     RegisterProperty('SORTED', 'Boolean', iptrw);
+    RegisterProperty('TEXT', 'String', iptrw);
+    RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
+    RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
+    RegisterProperty('MAXLENGTH', 'Integer', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CHARCASE', 'TEditCharCase', iptrw);
+    RegisterProperty('OEMCONVERT', 'Boolean', iptrw);
 
-  end;
+   end;
 end;
 
 (*----------------------------------------------------------------------------*)
@@ -193,6 +248,7 @@ begin
   end;
 end;
 
+//standard package property
 (*----------------------------------------------------------------------------*)
 procedure SIRegister_TLabeledEdit(CL: TPSPascalCompiler);
 begin
@@ -203,6 +259,33 @@ begin
     RegisterProperty('ONDBLCLICK', 'TNOTIFYEVENT', iptrw);
     RegisterProperty('ONENTER', 'TNOTIFYEVENT', iptrw);
     RegisterProperty('ONEXIT', 'TNOTIFYEVENT', iptrw);
+
+     RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
+    RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
+    RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
+     RegisterProperty('ONKEYDOWN', 'TKeyEvent', iptrw);
+    RegisterProperty('ONKEYPRESS', 'TKeyPressEvent', iptrw);
+    RegisterProperty('ONKEYUP', 'TKeyEvent', iptrw);
+   RegisterProperty('ALIGNMENT', 'TALIGNMENT', iptrw);
+    RegisterProperty('CAPTION', 'String', iptrw);
+    RegisterProperty('CHECKED', 'BOOLEAN', iptrw);
+    RegisterProperty('COLOR', 'TColor', iptrw);
+    RegisterProperty('FONT', 'TFont', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CTL3D', 'Boolean', iptrw);
+     RegisterProperty('FONT', 'TFont', iptrw);
+     RegisterProperty('SORTED', 'Boolean', iptrw);
+     RegisterProperty('Visible', 'Boolean', iptrw);
+      RegisterProperty('TEXT', 'String', iptrw);
+    RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
+    RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
+    RegisterProperty('MAXLENGTH', 'Integer', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CHARCASE', 'TEditCharCase', iptrw);
+    RegisterProperty('OEMCONVERT', 'Boolean', iptrw);
+ 
   end;
 end;
 
@@ -210,8 +293,7 @@ end;
 procedure SIRegister_TCustomLabeledEdit(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TCustomEdit', 'TCustomLabeledEdit') do
-  with CL.AddClassN(CL.FindClass('TCustomEdit'),'TCustomLabeledEdit') do
-  begin
+  with CL.AddClassN(CL.FindClass('TCustomEdit'),'TCustomLabeledEdit') do begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
     RegisterMethod('Procedure SetBounds( ALeft : Integer; ATop : Integer; AWidth : Integer; AHeight : Integer)');
     RegisterMethod('Procedure SetupInternalLabel');
@@ -231,6 +313,38 @@ begin
     RegisterProperty('Left', 'Integer', iptr);
     RegisterProperty('Top', 'Integer', iptr);
     RegisterProperty('Width', 'Integer', iptrw);
+
+    RegisterPublishedProperties;
+   RegisterProperty('ONCLICK', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONDBLCLICK', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONENTER', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONEXIT', 'TNOTIFYEVENT', iptrw);
+     RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
+    RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
+    RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
+     RegisterProperty('ONKEYDOWN', 'TKeyEvent', iptrw);
+    RegisterProperty('ONKEYPRESS', 'TKeyPressEvent', iptrw);
+    RegisterProperty('ONKEYUP', 'TKeyEvent', iptrw);
+   RegisterProperty('ALIGNMENT', 'TALIGNMENT', iptrw);
+    RegisterProperty('CAPTION', 'String', iptrw);
+    RegisterProperty('CHECKED', 'BOOLEAN', iptrw);
+    RegisterProperty('COLOR', 'TColor', iptrw);
+    RegisterProperty('FONT', 'TFont', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CTL3D', 'Boolean', iptrw);
+     RegisterProperty('FONT', 'TFont', iptrw);
+     RegisterProperty('SORTED', 'Boolean', iptrw);
+     RegisterProperty('Visible', 'Boolean', iptrw);
+     RegisterProperty('TEXT', 'String', iptrw);
+    RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
+    RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
+    RegisterProperty('MAXLENGTH', 'Integer', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CHARCASE', 'TEditCharCase', iptrw);
+    RegisterProperty('OEMCONVERT', 'Boolean', iptrw);
+
   end;
 end;
 
@@ -244,6 +358,33 @@ begin
     RegisterProperty('ONDBLCLICK', 'TNOTIFYEVENT', iptrw);
     RegisterProperty('ONENTER', 'TNOTIFYEVENT', iptrw);
     RegisterProperty('ONEXIT', 'TNOTIFYEVENT', iptrw);
+        RegisterPublishedProperties;
+     RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
+    RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
+    RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
+     RegisterProperty('ONKEYDOWN', 'TKeyEvent', iptrw);
+    RegisterProperty('ONKEYPRESS', 'TKeyPressEvent', iptrw);
+    RegisterProperty('ONKEYUP', 'TKeyEvent', iptrw);
+   RegisterProperty('ALIGNMENT', 'TALIGNMENT', iptrw);
+    RegisterProperty('CAPTION', 'String', iptrw);
+    RegisterProperty('CHECKED', 'BOOLEAN', iptrw);
+    RegisterProperty('COLOR', 'TColor', iptrw);
+    RegisterProperty('FONT', 'TFont', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CTL3D', 'Boolean', iptrw);
+     RegisterProperty('FONT', 'TFont', iptrw);
+     RegisterProperty('SORTED', 'Boolean', iptrw);
+     RegisterProperty('Visible', 'Boolean', iptrw);
+     RegisterProperty('TEXT', 'String', iptrw);
+    RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
+    RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
+    RegisterProperty('MAXLENGTH', 'Integer', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CHARCASE', 'TEditCharCase', iptrw);
+    RegisterProperty('OEMCONVERT', 'Boolean', iptrw);
+
   end;
 end;
 
@@ -251,8 +392,7 @@ end;
 procedure SIRegister_TCustomControlBar(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TCustomControl', 'TCustomControlBar') do
-  with CL.AddClassN(CL.FindClass('TCustomControl'),'TCustomControlBar') do
-  begin
+  with CL.AddClassN(CL.FindClass('TCustomControl'),'TCustomControlBar') do begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
     RegisterMethod('Procedure FlipChildren( AllLevels : Boolean)');
     RegisterMethod('Procedure StickControls');
@@ -266,7 +406,8 @@ begin
   //with RegClassS(CL,'TGraphicControl', 'TSplitter') do
   with CL.AddClassN(CL.FindClass('TGraphicControl'),'TSplitter') do begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
-    RegisterPublishedProperties;
+    RegisterProperty('Canvas', 'TCanvas', iptrw);
+     RegisterPublishedProperties;
     RegisterProperty('ONCLICK', 'TNOTIFYEVENT', iptrw);
     RegisterProperty('ONDBLCLICK', 'TNOTIFYEVENT', iptrw);
     RegisterProperty('ONENTER', 'TNOTIFYEVENT', iptrw);
@@ -285,8 +426,50 @@ end;
 procedure SIRegister_TRadioGroup(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TCustomRadioGroup', 'TRadioGroup') do
-  with CL.AddClassN(CL.FindClass('TCustomRadioGroup'),'TRadioGroup') do
-  begin
+  with CL.AddClassN(CL.FindClass('TCustomRadioGroup'),'TRadioGroup') do begin
+   RegisterPublishedProperties;
+   RegisterProperty('ONCLICK', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONDBLCLICK', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONENTER', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONEXIT', 'TNOTIFYEVENT', iptrw);
+     RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
+    RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
+    RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
+     RegisterProperty('ONKEYDOWN', 'TKeyEvent', iptrw);
+    RegisterProperty('ONKEYPRESS', 'TKeyPressEvent', iptrw);
+    RegisterProperty('ONKEYUP', 'TKeyEvent', iptrw);
+   RegisterProperty('ALIGNMENT', 'TALIGNMENT', iptrw);
+    RegisterProperty('CAPTION', 'String', iptrw);
+    RegisterProperty('CHECKED', 'BOOLEAN', iptrw);
+    RegisterProperty('COLOR', 'TColor', iptrw);
+    RegisterProperty('FONT', 'TFont', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CTL3D', 'Boolean', iptrw);
+     RegisterProperty('FONT', 'TFont', iptrw);
+     RegisterProperty('SORTED', 'Boolean', iptrw);
+     RegisterProperty('Visible', 'Boolean', iptrw);
+     RegisterProperty('TEXT', 'String', iptrw);
+    RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
+    RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
+    RegisterProperty('MAXLENGTH', 'Integer', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CHARCASE', 'TEditCharCase', iptrw);
+    RegisterProperty('OEMCONVERT', 'Boolean', iptrw);
+      RegisterProperty('ItemIndex', 'Integer', iptrw);
+    RegisterProperty('Items', 'TStrings', iptrw);
+    //RegisterProperty('Items', 'TStrings Integer', iptrw);
+     RegisterProperty('Columns', 'Integer', iptrw);
+    //SetDefaultPropery('Items');
+
+    {   property ItemIndex;
+    property Items;
+    property Columns: Integer read FColumns write SetColumns default 1;
+    property ItemIndex: Integer read FItemIndex write SetItemIndex default -1;
+    property Items: TStrings read FItems write SetItems; }
+
+
   end;
 end;
 
@@ -298,6 +481,8 @@ begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
     RegisterMethod('Procedure FlipChildren( AllLevels : Boolean)');
     RegisterProperty('Buttons', 'TRadioButton Integer', iptr);
+    RegisterMethod('Procedure Free');
+
   end;
 end;
 
@@ -320,8 +505,7 @@ end;
 procedure SIRegister_TNotebook(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TCustomControl', 'TNotebook') do
-  with CL.AddClassN(CL.FindClass('TCustomControl'),'TNotebook') do
-  begin
+  with CL.AddClassN(CL.FindClass('TCustomControl'),'TNotebook') do begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
     RegisterProperty('ActivePage', 'string', iptrw);
     RegisterProperty('PageIndex', 'Integer', iptrw);
@@ -344,8 +528,38 @@ end;
 procedure SIRegister_TGridPanel(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TCustomGridPanel', 'TGridPanel') do
-  with CL.AddClassN(CL.FindClass('TCustomGridPanel'),'TGridPanel') do
-  begin
+  with CL.AddClassN(CL.FindClass('TCustomGridPanel'),'TGridPanel') do begin
+    RegisterPublishedProperties;
+   RegisterProperty('ONCLICK', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONDBLCLICK', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONENTER', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONEXIT', 'TNOTIFYEVENT', iptrw);
+     RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
+    RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
+    RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
+     RegisterProperty('ONKEYDOWN', 'TKeyEvent', iptrw);
+    RegisterProperty('ONKEYPRESS', 'TKeyPressEvent', iptrw);
+    RegisterProperty('ONKEYUP', 'TKeyEvent', iptrw);
+   RegisterProperty('ALIGNMENT', 'TALIGNMENT', iptrw);
+    RegisterProperty('CAPTION', 'String', iptrw);
+    RegisterProperty('CHECKED', 'BOOLEAN', iptrw);
+    RegisterProperty('COLOR', 'TColor', iptrw);
+    RegisterProperty('FONT', 'TFont', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CTL3D', 'Boolean', iptrw);
+     RegisterProperty('FONT', 'TFont', iptrw);
+     RegisterProperty('SORTED', 'Boolean', iptrw);
+     RegisterProperty('Visible', 'Boolean', iptrw);
+     RegisterProperty('TEXT', 'String', iptrw);
+    RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
+    RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
+    RegisterProperty('MAXLENGTH', 'Integer', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CHARCASE', 'TEditCharCase', iptrw);
+    RegisterProperty('OEMCONVERT', 'Boolean', iptrw);
+
   end;
 end;
 
@@ -353,10 +567,10 @@ end;
 procedure SIRegister_TCustomGridPanel(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TCustomPanel', 'TCustomGridPanel') do
-  with CL.AddClassN(CL.FindClass('TCustomPanel'),'TCustomGridPanel') do
-  begin
+  with CL.AddClassN(CL.FindClass('TCustomPanel'),'TCustomGridPanel') do begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
-    RegisterMethod('Procedure GetChildren( Proc : TGetChildProc; Root : TComponent)');
+       RegisterMethod('Procedure Free');
+     RegisterMethod('Procedure GetChildren( Proc : TGetChildProc; Root : TComponent)');
     RegisterMethod('Function IsColumnEmpty( AColumn : Integer) : Boolean');
     RegisterMethod('Function IsRowEmpty( ARow : Integer) : Boolean');
     RegisterProperty('ColumnSpanIndex', 'Integer Integer Integer', iptr);
@@ -375,8 +589,7 @@ end;
 procedure SIRegister_TControlCollection(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TOwnedCollection', 'TControlCollection') do
-  with CL.AddClassN(CL.FindClass('TOwnedCollection'),'TControlCollection') do
-  begin
+  with CL.AddClassN(CL.FindClass('TOwnedCollection'),'TControlCollection') do begin
     RegisterMethod('Constructor Create( AOwner : TPersistent)');
     RegisterMethod('Function Add : TControlItem');
     RegisterMethod('Procedure AddControl( AControl : TControl; AColumn : Integer; ARow : Integer)');
@@ -394,8 +607,7 @@ end;
 procedure SIRegister_TControlItem(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TCollectionItem', 'TControlItem') do
-  with CL.AddClassN(CL.FindClass('TCollectionItem'),'TControlItem') do
-  begin
+  with CL.AddClassN(CL.FindClass('TCollectionItem'),'TControlItem') do begin
     RegisterMethod('Constructor Create( Collection : TCollection)');
     RegisterMethod('Procedure SetLocation( AColumn, ARow : Integer; APushed : Boolean)');
     RegisterProperty('Column', 'Integer', iptrw);
@@ -456,8 +668,38 @@ end;
 procedure SIRegister_TFlowPanel(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TCustomFlowPanel', 'TFlowPanel') do
-  with CL.AddClassN(CL.FindClass('TCustomFlowPanel'),'TFlowPanel') do
-  begin
+  with CL.AddClassN(CL.FindClass('TCustomFlowPanel'),'TFlowPanel') do begin
+    RegisterPublishedProperties;
+   RegisterProperty('ONCLICK', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONDBLCLICK', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONENTER', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONEXIT', 'TNOTIFYEVENT', iptrw);
+     RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
+    RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
+    RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
+     RegisterProperty('ONKEYDOWN', 'TKeyEvent', iptrw);
+    RegisterProperty('ONKEYPRESS', 'TKeyPressEvent', iptrw);
+    RegisterProperty('ONKEYUP', 'TKeyEvent', iptrw);
+   RegisterProperty('ALIGNMENT', 'TALIGNMENT', iptrw);
+    RegisterProperty('CAPTION', 'String', iptrw);
+    RegisterProperty('CHECKED', 'BOOLEAN', iptrw);
+    RegisterProperty('COLOR', 'TColor', iptrw);
+    RegisterProperty('FONT', 'TFont', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CTL3D', 'Boolean', iptrw);
+     RegisterProperty('FONT', 'TFont', iptrw);
+     RegisterProperty('SORTED', 'Boolean', iptrw);
+     RegisterProperty('Visible', 'Boolean', iptrw);
+     RegisterProperty('TEXT', 'String', iptrw);
+    RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
+    RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
+    RegisterProperty('MAXLENGTH', 'Integer', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CHARCASE', 'TEditCharCase', iptrw);
+    RegisterProperty('OEMCONVERT', 'Boolean', iptrw);
+
   end;
 end;
 
@@ -465,8 +707,7 @@ end;
 procedure SIRegister_TCustomFlowPanel(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TCustomPanel', 'TCustomFlowPanel') do
-  with CL.AddClassN(CL.FindClass('TCustomPanel'),'TCustomFlowPanel') do
-  begin
+  with CL.AddClassN(CL.FindClass('TCustomPanel'),'TCustomFlowPanel') do begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
     RegisterMethod('Procedure GetChildren( Proc : TGetChildProc; Root : TComponent)');
     RegisterMethod('Function GetControlIndex( AControl : TControl) : Integer');
@@ -1273,8 +1514,7 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TCustomColorBox(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TCustomColorBox) do
-  begin
+  with CL.Add(TCustomColorBox) do begin
     RegisterConstructor(@TCustomColorBox.Create, 'Create');
     RegisterPropertyHelper(@TCustomColorBoxStyle_R,@TCustomColorBoxStyle_W,'Style');
     RegisterPropertyHelper(@TCustomColorBoxColors_R,nil,'Colors');
@@ -1343,8 +1583,7 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TSplitter(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TSplitter) do
-  begin
+  with CL.Add(TSplitter) do begin
     RegisterConstructor(@TSplitter.Create, 'Create');
     RegisterPropertyHelper(@TSplitterAutoSnap_R,@TSplitterAutoSnap_W,'AutoSnap');
     RegisterPropertyHelper(@TSplitterBeveled_R,@TSplitterBeveled_W,'Beveled');
@@ -1367,10 +1606,10 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TCustomRadioGroup(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TCustomRadioGroup) do
-  begin
+  with CL.Add(TCustomRadioGroup) do begin
     RegisterConstructor(@TCustomRadioGroup.Create, 'Create');
-    RegisterMethod(@TCustomRadioGroup.FlipChildren, 'FlipChildren');
+   RegisterMethod(@TCustomRadioGroup.Free, 'Free');
+     RegisterMethod(@TCustomRadioGroup.FlipChildren, 'FlipChildren');
     RegisterPropertyHelper(@TCustomRadioGroupButtons_R,nil,'Buttons');
   end;
 end;
@@ -1423,10 +1662,10 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TCustomGridPanel(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TCustomGridPanel) do
-  begin
+  with CL.Add(TCustomGridPanel) do begin
     RegisterConstructor(@TCustomGridPanel.Create, 'Create');
-    RegisterMethod(@TCustomGridPanel.GetChildren, 'GetChildren');
+     RegisterMethod(@TCustomGridPanel.Free, 'Free');
+      RegisterMethod(@TCustomGridPanel.GetChildren, 'GetChildren');
     RegisterMethod(@TCustomGridPanel.IsColumnEmpty, 'IsColumnEmpty');
     RegisterMethod(@TCustomGridPanel.IsRowEmpty, 'IsRowEmpty');
     RegisterPropertyHelper(@TCustomGridPanelColumnSpanIndex_R,nil,'ColumnSpanIndex');
@@ -1597,8 +1836,7 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TPaintBox(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TPaintBox) do
-  begin
+  with CL.Add(TPaintBox) do begin
     RegisterConstructor(@TPaintBox.Create, 'Create');
     RegisterPropertyHelper(@TPaintBoxOnPaint_R,@TPaintBoxOnPaint_W,'OnPaint');
   end;

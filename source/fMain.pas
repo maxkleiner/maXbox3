@@ -112,6 +112,8 @@
          9661       build 98_2  inno setup functions
          9705       build 98_3 more inno functions, video grabber, 32 units add
          9733       build 98_4 add async pro tools
+         9792       build 98_5 8 more unit unit testing async pro tools
+
                   [the last one before V4 in 2015]
                    V4.0   in  June 2015
  ************************************************************************** }
@@ -808,7 +810,7 @@ type
     Last_fName8: string[255];
     Last_fName9: string[255];
     Last_fName10: string[255];
-
+    ledimage: TImage;
    // IPHost: string[255];
    // IPPort: integer;
    // COMPort: integer;
@@ -1838,6 +1840,13 @@ uses
   //uPSI_PlayCap,
   uPSI_AnalogMeter,
   uPSI_XPrinter,
+  uPSI_lazIniFiles,
+  uPSI_testutils,
+  uPSI_ToolsUnit,
+  uPSI_fpcunit,
+  uPSI_testdecorator,
+  uPSI_fpcunittests,
+  uPSI_cTCPBuffer,  ////3.9.9.98_5
 
     //MDIFrame,
   uPSI_St2DBarC,
@@ -1989,7 +1998,7 @@ uses
   VCLScannerIntf,
   SOAPHTTPClient, //Test for WS
   uPSI_interface2_so,
-  uPSI_IniFiles,
+  uPSI_IniFiles,    //standard
   uPSI_IdThread,
   uPSI_fMain,   //Register Methods to Open Tools API
   ComObj, //OCX internet radio
@@ -2004,7 +2013,7 @@ uses
 
 resourcestring
   RCReplace = 'Replace this '#13'of "%s"'#13+'by "%s"?';
-  RCSTRMB ='maXbox3 ';
+  RCSTRMB =' maXbox3 ';
   RCPRINTFONT ='Courier New';
   FILELOAD = ' File loaded';
   FILESAVE = ' File is saved';
@@ -2873,6 +2882,13 @@ begin
  SIRegister_Console(X);
  SIRegister_AnalogMeter(X);
  SIRegister_XPrinter(X);
+ SIRegister_lazIniFiles(X);
+ SIRegister_fpcunit(X);
+ SIRegister_testdecorator(X);
+ SIRegister_testutils(X);
+ SIRegister_ToolsUnit(X);
+ SIRegister_fpcunittests(X);
+ SIRegister_cTCPBuffer(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4162,6 +4178,16 @@ begin
   RIRegister_Console_Routines(Exec);
   RIRegister_AnalogMeter(X);
   RIRegister_XPrinter(X);
+  RIRegister_lazIniFiles(X);
+  RIRegister_testutils(X);
+  RIRegister_ToolsUnit_Routines(Exec);
+  RIRegister_ToolsUnit(X);
+  RIRegister_fpcunit_Routines(Exec);
+  RIRegister_fpcunit(X);
+  RIRegister_fpcunittests(X);
+  RIRegister_testdecorator(X);
+  RIRegister_cTCPBuffer_Routines(Exec);
+  RIRegister_cTCPBuffer(X);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -4318,8 +4344,10 @@ begin
   with statusbar1 do begin
     //simplepanel:= true;
     showhint:= true;
+    //left:= 50;
     hint:= ExtractFilePath(application.ExeName)+' Exe directory';
      Panels.add;
+     //panels.items[0].left:= 20;
      panels.items[0].width:= maxform1.width-270;
      panels.items[0].text:= 'LED BOX Data Log';
      Panels.add;
@@ -4379,8 +4407,11 @@ begin
      statusbar1.panels.items[1].width:= 210;
      statusbar1.panels.items[2].width:= 60;
      //createmessagedlg
-
- { statusbar1.SimplePanel:= false;
+    ledimage:= TImage.Create(self);
+    ledimage.parent:= statusbar1;
+     ledimage.align:= alleft;
+     ledimage.Top:= 2;
+  { statusbar1.SimplePanel:= false;
   with statusbar1 do begin
     //simplepanel:= true;
     showhint:= true;
@@ -5346,7 +5377,21 @@ var mybytecode: string;
         b:= True;
         memo1.SelStart:= PSScript.CompilerMessages[l].Pos;
       end;
-    end
+    end;
+    if b then begin
+       memo2.Lines.Add('XCompiler Message Count: '+inttoStr(PSScript.CompilerMessageCount));
+       with ledimage do begin
+        Top:= 2;
+        visible:= true;
+        picture.bitmap.loadfromResourcename(HINSTANCE,'LED_RED_ON')
+       end;
+    //bitmap.LoadFromResName }
+    end else begin
+      memo2.Lines.Add('XCompiler Message Count: '+inttoStr(PSScript.CompilerMessageCount));
+     with ledimage do begin
+      visible:= false;
+     end;
+    end;
   end;
 begin
   memo2.Lines.Clear;
@@ -5378,9 +5423,12 @@ begin
    //if pos('#', memo1.lines) > 0 then
     if STATMacro then
         Expand_Macro;
-
-  if PSScript.Compile then begin
+   if PSScript.Compile then begin
     OutputMessages;
+     with ledimage do begin
+        visible:= true;
+        picture.bitmap.loadfromResourcename(HINSTANCE,'LED_GREEN_ON')
+       end;
     memo2.Lines.Add(RCSTRMB +extractFileName(Act_Filename)+' Compiled done: '
                                                          +dateTimetoStr(now()));
     memo2.Lines.Add('--------------------------------------------------------');
@@ -5390,6 +5438,12 @@ begin
       memo1.SelStart := PSScript.ExecErrorPosition;
       memo2.Lines.Add(PSScript.ExecErrorToString +' at '+Inttostr(PSScript.ExecErrorProcNo)
                        +'.'+Inttostr(PSScript.ExecErrorByteCodePosition));
+      with ledimage do begin
+        parent:= statusbar1;
+        align:= alleft;
+        picture.bitmap.loadfromResourcename(HINSTANCE,'LED_RED_ON')
+       //bitmap.LoadFromResName
+      end;
     end else begin
     stopw.Stop;
     memo2.Lines.Add(' mX3 executed: '+dateTimetoStr(Now())+
@@ -5433,12 +5487,14 @@ begin
       showAndSaveBCode(mybytecode);
       statusBar1.panels[1].text:= 'ByteCode Saved: '+mybytecode;
     end;
+     with ledimage do begin
+        visible:= false;
+       end;
     imglogo.Transparent:= true;
     //mybytecode:= 'memo2.Lines.Add(PSScript.ExecErrorToString +';
     //memo1.lines.add(mybytecode);
     //call to macro    3.9.8.9
-
-    memo1.Hint:= intToStr(memo1.CaretY)+' Cursor: '+memo1.WordAtCursor +' Mouse: '+memo1.WordAtMouse;
+   memo1.Hint:= intToStr(memo1.CaretY)+' Cursor: '+memo1.WordAtCursor +' Mouse: '+memo1.WordAtMouse;
   if STATExceptionLog then begin
    hlog.Add('>>>> Stop Script: '+ExtractFileName(Act_Filename)+' {80@}{now}');
    hlog.Add('{RAM--} Compiled+Run Success! runtime: '+perftime);
@@ -7521,6 +7577,8 @@ begin
       winFormp.Free;
     if assigned(webMainForm) then
       webMainForm.Free;
+    if assigned(ledimage) then
+      ledimage.Free;                 //39998
    Action:= caFree;
     //maxform1.SetFocus;
   {end else
@@ -8948,6 +9006,7 @@ begin
   PSScript.Script.Assign(memo1.Lines);
   cedebug.MainFileName:= Act_Filename;
   cedebug.Script.Assign(memo1.Lines);
+  ledimage.Hide;
   //showmessage(psscript.script.Text);
   if STATMacro then begin
         //memo1.text:= ParseMacros(memo1.text);
