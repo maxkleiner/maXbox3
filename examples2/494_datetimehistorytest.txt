@@ -204,7 +204,7 @@ end;
 {   DecodeTime unpacks Time into four values:
     Hour, Minute, Second and MilliSecond    }
 
-procedure DecodeTime(Time: TDateTime; out Hour, Minute, Second, MilliSecond: word);
+procedure DecodeTimeX(Time: TDateTime; out Hour,Minute,Second, MilliSecond: word);
 Var
   l : cardinal;
 begin
@@ -217,6 +217,21 @@ begin
  l := l mod 1000;
  MilliSecond := l;
 end;
+
+procedure DecodeTime2(Time: TDateTime; out Hour, Minute, Second, MilliSecond: word);
+Var
+  l : cardinal;
+begin
+ l := Round(abs(Frac(time)) * MSecsPerDay);
+ Hour   := l div 3600000;
+ l := l mod 3600000;
+ Minute := l div 60000;
+ l := l mod 60000;
+ Second := l div 1000;
+ l := l mod 1000;
+ MilliSecond := l;
+end;
+
 
 {   SystemTimeToDateTime converts SystemTime to a TDateTime value   }
 
@@ -555,8 +570,10 @@ begin
 end;  
   
 
-var res: string;
-    inta: integer;
+ var   myextest: TExampleTest; //: TTestCase;
+   mcf: TFile; //TFileMapping; //TTextFileWriter; //TTextFileReader; //TMemoryFile; //TFile;  //TCustomFile;
+   //mcvt: TFileCreateDisposition; //TFileAccess; //TFileSharing;
+
 begin
 
   {var
@@ -566,24 +583,58 @@ begin
   hour       : word;
   days       : word;}
   
+  
   DecodeDate2(now, year, month, days)
-  printF('we do have %d/ %d/ %d/ ',[year, month, days]) 
+  printF('we do have date: %d/ %d/ %d/ ',[year, month, days]) 
+  
+  DecodeTime2(now, hour, minute, second, millisecond)
+  printF('we do have time: %d/ %d/ %d/ %d',[hour, minute, second, millisecond]) 
+  DecodeTime(now, hour, minute, second, millisecond)
+  printF('we do have time: %d/ %d/ %d/ %d',[hour, minute, second, millisecond]) 
+  
   writeln(timetostr(time2))
   writeln('which day of week ^'+itoa(DayOfWeek2(date)));
- datetimetostring(res,'dddd, mmm dd, yyyy  hh:nn ampm      ',now);
-  writeln(res)
-  //dateTimeToStringOut(res,'dddd, mmm dd, yyyy  hh:nn ampm      ',now);
-  //writeln(res)
-  
-  DateTimeToString(res,' hh:mm:ss',Time);
-  writeln(res)
-  //DateTimeToStringOut(res,' hh:mm:ss',Time);
-  //writeln(res)
-  inta:= 5
-  IncBorlDOW(inta, 20);
-  writeln(itoa(inta));
+   writeln(itoa(mulutest(4,5)));
+   writeln(itoa(mulutest(6,7)));
+   //opendoc('this is nit');
+   memo1.caretY;
    
-  writeln(itoa(mulutest(4,5)));
-  writeln(itoa(mulutest(6,7)));
+ 
+ {  TExampleTest = class(TTestCase)
+  published
+    procedure TestOne;
+    procedure TestWithError;
+    procedure TestWithFailure;
+  end;}
+ 
+   myextest:= TExampleTest.create;
+   myextest.testone;
+   try
+     myextest.TestWithError;
+   except
+     //RaiseLastException
+     writeln(GetSafeCallExceptionMsg)
+     RaiseLastWin321('my error')
+     //HookOSExceptions;
+     //dumpexception;
+     //RaiseException2;
+      //RaiseExcept;
+      //on except do 
+
+
+   end  
+   try
+     myextest.TestWithFailure;
+   except
+     writeln(GetSafeCallExceptionMsg)
+     //RaiseLastException;
+   end;
+   
+   {with TTestCaseTest(self) do begin
+      TestSetUp;  //Setup;
+      //TearDown;
+      TestAsString;
+      Free;
+   end;}
 
 end.

@@ -130,6 +130,13 @@ begin
   CL.AddDelphiFunction('Function FindAllFiles( const SearchPath : String; SearchMask : String; SearchSubDirs : Boolean) : TStringList');
  CL.AddDelphiFunction('Function FindAllDirectories( const SearchPath : string; SearchSubDirs : Boolean) : TStringList');
  CL.AddDelphiFunction('Function ReadFileToString( const Filename : string) : string');
+ CL.AddDelphiFunction('function FindAllDocs(const Root, extmask: string): TStringlist;');
+ CL.AddDelphiFunction('procedure Inc1(var X: longint; N: Longint);');
+ CL.AddDelphiFunction('procedure Dec1(var X: longint; N: Longint);');
+
+
+
+
 
  (*type
   TCopyFileFlag = (
@@ -249,6 +256,11 @@ begin
  S.RegisterDelphiFunction(@FindAllDirectories, 'FindAllDirectories', cdRegister);
  S.RegisterDelphiFunction(@ReadFileToString, 'ReadFileToString', cdRegister);
  S.RegisterDelphiFunction(@CopyDirTree, 'CopyDirTree', cdRegister);
+ S.RegisterDelphiFunction(@FindallDocs, 'Findalldocs', cdRegister);
+ S.RegisterDelphiFunction(@Inc1, 'Inc1', cdRegister);
+ S.RegisterDelphiFunction(@Dec1, 'Dec1', cdRegister);
+
+
 
  end;
 
@@ -267,6 +279,6 @@ begin
   RIRegister_LazFileUtils_Routines(CompExec.Exec); // comment it if no routines
 end;
 (*----------------------------------------------------------------------------*)
- 
- 
+
+
 end.

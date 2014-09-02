@@ -1,0 +1,223 @@
+//https://github.com/maxkleiner/maXbox3/blob/masterbox2/examples/469_formarrow_datepicker.txt 
+Program Firebird_Demo_App_mX_cALwON_Arrow_Result;
+{ ****************************************************************
+  Sourcefile : DBopen.PAS
+  Typ : WinForm-Unit
+  Engineer : MK max@kleiner.ch
+  First Release : 10.01.1997  //on progress!
+  Compiler  : maXbox: DevC+Delphi, OS: W7
+  Purpose   : Let a user to pick a date 
+  Revisions : 25.10.96 first dialog to open a date
+            :#sign:7 PM max: MAXBOX8: 8/28/2014 9:00:48 PM  :57 
+            : 23.04.2014 migrate to maXbox - #locs:115
+ **************************************************************** }
+
+type TdbOpenDlg = TForm;
+  //var //BeginDate: TDateTime;
+      //dbOpenDlg: TdbOpenDlg;
+      //brDateForm: TDateTimePicker; //TJvPickdate; 
+
+procedure TDlg_Button1Click(Sender: TObject);
+begin
+  TForm(TBitBtn(sender).parent).ModalResult:= mrOK;
+end;
+
+procedure TDlg_CalBtnFromClick(Sender: TObject);
+  var BeginDate: TDateTime;
+    dbOpenDlg: TdbOpenDlg;
+  
+begin
+  dbOpenDlg:= TdbOpenDlg.Create(self)
+  with dbOpenDlg do begin
+    setBounds(0,0,400,400)
+    caption:= 'trex tex';
+    //brush.style:= bsdiagCross
+    //color:= clred;
+    //showmodal;
+    canvas.font.size:= 30;
+    //show;
+    canvas.pen.color:= clblue;
+    canvas.Pen.Width:= 5;
+  
+    canvas.textout(10,220,'text on the trex2');
+   
+   //windowstate:= wsmaximized  
+  
+  end;
+  with TBitBtn.Create(dbopenDlg) do begin
+    parent:= dbopenDlg;
+    setBounds(20,300,150,40)
+    caption:= 'OK Date';
+    glyph.LoadFromRes(getHINSTANCE,'TPSIMPORT_COMOBJ');
+    onClick:= @TDlg_Button1Click;
+  end;
+  try
+    with TDateTimePicker.Create(dbopenDlg) do begin
+      parent:= dbopenDlg;
+      SetBounds(20,20,100,100);
+     //    dbOpenDlg.canvas.textout(120,220,'text on the trex');
+   
+      if dbOpenDlg.showmodal = mrOK then
+        beginDate:= Datetime;
+     
+      //windowstate:= wsmaximized  
+      writeln('date back time: '+dateTimetoStr(Datetime));
+    end;
+  finally
+    dbopenDlg.Release; //or free
+    Voice('You set the date '+datetoStr(begindate));
+   
+  end;
+end;
+
+function TdmCliente_OpenConnection : String;
+var Port, IP : String;
+  dmClient: TDataModule; 
+  Sqlconnect: TSQLConnection;
+begin
+  result := '';
+if FileExists(ExtractFilePath(ParamStr(0))+'\Client.ini') then begin
+try
+   IP := 'yourIP';
+   Port := 'yourPort';
+   SQLConnect.DriverName := 'DATASNAP';
+    SQLConnect.LoginPrompt := False;
+
+   {dmClient.}SQLConnect.Close;
+   {dmClient.}SQLConnect.Params.Values['HostName'] := IP;
+   {dmClient.}SQLConnect.Params.Values['Port'] := Port;
+   {dmClient.}SQLConnect.Open;
+except
+      //on e:exception do
+      end;
+   end;
+end;
+
+
+ var i,k: integer;
+
+begin //main
+  TDlg_CalBtnFromClick(self);
+  //Voice('You set the date '+datetoStr(begindate));
+  
+  //XOR Test
+  writeln(botostr(not(0=0)))
+  writeln(botostr(not(0=1)))
+  writeln(botostr(not(1=0)))
+  writeln(botostr(not(1=1)))
+  writeln('')
+  
+  for i:= 0 to 1 do 
+    for k:= 0 to 1 do
+       writeln(botostr(not(i=k)))
+    
+  
+end.
+
+
+-----------------------------------------------------
+Doc: Status
+API: The Date and Time Picker is a control that allows the user to
+      select either a date or a time value. This control provides two
+      objects in one: A picker and a calendar
+    Training: http://www.functionx.com/bcb/controls/datetime.htm
+    Blog
+    About http://www.softwareschule.ch/examples/469_ibzresult.txt
+    //ToDo: Eliminate the Global Vars!
+
+    © 2014 GitHub, Inc.
+    Terms
+    Privacy
+    Security
+    Contact
+    
+    Anforderung:
+    Ein Datum ist zu wählen und nach Bestätigung zu hören. 
+    Aufgabe:
+    Alles unnötige ist auszukommentieren und nötiges zu vereinfachen.
+    
+  first date: 14.6.2014  
+    
+  S. 251 - 268 im C++ Buch  Aufräumarbeiten
+    
+  S. 11 -Skript UML Use Case
+  
+  Tool: mX Musterlösung 469_formarrow_datepicker_ibz.txt
+  
+  
+  Hi Rob,
+Thank you for your interest in the topic
+When the con is created in design time code is:
+
+con.Params.Clear;
+con.DriverName := 'DATASNAP';
+con.LoginPrompt := False;
+
+con.Params.Values['DriverUnit'] := 'Data.DBXDataSnap';
+con.Params.Values['DriverName'] := 'DATASNAP';
+con.Params.Values['HostName'] := Edit2.Text;
+con.Params.Values['port'] := Edit1.Text;
+con.Params.Values['DatasnapContext'] := 'datasnap/';
+con.Params.Values['DriverAssemblyLoader'] := 'Borland.Data.TDBXClientDriverLoader,Borland.Data.DbxClientDriver,Version=19.0.0.0,Culture=neutral,PublicKeyToken=91d62ebb5b0d1b1b';
+con.Params.Values['Filters'] := '{}';
+
+DSProviderConnection1.SQLConnection := con;
+Memo1.Text := con.Params.Text + #13#10 + con.Params.Values['ConnectionString'];
+con.Open; 
+
+function TdmCliente.OpenConnection : String;
+var Port, IP : String;
+begin
+result := '';
+if FileExists(ExtractFilePath(ParamStr(0))+'\Client.ini') then
+begin
+try
+IP := yourIP;
+Port := yourPort;
+dmClient.SQLConnect.Close;
+dmClient.SQLConnect.Params.Values['HostName'] := IP;
+dmClient.SQLConnect.Params.Values['Port'] := Port;
+dmClient.SQLConnect.Open;
+except
+on e:exception do
+begin
+if (Pos('CONNECTION REFUSED', UpperCase(e.Message)) > 0) or
+(Pos('CONNECTION TIMED OUT', UpperCase(e.Message)) > 0) or
+(Pos('10060', UpperCase(e.Message)) > 0) then
+Result := '# Conexão recusada. Verifique : '
++#13+' - Se o servidor está ativo;'
++#13+' - Se o firewall está devidamente configurado.'
+else
+result := '# Erro ao conectar ao servidor : '+e.Message;
+end;
+end;
+end
+else
+begin
+result := '# Arquivo de configuração não foi localizado.';
+end;
+end; 
+
+
+To explain everything again.
+if I statically define parameters like:
+DriverUnit=Data.DBXDataSnap
+HostName=192.168.1.38
+Port=1002
+CommunicationProtocol=tcp/ip
+DatasnapContext=datasnap/
+DriverAssemblyLoader=Borland.Data.TDBXClientDriverLoader,Borland.Data.DbxClientDriver,Version=19.0.0.0,Culture=neutral,PublicKeyToken=91d62ebb5b0d1b1b
+Filters={}
+(copied from con.params)
+and if I only have on button press event next
+try
+con.Connected := True;
+except
+on e:exception do
+begin
+ShowMessage(e.Message);
+end;
+end;
+
+
+https://www.linkedin.com/groupItem?view=&item=5906490868235276288&type=member&gid=101829&trk=eml-group_discussion_new_comment-discussion-title-link&midToken=AQH-txikw7SEbQ&fromEmail=fromEmail&ut=0zuNNgzqwAkmo1

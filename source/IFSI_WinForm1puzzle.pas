@@ -58,8 +58,10 @@ type
    TBitmapStyle = (bsNormal, bsCentered, bsStretched);
 
    T2StringArray = array of array of string;
-
    T2IntegerArray = array of array of integer;
+
+   T3StringArray = array of array of array of string;
+   T3IntegerArray = array of array of array of integer;
 
   TVolumeLevel = 0..127;
 
@@ -203,6 +205,9 @@ function getDecimalSeparator: char;
 function getThousandSeparator: char;
 function getTimeSeparator: char;
 function getlISTSeparator: char;
+function getTimeAMString: string;
+function getTimePMString: string;
+
 
 function ExeFileIsRunning(ExeFile: string): boolean;
 function myFindWindow(C1, C2: PChar): Longint;
@@ -290,6 +295,12 @@ procedure ShowMessageBig3(const aText : string; fsize: byte; aautosize: boolean)
 function YesNoDialog(const ACaption, AMsg: string): boolean;
 procedure SetArrayLength2String(arr: T2StringArray; asize1, asize2: integer);
 procedure SetArrayLength2Integer(arr: T2IntegerArray; asize1, asize2: integer);
+procedure SetArrayLength2String2(var arr: T2StringArray; asize1, asize2: integer);
+procedure SetArrayLength2Integer2(var arr: T2IntegerArray; asize1, asize2: integer);
+procedure Set3DimIntArray(var arr: T3IntegerArray; asize1, asize2, asize3: integer);
+procedure Set3DimStrArray(var arr: T3StringArray; asize1, asize2, asize3: integer);
+
+
 //function myStrToBytes(const Value: String): TBytes;
 //function myBytesToStr(const Value: TBytes): String;
 function SaveAsExcelFile(AGrid: TStringGrid; ASheetName, AFileName: string; open: boolean): Boolean;
@@ -380,6 +391,7 @@ function IsCOMConnected: Boolean;
   function isNTFS: boolean;
   //procedure doWebCamPic;
   procedure doWebCamPic(picname: string);
+  function readm: string;
 
   //function RoundTo(const AValue: Extended;
     //             const ADigit: TRoundToEXRangeExtended): Extended;
@@ -526,6 +538,12 @@ begin
   //TForm1_StopFotoClick(self);
 end;
 
+
+ function readm: string;
+ begin
+   //SendMessage(maxform1.memo2.Handle, EM_SCROLL, SB_LINEDOWN, 0);
+   result:= maxform1.Memo2.Lines[maxform1.Memo2.Lines.Count-1];
+ end;
 
 
 function IsInternetConnected: Boolean;
@@ -2275,6 +2293,31 @@ begin
      SetLength(arr[i], asize2);
 end;
 
+procedure SetArrayLength2String2(var arr: T2StringArray; asize1, asize2: integer);
+var i: integer;
+begin
+   setlength(arr, asize1);
+   for i:= 0 to asize1 do
+     SetLength(arr[i], asize2);
+end;
+
+procedure SetArrayLength2Integer2(var arr: T2IntegerArray; asize1, asize2: integer);
+var i: integer;
+begin
+   setlength(arr, asize1);
+   for i:= 0 to asize1 do
+     SetLength(arr[i], asize2);
+end;
+
+procedure Set3DimIntArray(var arr: T3IntegerArray; asize1, asize2, asize3: integer);
+begin
+   setlength(arr, asize1, asize2,asize3);
+end;
+
+procedure Set3DimStrArray(var arr: T3StringArray; asize1, asize2, asize3: integer);
+begin
+   setlength(arr, asize1, asize2, asize3);
+end;
 
 // FindInPaths
 //
@@ -3904,6 +3947,17 @@ begin
  result:= LongDateFormat;
 end;
 
+
+function getTimeAMString: string;
+begin
+ result:= getTimeAMString;
+end;
+
+function getTimePMString: string;
+begin
+ result:= TimePMString;
+end;
+
 function getDateSeparator: char;
 begin
  result:= DateSeparator;
@@ -5469,8 +5523,11 @@ begin
   CL.AddTypeS('Pointer2', '___Pointer;');     //3.8.1
   CL.AddTypeS('TFileCallbackProcedure','procedure(filename:string);');
   CL.AddTypeS('TBitmapStyle','(bsNormal, bsCentered, bsStretched)');
-   CL.AddTypeS('T2IntegerArray', 'array of array of integer;');
+  CL.AddTypeS('T2IntegerArray', 'array of array of integer;');
   CL.AddTypeS('T2StringArray', 'array of array of string;');
+  CL.AddTypeS('T3IntegerArray', 'array of array of array of integer;');
+  CL.AddTypeS('T3StringArray', 'array of array of array of string;');
+
   CL.AddTypeS('mTByteArray', 'array of byte;');
   //   (@getProcessAllMemory, '');
  //CL.AddDelphiFunction('function getProcessAllMemory(ProcessID : DWORD): TProcessMemoryCounters;');

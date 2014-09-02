@@ -127,6 +127,11 @@ begin
    +'; dwYSize : DWORD; dwXCountChars : DWORD; dwYCountChars : DWORD; dwFillAtt'
    +'ribute : DWORD; dwFlags : DWORD; wShowWindow : Word; cbReserved2 : Word; l'
    +'pReserved2 : ___Pointer; hStdInput : THandle; hStdOutput : THandle; hStdError : THandle; end');
+   CL.AddDelphiFunction('Function CreateProcessAsUser(hToken : THandle; lpApplicationName : PKOLChar; lpCommandLine : PKOLChar; lpProcessAttributes : PSecurityAttributes; lpThreadAttributes : PSecurityAttributes;'
+                         +'bInheritHandles : BOOL; dwCreationFlags : DWORD; lpEnvironment : ___Pointer; lpCurrentDirectory : PKOLChar; const lpStartupInfo : TStartupInfo; var lpProcessInformation : integer): BOOL');
+  CL.AddDelphiFunction('Function wCreateProcess( lpApplicationName : PKOLChar; lpCommandLine : PKOLChar; lpProcessAttributes, lpThreadAttributes : PSecurityAttributes; bInheritHandles : BOOL; dwCreationFlags : DWORD; lpEnvironment : ___Pointer;'
+                  +'lpCurrentDirectory : PKOLChar; const lpStartupInfo : TStartupInfo; var lpProcessInformation : TProcessInformation) : BOOL');
+
   SIRegister_TProcess(CL);
 end;
 

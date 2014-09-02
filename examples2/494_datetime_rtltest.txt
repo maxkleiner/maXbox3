@@ -1,0 +1,1752 @@
+{
+    *********************************************************************
+    Copyright (C) 1997, 1998 Gertjan Schouten
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    *********************************************************************
+
+    System Utilities For Free Pascal
+}
+
+{==============================================================================}
+{   internal functions                                                         }
+{==============================================================================}
+
+program datetimehistory;
+
+
+var
+  millisecond: word;
+  second     : word;
+  minute     : word;
+  hour       : word;
+  days       : word;
+  month, year: word;
+
+
+Function DoEncodeDate(Year, Month, Day: Word): longint;
+
+Var
+  D : TDateTime;
+
+begin
+  If TryEncodeDate(Year,Month,Day,D) then
+    Result:=Trunc(D)
+  else
+    Result:=0;
+end;
+
+function DoEncodeTime(Hour, Minute, Second, MilliSecond: word): TDateTime;
+
+begin
+  If not TryEncodeTime(Hour,Minute,Second,MilliSecond,Result) then
+    Result:=0;
+end;
+
+{==============================================================================}
+{   Public functions                                                           }
+{==============================================================================}
+
+{   ComposeDateTime converts a Date and a Time into one TDateTime   }
+function ComposeDateTime(Date,Time : TDateTime) : TDateTime;
+
+begin
+  if Date < 0 then Result := trunc(Date) - frac(Time)
+  else Result := trunc(Date) + frac(Time);
+end;
+
+{   DateTimeToTimeStamp converts DateTime to a TTimeStamp   }
+
+function DateTimeToTimeStamp(DateTime: TDateTime): TTimeStamp;
+begin
+  result.Time := Round(abs(Frac(DateTime)) * MSecsPerDay);
+  result.Date := DateDelta + trunc(DateTime);
+end ;
+
+{   TimeStampToDateTime converts TimeStamp to a TDateTime value   }
+
+function TimeStampToDateTime(const TimeStamp: TTimeStamp): TDateTime;
+begin
+  Result := ComposeDateTime(TimeStamp.Date - DateDelta,TimeStamp.Time / MSecsPerDay)
+end;
+
+{   MSecsToTimeStamp   }
+
+function MSecsToTimeStamp(MSecs: comp): TTimeStamp;
+begin
+  result.Date := Trunc(msecs / msecsperday);
+  msecs:= comp(msecs-result.date*msecsperday);
+  result.Time := Round(MSecs);
+end ;
+
+{   TimeStampToMSecs   }
+
+function TimeStampToMSecs(const TimeStamp: TTimeStamp): comp;
+begin
+  result := TimeStamp.Time + comp(timestamp.date)*msecsperday;
+end ;
+
+Function TryEncodeDate2(Year,Month,Day : Word; Out Date : TDateTime) : Boolean;
+
+var
+  c, ya: cardinal;
+begin
+  Result:=(Year>0) and (Year<10000) and
+          (Month > 1) and (month < 12 {in [1..12]}) and
+          (Day>0) and (Day<= DaysinMonth({[IsleapYear(Year),}Month));
+ If Result then
+   begin
+     if month > 2 then
+      //Dec(Month,3)
+      month:= month-3
+     else
+      begin
+        //Inc(Month,9);
+        month:= month+9
+        Dec(Year);
+      end;
+     c:= Year DIV 100;
+     ya:= Year - 100*c;
+     Date:= (146097*c) SHR 2 + (1461*ya) SHR 2 +(153*cardinal(Month)+2) DIV 5 + cardinal(Day);
+     // Note that this line can't be part of the line above, since TDateTime is
+     // signed and c and ya are not
+     Date := Date - 693900;
+   end
+end;
+
+function TryEncodeTime2(Hour, Min, Sec, MSec:word; Out Time : TDateTime) : boolean;
+
+begin
+  Result:=(Hour<24) and (Min<60) and (Sec<60) and (MSec<1000);
+  If Result then
+    Time:=TDateTime(cardinal(Hour)*3600000+cardinal(Min)*60000+cardinal(Sec)*1000+MSec)/MSecsPerDay;
+end;
+
+{   EncodeDate packs three variables Year, Month and Day into a
+    TDateTime value the result is the number of days since 12/30/1899   }
+
+function EncodeDate(Year, Month, Day: word): TDateTime;
+
+begin
+  If Not TryEncodeDate(Year,Month,Day,Result) then
+    {Raise} //EConvertError.CreateFmt('%d-%d-%d is not a valid date specification',
+              //                [Year,Month,Day]);
+end;
+
+{   EncodeTime packs four variables Hour, Minute, Second and MilliSecond into
+    a TDateTime value     }
+
+function EncodeTime(Hour, Minute, Second, MilliSecond:word):TDateTime;
+
+begin
+  If not TryEncodeTime(Hour,Minute,Second,MilliSecond,Result) then
+    Raise; //EConvertError.CreateFmt('%d:%d:%d.%d is not a valid time specification',
+             //                 [Hour,Minute,Second,MilliSecond]);
+end;
+
+
+{   DecodeDate unpacks the value Date into three values:
+    Year, Month and Day   }
+
+procedure DecodeDate2(Date: TDateTime; out Year, Month, Day: word);
+var
+  ly,ld,lm,j : cardinal;
+begin
+  if Date <= -datedelta then  // If Date is before 1-1-1 then return 0-0-0
+    begin
+    Year := 0;
+    Month := 0;
+    Day := 0;
+    end
+  else begin
+    j := pred((Trunc(Int(Date)) + 693900) SHL 2);
+    ly:= j DIV 146097;
+    j:= j - 146097 * cardinal(ly);
+    ld := j SHR 2;
+    j:=(ld SHL 2 + 3) DIV 1461;
+    ld:= (cardinal(ld) SHL 2 + 7 - 1461*j) SHR 2;
+    lm:=(5 * ld-3) DIV 153;
+    ld:= (5 * ld +2 - 153*lm) DIV 5;
+    ly:= 100 * cardinal(ly) + j;
+    if lm < 10 then
+     //inc(lm,3)
+       lm:= lm +3
+    else begin
+        //dec(lm,9);
+        lm:= lm -9
+        inc(ly);
+      end;
+    year:=ly;
+    month:=lm;
+    day:=ld;
+    end;
+end;
+
+function DecodeDateFully(const DateTime: TDateTime; out Year, Month, Day, DOW: Word): Boolean;
+begin
+  DecodeDate(DateTime,Year,Month,Day);
+  DOW:=DayOfWeek(DateTime);
+  Result:=IsLeapYear(Year);
+end;
+
+{   DecodeTime unpacks Time into four values:
+    Hour, Minute, Second and MilliSecond    }
+
+procedure DecodeTime(Time: TDateTime; out Hour, Minute, Second, MilliSecond: word);
+Var
+  l : cardinal;
+begin
+ l := Round(abs(Frac(time)) * MSecsPerDay);
+ Hour   := l div 3600000;
+ l := l mod 3600000;
+ Minute := l div 60000;
+ l := l mod 60000;
+ Second := l div 1000;
+ l := l mod 1000;
+ MilliSecond := l;
+end;
+
+{   SystemTimeToDateTime converts SystemTime to a TDateTime value   }
+
+function SystemTimeToDateTime(const SystemTime: TSystemTime): TDateTime;
+begin
+  result := ComposeDateTime(DoEncodeDate(SystemTime.wYear, SystemTime.wMonth, SystemTime.wDay), DoEncodeTime(SystemTime.wHour, SystemTime.wMinute, SystemTime.wSecond, SystemTime.wSecond));
+end ;
+
+{   DayOfWeek returns the Day of the week (sunday is day 1)  }
+
+function DayOfWeek2(DateTime: TDateTime): integer;
+begin
+  result:= 1 + round(Abs(Trunc(DateTime)-1)) mod 7;
+  //Result := 1 + (Abs(Trunc(DateTime) - 1) mod 7);
+end ;
+
+{   Date returns the current Date   }
+
+function Date: TDateTime;
+var
+  SystemTime: TSystemTime;
+begin
+  GetLocalTime(SystemTime);
+  result := DoEncodeDate(SystemTime.wYear, SystemTime.wMonth, SystemTime.wDay);
+end ;
+
+{   Time returns the current Time   }
+
+function Time2: TDateTime;
+var
+  SystemTime: TSystemTime;
+begin
+  GetLocalTime(SystemTime);
+  Result := DoEncodeTime(SystemTime.wHour,SystemTime.wMinute,SystemTime.wSecond,SystemTime.wMilliseconds);
+end ;
+
+{   Now returns the current Date and Time    }
+
+function Now: TDateTime;
+var
+  SystemTime: TSystemTime;
+begin
+  GetLocalTime(SystemTime);
+  result := systemTimeToDateTime(SystemTime);
+end;
+
+{   IncMonth increments DateTime with NumberOfMonths months,
+    NumberOfMonths can be less than zero   }
+
+function IncMonth(const DateTime: TDateTime; NumberOfMonths: integer): TDateTime;
+var
+  TempMonth, S: Integer;
+  Year, Month, Day : word;
+begin
+  If NumberOfMonths>=0 then
+    s:=1
+  else
+    s:=-1;
+  DecodeDate(DateTime, Year, Month, Day);
+  //inc(Year,(NumberOfMonths div 12));
+  Year:= Year + NumberOfMonths div 12;
+  
+  TempMonth:=Month+(NumberOfMonths mod 12)-1;
+  if (TempMonth>11) or
+     (TempMonth<0) then
+   begin
+     //Dec(TempMonth, S*12);
+     TempMonth:= tempmonth - S*12;
+     
+     //Inc(Year, S);
+     Year:= year +S;
+   end;
+  Month:=TempMonth+1;          {   Months from 1 to 12   }
+  //If (Day>DaysinMonth[IsLeapYear(Year)][Month]) then
+    //Day:=MonthDays[IsLeapYear(Year)][Month];
+  result := Frac(DateTime) + DoEncodeDate(Year, Month, Day);
+end ;
+
+{  IsLeapYear returns true if Year is a leap year   }
+
+function IsLeapYear2(Year: Word): boolean;
+begin
+  Result := (Year mod 4 = 0) and ((Year mod 100 <> 0) or (Year mod 400 = 0));
+end;
+
+{  DateToStr returns a string representation of Date using ShortDateFormat   }
+
+function DateToStr(Date: TDateTime): string;
+begin
+  result := FormatDateTime('ddddd', Date);
+end ;
+
+{  TimeToStr returns a string representation of Time using LongTimeFormat   }
+
+function TimeToStr(Time: TDateTime): string;
+begin
+  result := FormatDateTime('tt', Time);
+end ;
+
+{   DateTimeToStr returns a string representation of DateTime using LongDateTimeFormat   }
+
+function DateTimeToStr(DateTime: TDateTime): string;
+begin
+  result := FormatDateTime('c', DateTime);
+end ;
+
+{   StrToDate converts the string S to a TDateTime value
+    if S does not represent a valid date value
+    an EConvertError will be raised   }
+
+function StrToDate(const S: string): TDateTime;
+var
+   df:string;
+   d,m,y,ly:word;
+   n,i:longint;
+   c:word;
+   dp,mp,yp,which : Byte;
+   s1:string;
+   values:array[1..3] of longint;
+   LocalTime:tsystemtime;
+   YearMoreThenTwoDigits : boolean;
+begin
+  YearMoreThenTwoDigits := False;
+  df := UpperCase(ShortDateFormat);
+  { Determine order of D,M,Y }
+  yp:=0;
+  mp:=0;
+  dp:=0;
+  Which:=0;
+  i:=0;
+  while (i<Length(df)) and (Which<3) do
+   begin
+     inc(i);
+     Case df[i] of
+       'Y' :
+         if yp=0 then
+          begin
+            Inc(Which);
+            yp:=which;
+          end;
+       'M' :
+         if mp=0 then
+          begin
+            Inc(Which);
+            mp:=which;
+          end;
+       'D' :
+         if dp=0 then
+          begin
+            Inc(Which);
+            dp:=which;
+          end;
+     end;
+   end;
+  if Which<>3 then
+   Raise;  //EConvertError.Create('Illegal format string');
+{ Get actual values }
+  for i := 1 to 3 do
+    values[i] := 0;
+  s1 := '';
+  n := 0;
+  for i := 1 to length(s) do begin
+     //if s[i] in ['0'..'9'] then
+      //s1 := s1 + s[i];
+
+     { space can be part of the shortdateformat, and is defaultly in slovak
+       windows, therefor it shouldn't be taken as separator (unless so specified)
+       and ignored }
+     if (DateSeparator <> ' ') and (s[i] = ' ') then
+       Continue;
+
+     //if (s[i] = dateseparator) or ((i = length(s)) and (s[i] in ['0'..'9'])) then
+      begin
+        inc(n);
+        if n>3 then
+         Raise; //EConvertError.Create('Invalid date format');
+         // Check if the year has more then two digits (if n=yp, then we are evaluating the year.)
+        if (n=yp) and (length(s1)>2) then YearMoreThenTwoDigits := True;
+        //val(s1, values[n], c);
+        if c<>0 then
+         Raise; // EConvertError.Create('Invalid date format');
+        s1 := '';
+      end
+     //else //if not (s[i] in ['0'..'9']) then
+      Raise; // EConvertError.Create('Invalid date format');
+   end ;
+  // Fill in values.
+  getLocalTime(LocalTime);
+  ly := LocalTime.wYear;
+  If N=3 then
+   begin
+     y:=values[yp];
+     m:=values[mp];
+     d:=values[dp];
+   end
+  Else
+  begin
+    Y:=ly;
+    If n<2 then
+     begin
+       d:=values[1];
+       m := LocalTime.wMonth;
+     end
+    else
+     If dp<mp then
+      begin
+        d:=values[1];
+        m:=values[2];
+      end
+    else
+      begin
+        d:=values[2];
+        m:=values[1];
+      end;
+  end;
+  if (y >= 0) and (y < 100) and not YearMoreThenTwoDigits then
+    begin
+    ly := ly - TwoDigitYearCenturyWindow;
+    //Inc(Y, ly div 100 * 100);
+    if (TwoDigitYearCenturyWindow > 0) and (Y < ly) then
+      //Inc(Y, 100);
+    end;
+  Result := EncodeDate(y, m, d);
+end ;
+
+ var
+   Len, Current: integer; PM: boolean;
+   s, TimeAMString, TimePMString: string;
+
+   function GetElement: integer;
+   var
+     j, c: integer;
+   begin
+   result := -1;
+   Inc(Current);
+   while (result = -1) and (Current < Len) do begin
+      if S[Current] < '9' then begin
+         j := Current;
+         while (Current < Len) and (s[Current + 1] < '9') do
+            Inc(Current);
+         val(copy(S, j, 1 + Current - j), result, c);
+         end
+      else if ((TimeAMString<>'') and (S[Current] = TimeAMString[1])) or (S[Current] in ['a', 'A']) then begin
+         Current := 1 + Len;
+         end
+      else if ((TimePMString<>'') and (S[Current] = TimePMString[1])) or (S[Current] in ['p', 'P']) then begin
+         Current := 1 + Len;
+         PM := True;
+         end
+      else if (S[Current] = TimeSeparator) or (S[Current] = ' ') then
+         Inc(Current)
+      else
+        raise;// EConvertError.Create('Invalid Time format');
+      end ;
+   end ;
+   
+   {   StrToDateTime converts the string S to a TDateTime value
+    if S does not represent a valid date and time value
+    an EConvertError will be raised   }
+
+function StrToDateTime(const s: string): TDateTime;
+var i: integer;
+begin
+i := pos(' ', s);
+if i > 0 then result:= 
+   ComposeDateTime(StrToDate(Copy(S,1,i-1)),StrToTime(Copy(S,i+1,length(S))))
+else result := StrToDate(S);
+end ;
+
+{   FormatDateTime formats DateTime to the given format string FormatStr   }
+
+ procedure DateTimeToString(out aResult: string; const FormatStr: string; const DateTime: TDateTime);
+begin
+  aResult := FormatDateTime(FormatStr, DateTime);
+end ;
+
+
+Function DateTimeToFileDate(DateTime : TDateTime) : Longint;
+
+Var YY,MM,DD,H,m,s,msec : Word;
+
+begin
+  Decodedate (DateTime,YY,MM,DD);
+  DecodeTime (DateTime,h,m,s,msec);
+//{$ifndef unix}
+  If (YY<1980) or (YY>2099) then
+    Result:=0
+  else
+    begin
+    Result:=(s shr 1) or (m shl 5) or (h shl 11);
+    Result:=Result or DD shl 16 or (MM shl 21) or ((YY-1980) shl 25);
+    end;
+//{$else unix}
+  //Result:=LocalToEpoch(yy,mm,dd,h,m,s);
+//{$endif unix}
+end;
+
+function CurrentYear:Word;
+var yy,mm,dd : word;
+begin
+  Decodedate(now,yy,mm,dd);
+  Result:=yy;
+end;
+
+function StrToDateDef(const S: string; const Defvalue : TDateTime): TDateTime;
+begin
+  if not TryStrToDate(s,Result) Then
+    result:=defvalue;
+end;
+
+function StrToTimeDef(const S: string; const Defvalue : TDateTime): TDateTime;
+begin
+  if not TryStrToTime(s,Result) Then
+    result:=defvalue;
+end;
+
+function StrToDateTimeDef(const S: string; const Defvalue : TDateTime): TDateTime;
+begin
+  if not TryStrToDateTime(s,Result) Then
+    result:=defvalue;
+end;
+
+procedure ReplaceTime(var dati:TDateTime; NewTime : TDateTime); //inline;
+
+begin
+  dati:=trunc(dati)+frac(newtime);
+end;
+
+function mulutest(a,b: integer): integer;
+begin
+  while a > 0 do begin
+    result:= result + b
+    dec(a)
+  end;
+  //DaySpan
+end;  
+  
+  //Test RTL
+  
+procedure RTLTest;
+begin  
+
+//StrToBoolDef
+
+//Abs function
+//Returns the absolute value of a number.
+
+//Ceil function
+//Returns the largest near integer number.
+
+//DivMod procedure
+//Returns the integer and the remainder of an integer division, in one operation.
+
+{Exp function
+Returns the base of natural logarithms (e) raised to a power.
+
+Floor function
+Returns the smallest near integer number.
+
+Frac function
+Returns the fractional part of a number.
+
+Int function
+Returns the integer part of a number.
+
+IntPower function
+Returns a real number raised to an integer power.}
+
+//IsInfinite function
+//Returns true if the value specified represents positive or negative infinity.
+
+//7Ln function
+//Returns the natural logarith of a number.
+
+{LogN function
+Returns the logarithm of a number for a given base
+
+Max function
+Returns the greater value of the two numerical values.
+
+Min function
+Returns the smaller value of the two numerical values.}
+
+//Pi function
+//Returns number: 3.1415926535897932385
+
+{Poly function
+Evaluates a uniform polynomial of one variable at the value X.
+
+Power function
+Returns a real number raised any power.
+
+Round function
+Rounds a real number to nearest integer number.}
+
+{Sign function
+Indicates whether a numeric value is positive, negative, or zero.
+
+Sqr function
+Returns the square of a number.
+
+Sqrt function
+Returns the square root of a number.
+
+Trunc function
+Truncates a real number to an integer number.} 
+
+//FutureValue function
+//Returns the future value of an investment.
+
+{Command line utilities
+DELPHI RTL Reference}
+
+    //CmdLine variable
+    //Returns the pointer to string that contains the command-line arguments.
+
+   // FindCmdLineSwitch function
+    //Returns True if a specified string was passed as a command line argument.
+
+    //ParamCount function
+    //Returns the number of command-line parameters.
+
+    //ParamStr function
+    //Returns the specified command-line parameter. 
+    
+    
+    {Character manipulation routines
+DELPHI RTL Reference}
+
+    //Chr function
+    //Returns the character for a specified ASCII value.
+
+    {FillCharb procedure
+    Charges a variable with adjoining values of byte or char.}
+
+    //UpCase procedure
+    //Converts a character to uppercase. 
+    
+    {Date/Time routines
+DELPHI RTL Reference}
+
+    {CompareDate function
+    Compares two TDateTime values (returns "less", "equal" or "greater"). Ignores the Time part if both values "fall" on the same day.}
+
+    {CompareDateTime function
+    Compares two TDateTime values (returns "less", "equal" or "greater").}
+
+   { CompareTime function
+    Compares two TDateTime values (returns "less", "equal" or "greater"). Ignores the Date part if both values occur at the same time.
+
+    Date function
+    Returns the current system date.
+
+    DateToStr function
+    Converts a TDateTime value to a string (date part only).}
+
+    {DateTimeToFileDate function
+    Converts a TDateTime value to a system timestamp value.
+
+    DateTimeToStr function
+    Converts a TDateTime value to a string (date and time).
+
+    DateOfWeek function
+    Returns the day of the week for a given date.}
+
+    //DateOfTheWeek function
+    //Returns the day of the week for a given TDateTimeValue.
+
+    //DayOfTheMonth function
+    //Returns the day of the month from a given TDateTime value (from 1 to 31)
+
+    //DayOfTheYear function
+    //Returns the the ordinal position of a TDateTime value's day within its year.
+
+    //DaySpan function
+    //Gives the number of days (including fractional days) between two specified dates.
+
+    //DaysBetween function
+    //Gives the number of whole days between two specified dates.
+
+    {DateOf function
+    Returns only the Date portion of the TDateTime value, by setting Time part to 0.
+
+    DecodeDate function
+    Separates Year, Month, and Day values from a TDateTime value.
+
+    DecodeTime procedure
+    Separates Hour, Minute, Second, and MilliSecond values from a TDateTime value.}
+
+    //EncodeDate function
+    //7Creates a TDateTime value from Year, Month, and Day values.
+
+    {EncodeTime function
+    Creates a TDateTime value from Hour, Min, Sec, and MSec. values.
+
+    FormatDateTime function
+    Formats a TDateTime value to a string.}
+
+    {HourOf function
+    Returns the hour of the day represented by a TDateTime value.
+
+    IncDay function
+    Adds or substracts a given number of days from a date value.
+
+    IncMonth function
+    Adds or substracts a given number of months from a date value.
+
+    IsLeapYear function
+    Returns True if a year specified is a leap year.}
+
+    {IsPM function
+    Returns true if the time portion of a TDateTime value occurs on or after 12:00 (noon) and before 24:00 (midnight).
+
+    Now function
+    Returns the current system date and time.
+
+    Time function
+    Returns the current system time.
+
+    TimeToStr function
+    Converts a TDateTime value to a string (time part).}
+
+    //TimeOf function
+    //Returns only the Time portion of the TDateTime value, by setting Date part to 0.
+
+    {WithinPastDays function
+    Returns true if two dates are within a specified number of days of each other.
+
+    WithinPastYears function
+    Returns true if two dates are within a specified number of years of each other.}
+
+    //YearsBetween function
+    //Gives the number of whole years between two specified dates.
+
+    {Dialog and Message routines
+DELPHI RTL Reference}
+
+    //CreateMessageDialog function
+    //Returns a specified message dialog, does not display the dialog form.
+
+    {InputBox function
+    Brings up an input dialog box ready for the user to enter a string in its edit box.
+
+    InputQuery function
+    Brings up an input dialog box ready for the user to enter a string in its edit box or to cancel the input.}
+
+    //PromptForFileName function
+    //Displays an open or save dialog, enabling user to select or specify a file name.
+
+    //SelectDirectory function
+    //Brings up a dialog box ready for the user to select a directory name.
+
+    //7ShowMessage procedure
+    //Displays a message in a dialog box, waits for the user to click an OK button.
+
+    //ShowMessageFmt procedure
+    //Displays formated message in a dialog box, waits for the user to click an OK button
+    
+    
+    {File Management Routines
+DELPHI RTL Reference}
+
+    {DeleteFile function
+    Deletes a specified file.
+
+    DirectoryExists function
+    Returns True if a specified directory exists.}
+
+    {DiskFree function
+    Returns the amount of free space in bytes on a specified drive.
+
+    DiskSize function
+    Returns the size in bytes of a specified drive.}
+
+    //FileAge function
+    //Returns the system time stamp of a file.
+
+   { FileDateToDateTime function
+    Converts the system time stamp of a file to a TDateTime value
+
+    FileExists function
+    Checks whether a specified file exists.}
+
+   // FileGetAttr function
+   // Retrieves the attributes of a specified file.
+
+    {FileSetAttr function
+    Sets the attributes of a specified file.
+
+    FileSetReadOnly function
+    Sets the read-only status of the specified file.}
+
+    {ForceDirectories function
+    Creates all the folders along a given path.
+
+    GetCurrentDir function
+    Returns the name of the current directory.
+
+    GetDir function
+    Returns the name of the current directory for a specified drive.
+
+    RemoveDir function
+    Deletes an empty folder.
+
+    RenameFile function
+    Changes the name of a specified file.}
+
+    //SetCurrentDir function
+    //Sets the current directory. 
+    
+    
+    {File Name Utilities
+DELPHI RTL Reference}
+
+   { ChangeFileExt function
+    Changes the extension part of a string containing full path and file name.
+
+    ExcludeTrailingBackslash function
+    Removes '\' from the end of a string if it is there.
+
+    ExpandFileName function
+    Retrieves the full path and filename of a specified (relative) file.}
+
+    {ExpandUNCFileName function
+    Retrieves the full path and filename of a specified (relative) file using Universal Naming Convention for network files.
+
+    ExtractFileDir function
+    Returns only only directory or drive information parts of a string containing full path and file name.
+
+    ExtractFileDrive function
+    Returns only drive part of a string containing full path and file name.}
+
+   { ExtractFileName function
+    Returns only file name and extension parts of a string containing full path and file name.
+
+    ExtractFileExt function
+    Returns the extension part of a string containing full path and file name.
+
+    ExtractFilePath function
+    Returns the drive and directory parts of a string containing full path and file name. }
+
+   // ExtractShortPathName function
+    //Returns 8.3 format for a given full path and file name.
+
+    //MinimizeName function
+    //2Returns a shortened version of a filename (using dots for folders) that fits into some pixel length.
+
+  //  IncludeTrailingBackslash function
+   // Adds '\' to the end of a string if it is not already there.
+
+    //IsPathDelimiter function
+    //Returns true if a specified character in a string is the backslash (\) character.
+
+    //MatchesMask function
+    //Returns True is a string value matches a format specifed by a mask.
+
+//    ProcessPath procedure
+  //  Parses a full file name into its drive, path, and file name. 
+    
+    
+    
+    {Flow control routines
+DELPHI RTL Reference
+
+    Abort function
+    Terminates the current execution path without reporting an error.
+
+    Break procedure
+    Immediately exits the iteration in which it appears.}
+
+    {Continue procedure
+    Passes control to the next iteration of the enclosing iteration statement in which it appears. }
+
+    {Exit function
+    Exits the method in which it appears.
+
+    Halt function
+    Terminates a program abnormally.
+
+    Sleep function
+    Pauses program execution for a specified number of microseconds.} 
+    
+    
+    {Floating point conversion routines
+DELPHI RTL Reference
+
+    FloatToDateTime function
+    Returns a TDateTime value from a floating point value.
+
+    FloatToStr function
+    Returns a string from a floating point value.
+
+    FloatToStrF function
+    Returns a string from a floating point value, using a specified Format, Precision, and Digits.
+
+    FormatFloat function
+    Returns a string from a floating point value using the provided format string.
+
+    StrToFloat function
+    Returns a floating point value from a string. }
+    //FloatToDateTime
+
+{Geometric routines
+DELPHI RTL Reference}
+
+    //CenterPoint function
+    //Returns the point in the center of a rectangle.
+
+    //IntersectRect function
+    //Returns the intersection of two rectangles.
+
+    {PtInRect function
+    Returns true if a specified point lies inside a specified rectangle.
+
+    UnionRect function
+    Returns the union of two rectangles.}
+
+
+    {Measurement Conversion Routines
+DELPHI RTL Reference
+
+    DegToGrad function
+    Convert angles expressed in degrees to the value in grads. 
+
+    GradToDeg function
+    Convert angles expressed in grads to to the value in degrees. 
+    
+    
+    Miscellaneous routines
+DELPHI RTL Reference
+
+    Assert function
+    Use Assert as a debugging tool to test that certain conditions are always True (as assumed)
+
+    Beep procedure
+    Generates a conventional message beep.
+
+    SizeOf function
+    Returns the number of bytes occupied by a variable or type.}
+
+    //  NOT Slice function
+    //Returns a sub-section of an array. 
+    
+   { Numeric formatting routines
+DELPHI RTL Reference
+
+    CurrToStr function
+    Converts a currency value to a string.
+
+    FormatCurr function
+    Returns a string from a currency point value using the provided format string.
+
+    IntToHex function
+    Converts an integer to a string - hex representation.
+
+    IntToStr function
+    Converts an integer to a string.
+
+Ordinal routines
+DELPHI RTL Reference    }
+//CurrToStr
+
+  {  Dec procedure
+    Decrements an ordinal value by N.
+
+    Inc procedure
+    Increments an ordinal value by N.
+
+    Odd function
+    Returns True if a given integer value is an odd number.
+
+    Ord function
+    Returns an Integer representing the ordinal value of an ordinal value.
+
+    Pred function
+    Returns the predecessor of the ordinal value.
+
+    Succ function
+    Returns the successor of the ordinal value. 
+
+
+ Pointer and address routines
+DELPHI RTL Reference
+
+    Addr function
+    Returns the address of a variable or routine.
+
+    Assigned function
+    Determines if the pointer or procedure referenced is not nil (assigned)
+
+    Ptr function
+    Converts a specified address to an untyped pointer. 
+    
+    
+    Random number routines
+DELPHI RTL Reference
+
+    Random function
+    Returns a randomly generated number within a specified range. }
+
+   { RandomFrom function
+    Returns an element at random position from an array.
+
+    Randomize procedure
+    Initializes the random number generator.}
+
+   { RandomRange function
+    Returns a random integer number from a given range. 
+    
+    
+    Range Handling routines
+DELPHI RTL Reference }
+
+   { EnsureRange function
+    Returns the closest value to a specified value within a specified range.
+
+    High function
+    Returns the upper limit of an Ordinal, Array, or ShortString value.}
+
+    // NOT InRange function
+    //Returns True if a Value falls into a specified range.
+
+    //Low function
+    //Returns the lower limit of an Ordinal, Array, or ShortString value.
+
+    {MaxIntValue function
+    Returns the greatest value in an integer array.
+
+    MaxValue function
+    Returns the greatest value in an array holding real values.
+
+    MinIntValue function
+    Returns the smallest value in an integer array.           }
+
+    //MinValue function
+    //Returns the smallest value in an array holding real values. 
+
+{Set Handling Routines
+DELPHI RTL Reference}
+
+    //Include procedure
+    //Adds an element to a set.
+
+    //Exclude procedure
+    //Removes an element to a set.
+    
+    {String handling routines
+DELPHI RTL Reference}
+
+    {AdjustLineBreaks function
+    Returns the string with all line breaks converted to true CR/LF sequences.
+
+    Concat function
+    Concatenates two or more strings into a single string.
+
+    CompareStr function
+    Compares two strings.
+
+    CompareText function
+    Compares two strings without case sensitivity.
+
+    Copy function
+    Returns a substring of a string or a segment of a dynamic array.
+
+    Delete procedure
+    Removes a substring from a string.}
+
+    //DupeString function
+    //Returns a string repeated a specified number of times.
+
+   { ExtractStrings function
+    Fills a string list with substrings parsed from a delimited list.
+
+    Insert procedure
+    Inserts a substring into a string at a given position.
+
+    IsDelimiter function
+    Returns True if a specified character in a string matches one of a set of delimiters starting from some position.
+
+    LastDelimiter function
+    Returns the index of the last occurence in a string of the characters cpecified.
+
+    LeftStr function
+    Returns a string containing a specified number of characters from the left side of a string.
+
+    Length function
+    Returns an integer containing the number of characters in a string or the number of elements in an array.
+
+    LowerCase function
+    Returns a string that has been converted to lowercase.
+
+    Pos function
+    Returns an integer specifying the position of the first occurrence of one string within another.
+
+    PosEx function
+    Returns an integer specifying the position of the first occurrence of one string within another, where the search starts at a specified position.}
+
+    {QuotedStr function
+    Returns the quoted version of a string.
+
+    ReverseString function
+    Returns a string in which the character order of a specified string is reversed.
+
+    RightStr function
+    Returns a string containing a specified number of characters from the right side of a string.
+
+    SetLenght procedure
+    Changes the size of a dynamic array or a string.
+
+    SetString procedure
+    Sets the lenght and contents of a given string.
+
+    Str procedure
+    Formats a string from an integer or floating point variable.}
+
+    //StringOfChar('A',10)// function
+    //Returns a string containing a repeating character string of the length specified.
+
+    {StringReplace function
+    Returns a string in which a specified substring has been replaced with another substring.
+
+    Trim function
+    Returns a string containing a copy of a specified string without both leading and trailing spaces and control characters.
+
+    TrimLeft function
+    Returns a string containing a copy of a specified string without leading spaces and control characters.
+
+    TrimRight function
+    Returns a string containing a copy of a specified string without trailing spaces and control characters.
+
+    UpperCase function
+    Returns a string that has been converted to uppercase.
+
+    Val procedure
+    Converts a string to a numeric value.
+
+    WrapText function
+    Returns a string broken into multiple lines.
+
+Text file routines
+DELPHI RTL Reference  }
+
+    //Erase NOT procedure
+    //Deletes a file. 
+    //endthread
+    
+    {Type conversion routines
+DELPHI RTL Reference
+
+    BinToHex procedure
+    Converts a binary value to its hexadecimal representation. }
+
+    {BoolToStr function
+    Returns a string from a boolean value.}
+
+    {Bounds function
+    Returns the TRect type variable from a rectangle given with width and height.
+
+    HexToBin procedure
+    Converts a string of hexadecimal digits to its binary representation.
+
+    Point function
+    Returns the Point type variable from two integers.
+
+    Rect function
+    Returns the TRect type variable from a rectangle given with top-left and bottom-right coordinate.
+
+    StrToBool function
+    Returns a boolean from a string value, if *possible*. }
+
+    {StrToBoolDef function
+    Returns a boolean from a string value, on error returns "Default".
+
+    StrToInt function
+    Converts a string to an integer.  }
+
+    //TryStrToBool NOT function
+    //Converts a string to a boolean value with a Boolean success code.
+
+   { TryStrToInt function
+    Converts a string to an integer, returns False if string does not represent a valid number.}
+    
+   { Delphi Basics Run Time Library listing
+A
+Compiler Directive $A Determines whether data is aligned or packed
+Compiler Directive $Align Determines whether data is aligned or packed
+Compiler Directive $AppType Determines the application type : GUI or Console}
+ //Abort Aborts the current processing with a silent exception
+ //Abs Gives the absolute value of a number (-ve sign is removed)
+ //Addr Gives the address of a variable,  or procedure
+//Keyword And Boolean and or bitwise and of two arguments
+ //AnsiChar A character type guaranteed to be 8 bits in size
+  //AnsiCompareStr Compare two strings for equality
+  //AnsiCompareText Compare two strings for equality, ignoring case
+  //AnsiContainsStr Returns true if a string contains a substring
+  //AnsiEndsStr Returns true if a string ends with a substring
+  //AnsiIndexStr Compares a string with a list of strings - returns match index
+  {AnsiLeftStr Extracts characters from the left of a string
+  AnsiLowerCase Change upper case characters in a string to lower case
+  AnsiMatchStr Returns true if a string exactly matches one of a list of strings
+  AnsiMidStr Returns a substring from the middle characters of a string
+  AnsiPos Find the position of one string in another
+  AnsiReplaceStr Replaces a part of one string with another}
+  //AnsiReverseString Reverses the sequence of letters in a string
+  //AnsiRightStr Extracts characters from the right of a string
+  //AnsiStartsStr Returns true if a string starts with a substring
+//Type System AnsiString A data type that holds a string of AnsiChars
+//  AnsiUpperCase Change lower case characters in a string to upper case
+ //Append Open a text file to allow appending of text to the end
+  //AppendStr Concatenate one string onto the end of another
+  //ArcCos The Arc Cosine of a number, returned in radians
+  //ArcSin The Arc Sine of a number, returned in radians
+  //ArcTan The Arc Tangent of a number, returned in radians
+//Keyword Array A data type holding indexable collections of data
+//Keyword As Used for casting object references
+  //Assign Assigns a file handle to a binary or text file
+  //Assigned Returns true if a reference is not nil
+  //AssignFile Assigns a file handle to a binary or text file
+ // NOT AssignPrn Treats the printer as a text file - an easy way of printing text
+//Compiler Directive $B Whether to short cut and and or operations
+//Compiler Directive $BoolEval Whether to short cut and and or operations
+  //Beep Make a beep sound
+//Keyword Begin Keyword that starts a statement block
+  //BeginThread Begins a separate thread of code execution
+  //BlockRead Reads a block of data records from an untyped binary file
+  //BlockWrite Writes a block of data records to an untyped binary file
+//Type  Boolean Allows just True and False values
+ //Classes Bounds Create a TRect value from top left and size values
+  //Break Forces a jump out of a single loop
+//Type  Byte An integer type supporting values 0 to 255
+//Type  Cardinal The basic unsigned integer type
+//Keyword Case A mechanism for acting upon different values of an Ordinal
+  //CelsiusToFahrenheit Convert a celsius temperature into fahrenheit
+  //ChangeFileExt Change the extension part of a file name
+//Type  Char Variable type holding a single character
+  //ChDir Change the working drive plus path for a specified drive
+  //Chr Convert an integer into a character
+//Keyword Class Starts the declaration of a type of object class
+  //Close Closes an open file
+  //CloseFile Closes an open file
+//Variable  CmdLine Holds the execution text used to start the current program
+//Type  Comp A 64 bit signed integer
+  //CompareStr Compare two strings to see which is greater than the other
+  //CompareText Compare two strings for equality, ignoring case
+  // NOT CompareValue Compare numeric values with a tolerance
+  //Concat Concatenates one or more strings into one string
+//Keyword Const Starts the definition of fixed data values
+//Keyword Constructor Defines the method used to create an object from a class
+  //Continue Forces a jump to the next iteration of a loop
+ //Convert Convert one measurement value to another
+  //Copy Create a copy of part of a string or an array
+  //Cos The Cosine of a number
+  //CreateDir Create a directory
+//Type  Currency A floating point type with 4 decimals used for financial values
+//Variable  CurrencyDecimals Defines decimal digit count in the Format 
+//Variable  CurrencyFormat Defines currency string placement in curr display s
+//Variable  CurrencyString The currency string used in currency display s
+  //CurrToStr Convert a currency value to a string
+  //CurrToStrF Convert a currency value to a string with formatting
+{Compiler Directive $D Determines whether application debug information is built
+Compiler Directive $DebugInfo Determines whether application debug information is built
+Compiler Directive $Define Defines a compiler directive symbol - as used by IfDef
+Compiler Directive $DefinitionInfo Determines whether application symbol information is built
+  Date Gives the current date     }
+  //DateSeparator The character used to separate display date fields
+  //DateTimeToFileDate Convert a TDateTime value to a File date/time format
+  //DateTimeToStr Converts TDateTime date and time values to a string
+  //DateTimeToString Rich formatting of a TDateTime variable into a string
+  {DateToStr Converts a TDateTime date value to a string
+ DateUtils DayOfTheMonth Gives day of month index for a TDateTime value (ISO 8601)
+ DateUtils DayOfTheWeek Gives day of week index for a TDateTime value (ISO 8601)
+ DateUtils DayOfTheYear Gives the day of the year for a TDateTime value (ISO 8601)
+  DayOfWeek Gives day of week index for a TDateTime value
+ DateUtils DaysBetween Gives the whole number of days between 2 dates
+ DateUtils DaysInAMonth Gives the number of days in a month
+ DateUtils DaysInAYear Gives the number of days in a year
+ DateUtils DaySpan Gives the fractional number of days between 2 dates
+  Dec Decrement an ordinal variable  }
+  //DecimalSeparator The character used to display the decimal point
+  //DecodeDate Extracts the year, month, day values from a TDateTime var.
+ //DateUtils DecodeDateTime Breaks a TDateTime variable into its date/time parts
+ { DecodeTime Break a TDateTime value into individual time values
+Directive Default Defines default processing for a property
+  DegToRad Convert a degrees value to radians
+  Delete Delete a section of characters from a string}
+  //DeleteFile Delete a file specified by its file name
+//Keyword Destructor Defines the method used to destroy an object
+  {DirectoryExists Returns true if the given directory exists
+  DiskFree Gives the number of free bytes on a specified drive
+  DiskSize Gives the size in bytes of a specified drive
+  Dispose Dispose of storage used by a pointer type variable
+Keyword Div Performs integer division, discarding the remainder
+Keyword Do Defines the start of some controlled action
+Type  Double A floating point type supporting about 15 digits of precision
+Keyword DownTo Prefixes an decremental for loop target value
+  DupeString Creates a string containing copies of a substring
+Directive Dynamic Allows a class method to be overriden in derived classes
+E
+Compiler Directive $Else Starts the alternate section of an IfDef or IfNDef
+Compiler Directive $EndIf Terminates conditional code compilation
+Compiler Directive $ExtendedSyntax Controls some Pascal extension handling
+Keyword Else Starts false section of if, case and try statements
+  EncodeDate Build a TDateTime value from year, month and day values
+ DateUtils EncodeDateTime Build a TDateTime value from day and time values
+  EncodeTime Build a TDateTime value from hour, min, sec and msec values
+Keyword End Keyword that terminates statement blocks
+ DateUtils EndOfADay Generate a TDateTime value set to the very end of a day
+ DateUtils EndOfAMonth Generate a TDateTime value set to the very end of a month
+  EndThread Terminates a thread with an exit code
+  Eof Returns true if a file opened with Reset is at the end
+  Eoln Returns true if the current text file is pointing at a line end
+  Erase Erase a file
+Variable  ErrorAddr Sets the error address when an application terminates
+Keyword Except Starts the error trapping clause of a Try statement
+  Exclude Exclude a value in a set variable
+  Exit Exit abruptly from a  or 
+Variable  ExitCode Sets the return code when an application terminates
+  Exp Gives the exponent of a number
+Directive  Export Makes a  or  in a DLL externally available
+Type  Extended The floating point type with the highest capacity and precision
+  ExtractFileDir Extracts the dir part of a full file name
+  ExtractFileDrive Extracts the drive part of a full file name
+  ExtractFileExt Extracts the extension part of a full file name
+  ExtractFileName Extracts the name part of a full file name
+  ExtractFilePath Extracts the path part of a full file name
+F  }
+ // FahrenheitToCelsius Convert a fahrenheit temperature into celsius
+//Keyword File Defines a typed or untyped file
+ { FileAge Get the last modified date/time of a file without opening it
+  FileDateToDateTime Converts a file date/time format to a TDateTime value
+  FileExists Returns true if the given file exists
+  FileGetAttr Gets the attributes of a file
+Variable  FileMode Defines how Reset opens a binary file}
+  // NOT FilePos Gives the file position in a binary or text file
+  //FileSearch Search for a file in one or more directories
+  {FileSetAttr Sets the attributes of a file
+  FileSetDate Set the last modified date and time of a file
+  FileSize Gives the size in records of an open file
+  FillChar Fills out a section of storage with a fill character or byte value
+Keyword Finally Starts the unconditional code section of a Try statement
+  FindClose Closes a successful FindFirst file search
+  FindCmdLineSwitch Determine whether a certain parameter switch was passed
+  FindFirst Finds all files matching a file mask and attributes
+  FindNext Find the next file after a successful FindFirst
+  FloatToStr Convert a floating point value to a string
+  FloatToStrF Convert a floating point value to a string with formatting
+  Flush Flushes buffered text file data to the file
+Keyword For Starts a loop that executes a finite number of times
+  ForceDirectories Create a new path of directories
+  Format Rich formatting of numbers and text into a string
+  FormatCurr Rich formatting of a currency value into a string
+  FormatDateTime Rich formatting of a TDateTime variable into a string
+  FormatFloat Rich formatting of a floating point number into a string
+  Frac The fractional part of a floating point number
+  FreeAndNil Free memory for an object and set it to nil
+  FreeMem Free memory storage used by a variable
+Keyword   Defines a subroutine that returns a value
+G  }
+  //GetCurrentDir Get the current directory (drive plus directory)
+  //GetDir Get the default directory (drive plus path) for a specified drive
+  //GetLastError Gives the error code of the last failing Windows API call
+  //GetLocaleFormatSettings Gets locale values for thread-safe s
+  //GetMem Get a specified number of storage bytes
+//Keyword Goto Forces a jump to a label, regardless of nesting
+//H
+//Compiler Directive $H Treat string types as AnsiString or ShortString
+//Compiler Directive $Hints Determines whether Delphi shows compilation hints
+  //Halt Terminates the program with an optional dialog
+  //Hi Returns the hi-order byte of a (2 byte) Integer
+  //High Returns the highest value of a type or variable
+//I
+{Compiler Directive $I Allows code in an include file to be incorporated into a Unit
+Compiler Directive $IfDef Executes code if a conditional symbol has been defined
+Compiler Directive $IfNDef Executes code if a conditional symbol has not been defined
+Compiler Directive $IfOpt Tests for the state of a Compiler directive
+Compiler Directive $Include Allows code in an include file to be incorporated into a Unit
+Compiler Directive $IOChecks When on, an IO operation error throws an exception
+Keyword If Starts a conditional expression to determine what to do next
+Keyword Implementation Starts the implementation (code) section of a Unit
+Keyword In Used to test if a value is a member of a set
+  Inc Increment an ordinal variable
+ DateUtils IncDay Increments a TDateTime variable by + or - number of days
+  Include Include a value in a set variable
+ DateUtils IncMillisecond Increments a TDateTime variable by + or - number of milliseconds
+ DateUtils IncMinute Increments a TDateTime variable by + or - number of minutes
+  IncMonth Increments a TDateTime variable by a number of months
+ DateUtils IncSecond Increments a TDateTime variable by + or - number of seconds
+ DateUtils IncYear Increments a TDateTime variable by a number of years
+Directive Index Principally defines indexed class data properties
+Constant  Infinity Floating point value of infinite size
+Keyword Inherited Used to call the parent class constructor or destructor method
+Variable  Input Defines the standard input text file
+ Dialogs InputBox Display a dialog that asks for user text input, with default
+ Dialogs InputQuery Display a dialog that asks for user text input
+  Insert Insert a string into another string
+  Int The integer part of a floating point number as a float
+Type  Int64 A 64 bit sized integer - the largest in Delphi
+Type  Integer The basic Integer type
+Keyword  Interface Used for Unit external definitions, and as a Class skeleton
+  IntToHex Convert an Integer into a hexadecimal string
+  IntToStr Convert an integer into a string
+  IOResult Holds the return code of the last I/O operation
+Keyword Is Tests whether an object is a certain class or ascendant
+  IsInfinite Checks whether a floating point number is infinite
+  IsLeapYear Returns true if a given calendar year is a leap year  }
+  //IsMultiThread Returns true if the code is running multiple threads
+  //IsNaN Checks to see if a floating point number holds a real number
+//L
+{Compiler Directive $L Determines what application debug information is built
+Compiler Directive $LocalSymbols Determines what application debug information is built
+Compiler Directive $LongStrings Treat string types as AnsiString or ShortString}
+  {LastDelimiter Find the last position of selected characters in a string
+  Length Return the number of elements in an array or string
+  Ln Gives the natural logarithm of a number
+  Lo Returns the low-order byte of a (2 byte) Integer
+  Log10 Gives the log to base 10 of a number
+Variable  LongDateFormat Long version of the date to string format
+Variable  LongDayNames An array of days of the week names, starting 1 = Sunday
+Type  LongInt An Integer whose size is guaranteed to be 32 bits
+Variable  LongMonthNames An array of days of the month names, starting 1 = January
+Variable  LongTimeFormat Long version of the time to string format
+Type  LongWord A 32 bit unsigned integer
+  Low Returns the lowest value of a type or variable
+  LowerCase Change upper case characters in a string to lower case
+M
+Compiler Directive $MinEnumSize Sets the minimum storage used to hold enumerated types
+  Max Gives the maximum of two integer values
+Constant  MaxInt The maximum value an Integer can have
+Constant  MaxLongInt The maximum value an LongInt can have
+  Mean Gives the average for a set of numbers
+ Dialogs MessageDlg Displays a message, symbol, and selectable buttons
+ Dialogs MessageDlgPos Displays a message plus buttons at a given screen position
+  Min Gives the minimum of two integer values
+Constant  MinsPerDay Gives the number of minutes in a day
+  MkDir Make a directory
+Keyword Mod Performs integer division, returning the remainder
+Constant  MonthDays Gives the number of days in a month
+ DateUtils MonthOfTheYear Gives the month of the year for a TDateTime value
+  Move Copy bytes of data from a source to a destination
+N  }
+  {NaN Not a real number
+Variable  NegCurrFormat Defines negative amount formatting in currency displays
+  New Create a new pointer type variable
+Constant  Nil A pointer value that is defined as undetermined
+Keyword Not Boolean Not or bitwise not of one arguments
+  Now Gives the current date and time
+Variable Variants Null A variable that has no value
+O
+Compiler Directive $O Determines whether Delphi optimises code when compiling
+Compiler Directive $Optimization Determines whether Delphi optimises code when compiling
+Compiler Directive $OverFlowChecks Determines whether Delphi checks integer and enum bounds
+Keyword  Object Allows a subroutine data type to refer to an object method
+  Odd Tests whether an integer has an odd value
+Keyword Of Linking keyword used in many places
+Keyword On Defines exception handling in a Try Except clause
+Keyword Or Boolean or or bitwise or of two arguments
+  Ord Provides the Ordinal value of an integer, character or enum
+Directive Out Identifies a routine parameter for output only
+Variable  Output Defines the standard output text file
+Directive Overload Allows 2 or more routines to have the same name
+Directive Override Defines a method that replaces a virtual parent class method
+P
+Keyword Packed Compacts complex data types into minimal storage
+Type  PAnsiChar A pointer to an AnsiChar value
+Type  PAnsiString Pointer to an AnsiString value
+  ParamCount Gives the number of parameters passed to the current program
+  ParamStr Returns one of the parameters used to run the current program
+Type  PChar A pointer to an Char value
+Type  PCurrency Pointer to a Currency value
+Type  PDateTime Pointer to a TDateTime value
+Type  PExtended Pointer to a Extended floating point value
+  Pi The ematical constant
+Type  PInt64 Pointer to an Int64 value
+ Classes Point Generates a TPoint value from X and Y values
+Type  Pointer Defines a general use Pointer to any memory based data
+ Classes PointsEqual Compares two TPoint values for equality
+  Pos Find the position of one string in another
+  Pred Decrement an ordinal variable
+ Printers Printer Returns a reference to the global Printer object
+Directive Private Starts the section of private data and methods in a class
+Keyword   Defines a subroutine that does not return a value
+ FileCtrl ProcessPath Split a drive/path/filename string into its constituent parts
+Keyword  Program Defines the start of an application
+ Dialogs PromptForFileName Shows a dialog allowing the user to select a file
+Keyword  Property Defines controlled access to class fields
+Directive Protected Starts a section of class private data accesible to sub-classes
+Type  PShortString A pointer to an ShortString value
+Type  PString Pointer to a String value
+ Types PtInRect Tests to see if a point lies within a rectangle
+Directive Public Starts an externally accessible section of a class
+Directive Published Starts a published externally accessible section of a class
+Type  PVariant Pointer to a Variant value
+Type  PWideChar Pointer to a WideChar
+Type  PWideString Pointer to a WideString value
+Q
+Compiler Directive $Q Determines whether Delphi checks integer and enum bounds
+R
+Compiler Directive $R Determines whether Delphi checks array bounds
+Compiler Directive $RangeChecks Determines whether Delphi checks array bounds
+Compiler Directive $ReferenceInfo Determines whether symbol reference information is built
+Compiler Directive $Resource Defines a resource file to be included in the application linking
+  RadToDeg Converts a radian value to degrees
+Keyword Raise Raise an exception
+  Random Generate a random floating point or integer number
+  Randomize Reposition the Random number generator next value
+  RandomRange Generate a random integer number within a supplied range
+Variable  RandSeed Reposition the Random number generator next value
+  Read Read data from a binary or text file
+  ReadLn Read a complete line of data from a text file
+Type  Real A floating point type supporting about 15 digits of precision
+Type  Real48 The floating point type with the highest capacity and precision
+  ReallocMem Reallocate an existing block of storage
+ DateUtils RecodeDate Change only the date part of a TDateTime variable
+ DateUtils RecodeTime Change only the time part of a TDateTime variable
+Keyword Record A structured data type - holding fields of data
+ Classes Rect Create a TRect value from 2 points or 4 coordinates
+  RemoveDir Remove a directory
+  Rename Rename a file
+  RenameFile Rename a file or directory
+Keyword Repeat Repeat statements until a ternmination condition is met
+  ReplaceDate Change only the date part of a TDateTime variable
+  ReplaceTime Change only the time part of a TDateTime variable
+  Reset Open a text file for reading, or binary file for read/write
+Variable  Result A variable used to hold the return value from a 
+  ReWrite Open a text or binary file for write access
+  RmDir Remove a directory
+  Round Rounds a floating point number to an integer }
+  //ReplaceTime
+  //RunError Terminates the program with an error dialog
+//S
+  //SecsPerDay Gives the number of seconds in a day
+  //Seek Move the pointer in a binary file to a new record position
+  //SeekEof Skip to the end of the current line or file
+  //NOTSeekEoln Skip to the end of the current line or file
+ {FileCtrl SelectDirectory Display a dialog to allow user selection of a directory
+Variable  Self Hidden parameter to a method - refers to the containing object
+Keyword Set Defines a set of up to 255 distinct values
+  SetCurrentDir Change the current directory
+  SetLength Changes the size of a string, or the size(s) of an array
+  SetString Copies characters from a buffer into a string
+Keyword Shl Shift an integer value left by a number of bits
+Variable  ShortDateFormat Compact version of the date to string format
+Variable  ShortDayNames An array of days of the week names, starting 1 = Sunday
+Type  ShortInt An integer type supporting values -128 to 127
+Variable  ShortMonthNames An array of days of the month names, starting 1 = Jan
+Type  ShortString Defines a string of up to 255 characters
+Variable  ShortTimeFormat Short version of the time to string format
+ Dialogs ShowMessage Display a string in a simple dialog with an OK button
+ Dialogs ShowMessageFmt Display formatted data in a simple dialog with an OK button
+ Dialogs ShowMessagePos Display a string in a simple dialog at a given screen position
+Keyword Shr Shift an integer value right by a number of bits
+  Sin The Sine of a number
+Type  Single The smallest capacity and precision floating point type
+  SizeOf Gives the storage byte size of a type or variable
+  Slice Creates a slice of an array as an Open Array parameter
+Type  SmallInt An Integer type supporting values from -32768 to 32767
+  Sqr Gives the square of a number
+  Sqrt Gives the square root of a number
+  Str Converts an integer or floating point number to a string
+Type  String A data type that holds a string of characters
+  StringOfChar Creates a string with one character repeated many times
+  StringReplace Replace one or more substrings found within a string
+  StringToWideChar Converts a normal string into a WideChar 0 terminated buffer
+  StrScan Searches for a specific character in a constant string
+  StrToCurr Convert a number string into a currency value
+  StrToDate Converts a date string into a TDateTime value
+  StrToDateTime Converts a date+time string into a TDateTime value
+  StrToFloat Convert a number string into a floating point value
+  StrToInt Convert an integer string into an Integer value
+  StrToInt64 Convert an integer string into an Int64 value
+  StrToInt64Def Convert a string into an Int64 value with default
+  StrToIntDef Convert a string into an Integer value with default
+  StrToTime Converts a time string into a TDateTime value
+  StuffString Replaces a part of one string with another
+  Succ Increment an ordinal variable
+  Sum Return the sum of an array of floating point values
+  Tan The Tangent of a number
+Type Classes TBits An object that can hold an infinite number of Boolean values
+Variable ConvUtils TConvFamily Defines a family of measurement types as used by Convert
+Type ConvUtils TConvType Defines a measurement type as used by Convert
+Type  TDateTime Data type holding a date and time value
+Type  Text Defines a file as a text file
+Type  TextFile Declares a file type for storing lines of text
+Type  TFloatFormat Formats for use in floating point number display s
+Type  TFormatSettings A record for holding locale values for thread-safe s
+Keyword Then Part of an if statement - starts the true clause
+Variable  ThousandSeparator The character used to display the thousands separator
+Keyword ThreadVar Defines variables that are given separate instances per thread
+  Time Gives the current time }
+  //TimeAMString Determines AM value in DateTimeToString 
+//Variable  TimePMString Determines PM value in DateTimeToString 
+//Variable  TimeSeparator The character used to separate display time fields
+  //TConvType
+  {TimeToStr Converts a TDateTime time value to a string
+Type Classes TList General purpose container of a list of objects
+Keyword To Prefixes an incremental for loop target value
+Type  TObject The base class type that is ancestor to all other classes
+ DateUtils Tomorrow Gives the date tomorrow
+Type Dialogs TOpenDialog Displays a file selection dialog
+Type Types TPoint Holds X and Y integer values
+Type Dialogs TPrintDialog Class that creates a printer selection and control dialog
+Type Types TRect Holds rectangle coordinate values
+Type  TReplaceFlags Defines options for the StringReplace routine
+  Trim Removes leading and trailing blanks from a string
+  TrimLeft Removes leading blanks from a string }
+ // TrimRight Removes trailing blanks from a string
+//  Trunc The integer part of a floating point number
+  //NOTTruncate Truncates a file size - removes all data after the current position
+{Keyword Try Starts code that has error trapping
+Type Dialogs TSaveDialog Displays a dialog for selecting a save file name
+Type  TSearchRec Record used to hold data for FindFirst and FindNext
+Type Classes TStringList Holds a variable length list of strings
+Type  TSysCharSet Characters used by supplied string parsing s
+Type  TThreadFunc Defines the  to be called by BeginThread
+Variable  TwoDigitYearCenturyWindow Sets the century threshold for 2 digit year string conversions
+Keyword Type Defines a new category of variable or process
+U
+Compiler Directive $UnDef Undefines a compiler directive symbol - as used by IfDef
+Keyword Unit Defines the start of a unit file - a Delphi module
+Keyword Until Ends a Repeat control loop
+  UpCase Convert a Char value to upper case
+  UpperCase Change lower case characters in a string to upper case
+Keyword Uses Declares a list of Units to be imported
+V
+  Val Converts number strings to integer and floating point values
+Keyword Var Starts the definition of a section of data variables
+Type  Variant A variable type that can hold changing data types
+ Variants VarType Gives the current type of a Variant variable
+Constant Variants VarTypeMask Mask for the meta-type part of a Variant variable
+Directive Virtual Allows a class method to be overriden in derived classes
+W
+Compiler Directive $Warnings Determines whether Delphi shows compilation warnings
+Keyword While Repeat statements whilst a continuation condition is met
+Type  WideChar Variable type holding a single International character
+  WideCharToString Copies a null terminated WideChar string to a normal string
+Type  WideString A data type that holds a string of WideChars
+Keyword With A means of simplifying references to structured variables
+Type  Word An integer type supporting values 0 to 65535 }
+ { WrapText Add line feeds into a string to simulate word wrap
+  Write Write data to a binary or text file
+  WriteLn Write a complete line of data to a text file
+X
+Compiler Directive $X Controls some Pascal extension handling
+Keyword Xor Boolean Xor or bitwise Xor of two arguments
+Y
+Compiler Directive $Y Determines whether application symbol information is built
+ DateUtils Yesterday Gives the date yesterday
+Z
+Compiler Directive $Z Sets the minimum storage used to hold enumerated types
+(c) Copyright Neil Moffatt 2002 - 2005. All rights reserved. }
+
+Yesterday
+
+end;
+  
+
+ var   myextest: TExampleTest; //: TTestCase;
+      mw: word;
+
+begin
+
+  {var
+  millisecond: word;
+  second     : word;
+  minute     : word;
+  hour       : word;
+  days       : word;}
+  
+  
+  DecodeDate2(now, year, month, days)
+  printF('we do have %d/ %d/ %d/ ',[year, month, days]) 
+  writeln(timetostr(time2))
+  writeln('which day of week ^'+itoa(DayOfWeek2(date)));
+   writeln(itoa(mulutest(4,5)));
+   writeln(itoa(mulutest(6,7)));
+   //word test!
+   mw:= 70000;
+   writeln(inttostr(mw));
+  
+   writeln(floattostr(intpower(2,16)+mw));
+   //opendoc('this is nit');
+   //memo1.caretY;
+   //getpi
+   
+ 
+ {  TExampleTest = class(TTestCase)
+  published
+     TestOne;
+    procedure TestWithError;
+    procedure TestWithFailure;
+  end;}
+ 
+   myextest:= TExampleTest.create;
+   myextest.testone;
+   try
+     myextest.TestWithError;
+   except
+     //RaiseLastException
+     writeln(GetSafeCallExceptionMsg)
+     RaiseLastWin321('my error')
+     //HookOSExceptions;
+     //dumpexception;
+     //RaiseException2;
+      //RaiseExcept;
+      //on except do 
+
+
+   end  
+   try
+     myextest.TestWithFailure;
+   except
+     writeln(GetSafeCallExceptionMsg)
+     //RaiseLastException;
+   end;
+   
+   {with TTestCaseTest(self) do begin
+      TestSetUp;  //Setup;
+      //TearDown;
+      TestAsString;
+      Free;
+   end;}
+
+end.
+
+
+La BB 22278 assura pendant neuf mois la remorque de l’Étendard à 200 km/h.
+
+Il y a 8 machines aptes à 200 km/h, et dotées de la Transmission voie-machine (signalisation en cabine) afin de pouvoir circuler sur les lignes à grande vitesse : les BB 22378, 22379(1), 22380(1) , 22386, 22399(1), 22401, 22403, 22405.
+
+(1) Locomotives équipées de câblots spéciaux pour circulation avec voitures de mesure.
+
+Les 233 BB 26000 sont cependant plus à l’aise à V200, du fait de leur puissance très élevée de 5 600 kW, contre 4 140 kW en 25 kV 50 Hz pour les BB 22200.
+Locomotives réversibles

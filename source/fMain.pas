@@ -113,6 +113,7 @@
          9705       build 98_3 more inno functions, video grabber, 32 units add
          9733       build 98_4 add async pro tools
          9792       build 98_5 8 more unit unit testing async pro tools
+         9890       build 98_6 5 more units fileclass set ,dmmcanvas, led set, morse gen
 
                   [the last one before V4 in 2015]
                    V4.0   in  June 2015
@@ -524,6 +525,7 @@ type
     Checkers1: TMenuItem;
     TaskMgr1: TMenuItem;
     WebCam1: TMenuItem;
+    Tutorial31Closure1: TMenuItem;
     procedure IFPS3ClassesPlugin1CompImport(Sender: TObject; x: TPSPascalCompiler);
     procedure IFPS3ClassesPlugin1ExecImport(Sender: TObject; Exec: TPSExec; x: TPSRuntimeClassImporter);
     procedure PSScriptCompile(Sender: TPSScript);
@@ -781,6 +783,7 @@ type
     procedure Checkers1Click(Sender: TObject);
     procedure TaskMgr1Click(Sender: TObject);
     procedure WebCam1Click(Sender: TObject);
+    procedure Tutorial31Closure1Click(Sender: TObject);
     //procedure Memo1DropFiles(Sender: TObject; X,Y: Integer; AFiles: TStrings);
   private
     STATSavebefore: boolean;
@@ -1527,7 +1530,7 @@ uses
   uPSI_StMime,
   uPSI_StList,
   uPSI_StMerge,
-  uPSI_StStrS,
+  uPSI_StStrS,     //Shortstring functions !
   uPSI_StTree,
   uPSI_StVArr,
   uPSI_StRegIni,
@@ -1847,8 +1850,25 @@ uses
   uPSI_testdecorator,
   uPSI_fpcunittests,
   uPSI_cTCPBuffer,  ////3.9.9.98_5
+  uPSI_Glut,
+  uPSI_LEDBitmaps,
+  uPSI_FileClass,
+  uPSI_FileUtilsClass,
+  uPSI_ComPortInterface,
+  uPSI_SwitchLed,
+  uPSI_cyDmmCanvas,
+  uPSI_uColorFunctions,
+  uPSI_uSettings,
+  uPSI_cyDebug,   ////3.9.9.98_6
+  uPSI_cyBaseColorMatrix,
+  uPSI_cyColorMatrix,
+  uPSI_cyCopyFiles,
+  uPSI_cySearchFiles,
+  uPSI_cyBaseMeasure,
+  uPSI_PJIStreams, //3.9.9.98_6
 
-    //MDIFrame,
+   ///
+   //MDIFrame,
   uPSI_St2DBarC,
   uPSI_FmxUtils,
   uPSI_CustomDrawTreeView,
@@ -2889,6 +2909,22 @@ begin
  SIRegister_ToolsUnit(X);
  SIRegister_fpcunittests(X);
  SIRegister_cTCPBuffer(X);
+ SIRegister_Glut(X);
+ SIRegister_LEDBitmaps(X);
+ SIRegister_FileClass(X);
+ SIRegister_FileUtilsClass(X);
+ SIRegister_ComPortInterface(X);
+ SIRegister_SwitchLed(X);
+ SIRegister_cyDmmCanvas(X);
+ SIRegister_uColorFunctions(X);
+ SIRegister_uSettings(X);
+ SIRegister_cyDebug(X);
+ SIRegister_cyBaseColorMatrix(X);
+ SIRegister_cyColorMatrix(X);
+ SIRegister_cySearchFiles(X);
+ SIRegister_cyCopyFiles(X);
+ SIRegister_cyBaseMeasure(X);
+ SIRegister_PJIStreams(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -3046,7 +3082,7 @@ begin
   SIRegister_PppLexer(X);
   SIRegister_PCharUtils(X);
   SIRegister_JclHookExcept(X);
-  SIRegister_StStrS(X);    //ansi char
+  SIRegister_StStrS(X);    //ansi char   shortstring
    //SIRegister_EncdDecd(X);
   //SIRegister_SockAppReg(X);
    SIRegister_xrtl_util_TimeStamp(X);
@@ -4188,6 +4224,24 @@ begin
   RIRegister_testdecorator(X);
   RIRegister_cTCPBuffer_Routines(Exec);
   RIRegister_cTCPBuffer(X);
+  RIRegister_Glut_Routines(Exec);
+  RIRegister_LEDBitmaps_Routines(Exec);
+  RIRegister_FileClass(X);
+  RIRegister_FileUtilsClass(X);
+  RIRegister_ComPortInterface(X);
+  RIRegister_SwitchLed(X);
+  RIRegister_cyDmmCanvas(X);
+  RIRegister_uColorFunctions_Routines(EXec);
+  RIRegister_uSettings_Routines(EXec);
+  RIRegister_cyDebug(X);
+  RIRegister_cyBaseColorMatrix(X);
+  RIRegister_cyColorMatrix(X);
+  RIRegister_cySearchFiles_Routines(Exec);
+  RIRegister_cySearchFiles(X);
+  RIRegister_cyCopyFiles(X);
+  RIRegister_cyCopyFiles_Routines(Exec);
+  RIRegister_cyBaseMeasure(X);
+  RIRegister_PJIStreams(X);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -4337,7 +4391,7 @@ begin
   SynPasSyn1.FloatAttri.Foreground:= clWebTomato; //IndianRed; //clWebTomato; //cllime; //clAqua; //clWebDarkOrange;  //clTeal; //clnavy; //cllime;
   memo1.Highlighter:= SynPasSyn1;
   //SynPasSyn1.
-  //should be a get highlight from extension 
+  //should be a get highlight from extension
   memo1.Gutter.ShowLineNumbers:= true;
   memo1.WantTabs:= true;
    statusbar1.SimplePanel:= false;
@@ -4689,6 +4743,11 @@ begin
   inc(x);
 end;
 
+procedure myFillcharSearchRec;
+begin
+  FillChar(srec, SizeOf(srec), 0);
+end;
+
 function myfindFirst(const filepath: string; attr: integer): integer;
 begin
   result:= findFirst(filePath, Attr, srec);
@@ -4746,12 +4805,21 @@ procedure myProcMessOFF;
 begin
   maxForm1.PSScript.OnLine:= NIL;
   maxForm1.procMess.Checked:= false;
-end;
+      with maxform1.ledimage do begin
+        Top:= 2;
+        visible:= true;
+        picture.bitmap.loadfromResourcename(HINSTANCE,'YELLOW')
+       end;
+  end;
 
 procedure myProcMessON;
 begin
   maxForm1.PSScript.OnLine:= maxForm1.PSScriptLine;
   maxForm1.procMess.Checked:= true;
+      with maxform1.ledimage do begin
+        Top:= 2;
+        visible:= false;
+      end;
 end;
 
 procedure myIncludeOFF;
@@ -5086,6 +5154,11 @@ begin
   Sender.AddFunction(@getThousandSeparator, 'function ThousandSeparator: char;');
   Sender.AddFunction(@getTimeSeparator, 'function TimeSeparator: char;');
   Sender.AddFunction(@getListSeparator, 'function ListSeparator: char;');
+  Sender.AddFunction(@getTimeAMString, 'function TimeAMString: string;');
+  Sender.AddFunction(@getTimePMString, 'function TimePMString: string;');
+  Sender.AddFunction(@readm, 'function readm: string;');
+  Sender.AddFunction(@readm, 'function readln2: string;');
+
   //Sender.AddFunction(@GetHinstance, 'function GetHINSTANCE: longword;');
   Sender.AddFunction(@ExeFileIsRunning, 'function ExeFileIsRunning(ExeFile: string): boolean;');
   Sender.AddFunction(@myFindWindow, 'function FindWindow(C1, C2: PChar): Longint;');
@@ -5186,6 +5259,13 @@ begin
 
   Sender.AddFunction(@SetArrayLength2String,'procedure SetArrayLength2String(arr: T2StringArray; asize1, asize2: integer);');
   Sender.AddFunction(@SetArrayLength2Integer,'procedure SetArrayLength2Integer(arr: T2IntegerArray; asize1, asize2: integer);');
+  Sender.AddFunction(@SetArrayLength2String2,'procedure SetArrayLength2String2(var arr: T2StringArray; asize1, asize2: integer);');
+  Sender.AddFunction(@SetArrayLength2Integer2,'procedure SetArrayLength2Integer2(var arr: T2IntegerArray; asize1, asize2: integer);');
+  Sender.AddFunction(@SetArrayLength2String2,'procedure Set2DimStrArray(var arr: T2StringArray; asize1, asize2: integer);');
+  Sender.AddFunction(@SetArrayLength2Integer2,'procedure Set2DimIntArray(var arr: T2IntegerArray; asize1, asize2: integer);');
+  Sender.AddFunction(@Set3DimIntArray,'procedure Set3DimIntArray(var arr: T3IntegerArray; asize1, asize2, asize3: integer);');
+  Sender.AddFunction(@Set3DimStrArray,'procedure Set3DimStrArray(var arr: T3StringArray; asize1, asize2, asize3: integer);');
+
   Sender.AddFunction(@SaveAsExcelFile,'function SaveAsExcelFile(AGrid: TStringGrid; ASheetName, AFileName: string; open: boolean): Boolean;');
   Sender.AddFunction(@SaveAsExcelFile,'function SaveAsExcel(aGrid: TStringGrid; aSheetName, aFileName: string; openexcel: boolean): Boolean;');
   Sender.AddFunction(@YesNoDialog,'function YesNoDialog(const ACaption, AMsg: string): boolean;');
@@ -5280,7 +5360,7 @@ begin
   Sender.AddFunction(@versionCheckAct, 'function VersionCheckAct: string;');
   Sender.AddFunction(@getBox, 'procedure getBox(aurl, extension: string);');
   Sender.AddFunction(@checkBox, 'function CheckBox: string;');
-
+  Sender.AddFunction(@myFillcharSearchRec, 'procedure FillCharSearchRec;');
        //Sender.AddFunction(@mmsystem32.timegettime
   //Sender.AddFunction(@AssignFile,'Procedure AssignFile(var F: Text; FileName: string)');
   //Sender.AddFunction(@CloseFile,'Procedure CloseFile(var F: Text);');
@@ -5292,6 +5372,11 @@ begin
   Sender.AddRegisteredVariable('maxForm1', 'TMaxform1');  //!!
   Sender.AddRegisteredVariable('debugout', 'Tdebugoutput');  //!!
   Sender.AddRegisteredVariable('hlog','THotlog');  //!!
+  Sender.AddRegisteredVariable('it','integer');  //for closure!!
+  Sender.AddRegisteredVariable('sr','string');  //for closure!!
+  Sender.AddRegisteredVariable('srlist','TStringlist');  //for closure!!
+  Sender.AddRegisteredVariable('bt','boolean');  //for closure!!
+  Sender.AddRegisteredVariable('ft','double');  //for closure!!
 
   //Sender.AddRegisteredVariable('maxForm1', 'TMaxForm1');
   //Sender.AddRegisteredVariable('stringgrid1', 'TStringGrid');
@@ -5337,6 +5422,8 @@ begin
   memo2.Lines.Add('Macro Expanded '+inttostr(memo1.Lines.count-1)+' lines');
 end;
 
+//var it: integer;
+
 procedure TMaxForm1.PSScriptExecute(Sender: TPSScript);
 begin
   PSScript.SetVarToInstance('APPLICATION', Application);
@@ -5348,6 +5435,7 @@ begin
   PSScript.SetVarToInstance('maxForm1', maxForm1);
   PSScript.SetVarToInstance('debugout', debugout);
   PSScript.SetVarToInstance('hlog', hlog);
+  //PSScript.SetVarToInstance('it', it);
   //PSScript.SetPointerToData('maxForm1', @maxForm1, PSScript.FindNamedType('TMaxForm1'));
   //PSScript.SetVarToInstance('stringgrid1', stringgrid1);
 end;
@@ -7912,6 +8000,11 @@ begin
   searchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter3.pdf');
 end;
 
+procedure TMaxForm1.Tutorial31Closure1Click(Sender: TObject);
+begin
+  searchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter31.pdf');
+end;
+
 procedure TMaxForm1.tutorial4Click(Sender: TObject);
 begin
   searchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter4.pdf');
@@ -9007,6 +9100,12 @@ begin
   cedebug.MainFileName:= Act_Filename;
   cedebug.Script.Assign(memo1.Lines);
   ledimage.Hide;
+  if procMess.Checked= false then
+      with ledimage do begin
+        Top:= 2;
+        visible:= true;
+        picture.bitmap.loadfromResourcename(HINSTANCE,'YELLOW')
+      end;
   //showmessage(psscript.script.Text);
   if STATMacro then begin
         //memo1.text:= ParseMacros(memo1.text);
@@ -9752,7 +9851,6 @@ begin
     aStrList.Free;
   end;
 end;
-
 
 procedure TMaxForm1.ShowInterfaces1Click(Sender: TObject);
 begin

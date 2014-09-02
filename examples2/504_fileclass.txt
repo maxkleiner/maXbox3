@@ -1,0 +1,171 @@
+Program FileClass_Demo;
+{ ****************************************************************
+  Sourcefile : 504_fileclass.txt
+  Typ : Shell-Unit
+  Engineer : MK max@kleiner.ch
+  First Release : 10.01.1997
+  Compiler  : maXbox: DevC++Delphi, OS: W7
+  Purpose   : Find your docs with filemasks iterate or recursion
+  Revisions : 25.10.96 first dialog to open a date
+            :#sign:Administrator: PC08: 01/09/2014 11:21:28 PM 
+            : 23.08.2014 migrate to maXbox - #locs:140
+ **************************************************************** }
+
+function cgIntPower(base: Single; exp: Integer): Single;
+var i: Integer;
+begin
+  if exp = 0 then Result := 1
+  else begin
+    if exp < 0 then Result := 1 // cgIntPower(base, Abs(exp))
+    else begin
+      Result:= 1;
+      for i:= 1 to exp do Result := Result * base;
+    end;
+  end;
+end;
+
+function cgIntPowerD(base: double; exp: Integer): double;
+var i: Integer;
+begin
+  if exp = 0 then Result:= 1
+  else begin
+    if exp < 0 then Result:= 1 // cgIntPower(base, Abs(exp))
+    else begin
+      Result:= 1;
+      for i:= 1 to exp do Result:= Result * base;
+    end;
+  end;
+end;
+
+
+//Discuss the Recursion of findfile!
+procedure FindFilePattern3(root:String; pattern:String);
+var SR: TFindRec;
+begin
+  root:=IncludeTrailingPathDelimiter(root);
+  if FindFirst3(root+'*.*',SR) = TRue then begin
+      repeat
+        Application.ProcessMessages;
+          if ((sr.attributes and faDirectory)= SR.Attributes ) and 
+            (pos('.',SR.name)=0) then
+             FindFilePattern3(root+SR.Name,pattern)
+          else begin
+           if pos(pattern,SR.Name)>0 then 
+             //Form1.ListBox1.Items.Add(Root+SR.Name);
+             writeln(Root+SR.Name);
+          end;
+      until FindNext3(SR) = False;
+    FindClose3(SR);  
+  end;
+end;
+
+procedure Split(const Delimiter: Char;
+                      Input: string; const Strings: TStrings);
+begin
+   Assert(Assigned(Strings),'strings not assigned');
+   Strings.Clear;
+   Strings.Delimiter:= Delimiter;
+   Strings.DelimitedText:= Input;
+end;
+
+procedure SetStringlistSplit;
+var ast: TStringList;
+begin //Split(' ', 'your maXbox tool guide', Ast) ;
+   Ast:= TStringList.Create;
+   try
+     Split(' ', 'your maXbox tool guide', Ast) ;
+     writeln(ast[0]); //your
+     writeln(ast[1]); //mX
+     writeln(ast[2]); //tool
+     writeln(ast[3]); //guide
+   finally
+     Ast.Free;
+   end;
+end;
+
+procedure FileClassDemo;
+begin
+  //faReadOnly
+  with  TFileSearch.Create do begin
+    recurse:= true;
+    attributes:= attributes + [ffareadonly];
+    Search(exepath, '*train*.pdf');
+    //Search1(exepath);
+    writeln(list.text);
+  Free
+  end; 
+end;
+  
+
+ var i,k: integer;
+
+begin //main console
+  //XOR Test
+  //processmessagesOFF;
+  writeln(botostr(not(0=0)))
+  writeln(botostr(not(0=1)))
+  writeln(botostr(not(1=0)))
+  writeln(botostr(not(1=1)))
+  writeln('')
+   for i:= 0 to 1 do 
+    for k:= 0 to 1 do
+       writeln(botostr(not(i=k)));
+    
+  //single or double test 
+   writeln(floattostr(cgIntPower(2.56,5)));
+   writeln(floattostr(IntPower(2.56,5)));
+   writeln(floattostr(cgIntPowerD(2.56,5)));
+  
+  //for i:= 1 to GetFileNames(exepath,faDirectory).count do 
+ {writeln('GetFileNames '+GetFileNames(exepath+'*.*',faAnyfile-faDirectory).text)  
+   writeln('GetDirNames '+GetDirNames(exepath).text); 
+   writeln('GetDirNames2 '+GetFileNames(exepath+'*.*',faDirectory).text)}  
+   writeln('GetDirNames3: '+#13#10+FindAllDirectories(exepath,false).text)  
+
+   {SetStringlistSplit;
+   writeln('-------------------') }
+
+  //FindDocs(exepath);  first lib func then script func
+    writeln(FindAllFiles(exepath,'*train*.pdf',true).text); 
+    writeln(FindAllDocs(exepath, '*train*.pdf').text); 
+    writeln(FindAllDocs(exepath, '*arduino*.pdf').text); 
+    //writeln('')
+    //FindFilePattern3(exepath, '.pdf');
+    k:= 12;
+    inc1(k,212) 
+    writeln(itoa(k)) 
+    
+    FileClassDemo;
+    
+End.
+
+//http://www.delphientwickler.de/
+
+I hate those recursive solutions with FindFirst/FindNext and I consider it troublesome that some even forget to use FindClose to clean up resources. So, for the fun of it, a non-recursive solution that should be practical to use...
+While it seems to eat a lot of memory because it uses a dynamic array, a recursive method will do exactly the same but recursion happens on the stack! Also, with a recursive method, space is allocated for all local variables while my solution only allocates space for the folder names.
+
+When you check for speed, both methods should be just as fast. The recursive method is easier to remember, though. You can also use a TStringList instead of a dynamic array, but I just like dynamic arrays.
+One additional trick with my solution: It can search in multiple folders! I Initialized the Folders array with just one root, but you could easily set it's length to 3, and set Folders[0] to C:\, Folders[1] to D:\ and Folders[2] to E:\ and it will search on multiple disks!
+
+Btw, replace the WriteLn() code with whatever logic you want to execute...
+
+
+-----------------------------------------------------
+Doc: Status
+API: The Date and Time Picker is a control that allows the user to
+      select either a date or a time value. This control provides two
+      objects in one: A picker and a calendar
+    Training: http://www.functionx.com/bcb/controls/datetime.htm
+    Blog
+    About http://www.softwareschule.ch/examples/469_ibzresult.txt
+    //ToDo: Eliminate the Global Vars!
+
+    Terms
+    Privacy
+    Security
+    Contact
+    
+    
+  S. 11 -Skript UML Use Case
+  
+  Tool: mX Musterlösung 469_formarrow_datepicker_ibz.txt

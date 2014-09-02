@@ -1,0 +1,698 @@
+Program Debug_Demo;
+{ ****************************************************************
+  Sourcefile : 505_debug.txt    ON Progress!
+  Typ : Shell-Unit
+  Engineer : MK max@kleiner.ch
+  First Release : 10.01.1997
+  Compiler  : maXbox: DevC++Delphi, OS: W7
+  Purpose   : Find your debug data and profile with filemasks iterate or recursion
+  Revisions : 25.10.96 first dialog to open a date
+            :#sign:Administrator: PC08: 02/09/2014 11:13:30 AM 
+            : 23.08.2014 migrate to maXbox - #locs:413
+            : morse code android https://github.com/dilshan/signalman
+ **************************************************************** }
+
+function cgIntPower(base: Single; exp: Integer): Single;
+var i: Integer;
+begin
+  if exp = 0 then Result := 1
+  else begin
+    if exp < 0 then Result := 1 // cgIntPower(base, Abs(exp))
+    else begin
+      Result:= 1;
+      for i:= 1 to exp do Result := Result * base;
+    end;
+  end;
+end;
+
+function cgIntPowerD(base: double; exp: Integer): double;
+var i: Integer;
+begin
+  if exp = 0 then Result:= 1
+  else begin
+    if exp < 0 then Result:= 1 // cgIntPower(base, Abs(exp))
+    else begin
+      Result:= 1;
+      for i:= 1 to exp do Result:= Result * base;
+    end;
+  end;
+end;
+
+procedure TFrmCyDebug_cyColorMatrix1Paint(Sender: TObject);
+var CBRandomDemo: boolean;
+    cyColorMatrix1: TcyColorMatrix;
+    Statistics: String;
+begin
+  // You can only change cyColorMatrix1.Canvas here!
+   with  TcyDebug.Create(self) do begin
+ 
+  ProcessEnter('Paint');
+  Sleep(10);
+  //cyColorMatrix1.parent:= 'fff';
+  if CBRandomDemo then begin
+    cyColorMatrix1.Canvas.Brush.Color := clBlack;
+    cyColorMatrix1.Canvas.Font.Color := clWhite;
+    cyColorMatrix1.Canvas.TextOut(10, cyColorMatrix1.Height-25, Statistics);
+  end;
+
+  ProcessExit('Paint');
+ end;
+end;
+
+procedure TFrmCyDebug_cySpeedButton1Click(Sender: TObject);
+var aRow: Integer;
+    cyColorMatrix1: TcyColorMatrix;
+begin
+  aRow := cyColorMatrix1.ValueToRow(cyColorMatrix1.TopRowValue);
+  cyColorMatrix1.SetColorGridRange(aRow, aRow, 0, 10, clRed);
+  aRow := cyColorMatrix1.ValueToRow(cyColorMatrix1.BottomRowValue);
+  cyColorMatrix1.SetColorGridRange(aRow, aRow, 0, 10, clLime);
+end;
+
+
+
+
+//Discuss the Recursion of findfile!
+procedure FindFilePattern3(root:String; pattern:String);
+var SR: TFindRec;
+begin
+  root:=IncludeTrailingPathDelimiter(root);
+  if FindFirst3(root+'*.*',SR) = TRue then begin
+      repeat
+        Application.ProcessMessages;
+          if ((sr.attributes and faDirectory)= SR.Attributes ) and 
+            (pos('.',SR.name)=0) then
+             FindFilePattern3(root+SR.Name,pattern)
+          else begin
+           if pos(pattern,SR.Name)>0 then 
+             //Form1.ListBox1.Items.Add(Root+SR.Name);
+             writeln(Root+SR.Name);
+          end;
+      until FindNext3(SR) = False;
+    FindClose3(SR);  
+  end;
+end;
+
+procedure Split(const Delimiter: Char;
+                      Input: string; const Strings: TStrings);
+begin
+   Assert(Assigned(Strings),'strings not assigned');
+   Strings.Clear;
+   Strings.Delimiter:= Delimiter;
+   Strings.DelimitedText:= Input;
+end;
+
+procedure SetStringlistSplit;
+var ast: TStringList;
+begin //Split(' ', 'your maXbox tool guide', Ast) ;
+   Ast:= TStringList.Create;
+   try
+     Split(' ', 'your maXbox tool guide', Ast) ;
+     writeln(ast[0]); //your
+     writeln(ast[1]); //mX
+     writeln(ast[2]); //tool
+     writeln(ast[3]); //guide
+   finally
+     Ast.Free;
+   end;
+end;
+
+procedure DebugClassDemo;
+var StringGrid1: TStringGrid;
+     CBRandomDemo: boolean;
+  adata2, adata3: array of array of integer;
+  adata4: T2IntegerArray;
+  i, j: Integer;
+
+begin
+  // Prepare Data
+  //aData := VarArrayCreate([1, AGrid.RowCount, 1, AGrid.ColCount], varVariant);
+   SetLength(adata2,11)
+   //for i:= 0 to AGrid.rowCount do
+     //SetArrayLength(adata2[i],AGrid.colCount+2);
+      SetArrayLength2integer(adata2, 10, 10);
+     //writeln(inttostr(agrid.colcount)+ '  '+inttostr(agrid.rowcount));  debug
+  for i:= 0 to 10-1 do         //temp layer
+    for j:= 0 to 10-1 do begin
+        aData2[i][j]:= random(100);
+        write(inttostr(aData2[i][j])+#9)
+        if j = 9 then writeln('')
+      end;  
+
+   writeln('second dyn array');
+   SetArrayLength2integer2(adata4, 5, 5);
+   for i:= 0 to 4-1 do         //temp layer
+     for j:= 0 to 5-1 do begin
+        aData4[i][j]:= random(100);
+        write(inttostr(aData4[i][j])+#9)
+        if j = 4 then writeln('')
+      end;  
+
+ 
+  //faReadOnly
+ // procedure SetArrayLength2String(arr: T2StringArray; asize1, asize2: integer); //2 dimension
+  //procedure SetArrayLength2Integer(arr: T2IntegerArray; asize1, asize2: integer);
+  with  TcyDebug.Create(self) do begin
+    ProcessGrid:= StringGrid1
+ //   ProcessEnter('');
+     ProcessEnter('Paint');
+      Sleep(500);
+   ProcessExit('Paint');
+    while (CBRandomDemo) and (not Application.Terminated) do
+      Sleep(500);
+    //  function GetBaseAddress(PID:DWORD):DWORD;  //Process API
+
+     writeln('procID: '+inttoStr((currentprocessid)));
+     //writeln('getbaseAddress: '+inttoStr(getbaseAddress(currentprocessid)));
+   
+    //recurse:= true;
+    //attributes:= attributes + [ffareadonly];
+    //Search(exepath, '*train*.pdf');
+    //Search1(exepath);
+    //writeln(list.text);
+  Free
+  end; 
+end;
+
+
+procedure cyColorMatrix1Paint(Sender: TObject);
+var statistics: string;
+begin
+
+  // You can only change cyColorMatrix1.Canvas here!
+ // if CBRandomDemo.Checked or CBGaugeDemo.Checked
+  //then begin
+  statistics:= '0n paint';
+    TcyColorMatrix(sender).Canvas.Brush.Color := clBlack;
+    TcyColorMatrix(sender).Canvas.Font.Color := clWhite;
+    TcyColorMatrix(sender).Canvas.TextOut(10, 
+                         TcyColorMatrix(sender).Height-25, Statistics);
+  //end;
+end;
+
+
+var
+  c: integer;
+  OldValue, NewValue: Double;
+  OldRow, OldCol, NewRow: Integer;
+
+
+procedure TFrmCyColorMatrix_CBGaugeDemoClick(Sender: TObject);
+var
+  {c: integer;
+  OldValue, NewValue: Double;
+  OldRow, OldCol, NewRow: Integer; }
+  Statistics: string;
+  CBGaugeDemo: boolean;
+  cyColorMatrix1: TcyColorMatrix;
+  inFrm: TForm;
+begin
+
+  inFrm:= TForm.Create(self);
+    with inFrm do begin
+    caption:= '********SortMonster3************';  
+    height:= 610;
+    width:= 980;
+    //color:= clred;
+    Position:= poScreenCenter;
+    //onClose:= @CloseClick;
+    Show;
+  end;
+  cyColorMatrix1:= TcyColorMatrix.create(infrm);
+  with cyColorMatrix1 do begin
+     parent:= infrm;
+     setbounds(20,20,600,400)
+     width:= 400;
+     onpaint:= @cyColorMatrix1Paint;
+  end;   
+  
+ 
+  Statistics := 'No statistics because of Sleep() used to slow down ...';
+  CBGaugeDemo:= true;
+  while (CBGaugeDemo) and (not isKeypressed{Application.Terminated}) do begin
+    cyColorMatrix1.BeginUpdate;
+    writeln('in loop');
+
+    for c := 0 to cyColorMatrix1.ColCount -1 do begin
+      // Red cell animation:
+      writeln(' in for loop '+inttostr(cyColorMatrix1.ColCount));
+      if not cyColorMatrix1.FindCellColor(0, cyColorMatrix1.RowCount - 1, c, c, clRed, OldRow, OldCol)
+      then OldValue := cyColorMatrix1.BottomRowValue
+      else OldValue := cyColorMatrix1.RowToValue(OldRow);
+
+      if OldValue > (cyColorMatrix1.TopRowValue - cyColorMatrix1.BottomRowValue) / 2
+      then NewValue := OldValue + RandomRange(-20, 5)
+      else NewValue := OldValue + RandomRange(-5, 20);
+
+      if NewValue < cyColorMatrix1.BottomRowValue
+      then NewValue := cyColorMatrix1.BottomRowValue;
+      if NewValue > cyColorMatrix1.TopRowValue
+      then NewValue := cyColorMatrix1.TopRowValue;
+
+      // Draw column level :
+      NewRow := cyColorMatrix1.ValueToRow(NewValue);
+      cyColorMatrix1.SetColorGridRange(0, NewRow, c, c, cyColorMatrix1.DefaultColor);     // Light off ...
+      cyColorMatrix1.SetColorGridRange(NewRow, cyColorMatrix1.RowCount-1, c, c, clLime);  // Light on ...
+
+      // Draw Red Cell:
+      if NewValue < OldValue then begin
+        OldRow := OldRow + 1;  // Indicator is falling ...
+        if OldRow > cyColorMatrix1.RowCount-1
+        then OldRow := cyColorMatrix1.RowCount-1;
+      end
+      else
+        OldRow := NewRow;
+      cyColorMatrix1.SetColorGrid(OldRow, c, clRed);
+    end;
+
+    Sleep(100);
+    cyColorMatrix1.Canvas.Brush.Style := bsClear;
+    cyColorMatrix1.Canvas.Font.Color := clBlack;
+    cyColorMatrix1.DrawText('mX Gauge demo', 0, 0, cyColorMatrix1.RowCount-1, cyColorMatrix1.ColCount-1, DT_WORDBREAK);
+    cyColorMatrix1.EndUpdate;
+    Application.ProcessMessages;
+  end;
+  writeln('end in loop');
+end;
+
+
+procedure TFrmCyColorMatrix_CBRandomDemoClick(Sender: TObject);
+var
+  c, r, _r, _g, _b: integer;
+  DrawCount: Integer;
+  SaveTime: Cardinal;
+    cyColorMatrix1: TcyColorMatrix;
+   statistics: string;
+begin
+  DrawCount := 0;
+  SaveTime := GetTickCount;
+  while (true) and (not Application.Terminated) do
+  begin
+    cyColorMatrix1.BeginUpdate;
+
+    for r := 0 to cyColorMatrix1.RowCount - 1 do
+    begin
+      for c := 0 to cyColorMatrix1.ColCount -1 do
+      begin
+        _r := RandomRange(0, 254);
+        _g := RandomRange(0, 254);
+        _b := RandomRange(0, 254);
+
+        cyColorMatrix1.SetColorGrid(r, c, RGB(_r, _g, _b));
+
+        Inc1(DrawCount, 1);
+        if GetTickCount - SaveTime > 1000
+        then begin
+          Statistics := intToStr(DrawCount) + ' boxes painted per second.';
+          // Frames per second:
+          Statistics := Statistics + '   '
+            + intToStr(DrawCount div (cyColorMatrix1.RowCount*cyColorMatrix1.ColCount)) + ' frames per second.';
+          DrawCount := 0;
+          SaveTime := GetTickCount;
+        end;
+      end;
+    end;
+
+    cyColorMatrix1.Canvas.Brush.Style := bsSolid;
+    cyColorMatrix1.Canvas.Brush.Color := clWhite;
+    cyColorMatrix1.Canvas.Font.Color := clBlack;
+    cyColorMatrix1.DrawText('Random demo', 0, 0, cyColorMatrix1.RowCount-1, cyColorMatrix1.ColCount-1, DT_WORDBREAK);
+    cyColorMatrix1.EndUpdate;
+
+    Application.ProcessMessages;
+  end;
+end;
+
+
+var cyColorMatrix1: TcyColorMatrix;
+  ImageLoad, ImageSave, ImageDrawGraphic: TImage;
+  Edit1: TEdit;
+
+procedure TFrmCyColorMatrix_BtnLoadFromBitmapClick(Sender: TObject);
+begin
+  cyColorMatrix1.LoadFromGraphic(ImageLoad.Picture.Graphic);
+end;
+
+procedure TFrmCyColorMatrix_BtnSaveToBitmapClick(Sender: TObject);
+begin
+  if not Assigned(ImageSave.Picture.Bitmap)
+  then ImageSave.Picture.Bitmap := TBitmap.Create;
+
+  cyColorMatrix1.SaveToBitmap(ImageSave.Picture.Bitmap);
+end;
+
+procedure TFrmCyColorMatrix_BtnDrawGraphicClick(Sender: TObject);
+begin
+  cyColorMatrix1.DrawGraphic(0, 0, ImageDrawGraphic.Picture.Graphic, clRed, true);
+end;
+
+procedure TFrmCyColorMatrix_BtnDrawTextClick(Sender: TObject);
+begin
+  cyColorMatrix1.Canvas.Brush.Style := bsClear;
+  cyColorMatrix1.DrawText(Edit1.Text, 50, 50, cyColorMatrix1.RowCount-1, cyColorMatrix1.ColCount-1, DT_SINGLELINE);
+end;
+
+
+
+  
+
+ var i,k: integer;
+
+begin //main console
+  //XOR Test
+  //processmessagesOFF;
+  writeln(botostr(not(0=0)))
+  writeln(botostr(not(0=1)))
+  writeln(botostr(not(1=0)))
+  writeln(botostr(not(1=1)))
+  writeln('')
+   for i:= 0 to 1 do 
+    for k:= 0 to 1 do
+       writeln(botostr(not(i=k)));
+    
+  //single or double test 
+   writeln(floattostr(cgIntPower(2.56,5)));
+   writeln(floattostr(IntPower(2.56,5)));
+   writeln(floattostr(cgIntPowerD(2.56,5)));
+  
+  //for i:= 1 to GetFileNames(exepath,faDirectory).count do 
+ {writeln('GetFileNames '+GetFileNames(exepath+'*.*',faAnyfile-faDirectory).text)  
+   writeln('GetDirNames '+GetDirNames(exepath).text); 
+   writeln('GetDirNames2 '+GetFileNames(exepath+'*.*',faDirectory).text)}  
+   writeln('GetDirNames3: '+#13#10+FindAllDirectories(exepath,false).text)  
+
+   {SetStringlistSplit;
+   writeln('-------------------') }
+
+  //FindDocs(exepath);  first lib func then script func
+    writeln(FindAllFiles(exepath,'*train*.pdf',true).text); 
+    writeln(FindAllDocs(exepath, '*train*.pdf').text); 
+    writeln(FindAllDocs(exepath, '*arduino*.pdf').text); 
+    //writeln('')
+    //FindFilePattern3(exepath, '.pdf');
+    k:= 12;
+    bt:= false;
+    inc1(k,212) 
+    writeln(itoa(k)) 
+    
+    DebugClassDemo;
+  
+  writeln(inttoStr(getMorseId('M')))   //--
+  writeln(inttoStr(getMorseId('A')))   //--
+  writeln(inttoStr(getMorseId('X')))   //--
+    
+  writeln('M '+getMorseString2('M'))   //--
+  writeln('A '+getMorseString2('A'))   //.-
+  writeln('X '+getMorseString2('X'))   //-..-
+    
+    //maxform1.ReportMemoryLeaksOnShutdown := DebugHook <> 0;
+    Set_ReportMemoryLeaksOnShutdown(true)
+    //ft
+    TFrmCyColorMatrix_CBGaugeDemoClick(self)
+    
+End.
+
+Doc:
+
+
+The TcyDebug component
+
+Component that help you debugging the code like :
+- identify where your code is spending more time.
+- Show occurences and statistics.
+- In/out code portions
+
+Published properties
+"	Active: Boolean 
+"	ProcessGrid: TStringGrid - Specify a TStringGrid where to see statistics data 
+
+Public properties
+"	ProcessCount: Integer - number of declared processes
+"	ProcessName[Index: Integer]
+"	ProcessDurationMs[Index: Integer]
+"	ProcessMinDurationMs[Index: Integer]
+"	ProcessMaxDurationMs[Index: Integer]
+"	ProcessEnterCount[Index: Integer]
+"	ProcessExitCount[Index: Integer]
+
+Events 
+"	OnEnterProcess
+"	OnExitProcess
+
+Functions
+"	function GetProcessIndex(aProcessName: String): Integer
+"	procedure ProcessEnter(aProcessName: String)
+"	procedure ProcessExit(aProcessName: String)
+"	procedure InitializeProcesses
+
+
+procedure SIRegister_TcyDebug(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TComponent', 'TcyDebug') do
+  with CL.AddClassN(CL.FindClass('TComponent'),'TcyDebug') do
+  begin
+    RegisterMethod('Constructor Create( AOwner : TComponent)');
+    RegisterMethod('Function GetProcessIndex( aProcessName : String) : Integer');
+    RegisterMethod('Procedure ProcessEnter( aProcessName : String)');
+    RegisterMethod('Procedure ProcessExit( aProcessName : String)');
+    RegisterMethod('Procedure InitializeProcesses');
+    RegisterProperty('ProcessCount', 'Integer', iptr);
+    RegisterProperty('ProcessName', 'ShortString Integer', iptr);
+    RegisterProperty('ProcessDurationMs', 'Cardinal Integer', iptr);
+    RegisterProperty('ProcessFirstDurationMs', 'Cardinal Integer', iptr);
+    RegisterProperty('ProcessLastDurationMs', 'Cardinal Integer', iptr);
+    RegisterProperty('ProcessMinDurationMs', 'Cardinal Integer', iptr);
+    RegisterProperty('ProcessMaxDurationMs', 'Cardinal Integer', iptr);
+    RegisterProperty('ProcessEnterCount', 'Integer Integer', iptr);
+    RegisterProperty('ProcessExitCount', 'Integer Integer', iptr);
+    RegisterProperty('Active', 'Boolean', iptrw);
+    RegisterProperty('ProcessGrid', 'TStringGrid', iptrw);
+    RegisterProperty('OnEnterProcess', 'TProcProcessEvent', iptrw);
+    RegisterProperty('OnExitProcess', 'TProcProcessEvent', iptrw);
+  end;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_cyDebug(CL: TPSPascalCompiler);
+begin
+  CL.AddTypeS('TProcProcessEvent', 'Procedure ( Sender : TObject; Index : Integer)');
+  CL.AddTypeS('RecProcess', 'record Name : ShortString; DurationMs : Cardinal; '
+   +'FirstDurationMs : Cardinal; LastDurationMs : Cardinal; MinDurationMs : Int'
+   +'64; MaxDurationMs : Cardinal; MarksCount : Integer; ArrayMarks : array of '
+   +'Cardinal; EnterCount : Integer; ExitCount : Integer; end');
+  SIRegister_TcyDebug(CL);
+end;
+
+
+
+
+
+//http://www.delphientwickler.de/
+
+I hate those recursive solutions with FindFirst/FindNext and I consider it troublesome that some even forget to use FindClose to clean up resources. So, for the fun of it, a non-recursive solution that should be practical to use...
+While it seems to eat a lot of memory because it uses a dynamic array, a recursive method will do exactly the same but recursion happens on the stack! Also, with a recursive method, space is allocated for all local variables while my solution only allocates space for the folder names.
+
+When you check for speed, both methods should be just as fast. The recursive method is easier to remember, though. You can also use a TStringList instead of a dynamic array, but I just like dynamic arrays.
+One additional trick with my solution: It can search in multiple folders! I Initialized the Folders array with just one root, but you could easily set it's length to 3, and set Folders[0] to C:\, Folders[1] to D:\ and Folders[2] to E:\ and it will search on multiple disks!
+
+Btw, replace the WriteLn() code with whatever logic you want to execute...
+
+
+-----------------------------------------------------
+Doc: Status
+API: The Date and Time Picker is a control that allows the user to
+      select either a date or a time value. This control provides two
+      objects in one: A picker and a calendar
+    Training: http://www.functionx.com/bcb/controls/datetime.htm
+    Blog
+    About http://www.softwareschule.ch/examples/469_ibzresult.txt
+    //ToDo: Eliminate the Global Vars!
+
+    Terms
+    Privacy
+    Security
+    Contact
+    
+    
+unit formcyDebug;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ComCtrls, ExtCtrls, cyBasePanel, cyPanel, StdCtrls, Buttons, Math,
+  vcl.cyGraphics, cySpeedButton, cySplitter, cyBaseLabel, cyHotLabel,
+  cyLabel, ShellAPI, cyColorMatrix, cyBaseSpeedButton, cyBaseColorMatrix, cyBaseButton, cyBitBtn, jpeg, Grids, cyDebug;
+
+type
+  TFrmCyDebug = class(TForm)
+    CyPanel1: TCyPanel;
+    Panel2: TPanel;
+    CyPanel2: TCyPanel;
+    RichEditInfo: TRichEdit;
+    StatusBar1: TStatusBar;
+    SBClose: TcySpeedButton;
+    cySplitter1: TcySplitter;
+    cyLabel1: TcyLabel;
+    LblWebSite: TcyHotLabel;
+    Panel1: TPanel;
+    CBRandomDemo: TCheckBox;
+    cyColorMatrix1: TcyColorMatrix;
+    cyDebug1: TcyDebug;
+    StringGrid1: TStringGrid;
+    CBShowStatistics: TCheckBox;
+    procedure FormCreate(Sender: TObject);
+    procedure SBCloseClick(Sender: TObject);
+    procedure LblWebSiteClick(Sender: TObject);
+    procedure cySplitter1Moved(Sender: TObject);
+    procedure CBRandomDemoClick(Sender: TObject);
+    procedure cySpeedButton1Click(Sender: TObject);
+    procedure cyColorMatrix1Paint(Sender: TObject);
+    procedure CBShowStatisticsClick(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  FrmCyDebug: TFrmCyDebug;
+
+  Statistics: String;
+
+implementation
+
+//{$R *.dfm}
+
+procedure TFrmCyDebug.CBShowStatisticsClick(Sender: TObject);
+begin
+  if CBShowStatistics.Checked
+  then cyDebug1.ProcessGrid := StringGrid1
+  else cyDebug1.ProcessGrid := Nil;
+
+  StringGrid1.Visible := CBShowStatistics.Checked;
+end;
+
+procedure TFrmCyDebug.cyColorMatrix1Paint(Sender: TObject);
+begin
+  // You can only change cyColorMatrix1.Canvas here!
+  cyDebug1.ProcessEnter('Paint');
+                              Sleep(10);
+  if CBRandomDemo.Checked
+  then begin
+    cyColorMatrix1.Canvas.Brush.Color := clBlack;
+    cyColorMatrix1.Canvas.Font.Color := clWhite;
+    cyColorMatrix1.Canvas.TextOut(10, cyColorMatrix1.Height-25, Statistics);
+  end;
+
+  cyDebug1.ProcessExit('Paint');
+end;
+
+procedure TFrmCyDebug.cySpeedButton1Click(Sender: TObject);
+var aRow: Integer;
+begin
+  aRow := cyColorMatrix1.ValueToRow(cyColorMatrix1.TopRowValue);
+  cyColorMatrix1.SetColorGridRange(aRow, aRow, 0, 10, clRed);
+
+  aRow := cyColorMatrix1.ValueToRow(cyColorMatrix1.BottomRowValue);
+  cyColorMatrix1.SetColorGridRange(aRow, aRow, 0, 10, clLime);
+end;
+
+procedure TFrmCyDebug.cySplitter1Moved(Sender: TObject);
+begin
+  RichEditInfo.Invalidate;
+end;
+
+procedure TFrmCyDebug.FormCreate(Sender: TObject);
+var
+  L: Integer;
+  cyCompName: String;
+  RtfFile: TFilename;
+begin
+  L := Length(Name);
+  cyCompName := Copy(Name, 4, L-3);
+  Caption := cyCompName + ' demo';
+  RtfFile := ExtractFileDir(ParamStr(0)) + '\' + cyCompName + '.rtf';
+
+  try
+    RichEditInfo.Lines.LoadFromFile(RtfFile);
+  finally
+
+  end;
+
+  Randomize;
+  Statistics := 'Calculating ...';
+end;
+
+procedure TFrmCyDebug.LblWebSiteClick(Sender: TObject);
+begin
+  Screen.Cursor := crHourGlass;
+  ShellExecute(handle, 'open', 'http://sourceforge.net/projects/tcycomponents/', '', '', SW_NORMAL);
+  Screen.Cursor := crDefault;
+end;
+
+procedure TFrmCyDebug.SBCloseClick(Sender: TObject);
+begin
+  Close;
+end;
+
+procedure TFrmCyDebug.CBRandomDemoClick(Sender: TObject);
+var
+  c, r, _r, _g, _b: integer;
+  DrawCount: Integer;
+  SaveTime: Cardinal;
+begin
+  // Activate TcyDebug:
+  cyDebug1.Active := CBRandomDemo.Checked;
+
+  if cyDebug1.Active then
+    cyDebug1.InitializeProcesses;
+
+  DrawCount := 0;
+  SaveTime := GetTickCount;
+  while (CBRandomDemo.Checked) and (not Application.Terminated) do
+  begin
+    cyColorMatrix1.BeginUpdate;
+
+    for r := 0 to cyColorMatrix1.RowCount - 1 do
+    begin
+      cyDebug1.ProcessEnter('Set line color');
+
+      for c := 0 to cyColorMatrix1.ColCount -1 do
+      begin
+        _r := RandomRange(0, 254);
+        _g := RandomRange(0, 254);
+        _b := RandomRange(0, 254);
+
+        cyColorMatrix1.SetColorGrid(r, c, RGB(_r, _g, _b));
+
+        Inc(DrawCount, 1);
+        if GetTickCount - SaveTime > 1000
+        then begin
+          Statistics := intToStr(DrawCount) + ' boxes painted per second.';
+          // Frames per second:
+          Statistics := Statistics + '   '
+            + intToStr(DrawCount div (cyColorMatrix1.RowCount*cyColorMatrix1.ColCount)) + ' frames per second.';
+          DrawCount := 0;
+          SaveTime := GetTickCount;
+        end;
+      end;
+
+      cyDebug1.ProcessExit('Set line color');
+    end;
+
+    cyColorMatrix1.Canvas.Brush.Style := bsSolid;
+    cyColorMatrix1.Canvas.Brush.Color := clWhite;
+    cyColorMatrix1.Canvas.Font.Color := clBlack;
+    cyColorMatrix1.DrawText('Random demo', 0, 0, cyColorMatrix1.RowCount-1, cyColorMatrix1.ColCount-1, DT_WORDBREAK);
+    cyColorMatrix1.EndUpdate;
+
+    Application.ProcessMessages;
+  end;
+end;
+
+end.
+    
+    
+    
+  Tool: mX Musterlösung 469_formarrow_datepicker_ibz.txt

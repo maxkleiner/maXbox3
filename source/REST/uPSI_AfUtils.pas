@@ -1,7 +1,7 @@
 unit uPSI_AfUtils;
 {
   afcom     char is pchar!
-  more of winapi funct with w_
+  more of winapi funct with w_   morse code inside
 }
 interface
  
@@ -35,7 +35,7 @@ implementation
 
 uses
    Windows
-  ,AfUtils, wiwin32, REGiSTRY ;
+  ,AfUtils, wiwin32, REGiSTRY, PsAPI, messages;
 
 
 procedure Register;
@@ -77,6 +77,405 @@ end;
     reg.free;
   end;
  end;
+
+
+function ComposeDateTime(Date,Time : TDateTime) : TDateTime;
+begin
+  if Date < 0 then Result := trunc(Date) - frac(Time)
+  else Result := trunc(Date) + frac(Time);
+end;
+
+
+ function FullTimeToStr(SUMTime: TDateTime): string;
+    var
+    StrHor,
+    StrMin :string;
+    TotHor :double;
+    begin
+         TotHor := SUMTime *24;
+         if (TotHor -Trunc(TotHor)) > 0.9999 then
+         TotHor := Round(TotHor);
+         StrHor := FormatFloat('##0:', Int(TotHor));
+         StrMin := FormatDateTime('nn:ss', Frac(TotHor)/24);
+         Result := StrHor +StrMin;
+    end;
+
+
+ function GetBaseAddress(PID:DWORD):DWORD;
+var
+hOpen:  THandle;
+hMod:   THandle;
+MODINFO:  MODULEINFO;
+null:	 DWORD;
+begin
+  hOpen := OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ, FALSE, PID);
+  if hOpen <> INVALID_HANDLE_VALUE then begin
+	EnumProcessModules(hOpen, @hMod, SizeOf(hMod), null);
+	GetModuleInformation(hOpen, hMod, @MODINFO, SizeOf(MODINFO));
+	Result := Cardinal(MODINFO.lpBaseOfDll);
+	CloseHandle(hOpen);
+  end;
+end;
+
+
+const
+Zero = 0;
+ID_Static = 200;
+
+var
+MsgClass: TWndClass;
+aResult: record hWnd, Result: Integer; end;
+aryMsgForms: Array of Integer;
+  { aryMsgForms has all of the handles of the message windows
+    this will allow more than one message window to exist }
+aryEnable: Array of Integer;
+  // aryEnable has all of the handles for the dis-abled windows
+FontBut, aFont: Cardinal;
+hFParent: Integer;
+
+
+function FoundTopLevel(hWnd, LParam: Integer): BOOL; StdCall;
+var
+i: Integer;
+begin
+// this is the call back function for EnumThreadWindows  function
+Result := True;
+// return true to get all windows
+
+{I wanted to be able to show more than one Message-window, the Msg-windows
+ are also top-level, and I did not want any Msg-Wnds to be disabled,
+ so I add all Msg-Wnds handles to the aryMsgForms array}
+for i := Zero to High(aryMsgForms) do
+  if hWnd = aryMsgForms[i] then Exit;
+  // if a top-level is a Msg-Wnd then exit and do NOT add it to aryEnable
+
+SetLength(aryEnable, Length(aryEnable)+1);
+// make aryEnable larger and add window handle
+aryEnable[High(aryEnable)] := hWnd;
+end;
+
+
+
+procedure DisableForms;
+var
+i: Integer;
+begin
+{ if there is no aryEnable handles, then use EnumThreadWindows
+ to get all top-level windows in the aryEnable array }
+if Length(aryEnable) = Zero then begin
+  EnumThreadWindows(GetCurrentThreadId, @FoundTopLevel, Zero);
+
+  // after all top-level are in aryEnable, dis-able all with EnableWindow( )
+  for i := Zero To High(aryEnable) do
+   EnableWindow(aryEnable[i], False);
+  end;
+end;
+
+procedure DeleteMsgForm(Handle: Integer);
+var
+i: Integer;
+begin
+// this procedure removes a handle form the aryMsgForms array
+for i := Zero to High(aryMsgForms) do
+  if Handle = aryMsgForms[i] then begin
+    if i <> High(aryMsgForms) then
+      MoveMemory(@aryMsgForms[i],@aryMsgForms[i+1],
+                 SizeOf(Integer)*(High(aryMsgForms)-i));
+  // the MoveMemory will move all of the array data forward one position
+    setLength(aryMsgForms, Length(aryMsgForms)-1);
+    Break;
+    end;
+end;
+
+
+//procedure ShowMsg(hParent: Integer; const Mess, Title: String);
+{ ShowMsg is a simple "Modal" window that does NOT Block code progression.
+  It is mostly to show you how block user input to forms on screen}
+procedure ShowMsg(hParent: Integer; const Mess, Title: String);
+var
+hNew, hBut: Integer;
+begin
+{this ShowMsg procedure creates a modal message box window.
+ It does NOT block code progression like the API MessageBox function.
+ But it does disable all top-level windows for a modal effect.
+ For this lesson, the code here is simple, I do NOT size the message window
+ or offer any options except the message and title strings,
+ there can only be an OK button}
+hNew := CreateWindow(MsgClass.lpszClassName, PChar(Title),
+             WS_CAPTION or WS_POPUP or WS_VISIBLE,
+             ((GetSystemMetrics(SM_CXSCREEN) div 2)-130)+(High(aryMsgForms)*6),
+             (GetSystemMetrics(SM_CYSCREEN) div 2)-75, 260, 124,
+              hParent, Zero, hInstance, nil);
+
+if hNew = Zero then Exit;
+
+setLength(aryMsgForms, Length(aryMsgForms)+1);
+aryMsgForms[High(aryMsgForms)] := hNew;
+{ you must add this window handle to the aryMsgForms array
+  to have more than one message window}
+
+SendMessage(CreateWindow('STATIC',PChar(Mess),
+ WS_VISIBLE or WS_CHILD,6,6,246,54,hNew,ID_Static,hInstance,nil),
+    WM_SETFONT,aFont,Zero);
+
+hBut := CreateWindow('BUTTON', 'O K',
+    WS_VISIBLE or WS_CHILD or BS_PUSHBUTTON or WS_BORDER or WS_TABSTOP,
+    102,64,58,26,hNew,IDOk,hInstance,nil);
+SendMessage(hBut, WM_SETFONT, FontBut, Zero);
+SetFocus(hBut);
+
+DisableForms;
+// call DisableForms procedure to have a Modal effect
+
+// WaitTilClose(hNew);
+// if you want to block code progression then add the WaitTilClose above
+end;
+
+function MsgFunc(hWnd,Msg,wParam,lParam:Integer):Integer; stdcall;
+var
+PaintS: TPaintStruct;
+i: Integer;
+cRect: TRect;
+begin
+// this is the Window Proc for all of the message windows
+case Msg of
+  WM_CLOSE: begin
+    // when a message window closes the aResult is set
+    if (aResult.hWnd <> hWnd) then // you test to see if aResult.Result is valid
+      begin
+      aResult.Result := IDCancel;
+      aResult.hWnd := hWnd;
+      end;
+    DeleteMsgForm(hWnd);
+    // remove this window from the aryMsgForms array with DeleteMsgForm
+    if High(aryMsgForms) < Zero then
+      begin
+      // if all of the msg forms are closed, then High(aryMsgForms) is -1
+      // you need to enable all the top windows
+      for i := Zero to High(aryEnable) do
+        EnableWindow(aryEnable[i], True);
+      SetLength(aryEnable, Zero); // reset aryEnabled array to zero
+      end;
+    end;
+
+  WM_PAINT: begin
+    // to have a visual clue for a message window I paint a white line
+    GetClientRect(hWnd, cRect);
+    BeginPaint(hWnd, PaintS);
+    SelectObject(PaintS.hDC, GetStockObject(NULL_BRUSH));
+    SelectObject(PaintS.hDC, GetStockObject(WHITE_PEN));
+    Rectangle(Paints.hDC,cRect.Left, cRect.Top, cRect.Right, cRect.Bottom);
+    EndPaint(hWnd,PaintS);
+    Result := Zero;
+    Exit;
+    end;
+
+  WM_COMMAND: if HIWORD(WParam) = BN_CLICKED then
+    begin
+    // aResult is used for the WaitMessage repeat loop, so set it for button click
+    aResult.Result := LOWORD(wParam); // button ID
+    aResult.hWnd := hWnd; // set aResult.hWnd to handle for valid Result in WM_CLOSE
+    PostMessage(hWnd, WM_CLOSE, Zero, Zero); // any button clicked closes window
+    end;
+  end;
+
+Result := DefWindowProc(hWnd,Msg,wParam,lParam);
+end;
+
+
+function DoUserMsgs: Boolean;
+var
+aMsg: TMSG;
+begin
+{ for the WaitTilClose repeat loop , you will need to
+ get the message queue messages and dispatch them } 
+Result := False; // WaitTilClose loop continues as long as Result is False
+while PeekMessage(aMsg, Zero, Zero, Zero, PM_REMOVE) do
+  if aMsg.message = WM_QUIT then
+     begin
+     Result := True;
+// IMPORTANT, must get WM_QUIT and repost it, set Result so repeat loop is ended
+     PostQuitMessage(Zero);
+     Break;
+     end else
+     if not IsDialogMessage(GetActiveWindow, aMsg) then
+       begin
+       TranslateMessage(aMsg);
+       DispatchMessage(aMsg);
+       end;
+end;
+
+
+function WaitTilClose(hWnd: Integer): Integer;
+begin
+// this function allows you to wait until the hWnd window closes
+aResult.Result := IDCancel;
+aResult.hWnd := Zero;
+
+repeat
+  if DoUserMsgs or (aResult.hWnd = hWnd) then Break;
+  WaitMessage;
+  { the  WaitMessage  function is what allows this to be a "Modal" window AND
+    wait for this MsgResult function to return. The WaitMessage  function will
+    yield control to other threads when this thread has no messages }
+  until (aResult.hWnd = hWnd) or (not IsWindow(hWnd));
+Result := aResult.Result;
+end;
+
+
+
+
+type
+  //PMorseEntry = ^TMorseEntry;
+   TMorseEntry = record
+       MorseChar : Char;
+       KeyID : Word;
+    end;
+
+var  morsTblRec: array[1..36] of TMorseEntry;
+
+procedure AddTableEntry(idx: byte; Symbol : Char; KeyID : Word);
+var
+   ListData : TMorseEntry;
+begin
+   //New(ListData);
+   ListData.MorseChar:= Symbol;
+   ListData.KeyID := KeyID;
+   morsTblRec[idx]:= ListData;
+end;
+
+procedure FillMorseTable();
+begin
+//MorseTable.Clear;
+AddTableEntry(1,#65, $009); // A .-
+AddTableEntry(2,#66, $056); // B -...
+AddTableEntry(3,#67, $066); // C -.-.
+AddTableEntry(4,#68, $016); // D -..
+AddTableEntry(5,#69, $001); // E .
+AddTableEntry(6,#70, $065); // F ..-.
+AddTableEntry(7,#71, $01A); // G --.
+AddTableEntry(8,#72, $055); // H ....
+AddTableEntry(9,#73, $005); // I ..
+AddTableEntry(10,#74, $0A9); // J .---
+AddTableEntry(11,#75, $026); // K -.-
+AddTableEntry(12,#76, $059); // L .-..
+AddTableEntry(13,#77, $00A); // M --
+AddTableEntry(14,#78, $006); // N -.
+AddTableEntry(15,#79, $02A); // O ---
+AddTableEntry(16,#80, $069); // P .--.
+AddTableEntry(17,#81, $09A); // Q --.-
+AddTableEntry(18,#82, $019); // R .-.
+AddTableEntry(19,#83, $015); // S ...
+AddTableEntry(20,#84, $002); // T -
+AddTableEntry(21,#85, $025); // U ..-
+AddTableEntry(22,#86, $095); // V ...-
+AddTableEntry(23,#87, $029); // W .--
+AddTableEntry(24,#88, $096); // X -..-
+AddTableEntry(25,#89, $0A6); // Y -.--
+AddTableEntry(26,#90, $05A); // Z --..
+AddTableEntry(27,#49, $2A9); // 1 .----
+AddTableEntry(28,#50, $2A5); // 2 ..---
+AddTableEntry(29,#51, $295); // 3 ...--
+AddTableEntry(30,#52, $255); // 4 ....-
+AddTableEntry(31,#53, $155); // 5 .....
+AddTableEntry(32,#54, $156); // 6 -....
+AddTableEntry(33,#55, $15A); // 7 --...
+AddTableEntry(34,#56, $16A); // 8 ---..
+AddTableEntry(35,#57, $1AA); // 9 ----.
+AddTableEntry(36,#48, $2AA); // 0 -----
+end;
+
+
+function GetMorseID(InChar : Char): Word;
+var
+ScanPos: Integer;
+begin
+FillMorseTable;
+result:= 0;
+ for ScanPos:= 1 to 36 do begin
+  if(InChar = morsTblRec[scanpos].MorseChar) then begin
+     result:= morsTblRec[ScanPos].KeyID;
+    break;
+  end;
+ end;
+end;
+
+
+function GetMorseString2(InChar : Char): string;
+var
+MorseData : Word; CodePos, OutCode: Byte;
+ScanPos : Integer;
+begin
+FillMorseTable;
+result:= '';
+ morsedata:= getmorseid(inchar);
+  if(MorseData > 0) then begin
+    CodePos := 0;
+   repeat
+    OutCode:= (MorseData and (3 shl CodePos)) shr CodePos;
+     CodePos:= CodePos + 2;
+     if(OutCode > 0) then begin
+       result:= result + inttostr(outcode)
+       //writeln('in loop')   debug
+     end;
+   until (OutCode = 0);
+  end;
+end;
+
+function GetMorseLine(dots: boolean): string;
+var
+MorseData : Word; CodePos, OutCode: Byte;
+ScanPos : Integer;
+sign: char;
+begin
+result:= '';
+FillMorseTable;
+ for ScanPos:= 1 to 36 do begin
+     morsedata:= MorsTblrec[ScanPos].KeyID;
+   if(MorseData > 0) then begin
+    CodePos:= 0;
+ //result:= + MorseTblrec[ScanPos].Morsechar
+    repeat
+    OutCode:= (MorseData and (3 shl CodePos)) shr CodePos;
+     CodePos:= CodePos + 2;
+     if(OutCode > 0) then begin
+     if dots then begin
+     if outcode = 1 then sign:= '.' else sign:= '-';
+       result:= result + sign
+       end else
+         result:= result + inttostr(outcode)
+       //writeln('in loop')   debug
+     end;
+   until (OutCode = 0);
+   result:= result+#9+MorsTblrec[ScanPos].Morsechar+#13+#10
+  end;
+ end;
+end;
+
+function GetMorseSign(InChar : Char): string;
+var
+MorseData : Word; CodePos, OutCode: Byte;
+ScanPos : Integer;
+sign: char;
+begin
+result:= '';
+FillMorseTable;
+  morsedata:= getmorseid(inchar);
+  if(MorseData > 0) then begin
+    CodePos := 0;
+   repeat
+    OutCode:= (MorseData and (3 shl CodePos)) shr CodePos;
+     CodePos:= CodePos + 2;
+     if(OutCode > 0) then begin
+        if outcode = 1 then sign:= '.' else sign:= '-';
+       result:= result + sign
+       //writeln('in loop')   debug
+     end;
+   until (OutCode = 0);
+  end;
+end;
+
+
 
      //UrlDownloadToFile
 
@@ -309,7 +708,19 @@ CL.AddDelphiFunction('Function OpenWindowStation( lpszWinSta : PChar; fInherit :
  CL.AddDelphiFunction('Function CloseWindowStation( hWinSta : HWINSTA) : BOOL');
  CL.AddDelphiFunction('Function SetProcessWindowStation( hWinSta : HWINSTA) : BOOL');
  CL.AddDelphiFunction('Function GetProcessWindowStation : HWINSTA');
+ CL.AddDelphiFunction('function GetMorseID(InChar : Char): Word;');
+ CL.AddDelphiFunction('function GetMorseString2(InChar : Char): string;');
+ CL.AddDelphiFunction('function GetMorseLine(dots: boolean): string;');
+ CL.AddDelphiFunction('function GetMorseTable(dots: boolean): string;');
+ CL.AddDelphiFunction('function GetMorseSign(InChar : Char): string;');
 
+ CL.AddDelphiFunction('function WaitTilClose(hWnd: Integer): Integer;');
+ CL.AddDelphiFunction('function DoUserMsgs: Boolean;');
+ CL.AddDelphiFunction('function MsgFunc(hWnd,Msg,wParam,lParam:Integer):Integer; stdcall;');
+ CL.AddDelphiFunction('procedure ShowMsg(hParent: Integer; const Mess, Title: String);');
+ CL.AddDelphiFunction('procedure DeleteMsgForm(Handle: Integer);');
+ CL.AddDelphiFunction('procedure DisableForms;');
+ CL.AddDelphiFunction('function FoundTopLevel(hWnd, LParam: Integer): BOOL; StdCall;');
 
   CL.AddTypeS('TFNTimerProc', 'TObject');
  CL.AddConstantN('GW_HWNDFIRST','LongInt').SetInt( 0);
@@ -578,9 +989,11 @@ CL.AddConstantN('NOPARITY','LongInt').SetInt( 0);
  //+' var GrantedAccess : DWORD; var AccessStatus, pfGenerateOnClose : BOOL) : BOOL');
  CL.AddDelphiFunction('Function BackupEventLog( hEventLog : THandle; lpBackupFileName : PKOLChar) : BOOL');
  CL.AddDelphiFunction('Function ClearEventLog( hEventLog : THandle; lpBackupFileName : PKOLChar) : BOOL');
- //CL.AddDelphiFunction('Function CreateProcessAsUser( hToken : THandle; lpApplicationName : PKOLChar; lpCommandLine : PKOLChar; lpProcessAttributes : PSecurityAttributes; lpThreadAttributes : PSecurityAttributes; bInheritHandles : BOOL; dwCreationFlags : DWORD; lpEnvironment : Pointer; lpCurrentDirectory : PKOLChar; const lpStartupInfo : TStartupInfo; var lpProcessInformation : TProcessInformation) : BOOL');
+// CL.AddDelphiFunction('Function CreateProcessAsUser(hToken : THandle; lpApplicationName : PKOLChar; lpCommandLine : PKOLChar; lpProcessAttributes : PSecurityAttributes; lpThreadAttributes : PSecurityAttributes;'
+  //                       +'bInheritHandles : BOOL; dwCreationFlags : DWORD; lpEnvironment : ___Pointer; lpCurrentDirectory : PKOLChar; const lpStartupInfo : TStartupInfo; var lpProcessInformation : integer): BOOL');
+// CL.AddDelphiFunction('Function CreateProcessAsUser2(bInheritHandles : BOOL; dwCreationFlags : DWORD; lpEnvironment : ___Pointer; lpCurrentDirectory : PKOLChar; const lpStartupInfo : TStartupInfo; var lpProcessInformation : integer): BOOL');
  //CL.AddDelphiFunction('Function GetCurrentHwProfile( var lpHwProfileInfo : THWProfileInfo) : BOOL');
- //CL.AddDelphiFunction('Function GetFileSecurity( lpFileName : PKOLChar; RequestedInformation : SECURITY_INFORMATION; pSecurityDescriptor : PSecurityDescriptor; nLength : DWORD; var lpnLengthNeeded : DWORD) : BOOL');
+ //CL.AddDelphiFunction('Function GetFileSecurity( lpFileName : PKOLChar; RequestedInformation : SECURITY_INFORMATION; pSecurityDescriptor : PSecurityDescriptor; nLength : DWORD; var lpnLengthNeeded : DWORD) : BOOL'); TStartupInfo    TProcessInformation
  CL.AddDelphiFunction('Function avGetUserName( lpBuffer : PKOLChar; var nSize : DWORD) : BOOL');
  CL.AddDelphiFunction('Function InitiateSystemShutdown( lpMachineName, lpMessage : PKOLChar; dwTimeout : DWORD; bForceAppsClosed, bRebootAfterShutdown : BOOL) : BOOL');
  CL.AddDelphiFunction('Function LogonUser( lpszUsername, lpszDomain, lpszPassword : PKOLChar; dwLogonType, dwLogonProvider : DWORD; var phToken : THandle) : BOOL');
@@ -1018,6 +1431,13 @@ CL.AddConstantN('NOPARITY','LongInt').SetInt( 0);
  CL.AddDelphiFunction('Function GetWindowTask( hWnd : HWND) : THandle');
  CL.AddDelphiFunction('Function GetLastActivePopup( hWnd : HWND) : HWND');
  CL.AddDelphiFunction('function GetMDACVersion2: string;');
+ CL.AddDelphiFunction('function ComposeDateTime(Date,Time : TDateTime) : TDateTime;');
+ CL.AddDelphiFunction('function FullTimeToStr(SUMTime: TDateTime): string;');
+ CL.AddDelphiFunction('function GetBaseAddress(PID:DWORD):DWORD;');
+
+ //function GetBaseAddress(PID:DWORD):DWORD;
+
+ //function FullTimeToStr(SUMTime: TDateTime): string;
 
 
 
@@ -1038,7 +1458,7 @@ begin
  S.RegisterDelphiFunction(@AccessCheckByTypeResultListAndAuditAlarm, 'AccessCheckByTypeResultListAndAuditAlarm', CdStdCall);
  S.RegisterDelphiFunction(@BackupEventLog, 'BackupEventLog', CdStdCall);
  S.RegisterDelphiFunction(@ClearEventLog, 'ClearEventLog', CdStdCall);
- //S.RegisterDelphiFunction(@CreateProcessAsUser, 'CreateProcessAsUser', CdStdCall);
+ S.RegisterDelphiFunction(@CreateProcessAsUser, 'CreateProcessAsUser', CdStdCall);
  //S.RegisterDelphiFunction(@GetCurrentHwProfile, 'GetCurrentHwProfile', CdStdCall);
  //S.RegisterDelphiFunction(@GetFileSecurity, 'GetFileSecurity', CdStdCall);
  S.RegisterDelphiFunction(@GetUserName, 'avGetUserName', CdStdCall);
@@ -1432,7 +1852,7 @@ begin
  S.RegisterDelphiFunction(@GetClassName, 'GetClassName', CdStdCall);
  S.RegisterDelphiFunction(@GetWindowTask, 'GetWindowTask', cdRegister);
  S.RegisterDelphiFunction(@GetLastActivePopup, 'GetLastActivePopup', CdStdCall);
- S.RegisterDelphiFunction(@GetMDACVersion2, 'GetMDACVersion2', CdStdCall);
+ S.RegisterDelphiFunction(@GetMDACVersion2, 'GetMDACVersion2', cdRegister);
   S.RegisterDelphiFunction(@RegisterWindowMessage, 'RegisterWindowMessage', CdStdCall);
   S.RegisterDelphiFunction(@PostThreadMessage, 'PostThreadMessage', CdStdCall);
   S.RegisterDelphiFunction(@PostAppMessage, 'PostAppMessage', CdStdCall);
@@ -1452,7 +1872,24 @@ begin
  S.RegisterDelphiFunction(@CloseWindowStation, 'CloseWindowStation', CdStdCall);
  S.RegisterDelphiFunction(@SetProcessWindowStation, 'SetProcessWindowStation', CdStdCall);
  S.RegisterDelphiFunction(@GetProcessWindowStation, 'GetProcessWindowStation', CdStdCall);
- 
+ S.RegisterDelphiFunction(@ComposeDateTime, 'ComposeDateTime', cdRegister);
+ S.RegisterDelphiFunction(@FullTimeToStr, 'FullTimeToStr', cdRegister);
+ S.RegisterDelphiFunction(@GetBaseAddress, 'GetBaseAddress', cdRegister);
+
+ S.RegisterDelphiFunction(@GetMorseID, 'GetMorseID', cdRegister);
+ S.RegisterDelphiFunction(@GetMorseString2, 'GetMorseString2', cdRegister);
+ S.RegisterDelphiFunction(@GetMorseLine, 'GetMorseLine', cdRegister);
+ S.RegisterDelphiFunction(@GetMorseLine, 'GetMorseTable', cdRegister);
+ S.RegisterDelphiFunction(@GetMorseSign, 'GetMorseSign', cdRegister);
+ S.RegisterDelphiFunction(@WaitTilClose, 'WaitTilClose', cdRegister);
+ S.RegisterDelphiFunction(@DoUserMsgs, 'DoUserMsgs', cdRegister);
+ S.RegisterDelphiFunction(@MsgFunc, 'MsgFunc', cdRegister);
+ S.RegisterDelphiFunction(@ShowMsg, 'ShowMsg', cdRegister);
+ S.RegisterDelphiFunction(@DeleteMsgForm, 'DeleteMsgForm', cdRegister);
+ S.RegisterDelphiFunction(@DisableForms, 'DisableForms', cdRegister);
+ S.RegisterDelphiFunction(@FoundTopLevel, 'FoundTopLevel', cdRegister);
+
+
 end;
 
 

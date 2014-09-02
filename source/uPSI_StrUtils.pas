@@ -3,7 +3,7 @@ unit uPSI_StrUtils;
 
 //imports by max  and imports more runtime lib functions of delphi2 up
  set constants and sets to provide is dependent from sysutils
- overload with leftstr2 ... correction   , getmem vars  TSearchRec bug!
+ overload with leftstr2 ... correction   , getmem vars  TSearchRec bug! getdir!
 }
 interface
  
@@ -433,7 +433,9 @@ begin
  CL.AddDelphiFunction('function IsDelimiter(const Delimiters: string; const S: string; Index: Integer): Boolean)');
  CL.AddDelphiFunction('function IsPathDelimiter(const S: string; Index: Integer): Boolean)');
  CL.AddDelphiFunction('function LastDelimiter(const Delimiters: string; const S: string): Integer)');
- CL.AddDelphiFunction('function IsValidIdent(const Ident: string; AllowDots: Boolean): Boolean)');
+ //CL.AddDelphiFunction('function IsValidIdent(const Ident: string; AllowDots: Boolean): Boolean)');
+ CL.AddDelphiFunction('function IsValidIdent1(const Ident: string; AllowDots: Boolean): Boolean)');
+ CL.AddDelphiFunction('function IsValidIdent2(const Ident: string; AllowDots: Boolean): Boolean)');
 
  //Experimental and fix for 3.5
  CL.AddDelphiFunction('procedure New(P: PChar)');
@@ -505,6 +507,7 @@ begin
  //CL.AddFunction('Function GetWindowRect(hdwnd: HWND, arect: TRect): boolean;');
         //cl.add               // getwindowrect
  end;
+
 
  procedure getmemA(var P: PChar; Size: Integer);
  begin
@@ -616,6 +619,12 @@ begin
   result:= StrToCurr(Value);
 end;
 
+procedure System_GetDir(d: byte; var s: string);
+begin
+  System.GetDir(d, s);
+end;
+
+
 function SearchBuf2(Buf: string; SelStart, SelLength: Integer;
   SearchString: String; Options: TStringSearchOptions): integer;
 var
@@ -719,7 +728,7 @@ begin
  S.RegisterDelphiFunction(@ChDir,'ChangeDir', cdRegister);
 
  S.RegisterDelphiFunction(@RMDir,'RmDir', cdRegister);
- //S.RegisterDelphiFunction(@System.GetDir,'GetDir', cdRegister);
+ S.RegisterDelphiFunction(@System_GetDir,'GetDir', cdRegister);
  S.RegisterDelphiFunction(@FileCreate,'FileCreate', cdRegister);
  S.RegisterDelphiFunction(@FileCreate,'MakeFile', cdRegister);
  S.RegisterDelphiFunction(@FileClose,'FileClose', cdRegister);
@@ -814,7 +823,8 @@ begin
  S.RegisterDelphiFunction(@IsDelimiter,'IsDelimiter', cdRegister);
  S.RegisterDelphiFunction(@IsPathDelimiter,'IsPathDelimiter', cdRegister);
  S.RegisterDelphiFunction(@LastDelimiter,'LastDelimiter', cdRegister);
- S.RegisterDelphiFunction(@IsValidIdent,'IsValidIdent', cdRegister);
+ S.RegisterDelphiFunction(@IsValidIdent,'IsValidIdent1', cdRegister);
+ S.RegisterDelphiFunction(@IsValidIdent,'IsValidIdent2', cdRegister);
  S.RegisterDelphiFunction(@InputQuery, 'InputQuery', cdRegister);
  S.RegisterDelphiFunction(@InputBox,'InputBox', cdRegister);
  //S.RegisterDelphiFunction(@MessageDlg,'MessageDlg', cdRegister);

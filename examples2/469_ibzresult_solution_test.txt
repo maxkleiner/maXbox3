@@ -1,0 +1,406 @@
+//https://github.com/maxkleiner/maXbox3/blob/masterbox2/examples/469_formarrow_datepicker.txt 
+Program Demo_App_mX_cALwON_Arrow_Result;
+{ ****************************************************************
+  Sourcefile : DBopen.PAS
+  Typ : WinForm-Unit
+  Engineer : MK max@kleiner.ch
+  First Release : 10.01.1997
+  Compiler  : maXbox: DevC++Delphi, OS: W7
+  Purpose   : Let a user to pick a date 
+  Revisions : 25.10.96 first dialog to open a date
+            :#sign:12 PMmax: MAXBOX8: 8/28/2014 8:38:45 AM  :57 
+            : 23.04.2014 migrate to maXbox - #locs:367
+ **************************************************************** }
+
+type TdbOpenDlg = TForm;
+  //var //BeginDate: TDateTime;
+      //dbOpenDlg: TdbOpenDlg;
+      //brDateForm: TDateTimePicker; //TJvPickdate; 
+
+procedure TDlg_Button1Click(Sender: TObject);
+begin
+  TForm(TBitBtn(sender).parent).ModalResult:= mrOK;
+end;
+
+procedure TDlg_CalBtnFromClick(Sender: TObject);
+  var BeginDate: TDateTime;
+    dbOpenDlg: TdbOpenDlg;
+  
+begin
+  dbOpenDlg:= TdbOpenDlg.Create(self)
+  with dbOpenDlg do begin
+    setBounds(0,0,400,400)
+    caption:= 'trex tex';
+    //brush.style:= bsdiagCross
+    //color:= clred;
+    //showmodal;
+    canvas.font.size:= 30;
+    //show;
+    canvas.pen.color:= clblue;
+    canvas.Pen.Width:= 5;
+  
+    canvas.textout(10,220,'text on the trex2');
+   
+   //windowstate:= wsmaximized  
+  
+  end;
+  with TBitBtn.Create(dbopenDlg) do begin
+    parent:= dbopenDlg;
+    setBounds(20,300,150,40)
+    caption:= 'OK Date';
+    glyph.LoadFromRes(getHINSTANCE,'TPSIMPORT_COMOBJ');
+    onClick:= @TDlg_Button1Click;
+  end;
+  try
+    with TDateTimePicker.Create(dbopenDlg) do begin
+      parent:= dbopenDlg;
+      SetBounds(20,20,100,100);
+     //    dbOpenDlg.canvas.textout(120,220,'text on the trex');
+   
+      if dbOpenDlg.showmodal = mrOK then
+        beginDate:= Datetime;
+     
+      //windowstate:= wsmaximized  
+      writeln('date back time: '+dateTimetoStr(Datetime));
+    end;
+  finally
+    dbopenDlg.Release; //or free
+    Voice('You set the date '+datetoStr(begindate));
+   
+  end;
+end;
+
+var hDLL: THandle;
+
+procedure LoadGlut(const dll: String);
+begin
+
+  //FreeGlut;
+
+  hDLL := LoadLibrary(PChar(dll));
+  if hDLL = 0 then Exception.Create('Could not load Glut from ' + dll);
+
+  //@glutInit := GetProcAddress(hDLL, 'glutInit');
+  //@glutInitDisplayMode := GetProcAddress(hDLL, 'glutInitDisplayMode');
+end;
+
+function cgIntPower(base: Single; exp: Integer): Single;
+var i: Integer;
+begin
+  if exp = 0 then Result := 1
+  else begin
+    if exp < 0 then Result := 1 // cgIntPower(base, Abs(exp))
+    else begin
+      Result := 1;
+      for i := 1 to exp do Result := Result * base;
+    end;
+  end;
+end;
+
+function cgIntPowerD(base: double; exp: Integer): double;
+var i: Integer;
+begin
+  if exp = 0 then Result := 1
+  else begin
+    if exp < 0 then Result := 1 // cgIntPower(base, Abs(exp))
+    else begin
+      Result := 1;
+      for i := 1 to exp do Result := Result * base;
+    end;
+  end;
+end;
+
+function GetFileNames(path: String; attrib: Integer): TStringList;
+//var srec: TSearchRec;
+begin
+  Result:= TStringList.Create;
+  //FillChar(srec, SizeOf(srec), 0);
+  //searchRecName:= '';
+  if FindFirst(path, attrib) = 0 then begin
+    Result.Add(searchRecName);
+    while FindNext = 0 do Result.Add(searchRecName);
+    FindClose;
+  end;
+end;
+
+function GetDirNames(path: String): TStringList;
+var
+  i: Integer;
+  //att: TFileSearch;
+begin
+  //SetCurrentDir('..');
+  Result:= GetFileNames(path + '*.*', faDirectory);
+  i:= 0;
+  while i < Result.Count do begin
+    //if (not HasAttrib(FileGetAttr(Result[i]), faDirectory))
+    if (FileGetAttr(Result[i]) <> faDirectory)
+      //result[i].strings[1];
+      or (Result.strings[1] = '.') then Result.Delete(i)
+    else INC(i);
+  end;
+  writeln('res '+inttostr(result.count))
+end;
+
+procedure FindDocs(const Root: string);
+var
+  //SearchRec: TSearchRec;
+  Folders: array of string;
+  Folder: string;
+  I: Integer;
+  Last: Integer;
+begin
+  SetLength(Folders, 1);
+  Folders[0] := Root;
+  I := 0;
+  while (I < Length(Folders)) do begin
+    Folder := IncludeTrailingBackslash(Folders[I]);
+    Inc(I);
+    { Collect child folders first. }
+    if (FindFirst(Folder + '*.*', faDirectory) = 0) then begin
+      repeat
+        if not ((SearchRecName = '.') or (SearchRecName = '..')) then begin
+          Last := Length(Folders);
+          SetLength(Folders, Succ(Last));
+          Folders[Last] := Folder + SearchRecName;
+        end;
+      until (FindNext() <> 0);
+      FindClose();
+    end;
+    { Collect files next.}
+    if (FindFirst(Folder + '*.pdf', faAnyFile - faDirectory) = 0) then begin
+      repeat
+        if not ((SearchRecAttr and faDirectory) = faDirectory) then begin
+          WriteLn(Folder+' '+SearchRecName);
+        end;
+      until (FindNext() <> 0);
+      FindClose();
+    end;
+  end;
+  //findallfiles
+end;
+
+function FindAllDocs(const Root, extmask: string): TStringlist;
+var
+  //SearchRec: TSearchRec;  implicit
+  Folders: array of string;
+  Folder: string;
+  I: Integer;
+  Last: Integer;
+begin
+  SetLength(Folders, 1);
+  Folders[0]:= Root;
+  I:= 0;
+  Result:= TStringList.Create;
+  while (I < Length(Folders)) do begin
+    Folder:= IncludeTrailingBackslash(Folders[I]);
+    Inc(I);
+    { Collect child folders first. }
+    if (FindFirst(Folder+'*.*', faDirectory) = 0) then begin
+      repeat
+        if not ((SearchRecName='.') or (SearchRecName='..')) then begin
+          Last:= Length(Folders);
+          SetLength(Folders, Succ(Last));
+          Folders[Last]:= Folder + SearchRecName;
+        end;
+      until (FindNext() <> 0);
+      FindClose();
+    end;
+    { Collect files next.}
+    if (FindFirst(Folder+extmask,faAnyFile-faDirectory)= 0) then begin
+      repeat
+        if not ((SearchRecAttr and faDirectory)=faDirectory) then begin
+           result.Add(Folder+SearchRecName);
+          //WriteLn(Folder+' '+SearchRecName); :debug
+        end;
+      until (FindNext() <> 0);
+      FindClose();
+    end;
+  end;
+end;
+
+procedure FindFilePatternX(root:String; pattern:String);
+//var
+  //SR:TSearchRec;
+begin
+  root:=IncludeTrailingPathDelimiter(root);
+  if FindFirst(root+'*.*',faAnyfile) = 0 then begin
+      repeat
+          Application.ProcessMessages;
+          if ((searchrecAttr and faDirectory) = SearchRecAttr ) and 
+            (pos('.',SearchRecName)=0) then begin
+             FindFilePatternX(root+SearchRecName,pattern)
+              writeln(' in rec '+searchrecname)
+             end
+          else begin
+           if pos(pattern,SearchRecName)>0 then 
+             //Form1.ListBox1.Items.Add(Root+SR.Name);
+             writeln(Root+SearchRecName);
+          end;
+      until FindNext()<>0;
+    FindClose();  
+  end;
+end;
+
+procedure FindFilePattern3(root:String;pattern:String);
+var
+  SR:TFindRec;
+begin
+  root:=IncludeTrailingPathDelimiter(root);
+  if FindFirst3(root+'*.*',SR) = TRue then begin
+      repeat
+          Application.ProcessMessages;
+          if ((sr.attributes and faDirectory) = SR.Attributes ) and 
+            (pos('.',SR.name)=0) then
+             FindFilePattern3(root+SR.Name,pattern)
+          else begin
+           if pos(pattern,SR.Name)>0 then 
+             //Form1.ListBox1.Items.Add(Root+SR.Name);
+             writeln(Root+SR.Name);
+          end;
+      until FindNext3(SR) = False;
+    FindClose3(SR);  
+  end;
+end;
+
+
+
+  //tstrings
+
+{function GetFileNames2(path: String; attrib: Integer): TStringList;
+var
+  srec: TSearchRec;
+  //t:TSTreeScanner;
+begin
+
+  Result := TStringList.Create;
+  result[1].strings;
+  //FillChar(srec, SizeOf(srec), 0);
+  if FindFirst(path, attrib, srec) = 0 then
+  begin
+    Result.Add(srec.Name);
+    while FindNext(srec) = 0 do Result.Add(srec.Name);
+    FindClose(srec);
+  end;
+end;}
+
+procedure Split(const Delimiter: Char;
+                      Input: string; const Strings: TStrings);
+begin
+   Assert(Assigned(Strings),'strings not assigned');
+   Strings.Clear;
+   Strings.Delimiter:= Delimiter;
+   Strings.DelimitedText:= Input;
+end;
+
+
+
+procedure SetStringlist;
+var
+   Ast: TStringList;
+begin  //  Split(' ', 'your maXbox tool guide', Ast) ;
+   Ast:= TStringList.Create;
+   try
+     Split(' ', 'your maXbox tool guide', Ast) ;
+     writeln(ast[0]); //your
+     writeln(ast[1]); //mX
+     writeln(ast[2]); //tool
+     writeln(ast[3]); //guide
+   finally
+     Ast.Free;
+   end;
+end;
+
+
+
+
+ var i,k: integer;
+
+begin //main
+  TDlg_CalBtnFromClick(self);
+  //Voice('You set the date '+datetoStr(begindate));
+  
+  //XOR Test
+  writeln(botostr(not(0=0)))
+  writeln(botostr(not(0=1)))
+  writeln(botostr(not(1=0)))
+  writeln(botostr(not(1=1)))
+  writeln('')
+  
+  for i:= 0 to 1 do 
+    for k:= 0 to 1 do
+       writeln(botostr(not(i=k)));
+    
+    //dump_stack  
+    //netusergetinfo
+    //windowuserid 
+    //LoadGlut
+    //glutSetColor
+    
+    try
+    LoadGlut('glut32.dll');
+  except
+    writeln('glut not load');
+   end;
+   
+   writeln(floattostr(cgIntPower(2.56,5)));
+   writeln(floattostr(IntPower(2.56,5)));
+   writeln(floattostr(cgIntPowerD(2.56,5)));
+  
+  //for i:= 1 to GetFileNames(exepath,faDirectory).count do 
+   writeln('GetFileNames '+GetFileNames(exepath+'*.*',faAnyfile-faDirectory).text)  
+   writeln('GetDirNames '+GetDirNames(exepath).text); 
+   writeln('GetDirNames2 '+GetFileNames(exepath+'*.*',faDirectory).text)  
+   writeln('GetDirNames3: '+#13#10+FindAllDirectories(exepath,false).text)  
+
+       
+   {SetStringlist;
+   
+   FindDocs(exepath)
+   writeln('-------------------')}
+   FindFilePatternX(exepath, '.pdf'); 
+
+    //FindDocs(exepath); 
+    //writeln(FindAllFiles(exepath,'*train*.pdf',true).text); 
+   
+    //writeln(FindAllDocs(exepath, '*.pdf').text); 
+   
+end.
+
+//http://www.delphientwickler.de/
+
+I hate those recursive solutions with FindFirst/FindNext and I consider it troublesome that some even forget to use FindClose to clean up resources. So, for the fun of it, a non-recursive solution that should be practical to use...
+While it seems to eat a lot of memory because it uses a dynamic array, a recursive method will do exactly the same but recursion happens on the stack! Also, with a recursive method, space is allocated for all local variables while my solution only allocates space for the folder names.
+When you check for speed, both methods should be just as fast. The recursive method is easier to remember, though. You can also use a TStringList instead of a dynamic array, but I just like dynamic arrays.
+One additional trick with my solution: It can search in multiple folders! I Initialized the Folders array with just one root, but you could easily set it's length to 3, and set Folders[0] to C:\, Folders[1] to D:\ and Folders[2] to E:\ and it will search on multiple disks!
+
+Btw, replace the WriteLn() code with whatever logic you want to execute...
+
+
+-----------------------------------------------------
+Doc: Status
+API: The Date and Time Picker is a control that allows the user to
+      select either a date or a time value. This control provides two
+      objects in one: A picker and a calendar
+    Training: http://www.functionx.com/bcb/controls/datetime.htm
+    Blog
+    About http://www.softwareschule.ch/examples/469_ibzresult.txt
+    //ToDo: Eliminate the Global Vars!
+
+    © 2014 GitHub, Inc.
+    Terms
+    Privacy
+    Security
+    Contact
+    
+    Anforderung:
+    Ein Datum ist zu wählen und nach Bestätigung zu hören. 
+    Aufgabe:
+    Alles unnötige ist auszukommentieren und nötiges zu vereinfachen.
+    
+  first date: 14.6.2014  
+    
+  S. 251 - 268 im C++ Buch  Aufräumarbeiten
+    
+  S. 11 -Skript UML Use Case
+  
+  Tool: mX Musterlösung 469_formarrow_datepicker_ibz.txt

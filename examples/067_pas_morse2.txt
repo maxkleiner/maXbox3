@@ -1,0 +1,416 @@
+{write a program that encodes a message into morse code and decode a message from morse code into english.the message should be located in the input file ,read the message in and from it determine which type of operation needs to be performed.write the result to the output file. enter the morse code using another input file.assume the message will be less then 1000 charactors,that a space occurs between patterns,and that the message contains only letters.
+:Morse code must be typed in using '.' for a dot and '-' for a dash. Letters have to be separated by spaces and words have to be separated by '/'.
+
+e.g. for "SOS SOS" type "... --- ... / ... --- ...".
+
+you will probly have to store all the codes onto a file and use a serch function to call them! then output it on the screen and say if its correct! I dont have any code coz never done it! hope you enjoy and hope this is helpful!
+
+//MaxBox is a scripter tool with an inbuild delphi engine in one exe!
+//designed for teaching and analyzing methods
+//runs under Win and Linux (CLX) to build Delphi in a Box
+//*************************************************************************}
+
+program Morse_Genarator_TASK;
+
+function PlaySound(s: pchar; flag,syncflag: integer): boolean;
+external 'PlaySound@winmm.dll stdcall';
+
+type
+  //PMorseEntry = ^TMorseEntry;
+   TMorseEntry = record
+       MorseChar : Char;
+       KeyID : Word;
+    end;
+
+
+const mys = 'CODESIGN socks!';
+var i: byte;
+    MorseTable : TIntegerList;
+    morseTblRec: array[1..36] of TMorseEntry;
+
+maxboxpath: string;
+ inFrm: TForm;
+ 
+procedure AddTableEntry(idx: byte; Symbol : Char; KeyID : Word);
+var
+   ListData : TMorseEntry;
+begin
+   //New(ListData);
+   ListData.MorseChar:= Symbol;
+   ListData.KeyID := KeyID;
+   MorseTblRec[idx]:= ListData;
+end;
+
+procedure FillMorseTable();
+begin
+//MorseTable.Clear;
+AddTableEntry(1,#65, $009); // A .-
+AddTableEntry(2,#66, $056); // B -...
+AddTableEntry(3,#67, $066); // C -.-.
+AddTableEntry(4,#68, $016); // D -..
+AddTableEntry(5,#69, $001); // E .
+AddTableEntry(6,#70, $065); // F ..-.
+AddTableEntry(7,#71, $01A); // G --.
+AddTableEntry(8,#72, $055); // H ....
+AddTableEntry(9,#73, $005); // I ..
+AddTableEntry(10,#74, $0A9); // J .---
+AddTableEntry(11,#75, $026); // K -.-
+AddTableEntry(12,#76, $059); // L .-..
+AddTableEntry(13,#77, $00A); // M --
+AddTableEntry(14,#78, $006); // N -.
+AddTableEntry(15,#79, $02A); // O ---
+AddTableEntry(16,#80, $069); // P .--.
+AddTableEntry(17,#81, $09A); // Q --.-
+AddTableEntry(18,#82, $019); // R .-.
+AddTableEntry(19,#83, $015); // S ...
+AddTableEntry(20,#84, $002); // T -
+AddTableEntry(21,#85, $025); // U ..-
+AddTableEntry(22,#86, $095); // V ...-
+AddTableEntry(23,#87, $029); // W .--
+AddTableEntry(24,#88, $096); // X -..-
+AddTableEntry(25,#89, $0A6); // Y -.--
+AddTableEntry(26,#90, $05A); // Z --..
+AddTableEntry(27,#49, $2A9); // 1 .----
+AddTableEntry(28,#50, $2A5); // 2 ..---
+AddTableEntry(29,#51, $295); // 3 ...--
+AddTableEntry(30,#52, $255); // 4 ....-
+AddTableEntry(31,#53, $155); // 5 .....
+AddTableEntry(32,#54, $156); // 6 -....
+AddTableEntry(33,#55, $15A); // 7 --...
+AddTableEntry(34,#56, $16A); // 8 ---..
+AddTableEntry(35,#57, $1AA); // 9 ----.
+AddTableEntry(36,#48, $2AA); // 0 -----
+end;
+
+
+function GetMorseID(InChar : Char): Word;
+var
+ScanPos: Integer;
+begin
+result:= 0;
+ for ScanPos:= 1 to 36 do begin
+  if(InChar = MorseTblrec[scanpos].MorseChar) then begin
+     result:= MorseTblrec[ScanPos].KeyID;
+    break;
+  end;
+ end;
+end;
+
+
+function GetMorseString(InChar : Char): string;
+var
+MorseData : Word; CodePos, OutCode : Byte;
+ScanPos : Integer;
+begin
+result:= '';
+for ScanPos := 1 to 36 do begin
+  if(InChar = MorseTblrec[scanpos].MorseChar) then begin
+     result:= MorseTblrec[ScanPos].MorseChar +'  '+
+              inttobin(MorseTblrec[ScanPos].KeyID and (3 shl 0) shr 0);
+  break;
+  end;
+end;
+end;
+
+function GetMorseString2(InChar : Char): string;
+var
+MorseData : Word; CodePos, OutCode: Byte;
+ScanPos : Integer;
+begin
+result:= '';
+  morsedata:= getmorseid(inchar)
+  if(MorseData > 0) then begin
+    CodePos := 0;
+   repeat
+    OutCode:= (MorseData and (3 shl CodePos)) shr CodePos;
+     CodePos:= CodePos + 2;
+     if(OutCode > 0) then begin
+       result:= result + inttostr(outcode)
+       //writeln('in loop')   debug
+     end;
+   until (OutCode = 0);
+  end;
+end;
+
+
+function GetMorseLine(dots: boolean): string;
+var
+MorseData : Word; CodePos, OutCode: Byte;
+ScanPos : Integer;
+sign: char;
+begin
+result:= '';
+ for ScanPos:= 1 to 36 do begin
+     morsedata:= MorseTblrec[ScanPos].KeyID;
+   if(MorseData > 0) then begin
+    CodePos:= 0;
+ //result:= + MorseTblrec[ScanPos].Morsechar
+    repeat
+    OutCode:= (MorseData and (3 shl CodePos)) shr CodePos;
+     CodePos:= CodePos + 2;
+     if(OutCode > 0) then begin
+     if dots then begin
+     if outcode = 1 then sign:= '.' else sign:= '-';
+       result:= result + sign
+       end else 
+         result:= result + inttostr(outcode)
+       //writeln('in loop')   debug
+     end;
+   until (OutCode = 0);
+   result:= result +#9+MorseTblrec[ScanPos].Morsechar+#13+#10
+  end;
+ end;
+end;
+
+function GetMorseSign(InChar : Char): string;
+var
+MorseData : Word; CodePos, OutCode: Byte;
+ScanPos : Integer;
+sign: char;
+begin
+result:= '';
+  morsedata:= getmorseid(inchar)
+  if(MorseData > 0) then begin
+    CodePos := 0;
+   repeat
+    OutCode:= (MorseData and (3 shl CodePos)) shr CodePos;
+     CodePos:= CodePos + 2;
+     if(OutCode > 0) then begin
+        if outcode = 1 then sign:= '.' else sign:= '-';
+       result:= result + sign
+       //writeln('in loop')   debug
+     end;
+   until (OutCode = 0);
+  end;
+end;
+
+//ShowMsg
+
+
+  var morsedata: word;
+
+begin
+  maXboxpath:= extractfilepath(application.exename)
+   //msgfunc
+   //DeleteMsgForm
+   //foundtoplevel
+   {showmsg
+  function WaitTilClose(hWnd: Integer): Integer;
+  function DoUserMsgs: Boolean;
+ function MsgFunc(hWnd,Msg,wParam,lParam:Integer):Integer; stdcall;
+ procedure ShowMsg(hParent: Integer; const Mess, Title: String);
+ procedure DeleteMsgForm(Handle: Integer);
+ procedure DisableForms;
+  function FoundTopLevel(hWnd, LParam: Integer): BOOL; StdCall;}
+
+
+//DoUserMsgs
+  //ShowMsg
+  //FoundTopLevel
+  //DisableForms
+  //MsgFunc
+  //DeleteMsgForm
+  //WaitTilClose
+  {inFrm:= TForm.create(self)
+  for i:= 1 to 3 do
+    writeln(intToStr(i) + ' aloha from PascalScript Bit');
+  with inFrm do begin
+    position := poScreenCenter;
+    color:= clred;
+    caption:= 'Delphi in a Box'
+    show;
+  end;  
+  showmessage('the boX rocks ' + mys)}
+  //PlaySound(pchar(maXboxpath+'examples\maxbox.wav'), 0, 1);
+  //closeMP3;
+  //playMP3(maXboxpath+'examples\maxbox.mp3');
+  //sleep(1250)
+  //inFrm.color:= clblue;
+  //inFrm.close;
+  //... add your code here
+  FillMorseTable;
+  writeln(inttostr(GetMorseID('K')))
+  writeln(inttobin(GetMorseID('K')))
+  
+  it:= 0;
+  morsedata:= GetMorseID('L');    //L .-..
+  //it:= MorseData and (3 shl it) shr it;
+  writeln('to hex '+inttohex(MorseData and 3 shl it shr it,4));
+  
+  //writeln('L '+hextobin((MorseData and (3 shl it)) shr it),4);
+  
+  writeln(getMorseString('K'))
+  writeln(getMorseString('L'))
+ 
+  morsedata:= GetMorseID('L');    //L .-..  $059   //B -...
+  writeln(inttostr(morsedata))
+  writeln(inttohex(morsedata,4))
+  writeln('m2 '+getMorseString2('K'))   //-.-
+  writeln(inttobin(89))
+
+  writeln('M '+getMorseString2('M'))   //--
+  writeln('A '+getMorseString2('A'))   //.-
+  writeln('X '+getMorseString2('X'))   //-..-
+ 
+   //MorseTable := TIntegerList.Create;
+   //TCopyFileResult
+   //TCopyFileExists
+   //TCopyFileNotExists
+   //TCopyFileNotExists TCopyFileExists TCopyFileResult
+   //LARGE_INTEGER
+     //TLargeInteger
+     //_LARGE_INTEGER
+     //longlong
+     
+    writeln(getmorseline(true))
+    writeln('Z: '+getmorsesign('Z'))
+     
+     
+end.
+
+
+procedure TfrmMain.FillMorseTable();
+procedure AddTableEntry(Symbol : Char; KeyID : Word);
+var ListData : PMorseEntry;
+begin
+New(ListData);
+ListData^.MorseChar := Symbol;
+ListData^.KeyID := KeyID;
+MorseTable.Add(ListData);
+end;
+begin
+MorseTable.Clear;
+AddTableEntry(#65, $009); // A .-
+AddTableEntry(#66, $056); // B -...
+AddTableEntry(#67, $066); // C -.-.
+AddTableEntry(#68, $016); // D -..
+AddTableEntry(#69, $001); // E .
+AddTableEntry(#70, $065); // F ..-.
+AddTableEntry(#71, $01A); // G --.
+AddTableEntry(#72, $055); // H ....
+AddTableEntry(#73, $005); // I ..
+AddTableEntry(#74, $0A9); // J .---
+AddTableEntry(#75, $026); // K -.-
+AddTableEntry(#76, $059); // L .-..
+AddTableEntry(#77, $00A); // M --
+AddTableEntry(#78, $006); // N -.
+AddTableEntry(#79, $02A); // O ---
+AddTableEntry(#80, $069); // P .--.
+AddTableEntry(#81, $09A); // Q --.-
+AddTableEntry(#82, $019); // R .-.
+AddTableEntry(#83, $015); // S ...
+AddTableEntry(#84, $002); // T -
+AddTableEntry(#85, $025); // U ..-
+AddTableEntry(#86, $095); // V ...-
+AddTableEntry(#87, $029); // W .--
+AddTableEntry(#88, $096); // X -..-
+AddTableEntry(#89, $0A6); // Y -.--
+AddTableEntry(#90, $05A); // Z --..
+AddTableEntry(#49, $2A9); // 1 .----
+AddTableEntry(#50, $2A5); // 2 ..---
+AddTableEntry(#51, $295); // 3 ...--
+AddTableEntry(#52, $255); // 4 ....-
+AddTableEntry(#53, $155); // 5 .....
+AddTableEntry(#54, $156); // 6 -....
+AddTableEntry(#55, $15A); // 7 --...
+AddTableEntry(#56, $16A); // 8 ---..
+AddTableEntry(#57, $1AA); // 9 ----.
+AddTableEntry(#48, $2AA); // 0 -----
+end;
+
+
+//Load examples pas_*.txt from directory and press F9!
+//please read the readmefirst...
+//memo1 is script editor
+//memo2 is output space
+//check also the demo: 38_pas_box_demonstrator.txt
+//new in 2.7: include, dll, math lib, print engine maxtex & debug... 
+
+{ max@kleiner.com  V2.7.1 November 2009
+  new version and examples from
+     http://www.softwareschule.ch/maxbox.htm }
+     
+     
+     https://github.com/dilshan/signalman/blob/master/SignalManTemplate.pas
+     
+
+just inside maXbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_|   
+        
+        
+        procedure TfrmMain.GenerateMorseOutput(InChar : Char);
+var
+MorseData : Word; CodePos, OutCode : Byte;
+function GetMorseID() : Word;
+var
+ScanPos : Integer;
+begin
+result := 0;
+for ScanPos := 0 to (frmMain.MorseTable.Count - 1) do
+begin
+if(InChar = PMorseEntry(frmMain.MorseTable.Items[ScanPos])^.MorseChar) then
+begin
+result := PMorseEntry(frmMain.MorseTable.Items[ScanPos])^.KeyID;
+break;
+end;
+end;
+end;
+// procedure for visual output.
+procedure SetFlashMode(Mode : Word);
+begin
+camControl.TorchMode := TTorchMode.tmModeOn;
+Sleep(BaseTime);
+if(Mode > 1) then
+Sleep(2 * BaseTime);
+camControl.TorchMode := TTorchMode.tmModeOff;
+end;
+// procedure for audio output.
+procedure SetAudioMode(Mode : Word);
+begin
+if(Mode > 1) then
+begin
+BeepSteamD2.Position := 0;
+BeepSteamD2.SaveToFile(PlayFile);
+end
+else
+begin
+BeepSteamD1.Position := 0;
+BeepSteamD1.SaveToFile(PlayFile);
+end;
+mediaPlayer.FileName := PlayFile;
+mediaPlayer.Play;
+end;
+begin
+if(InChar = #32) then
+Sleep(5 * BaseTime)
+else
+begin
+MorseData := GetMorseID;
+if(MorseData > 0) then
+begin
+CodePos := 0;
+repeat
+OutCode := (MorseData and (3 shl CodePos)) shr CodePos;
+CodePos := CodePos + 2;
+if(OutCode > 0) then
+begin
+if(IsFlash) then
+SetFlashMode(OutCode)
+else
+SetAudioMode(OutCode);
+Sleep(BaseTime);
+end;
+until (OutCode = 0);
+end
+// treat unknown characters as spaces.
+else
+Sleep(BaseTime);
+end;
+end;
+end                                
+

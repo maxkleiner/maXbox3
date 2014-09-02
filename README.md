@@ -2,11 +2,11 @@ maXbox
 ======
 
 ****************************************************************
-Release Notes maXbox 3.9.9.98 August 2014
+Release Notes maXbox 3.9.9.98 September 2014
 ****************************************************************
-Add 45 Units, Wav res, RoundTo, OpenOffice, Pipes, GSM2
+Add 45 Units, Wav res, RoundTo, OpenOffice, Pipes, GSM2, CMatrix
 TFixedCriticalSection, XPlatform beta, GCC Command Pipe, Testunit
-VfW (Video), FindFirst3, ResFiler, AssemblyCache, maXring
+VfW (Video), FindFirst3, ResFiler, AssemblyCache, maXring, morse-gen
 
 946 uPSI_NamedPipes,
 947 uPSI_NamedPipeServer,
@@ -53,9 +53,24 @@ VfW (Video), FindFirst3, ResFiler, AssemblyCache, maXring
 988 uPSI_testdecorator;
 989 unit uPSI_fpcunittests;
 990 unit uPSI_cTCPBuffer;
+991 unit uPSI_Glut,
+992 uPSI_LEDBitmaps,
+993 uPSI_FileClass,
+994 uPSI_FileUtilsClass,
+995 uPSI_ComPortInterface; //Kit
+996 unit uPSI_SwitchLed;
+997 unit uPSI_cyDmmCanvas;
+998 uPSI_uColorFunctions;
+999 uPSI_uSettings;
+1000 uPSI_cyDebug.pas
+1001 uPSI_cyColorMatrix;
+1002 unit uPSI_cyCopyFiles;
+1003 unit uPSI_cySearchFiles;
+1004 unit uPSI_cyBaseMeasure;
+1005 unit uPSI_PJIStreams;
 
-SHA1:  maXbox3.exe 9332386628C609D8DAE419C5D76F010C89380BD7
-CRC32: maXbox3.exe CBF39DA2
+SHA1:  maXbox3.exe D0EC95326FE1ABD9D441F137336D00CF4BC77CAB
+CRC32: maXbox3.exe D74E54A7
 
 
 ****************************************************************

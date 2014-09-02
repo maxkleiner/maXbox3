@@ -192,6 +192,12 @@ function TryCreateRelativePath(const Dest, Source: String; UsePointDirectory: bo
 //END  lazfileutils.inc
 
 
+function FindAllDocs(const Root, extmask: string): TStringlist;
+procedure Inc1(var X: longint; N: Longint);
+procedure Dec1(var X: longint; N: Longint);
+
+
+
 type
   TInvalidateFileStateCacheEvent = procedure(const Filename: string);
 var
@@ -315,6 +321,58 @@ begin
     Searcher.Free;
   end;
 end;
+
+
+ procedure Inc1(var X: longint; N: Longint);
+ begin
+   X:= X+N;
+ end;
+
+ procedure Dec1(var X: longint; N: Longint);
+ begin
+   X:= X-N;
+ end;
+
+
+
+function FindAllDocs(const Root, extmask: string): TStringlist;
+var //SearchRec: TSearchRec;  implicit
+  Folders: array of string;
+  Folder: string;
+  I, Last: Integer;
+  SearchRec: TSearchRec;
+
+begin
+  SetLength(Folders,1);
+  Folders[0]:= Root;
+  I:= 0;
+  Result:= TStringList.Create;
+  while (I < Length(Folders)) do begin
+    Folder:= IncludeTrailingBackslash(Folders[I]);
+    Inc(I);
+    { Collect child folders first. }
+    if (FindFirst(Folder+'*.*', faDirectory, SearchRec) = 0) then begin
+      repeat
+        if not ((SearchRec.Name='.') or (SearchRec.Name='..')) then begin
+          Last:= Length(Folders);
+          SetLength(Folders, Succ(Last));
+          Folders[Last]:= Folder + SearchRec.Name;
+        end;
+      until (FindNext(searchrec) <> 0);
+      sysutils.FindClose(searchrec);
+    end;
+    { Collect files next.}
+    if (FindFirst(Folder+extmask,faAnyFile-faDirectory,searchrec)= 0) then begin
+      repeat
+        if not ((SearchRec.Attr and faDirectory)=faDirectory) then
+           result.Add(Folder+SearchRec.Name);
+          //WriteLn(Folder+' '+SearchRecName); :debug
+      until (FindNext(searchrec) <> 0);
+      sysutils.FindClose(searchrec);
+    end;
+  end;
+end;
+
 
 function ReadFileToString(const Filename: String): String;
 var

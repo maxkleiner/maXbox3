@@ -1,0 +1,190 @@
+unit ledswitchMain;
+
+//DEMO for maXbox unit: 996 unit uPSI_SwitchLed;
+//#sign:Administrator: PC08: 30/08/2014 08:27:25 PM 
+
+interface
+
+{uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
+  Dialogs, SwitchLed, StdCtrls, ExtCtrls;}
+
+type
+  TLEDRec = record //class(TForm)
+    OnBox: TGroupBox;
+    OffBox: TGroupBox;
+    QuitBtn: TButton;
+    ONLbl: TLabel;
+    OFFLbl: TLabel;
+    OnCombo: TComboBox;
+    OffCombo: TComboBox;
+  end; 
+      procedure FormCreate(Sender: TObject);
+      procedure QuitBtnClick(Sender: TObject);
+      procedure FormClose(Sender: TObject; var Action: TCloseAction);
+      procedure ModifyColors(Sender: TObject);
+  //private
+    { Déclarations privées }
+  //public
+    { Déclarations publiques }
+  //end;
+
+var
+  ledrec: TLEDRec;
+  ledFrm: TForm;
+  OnLedComp, OffLedComp: TSwitchLed;
+
+implementation
+
+//{$R *.dfm}
+
+  procedure loadLEDForm;
+  begin
+   ledFrm:= TForm.create(self)
+   with ledfrm do begin
+     SetBounds(0,0,218,150)
+     BorderIcons:= [biSystemMenu, biMinimize]
+     BorderStyle:= bsSingle
+     Caption:= 'TSwitchLed_maX'
+     ClientHeight:= 125
+     ClientWidth:= 281
+     Color:= clBtnFace
+     Font.Charset:= DEFAULT_CHARSET
+     Font.Color:= clWindowText
+     Font.Height:= -14
+     Font.Name:= 'MS Sans Serif'
+     Font.Style:= []
+     OldCreateOrder:= False
+     Position:= poScreenCenter
+     OnClose:= @FormClose
+     //OnCreate = FormCreate
+     PixelsPerInch:= 120
+     Show;
+     //TextHeight(16)
+     end;
+     with TLabel.create(ledfrm) do begin
+       parent:= ledfrm
+       SetBounds(120,16,58,16)
+       Caption:= 'Color ON:'
+     end;
+     with TLabel.create(ledfrm) do begin
+       parent:= ledfrm
+       SetBounds(120,48,64,16)
+       Caption:= 'Color OFF:'
+     end;
+     
+     ledrec.OnBox:= TGroupBox.create(ledfrm)
+     with ledrec.OnBox do begin
+       parent:= ledfrm
+       SetBounds(8,8,49,57)
+       Caption:= ' ON '
+       TabOrder:= 0
+     end;
+     ledrec.OffBox:= TGroupBox.create(ledfrm)
+     with ledrec.OffBox do begin
+       parent:= ledfrm
+       SetBounds(64,8,49,57)
+       Caption:= ' OFF '
+       TabOrder:= 1
+     end;
+     with TButton.create(ledfrm) do begin
+       parent:= ledfrm
+       SetBounds(8,82,265,25)
+       Caption:= 'Exit'
+       TabOrder:= 2
+       OnClick:= @QuitBtnClick
+     end;
+     with TComboBox.create(ledfrm) do begin
+       parent:= ledfrm
+       SetBounds(192,8,81,24)
+       Tag:= 1
+       Style:= csDropDownList
+       ItemHeight:= 16
+       ItemIndex:= 5
+       TabOrder:= 3
+       Text:= 'Green'
+       OnChange:= @ModifyColors
+       Items.add('Aqua');
+       Items.add('Pink');
+       Items.add('Purple');
+       Items.add('Red');
+       Items.add('Yellow');
+       Items.add('Green');
+       Items.add('Blue');
+       Items.add('Orange');
+       Items.add('Black');
+     end;
+     with TComboBox.create(ledfrm) do begin
+       parent:= ledfrm
+       SetBounds(192,39,81,24)
+       Tag:= 2
+       Style:= csDropDownList
+       ItemHeight:= 16
+       ItemIndex:= 3
+       TabOrder:= 4
+       Text:= 'Red'
+       OnChange:= @ModifyColors
+       Items.add('Aqua');
+       Items.add('Pink');
+       Items.add('Purple');
+       Items.add('Red');
+       Items.add('Yellow');
+       Items.add('Green');
+       Items.add('Blue');
+       Items.add('Orange');
+       Items.add('Black');
+     end;
+     FormCreate(self);
+   end;
+
+procedure FormCreate(Sender: TObject);
+begin
+ ledFrm.DoubleBuffered := True;
+ ledrec.OnBox.DoubleBuffered := True; // Evite les scintillements
+ ledrec.OffBox.DoubleBuffered := True;
+
+ OnLedComp := TSwitchLed.Create(ledrec.OnBox);
+ OnLedComp.Left := 18; // Création dynamique du ON
+ OnLedComp.Top := 25;
+ OnLedComp.LedState := LedOn;
+ OffLedComp := TSwitchLed.Create(ledrec.OffBox);
+ OffLedComp.Left := 18; // Création dynamique du OFF
+ OffLedComp.Top := 25;
+ OffLedComp.LedState := LedOff;
+end;
+
+procedure QuitBtnClick(Sender: TObject);
+begin
+ ledfrm.Close; // On appelle Close
+end;
+
+procedure FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+ OnLedComp.Free; // On libère les LEDs
+ OffLedComp.Free;
+end;
+
+procedure ModifyColors(Sender: TObject);
+Var
+ TmpColor: TLedColor;
+begin
+ if Sender is TComboBox
+ then begin  // Si c'est bien un combobox alors ...
+   TmpColor := Aqua; // Inutile mais evite des avertissements
+   if not (TComboBox(Sender).ItemIndex < 9) // in [0..8])
+   then Exit;
+   // Si l'itemindex est incorrect on s'en va
+   TmpColor := OnLedComp.IntToLedColor(TComboBox(Sender).ItemIndex);
+   // On définit la couleur selon l'itemindex du combobox sender
+
+   case TComboBox(Sender).Tag of
+    1: OnLedComp.OnColor := TmpColor; // Selon le tag du combobox on modifie le led correspondant
+    2: OffLedComp.OffColor := TmpColor;
+   end;
+  end;
+end;
+
+
+begin
+  loadLEDForm;
+end.
