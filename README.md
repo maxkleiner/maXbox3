@@ -4,7 +4,7 @@ maXbox
 ****************************************************************
 Release Notes maXbox 3.9.9.98 September 2014
 ****************************************************************
-Add 45 Units, Wav res, RoundTo, OpenOffice, Pipes, GSM2, CMatrix
+Add 60 Units, Wav res, RoundTo, OpenOffice, Pipes, GSM2, CMatrix
 TFixedCriticalSection, XPlatform beta, GCC Command Pipe, Testunit
 VfW (Video), FindFirst3, ResFiler, AssemblyCache, maXring, morse-gen
 

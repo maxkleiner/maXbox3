@@ -1,0 +1,151 @@
+//shows the recursive solution to the 8 queens chess problem, max@kleiner.com
+//small output of solutions codestring in text mode or file list!, #locs=118
+//Performance tester for N solutions {N8 = 92 solutions] - see below
+
+Program Performer_QueensSolutions2;
+            
+Const NB = 10;
+      N_LEFT = 2 * NB;
+      N_RIGHT_R = NB - 1;
+      N_RIGHT_L = 1 - NB;
+      FILESAVE = 'ChessSolution_Res8codes.txt';
+
+Type
+  TPlay = array[1..NB] of boolean;
+  TPlay2 = array[1..NB] of TPlay;
+  RowCheck = array[1..NB] of boolean;
+  LDiagCheck = array[2..N_LEFT] of boolean;
+  RDiagCheck = array[N_RIGHT_L..N_RIGHT_R] of boolean;
+  
+var 
+  safeRow: RowCheck;
+  safeLD: LDiagCheck; safeRD: RDiagCheck;
+  RList: TStringList;
+  Time1: TDateTime;
+  Count: integer;
+ 
+
+function Safe(row,col: shortint; asaferow: rowCheck; sLDia: LDiagCheck;
+                      sRDia: RDiagCheck): boolean;
+//true if queen can be safely placed in current position
+begin
+  result:= asafeRow[row] And sLDia[row+col] And sRDia[row-col]
+end;
+ 
+procedure chessPrint(board: TPlay2);
+var i,j: integer;
+    stmp,scod: string;
+begin
+  stmp:=''; scod:='';
+  RList.add(inttostr(count+1))
+  //i is column, j is row ! 
+  for j:= 1 to NB do begin
+    for i:= 1 to NB do
+      if (board[i][j]) then begin
+        stmp:= stmp+ 'Q'
+        scod:= scod+ inttostr(i)+'/'
+      end else stmp:= stmp+'-';
+    RList.add(stmp)
+    stmp:= '';
+       { write('Q') else write('*'); 
+         writeln('');}
+  end;//for   
+  RList.add(scod); 
+  RList.add('-----------------');
+  inc(Count)
+end;
+
+procedure TryColumn(col: integer; aboard: TPlay2);
+//recursive procedure for attempting queen placement
+var row: integer;
+begin
+  row:= 1
+  repeat 
+    if Safe(row,col,saferow, safeLD,safeRD) then begin
+      //set a queen
+      safeRow[row]:= false;
+      safeLD[row+col]:= false;
+      safeRD[row-col]:= false;
+      aboard[row][col]:= true;
+      if col < NB then
+        Trycolumn(col+1, aboard) else 
+           chessPrint(aboard);
+      //remove queens
+      safeRow[row]:= true;
+      safeLD[row+col]:= true;
+      safeRD[row-col]:= true;
+      aBoard[row][col]:= false;
+    end; //row was safe
+    inc(row);
+  until row > NB
+end;
+
+function initAndStartBoard: boolean;
+var row,col, i: integer;
+    board : TPlay2;
+begin
+  RList:= TStringlist.Create;
+  Count:= 0;
+  result:= false;
+  try
+    for row:= 1 to NB do safeRow[row]:= true;    
+    for i:= 2 to N_LEFT do safeLD[i]:= true;
+    for i:= N_RIGHT_L to N_RIGHT_R do safeRD[i]:= true;
+    for row:= 1 to NB do 
+      for col:= 1 to NB do
+        board[row][col]:= false;
+      //first recursive call
+    tryColumn(1, board);
+    PrintF('Solutions: %d   -ASCIITest: %s',[Count,Chr(64)]);
+  finally
+    RList.saveToFile(FILESAVE)
+    RList.Free;
+    result:= true;
+  end;   
+ end;
+
+
+begin //init & main
+  //processMessagesOFF;  //performance gain
+  Time1:= Time;
+  writeln(formatdatetime('"start:" hh:mm:ss:zzz',Time)) 
+  if initAndStartBoard then
+    writeln('Filesize: '+inttoStr(filesize(FILESAVE)));
+  writeln(formatDateTime('"stop:" hh:mm:ss:zzz',Time)) 
+  PrintF('%d %s',[Trunc((Time-Time1)*24),
+                  FormatDateTime('"h runtime:" nn:ss:zzz',Time-Time1)])
+  OpenDoc(Exepath+FILESAVE);                
+End.                                                                             
+
+
+Doc: Change N as Const in line 7 for another NB
+
+start is: 21:30:32:233
+all codestrings of solutions
+stop is: 23:19:44:183
+1 h run time: 49:11:950
+ mX3 executed: 23.05.2014 23:19:44  Runtime: 1:49:13.10  Memoryload: 52% use
+
+
+Ref:    
+08 Queens:    92  solutions: 0 h run time: 00:00:376
+09 Queens:   352  solutions: 0 h run time: 00:01:493
+10 Queens:   724  solutions: 0 h run time: 00:06:460
+11 Queens:  2680  solutions: 0 h run time: 00:32:107
+12 Queens: 14200  solutions: 0 h run time: 02:58:011
+13 Queens: 73712  solutions: 0 h run time: 17:24:995
+
+old code:
+  writeln(IntToStr(Trunc(Dif * 24)) + 
+                      FormatDateTime('" h run time:" nn:ss:zzz',Dif));
+                     
+Solutions: 724   -ASCIITest: @
+Filesize: 120800
+stop: 21:07:40:406
+0 h runtime: 00:28:944
+ mX3 executed: 9/2/2014 9:07:40 PM  Runtime: 0:0:38.125  Memoryload: 68% use
+                      
+
+    
+ 
+ 

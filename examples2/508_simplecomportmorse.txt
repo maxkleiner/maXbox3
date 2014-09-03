@@ -1,5 +1,5 @@
 program simpleComport;
-//for maXdrive #sign:max: MAXBOX8: 9/2/2014 9:43:34 PM 
+//for maXdrive #sign:max: MAXBOX8: 9/2/2014 11:50:53 PM 
 //shows a class in use and a procedure
 // uncomment DirectCOMCall;
 
@@ -50,8 +50,7 @@ procedure TSimpleComPort.PortEvent(Sender: TAfComPortCore;
   EventKind: TAfCoreEvent; Data: DWORD);
 
    procedure DisplayData;
-  var
-  S: String;
+  var S: String;
   Count: DWORD;
 begin
   Count := FComPort.ComStatus.cbInQue;
@@ -90,6 +89,59 @@ var
   InputBuffer: TInputRecord;
   InputEvents, ConsoleMode: DWORD;
   SimpleComPort: TSimpleComPort;
+  
+  
+  procedure MorseGenerator(atext: string);
+  var key,i: byte;
+   achar, aget: char;
+   asign: string;
+  begin
+   with TAfComPort.create(NIL) do begin
+     //core:= core1; 
+     comnumber:= 4;
+     BaudRate:= br9600; //br9600;
+     Open;
+     //autoopen:= true;
+     //active:= true;
+     ExecuteCOMDialog;
+    //aget:= atext[1];
+     for it:= 1 to length(atext) do begin
+       asign:= getmorsesign(atext[it]);
+       if atext[it]=' ' then begin
+          sleep(1000)
+          continue
+       end;  
+       writeln(getmorsesign(atext[it]));
+       for i:= 1 to length(asign) do begin
+          writeChar('1');
+          if (asign[i]='-') then begin
+            sleep(300)   //500
+            MakeSound(500, 250, 60,'')
+          end else begin
+            sleep(100);
+            MakeSound(500, 100, 60,'');
+          end;  
+         writeChar('A');
+         sleep(50)
+       end;
+     end;   
+    {PWM Emulator--------------------}
+   {writeString('1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A'+
+    '1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A');}
+   //writeString('11A11111A11111111A111111111A111111A111111111A');
+   try
+    writeln('read it: '+readchar)
+    writeln(itoa(ord(readchar)))
+    writeln(itoa(ord('1')))
+   except 
+     //((writeChar('A');
+    Close;
+    FreeOnRelease;
+    end;
+  Close;
+  FreeOnRelease;
+  end;
+ end;
   
   //TODO: getcomport query as loop
   //TODO: find auto free COM and pass to proc as loop
@@ -146,7 +198,7 @@ begin
      //sleep(1333)
      if key = 1 then begin
        sleep(300)   //500
-       MakeSound(440, 250, 60,'');
+       MakeSound(740, 250, 60,'');
      end
        else begin sleep(100);
        MakeSound(440, 100, 60,'');
@@ -155,14 +207,14 @@ begin
        sleep(80)
    until isKeypressed; 
    try
-    writeln('read it: '+readchar)
-    writeln(itoa(ord(readchar)))
-    writeln(itoa(ord('1')))
+     writeln('read it: '+readchar)
+     writeln(itoa(ord(readchar)))
+     writeln(itoa(ord('1')))
    except 
      //((writeChar('A');
-    Close;
-    FreeOnRelease;
-    end;
+     Close;
+     FreeOnRelease;
+   end;
   Close;
   FreeOnRelease;
  end;
@@ -174,15 +226,13 @@ end;
    var AfComPort1: TAfComPort;
         core1: TAfComPortCore;
         key: char;
-        strb: string;
-        i: integer;
         mytime: TDatetime;
   
 begin
-  {SetConsoleTitle('AsyncFree NonVCL example, press ESC to exit');
+  SetConsoleTitle('AsyncFree NonVCL example, press ESC to exit');
   StdIn:= GetStdHandle(STD_INPUT_HANDLE);
-  writeln(inttostr(stdin));
-  if StdIn = INVALID_HANDLE_VALUE then RaiseLastWin32Error;
+  writeln('stdin '+inttostr(stdin));
+  {if StdIn = INVALID_HANDLE_VALUE then RaiseLastWin32Error;
   Win32Check(GetConsoleMode(StdIn, ConsoleMode));
   Win32Check(SetConsoleMode(StdIn, ConsoleMode and (not ENABLE_ECHO_INPUT)));}
 
@@ -195,8 +245,8 @@ begin
     SimpleComPort.WriteString('1');
     sleep(1500)
     SimpleComPort.WriteString('A');
-    SimpleComPort.ReadString(strb)
-    writeln('back '+strb)
+    SimpleComPort.ReadString(sr)
+    writeln('sign back '+sr)
     SimpleComPort.Free;
    end;
   {while True do
@@ -205,7 +255,7 @@ begin
       KEY_EVENT:
         with InputBuffer.Event.KeyEvent do if bKeyDown then
           case AsciiChar of
-            #08, #10, #13, #32..#255:
+            #08, #10, #13, #32..#
               SimpleComPort.WriteString(AsciiChar);
             #27:
               Break;
@@ -213,11 +263,14 @@ begin
     end;}
     //EV_RXCHAR
   //IsPortAvailable
-  for i := 1 to 64 do
-    if IsCOM(i) then
-      writeln('COM: ' + IntToStr(i)+ ' available'); 
+  for it:= 1 to 64 do
+    if IsCOM(it) then
+      writeln('COM: ' + IntToStr(it)+ ' available'); 
   
-  DirectCOMCall;
+  //DirectCOMCall;
+  MorseGenerator(uppercase('max box'))
+  //MorseGenerator(uppercase('bern gruesst bonn zu den delphi tagen'))
+
     {repeat
       MakeSound(500, 4000, 50,'');
     until iskeypressed; }
@@ -230,7 +283,6 @@ begin
   //FreeDBConnector
   //DataEventnames
   
-
 End.
 
 

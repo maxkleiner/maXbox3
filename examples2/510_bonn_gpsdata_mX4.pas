@@ -11,7 +11,7 @@
 
 unit gpsdata_testkit;
 
-interface    
+interface
 
 {uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
@@ -1634,8 +1634,7 @@ BEGIN
    si.dwFlags := STARTF_USESHOWWINDOW;
    si.wShowWindow := SW_SHOWNORMAL; 
 
-  //CreateProcessAsUser( NIL,'Satreceiver.exe',NIL, NIL, FALSE,0,NIL,NIL, si, pi);
-  //wCreateProcess( 0,'Satreceiver.exe',0, 0, FALSE,NIL,0,0, NIL, NIL);
+//  CreateProcessAsUser( NIL,'Satreceiver.exe',NIL, NIL, FALSE,0,NIL,NIL, si, pi);
 
    WaitForInputIdle(GetCurrentProcessId, INFINITE);
 
@@ -1674,9 +1673,6 @@ VAR SysTime: TSystemTime;
    erreicht         : BOOLEAN;
    TDTVon           : TDateTime;
    arelval: TValueRelationship;
-  si              : TStartUpInfo;
-   pi              : TProcessInformation;
- 
   //TValueRelationship','array [-1..1] of byte)'
 BEGIN
 //7 Result := false;
@@ -1701,8 +1697,8 @@ BEGIN
  arelval:= CompareTime(TDT,TDTVon)
  IF (arelval[0] > 0) then Begin
 
-  //CreateProcessRedir(false, NIL, 'SatReceiver.exe Aufnahme', 
-    //                        NIL, NIL, FALSE,0,NIL,NIL, si, pi);
+    //CreateProcessRedir( NIL, 'SatReceiver.exe Aufnahme', NIL, NIL, FALSE,
+                   //0,NIL,NIL, si, pi);
 
   MessageBeep(0);
   Erreicht := TRUE;
@@ -1735,6 +1731,132 @@ procedure {TGPS.}DiagramClick(Sender: TObject);
 begin
   //Diagramm.Show();
 end;
+
+
+  procedure MorseGenerator(atext: string);
+  var key,i: byte;
+   achar, aget: char;
+   asign: string;
+  begin
+   with TAfComPort.create(NIL) do begin
+     //core:= core1; 
+     comnumber:= 4;
+     BaudRate:= br9600; //br9600;
+     Open;
+     //autoopen:= true;
+     //active:= true;
+     ExecuteCOMDialog;
+    //aget:= atext[1];
+     for it:= 1 to length(atext) do begin
+       asign:= getmorsesign(atext[it]);
+       if atext[it]=' ' then begin
+          sleep(1000)
+          continue
+       end;  
+       writeln(getmorsesign(atext[it]));
+       for i:= 1 to length(asign) do begin
+          writeChar('1');
+          if (asign[i]='-') then begin
+            sleep(300)   //500
+            MakeSound(500, 250, 60,'')
+          end else begin
+            sleep(100);
+            MakeSound(500, 100, 60,'');
+          end;  
+         writeChar('A');
+         sleep(50)
+       end;
+     end;   
+    {PWM Emulator--------------------}
+   {writeString('1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A'+
+    '1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A');}
+   //writeString('11A11111A11111111A111111111A111111A111111111A');
+   try
+    writeln('read it: '+readchar)
+    writeln(itoa(ord(readchar)))
+    writeln(itoa(ord('1')))
+   except 
+     //((writeChar('A');
+    Close;
+    FreeOnRelease;
+    end;
+  Close;
+  FreeOnRelease;
+  end;
+ end;
+ 
+  procedure DirectCOMCallASyncPro;
+  var key: byte;
+  begin
+  with TAfComPort.create(NIL) do begin
+    //core:= core1; 
+    comnumber:= 4;
+    BaudRate:= br9600; //br9600;
+    {Parity:= None;
+    Databits:= db8;
+    Stopbits:= sbone;
+    flowcontrol:= fwnone; }
+    //checkClose;
+    Open;
+    //autoopen:= true;
+    //active:= true;
+    ExecuteCOMDialog;
+    //AddStringToLog
+     //  OnDataRecived:= @TPortForm1_AfComPort1DataRecieved;
+    //writeString('1');
+    // writedatastring('1',1);
+    //putchar
+  {for i:= 0 to 255 do begin
+    writeChar(chr(i));
+    writeln(chr(i))
+    //writeln('read it: '+readchar)
+    end;}
+    //writeChar(chr(ord(49)));
+    //writeChar('1');
+    {PWM Emulator--------------------}
+   writeString('1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A'+
+    '1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A');
+   //writeString('111111A111111111A11111111A111111111A111111A111111111A');
+   memo2.setfocus;
+   it:= 0;
+   repeat 
+     key:= random(2);
+     writeln(itoa(key));
+     writeChar('1');
+     //sleep(1333)
+     inc(it)
+     if key = 1 then begin
+       //sleep(200)   //500
+       MakeSound(550, 150, 60,'');  //350
+     end
+       else begin //sleep(100);
+       MakeSound(550, 60, 60,'');   //150
+     end;  
+     writeChar('A');
+       sleep(10)
+     if it mod (random(3)+2) = 0 then begin 
+        sleep(180);
+       writeln('---simul word end');
+     end;    
+   until isKeypressed; 
+   try
+     writeln('read it: '+readchar)
+     writeln(itoa(ord(readchar)))
+     writeln(itoa(ord('1')))
+   except 
+     //((writeChar('A');
+     Close;
+     FreeOnRelease;
+   end;
+  Close;
+  FreeOnRelease;
+ end;
+    // show a possible cast to core
+    //TAfComPortCore(Afcomport1).DirectWrite:= True;
+    //OnDataRecived:= @TPortForm1_AfComPort1DataRecieved;
+end; 
+
+  
 
 function GetEvenNumbersAmount(const x: array of integer; count,i:integer):integer;
 begin
@@ -1788,6 +1910,9 @@ begin
      SetArrayLength(arr[i][j], asize2-1);
 end;    
 
+
+type mob = procedure; // of object;
+  type TFarProc2 = ___Pointer;
   
 var i, j: integer;
    serc:  TSerialConfig;
@@ -1799,11 +1924,17 @@ var i, j: integer;
     amount: integer;
     var mba: array of byte; //TBytearray; //array of byte;
      var buf: byte;
-
+     myobj: TObject;
+     myobj2: TFarProc2;
+     
 
 begin
 
   setlength(X,10);
+  myobj:= Tobject.create;
+  //myobj.size
+  //myobj.tag:= 
+  myobj.free;
   //setarraylength(X,10);
   //SetArrayLength2integer
   {SetArrayLength(XX,11);
@@ -1836,16 +1967,21 @@ begin
   //end;
  
   with TComPortInterface.create do begin
-    connect;
+    if iscomport then
+      connect;
     baudrate:= 9600;
     parity:= parNone;
     rescanPorts;
     //connect;
     //writeln(ComPorts[1].getitem)
-    //writeln(ComPorts[1])
-    writebyte(49)
+    writeln('comport found at nr: '+itoa(ComPorts[0].nr));
+    //writebyte(49)
+    writebyte(ord('1'))
     sleep(1000)
-    writebyte(65)
+    //writebyte(65)
+    writebyte(ord('A'))
+    ReadByte(buf)
+    writeln('buf back: '+inttostr(buf))
     ReadByte(buf)
     writeln('buf back: '+inttostr(buf))
     disconnect;
@@ -1854,7 +1990,15 @@ begin
   
   end;
   
+  for it:= 1 to 64 do 
+    if isCOM(it) then printF('COM avail: at %d ',[it]);
   
+    //type TFNTimerProc = TFarProc;
+    //type TFarProc = Pointer;
+  //SetTimer(hWnd : HWND; nIDEvent, uElapse: UINT; lpTimerFunc: TFNTimerProc):UINT;
+     // settimer(hinstance,0,500, myobj);
+      if KillTimer(hinstance,123) then
+         writeln('timer gone');
   
  (*  for i:= 1 to 64 do
     if IsCOM(i) then
@@ -1892,10 +2036,7 @@ begin
        Free;
      end;       
        
-       
-        
-      
-   gps.seriell:= TSerial.create(self);
+  gps.seriell:= TSerial.create(self);
        gps.Seriell.COMPort:= 4;
        gps.Seriell.Baudrate:= 9600;
        gps.Seriell.oneventchar:= @noteme;
@@ -1946,11 +2087,10 @@ begin
       
   // Schnittstelle mit default Werten oeffnen
   //Rueckgabe := gps.Seriell.OpenComm;
-      
-     getdir(1, sr)
-     writeln('get dir '+sr);
-     getdir(3, sr)
-     writeln('get dir '+sr);
+   //MorseGenerator(uppercase('max box'))
+   //MorseGenerator(uppercase('bern gruesst bonn zu den delphi tagen'))
+   DirectCOMCallASyncPro;   
+ 
 end.
 
 //this is 
@@ -2173,7 +2313,7 @@ If the online privacy statement is not available, please read our privacy statem
  end; *)
  
  
-(*Mikrocontroller für Einsteiger (5)
+{Mikrocontroller für Einsteiger (5)
 
 Veröffentlicht in Heft 9/2014 auf Seite 62
 
@@ -2181,5 +2321,6 @@ Eines der größten Kapitel im Datenblatt des ATmega328 behandelt die drei Timer d
 
 Der Download des Artikels ist den Abo-Mitgliedern von Elektor vorbehalten. Infos zur Abo-Mitgliedschaft finden Sie unter www.elektor.de/mitgliedschaft.
 
-    Software: 140049-11.zip*)
+    Software: 140049-11.zip
 
+http://novafile.com/daycdq4gez4v }

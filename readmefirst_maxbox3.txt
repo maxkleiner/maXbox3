@@ -1,7 +1,7 @@
 ****************************************************************
 Release Notes maXbox 3.9.9.98 September 2014
 ****************************************************************
-Add 60 Units, Wav res, RoundTo, OpenOffice, Pipes, GSM2, VUMeter
+Add 60 Units, 2 Tutors, Math+, OpenOffice, Pipes, GSM2, VUMeter
 TFixedCriticalSection, XPlatform beta, GCC Command Pipe, XPrint
 VfW (Video), FindFirst3, ResFiler, AssemblyCache, maXring, morse
 

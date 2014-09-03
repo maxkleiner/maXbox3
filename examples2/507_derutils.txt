@@ -1,0 +1,411 @@
+PROGRAM DerUtils;
+
+//////////////////////////////////////////////////////////////////////
+//  #sign: max: MAXBOX8: 9/3/2014 12:19:27 PM 
+//  Purpose: Grabs outlook contacts out of,  more items see below   //
+//          DER : Document elements recognition utilities 
+//  #path>ples\C:\maXbook\maxbox3\mX3999\maxbox3\examples\          //
+//  Lines of Code #locs:255
+//////////////////////////////////////////////////////////////////////
+
+Const TEXTOUT = 'hi world of code age';
+
+//############################################################################
+// Archimedes Spiral Architect
+//############################################################################
+//TODO: Button with wait/stop event, change color and save bitmap as png
+
+{ cyDERUtils
+  Description: Document elements recognition utilities
+
+  Definitions:
+  Elements: value types recognized on documents like date, money, webiste, webmail, percentage, float, integer and etNumber
+  - etDate: Date recognition in any formats ('00/00', '00-00-0000' etc ...)
+  - etMoney: money values recognition ('30.56€', '$30.56' etc ...)
+  - etwebSite: webSite recognition
+  - etWebMail: webmail recognition
+  - etPercentage: percentage values recognition like VAT ('5%')
+  - etFloat: float values recognition
+  - etInteger: integer values recognition
+  - etNumbers: Integer, Postal code, telefone, fax recognition
+  - etExpressionKeyWord: text that was been defined has a key }
+
+
+ procedure TApplication_PaintView(Canvas: TCanvas); forward;
+
+
+  var aform: TForm;
+      FWait, FStop, switch: Boolean;
+      FValueA: Float;
+      FValueB: Float;
+
+//<FUNCTION>
+//<PROCEDURE> 
+procedure OpenIEURL(aURL:string);
+var sz: string;
+   //asr: TResolver;
+   //ahead: TIPHeader;
+begin
+  Application.ProcessMessages;
+  aURL:= trim(aURL);
+  if aURL='' then Exit;
+  with TRegistry.Create do try
+     rootkey:= HKey_Classes_Root;
+     OpenKey('\htmlfile\shell\open\command',false);
+     try 
+       sz:= ReadString('');
+       writeln('test of IE readkey '+sz) 
+     except
+       sz:= ''; 
+     end;
+     CloseKey;
+  finally
+      Free;
+  end;
+  if sz='' then Exit;
+  sz:= copy(sz, pos('"',sz)+1, length(sz));
+  sz:= copy(sz, 1, pos('"',sz)-1);
+  if pos('http://',aURL)<>1 then aURL:='http://'+aURL;
+  //ShellExecute(0,'open',PChar(z), PChar(aURL), nil, sw_ShowNormal); 
+  //ShellExecute(0,'open', PChar(aURL), nil, nil, sw_Show);
+end;
+
+procedure stopclick(sender: TObject);
+begin
+  writeln('archimedes demo stopped');
+  FStop:= true;
+end;  
+
+procedure waitclick(sender: TObject);
+begin
+  FWait:= NOT Fwait;
+  writeln('archimedes demo wait');
+  if Not FWait then begin
+    writeln('archimedes demo go');
+    repeat
+     TApplication_PaintView(aform.canvas);
+     switch:= NOT switch;
+     Sleep(20);
+   until FWait; 
+  end;
+end;  
+
+procedure CreateAForm;
+ //diaform:= CreateMessageDialog('my fast form perform',mtconfirmation, []);
+begin
+   FValueA:= 3.0;
+   FValueB:= 1.4;
+   FWait:= false;
+   aform:= CreateMessageDialog('Archimedes Spiral - Click to Stop or KeyPress',mtwarning,
+                                        [mball, mbyes, mbhelp, mbok]);
+   with aform do begin
+     caption:= 'Archimedes Spiral Architect Demo';
+     setBounds(50,50,800,850)
+     Formstyle:= fsStayontop;
+     Color:= clRed; //1266;
+     Canvas.Brush.Color:= clBlack; //clBlue;
+     Canvas.Brush.Style:= bsSolid;
+     Canvas.Pen.Color:= clWhite;
+     onclick:= @waitclick;
+     ondblclick:= @stopclick;
+   end;  
+   with TLabel.Create(self) do begin
+     parent:= aform;
+     SetBounds(330,30,400,70)
+     font.size:= 34;
+     font.style:= [fsItalic]
+     font.color:= clyellow;
+     caption:= 'Archimedes Spiral ';
+   end;  
+   aform.show; 
+end;
+
+
+procedure TApplication_PaintView(Canvas: TCanvas);
+var cx, cy, i: Integer;
+  angle,x,y: Float;
+ begin
+  if FWait then Exit;
+    FValueB:= FValueB + 0.001;
+   // Clear background
+   //Canvas.FillStyle := 'rgba(0,0,99,0.08)';
+   if switch then
+     Canvas.FillRect(rect(0,90, aForm.Width, aForm.Height));
+   //Draw our framerate on the screen
+    cx:= aForm.width div 2;
+    cy:= aForm.Height div 2;
+   // Canvas.BeginPath;
+  for i:= 42 downto 0 do begin
+    angle:= FValueB * i;
+    x:= cx + (FValueA + FValueB * angle) * Cos(angle);
+    y:= cy + (FValueA + FValueB * angle) * Sin(angle);
+    if i = 42 then Canvas.MoveTo(round(x), round(y)) 
+      else Canvas.LineTo(round(x),round(y));
+  end;
+  //Canvas.StrokeStyle := '#FFF';
+  //Canvas.Stroke;
+end;
+
+
+function CheckIEStartCommand: string;
+begin
+  Application.ProcessMessages;
+  with TRegistry.Create do try
+     rootkey:= HKey_Classes_Root;
+     OpenKey('\htmlfile\shell\open\command',false);
+     try 
+       result:= ReadString('');
+     except
+       result:= ''; 
+     end;
+     CloseKey;
+  finally
+     Free;
+  end;
+end;
+
+function SplitToken(const Text: string; SplitChar: Char;
+    var First, Last: string): Boolean;
+var  SplitPos: Integer;
+begin
+  Result:= False;
+  SplitPos:= Pos(SplitChar, Text);
+  if SplitPos = 0 then Exit;
+  First:= Trim(Copy(Text, 1, SplitPos -1));
+  Last:= Trim(Copy(Text, SplitPos +1, Length(Text) -SplitPos));
+  Result:= (First <>'') and (Last <>'');
+end;
+
+   var derset: TElementsType; 
+        i4: int64; i: integer;
+
+Begin  //Main
+//<Executable statements>
+  //TOutlookExport_Spy;
+  Writeln('');
+  Writeln('Start Command of IE: '+CheckIEStartCommand);  
+//<Definitions>  
+
+  //ares:= TResolver.create;
+ { with TResolver.create do begin
+   //writeln(inttostr(GetHostByName(gethostname)));
+    Free;
+   end;  }
+   
+  { CreateAForm;
+   repeat 
+     TApplication_PaintView(aform.canvas);
+     switch:= NOT switch;
+     Sleep(20);
+   until isKeyPressed or FStop;
+   writeln('archimedes demo stopped now!');}
+   
+    writeln(botoStr(isValidWebMail('max@kleiner.ch')));
+      // Get any webSite present in a DERString :
+  //function DERExtractwebSite(aDERStr: DERString; SmartRecognition: Boolean): String;
+  writeln(DERExtractwebSite('this is a site http://www.softwareschule.ch by'+
+                                    'night',true))
+  writeln(DERDefaultChars)
+  
+  // Get any webmail present in a DERString :
+//function DERExtractWebMail(aDERStr: DERString): String;
+    writeln(' DERExtractWebMail '+DERExtractWebMail('this is max@kleiner.ch'));
+
+//function DERExtractPhoneNr(aDERStr: DERString): String;
+
+// Recognize from string any integer/float/percentage/money/date value :
+//function DERExecute(aDERStr: DERString; SmartNumbersRecognition, //SmartWebsiteRecognition: Boolean): TElementsType; overload;
+ //TElementsType = (etText, etExpressionKeyWord, etNumbers, etInteger, etFloat, etPercentage, etwebSite, etWebMail, etMoney, etDate,etTextLine, etParagraph);
+ 
+ //derset:= DERExecute('this 3.1415926535 of PI just 10 afterpoints', true,false);
+ derset:= DERExecute('3.1415926535 1000', true,false);
+
+   writeln(inttostr(ord(derset)))
+   if ord(derset) > 0 then  writeln('something drin');
+   case derset of
+     etfloat: writeln('float found');
+     etinteger: writeln('int found');
+   end;  
+   writeln(getbigpi)
+   sr:= getbigPI;
+   
+   for it:= 3 to length(sr) do 
+        i4:= i4 + strtoint(sr[it]);
+    writeln('the sum of big is: '+inttostr64(i4))    
+   i4:= 0;
+   for it:= 3 to 146 do   //144 steps
+        i4:= i4 + strtoint(sr[it]);
+    writeln('the sum of beast1 is: '+inttostr64(i4))    
+   i4:= 0;
+   for it:= 3 to 146 do   //144 steps
+     inc1(i,atoi(getbigpi[it])); 
+   writeln('the sum of beast2 is: '+itoa(i))    
+ 
+    derset:= DERExecute(getbigPI, true,false);
+   
+   for i4:= 1 to 32 do
+    printF('Bin exponent with SHL: 2^%d = %d',[i4, i4 SHL i4 DIV i4]);
+     
+   {with TledForm.create(self) do begin
+    showmodal;
+    free;
+   end;} 
+ // function GetMacAddresses(const Machine: string; const Addresses:TStrings):Integer;
+    
+END. 
+
+
+//############################################################################
+// Archimedes Spiral App
+//############################################################################
+
+Ref:
+unit cyDERUtils;
+
+{ cyDERUtils
+  Description: Document elements recognition utilities
+
+  Definitions:
+  Elements: value types recognized on documents like date, money, webiste, webmail, percentage, float, integer and etNumber
+  - etDate: Date recognition in any formats ('00/00', '00-00-0000' etc ...)
+  - etMoney: money values recognition ('30.56€', '$30.56' etc ...)
+  - etwebSite: webSite recognition
+  - etWebMail: webmail recognition
+  - etPercentage: percentage values recognition like VAT ('5%')
+  - etFloat: float values recognition
+  - etInteger: integer values recognition
+  - etNumbers: Integer, Postal code, telefone, fax recognition
+  - etExpressionKeyWord: text that was been defined has a key
+
+  DERString: avoid trash cars from OCR's isolated word using StringToDERCharSet() function
+
+  DERNString: charset for date, money, percentage, float and integer elements recognition
+}
+
+interface
+
+uses Classes, Windows, Controls, SysUtils, cyDateUtils;
+
+type
+  DERString = String;
+  DERChar = Char;
+  TElementsType = (etText, etExpressionKeyWord, etNumbers, etInteger, etFloat, etPercentage, etwebSite, etWebMail, etMoney, etDate,
+                     etTextLine, etParagraph);
+  // 2013-07-22 Added etTextLine, etParagraph only for elements recognition (expressions are divided into single words)
+  TElementsTypes = Set of TElementsType;
+
+  // For smart numbers Recognition :
+  DERNString = String;
+
+var
+  DERMoneyCars: String = '€';         // Add/redefine money chars
+  DERDateSeparators: String = '/-_.'; // Add/redefine date separators
+  DERExceptionCars: String = '';      // Add/redefine exceptions chars
+
+  LocalFormatSettings: TFormatSettings;
+
+const
+  DERDecimalSeparator = '.';
+  DERDefaultChars = '+º@/%-_.:0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';  // Charset used to recognize all elements
+
+  DERNDefaultChars = '/%-.0123456789abcdefghjkmnopqrstuvwxyz'; // Charset used to recognize etInteger, etnumbers, etFloat, etPercentage, etMoney, etDate elements
+
+// *** General functions *** //
+function isValidWebSiteChar(aChar: Char): Boolean;
+function isValidWebMailChar(aChar: Char): Boolean;
+function isValidwebSite(aStr: String): Boolean;
+function isValidWebMail(aStr: String): Boolean;
+
+function ValidateDate(aDERStr: DERString; var RsltFormat: String): Boolean;
+function DERStrToDate(aDERStr, aFormat: String): TDate;
+
+
+// *** DER functions *** //
+// Know if a char belongs to the DER charset
+function IsDERChar(aChar: Char): Boolean;
+
+// Know if a char is a defined on DERDefaultChars variable
+function IsDERDefaultChar(aChar: Char): Boolean;
+
+// Know if a char is a money char defined on DERMoneyCars variable
+function IsDERMoneyChar(aChar: Char): Boolean;
+
+// Know if a char is a date separator char defined on DERDateSeparator variable
+function IsDERDateSeparatorChar(aChar: Char): Boolean;
+
+// Know if a char is an exception char defined on DERExceptionCars variable
+function IsDERExceptionCar(aChar: Char): Boolean;
+
+// Know if a DERString only contains symbols
+function IsDERSymbols(aDERString: String): Boolean;
+
+// Convert a string to DERString :
+function StringToDERCharSet(aStr: String): DERString;
+
+// *** DERN functions *** //
+function IsDERNDefaultChar(aChar: Char): Boolean;
+
+function IsDERNChar(aChar: Char): Boolean;
+
+// Convert a DERString into a DERNString that was made for numbers Recognition :
+function DERToDERNCharset(aDERStr: DERString): DERNString;
+
+// *** Other functions *** //
+// Get any webSite present in a DERString :
+function DERExtractwebSite(aDERStr: DERString; SmartRecognition: Boolean): String;
+
+// Get any webmail present in a DERString :
+function DERExtractWebMail(aDERStr: DERString): String;
+
+function DERExtractPhoneNr(aDERStr: DERString): String;
+
+// Recognize from string any integer/float/percentage/money/date value :
+function DERExecute(aDERStr: DERString; SmartNumbersRecognition, SmartWebsiteRecognition: Boolean): TElementsType; overload;
+
+function DERExecute(aDERStr: DERString; var RsltNumbers, RsltInteger, RsltFloat, RsltPercentage, RsltwebSite, RsltWebMail, RsltMoney, RsltDate: String;
+                     SmartNumbersRecognition, SmartWebsiteRecognition: Boolean): TElementsType; overload;
+
+function RetrieveElementValue(aStr: String; SmartNumbersRecognition, SmartWebsiteRecognition: Boolean; aElementsType: TElementsType): String; overload;
+procedure RetrieveElementValue(aStr: String; SmartNumbersRecognition, SmartWebsiteRecognition: Boolean; var RsltDERStr: DERString; var RsltElementType: TElementsType); overload;
+
+implementation
+
+
+More Items:
+
+       aContactItem.Categories:='Kunde'; // neu
+       aContactItem.FirstName:=KundeName1.AsString;
+       aContactItem.LastName:=KundeName2.AsString;
+       aContactItem.FileAs:=KundeSuchbegriff.AsString;
+       aContactItem.CompanyName:=KundeSuchbegriff.AsString;
+       aContactItem.CustomerID:=KundeKundenNr.AsString;
+       aContactItem.Account:=KundeFibuNr.AsString; // neu
+       aContactItem.Body:=KundeAnsprechpartner.AsString;
+       aContactItem.BusinessAddressStreet:=KundeStrasse.AsString;
+       aContactItem.BusinessAddressPostalCode:=KundePLZ.AsString;
+       aContactItem.BusinessAddressPostOfficeBox:=KundePostfach.AsString;
+       aContactItem.BusinessAddressCity:=KundeOrt.AsString;
+//         aContactItem.BusinessAddressCountry:=KundeLand.AsString; // neu
+       aContactItem.OrganizationalIDNumber:=KundeUStIdNr.AsString; // neu
+//         aContactItem.GovernmentIDNumber:=''
+       aContactItem.BusinessTelephoneNumber:=KundeTelefon1.AsString;
+       aContactItem.BusinessFaxNumber:=KundeFax.AsString;
+       aContactItem.MobileTelephoneNumber:=KundeTelefon2.AsString;
+       aContactItem.Email1Address:=KundeEMail.AsString;
+       aContactItem.WebPage:=KundeHomepage.AsString;
+       aContactItem.Save;
+ 
+  http://i1-win.softpedia-static.com/screenshots/maXbox_5.png?1381322021
+  
+    RegisterMethod('Constructor Create(AOwner: TComponent)');
+    RegisterConstructor(@TJvMail.Create, 'Create');
+  
+  
+   RegisterMethod('Procedure Free');
+   RegisterMethod(@TJvMail.Destroy, 'Free');
+   
+   The first 144 digits of pi add up to 666 (which many scholars say is “the mark of the Beast”). And 144 = (6+6) x (6+6).d
+   
+
+
+----app_template_loaded_code----
