@@ -392,10 +392,14 @@ function IsCOMConnected: Boolean;
   //procedure doWebCamPic;
   procedure doWebCamPic(picname: string);
   function readm: string;
+  procedure getGEOMapandRunAsk;
+ function GetMapX(C_form,apath: string; const Data: string): boolean;
+  procedure GetGEOMap(C_form,apath: string; const Data: string);
 
   //function RoundTo(const AValue: Extended;
     //             const ADigit: TRoundToEXRangeExtended): Extended;
-
+ function DownloadFile(SourceFile, DestFile: string): Boolean;
+ function DownloadFileOpen(SourceFile, DestFile: string): Boolean;
 
   
 implementation
@@ -601,6 +605,105 @@ begin
   CloseHandle(token);
 end;
 
+const
+  UrlMapQuestAPICode='http://open.mapquestapi.com/nominatim/v1/search.php?format=html&json_callback=renderBasicSearchNarrative&q=%s';
+  UrlMapQuestAPICode2='http://open.mapquestapi.com/nominatim/v1/search.php?format=%s&json_callback=renderBasicSearchNarrative&q=%s';
+
+
+procedure getGEOMapandRunAsk;
+  var getstr, ascript: string;
+ encodedURL, apath: string;
+ begin
+   if IsInternet then begin
+   //ascript:= 'http://www.softwareschule.ch/examples/demoscript.txt';
+  apath:= ExePath+'geomapX.html';
+  ascript:= 'Dom Cologne';
+    if InputQuery('Get Web GEO Map','Please enter a GEO search location:',ascript) then
+     begin
+     //writeln('you entered: '+(string(ascript)));
+    // wGet(ascript,'scriptdemo.txt');
+  encodedURL:= Format(UrlMapQuestAPICode,[HTTPEncode(ascript)]);
+  try
+   //HttpGet(EncodedURL, mapStream);   //WinInet
+   UrlDownloadToFile(Nil,PChar(encodedURL),PChar(apath),0,Nil);
+  //OpenFile(apath);
+  S_ShellExecute(apath,'',seCmdOpen);
+  finally
+    encodedURL:= '';
+  end;
+       //ShellExecute3
+      maxForm1.memo2.lines.Add(' GEO Web Script started: '+ascript+ ' at: '+timetostr(time));
+      maxForm1.statusBar1.SimpleText:= ' GEO Web Script finished: '+ascript;
+      maxForm1.memo2.lines.Add(' GEO Web Script finished: '+getStr+ ' at: '+timetostr(time));
+        //statusline
+   end else
+         showmessage('No Web Connection available!');
+
+  end;
+end;
+
+
+function GetMapX(C_form,apath: string; const Data: string): boolean;
+var encodedURL: string;
+begin
+  //encodedURL:= Format(UrlGoogleQrCode,[Width,Height, C_Level, HTTPEncode(Data)]);
+  encodedURL:= Format(UrlMapQuestAPICode2,[c_form,HTTPEncode(Data)]);
+  try
+   //HttpGet(EncodedURL, mapStream);   //WinInet
+  Result:= UrlDownloadToFile(Nil,PChar(encodedURL),PChar(apath),0,Nil)= 0;
+  //OpenDoc(apath);
+   S_ShellExecute(apath,'',seCmdOpen);
+  finally
+    encodedURL:= '';
+  end;
+end;
+
+
+procedure GetGEOMap(C_form,apath: string; const Data: string);
+var
+  encodedURL: string;
+  mapStream: TMemoryStream;
+begin
+  //encodedURL:= Format(UrlGoogleQrCode,[Width,Height, C_Level, HTTPEncode(Data)]);
+  encodedURL:= Format(UrlMapQuestAPICode2,[c_form,HTTPEncode(Data)]);
+  mapStream:= TMemoryStream.create;
+  try
+    Wininet_HttpGet(EncodedURL, mapStream);   //WinInet
+    mapStream.Position:= 0;
+    mapStream.Savetofile(apath);
+   // OpenDoc(apath);
+   S_ShellExecute(apath,'',seCmdOpen);
+
+  finally
+    mapStream.Free;
+  end;
+end;
+
+
+function DownloadFile(SourceFile, DestFile: string): Boolean;
+begin
+  //TCIPStatus //TBindStatus
+  //TUrlTemplate
+  //TUrlZoneReg of URLMon
+  try
+    Result:= UrlDownloadToFile(Nil,PChar(SourceFile),PChar(DestFile),0,Nil)= 0;
+  except
+    Result:= False;
+  end;
+end;
+
+function DownloadFileOpen(SourceFile, DestFile: string): Boolean;
+begin
+  //TCIPStatus //TBindStatus
+  //TUrlTemplate
+  //TUrlZoneReg of URLMon
+  try
+    Result:= UrlDownloadToFile(Nil,PChar(SourceFile),PChar(DestFile),0,Nil)= 0;
+     S_ShellExecute(DestFile,'',seCmdOpen);
+  except
+    Result:= False;
+  end;
+end;
 
 procedure getScriptandRunAsk;
   var getstr, ascript: string;

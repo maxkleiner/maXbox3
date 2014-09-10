@@ -1,7 +1,23 @@
 ****************************************************************
+Release Notes maXbox 3.9.9.98 October 2014
+****************************************************************
+Add 5 Units, 1 Tutors, maXmap, OpenStreetView, MAPX, timers
+Function Menu/View/GEO Map View, DownloadFile, wgetX, sensors
+
+1006 unit uPSI_cyRunTimeResize;
+1007 unit uPSI_jcontrolutils;
+1008 unit uPSI_kcMapViewer; (+GEONames)
+1009 unit uPSI_kcMapViewerDESynapse;
+1010 unit uPSI_cparserutils; (+GIS_SysUtils) 
+
+SHA1:  maXbox3.exe FF1FBC4C54343B301A55089CC01630434175632E
+CRC32: maXbox3.exe B5FCA71
+
+
+****************************************************************
 Release Notes maXbox 3.9.9.98 September 2014
 ****************************************************************
-Add 60 Units, Wav res, RoundTo, OpenOffice, Pipes, GSM2, VUMeter
+Add 60 Units, 2 Tutors, Math+, OpenOffice, Pipes, GSM2, VUMeter
 TFixedCriticalSection, XPlatform beta, GCC Command Pipe, XPrint
 VfW (Video), FindFirst3, ResFiler, AssemblyCache, maXring, morse
 

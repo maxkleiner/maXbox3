@@ -114,6 +114,7 @@
          9733       build 98_4 add async pro tools
          9792       build 98_5 8 more unit unit testing async pro tools
          9890       build 98_6 5 more units fileclass set ,dmmcanvas, led set, morse gen
+         9925       build 98_7 maps, maXmap, downloadengine
 
                   [the last one before V4 in 2015]
                    V4.0   in  June 2015
@@ -526,6 +527,7 @@ type
     TaskMgr1: TMenuItem;
     WebCam1: TMenuItem;
     Tutorial31Closure1: TMenuItem;
+    GEOMapView1: TMenuItem;
     procedure IFPS3ClassesPlugin1CompImport(Sender: TObject; x: TPSPascalCompiler);
     procedure IFPS3ClassesPlugin1ExecImport(Sender: TObject; Exec: TPSExec; x: TPSRuntimeClassImporter);
     procedure PSScriptCompile(Sender: TPSScript);
@@ -784,6 +786,7 @@ type
     procedure TaskMgr1Click(Sender: TObject);
     procedure WebCam1Click(Sender: TObject);
     procedure Tutorial31Closure1Click(Sender: TObject);
+    procedure GEOMapView1Click(Sender: TObject);
     //procedure Memo1DropFiles(Sender: TObject; X,Y: Integer; AFiles: TStrings);
   private
     STATSavebefore: boolean;
@@ -1866,8 +1869,13 @@ uses
   uPSI_cySearchFiles,
   uPSI_cyBaseMeasure,
   uPSI_PJIStreams, //3.9.9.98_6
-
-   ///
+  uPSI_cyRunTimeResize,
+  uPSI_jcontrolutils,
+  uPSI_kcMapViewer, //add GeoNames
+  uPSI_kcMapViewerDESynapse,
+  uPSI_cparserutils,    //3.9.9.98_7
+  //uPSI_GIS_SysUtils,
+  ///
    //MDIFrame,
   uPSI_St2DBarC,
   uPSI_FmxUtils,
@@ -2925,6 +2933,12 @@ begin
  SIRegister_cyCopyFiles(X);
  SIRegister_cyBaseMeasure(X);
  SIRegister_PJIStreams(X);
+ SIRegister_cyRunTimeResize(X);
+ SIRegister_jcontrolutils(X);
+ SIRegister_kcMapViewer(X);
+ SIRegister_kcMapViewerGLGeoNames(X);
+ SIRegister_kcMapViewerDESynapse(X);
+ SIRegister_cparserutils(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4242,6 +4256,14 @@ begin
   RIRegister_cyCopyFiles_Routines(Exec);
   RIRegister_cyBaseMeasure(X);
   RIRegister_PJIStreams(X);
+  RIRegister_cyRunTimeResize(X);
+  RIRegister_jcontrolutils_Routines(Exec);
+  RIRegister_kcMapViewer(X);
+  RIRegister_kcMapViewerGLGeoNames(X);
+  RIRegister_kcMapViewerDESynapse(X);
+  RIRegister_TLineBreaker(X);
+  RIRegister_cparserutils_Routines(Exec); //3.9.9.98_7
+
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -5246,6 +5268,9 @@ begin
   Sender.AddFunction(@AspectRatio,'Function AspectRatio(aWidth, aHeight: Integer): String;');
   Sender.AddFunction(@wget,'function wget(aURL, afile: string): boolean;');
   Sender.AddFunction(@wget2,'function wget2(aURL, afile: string): boolean;');
+  Sender.AddFunction(@DownloadFileOpen,'function wgetX(aURL, afile: string): boolean;');
+  Sender.AddFunction(@DownloadFile,'function wgetX2(aURL, afile: string): boolean;');
+
   Sender.AddFunction(@PrintList,'procedure PrintList(Value: TStringList);');
   Sender.AddFunction(@PrintImage,'procedure PrintImage(aValue: TBitmap; Style: TBitmapStyle);');
   Sender.AddFunction(@getEnvironmentInfo,' procedure getEnvironmentInfo;');
@@ -5349,6 +5374,10 @@ begin
   Sender.AddFunction(@IsNTFS, 'function IsNTFS: Boolean;');
   Sender.AddFunction(@dowebcampic, 'procedure doWebCamPic(picname: string);');
   Sender.AddFunction(@dowebcampic, 'procedure WebCamPic(picname: string);');
+  Sender.AddFunction(@GetMapX, 'function GetMapX(C_form,apath: string; const Data: string): boolean;');
+  Sender.AddFunction(@GetGEOMap, 'procedure GetGEOMap(C_form,apath: string; const Data: string);');
+  Sender.AddFunction(@DownloadFile, 'function DownloadFile(SourceFile, DestFile: string): Boolean;');
+  Sender.AddFunction(@DownloadFileOpen, 'function DownloadFileOpen(SourceFile, DestFile: string): Boolean;');
 
   Sender.AddFunction(@IsApplication, 'function IsApplication: Boolean;');
   Sender.AddFunction(@IsTerminalSession, 'function IsTerminalSession: Boolean;');
@@ -6578,6 +6607,12 @@ begin
     Execute(false);
    //btnSearch.SetFocus;
   end;
+end;
+
+procedure TMaxForm1.GEOMapView1Click(Sender: TObject);
+begin
+ //get geo map mapbox
+ getGEOMapandRunAsk
 end;
 
 function TMaxForm1.GetActFileName: string;

@@ -722,6 +722,22 @@ CL.AddDelphiFunction('Function OpenWindowStation( lpszWinSta : PChar; fInherit :
  CL.AddDelphiFunction('procedure DisableForms;');
  CL.AddDelphiFunction('function FoundTopLevel(hWnd, LParam: Integer): BOOL; StdCall;');
 
+ CL.AddDelphiFunction('Function GetRgnBox( RGN : HRGN; var p2 : TRect) : Integer');
+ CL.AddDelphiFunction('Function GetStockObject( Index : Integer) : HGDIOBJ');
+ CL.AddDelphiFunction('Function GetStretchBltMode( DC : HDC) : Integer');
+ CL.AddDelphiFunction('Function GetSystemPaletteUse( DC : HDC) : UINT');
+ CL.AddDelphiFunction('Function GetTextCharacterExtra( DC : HDC) : Integer');
+ CL.AddDelphiFunction('Function GetTextAlign( DC : HDC) : UINT');
+ CL.AddDelphiFunction('Function GetTextColor( DC : HDC) : COLORREF');
+ CL.AddDelphiFunction('Function GetObjectType( h : HGDIOBJ) : DWORD');
+ CL.AddDelphiFunction('Function GetGraphicsMode( DC : HDC) : Integer');
+ CL.AddDelphiFunction('Function GetMapMode( DC : HDC) : Integer');
+ CL.AddDelphiFunction('Function GetPixel( DC : HDC; X, Y : Integer) : COLORREF');
+ CL.AddDelphiFunction('Function GetPixelFormat( DC : HDC) : Integer');
+ CL.AddDelphiFunction('Function GetPolyFillMode( DC : HDC) : Integer');
+ CL.AddDelphiFunction('Function GetCurrentObject( DC : HDC; p2 : UINT) : HGDIOBJ');
+ CL.AddDelphiFunction('Function GetDeviceCaps( DC : HDC; Index : Integer) : Integer');
+
   CL.AddTypeS('TFNTimerProc', 'TObject');
  CL.AddConstantN('GW_HWNDFIRST','LongInt').SetInt( 0);
  CL.AddConstantN('GW_HWNDLAST','LongInt').SetInt( 1);
@@ -817,7 +833,9 @@ CL.AddConstantN('NOPARITY','LongInt').SetInt( 0);
   CL.AddTypeS('_FOCUS_EVENT_RECORD', 'record bSetFocus : BOOL; end');
   CL.AddTypeS('TFocusEventRecord', '_FOCUS_EVENT_RECORD');
   CL.AddTypeS('FOCUS_EVENT_RECORD', '_FOCUS_EVENT_RECORD');
-
+  CL.AddTypeS('TmrProc', 'procedure TmrProc(hWnd: HWND; uMsg: Integer; idEvent: Integer; dwTime: Integer);');
+  //procedure TmrProc(hWnd: HWND; uMsg: Integer; idEvent: Integer; dwTime: Integer); stdcall;
+  
   CL.AddTypeS('_CONSOLE_SCREEN_BUFFER_INFO', 'record dwSize : TCoord; dwCursorP'
    +'osition : TCoord; wAttributes : Word; srWindow : TSmallRect; dwMaximumWindowSize : TCoord; end');
   CL.AddTypeS('TConsoleScreenBufferInfo', '_CONSOLE_SCREEN_BUFFER_INFO');
@@ -973,6 +991,8 @@ CL.AddConstantN('NOPARITY','LongInt').SetInt( 0);
  CL.AddDelphiFunction('Function ReplyMessage( lResult : LRESULT) : BOOL');
 
  CL.AddDelphiFunction('Function SetTimer( hWnd : HWND; nIDEvent, uElapse : UINT; lpTimerFunc : TFNTimerProc) : UINT');
+ CL.AddDelphiFunction('Function SetTimer2( hWnd : HWND; nIDEvent, uElapse : UINT; lpTimerFunc : TmrProc) : UINT');
+
  CL.AddDelphiFunction('Function KillTimer( hWnd : HWND; uIDEvent : UINT) : BOOL');
  CL.AddDelphiFunction('Function wIsWindowUnicode( hWnd : HWND) : BOOL');
  CL.AddDelphiFunction('Function wEnableWindow( hWnd : HWND; bEnable : BOOL) : BOOL');
@@ -1843,6 +1863,7 @@ begin
  S.RegisterDelphiFunction(@CallNextHookEx, 'CallNextHookEx', CdStdCall);
  S.RegisterDelphiFunction(@DefHookProc, 'DefHookProc', cdRegister);
  S.RegisterDelphiFunction(@SetTimer, 'SetTimer', CdStdCall);
+ S.RegisterDelphiFunction(@SetTimer, 'SetTimer2', CdStdCall);
  S.RegisterDelphiFunction(@KillTimer, 'KillTimer', CdStdCall);
  S.RegisterDelphiFunction(@IsWindowUnicode, 'wIsWindowUnicode', CdStdCall);
  S.RegisterDelphiFunction(@EnableWindow, 'wEnableWindow', CdStdCall);
@@ -1889,6 +1910,27 @@ begin
  S.RegisterDelphiFunction(@DisableForms, 'DisableForms', cdRegister);
  S.RegisterDelphiFunction(@FoundTopLevel, 'FoundTopLevel', cdRegister);
 
+  S.RegisterDelphiFunction(@GetDeviceCaps, 'GetDeviceCaps', CdStdCall);
+ //S.RegisterDelphiFunction(@GetGraphicsMode, 'GetGraphicsMode', CdStdCall);
+ S.RegisterDelphiFunction(@GetMapMode, 'GetMapMode', CdStdCall);
+ //S.RegisterDelphiFunction(@GetMetaFile, 'GetMetaFile', CdStdCall);
+ S.RegisterDelphiFunction(@GetNearestColor, 'GetNearestColor', CdStdCall);
+ S.RegisterDelphiFunction(@GetNearestPaletteIndex, 'GetNearestPaletteIndex', CdStdCall);
+ S.RegisterDelphiFunction(@GetObjectType, 'GetObjectType', CdStdCall);
+ S.RegisterDelphiFunction(@GetOutlineTextMetrics, 'GetOutlineTextMetrics', CdStdCall);
+ S.RegisterDelphiFunction(@GetPixel, 'GetPixel', CdStdCall);
+ S.RegisterDelphiFunction(@GetPixelFormat, 'GetPixelFormat', CdStdCall);
+ S.RegisterDelphiFunction(@GetPolyFillMode, 'GetPolyFillMode', CdStdCall);
+ S.RegisterDelphiFunction(@GetRasterizerCaps, 'GetRasterizerCaps', CdStdCall);
+ S.RegisterDelphiFunction(@GetRegionData, 'GetRegionData', CdStdCall);
+ S.RegisterDelphiFunction(@GetRgnBox, 'GetRgnBox', CdStdCall);
+ S.RegisterDelphiFunction(@GetStockObject, 'GetStockObject', CdStdCall);
+ S.RegisterDelphiFunction(@GetStretchBltMode, 'GetStretchBltMode', CdStdCall);
+ S.RegisterDelphiFunction(@GetSystemPaletteUse, 'GetSystemPaletteUse', CdStdCall);
+ S.RegisterDelphiFunction(@GetTextCharacterExtra, 'GetTextCharacterExtra', CdStdCall);
+ S.RegisterDelphiFunction(@GetTextAlign, 'GetTextAlign', CdStdCall);
+ S.RegisterDelphiFunction(@GetTextColor, 'GetTextColor', CdStdCall);
+ S.RegisterDelphiFunction(@GetCurrentObject, 'GetCurrentObject', CdStdCall);
 
 end;
 

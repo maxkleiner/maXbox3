@@ -45,6 +45,7 @@ uses
    Forms
   ,StrUtils
   ,cySearchFiles
+  ,kcMapViewer
   ;
  
  
@@ -129,8 +130,7 @@ begin
   CL.AddTypeS('TSearchState', '( ssIdle, ssPaused, ssSearch, ssPausing, ssResuming, ssAborting )');
   CL.AddTypeS('TProcOnValidateFileEvent', 'Procedure ( Sender : TObject; ValidM'
    +'askInclude, ValidMaskExclude, ValidAttributes : boolean; var Accept : boolean)');
-  CL.AddTypeS('TProcOnValidateDirectoryEvent', 'Procedure ( Sender : TObject; D'
-   +'irectory : String; var Accept : boolean)');
+  CL.AddTypeS('TProcOnValidateDirectoryEvent', 'Procedure ( Sender : TObject; Directory : String; var Accept : boolean)');
   SIRegister_TcyCustomSearchFiles(CL);
   SIRegister_TcySearchFiles(CL);
  CL.AddDelphiFunction('Function FileNameRespondToMask( aFileName : String; aMask : String) : Boolean');
@@ -192,18 +192,60 @@ begin Self.Archive := T; end;
 procedure TcyFileAttributesArchive_R(Self: TcyFileAttributes; var T: TcyFileAttributeMode);
 begin T := Self.Archive; end;
 
+
+procedure Tcysearchfileactivesr_W(Self: TcySearchFiles; const T: TSearchRecInstance);
+begin //Self.ActiveSearchRec:= T;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure Tcysearchfileactivesr_R(Self: TcySearchFiles; var T: TSearchRecInstance);
+begin T := Self.ActiveSearchRec; end;
+
+
+{procedure TcyFilesearchfileactivesr_W(Self: TcySearchFiles; const T: TSearchRecInstance);
+begin //Self.ActiveSearchRec:= T;
+end;}
+
+(*----------------------------------------------------------------------------*)
+procedure TcysearchfileAbort_R(Self: TcySearchFiles; var T: boolean);
+begin T := Self.Aborted; end;
+
+procedure TcysearchfileCurrentFileName_R(Self: TcySearchFiles; var T: string);
+begin T := Self.CurrentFileName; end;
+
+procedure TcysearchfileCurrentDirectory_R(Self: TcySearchFiles; var T: string);
+begin T := Self.CurrentDirectory; end;
+
+procedure TcysearchfileMatchedDirectories_R(Self: TcySearchFiles; var T: integer);
+begin T := Self.MatchedDirectories; end;
+procedure TcysearchfileMatchedFiles_R(Self: TcySearchFiles; var T: integer);
+begin T := Self.MatchedFiles; end;
+procedure TcysearchfileSearchState_R(Self: TcySearchFiles; var T: TSearchState);
+begin T := Self.SearchState; end;
+
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_cySearchFiles_Routines(S: TPSExec);
 begin
  S.RegisterDelphiFunction(@FileNameRespondToMask, 'FileNameRespondToMask', cdRegister);
  S.RegisterDelphiFunction(@IsFolder, 'IscyFolder', cdRegister);
+ S.RegisterDelphiFunction(@IsValidPNG, 'IsValidPNG', cdRegister);
+ S.RegisterDelphiFunction(@IsValidJPEG, 'IsValidJPEG', cdRegister);
+ //  function IsValidPNG(stream: TStream): Boolean; from kcmapviewer
+ // function IsValidJPEG(stream: TStream): Boolean;
 end;
 
-(*----------------------------------------------------------------------------*)
+ (*----------------------------------------------------------------------------*)
 procedure RIRegister_TcySearchFiles(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TcySearchFiles) do
-  begin
+  with CL.Add(TcySearchFiles) do begin
+    RegisterPropertyHelper(@TcySearchFileActiveSR_R,@TcyFileAttributesReadOnly_W,'ActiveSearchRec');
+    RegisterPropertyHelper(@TcySearchFileAbort_R,NIL,'Aborted');
+    RegisterPropertyHelper(@TcysearchfileCurrentFileName_R,NIL,'CurrentFileName');
+    RegisterPropertyHelper(@TcysearchfileCurrentDirectory_R,NIL,'CurrentDirectory');
+    RegisterPropertyHelper(@TcysearchfileMatchedDirectories_R,NIL,'MatchedDirectories');
+  RegisterPropertyHelper(@TcysearchfileMatchedFiles_R,NIL,'MatchedFiles');
+  RegisterPropertyHelper(@TcysearchfileSearchState_R,NIL,'SearchState');
+
   end;
 end;
 

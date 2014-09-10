@@ -671,7 +671,8 @@ begin
     RegisterMethod('procedure Checkers1Click(Sender: TObject);');
     RegisterMethod('procedure TaskMgr1Click(Sender: TObject);');
     RegisterMethod('procedure WebCam1Click(Sender: TObject);');
-
+    RegisterMethod('procedure Tutorial31Closure1Click(Sender: TObject);');
+    RegisterMethod('procedure GEOMapView1Click(Sender: TObject);');
 
    //RegisterMethod('procedure defFilereadUpdate;');
       //  procedure defFilereadUpdate;
@@ -3702,6 +3703,8 @@ begin
     RegisterMethod(@TMaxForm1.Checkers1Click, 'Checkers1Click');
     RegisterMethod(@TMaxForm1.TaskMgr1Click, 'TaskMgr1Click');
     RegisterMethod(@TMaxForm1.WebCam1Click, 'WebCam1Click');
+    RegisterMethod(@TMaxForm1.Tutorial31Closure1Click, 'Tutorial31Closure1Click');
+    RegisterMethod(@TMaxForm1.GEOMapView1Click, 'GEOMapView1Click');
 
      //  GetWebScript1Click
    end;

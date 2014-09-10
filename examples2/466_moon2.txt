@@ -1,0 +1,220 @@
+
+Program U_DrawMoon;
+
+//http://www.delphiforfun.org/Programs/Delphi_Techniques/Draw%20Moon.htm
+//migrate to maXbox by mX - #locs:216
+//DONE: b.pixelformat:=pf24bit; {to force true black background}
+             
+
+{interface
+ uses
+Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  ExtCtrls, StdCtrls;}
+//type
+{TForm1 = class(TForm)
+    PBox: TPaintBox;
+    CloseBtn: TButton;
+    MoonBtn: TButton;
+      procedure FormActivate(Sender: TObject);
+      procedure PBoxPaint(Sender: TObject);
+      procedure CloseBtnClick(Sender: TObject);
+      procedure FormClose(Sender: TObject; var Action: TCloseAction);
+      procedure MoonBtnClick(Sender: TObject);
+private    Private declarations }
+//public
+var moonphase:single; {fraction of moon visible:  0 to 1}
+  runflag:boolean; {controls program stopping}
+  waxing:boolean;  {true ==> moon visibility is increasing}
+  b:TBitmap;       {moon image}
+  showmoon:boolean; {flag}
+
+{moon image coordinates}
+lx,rx,ty,by:integer; {corners of moon image}
+cx,cy:integer; {center of moon image}
+rad:integer; {radius}
+   PBox: TPaintBox;
+    CloseBtn: TBitBtn;
+    MoonBtn: TBitBtn;
+    Form1: TForm;
+
+//implementation
+//uses math;
+//{$R *.DFM}
+
+procedure swap2(var a,b:integer);
+{exchange 2 integers}
+var n:integer;
+begin  n:=a; a:=b; b:=n; end;
+
+{****************** PBoxPaint *****************}
+procedure TForm1_PBoxPaint(Sender: TObject);
+var
+delta:integer; {x distance from center edge of image to center edge of arc}
+fillfrom:integer;  {x coordinate for floodfill}
+ds,de, myblack:integer;  {y coord start and end points for arc}
+begin
+with PBox,form1.canvas do begin
+ {make the radius of the crescent vary from "rad" down to 0 as moonphase
+     varies from 0 to 1/2 and then back to "rad" as phase goes to 1}
+  delta:=trunc(rad*2*abs(moonphase-0.5));
+ if showmoon then begin
+   draw(0,0,b); {draw moon image}
+   brush.style:=bsClear; {let ellipse draw only the border}
+   myblack:=b.canvas.pixels[1,1];
+ end else begin
+   myblack:=clblack;
+      brush.color:=myblack;
+      rectangle(0,0,width,height);
+      brush.color:=$C0E0E0; {B-G-R value $C0E0E0 = light GOLD}
+ end;
+  pen.color:=myblack;
+  ellipse(Lx,TY,RX,By);
+   ds:=ty-1;  {set arc start and end points}
+   de:=by+1;
+  if waxing then begin{increasing moon}
+ {x coordinate for floodfill to black-out left side for waxing moon}
+ fillfrom:=lx+2;
+ {arc draws counter-clockwise, so to draw right half of ellipse, start at bottom}
+   if moonphase<0.5 then swapinteger(ds,de);
+ end else begin{waning (decreasing) moon}
+   fillfrom:=rx-2; {set right side point for floodfill}
+   {same thing - waning moon with over 50% showing,draw right portion of ellipse}
+   if moonphase>0.5 then swapinteger(ds,de)
+ end;
+if delta>1
+  then arc(cx-delta,ty,cx+delta,BY,cx,ds,cx,de)
+ else begin{ellipse too narrow to draw, use a line}
+     moveto(cx,ty);
+     lineto(cx,by);
+ end;
+    brush.color:=myblack;
+ If moonphase<0.99 then floodfill(fillfrom,cy,myblack,fsborder);
+  //pixels[fillfrom,cy]:=cllime; {for debugging}
+ end; //with
+end;
+{********************* CloseBtnClick *************}
+procedure TForm1_CloseBtnClick(Sender: TObject);
+begin
+  form1.close;
+end;
+
+{******************* FormClose *****************}
+procedure TForm1_FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  runflag:=false;
+  action:=cafree;
+end;
+
+{*********************** MoonBtnClick *************}
+procedure TForm1_MoonBtnClick(Sender: TObject);
+{Set/reset flag to show moon image}
+begin
+if not showmoon then begin
+   showmoon:=true;
+   moonbtn.caption:='Hide moon image';
+ end else begin
+   showmoon:=false;
+   moonbtn.caption:='Show moon image';
+ end;
+end;
+
+{******************* FormActivate ****************}
+procedure TForm1_FormActivate(Sender: TObject);
+var inc:single; {angle - radian increment for each view}
+    angle:single;  {the angle of sun}
+   fname:string;
+  i,j:integer;
+begin
+  form1:= TForm.create(self);
+  with form1 do begin
+    caption:= 'Full Moon Plotter(((((\*/)))))'; 
+    SetBounds(461,87,451,475) 
+    Anchors:= [akLeft, akTop, akRight, akBottom]
+    //Color:= clBtnFace;
+    Color:= clBlack;
+   {Font.Charset = DEFAULT_CHARSET
+  Font.Height = -11
+  Font.Style = []  }
+    OldCreateOrder:= False;
+   Scaled:= False;
+    //OnActivate = FormActivate
+  OnClose:= @TForm1_FormClose
+  PixelsPerInch:= 96;
+   doublebuffered:=true;
+   //TextHeight:= 13;
+    //onPaint:= @PaintBox1Paint;
+    Show;
+  end;  
+   moonbtn:= TBitBtn.create(form1);
+    with moonbtn do begin
+    parent:= form1;
+    SetBounds(16,350,190,70)
+    Caption:= 'Show Moon Image'
+    glyph.LoadFromResourceName(HINSTANCE,'MOON_COLOR_64');
+    TabOrder:= 1
+    Visible:= false
+    OnClick:= @TForm1_MoonBtnClick;
+  end;
+ with TBItbtn.create(form1) do begin
+    parent:= form1;
+    SetBounds(235,350,190,70)
+    Caption:= '&Close'
+    glyph.LoadFromResourceName(HINSTANCE,'MOON_64');
+    TabOrder:= 0
+    OnClick:= @TForm1_CloseBtnClick;
+  end;
+PBox:= TPaintBox.create(form1);
+with pbox do begin
+ parent:= form1;
+  SetBounds(320,224,314,314)
+  OnPaint:= @TForm1_PBoxPaint;
+   {set moon image dimensions}
+  lx:=3;  {left x}
+  ty:=2;  {top y}
+  rx:=width-lx; {right x}
+  by:=height-ty;{bottom y}
+  cx:= height div 2; {center}
+  cy:= height div 2;
+  rad:= cx-lx;{radius}
+    show;
+end;
+  showmoon:=false; {no moon image initially}
+  fname:=extractfilepath(application.exename)+'examples\BrightFullMoon.bmp';
+ if fileexists(fname) then begin
+    b:=TBitMap.create;
+       b.loadfromfile(fname);
+   //b.pixelformat:=pf24bit; {to force true black background}
+   moonbtn.visible:=true; {OK to show the button}
+   {trim image to circle}
+   screen.cursor:= crHourglass;
+   for i:=0 to b.width-1 do
+   for j:= 0 to b.height-1 do
+     if trunc(sqrt((cx-i)*(cx-i)+(cy-j)*(cy-j)))>=rad
+   then b.canvas.pixels[i,j]:= clblack;
+   screen.cursor:= crDefault;
+end;
+  runflag:=true;
+  angle:=0;
+  inc:=pi/64;
+{loop to set moon phase info}
+repeat
+  angle:=angle+inc;
+  if angle>=2*pi then angle:=angle-2*pi;
+    moonphase:=(1+cos(angle))/2;
+  if angle>=Pi then waxing:=true
+  else waxing:=false;
+    pbox.invalidate; {force redraw}
+    application.processmessages;
+    sleep(100);
+  until runflag=false;
+  b.free;
+ end;
+
+begin  //main
+  //create
+  TForm1_FormActivate(self);
+End.
+
+
+----app_template_loaded_code----
+----File newtemplate.txt not exists - now saved!----
