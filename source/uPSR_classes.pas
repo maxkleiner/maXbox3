@@ -818,6 +818,11 @@ Begin
 END;
 
 
+function TMemSTREAMReadString(Self: TMemoryStream; var Buffer: string; Count:longint): longint;
+Begin
+  result:= Self.Read(Buffer, count);
+END;
+
 
 procedure RIRegisterTFILESTREAM(Cl: TPSRuntimeClassImporter);
 begin
@@ -848,6 +853,7 @@ begin
     RegisterMethod(@TCUSTOMMEMORYSTREAM.SAVETOSTREAM, 'SAVETOSTREAM');
     RegisterMethod(@TCUSTOMMEMORYSTREAM.SAVETOFILE, 'SAVETOFILE');
     RegisterMethod(@TCUSTOMMEMORYSTREAM.Read, 'Read');
+    RegisterMethod(@TMemSTREAMReadString, 'ReadString');
     RegisterMethod(@TCUSTOMMEMORYSTREAM.Read, 'ReadByteArray');
     RegisterMethod(@TCUSTOMMEMORYSTREAM.Seek, 'Seek');
     RegisterPropertyHelper(@TCUSTOMMEMORYSTREAMMemory_R, nil, 'Memory');

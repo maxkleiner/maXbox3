@@ -395,11 +395,13 @@ function IsCOMConnected: Boolean;
   procedure getGEOMapandRunAsk;
  function GetMapX(C_form,apath: string; const Data: string): boolean;
   procedure GetGEOMap(C_form,apath: string; const Data: string);
+  function GetMapXGeoReverse(C_form: string; const lat,long: string): string;
 
   //function RoundTo(const AValue: Extended;
     //             const ADigit: TRoundToEXRangeExtended): Extended;
  function DownloadFile(SourceFile, DestFile: string): Boolean;
  function DownloadFileOpen(SourceFile, DestFile: string): Boolean;
+ function OpenMap(const Data: string): boolean;
 
   
 implementation
@@ -617,7 +619,7 @@ procedure getGEOMapandRunAsk;
    if IsInternet then begin
    //ascript:= 'http://www.softwareschule.ch/examples/demoscript.txt';
   apath:= ExePath+'geomapX.html';
-  ascript:= 'Dom Cologne';
+  ascript:= 'Cathedral Cologne';
     if InputQuery('Get Web GEO Map','Please enter a GEO search location:',ascript) then
      begin
      //writeln('you entered: '+(string(ascript)));
@@ -637,9 +639,10 @@ procedure getGEOMapandRunAsk;
       maxForm1.memo2.lines.Add(' GEO Web Script finished: '+getStr+ ' at: '+timetostr(time));
         //statusline
    end else
+         showmessage('No Search Location!');
+  //end;
+   end else
          showmessage('No Web Connection available!');
-
-  end;
 end;
 
 
@@ -678,6 +681,57 @@ begin
     mapStream.Free;
   end;
 end;
+
+function OpenMap(const Data: string): boolean;
+var encURL: string;
+begin
+  //encodedURL:= Format(UrlGoogleQrCode,[Width,Height, C_Level, HTTPEncode(Data)]);
+  encURL:= Format(UrlMapQuestAPICode2,['html',HTTPEncode(Data)]);
+  try
+   //HttpGet(EncodedURL, mapStream);   //WinInet
+  Result:= UrlDownloadToFile(Nil,PChar(encURL),PChar(Exepath+'openmapx.html'),0,Nil)= 0;
+  //OpenDoc(Exepath+'openmapx.html');
+  S_ShellExecute(Exepath+'openmapx.html','',seCmdOpen);
+  finally
+    encURL:= '';
+  end;
+end;
+
+
+function  StreamtoString2( Source: TStream): string;
+begin
+SetLength( result, Source.Size);
+if result <> '' then
+  Source.ReadBuffer( result[1], Length( result) * SizeOf( AnsiChar))
+end;
+
+
+
+function GetMapXGeoReverse(C_form:string; const lat,long: string): string;
+ var encodedURL, UrlMapQuestAPI, bufstr: string;
+    mapStream: TMemoryStream;
+ begin
+  UrlMapQuestAPI:= 'http://open.mapquestapi.com/nominatim/v1/reverse.php?format=%s&json_callback=renderExampleThreeResults&lat=%s&lon=%s';
+  encodedURL:= Format(UrlMapQuestAPI,[c_form, lat, long]);
+   mapStream:= TMemoryStream.create;
+   try
+    Wininet_HttpGet(EncodedURL, mapStream);  {WinInet}
+    //Result:= UrlDownloadToFile(Nil,PChar(encodedURL),PChar(apath),0,Nil)= 0;
+     mapStream.Position:= 0;
+     maxform1.memo2.lines.add('stream size: '+inttostr(mapstream.size));
+      //mapStream.readbuffer(bufstr, mapStream.Size);
+      //mapStream.memory;
+      result:= StreamToString2(mapstream);
+      //mapstream.loadfromstream
+     maxform1.memo2.lines.add('encodedURL: '+encodedURL);
+    //OpenDoc(apath);
+    //result:= bufstr;
+  finally
+    encodedURL:= '';
+    mapStream.Free;
+  end;
+end;                            
+
 
 
 function DownloadFile(SourceFile, DestFile: string): Boolean;

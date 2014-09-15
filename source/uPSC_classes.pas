@@ -454,6 +454,7 @@ begin
     RegisterMethod('procedure SaveToFile(FileName:String)');
     RegisterProperty('Memory', 'TObject', iptr);
     RegisterMethod('function Read(var Buffer; Count: Longint): Longint');
+    RegisterMethod('function ReadString(var Buffer: string; Count: Longint): Longint');
     RegisterMethod('function Seek(Offset: Longint; Origin: Word): Longint;');
     RegisterMethod('function ReadByteArray(Buffer:TByteArray;Count:LongInt):LongInt');
        //property Memory: Pointer read FMemory;

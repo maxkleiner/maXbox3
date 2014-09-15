@@ -1,0 +1,64 @@
+PROGRAM ReverseGeoCoding;
+//Doc at http://open.mapquestapi.com/nominatim/
+//#sign:3:09 max: MAXBOX8: 12.09.2014 09:59:17 M 9:41:53 
+//#path:ples\C:\maXbook\maxbox3\mX3999\maxbox3\examples\es\
+//Ex. of Reverse Geocoding with OpenStreetMap /mapquestAPI
+
+CONST 
+  UrlMapQuestAPICode2='http://open.mapquestapi.com/nominatim/v1/search.php?format=%s&json_callback=renderBasicSearchNarrative&q=%s';  
+  
+{TYPE <Type declarations>} 
+
+Var 
+  topPath: string;
+
+//<FUNCTION>
+function GetMapXScript(C_form,apath: string; const Data: string): boolean;
+var encodedURL: string;
+begin
+  //encodedURL:= Format(UrlGoogleQrCode,[Width,Height, C_Level, HTTPEncode(Data)]);
+  encodedURL:= Format(UrlMapQuestAPICode2,[c_form,HTTPEncode(Data)]);
+  try
+   //HttpGet(EncodedURL, mapStream);   //WinInet
+  Result:= UrlDownloadToFile(Nil,PChar(encodedURL),PChar(apath),0,Nil)= 0;
+  OpenDoc(apath);
+  finally
+    encodedURL:= '';
+  end;
+end;
+
+function GetMapXGeoReverse(C_form,apath: string; const lat,long: string):boolean;
+ var encodedURL, UrlMapQuestAPI: string;
+ begin
+  UrlMapQuestAPI:= 'http://open.mapquestapi.com/nominatim/v1/reverse.php?format=%s&json_callback=renderExampleThreeResults&lat=%s&lon=%s';
+  encodedURL:= Format(UrlMapQuestAPI,[c_form, lat, long]);
+  try
+   //HttpGet(EncodedURL, mapStream);  {WinInet}
+    Result:= UrlDownloadToFile(Nil,PChar(encodedURL),PChar(apath),0,Nil)= 0;
+    memo2.lines.add(encodedURL);
+    OpenDoc(apath);
+    writeln(FileToString(apath))
+  finally
+    encodedURL:= '';
+  end;
+end;
+
+
+Begin  //Main
+//<Executable statements>
+   topPath:= ExePath+'outputmap_2.xml';
+   //if GetMAPX('html',toppath,'Oberburg') then
+   {if GetMAPXScript('html',toppath,'Oberburg') then
+      writeln('map found'); OpenDoc(toppath);   }
+
+   if GetMapXGeoReverse('XML',topPath,'47.0397826','7.62914761277888') then
+    writeln('reverse geocode map data found!');   
+End. 
+
+
+Test Ref:  XML, JSON, HTML
+
+<reversegeocode timestamp="Thu, 11 Sep 14 20:52:32 +0000" attribution="Data © OpenStreetMap contributors, ODbL 1.0. http://www.openstreetmap.org/copyright" querystring="format=html&json_callback=renderExampleThreeResults&lat=47.0397826&lon=7.62914761277888"><result place_id="15120759" osm_type="node" osm_id="1378799522" ref="UBS AG" lat="47.0398676" lon="7.6291424">UBS AG, Bahnhofstrasse, Oberstadt, Burgdorf, Verwaltungskreis Emmental, Verwaltungsregion Emmental-Oberaargau, Bern, 3414, Switzerland</result><addressparts><atm>UBS AG</atm><road>Bahnhofstrasse</road><neighbourhood>Oberstadt</neighbourhood><town>Burgdorf</town><county>Verwaltungskreis Emmental</county><state_district>Verwaltungsregion Emmental-Oberaargau</state_district><state>Bern</state><postcode>3414</postcode><country>Switzerland</country><country_code>ch</country_code></addressparts></reversegeocode>
+
+----app_template_loaded_code----
+----File newtemplate.txt not exists - now saved!----

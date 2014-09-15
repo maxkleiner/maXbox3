@@ -35,7 +35,7 @@ implementation
 
 uses
    Windows
-  ,AfUtils, wiwin32, REGiSTRY, PsAPI, messages;
+  ,AfUtils, wiwin32, REGiSTRY, PsAPI, messages, WinSpool;
 
 
 procedure Register;
@@ -475,6 +475,70 @@ FillMorseTable;
   end;
 end;
 
+function ExtComName(ComNr: DWORD): string;
+begin
+  if ComNr > 9 then
+    Result := Format('\\\\.\\COM%d', [ComNr])
+  else
+    Result := Format('COM%d', [ComNr]);
+end;
+
+function CheckCom(AComNumber: Integer): Integer;
+var
+  FHandle: THandle;
+begin
+  Result := 0;
+  FHandle := CreateFile(PChar(ExtComName(AComNumber)),
+    GENERIC_READ or GENERIC_WRITE,
+    0, {exclusive access}
+    nil, {no security attrs}
+    OPEN_EXISTING,
+    FILE_ATTRIBUTE_NORMAL,
+    0);
+  if FHandle <> INVALID_HANDLE_VALUE then
+    CloseHandle(FHandle)
+  else
+    Result := GetLastError;
+end;
+
+type
+  TArrayPORT_INFO_1 = array[0..0] of PORT_INFO_1;
+  PArrayPORT_INFO_1 = ^TArrayPORT_INFO_1;
+
+function CheckLPT1: string;
+var
+  apiBuffer: PArrayPORT_INFO_1;
+  lwBufferSize: LongWord;
+  lwPortCount: LongWord;
+  lwIndex: LongWord;
+  sMessage: string;
+begin
+  {Find required size of the buffer}
+  EnumPorts(nil, 1, nil, 0, lwBufferSize, lwPortCount);
+  {Alloc and fill buffer}
+  apiBuffer := AllocMem(lwBufferSize);
+  EnumPorts(nil, 1, apiBuffer, lwBufferSize, lwBufferSize, lwPortCount);
+  {Search returned buffer}
+  {Using word so must check for 0 as 0 - 1 = 4294967295  not -1!}
+  if lwPortCount = 0 then
+    sMessage := 'No ports installed on this system'
+  else
+  begin
+    sMessage := 'LPT1: not found on this system';
+    for lwIndex := 0 to lwPortCount - 1 do
+    begin
+      if UpperCase(apiBuffer[lwIndex].pName) = 'LPT1:' then
+      begin
+        sMessage := 'LPT1: exists';
+        Break;
+      end;
+    end;
+  end;
+  {Free the buffer and show result}
+  FreeMem(apiBuffer);
+  result:= sMessage;
+end;
+
 
 
      //UrlDownloadToFile
@@ -721,8 +785,10 @@ CL.AddDelphiFunction('Function OpenWindowStation( lpszWinSta : PChar; fInherit :
  CL.AddDelphiFunction('procedure DeleteMsgForm(Handle: Integer);');
  CL.AddDelphiFunction('procedure DisableForms;');
  CL.AddDelphiFunction('function FoundTopLevel(hWnd, LParam: Integer): BOOL; StdCall;');
+ CL.AddDelphiFunction('function CheckCom(AComNumber: Integer): Integer;');
+ CL.AddDelphiFunction('function CheckLPT1: string;');
 
- CL.AddDelphiFunction('Function GetRgnBox( RGN : HRGN; var p2 : TRect) : Integer');
+  CL.AddDelphiFunction('Function GetRgnBox( RGN : HRGN; var p2 : TRect) : Integer');
  CL.AddDelphiFunction('Function GetStockObject( Index : Integer) : HGDIOBJ');
  CL.AddDelphiFunction('Function GetStretchBltMode( DC : HDC) : Integer');
  CL.AddDelphiFunction('Function GetSystemPaletteUse( DC : HDC) : UINT');
@@ -1909,8 +1975,10 @@ begin
  S.RegisterDelphiFunction(@DeleteMsgForm, 'DeleteMsgForm', cdRegister);
  S.RegisterDelphiFunction(@DisableForms, 'DisableForms', cdRegister);
  S.RegisterDelphiFunction(@FoundTopLevel, 'FoundTopLevel', cdRegister);
+ S.RegisterDelphiFunction(@CheckCom, 'CheckCom', cdRegister);
+ S.RegisterDelphiFunction(@CheckLPT1, 'CheckLPT1', cdRegister);
 
-  S.RegisterDelphiFunction(@GetDeviceCaps, 'GetDeviceCaps', CdStdCall);
+   S.RegisterDelphiFunction(@GetDeviceCaps, 'GetDeviceCaps', CdStdCall);
  //S.RegisterDelphiFunction(@GetGraphicsMode, 'GetGraphicsMode', CdStdCall);
  S.RegisterDelphiFunction(@GetMapMode, 'GetMapMode', CdStdCall);
  //S.RegisterDelphiFunction(@GetMetaFile, 'GetMetaFile', CdStdCall);

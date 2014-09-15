@@ -78,8 +78,6 @@ begin
     RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
     RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
     RegisterProperty('MAXLENGTH', 'Integer', iptrw);
-    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
-    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
     RegisterProperty('Bevels', 'tcyBevels', iptrw);
     RegisterProperty('Wallpaper', 'TcyBgPicture', iptrw);
       RegisterProperty('onClick', 'TNotifyEvent', iptrw);

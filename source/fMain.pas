@@ -115,6 +115,7 @@
          9792       build 98_5 8 more unit unit testing async pro tools
          9890       build 98_6 5 more units fileclass set ,dmmcanvas, led set, morse gen
          9925       build 98_7 maps, maXmap, downloadengine
+         9938       build 98_8 IDL Syntax, maXmap, downloadengine , openmapX
 
                   [the last one before V4 in 2015]
                    V4.0   in  June 2015
@@ -142,7 +143,7 @@ uses
   SynHighlighterUNIXShellScript, SynEditPrintPreview, SynEditPrintTypes,
   SynHighlighterURI, SynURIOpener, SynHighlighterMulti, SynExportRTF, SynHighlighterCSS,
   SynHighlighterEiffel, SynHighlighterAsm, SynHighlighterDfm, SynHighlighterVB,
-  SynHighlighterIni, SynHighlighterBat
+  SynHighlighterIni, SynHighlighterBat, SynHighlighterIDL
   {,IWBaseControl,IWBaseHTMLControl}; //, jpeg;
 
 const
@@ -528,6 +529,7 @@ type
     WebCam1: TMenuItem;
     Tutorial31Closure1: TMenuItem;
     GEOMapView1: TMenuItem;
+    SynIdlSyn1: TSynIdlSyn;
     procedure IFPS3ClassesPlugin1CompImport(Sender: TObject; x: TPSPascalCompiler);
     procedure IFPS3ClassesPlugin1ExecImport(Sender: TObject; Exec: TPSExec; x: TPSRuntimeClassImporter);
     procedure PSScriptCompile(Sender: TPSScript);
@@ -1875,6 +1877,9 @@ uses
   uPSI_kcMapViewerDESynapse,
   uPSI_cparserutils,    //3.9.9.98_7
   //uPSI_GIS_SysUtils,
+  uPSI_LedNumber,
+  uPSI_StStrL,         //3.9.9.98_8
+
   ///
    //MDIFrame,
   uPSI_St2DBarC,
@@ -2939,6 +2944,8 @@ begin
  SIRegister_kcMapViewerGLGeoNames(X);
  SIRegister_kcMapViewerDESynapse(X);
  SIRegister_cparserutils(X);
+ SIRegister_LedNumber(X);
+ SIRegister_StStrL(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4263,6 +4270,8 @@ begin
   RIRegister_kcMapViewerDESynapse(X);
   RIRegister_TLineBreaker(X);
   RIRegister_cparserutils_Routines(Exec); //3.9.9.98_7
+  RIRegister_LedNumber(X);
+  RIRegister_StStrL_Routines(EXec);
 
 
   RIRegister_DebugBox(X);
@@ -5376,6 +5385,11 @@ begin
   Sender.AddFunction(@dowebcampic, 'procedure WebCamPic(picname: string);');
   Sender.AddFunction(@GetMapX, 'function GetMapX(C_form,apath: string; const Data: string): boolean;');
   Sender.AddFunction(@GetGEOMap, 'procedure GetGEOMap(C_form,apath: string; const Data: string);');
+  Sender.AddFunction(@GetMapXGeoReverse, 'function GetMapXGeoReverse(C_form: string; const lat,long: string): string;');
+  Sender.AddFunction(@OpenMap, 'function OpenMap(const Data: string): boolean;');
+  Sender.AddFunction(@OpenMap, 'function OpenMapX(const Data: string): boolean;');
+  Sender.AddFunction(@OpenMap, 'function OpenStreetMap(const Data: string): boolean;');
+
   Sender.AddFunction(@DownloadFile, 'function DownloadFile(SourceFile, DestFile: string): Boolean;');
   Sender.AddFunction(@DownloadFileOpen, 'function DownloadFileOpen(SourceFile, DestFile: string): Boolean;');
 
@@ -5447,7 +5461,6 @@ begin
        [perftime, numprocessthreads, getIPAddress(getComputerNameWin), timetoStr(time),mbversion]), 11);
   SearchAndCopy(memo1.lines, '#net',Format('DNS: %s; local IPs: %s; local IP: %s',
        [getDNS, GetLocalIPs, getIPAddress(getComputerNameWin)]), 10);
-
   memo2.Lines.Add('Macro Expanded '+inttostr(memo1.Lines.count-1)+' lines');
 end;
 

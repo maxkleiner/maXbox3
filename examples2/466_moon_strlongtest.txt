@@ -1,0 +1,369 @@
+
+Program U_DrawMoon;
+
+//http://www.delphiforfun.org/Programs/Delphi_Techniques/Draw%20Moon.htm
+//migrate to maXbox by mX - #locs:365
+//DONE: b.pixelformat:=pf24bit; {to force true black background}
+             
+
+{interface
+ uses
+Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  ExtCtrls, StdCtrls;}
+//type
+{TForm1 = class(TForm)
+    PBox: TPaintBox;
+    CloseBtn: TButton;
+    MoonBtn: TButton;
+      procedure FormActivate(Sender: TObject);
+      procedure PBoxPaint(Sender: TObject);
+      procedure CloseBtnClick(Sender: TObject);
+      procedure FormClose(Sender: TObject; var Action: TCloseAction);
+      procedure MoonBtnClick(Sender: TObject);
+private    Private declarations }
+//public
+var moonphase:single; {fraction of moon visible:  0 to 1}
+  runflag:boolean; {controls program stopping}
+  waxing:boolean;  {true ==> moon visibility is increasing}
+  b:TBitmap;       {moon image}
+  showmoon:boolean; {flag}
+
+{moon image coordinates}
+lx,rx,ty,by:integer; {corners of moon image}
+cx,cy:integer; {center of moon image}
+rad:integer; {radius}
+   PBox: TPaintBox;
+    CloseBtn: TButton;
+    MoonBtn: TButton;
+    Form1: TForm;
+
+//implementation
+//uses math;
+//{$R *.DFM}
+
+procedure swap2(var a,b:integer);
+{exchange 2 integers}
+var n:integer;
+begin  n:=a; a:=b; b:=n; end;
+
+{****************** PBoxPaint *****************}
+procedure TForm1_PBoxPaint(Sender: TObject);
+var
+delta:integer; {x distance from center edge of image to center edge of arc}
+fillfrom:integer;  {x coordinate for floodfill}
+ds,de, myblack:integer;  {y coord start and end points for arc}
+begin
+with PBox,form1.canvas do begin
+ {make the radius of the crescent vary from "rad" down to 0 as moonphase
+     varies from 0 to 1/2 and then back to "rad" as phase goes to 1}
+  delta:=trunc(rad*2*abs(moonphase-0.5));
+ if showmoon then begin
+   draw(0,0,b); {draw moon image}
+   brush.style:=bsClear; {let ellipse draw only the border}
+   myblack:=b.canvas.pixels[1,1];
+ end else begin
+   myblack:=clblack;
+      brush.color:=myblack;
+      rectangle(0,0,width,height);
+      brush.color:=$C0E0E0; {B-G-R value $C0E0E0 = light GOLD}
+ end;
+  pen.color:=myblack;
+  ellipse(Lx,TY,RX,By);
+   ds:=ty-1;  {set arc start and end points}
+   de:=by+1;
+  if waxing then begin{increasing moon}
+ {x coordinate for floodfill to black-out left side for waxing moon}
+ fillfrom:=lx+2;
+ {arc draws counter-clockwise, so to draw right half of ellipse, start at bottom}
+   if moonphase<0.5 then swapinteger(ds,de);
+ end else begin{waning (decreasing) moon}
+   fillfrom:=rx-2; {set right side point for floodfill}
+   {same thing - waning moon with over 50% showing,draw right portion of ellipse}
+   if moonphase>0.5 then swapinteger(ds,de)
+ end;
+if delta>1
+  then arc(cx-delta,ty,cx+delta,BY,cx,ds,cx,de)
+ else begin{ellipse too narrow to draw, use a line}
+     moveto(cx,ty);
+     lineto(cx,by);
+ end;
+    brush.color:=myblack;
+ If moonphase<0.99 then floodfill(fillfrom,cy,myblack,fsborder);
+  //pixels[fillfrom,cy]:=cllime; {for debugging}
+ end; //with
+end;
+{********************* CloseBtnClick *************}
+procedure TForm1_CloseBtnClick(Sender: TObject);
+begin
+  form1.close;
+end;
+
+{******************* FormClose *****************}
+procedure TForm1_FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  runflag:=false;
+  action:=cafree;
+end;
+
+{*********************** MoonBtnClick *************}
+procedure TForm1_MoonBtnClick(Sender: TObject);
+{Set/reset flag to show moon image}
+begin
+if not showmoon then begin
+   showmoon:=true;
+   moonbtn.caption:='Hide moon image';
+ end else begin
+   showmoon:=false;
+   moonbtn.caption:='Show moon image';
+ end;
+end;
+
+{******************* FormActivate ****************}
+procedure TForm1_FormActivate(Sender: TObject);
+var inc:single; {angle - radian increment for each view}
+    angle:single;  {the angle of sun}
+   fname:string;
+  i,j:integer;
+begin
+  form1:= TForm.create(self);
+  with form1 do begin
+    caption:= 'Full Moon Plotter(((((\*/)))))'; 
+    SetBounds(461,87,351,375) 
+    Anchors:= [akLeft, akTop, akRight, akBottom]
+    //Color:= clBtnFace;
+    Color:= clBlack;
+   {Font.Charset = DEFAULT_CHARSET
+  Font.Height = -11
+  Font.Style = []  }
+    OldCreateOrder:= False;
+   Scaled:= False;
+    //OnActivate = FormActivate
+  OnClose:= @TForm1_FormClose
+  PixelsPerInch:= 96;
+   doublebuffered:=true;
+   //TextHeight:= 13;
+    //onPaint:= @PaintBox1Paint;
+    Show;
+  end;  
+   moonbtn:= TButton.create(form1);
+    with moonbtn do begin
+    parent:= form1;
+    SetBounds(16,0,107,25)
+    Caption:= 'Show Moon Image'
+    TabOrder:= 1
+    Visible:= false
+    OnClick:= @TForm1_MoonBtnClick;
+  end;
+ with TButton.create(form1) do begin
+    parent:= form1;
+    SetBounds(256,0,75,25)
+    Caption:= '&Close'
+    TabOrder:= 0
+    OnClick:= @TForm1_CloseBtnClick;
+  end;
+PBox:= TPaintBox.create(form1);
+with pbox do begin
+ parent:= form1;
+  SetBounds(320,124,314,314)
+  OnPaint:= @TForm1_PBoxPaint;
+   {set moon image dimensions}
+  lx:=3;  {left x}
+  ty:=2;  {top y}
+  rx:=width-lx; {right x}
+  by:=height-ty;{bottom y}
+  cx:= height div 2; {center}
+  cy:= height div 2;
+  rad:= cx-lx;{radius}
+    show;
+end;
+  showmoon:=false; {no moon image initially}
+  fname:=extractfilepath(application.exename)+'examples\BrightFullMoon.bmp';
+ if fileexists(fname) then begin
+    b:=TBitMap.create;
+       b.loadfromfile(fname);
+   //b.pixelformat:=pf24bit; {to force true black background}
+   moonbtn.visible:=true; {OK to show the button}
+   {trim image to circle}
+   screen.cursor:= crHourglass;
+   for i:=0 to b.width-1 do
+   for j:= 0 to b.height-1 do
+     if trunc(sqrt((cx-i)*(cx-i)+(cy-j)*(cy-j)))>=rad
+   then b.canvas.pixels[i,j]:= clblack;
+   screen.cursor:= crDefault;
+end;
+  runflag:=true;
+  angle:=0;
+  inc:=pi/64;
+{loop to set moon phase info}
+repeat
+  angle:=angle+inc;
+  if angle>=2*pi then angle:=angle-2*pi;
+    moonphase:=(1+cos(angle))/2;
+  if angle>=Pi then waxing:=true
+  else waxing:=false;
+    pbox.invalidate; {force redraw}
+    application.processmessages;
+    sleep(100);
+  until runflag=false;
+  b.free;
+ end;
+ 
+ 
+ function OpenCOMPort: Boolean;
+var
+  DeviceName: string; //array[0..80] of Char;
+  ComFile: THandle;
+begin
+   { First step is to open the communications device for read/write.
+     This is achieved using the Win32 'CreateFile' function.
+     If it fails, the function returns false.
+
+     Wir versuchen, COM1 zu öffnen.
+     Sollte dies fehlschlagen, gibt die Funktion false zurück.
+   }
+  //StrPCopy(DeviceName, 'COM1:');
+   {Function CreateFile( lpFileName : PChar; dwDesiredAccess, dwShareMode : DWORD; lpSecurityAttributes : PSecurityAttributes; dwCreationDisposition, dwFlagsAndAttributes : DWORD; hTemplateFile : THandle) : THandle');}
+
+  ComFile:= CreateFile(DeviceName, GENERIC_READ or GENERIC_WRITE,
+    0, 0,
+    (OPEN_EXISTING),
+    (FILE_ATTRIBUTE_NORMAL),
+    0); 
+
+  if ComFile = INVALID_HANDLE_VALUE then
+    Result := False
+  else
+    Result := True;
+    //CheckCom
+end;
+
+ 
+ procedure SIRegister_StStrLTest;
+var ast: ansichar;
+abt:   BTable;
+//  = array[0..255] of Byte;  {Table used by Boyer-Moore search routines}
+
+begin
+  //LStrRec', 'record AllocSize : Longint; RefCount : Longint; Length : Longint; end');
+  //HexBL( B : Byte) : AnsiString');
+  //HexWL( W : Word) : AnsiString');
+  //HexLL( L : LongInt) : AnsiString');
+  //HexPtrL( P : Pointer) : AnsiString');
+  //BinaryBL( B : Byte) : AnsiString');
+  //BinaryWL( W : Word) : AnsiString');
+  //BinaryLL( L : LongInt) : AnsiString');
+  //OctalBL( B : Byte) : AnsiString');
+  //OctalWL( W : Word) : AnsiString');
+  //OctalLL( L : LongInt) : AnsiString');
+  //Str2Int16L( const S : AnsiString; var I : SmallInt) : Boolean');
+  //Str2WordL( const S : AnsiString; var I : Word) : Boolean');
+  //Str2LongL( const S : AnsiString; var I : LongInt) : Boolean');
+  //Str2RealL( const S : AnsiString; var R : Double) : Boolean');
+  //Str2RealL( const S : AnsiString; var R : Real) : Boolean');
+  //Str2ExtL( const S : AnsiString; var R : Extended) : Boolean');
+  //Long2StrL( L : LongInt) : AnsiString');
+  //Real2StrL( R : Double; Width : Byte; Places : ShortInt) : AnsiString');
+  //Ext2StrL( R : Extended; Width : Byte; Places : ShortInt) : AnsiString');
+  //ValPrepL( const S : AnsiString) : AnsiString');
+  //CharStrL( C : AnsiChar; Len : Cardinal) : AnsiString');
+  //PadChL( const S : AnsiString; C : AnsiChar; Len : Cardinal) : AnsiString');
+  //PadLL( const S : AnsiString; Len : Cardinal) : AnsiString');
+  //LeftPadChL( const S : AnsiString; C : AnsiChar; Len : Cardinal) : AnsiString');
+  //LeftPadL( const S : AnsiString; Len : Cardinal) : AnsiString');
+  //TrimLeadL( const S : AnsiString) : AnsiString');
+  //TrimTrailL( const S : AnsiString) : AnsiString');
+  //TrimL( const S : AnsiString) : AnsiString');
+  //TrimSpacesL( const S : AnsiString) : AnsiString');
+  //CenterChL( const S : AnsiString; C : AnsiChar; Len : Cardinal) : AnsiString');
+  //CenterL( const S : AnsiString; Len : Cardinal) : AnsiString');
+  //EntabL( const S : AnsiString; TabSize : Byte) : AnsiString');
+  //DetabL( const S : AnsiString; TabSize : Byte) : AnsiString');
+  //ScrambleL( const S, Key : AnsiString) : AnsiString');
+  //SubstituteL( const S, FromStr, ToStr : AnsiString) : AnsiString');
+  //FilterL( const S, Filters : AnsiString) : AnsiString');
+  //CharExistsL( const S : AnsiString; C : AnsiChar) : Boolean');
+  //CharCountL( const S : AnsiString; C : AnsiChar) : Cardinal');
+  //WordCountL( const S, WordDelims : AnsiString) : Cardinal');
+  //WordPositionL( N : Cardinal; const S, WordDelims : AnsiString; var Pos : Cardinal) : Boolean');
+  //ExtractWordL( N : Cardinal; const S, WordDelims : AnsiString) : AnsiString');
+  //AsciiCountL( const S, WordDelims : AnsiString; Quote : AnsiChar) : Cardinal');
+  //AsciiPositionL( N : Cardinal; const S, WordDelims : AnsiString; Quote : AnsiChar; var Pos : Cardinal) : Boolean');
+  //ExtractAsciiL( N : Cardinal; const S, WordDelims : AnsiString; Quote : AnsiChar) : AnsiString');
+ //WordWrap( const InSt : AnsiString; var OutSt, Overlap : AnsiString; Margin : Cardinal; PadToMargin : Boolean)');
+  //CompStringL( const S1, S2 : AnsiString) : Integer');
+  //CompUCStringL( const S1, S2 : AnsiString) : Integer');
+  //SoundexL( const S : AnsiString) : AnsiString');
+  //MakeLetterSetL( const S : AnsiString) : Longint');
+ //BMMakeTableL( const MatchString : AnsiString; var BT : BTable)');
+  //BMSearchL( var Buffer, BufLength : Cardinal; var BT : BTable; const MatchString : AnsiString; var Pos : Cardinal) : Boolean');
+  //BMSearchUCL( var Buffer, BufLength : Cardinal; var BT : BTable; const MatchString : AnsiString; var Pos : Cardinal) : Boolean');
+  //DefaultExtensionL( const Name, Ext : AnsiString) : AnsiString');
+  //ForceExtensionL( const Name, Ext : AnsiString) : AnsiString');
+  //JustFilenameL( const PathName : AnsiString) : AnsiString');
+  //JustNameL( const PathName : AnsiString) : AnsiString');
+  //JustExtensionL( const Name : AnsiString) : AnsiString');
+  //JustPathnameL( const PathName : AnsiString) : AnsiString');
+  //AddBackSlashL( const DirName : AnsiString) : AnsiString');
+  //CleanPathNameL( const PathName : AnsiString) : AnsiString');
+  //HasExtensionL( const Name : AnsiString; var DotPos : Cardinal) : Boolean');
+  //CommaizeL( L : LongInt) : AnsiString');
+  //CommaizeChL( L : Longint; Ch : AnsiChar) : AnsiString');
+  //FloatFormL( const Mask : AnsiString; R : TstFloat; const LtCurr, RtCurr : AnsiString; Sep, DecPt : AnsiChar) : AnsiString');
+  //LongIntFormL( const Mask : AnsiString; L : LongInt; const LtCurr, RtCurr : AnsiString; Sep : AnsiChar) : AnsiString');
+  //StrChPosL( const P : AnsiString; C : AnsiChar; var Pos : Cardinal) : Boolean');
+  //StrStPosL( const P, S : AnsiString; var Pos : Cardinal) : Boolean');
+  //StrStCopyL( const S : AnsiString; Pos, Count : Cardinal) : AnsiString');
+  //StrChInsertL( const S : AnsiString; C : AnsiChar; Pos : Cardinal) : AnsiString');
+  //StrStInsertL( const S1, S2 : AnsiString; Pos : Cardinal) : AnsiString');
+  //StrChDeleteL( const S : AnsiString; Pos : Cardinal) : AnsiString');
+  //StrStDeleteL( const S : AnsiString; Pos, Count : Cardinal) : AnsiString');
+  //ContainsOnlyL( const S, Chars : AnsiString; var BadPos : Cardinal) : Boolean');
+  //ContainsOtherThanL( const S, Chars : AnsiString; var BadPos : Cardinal) : Boolean');
+  //CopyLeftL( const S : AnsiString; Len : Cardinal) : AnsiString');
+  //CopyMidL( const S : AnsiString; First, Len : Cardinal) : AnsiString');
+  //CopyRightL( const S : AnsiString; First : Cardinal) : AnsiString');
+  //CopyRightAbsL( const S : AnsiString; NumChars : Cardinal) : AnsiString');
+  //CopyFromNthWordL( const S, WordDelims : AnsiString; const AWord : AnsiString; N : Cardinal; var SubString : AnsiString) : Boolean');
+  //CopyFromToWordL( const S, WordDelims, Word1, Word2 : AnsiString; N1, N2 : Cardinal; var SubString : AnsiString) : Boolean');
+  //CopyWithinL( const S, Delimiter : AnsiString; Strip : Boolean) : AnsiString');
+  //DeleteFromNthWordL( const S, WordDelims : AnsiString; const AWord : AnsiString; N : Cardinal; var SubString : AnsiString) : Boolean');
+  //DeleteFromToWordL( const S, WordDelims, Word1, Word2 : AnsiString; N1, N2 : Cardinal; var SubString : AnsiString) : Boolean');
+  //DeleteWithinL( const S, Delimiter : AnsiString) : AnsiString');
+  //ExtractTokensL( const S, Delims : AnsiString; QuoteChar : AnsiChar; AllowNulls : Boolean; Tokens : TStrings) : Cardinal');
+  //IsChAlphaL( C : AnsiChar) : Boolean');
+  //IsChNumericL( C : AnsiChar; const Numbers : AnsiString) : Boolean');
+  //IsChAlphaNumericL( C : AnsiChar; const Numbers : AnsiString) : Boolean');
+  //IsStrAlphaL( const S : AnsiString) : Boolean');
+  //IsStrNumericL( const S, Numbers : AnsiString) : Boolean');
+  //IsStrAlphaNumericL( const S, Numbers : AnsiString) : Boolean');
+  //KeepCharsL( const S, Chars : AnsiString) : AnsiString');
+  //LastWordL( const S, WordDelims, AWord : AnsiString; var Position : Cardinal) : Boolean');
+  //LastWordAbsL( const S, WordDelims : AnsiString; var Position : Cardinal) : Boolean');
+  //LastStringL( const S, AString : AnsiString; var Position : Cardinal) : Boolean');
+  //LeftTrimCharsL( const S, Chars : AnsiString) : AnsiString');
+  //ReplaceWordL( const S, WordDelims, OldWord, NewWord : AnsiString; N : Cardinal; var Replacements : Cardinal) : AnsiString');
+  //ReplaceWordAllL( const S, WordDelims, OldWord, NewWord : AnsiString; var Replacements : Cardinal) : AnsiString');
+  //ReplaceStringL( const S, OldString, NewString : AnsiString; N : Cardinal; var Replacements : Cardinal) : AnsiString');
+  //ReplaceStringAllL( const S, OldString, NewString : AnsiString; var Replacements : Cardinal) : AnsiString');
+  //RepeatStringL( const RepeatString : AnsiString; var Repetitions : Cardinal; MaxLen : Cardinal) : AnsiString');
+  //RightTrimCharsL( const S, Chars : AnsiString) : AnsiString');
+  //StrWithinL( const S, SearchStr : string; Start : Cardinal; var Position : Cardinal) : boolean');
+  //TrimCharsL( const S, Chars : AnsiString) : AnsiString');
+  //WordPosL( const S, WordDelims, AWord : AnsiString; N : Cardinal; var Position : Cardinal) : Boolean');
+  //wordpos
+  //wordcount
+  //triml
+  {with TCanvas.create do begin
+    framerect 
+  end;}
+end;
+
+
+begin  //main
+  //create
+  TForm1_FormActivate(self);
+End.
+
+
+----app_template_loaded_code----
+----File newtemplate.txt not exists - now saved!----

@@ -1,0 +1,281 @@
+PROGRAM ReverseGeoCodingMemstreamTest;
+//Doc at http://open.mapquestapi.com/nominatim/
+//#sign:0 PM Administrator: PC08: 15/09/2014 02:16:58 PM 
+//#path:les2\E:\maxbox3\mXGit39988\maxbox3\examples2\es\es\
+//Ex. of Reverse Geocoding with OpenStreetMap /mapquestAPI
+
+CONST 
+  UrlMapQuestAPICode2='http://open.mapquestapi.com/nominatim/v1/search.php?format=%s&json_callback=renderBasicSearchNarrative&q=%s';  
+  
+{TYPE <Type declarations>} 
+
+Var 
+  topPath: string;
+  
+ function MemoryStreamToString(M: TMemoryStream): String;
+var
+  NewCapacity: Longint;
+begin
+  if (M.Size = 0) or (M.Memory = nil) then
+    Result:= ''
+  else begin
+    {if TMemoryStreamProtected(M).Capacity = M.Size then
+    begin
+      NewCapacity:= M.Size+1;
+      TMemoryStreamProtected(M).Realloc(NewCapacity);
+    end;
+    NullString(M.Memory^)[M.Size]:= #0; }
+    //Result:= StrPas(M.Memory);
+  end;
+end; 
+
+ function StreamToString1(Stream: TStream): string;
+ var
+  ms: TMemoryStream;
+ begin
+   Result := '';
+   ms := TMemoryStream.Create;
+   try
+     ms.LoadFromStream(Stream);
+    //SetString(Result, PChar(ms.memory), ms.Size);
+   finally
+    ms.Free;
+  end;
+ end;
+
+//1) read the available Size of the TStream, allocate a String of that length,
+//and then Read() the TStream contents into the String:
+
+ function StreamToString2in(Stream: TStream): String;
+ var
+  len: Integer;
+ begin
+    len:= Stream.Size - Stream.Position;  
+    SetLength(Result, len);
+    if len > 0 then Stream.ReadBuffer(Result, len);
+      writeln('test - buffer read check!')
+ end;
+ {code}
+
+//2) create an intermediate TStringStream, CopyFrom() the TStream to the
+//TStringStream, and then read the TStringStream.DataString property:
+
+{code:delphi}
+ function StreamToString3(Stream: TStream): String;
+ begin
+    with TStringStream.Create('') do 
+    try
+        CopyFrom(Stream, Stream.Size - Stream.Position);
+        Result:= DataString;
+    finally
+        Free;
+    end;
+ end;
+
+//<FUNCTION>
+function GetMapXScript(C_form,apath: string; const Data: string): boolean;
+var encodedURL: string;
+begin
+  //encodedURL:= Format(UrlGoogleQrCode,[Width,Height, C_Level, HTTPEncode(Data)]);
+  encodedURL:= Format(UrlMapQuestAPICode2,[c_form,HTTPEncode(Data)]);
+  try
+   //HttpGet(EncodedURL, mapStream);   //WinInet
+  Result:= UrlDownloadToFile(Nil,PChar(encodedURL),PChar(apath),0,Nil)= 0;
+  OpenDoc(apath);
+  finally
+    encodedURL:= '';
+  end;
+end;
+
+function OpenMap(const Data: string): boolean;
+var encURL: string;
+begin
+  //encodedURL:= Format(UrlGoogleQrCode,[Width,Height, C_Level, HTTPEncode(Data)]);
+  encURL:= Format(UrlMapQuestAPICode2,['html',HTTPEncode(Data)]);
+  try
+   //HttpGet(EncodedURL, mapStream);   //WinInet
+  Result:= UrlDownloadToFile(Nil,PChar(encURL),PChar(Exepath+'openmapx.html'),0,Nil)= 0;
+  OpenDoc(Exepath+'openmapx.html');
+  finally
+    encURL:= '';
+  end;
+end;
+
+
+function GetMapXGeoReverseIn(C_form: string; const lat,long: string):boolean;
+ var encodedURL, UrlMapQuestAPI, bufstr: string;
+    mapStream: TMemoryStream;
+ begin
+  UrlMapQuestAPI:= 'http://open.mapquestapi.com/nominatim/v1/reverse.php?format=%s&json_callback=renderExampleThreeResults&lat=%s&lon=%s';
+  encodedURL:= Format(UrlMapQuestAPI,[c_form, lat, long]);
+   mapStream:= TMemoryStream.create;
+   try
+    HttpGet(EncodedURL, mapStream);  {WinInet}
+    //Result:= UrlDownloadToFile(Nil,PChar(encodedURL),PChar(apath),0,Nil)= 0;
+     mapStream.Position:= 0;
+     writeln('stream size: '+inttostr(mapstream.size));
+     //mapStream.readbufferp(bufstr, mapStream.Size-1);
+      //mapStream.memory; 
+     // setlength(bufstr, mapStream.Size)
+     //mapStream.readstring(bufstr, mapStream.Size);
+       bufstr:= StreamToString2in(mapstream);
+      //mapstream.loadfromstream
+      memo2.lines.add(encodedURL);
+    //OpenDoc(apath);
+    writeln('stream back: '+bufstr)
+  finally
+    encodedURL:= '';
+    mapStream.Free;
+  end;
+end;                            
+
+function GetMapXLocal(C_form,apath: string; const lat,long: string):boolean;
+ var encodedURL, UrlMapQuestAPI, bufstr: string;
+    mapStream: TMemoryStream;
+ begin
+  UrlMapQuestAPI:= 'http://192.168.1.43:9000';
+  encodedURL:= UrlMapQuestAPI;
+   mapStream:= TMemoryStream.create;
+ try
+    HttpGet(EncodedURL, mapStream);  {WinInet}
+    //Result:= UrlDownloadToFile(Nil,PChar(encodedURL),PChar(apath),0,Nil)= 0;
+     mapStream.Position:= 0;
+     writeln('stream size: '+inttostr(mapstream.size));
+      //mapStream.readstring(bufstr, mapStream.Size-1);
+      //mapStream.memory; 
+      bufstr:= StreamToString2(mapstream);
+      //mapstream.loadfromstream
+   
+    memo2.lines.add(encodedURL);
+    //OpenDoc(apath);
+    writeln('stream back: '+bufstr)
+  finally
+    encodedURL:= '';
+    mapStream.Free;
+  end;
+end;                            
+
+Begin  //Main
+//<Executable statements>
+   topPath:= ExePath+'outputmap_2.html';
+   //if GetMAPX('html',toppath,'Oberburg') then
+   {if GetMAPXScript('html',toppath,'Oberburg') then
+      writeln('map found'); OpenDoc(toppath);   }
+
+   //if GetMapXGeoReverseIn('XML',topPath,'47.0397826','7.62914761277888') then
+    //writeln('reverse geocode map data found!');   
+
+   GetGEoMap('html',toppath,'Dom Cologne')
+  
+
+   if GetMapXGeoReverseIn('XML','47.0397826','7.62914761277888') then
+    writeln('reverse geocode map data found!');   
+    
+    Writeln(dupestring('*',60));
+
+ //  writeln(GetMapXGeoReverse('XML','47.0397826','7.62914761277888'))
+  
+   //if GetMapXLocal('XML',topPath,'47.0397826','7.62914761277888') then
+    //writeln('reverse geocode local map data found!');   
+    
+    //WordWrap
+    //CompString
+    //Str2WordL
+    //CharCountL
+    //TStMemoryMappedFile
+    //TStStreamToHTML
+    {with TStFileToHTML.create(self) do begin
+      infilename:= topPath;
+      outfilename:= ExePath+'outputmap_22.txt';
+      execute;
+     free
+   end;} 
+   //TLedNumberBorderStyle
+   //TSegmentSize 
+   //function OpenMap(const Data: string): boolean;
+   OpenMapX('church trier');
+
+    
+End. 
+
+Ref:
+http://embarcadero.newsgroups.archived.at/public.delphi.vcl.components.using/200907/0907292775.html
+Note: in both cases, this code is assuming D2007 or earlier.  In D2009 and
+later, String is Unicode now, so you need to know the Encoding of the
+TStream contents ahead of time in order for the bytes to be interpretted as,
+or converted to, Unicode correctly.  Otherwise, you would have to change #1
+to operate on AnsiString or RawByteString instead (#2 may not work correctly
+in D2009+ is a proper Encoding is not specified).
+
+-- 
+
+Test Ref:  XML, JSON, HTML
+
+<reversegeocode timestamp="Thu, 11 Sep 14 20:52:32 +0000" attribution="Data © OpenStreetMap contributors, ODbL 1.0. http://www.openstreetmap.org/copyright" querystring="format=html&json_callback=renderExampleThreeResults&lat=47.0397826&lon=7.62914761277888"><result place_id="15120759" osm_type="node" osm_id="1378799522" ref="UBS AG" lat="47.0398676" lon="7.6291424">UBS AG, Bahnhofstrasse, Oberstadt, Burgdorf, Verwaltungskreis Emmental, Verwaltungsregion Emmental-Oberaargau, Bern, 3414, Switzerland</result><addressparts><atm>UBS AG</atm><road>Bahnhofstrasse</road><neighbourhood>Oberstadt</neighbourhood><town>Burgdorf</town><county>Verwaltungskreis Emmental</county><state_district>Verwaltungsregion Emmental-Oberaargau</state_district><state>Bern</state><postcode>3414</postcode><country>Switzerland</country><country_code>ch</country_code></addressparts></reversegeocode>
+
+----app_template_loaded_code----
+
+
+<!-- Script Size:  1.00 KB  --><!-- TWO STEPS TO INSTALL DYNAMIC CLOCK:
+
+  1.  Copy the coding into the HEAD of your HTML document
+  2.  Add the last code into the BODY of your HTML document  --><!-- STEP ONE: Paste this code into the HEAD of your HTML document  -->
+<SCRIPT language=JavaScript>
+<!-- Original:  Craig Lumley -->
+<!-- Web Site:  http://www.ws4all.co.uk -->
+
+<!-- This script and many more are available free online at -->
+<!-- The JavaScript Source!! http://javascript.internet.com -->
+
+<!-- Begin
+function MakeArrayday(size) {
+this.length = size;
+for(var i = 1; i <= size; i++) {
+this[i] = "";
+}
+return this;
+}
+function MakeArraymonth(size) {
+this.length = size;
+for(var i = 1; i <= size; i++) {
+this[i] = "";
+}
+return this;
+}
+function funClock() {
+if (!document.layers && !document.all)
+return;
+var runTime = new Date();
+var hours = runTime.getHours();
+var minutes = runTime.getMinutes();
+var seconds = runTime.getSeconds();
+var dn = "AM";
+if (hours >= 12) {
+dn = "PM";
+hours = hours - 12;
+}
+if (hours == 0) {
+hours = 12;
+}
+if (minutes <= 9) {
+minutes = "0" + minutes;
+}
+if (seconds <= 9) {
+seconds = "0" + seconds;
+}
+movingtime = "<b>"+ hours + ":" + minutes + ":" + seconds + " " + dn + "</b>";
+if (document.layers) {
+document.layers.clock.document.write(movingtime);
+document.layers.clock.document.close();
+}
+else if (document.all) {
+clock.innerHTML = movingtime;
+}
+setTimeout("funClock()", 1000)
+}
+window.onload = funClock;
+//  End -->
+</SCRIPT>
+<!-- STEP TWO: Copy this code into the BODY of your HTML document  -->Currently, it's <SPAN id=clock style="POSITION: relative"></SPAN><!-- Script Size:  1.66 KB -->
+----File newtemplate.txt not exists - now saved!----
+----Simple Browser started----

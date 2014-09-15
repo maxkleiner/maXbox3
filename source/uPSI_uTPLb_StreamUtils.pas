@@ -62,6 +62,71 @@ begin
   end;
 end;
 
+
+//1) read the available Size of the TStream, allocate a String of that length,
+//and then Read() the TStream contents into the String:
+
+ function StreamToString2(Stream: TStream): String;
+ var
+  len: Integer;
+ begin
+    len:= Stream.Size - Stream.Position;  
+    SetLength(Result, len);
+    if len > 0 then Stream.ReadBuffer(Result[1], len);
+      //writeln('test - buffer read check!')
+ end;
+ {code}
+
+//2) create an intermediate TStringStream, CopyFrom() the TStream to the
+//TStringStream, and then read the TStringStream.DataString property:
+
+{code:delphi}
+ function StreamToString3(Stream: TStream): String;
+ begin
+    with TStringStream.Create('') do
+    try
+        CopyFrom(Stream, Stream.Size - Stream.Position);
+        Result:= DataString;
+    finally
+        Free;
+    end;
+ end;
+
+ function StreamToString4(Stream: TStream): string;
+ var
+  ms: TMemoryStream;
+ begin
+   Result := '';
+   ms := TMemoryStream.Create;
+   try
+     ms.LoadFromStream(Stream);
+    SetString(Result, PChar(ms.memory), ms.Size);
+   finally
+    ms.Free;
+  end;
+ end;
+
+
+  function MemoryStreamToString(M: TMemoryStream): String;
+var
+  NewCapacity: Longint;
+begin
+  if (M.Size = 0) or (M.Memory = nil) then
+    Result:= ''
+  else
+  begin
+   (* if TMemoryStreamProtected(M).Capacity = M.Size then
+    begin
+      NewCapacity:= M.Size+1;
+      TMemoryStreamProtected(M).Realloc(NewCapacity);
+    end; *)
+    //NullString(M.Memory^)[M.Size]:= #0;
+    Result:= StrPas(M.Memory);
+  end;
+end; 
+
+
+
 (*----------------------------------------------------------------------------*)
 procedure SIRegister_uTPLb_StreamUtils(CL: TPSPascalCompiler);
 begin
@@ -81,6 +146,9 @@ begin
  CL.AddDelphiFunction('Function StreamtoAnsiString( Source : TStream) : ansistring');
 
  CL.AddDelphiFunction('Function StreamToString( Source : TStream) : string');
+ CL.AddDelphiFunction('Function StreamToString2( Source : TStream) : string');
+CL.AddDelphiFunction('Function StreamToString3( Source : TStream) : string');
+CL.AddDelphiFunction('Function StreamToString4( Source : TStream) : string');
 
  CL.AddDelphiFunction('Procedure AnsiString_to_stream( const Value : ansistring; Destin : TStream)');
  CL.AddDelphiFunction('Function CompareFiles( const FN1, FN2 : string; Breathe : TNotifyEvent; BreathingSender : TObject) : boolean');
@@ -128,6 +196,9 @@ begin
  S.RegisterDelphiFunction(@Stream_to_AnsiString, 'StreamtoAnsiString', cdRegister);
 
  S.RegisterDelphiFunction(@StreamToString, 'StreamtoString', cdRegister);
+ S.RegisterDelphiFunction(@StreamToString2, 'StreamtoString2', cdRegister);
+ S.RegisterDelphiFunction(@StreamToString3, 'StreamtoString3', cdRegister);
+ S.RegisterDelphiFunction(@StreamToString4, 'StreamtoString4', cdRegister);
 
  S.RegisterDelphiFunction(@AnsiString_to_stream, 'AnsiString_to_stream', cdRegister);
  S.RegisterDelphiFunction(@CompareFiles, 'CompareFiles', cdRegister);
