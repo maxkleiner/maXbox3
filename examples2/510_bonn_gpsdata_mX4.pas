@@ -1790,7 +1790,7 @@ end;
   begin
   with TAfComPort.create(NIL) do begin
     //core:= core1; 
-    comnumber:= 4;
+    comnumber:= 1;
     BaudRate:= br9600; //br9600;
     {Parity:= None;
     Databits:= db8;

@@ -35,7 +35,7 @@ implementation
 
 uses
    Windows
-  ,AfUtils, wiwin32, REGiSTRY, PsAPI, messages, WinSpool;
+  ,AfUtils, wiwin32, REGiSTRY, PsAPI, messages, WinSpool, graphics, forms;
 
 
 procedure Register;
@@ -116,6 +116,81 @@ begin
 	CloseHandle(hOpen);
   end;
 end;
+
+procedure GetScreenShot(var ABitmap : TBitmap);
+var
+  DC : THandle;
+begin
+  if Assigned(ABitmap) then begin// Check Bitmap<>NIL
+    DC := GetDC(0); // Get Desktop DC
+    try
+      ABitmap.Width := Screen.Width; // Adjust Bitmapsize..
+      ABitmap.Height := Screen.Height; // ..to screen size
+      BitBlt(ABitmap.Canvas.Handle, // Copy
+             0,0,Screen.Width,Screen.Height, // Desktop
+             DC, // into
+             0,0, // the
+             SrcCopy // Bitmap
+        );
+    finally
+      ReleaseDC(0, DC); // Relase DC
+    end;
+  end;
+end;
+
+
+function LoadFile(const FileName: TFileName): string;
+   begin
+     with TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite) do begin
+       try
+         SetLength(Result, Size);
+         Read(Pointer(Result)^, Size);
+       except
+         Result := '';  // Deallocates memory
+         Free;
+         raise;
+       end;
+       Free;
+     end;
+   end;
+
+
+ function URLEncode(const S: string): string;
+var I: Integer;
+begin
+  Result := '';
+  for I := 1 to Length(S) do
+  begin
+    {$IFDEF UNICODE}
+    if CharInSet(S[I], ['A'..'Z', 'a'..'z', '0'..'9', '-', '_', '.']) then
+    {$ELSE}
+    if S[I] in ['A'..'Z', 'a'..'z', '0'..'9', '-', '_', '.'] then
+    {$ENDIF}
+      Result := Result + S[I]
+    else
+      Result := Result + '%' + IntToHex(Ord(S[I]), 2);
+  end;
+end;
+
+
+function TRestRequest_createStringStreamFromStringList(strings:
+    TStringList): TStringStream;
+var
+  key, value, strParam: string;
+  it: integer;
+begin
+  Result:= TStringStream.Create('');
+  for it:= 0 to strings.Count - 1 do begin
+    key:= strings.Names[it];
+    value:= strings.ValueFromIndex[it];
+    strParam:= urlEncode(key) + '=' + urlEncode(value);
+    if not (it = strings.Count - 1) then strParam:= strParam + '&';
+    Result.WriteString(strParam);
+  end;
+end;
+
+
+
 
 
 const
@@ -540,6 +615,74 @@ begin
 end;
 
 
+function ComponentToStringProc(Component: TComponent): string;
+var
+  BinStream:TMemoryStream;
+  StrStream: TStringStream;
+  s: string;
+begin
+  BinStream := TMemoryStream.Create;
+  try
+    StrStream := TStringStream.Create(s);
+    try
+      BinStream.WriteComponent(Component);
+      BinStream.Seek(0, soFromBeginning);
+      ObjectBinaryToText(BinStream, StrStream);
+      StrStream.Seek(0, soFromBeginning);
+      Result:= StrStream.DataString;
+    finally
+      StrStream.Free;
+    end;
+  finally
+    BinStream.Free
+  end;
+end;
+
+function StringToComponentProc(Value: string): TComponent;
+var
+  StrStream:TStringStream;
+  BinStream: TMemoryStream;
+begin
+  StrStream:= TStringStream.Create(Value);
+  try
+    BinStream:= TMemoryStream.Create;
+    try
+      ObjectTextToBinary(StrStream, BinStream);
+      BinStream.Seek(0, soFromBeginning);
+      Result:= BinStream.ReadComponent(nil);
+    finally
+      BinStream.Free;
+    end;
+  finally
+    StrStream.Free;
+  end;
+end;
+
+procedure MyCopyFile(Name1,Name2:string);
+var FSS, FST, MS : TStream; // Source, Target and Memory
+begin
+   // Open Source File
+   FSS:=TFileStream.Create(Name1,fmOpenRead or fmShareDenyNone);
+   // Create Target File
+   FST:=TFileStream.Create(Name2,fmCreate or fmShareExclusive);
+   // Create Memory stream
+   MS:=TMemoryStream.Create;
+   // Load Source file into Memory
+   MS.CopyFrom(FSS,FSS.Size);
+   // note that both the Source file stream and the
+   // memory stream are now at their ends, I don't need
+   // the source stream any more though, so I free it...
+   FSS.Free;
+   // but, I have to reset the memory to it's start
+   MS.Seek(0,soFromBeginning);
+   // Now I can pump it to the target file:
+   FST.CopyFrom(MS,MS.Size);
+   // And voila!
+   FST.Free;
+   MS.Free;
+   // Now my stuff is copied.
+end;
+
 
      //UrlDownloadToFile
 
@@ -787,8 +930,11 @@ CL.AddDelphiFunction('Function OpenWindowStation( lpszWinSta : PChar; fInherit :
  CL.AddDelphiFunction('function FoundTopLevel(hWnd, LParam: Integer): BOOL; StdCall;');
  CL.AddDelphiFunction('function CheckCom(AComNumber: Integer): Integer;');
  CL.AddDelphiFunction('function CheckLPT1: string;');
+ CL.AddDelphiFunction('procedure GetScreenShot(var ABitmap : TBitmap);');
+ CL.AddDelphiFunction('function LoadFile(const FileName: TFileName): string;');
+ CL.AddDelphiFunction('function TRestRequest_createStringStreamFromStringList(strings: TStringList): TStringStream;');
 
-  CL.AddDelphiFunction('Function GetRgnBox( RGN : HRGN; var p2 : TRect) : Integer');
+ CL.AddDelphiFunction('Function GetRgnBox( RGN : HRGN; var p2 : TRect) : Integer');
  CL.AddDelphiFunction('Function GetStockObject( Index : Integer) : HGDIOBJ');
  CL.AddDelphiFunction('Function GetStretchBltMode( DC : HDC) : Integer');
  CL.AddDelphiFunction('Function GetSystemPaletteUse( DC : HDC) : UINT');
@@ -803,8 +949,11 @@ CL.AddDelphiFunction('Function OpenWindowStation( lpszWinSta : PChar; fInherit :
  CL.AddDelphiFunction('Function GetPolyFillMode( DC : HDC) : Integer');
  CL.AddDelphiFunction('Function GetCurrentObject( DC : HDC; p2 : UINT) : HGDIOBJ');
  CL.AddDelphiFunction('Function GetDeviceCaps( DC : HDC; Index : Integer) : Integer');
+ CL.AddDelphiFunction('function ComponentToStringProc(Component: TComponent): string;');
+ CL.AddDelphiFunction('function StringToComponentProc(Value: string): TComponent;');
+ CL.AddDelphiFunction('procedure MyCopyFile(Name1,Name2:string);');
 
-  CL.AddTypeS('TFNTimerProc', 'TObject');
+ CL.AddTypeS('TFNTimerProc', 'TObject');
  CL.AddConstantN('GW_HWNDFIRST','LongInt').SetInt( 0);
  CL.AddConstantN('GW_HWNDLAST','LongInt').SetInt( 1);
  CL.AddConstantN('GW_HWNDNEXT','LongInt').SetInt( 2);
@@ -1520,6 +1669,8 @@ CL.AddConstantN('NOPARITY','LongInt').SetInt( 0);
  CL.AddDelphiFunction('function ComposeDateTime(Date,Time : TDateTime) : TDateTime;');
  CL.AddDelphiFunction('function FullTimeToStr(SUMTime: TDateTime): string;');
  CL.AddDelphiFunction('function GetBaseAddress(PID:DWORD):DWORD;');
+ CL.AddDelphiFunction('Function GetSystemDefaultLangID : LANGID');
+ CL.AddDelphiFunction('Function GetUserDefaultLangID : LANGID');
 
  //function GetBaseAddress(PID:DWORD):DWORD;
 
@@ -1977,8 +2128,14 @@ begin
  S.RegisterDelphiFunction(@FoundTopLevel, 'FoundTopLevel', cdRegister);
  S.RegisterDelphiFunction(@CheckCom, 'CheckCom', cdRegister);
  S.RegisterDelphiFunction(@CheckLPT1, 'CheckLPT1', cdRegister);
+ S.RegisterDelphiFunction(@GetScreenShot, 'GetScreenShot', cdRegister);
+ S.RegisterDelphiFunction(@LoadFile, 'LoadFile', cdRegister);
+ S.RegisterDelphiFunction(@TRestRequest_createStringStreamFromStringList, 'TRestRequest_createStringStreamFromStringList', cdRegister);
+ S.RegisterDelphiFunction(@ComponentToStringProc, 'ComponentToStringProc', cdRegister);
+ S.RegisterDelphiFunction(@StringToComponentProc, 'StringToComponentProc', cdRegister);
+ S.RegisterDelphiFunction(@MyCopyFile, 'MyCopyFile', cdRegister);
 
-   S.RegisterDelphiFunction(@GetDeviceCaps, 'GetDeviceCaps', CdStdCall);
+ S.RegisterDelphiFunction(@GetDeviceCaps, 'GetDeviceCaps', CdStdCall);
  //S.RegisterDelphiFunction(@GetGraphicsMode, 'GetGraphicsMode', CdStdCall);
  S.RegisterDelphiFunction(@GetMapMode, 'GetMapMode', CdStdCall);
  //S.RegisterDelphiFunction(@GetMetaFile, 'GetMetaFile', CdStdCall);
@@ -1999,8 +2156,10 @@ begin
  S.RegisterDelphiFunction(@GetTextAlign, 'GetTextAlign', CdStdCall);
  S.RegisterDelphiFunction(@GetTextColor, 'GetTextColor', CdStdCall);
  S.RegisterDelphiFunction(@GetCurrentObject, 'GetCurrentObject', CdStdCall);
+ S.RegisterDelphiFunction(@GetSystemDefaultLangID, 'GetSystemDefaultLangID', CdStdCall);
+ S.RegisterDelphiFunction(@GetUserDefaultLangID, 'GetUserDefaultLangID', CdStdCall);
 
-end;
+ end;
 
 
 

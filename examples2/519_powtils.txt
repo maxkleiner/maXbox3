@@ -1,0 +1,952 @@
+{***************************************************************
+ * Project  : Powtils Demo with TimeTunnel - on progress !
+ * App Name: 519_powtils.txt, time_machine2
+ * Purpose  : Demonstrates the functions of powtils SNTP time sync
+ * Date  : 14/10/2010  -  time slot, locs= 130
+ * History  : add a voice of result, filter test
+ ***************************************************************}
+Program Powtils_Time_Machine2;
+
+//http://wiki.freepascal.org/Powtils
+
+//{$IFDEF MSWINDOWS}{$R *.dfm}{$ELSE}{$R *.xfm}{$ENDIF}
+
+const 
+ DIM = 790;
+
+Type
+  TXYVector = array[0..DIM] of TFloatPoint; 
+  TMath_Func = PROCEDURE (var x: single);
+
+var
+  mySTime: TIdSNTP;
+  //mytime: TIDDayTime;
+  myindex: integer;
+  cFrm: TForm;
+  amp, freq, i: byte;
+  fct7x, fct8x: TMath_Func;
+  fPoints: TXYVector;
+
+procedure drawChart(vPoints: TXYVector; vcolor: integer);
+var
+  i, hsize, 
+  origx, origy, xRngPixs, yRngPixs: integer;
+begin
+  with cFrm.canvas do begin
+    hsize:= cFrm.Height -1 div 2;
+     { Paint a coordinate cross }
+    origx:= (cfrm.Width div 2);
+    origy:= (cfrm.Height div 2);
+    Pen.Color:= clwhite;
+    Pen.Style:= psSolid;
+    Pen.Width:= 1;
+    MoveTo(1, origy);
+    LineTo(cfrm.Width - 1, origy);
+    MoveTo(origx, 1);
+    LineTo(origx, cFrm.Height - 1);
+    { Paint some tickmarks and label the axis }
+    Font.Name:= 'Georgia';
+    Font.Size:= 18;
+    Font.Color:= clblue;
+    xRngPixs:= (cFrm.Width - 20) div 4; { pixels in Pi }
+    yRngPixs:= (cFrm.Height - 20) div 2; { pixels in 1 }
+    TextOut(origx -2 * xRngPixs +2, origy -210,'maXPlot TimeTunnel');
+    Pen.Color:= vcolor;
+    MoveTo(0, hsize -((round(vPoints[0].Y))));
+    for i:= 0 to DIM do
+      LineTo(i, round(vPoints[i].Y));
+  end;
+end; 
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  amp:= 110;
+  freq:= 440;
+  with cFrm do begin
+    caption:= 'maXFunCPlotter(((((\*/)))))';  
+    BorderStyle:= bsDialog;
+    height:= 440;
+    width:= 800;
+    color:= clblack;
+    //onPaint:= @PaintBox1Paint;
+    Show;
+  end  
+end;
+
+PROCEDURE exp2(var x: single);
+BEGIN
+  x:= exp(-0.2*x)*sin((pi/4)*x);
+END;
+
+PROCEDURE sin2(var x: single);
+BEGIN
+  x:= sin((pi/4)*x)*(sin(3*pi*x));
+END;
+
+PROCEDURE fct_table(start, amp, freq, color: integer; FCT: TMath_Func;
+                                         fct_name: string);
+var x, tempx: single;
+    origy, i: Integer;
+BEGIN
+  //Writeln('x   |   ' + fct_name);
+  origy:= cFrm.Height div 2;
+  x:= start;
+  for i:= 0 to (DIM) do begin
+    x:= i/freq
+    tempx:= x;
+    FCT(x);
+    fPoints[i].Y:= origy + (x * amp);
+    //Writeln(floatToStr(x) +' | '+ floatToStr((tempx)));
+  end;
+  DrawChart(fPoints, color)
+END;
+
+
+procedure Powtooltestdrive;
+begin
+ //Init;
+
+ //OffReadln;
+
+ //Lcase(const s: astr): astr;
+ //Ucase(const s: astr): astr;
+
+{ Posted Variable Functions } 
+// note: function names changed to 'post' in 1.7.X rather than old CGI
+ //CountPostVars: longword;
+ //GetPostVar(const name: astr): astr; overload;
+ {GetPostVar(const name: astr; filter: TFilterFunc): astr; overload;
+ GetPostVar_S(const name: astr; Security: integer): astr;
+ GetPostVar_SF(const name: astr; Security: integer): astr;
+ GetPostVarAsFloat(const name: astr): double;
+ GetPostVarAsInt(const name: astr): longint;
+ GetPostVar_SafeHTML(const name: astr): astr; }
+ //FetchPostVarName(idx: longword): astr;
+ {FetchPostVarVal(idx: longword): astr; overload;
+ FetchPostVarVal(idx: longword; filter: TFilterFunc): astr; overload;
+ FetchPostVarName_S(idx: longword; Security: integer): astr;
+ FetchPostVarVal_S(idx: longword; Security: integer): astr;
+ IsPostVar(const name: astr): bln;}
+
+{ TODO get cgi var based on a valid set of characters such as A..Z, 1..9, a..z
+  type TCharSet = set of char;
+       GetCgiVar(const input: astr; CharSet: TCharSet): bln;
+  Use the pwstrfilter unit, with Alpha, numeric, alphanumeric sets     }
+
+
+{ Abstract for Posts (cgi vars), Vars (macros), and Cookies }
+ //CountAny: longword;
+ //GetAny(const name: astr): astr; overload;
+ //GetAny(const name: astr; filter: TFilterFunc): astr; overload;
+ //GetAny_S(const name: astr; Security: integer): astr;
+ //7GetAnyAsFloat(const name: astr): double;
+ //GetAnyAsInt(const name: astr): longint;
+ //IsAny(const name: astr): byte;
+
+{ Cookie s }
+ //CountCookies: longword;
+ {FetchCookieName(idx: longword): astr;
+ FetchCookieVal(idx: longword): astr; overload;
+ FetchCookieVal(idx: longword; filter: TFilterFunc): astr; overload;
+ GetCookie(const name: astr): astr; overload;
+ GetCookie(const name: astr; filter: TFilterFunc): astr; overload;
+ GetCookieAsFloat(const name: astr): double;
+ GetCookieAsInt(const name: astr): longint;}
+ //IsCookie(const name: astr): bln;
+ //SetCookie(const name, value: astr): bln;
+ {SetCookieAsFloat(const name: astr; value: double): bln;
+ SetCookieAsInt(const name: astr; value: longint): bln;
+ SetCookieEx(const name, value, path, domain, expiry: astr): bln;
+ SetCookieAsFloatEx(const name: astr; value: double; const path, domain, expiry: astr): bln;
+ SetCookieAsIntEx(const name: astr; value: longint; const path, domain, expiry: astr): bln;
+ UnsetCookie(const name: astr): bln;
+ UnsetCookieEx(const name, path, domain: astr): bln;}
+
+{ Environment Variable s } 
+// now moved to pwenvvar.pas
+
+
+{ Filtering Functions }
+ //FilterHtml(const input: astr): astr;
+ //FilterHtml_S(const input: astr; security: integer): astr;
+ {TrimBadChars(const input: astr): astr;
+ TrimBadFile(const input: astr): astr;
+ TrimBadDir(const input: astr): astr;
+ TrimBad_S(const input: astr; security: integer): astr;}
+
+{ TODO
+    function IsBadFile(const input: astr): bln;
+    function IsBadDir(const input: astr): bln; }
+
+{ Header Functions }
+ //CountHeaders: longword;
+ //FetchHeaderName(idx: longword): astr;
+ //FetchHeaderVal(idx: longword): astr;
+ //GetHeader(const name: astr): astr;
+ //IsHeader(const name: astr): bln;
+ //SetHeader(const name, value: astr): bln;
+ //UnsetHeader(const name: astr): bln;
+ //PutHeader(const header: astr): bln;
+
+{ Output/Write s }
+ //Out1(const s: astr);
+ //OutLn(const s: astr);
+ //OutA(args: array of const);
+ {OutF(const s: astr);
+ OutLnF(const s: astr);
+ OutFF(const s: astr);
+ OutF_FI(const s: astr; HTMLFilter: bln);
+ OutLnFF(const s: astr);
+ OutLnF_FI(const s: astr; HTMLFilter: bln );}
+
+
+ //FileOut(const fname: astr): errcode;
+ //ResourceOut(const fname: astr): errcode;
+ //BufferOut(Const buff; len: LongWord);
+
+ {TemplateOut(const fname: astr; HtmlFilter: bln): errcode; overload;
+ TemplateOut(const fname: astr): errcode; overload;
+ TemplateOut(const fname: astr; filter: TFilterFunc): errcode; overload;
+ TemplateOut1(const fname: astr; HtmlFilter: bln): errcode; overload;
+ TemplateRaw(const fname: astr): errcode;}
+
+{ fmt stands for format, to not conflict with sysutils Format()  }
+ //Fmt(const s: astr): astr; overload;
+ //Fmt(const s: astr; filter: TFilterFunc): astr; overload;
+ //FmtFilter(const s: astr): astr;
+
+ //Fmt_SF(const s: astr; HTMLFilter: bln; filter: TFilterFunc;
+                //FilterSecurity, TrimSecurity: integer): astr; overload;
+ //7Fmt_SF(const s: astr; HTMLFilter: bln; 
+                //FilterSecurity, TrimSecurity: integer): astr; overload;
+
+
+{ RTI s }
+ //CountRtiVars: longword;
+ //FetchRtiName(idx: longword): astr;
+ //FetchRtiVal(idx: longword): astr;
+ //GetRti(const name: astr): astr;
+ //GetRtiAsFloat(const name: astr): double;
+ //GetRtiAsInt(const name: astr): longint;
+ //IsRti(const name: astr): bln;
+ //SetRTI(const name, value: astr); 
+
+{ Upload File s }
+ //FetchUpfileName(idx: longword): astr;
+ //GetUpfileName(const name: astr): astr;
+ //GetUpfileSize(const name: astr): longint;
+ //GetUpfileType(const name: astr): astr;
+ //CountUpfiles: longword;
+ //IsUpfile(const name: astr): bln;
+ //SaveUpfile(const name, fname: astr): bln;
+
+{ Web Variable s }
+ //CountVars: longword;
+ //FetchVarName(idx: longword): astr;
+ //FetchVarVal(idx: longword): astr; overload;
+ //FetchVarVal(idx: longword; filter: TFilterFunc): astr; overload;
+ //GetVar(const name: astr): astr; overload;
+ //GetVar(const name: astr; filter: TFilterFunc): astr; overload;
+ //GetVar_S(const name: astr; security: integer): astr;
+ //GetVarAsFloat(const name: astr): double;
+ //GetVarAsInt(const name: astr): longint;
+ //SetVar(const name, value: astr);
+ //SetVarAsFloat(const name: astr; value: double);
+ //SetVarAsInt(const name: astr; value: longint);
+ //IsVar(const name: astr): byte;
+ //UnsetVar(const name: astr);
+
+{ Utility/Tools s }
+ //LineEndToBR(const s: astr): astr;
+ //RandomStr(len: longint): astr;
+ //XorCrypt(const s: astr; key: byte): astr;
+
+{ Config s }
+ //CountCfgVars: longword;
+ //FetchCfgVarName(idx: longword): astr;
+ //FetchCfgVarVal(idx: longword): astr;
+ //IsCfgVar(const name: astr): bln;
+ //SetCfgVar(const name, value: astr): bln;
+ //GetCfgVar(const name: astr): astr;
+
+{ Error s }
+ //ThrowErr(const s: astr);
+ //ThrowWarn(const s: astr);  
+ //ErrWithHeader(const s: astr);
+
+end;
+
+ procedure SpammersAreParasitesTest;
+    var
+      l1,l2, bxo: String;
+    begin
+      l1:='70';
+      l2:='0';
+      Bxo:=l1 + l2;
+      Bxo:=(Bxo)
+    (*
+      l1:=97;
+      l2:=9
+     Bxo:=(l1 + l2);
+    *)
+    writeln(Bxo)
+ end;
+       var outst: ansistring;
+       syninf: TSynwInfo;
+       timestr: string;
+ 
+Begin
+{0.debian.pool.ntp.org
+1.debian.pool.ntp.org
+2.debian.pool.ntp.org
+3.debian.pool.ntp.org}
+  MyIndex := LastDelimiter('\.:','c:\filename.ext'); 
+  writeln('last delimit test '+inttoStr64(myindex))    
+  //writeln(TimeToStr(strtotime('14:15:12')))
+  writeln(strFilter('this is mX3 filter demo',['m','X','s'])) 
+  fct7x:= @exp2;
+  fct8x:= @sin2;
+  loadForm;
+  fct_table(40, amp, 50, clwhite, fct7x, 'exp2 function');
+  fct_table(40, 74, 100, clblue, fct8x, 'sin2 function');
+  for i:= 200 downto 160 do
+    fct_table(50, amp, i, clred, fct8x, '3D phase shifter2');
+  
+  mySTime:= TIdSNTP.create(self);
+  try
+    mySTime.host:='0.debian.pool.ntp.org'
+    writeln('the internettime '+datetimetoStr(mystime.datetime));
+    if mySTime.Synctime then
+      writeln('operating system sync now!');
+  finally
+    mySTime.free;
+    Speak('your system time is now sync with the internet time '+TimeToStr(time))
+    cFrm.Free;
+  end;
+  
+  // pwinit;  //first!
+  
+  //writeln(GetHtm('http://www.kleiner.ch'))
+  writeln(GetHtm('0.debian.pool.ntp.org'))
+  //writeln(GetUrl('http://www.kleiner.ch',true).headers)
+  //syninf:= GetHttpFile2('http://www.ibm.com',outst);
+  
+  //writeln(GetUrl2('http://www.kleiner.ch').headers)
+    //CountHeaders
+    //GetAny('http')
+    timestr:= formatDatetime('tt',now)
+    setcookie('name','value');
+    setVar('time',timestr)
+    templateRaw(exepath+'maxweb.htm');
+
+end.   
+
+ ---------------------------------------------------------------------
+-----------------------------------------------------------------------
+The Comp (computational) type is native to the Intel CPU and represents a 64-bit integer. A Comp is classified as a real, however, it does not behave like an ordinal type. Comp is maintained for backward compatibility only. Use the Int64  type for better performance.
+
+String quote = �if the facts don�t fit the theory, face the facts. � Albert Einstein�;
+<script type="text/javascript" src="http://www.brainyquote.com/link/quotebr.js"></script>
+
+debian.pool.ntp.org
+
+Stack := #0#0#0#0 + Stack;
+          Pointer((@Stack[1])^) := VarPtr;
+
+function SafeStr(const s: string): string;
+var
+ i : Longint;
+begin
+  Result:= s;
+  for i:= 1 to length(s) do begin
+    if s[i] in [#0..#31] then begin
+      Result := Copy(s, 1, i-1);
+      exit;
+    end;
+  end;
+end;
+
+procedure Set_Union(Dest, Src: PByteArray; ByteSize: Integer);
+var
+  i: Longint;
+begin
+  for i := ByteSize -1 downto 0 do
+    Dest^[i] := Dest^[i] OR Src^[i];
+end;
+
+procedure Set_Diff(Dest, Src: PByteArray; ByteSize: Integer);
+var
+  i: Longint;
+begin
+  for i := ByteSize -1 downto 0 do
+    Dest^[i] := Dest^[i] AND NOT Src^[i];
+end;
+
+procedure Set_Intersect(Dest, Src: PByteArray; ByteSize: Integer);
+var
+  i: Longint;
+begin
+  for i := ByteSize -1 downto 0 do
+    Dest^[i] := Dest^[i] AND Src^[i];
+end;
+
+
+procedure SIRegister_synwrap1(CL: TPSPascalCompiler);
+begin
+  CL.AddTypeS(TSynwInfo', 'record Err : byte; UrlHtml : ansistring; ErrResponse
+   : integer; UltimateURL : ansistring; Headers : ansistring; end');
+  CL.AddTypeS('TUrlInfo', 'record Err : byte; UltimateURL : string; end');
+ Function GetHttpFile( const Url, UserAgent, Outfile : string; verbose : boolean) : TSynwInfo;');
+ Function GetHttpFile1( const Url, UserAgent, Outfile : string) : TSynwInfo;');
+ Function GetHttpFile2( const Url, Outfile : string) : TSynwInfo;');
+ Function GetHttpFile3( const Url, outfile : string; verbose : boolean) : TSynwInfo;');
+ Function GetHtm( const Url : string) : string;');
+ Function GetHtm1( const Url, UserAgent : string) : string;');
+ Function GetUrl( const Url : string; verbose : boolean) : TSynwInfo;');
+ Function GetUrl1( const Url, useragent : string) : TSynwInfo;');
+ Function GetUrl2( const Url : string) : TSynwInfo;');
+ Function GetUrl3( const Url : string; const http : THTTPSend; verbose : boolean) : TUrlInfo;');
+ Function GetUrl4( const Url : string; const http : THTTPSend) : TUrlInfo;');
+ Procedure StrToStream( s : String; strm : TMemoryStream)');
+ Function StrLoadStream( strm : TStream) : String');
+
+end;
+
+procedure SIRegister_HTMLUtil(CL: TPSPascalCompiler);
+begin
+ Function GetVal( const tag, attribname_ci : string) : string');
+ Function GetTagName( const Tag : string) : string');
+ Function GetUpTagName( const tag : string) : string');
+ Function GetNameValPair( const tag, attribname_ci : string) : string');
+ Function GetValFromNameVal( const namevalpair : string) : string');
+ Function GetNameValPair_cs( const tag, attribname : string) : string');
+ Function GetVal_JAMES( const tag, attribname_ci : string) : string');
+ Function GetNameValPair_JAMES( const tag, attribname_ci : string) : string');
+ Function CopyBuffer( StartIndex : PChar; Len : integer) : string');
+ Function Ucase( s : string) : string');
+end;
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<title>pool.ntp.org: the internet cluster of ntp servers</title>
+
+                <script type="text/javascript">
+                  if (!NP) var NP = {};
+                </script>
+
+                <script type="text/javascript" src="//use.typekit.com/giv8ugp.js"></script>
+                <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+                <link rel="stylesheet" href="/static/.g/common.vf52c88801d.css" type="text/css" charset="utf-8">
+
+
+		<link rel="shortcut icon" href="/static/images/favicon.v717cb32.ico" type="image/x-icon" />
+
+<script>
+var _prum = [['id', '5241b172abe53d2337000000'],
+             ['mark', 'firstbyte', (new Date()).getTime()]];
+(function() {
+    var s = document.getElementsByTagName('script')[0]
+      , p = document.createElement('script');
+    p.async = 'async';
+    p.src = '//rum-static.pingdom.net/prum.min.js';
+    s.parentNode.insertBefore(p, s);
+})();
+</script>
+
+</head>
+<body>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-52057-3', 'auto');
+  ga('require', 'displayfeatures');
+  ga('send', 'pageview');
+</script>
+
+
+
+<div class="container-fluid">
+	<div id="hd" class="row-fluid">
+		<h1>pool.ntp.org</h1>
+		
+
+	</div>
+	<div class="row-fluid">
+		<div id="sidebar" class="span2">
+			<h1><a href="/">pool.ntp.org</a></h1>
+            			<div id="quickstart" class="mod">
+				<ul>
+				<li><a href="http://www.pool.ntp.org/en/#news">News</a></li>
+				<li><a href="http://www.pool.ntp.org/en/use.html">How do I <i>use</i> pool.ntp.org?</a></li>
+				<li><a href="http://www.pool.ntp.org/en/join.html">How do I <i>join</i> pool.ntp.org?</a></li>
+				<li><a href="http://www.pool.ntp.org/en/vendors.html">Information for vendors</a></li>
+				<li><a href="http://www.pool.ntp.org/en/mailinglists.html">The mailing lists</a></li>
+				<li><a href="http://www.pool.ntp.org/en/#links">Additional links</a></li>
+				</ul>
+			</div>
+
+                        
+
+			<h3>Translations</h3>
+                        <div id="translations">
+			<ul class="mod">
+                                 
+                                  
+                                   
+                                  
+                                   
+                                  
+                                   
+                                  
+                                  
+                                  <li><a href="/de/">Deutsch</a>
+                                  
+                                  </li>
+                                 
+                                  
+                                  
+                                  <li><a href="/en/">English</a>
+                                  
+                                  </li>
+                                 
+                                  
+                                  
+                                  <li><a href="/es/">Español</a>
+                                  
+                                  </li>
+                                 
+                                  
+                                  
+                                  <li><a href="/fi/">Suomi</a>
+                                  
+                                  </li>
+                                 
+                                  
+                                  
+                                  <li><a href="/fr/">Français</a>
+                                  
+                                  </li>
+                                 
+                                  
+                                   
+                                  
+                                  
+                                  <li><a href="/ja/">日本語</a>
+                                  
+                                  </li>
+                                 
+                                  
+                                  
+                                  <li><a href="/ko/">한국어</a>
+                                  
+                                  </li>
+                                 
+                                  
+                                   
+                                  
+                                  
+                                  <li><a href="/nl/">Nederlands</a>
+                                  
+                                  </li>
+                                 
+                                  
+                                   
+                                  
+                                  
+                                  <li><a href="/pt/">Português</a>
+                                  
+                                  </li>
+                                 
+                                  
+                                   
+                                  
+                                  
+                                  <li><a href="/rs/">српски srpski</a>
+                                  
+                                  </li>
+                                 
+                                  
+                                  
+                                  <li><a href="/ru/">русский</a>
+                                  
+                                  </li>
+                                 
+                                  
+                                  
+                                  <li><a href="/sv/">Svenska</a>
+                                  
+                                  </li>
+                                 
+                                  
+                                   
+                                  
+                                  
+                                  <li><a href="/uk/">Українська</a>
+                                  
+                                  </li>
+                                
+                                <li><br>(<a href="/en/translators.html">Can you translate?</a>)</li>
+
+			</ul>
+                        </div>
+
+                        
+
+		</div>
+		<div id="mainbar" class="span10">
+			<ul id="nav">
+	<li class="join"><a href="http://www.pool.ntp.org/en/join.html">join the pool</a></li>
+	<li class="use"><a href="http://www.pool.ntp.org/en/use.html">use the pool</a></li>
+	<li class="manage"><a href="https://manage.ntppool.org/manage">manage servers</a></li>
+</ul>
+
+			<br class="clearboth"/>
+			<div id="tagline">pool.ntp.org: public ntp time server for everyone</div>
+
+<h3>Introduction</h3>
+	<div id="activity">
+		<h3>Active Servers</h3>
+		<ul id="servers">
+			
+			<li class="area">
+				<span class="location africa ">
+				<a href="/zone/africa">Africa</a>
+				</span>&nbsp;<span class="count">31</span>
+			</li>
+			
+			<li class="area">
+				<span class="location asia ">
+				<a href="/zone/asia">Asia</a>
+				</span>&nbsp;<span class="count">218</span>
+			</li>
+			
+			<li class="area">
+				<span class="location europe ">
+				<a href="/zone/europe">Europe</a>
+				</span>&nbsp;<span class="count">2569</span>
+			</li>
+			
+			<li class="area">
+				<span class="location north-america ">
+				<a href="/zone/north-america">North America</a>
+				</span>&nbsp;<span class="count">916</span>
+			</li>
+			
+			<li class="area">
+				<span class="location oceania ">
+				<a href="/zone/oceania">Oceania</a>
+				</span>&nbsp;<span class="count">91</span>
+			</li>
+			
+			<li class="area">
+				<span class="location south-america ">
+				<a href="/zone/south-america">South America</a>
+				</span>&nbsp;<span class="count">42</span>
+			</li>
+			
+			<li class="area">
+				<span class="location @ global"><b>
+				<a href="/zone/@">Global</a>
+				</b></span>&nbsp;<span class="count">3613</span>
+			</li>
+			
+			<li class="area">
+				<span class="location . global">
+				<a href="/zone/.">All Pool Servers</a>
+				</span>&nbsp;<span class="count">3867</span>
+			</li>
+			
+		</ul>
+		<span class="date">As of 2014-10-09</span>
+	</div>
+
+    <p>
+The pool.ntp.org project is a big virtual cluster of timeservers providing reliable <a href="use.html">easy to use</a> NTP service for millions of clients.
+</p>
+
+<p>
+The pool is being used by millions or tens of millions of systems around the world.  It's the default "time server" for most of the major Linux distributions and many networked appliances (see <a href="vendors.html">information for vendors</a>).
+</p>
+
+<p>
+Because of the large number of users we are in need of more servers. If you have a server with a static IP address always available on the internet, please consider <a href="join.html"> adding it to the system</a>.
+</p>
+
+<p>
+The project is maintained and developed by <a href="http://www.askask.com/">Ask Bjørn Hansen</a> and a great group of contributors on the <a href="/mailinglists.html">mailing lists</a>. The source code for the system is <a href="http://github.com/abh/ntppool">available</a>.
+</p>
+
+<p>
+Hosting and bandwidth for the "hub" servers are provided by <a href="http://develooper.com/">Develooper</a> and <a href="http://www.phyber.com/">Phyber Communications</a>.
+</p>
+
+
+<a href="#top" class="up">go up</a>
+
+
+<a name="news"></a>
+
+<h3>News</h3>
+        <p>
+        	<a href="http://news.ntppool.org/atom.xml" rel="alternate" type="application/rss+xml"><img width="16" height="16" src="/static/images/feed-icon16x16.vafa1ff4.png" alt="Atom feed" style="vertical-align:middle;border:0"/></a>&nbsp;<a href="http://news.ntppool.org/atom.xml" rel="alternate" type="application/rss+xml">Subscribe in a reader
+ 			</a>
+		</p>
+
+	<ul id="news">
+
+        <li>
+<div id="entry-3350" class="entry-asset asset hentry">
+	<div class="date">January 12, 2014</div>
+        <h4 class="asset-name entry-title"><a href="http://news.ntppool.org/2014/01/important-configuration-change.html" rel="bookmark">Important configuration changes for NTP servers</a></h4>
+
+	<div class="asset-content entry-content">
+		
+	        	<div class="asset-body">
+	            		<p>If you are using the standard ntpd daemon to serve time to the public internet, it&#8217;s important that you make sure it is configured to not reply to &#8220;monlist&#8221; queries. Many routers and other equipment are included in this.</p>
+
+<p>The <a href="http://www.ntppool.org/join/configuration.html#management-queries">configuration recommendations</a> include the appropriate &#8220;restrict&#8221; lines to disallow any management queries to ntpd. Most Linux distributions will have an updated version by now that just disables the &#8220;monlist&#8221; queries, that will also solve the primary problem.</p>
+
+<p>The <a href="http://support.ntp.org/bin/view/Main/SecurityNotice#DoS_attack_from_certain_NTP_mode">NTP Support wiki</a> has more information.</p>
+
+<p>If your server is part of the NTP Pool, the system also does a periodic check if your server responds to mode6/mode7 information queries and will warn you on the <a href="https://manage.ntppool.org/manage">manage page</a> if it does.</p>
+
+<p>If you operate a network you can use the <a href="http://openntpproject.org">Open NTP Project</a> to see if you have vulnerable devices on your network.</p>
+
+	        	</div>
+		
+
+		
+
+    	</div>
+</div>
+
+<a class="permalink" href="http://news.ntppool.org/2014/01/important-configuration-change.html" rel="bookmark">Permalink</a>
+
+</li>
+
+
+
+<li>
+<div id="entry-3257" class="entry-asset asset hentry">
+	<div class="date">June 28, 2013</div>
+        <h4 class="asset-name entry-title"><a href="http://news.ntppool.org/2013/06/ipv6-monitoring-problems-for-g.html" rel="bookmark">IPv6 monitoring problems for German servers</a></h4>
+
+	<div class="asset-content entry-content">
+		
+	        	<div class="asset-body">
+	            		<p>This week we had a period of weird behavior for the monitoring system for (mostly) German IPv6 servers.</p>
+
+<p>After much back and forth on the mailing list and numerous debugging sessions we got this information from a network engineer at <a href="http://www.he.net/">Hurricane Electric</a>:</p>
+
+<blockquote>
+  <p>A bug was recently discovered in Force10 switches that cause unicast IPv6 NTP traffic to be erroneously broadcast to all ports. Due to this, there are currently access lists in place preventing some IPv6 NTP traffic from traversing the DECIX exchange, as it was causing a storm that generated nearly 1 terabit per second of traffic.  This should be resolved in the near future.</p>
+</blockquote>
+
+<p>The number of IPv6 servers active in the pool appears to be about back to normal.</p>
+
+<p>Also this is the answer to "why don't we have IPv6 servers by default on all the pool zones" yet. As you might know only "2.pool.ntp.org" (and 2.debian.pool.ntp.org, etc) returns AAAA records currently.</p>
+
+	        	</div>
+		
+
+		
+
+    	</div>
+</div>
+
+<a class="permalink" href="http://news.ntppool.org/2013/06/ipv6-monitoring-problems-for-g.html" rel="bookmark">Permalink</a>
+
+</li>
+
+
+
+<li>
+<div id="entry-3241" class="entry-asset asset hentry">
+	<div class="date">May 17, 2013</div>
+        <h4 class="asset-name entry-title"><a href="http://news.ntppool.org/2013/05/brief-outage-for-ntp-pool-webs.html" rel="bookmark">Brief outage for NTP Pool websites</a></h4>
+
+	<div class="asset-content entry-content">
+		
+	        	<div class="asset-body">
+	            		<p>The NTP Pool "backend systems" are moving racks at <a href="http://www.phyber.com">Phyber</a>. To minimize the risk of things going wrong we're doing it the old-fashioned simple way of turning everything off, moving it and turning it on again. It will mean about an hour where servers are not monitored and we can't add new ones or access the www.pool.ntp.org site.</p>
+
+<p>In the new rack there'll be more power available so when the move is done we'll have more capacity.</p>
+
+	        	</div>
+		
+
+		
+
+    	</div>
+</div>
+
+<a class="permalink" href="http://news.ntppool.org/2013/05/brief-outage-for-ntp-pool-webs.html" rel="bookmark">Permalink</a>
+
+</li>
+
+
+
+<li>
+<div id="entry-3225" class="entry-asset asset hentry">
+	<div class="date">April 23, 2013</div>
+        <h4 class="asset-name entry-title"><a href="http://news.ntppool.org/2013/04/server-upgrades-at-ntppoolorg.html" rel="bookmark">Server upgrades at ntppool.org</a></h4>
+
+	<div class="asset-content entry-content">
+		
+	        	<div class="asset-body">
+	            		<p>Over the last couple of months we had a couple of the "central servers" fail. It hasn't caused any service outage for the NTP clients, but some of you might have noticed that the  <a href="https://manage.ntppool.org/">manage NTP Pool</a> site has been sluggish at times.</p>
+
+<p>A few months ago I bought a few new servers and sent them down to our friends at <a href="http://www.phyber.com/">Phyber Communications</a> who wired them up in their <a href="http://www.phyber.com/services/hosting/">hosting facility</a>. Over the last weeks I've added <a href="http://en.wikipedia.org/wiki/Puppet_(software">puppet declarations</a>) to configure them and since earlier this evening they're in production for the web sites and a few other services.</p>
+
+<p>I have a long road map for the NTP Pool system and many of the items involve processing and storing more data to make our system better. The new servers are going to be helpful for that.</p>
+
+<p>My other project for the months have been upgrades to the <a href="http://geo.bitnames.com/">GeoDNS server</a> to support <a href="http://tools.ietf.org/html/draft-vandergaast-edns-client-subnet-01">EDNS-CLIENT-SUBNET</a>. It has been live for users of <a href="https://developers.google.com/speed/public-dns/">Google DNS</a> for a while. We're still working out some kinks with the <a href="http://www.opendns.com">OpenDNS</a> folks to get it fully enabled there.</p>
+
+	        	</div>
+		
+
+		
+
+    	</div>
+</div>
+
+<a class="permalink" href="http://news.ntppool.org/2013/04/server-upgrades-at-ntppoolorg.html" rel="bookmark">Permalink</a>
+
+</li>
+
+
+
+<li>
+<div id="entry-3142" class="entry-asset asset hentry">
+	<div class="date">October  9, 2012</div>
+        <h4 class="asset-name entry-title"><a href="http://news.ntppool.org/2012/10/new-dns-server.html" rel="bookmark">DNS server in Go - Big NTP Pool upgrade</a></h4>
+
+	<div class="asset-content entry-content">
+		
+	        	<div class="asset-body">
+	            		<p>Over the last month the NTP Pool has gotten the biggest upgrade it has had in years. The changes has given us much more scalability and performance.</p>
+
+<p>As you might know, the NTP Pool system is essentially a monitoring system and a smart DNS server. Server operators register their server in the system, the monitoring system checks and evaluates the submitted servers and the DNS server gives end-users a (hopefully) local selection of servers, weighted by preferences given by the server operator and other factors.</p>
+
+<p>Last month there was a big change to the DNS server.</p>
+
+	        	</div>
+		
+
+		
+        		<div class="asset-more-link">
+            			Continue reading <a href="http://news.ntppool.org/2012/10/new-dns-server.html#more" rel="bookmark">DNS server in Go - Big NTP Pool upgrade</a>.
+        		</div>
+		
+
+    	</div>
+</div>
+
+<a class="permalink" href="http://news.ntppool.org/2012/10/new-dns-server.html" rel="bookmark">Permalink</a>
+
+</li>
+
+
+
+
+		<li class="last">
+			<a href="http://news.ntppool.org/archives.html">Older news...</a>
+		</li>
+	</ul>
+
+
+
+<a name="links"></a>
+	<h3>Links</h3>
+	<ul>
+                <li><a href="/tos.html">Terms of service</a>
+                </li>
+
+		<li>
+			<a href="http://www.ntp.org">NTP home</a> - <i>the</i> website about ntp
+		</li>
+
+		<li>
+			<a href="http://www.meinberg.de/english/">Meinberg</a>, makers of incredibly fine <a href="http://www.meinberg.de/english/products/ntp-time-server.htm">time server</a> systems.
+		</li>
+
+		<li>
+			The <a href="http://groups.google.com/groups?threadm=3E2DBFF7.F9A51614%40udel.edu">Public servers abuse</a> and the <a href="http://groups.google.com/groups?threadm=cpaznpnzrb1.fsf%40cabernet.nelson.monkey.org">Fixing the NTP server abuse problem</a> threads on the <a href="news:comp.protocols.time.ntp">comp.protocols.time.ntp</a> newsgroup have caused this project to be started.
+		</li>
+	</ul>
+
+<a href="#top" class="up">go up</a>
+
+
+
+
+
+		</div>		
+	</div>
+</div>
+	
+<div id="doc3" class="yui-t2">
+	<div id="hd">
+
+	</div>
+	<div id="bd">
+		<div id="yui-main">
+			<div class="yui-b">
+
+			</div>
+		</div>
+		<div id="sidebar" class="yui-b">
+		</div>
+	</div>
+	<div id="ft">
+		Comments and questions to <a href="http://www.askask.com/">Ask Bj&oslash;rn Hansen</a> &#8212;
+		<a href="mailto:ask@develooper.com">ask@develooper.com</a>
+	</div>
+</div>	
+
+
+<script type="text/javascript" src="/static/cdn/libs/jquery/1.7.2/jquery.min.v16ad06c.js" charset="UTF-8"></script>
+
+
+
+
+
+
+<!-- ipv6 testing -->
+<script type="text/javascript" src="http://ipv64.v6test.develooper.com/js/v1/v6test.js"></script>
+
+<script type="text/javascript">
+   // v6.target = '';
+   if (!v6.target) { v6.only_once = true }
+   v6.site = 'EED5EB02-235D-11DF-8ACC-F064064DD970';
+   v6.api_server = 'http://ipv64.v6test.develooper.com';
+   try {
+     v6.test();
+   } catch(err) {}
+</script>
+
+
+<script type="text/javascript">
+  (function(w, d) { var a = function() { var a = d.createElement('script'); a.type = 'text/javascript';
+    a.async = 'async'; a.src = '//' + ((w.location.protocol === 'https:') ? 's3.amazonaws.com/cdx-radar/' :
+    'radar.cedexis.com/') + '01-11862-radar10.min.js'; d.body.appendChild(a); };
+    if (w.addEventListener) { w.addEventListener('load', a, false); }
+    else if (w.attachEvent) { w.attachEvent('onload', a); }
+  }(window, document));
+</script>
+
+</body>
+</html>
+
+
+

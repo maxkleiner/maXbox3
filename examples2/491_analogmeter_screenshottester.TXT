@@ -1,0 +1,1057 @@
+{***************************************************************
+ * Project  : Analog Meter and Time Routines
+ * App Name : 491_analogmeter.TXT, #locs=727
+ * Purpose  : Demonstrates component
+ * Date     : #sign>max: MAXBOX8: 10/7/2014 8:01:42 PM 
+ * History  : convert analogmeter to maXbox Aug 2014
+ *          : add time routines and tickcount to LED
+            : animates a sprite, if XP then ProcessMessagesOFF;
+ ****************************************************************}
+
+Program AnalogMeterComp;
+
+{@BOOL WINAPI MessageBeep(
+  __in  UINT uType  );}
+
+
+function MessageBoxTimeOut(hWnd: HWND; lpText: PChar; lpCaption: PChar; uType: UINT;
+                wLanguageId: WORD; dwMilliseconds: DWORD): Integer;
+             external 'MessageBoxTimeoutA@user32.dll stdcall';
+  
+procedure CloseClick(Sender: TObject; var action: TCloseAction); forward;
+  
+Const
+  BACKMAP = 'examples\images\bmp47.bmp';
+  //BACKMAP = 'examples\images\bmp33.bmp';
+  BITMAP1 = 'examples\images\empty.bmp';
+  //BITMAP1 = 'examples\images\bmp21.bmp';  //try another combinations
+  //BITMAP2 = 'examples\images\bmp29.bmp';
+  //BITMAP2 = 'examples\images\bmp33.bmp';
+  SAVEPATH = 'examples\treeview_300.txt';
+  AExponent = 4;
+  ANIMATEDELAY = 6;
+  
+type
+  TByteArr = array of byte;
+  
+var
+  except_state, execute_state: string;  
+  mytimestamp: TDateTime;
+  osType: TIdWin32Type;
+  bfrm: TForm;
+  FPicled, FPicRed, FPicGreen: TBitMap;
+  anamtr, anamtr0: TAnalogMeter;
+  timerRedraw: TTimer;
+  
+  
+{Windows Date and Time
+Sometimes you need to send a date and time through the Windows API. However, Windows uses its own date and time type: TSystemTime. Convert between TDateTime and TSystemTime using one of the following methods: }
+
+{procedure TForm1.PSScriptCompile(Sender: TPSScript);
+begin
+  Sender.AddFunction(@MyWriteln, 'procedure Writeln(s: string);');
+  Sender.AddFunction(@MyReadln, 'function Readln(question: string): string;');
+  Sender.AddFunction(@ImportTest, 'function ImportTest(S1: string; s2: Longint; s3: Byte; s4: word; var s5: string): string;');
+  Sender.AddRegisteredVariable('vars', 'Variant');
+  Sender.AddRegisteredVariable('Application', 'TApplication');
+  Sender.AddRegisteredVariable('Self', 'TForm');
+  Sender.AddRegisteredVariable('Memo1', 'TMemo');
+  Sender.AddRegisteredVariable('Memo2', 'TMemo');
+end;
+
+procedure TForm1.PSScriptExecute(Sender: TPSScript);
+begin
+  PSScript.SetVarToInstance('APPLICATION', Application);
+  PSScript.SetVarToInstance('SELF', Self);
+  PSScript.SetVarToInstance('MEMO1', Memo1);
+  PSScript.SetVarToInstance('MEMO2', Memo2);
+  PPSVariantVariant(PSScript.GetVariable('VARS'))^.Data := VarArrayCreate([0, 1], varShortInt)
+end;}
+
+//ÑSoftware wird schneller langsamer als Hardware schneller wird. ì (Niklaus Wirth, 1995)
+
+procedure GetScreenShot(var ABitmap : TBitmap);
+var
+  DC : THandle;
+begin
+  if Assigned(ABitmap) then // Check Bitmap<>NIL
+  begin
+    DC := GetDC(0); // Get Desktop DC
+    try
+      ABitmap.Width := Screen.Width; // Adjust Bitmapsize..
+      ABitmap.Height := Screen.Height; // ..to screen size
+      BitBlt(ABitmap.Canvas.Handle, // Copy
+             0,0,Screen.Width,Screen.Height, // Desktop
+             DC, // into
+             0,0, // the
+             SrcCopy // Bitmap
+        );
+    finally
+      ReleaseDC(0, DC); // Relase DC
+    end;
+  end;
+end; 
+
+
+procedure TfrmScreenshot_btnScreenshotClick(Sender: TObject);
+var
+  bmp: TBitmap;
+  DC: HDC;
+  btnScreenshot: TBitBtn;
+    imgScreenshot: TImage;
+    vars: variant;
+    //$$vari: vars;
+begin
+  vars:= VarArrayCreate([0, 1], varShortInt)
+  bmp := TBitmap.Create;
+  DC := GetDC(0);
+  try
+    //bmp.LoadFromDevice(DC);
+  finally
+    ReleaseDC(0, DC);
+  end;
+  imgScreenshot.Picture.Bitmap.Assign(bmp);
+  bmp.Free;
+  //FreeAndNil(bmp);
+end;
+
+procedure TForm1_Outline1DrawItem(Control: TWinControl; Index: Integer;  Rect: TRect; State: TOwnerDrawState); 
+var  SourceRect: TRect;
+    outline1: TOutline;
+
+ begin  SourceRect.Top := 0;
+//100 Delphi Visual Component Library Reference
+//Canvas property
+  SourceRect.Left := 0;  
+  SourceRect.Bottom := TBitmap(Outline1.Items[Index]).Height;  SourceRect.Right := TBitmap(Outline1.Items[Index]){Data}.Width;  
+  //Outline1.Canvas.CopyRect(Rect, TBitmap(Outline1.Items[Index].Data).Canvas,    SourceRect);
+   end;
+   
+procedure TMHTMLGetImageX(Sender: TObject {TIpHtmlNode}; const URL: string;
+  var Picture: TPicture);
+var
+  PicCreated: boolean;
+begin
+  try
+    if FileExistsUTF8(URL) then begin
+      PicCreated := False;
+      if Picture=nil then begin
+        Picture:=TPicture.Create;
+        PicCreated := True;
+      end;
+      Picture.LoadFromFile(URL);
+    end;
+  except
+    if PicCreated then
+      Picture.Free;
+    Picture := nil;
+  end;
+  //OpenURL
+end;
+
+procedure TFGetBrowser(out BrowserName, BrowserFilename,
+  StartScriptFilename: string);
+var
+  i: LongInt;
+begin
+  //i:=BrowserRadioGroup.ItemIndex;
+  if i<0 then i:=4;
+  //BrowserName:=BrowserRadioGroup.Items[i];
+ // StartScriptFilename:=ExtractFilePath(Application.ExeName)+'OpenURLIn'+BrowserName+'.sh';
+  StartScriptFilename:= ExtractFilePath(Application.ExeName)+'OpenURLInFirefox'+'.sh';
+  BrowserFilename:='firefox.exe'
+  //if not SearchExecutable(lowercase(BrowserName),BrowserFilename) then
+    //BrowserFilename:='';
+end;
+
+
+{
+OpenURLInMozilla.sh
+#!/usr/bin/env bash
+mozilla -remote "openurl($1)" || mozilla $1 &}
+
+
+procedure TFOpenURL(const URL: string);
+var
+  TheProcess: TProcess;
+  BrowserFilename: string;
+  StartScriptFilename: string;
+  BrowserName: string;
+begin
+  TFGetBrowser(BrowserName,BrowserFilename,StartScriptFilename);
+  if BrowserFilename='' then begin
+    //DebugLn('TForm1.OpenURL unable to find browser "',BrowserName,'"');
+    MessageDlg('Invalid browser'+
+           'Unable to find browser executable "'+BrowserName+'"',
+           mtError,[mbCancel],0);
+    exit;
+  end;
+  
+  //DebugLn('TForm1.OpenURL StartScriptFilename=',StartScriptFilename);
+  if not FileExistsUTF8(StartScriptFilename) then begin
+    //DebugLn('TForm1.OpenURL unable to find program "',StartScriptFilename,'"');
+    MessageDlg('Invalid browser'+
+           'Unable to find browser "'+StartScriptFilename+'"',
+           mtError,[mbCancel],0);
+    exit;
+  end;
+ { if not FileIsExecutable(StartScriptFilename) then begin
+    DebugLn('TForm1.OpenURL browserfile is not executable "',StartScriptFilename,'"');
+    MessageDlg('Invalid browser',
+           'Browserfilename "'+StartScriptFilename+'" is not executable',
+           mtError,[mbCancel],0);
+    exit;
+  end; }
+
+  TheProcess:=TProcess{UTF8}.Create(nil);
+  try
+    TheProcess.Options:= [poUsePipes, poNoConsole, poStdErrToOutput];
+    TheProcess.ShowWindow := swoNone;
+    TheProcess.CommandLine:=StartScriptFilename+' '+URL;
+    try
+      TheProcess.Execute;
+      TheProcess.WaitOnExit;
+      if TheProcess.ExitStatus<>0 then begin
+        MessageDlg('Error'+
+          'Error executing browser script '+StartScriptFilename+#13
+          +'Error code: '+IntToStr(TheProcess.ExitStatus),
+          mtError,[mbCancel],0);
+      end;
+    finally
+      TheProcess.Free;
+    end;
+  except
+    //on E: Exception do begin
+      Writeln('TForm1.OpenURL ERROR: '+'$E.Message');
+    //end;
+  end;
+end;
+
+   
+   
+   var CurStep: Double; 
+ 
+
+function TFRotatePoint(APoint, ACenter: TPoint; AAngle: Double): TPoint;
+var
+  dx, dy: Double;
+begin
+  dx := (ACenter.Y * Sin(AAngle)) - (ACenter.X * Cos(AAngle)) + ACenter.X;
+  dy := -(ACenter.X * Sin(AAngle)) - (ACenter.Y * Cos(AAngle)) + ACenter.Y;
+  Result.X := Round((APoint.X * Cos(AAngle)) - (APoint.Y * Sin(AAngle)) + dx);
+  Result.Y := Round((APoint.X * Sin(AAngle)) + (APoint.Y * Cos(AAngle)) + dy);
+end;
+   
+type ATPoint = array[0..2] of TPoint;
+   
+procedure TFRotatePolygon(var APoints: ATPoint; AAngle: Double);
+var
+  alCenter: TPoint;
+  i: Integer;
+begin
+  alCenter:= Point(50, 50);
+  for i:= 0 to Length(APoints)-1 do begin
+    alCenter.X := alCenter.X + APoints[i].X;
+    alCenter.Y := alCenter.Y + APoints[i].Y;
+  end;
+  alCenter.X := alCenter.X div Length(APoints);
+  alCenter.Y := alCenter.Y div Length(APoints);
+
+  for i := 0 to Length(APoints)-1 do
+    APoints[i]:= TFRotatePoint(APoints[i], alCenter, AAngle);
+end;
+
+
+procedure TFFormPaint(Sender: TObject);
+var
+  lPoints: ATPoint;
+begin
+  lPoints[0].X := 100;
+  lPoints[0].Y := 100;
+  lPoints[1].X := 200;
+  lPoints[1].Y := 0;
+  lPoints[2].X := 200;
+  lPoints[2].Y := 200;
+  TFRotatePolygon(lPoints, CurStep);
+  bfrm.Canvas.Polygon(lPoints);
+  //writeln('pant');
+end;
+
+procedure TFTimerRedrawTimer(Sender: TObject);
+begin
+  CurStep := CurStep + 0.1;
+  if CurStep > 360 then CurStep := 0;
+  bfrm.Invalidate;
+end;
+
+
+
+
+procedure ChangeTime;
+var
+delphi_datetime: tDateTime;
+windows_datetime: tSystemTime;
+three_years_from_now: tDateTime;
+
+ year, month, day: word;
+  hour, min, sec, msec: word;
+begin
+  delphi_datetime := now;
+  DateTimeToSystemTime( delphi_datetime, windows_datetime );
+  SetSystemTime( windows_datetime );
+  // get the system time
+  GetSystemTime( windows_datetime );
+  delphi_datetime:= SystemTimeToDateTime( windows_datetime );
+  writeln(datetimetoStr(delphi_datetime))
+  
+  // Is it morning or afternoon?
+  DecodeTime( time, hour, min, sec, msec );
+   if hour < 12
+      then ShowMessage( 'Good morning!' )
+           else ShowMessage( 'Good afternoon!' );
+           
+   //if DayOfWeek( date ) in [1, 7]
+   {if DayOfWeek( date ) = (1 OR 7)
+      then ShowMessage( 'Yeah! It''s the weekend!' )
+          else ShowMessage( 'Alas, it is a workday...' )}
+          
+    DecodeDate( date, year, month, day );
+    //inc( year, 3 );
+    YEAR:= year + 3;
+    three_years_from_now := EncodeDate( year, month, day )      
+    writeln('three_years_from_now '+datetimetoStr(three_years_from_now))
+    writeln(FormatDateTime('"Today is" dddd", the" d"th" of mmmm", AD" yyyy.',date));
+    writeln(FormatDateTime('"And the time is" h:mm ampm.',time))
+end;
+
+
+//And, at last, I would like to share one function that could be util if someone need to display total time greater 23:59 - not provide by Delphi:
+
+  function FullTimeToStr(SUMTime: TDateTime): string;
+    var
+    StrHor,
+    StrMin :string;
+    TotHor :double;
+    begin
+         TotHor := SUMTime *24;
+         if (TotHor -Trunc(TotHor)) > 0.9999 then
+         TotHor := Round(TotHor);
+         StrHor := FormatFloat('##0:', Int(TotHor));
+         StrMin := FormatDateTime('nn:ss', Frac(TotHor)/24);
+         Result := StrHor +StrMin;
+    end;
+
+
+procedure getMaxBoxIni;
+var Ini: TIniFile;   
+begin
+  Ini:= TIniFile.Create(ExePath+'maxboxdef.ini');
+  try
+    except_state:= Ini.ReadString('Form', 'EXCEPTIONLOG','');
+    execute_state:= Ini.ReadString('Form', 'EXECUTESHELL','');
+  finally
+    writeln('inifile sysdata test: '+(except_state)+ ' '+(execute_state))
+    ini.Free;
+  end;
+end;
+
+procedure TJvFormAutoSize_Resize(Sender: TObject);
+var
+  WidthRatio, HeightRatio: Double;
+  CompIndex: Integer;
+  FForm: TForm;
+    FActive: Boolean;
+      FOldWidth: Integer;
+    FOldHeight: Integer;
+  FResize: TNotifyEvent;
+begin
+  if FForm = nil then
+    FForm := GetParentForm(Application.Owner as TControl) as TForm;
+  if FActive and (FForm <> nil) then begin
+    // (p3) this code is slightly dangerous: no sanity checks -
+    // values can become really large or really small
+    if (FOldWidth <> 0) and (FOldHeight <> 0) then begin
+      WidthRatio := FForm.Width / FOldWidth;
+      HeightRatio := FForm.Height / FOldHeight;
+      for CompIndex := 0 to FForm.ComponentCount - 1 do begin
+        if FForm.Components[CompIndex] is TControl then begin
+          with FForm.Components[CompIndex] {as TControl} do begin
+            if not (FForm.Components[CompIndex] is TButton) then begin
+              fform.Width := Round(fform.Width * WidthRatio);
+              fform.Height := Round(fform.Height * HeightRatio);
+            end;
+            fform.Left:= Round(fform.Left * WidthRatio);
+            fform.Top:= Round(fform.Top * HeightRatio);
+          end;
+        end;
+      end;
+    end;
+    FOldWidth := FForm.Width;
+    FOldHeight := FForm.Height;
+  end;
+  if FResize<> NIL then
+    FResize(Sender);
+end;
+
+procedure BitmapFormCreate(Sender: TObject);
+begin
+  //FMask.LoadFromFile(exepath+'examples\citymax.bmp');
+  FPicled:= TBitMap.Create;
+  FPicRed:= TBitMap.Create;
+  FPicGreen:= TBitMap.Create;
+  FPicled.LoadFromFile(Exepath+'\examples\images\yellow1.bmp');
+  FPicRed.LoadFromFile(Exepath+'\examples\images\red1.bmp');
+  FPicGreen.LoadFromFile(Exepath+'\examples\images\green1.bmp');
+  Screen.Cursor:= crCross;//loadCursor(hinstance,'Pan_All'); //crCross;
+end;  
+
+function getBitMapObject2(mappath: string): TBitmap;
+begin
+  result:= TBitmap.Create;
+  try 
+    result.LoadFromFile(mappath);
+  finally
+    //result.Free;
+  end;  
+end;  
+
+
+//********************************Event Handler*****************************//
+
+procedure MeterClick(Sender: TObject);
+var idx: integer;
+begin
+     TAnalogMeter(sender).value:= 
+       TAnalogMeter(sender).value +2; 
+end;
+
+procedure BtnAddClick(Sender: TObject);
+begin
+  {If nothing is selected}
+     bfrm.canvas.draw(335,30, FPicGreen); 
+     anamtr.value:= anamtr.value+10; 
+     anamtr0.value:= anamtr0.value+1;
+     //meterClick(anamtr)
+end;
+
+procedure RemoveClick(Sender: TObject);
+begin
+     bfrm.canvas.draw(335,30, FPicRed);  
+     anamtr.value:= anamtr.value-10; 
+     anamtr0.value:= anamtr0.value-1;
+end;
+
+procedure CloseClick(Sender: TObject; var action: TCloseAction);
+begin
+  FPicled.Free;
+  FPicRed.Free;
+  FPicGreen.Free;
+  action:= caFree;
+  timerRedraw.Free;
+  Screen.Cursor:= crDefault;
+  writeln('Analog Outline Form being closed');
+end;
+
+procedure CloseButtonClick(Sender: TObject);
+begin
+  bfrm.Close; //calls close click
+end;
+
+//********************************Form Builder*****************************//
+procedure InitBitmapForm;
+var  RootNode: TTreeNode;
+     myc: TCollection;   
+     //images: TCustomImagelist;
+     i: byte;
+begin
+ bfrm:= TForm.create(self);
+  //mt.free;  in on close
+ with bfrm do begin
+   FormStyle := fsStayOnTop;
+   Position:= poScreenCenter;
+   caption:='Analog Meter Demo - DblClick to Count';
+   color:= clwhite;
+   width:= 750;
+   height:= 700;
+   //canvas.Pen.mode:= pmNotXor;
+   onClose:=  @CloseClick;
+   onpaint:= @TFFormPaint;
+   //canvas.brush.bitmap.loadfromfile(Exepath+backmap);
+   Show;
+   canvas.draw(300,200, getbitmapObject2(Exepath+'\examples\citymax.bmp'));
+ end;
+ 
+ timerRedraw:= TTimer.create(self);
+ timerRedraw.interval:= 60;
+ timerRedraw.ontimer:= @TFTimerRedrawTimer;
+ timerRedraw.enabled:= true;
+ 
+  with TTreeView.Create(NIL) do begin
+   parent:= bfrm;
+   Loadfromfile(ExePath+SAVEPATH);
+   setbounds(5,170,160, 160);
+   writeln(inttostr(width));
+   FullExpand;
+  end; 
+ 
+ with TBitBtn.create(bfrm) do begin
+   parent:= bfrm;
+   setbounds(550,580,150,55)
+   font.size:= 12;
+   glyph.LoadFromRes(HINSTANCE,'CL_MPSTOP');
+   mXButton(05,05,width, height,12,12,handle);
+   caption:= '&Close App';
+   onClick:= @closeButtonClick;
+ end;
+ with TBitBtn.Create(bfrm) do begin
+   Parent:= bfrm;
+   setbounds(230,580,150, 55);
+   caption:= 'A&dd Node';
+   font.size:= 12;
+   glyph.LoadFromRes(HINSTANCE,'CL_MPNEXT');
+   mXButton(05,05,width, height,12,12,handle);
+   onClick:= @BtnAddClick;
+ end;
+ with TBitBtn.Create(bfrm) do begin
+   Parent:= bfrm;
+   setbounds(390,580,150, 55);
+   caption:= '&Reduce Node';
+   font.size:= 12;
+   glyph.LoadFromRes(getHINSTANCE,'CL_MPPREV');
+   mXButton(05,05,width, height,12,12,handle);
+   onClick:= @RemoveClick;
+ end;
+ 
+ with TStatusBar.create(bfrm) do begin
+    parent:= bfrm;
+    simplepanel:= true;
+    color:= clyellow;
+    //align:= alleft;
+    showhint:= true;
+    hint:= 'this is box';
+    //simpletext.font.size:= 12;
+    simpletext:= 'this is analogue status bar';
+    //visible:= true;
+    //alignment:= alleft;
+  end;
+  
+  with TRichEdit.Create(bfrm) do begin
+    parent:= bfrm;
+    clear;
+    setbounds(5,350,220,160);
+    //findtext
+    //align:= alclient;
+    wordwrap:= true;
+    color:= clred;
+    font.size:= 12;
+    //Loadfromfile(ExePath+SAVEPATH);
+    //PlainText
+    scrollbars:= true;
+    Lines.Add('This is {b super} real');
+    Lines.LoadfromFile(ExePath+SAVEPATH);
+    with SelAttributes do begin
+      Color:= clGreen;
+      Height:= 10;
+      Style:= [fsBold]; // b
+    end;
+    //print
+    //SetBounds
+    wanttabs:= true;
+    //show; 
+  end; 
+  
+  anamtr:= TAnalogMeter.create(self);
+  with anamtr do begin
+    parent:= bfrm;
+    //clear;
+    caption:= 'maXtax2';
+    setbounds(430,50,240,220);
+    //tickcolor:= clred;
+    tickcount:= 11;
+    value:= 25;
+    visible;
+    //ctl3d
+    //alignment
+  end;
+  
+  anamtr0:= TAnalogMeter.create(self)
+  with anamtr0 do begin
+    parent:= bfrm;
+    //clear;
+    caption:= 'maXtax';
+    setbounds(230,350,240,220);
+    //tickcolor:= clred;
+    tickcount:= 11;
+    value:= 25;
+    visible;
+    onclick:= @MeterClick;
+    //ctl3d
+    //alignment
+  end;
+ for i:= 10 to 100 do begin 
+    anamtr.value:= anamtr.value + 1;
+    sleep(50);
+  end;  
+  for i:= 100 downto 25 do begin   
+    anamtr.value:= anamtr.value - 1;
+    sleep(50)
+ end; 
+end;
+
+  function maxcalcfunc(a: extended): extended;
+  begin
+    result:= cotan(a);
+  end;  
+  
+function TimeStampInterval(StartStamp, EndStamp: TDateTime): integer;
+var
+  days: Integer;
+  hour, min, s, ms: Word;
+begin
+  days := Trunc(EndStamp - StartStamp); // whole days
+  DecodeTime(EndStamp - StartStamp, hour, min, s, ms);
+  result := (((days * 24 + hour) * 60 + min) * 60 + s) * 1000 + ms;
+end;
+
+procedure maxcalc_demo;
+begin
+  printF('this is %.6f',[maXcalc('ln(2)+fact(388)+2!')]); 
+  printF('this is %.6f',[maXcalc('(4!)^(3!)')]); 
+  printF('this is %.6f',[maXcalc('4!+4!')]); 
+  printF('this is %.6f',[maXcalc('log(22)')]); 
+  printF('this is logN %.6f',[maXcalc('2%256')]);
+  writeln('ln(e): '+floattostr(maXcalc('ln(e)')))
+  writeln(floattostr(maXcalc('e+10^6')))
+  printF('addition theorem %.18f ',[maXcalc('sin(2.5/2)')])
+  printF('addition theorem %.18f ',[maXcalc('sqrt(1/2*(1-cos(2.5)))')])
+  printF('addition theorem2 %22.18f ',[maXcalc('cos(2.5/2)')])
+  printF('addition theorem2 %22.18f ',[maXcalc('sqrt(1/2*(1+cos(2.5)))')])
+  maXcalcF('2%256+2^10');
+end; 
+
+ var    myus: TUserfunction;
+        aobj: TObject;
+        //mylog: TFoLog;
+        i: integer;
+        bitstyle: TBitmapstyle;
+        UserSpaceAvail, TotalSpaceAvail, DiskSize: Comp; {disk size}
+        shdig: TSHA1Digest;
+        mybit: TBitmap;
+
+begin   //main of animationbox
+   //InifileRead;
+   ProcessMessagesON;
+   getMaxBoxIni;
+   writeln('Thread ID :'+intToStr(CurrentThreadID))
+   writeln('Process ID :'+intToStr(CurrentProcessID))
+   writeln('machine name is: '+getHostName)
+   writeln('user name is: '+getUserName)
+   osType:= Win32Type;
+   writeln('OS Type is: '+intToStr(ord(osType)));
+   mytimestamp:= GetFileCreationTime(exepath+'maxbox3.exe')
+   writeln(DateTimeToStr(mytimestamp)+' for maXbox3 file')
+   //SearchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter16.pdf')
+   //ExecuteCommand('cmd','/k dir *.*')
+   BitmapFormCreate(self);
+   InitBitmapForm;
+   //FormDrawBitmap(Exepath+BACKMAP,10,10, bfrm.canvas);
+    //bfrm.canvas.brush.bitmap.loadfromfile(Exepath+backmap);
+   //bfrm.canvas.draw(300,200, getbitmapObject(Exepath+backmap));
+   bfrm.canvas.brush.bitmap:= getbitmapObject(Exepath+backmap);
+   bfrm.Canvas.FillRect(Rect(400,300,100,100));
+   //bfrm.canvas.brush.bitmap.width:= 300;
+   //FormDrawBitmap(BITMAP2,540,10, bfrm.canvas);
+   CurrencyFormat;
+   //VarComplexToPolar
+   //CheckSynchronize
+    if isMultiThread then writeln('multi thread');
+    //maXbox
+    myus:= @maxcalcfunc;
+    with TJvMathParser.create do begin
+      //registeruserfunction('maxcalcfunc', myus);
+      execute('4+6')
+      Free;
+    end; 
+     aobj:= TObject.Create;
+    freeandnil2(aobj);
+    //RIRegister_StGenLog_Routines
+    //Function HexifyBlock( var Buffer, BufferSize : Integer) : string');
+    //HexifyBlock( var Buffer, BufferSize : Integer) : string');
+    //maxform1.CB1SCList.color:= clred;
+    maxform1.mxNavigator.color:= clyellow;
+    bitstyle:= bsCentered;
+    //printimage(getbitmapObject(Exepath+backmap),bscentered); 
+    writeln(inttostr(vk_back))
+    writeln(inttostr(vk_F1))
+    //formatmasktext
+    //MaskGetMaskSave
+    GetEnvironmentInfo;
+  writeln('DriveDelim= '+DriveDelim) 
+
+{-Return technical information about the specified drive.}
+{GetDiskSpace}
+ //GetDiskSpace(Drive : AnsiChar;
+   //               var UserSpaceAvail  : Comp;           {space available to user}
+     //             var TotalSpaceAvail : Comp;           {total space available}
+       //           var DiskSize        : Comp) : Boolean;{disk size}
+{-Return space information about the drive.}
+
+ if GetDiskSpace('C',UserSpaceAvail,TotalSpaceAvail,DiskSize) then
+     printF('UserSpaceAvail: %d TotalSpaceAvail: %d DiskSize: %d',
+         [UserSpaceAvail div 1024,TotalSpaceAvail div 1024,DiskSize div 1024]);
+  
+    maXcalc_demo;
+   
+   maXcalcF('ln(e)');
+   //dpGetTempFolder
+   //GetTempFile
+//function GetSomeFileInfo( aFile : string; aWhatInfo : TSomeFileInfo) : string');
+    writeln(GetSomeFileInfo(exepath+'maxbox3.exe', fi_DisplayType));
+    writeln(TBGetTempFolder+' '+TBGetTempFile+' '
+         +TBGetModuleFilename+inttostr(TBGetFileSize(exepath+'maxbox3.exe',1)));
+     writeln('windir: ' +windir)
+    //ExpandMacro('%WINDIR%\Media\notify.wav');
+    if PlaySound(windir+'\Media\notify.wav', 0, SND_FILENAME or SND_SYNC) then
+    writeln('sound on box fox');
+      
+    {writeln(itoa(ComputeFileCRC32(exepath+'\maxbox3.exe')));
+    writeln(sha1(exepath+'\maxbox3.exe'))
+    shdig:= GetSHA1OfFile(false,exepath+'\maxbox3.exe'); 
+      for i:= 0 to 19 do write(bytetohex(shdig[i]));} 
+    //changetime;  
+    //TFOpenURL('http://www.softwareschule.ch');
+    mybit:= TBitmap.create;
+    GetScreenShot(mybit)
+    mybit.savetofile(exepath+'gotscreen.bmp');
+    mybit.Free;
+End.   
+
+http://www.be-precision.com/products/precision-builder/express/webhelp/en/topics/PSSyntax.htm
+
+------------------------------------------------
+Windows crashed again. I am the Blue Screen of Death. No one hears your screams.
+Three things are certain: Death, taxes, and lost data. Guess which has occurred.
+There is no place like 127.0.0.1 
+
+http://en.wikipedia.org/wiki/Sneakers_%281992_film%29
+
+
+
+procedure CurrencyFormat;
+var fSettings: TFormatSettings;
+begin
+  GetLocaleFormatSettings(LOCALE_SYSTEM_DEFAULT, fSettings);
+  writeln(fsettings.timeAMString);
+  writeln(fsettings.longDateFormat);
+  writeln(fsettings.shortDateFormat);
+    //writeln(currtostrF
+  writeln('currtostrFS 1234.56 formats with setting as = '+
+             CurrToStrFS(1234.5678989, ffCurrency, 4, fSettings));
+             writeln(FloatToStrF(1234.5678989, ffCurrency, 6, 6));
+  writeln('currtostrFS and back as = '+
+             CurrToStrFS(strToCurr('1234.5678989'), ffCurrency, 4, fSettings));
+end; 
+
+procedure maxcalc_demo;
+begin
+  printF('this is %.6f',[maXcalc('ln(2)+fact(388)+2!')]); 
+  printF('this is %.6f',[maXcalc('(4!)^(3!)')]); 
+  printF('this is %.6f',[maXcalc('4!+4!')]); 
+  printF('this is %.6f',[maXcalc('log(22)')]); 
+  printF('this is logN %.6f',[maXcalc('2%256')]);
+  writeln('ln(e): '+floattostr(maXcalc('ln(e)')))
+  writeln(floattostr(maXcalc('e+10^6')))
+  printF('addition theorem %.18f ',[maXcalc('sin(2.5/2)')])
+  printF('addition theorem %.18f ',[maXcalc('sqrt(1/2*(1-cos(2.5)))')])
+  printF('addition theorem2 %22.18f ',[maXcalc('cos(2.5/2)')])
+  printF('addition theorem2 %22.18f ',[maXcalc('sqrt(1/2*(1+cos(2.5)))')])
+  maXcalcF('2%256+2^10');
+end; 
+
+50000  = 0.693137180659968
+100000 = 0.693142180584982
+500000 = 0.693146180561005
+10^6   = 0.693146680560255
+5*10^6 = 0.693147080560068
+50*10^6= 0.693147170560399    //Runtime: 0:28:22.422
+ln(2)  = 0.693147180559945
+
+(* zeta:= 0;
+     for i:= 1 to 50000 do 
+       if i mod 2 = 0 then
+         zeta:= zeta - 1/i else
+         zeta:= zeta + 1/i;
+       writeln('harmonic alternate to ln(2): '+floattostr(zeta))  
+       writeln(floattostr(maxcalc('ln(2)')))
+       writeln(floattostr(ln2))    *)
+   
+
+
+***********************************Thread Class *****************************
+  TThread = class
+  private
+{$IFDEF MSWINDOWS}
+    FHandle: THandle;
+    FThreadID: THandle;
+{$ENDIF}
+{$IFDEF LINUX}
+    // ** FThreadID is not THandle in Linux **
+    FThreadID: Cardinal;
+    FCreateSuspendedSem: TSemaphore;
+    FInitialSuspendDone: Boolean;
+{$ENDIF}
+    FCreateSuspended: Boolean;
+    FTerminated: Boolean;
+    FSuspended: Boolean;
+    FFreeOnTerminate: Boolean;
+    FFinished: Boolean;
+    FReturnValue: Integer;
+    FOnTerminate: TNotifyEvent;
+    FSynchronize: TSynchronizeRecord;
+    FFatalException: TObject;
+    procedure CallOnTerminate;
+    class procedure Synchronize(ASyncRec: PSynchronizeRecord; QueueEvent: Boolean = False); overload;
+{$IFDEF MSWINDOWS}
+    function GetPriority: TThreadPriority;
+    procedure SetPriority(Value: TThreadPriority);
+{$ENDIF}
+{$IFDEF LINUX}
+    // ** Priority is an Integer value in Linux
+    function GetPriority: Integer;
+    procedure SetPriority(Value: Integer);
+    function GetPolicy: Integer;
+    procedure SetPolicy(Value: Integer);
+{$ENDIF}
+    procedure SetSuspended(Value: Boolean);
+  protected
+    procedure CheckThreadError(ErrCode: Integer); overload;
+    procedure CheckThreadError(Success: Boolean); overload;
+    procedure DoTerminate; virtual;
+    procedure Execute; virtual; abstract;
+    procedure Queue(AMethod: TThreadMethod); overload;
+    procedure Synchronize(AMethod: TThreadMethod); overload;
+    property ReturnValue: Integer read FReturnValue write FReturnValue;
+    property Terminated: Boolean read FTerminated;
+  public
+    constructor Create(CreateSuspended: Boolean);
+    destructor Destroy; override;
+    procedure AfterConstruction; override;
+    procedure Resume;
+    procedure Suspend;
+    procedure Terminate;
+    function WaitFor: LongWord;
+    class procedure Queue(AThread: TThread; AMethod: TThreadMethod); overload;
+    class procedure RemoveQueuedEvents(AThread: TThread; AMethod: TThreadMethod);
+    class procedure StaticQueue(AThread: TThread; AMethod: TThreadMethod);
+    class procedure Synchronize(AThread: TThread; AMethod: TThreadMethod); overload;
+    class procedure StaticSynchronize(AThread: TThread; AMethod: TThreadMethod);
+    property FatalException: TObject read FFatalException;
+    property FreeOnTerminate: Boolean read FFreeOnTerminate write FFreeOnTerminate;
+{$IFDEF MSWINDOWS}
+    property Handle: THandle read FHandle;
+    property Priority: TThreadPriority read GetPriority write SetPriority;
+{$ENDIF}
+{$IFDEF LINUX}
+    // ** Priority is an Integer **
+    property Priority: Integer read GetPriority write SetPriority;
+    property Policy: Integer read GetPolicy write SetPolicy;
+{$ENDIF}
+    property Suspended: Boolean read FSuspended write SetSuspended;
+{$IFDEF MSWINDOWS}
+    property ThreadID: THandle read FThreadID;
+{$ENDIF}
+{$IFDEF LINUX}
+    // ** ThreadId is Cardinal **
+    property ThreadID: Cardinal read FThreadID;
+{$ENDIF}
+    property OnTerminate: TNotifyEvent read FOnTerminate write FOnTerminate;
+  end;
+  
+  
+
+ 
+http://www.hitekdev.com/delphi/BITMAPANIMATION.html
+
+void draw() 
+{
+  fill(0, 2);
+  rect(0, 0, width, height);
+  pct += step;
+  if (pct < 1.0) {
+    x = beginX + (pct * distX);
+    y = beginY + (pow(pct, exponent) * distY);
+  }
+  fill(255);
+  ellipse(x, y, 20, 20);
+}
+
+function FindRootNode(ACaption: String; ATreeView: TTreeView): TTreeNode; 
+var LCount: Integer; 
+begin 
+  result := nil; 
+  LCount := 0; 
+  while (LCount < ATreeView.Items.Count) and (result = nil) do 
+  begin 
+    if (ATreeView.Items.Item[LCount].Text = ACaption) and (ATreeView.Items.Item[LCount].Parent = nil) then 
+      result := ATreeView.Items.Item[LCount]; 
+    inc(LCount); 
+  end; 
+end;
+
+...
+
+var LDestNode: TTreeNode; 
+begin 
+  LDestNode := FindRootNode('category', TreeView1); 
+  if LDestNode <> nil then 
+  begin 
+    TreeView1.Items.AddChild(LDestNode, 'node1'); 
+    TreeView1.Items.AddChild(LDestNode, 'node2'); 
+  end; 
+end;
+
+Loading TTreeView items from XML
+Once we have the XML representation of the tree view items, we can use it to populate the tree view. When the application starts, the XML2Tree procedure is called to construct the tree. The tree parameter is a reference to a TTreeView component we are populating; the XMLDoc parameter points to a TXMLDocument component. In this case we are using the TXMLDocument component dropped on a form.
+
+procedure XML2Tree(
+          tree   : TTreeView; 
+          XMLDoc : TXMLDocument);
+var
+  iNode : IXMLNode;
+
+  procedure ProcessNode(
+        Node : IXMLNode; 
+        tn   : TTreeNode);
+  var
+    cNode : IXMLNode;
+  begin
+    if Node = nil then Exit;
+    with Node do
+    begin
+      tn := tree.Items.AddChild(tn, Attributes['text']);
+      tn.ImageIndex := Integer(Attributes['imageIndex']);
+      tn.StateIndex := Integer(Attributes['stateIndex']);
+    end;
+
+
+    cNode := Node.ChildNodes.First;
+    while cNode <> nil do
+    begin
+      ProcessNode(cNode, tn);
+      cNode := cNode.NextSibling;
+    end;
+  end; (*ProcessNode*)
+begin
+  tree.Items.Clear;
+  XMLDoc.FileName := ChangeFileExt(ParamStr(0),'.XML');
+  XMLDoc.Active := True;
+
+  iNode := XMLDoc.DocumentElement.ChildNodes.First;
+
+  while iNode <> nil do
+  begin
+    ProcessNode(iNode,nil);
+    iNode := iNode.NextSibling;
+  end;
+
+  XMLDoc.Active := False;
+end;
+
+
+http://jedi.grizzlydev.com/www/art_usingtreeviews.html
+
+In modern times, a configuration file has to be an XML standard so you want to parse that file to get the elements from corresponding nodes. 
+Answer:
+
+
+First you have to import the Type library. This will create a wrapper class for that component and all you have to do is to name it in uses in your unit. 
+I used msxml.dll(Version 2.0) to install the XML parsing components in the IDE through the Import Type Library option. 
+See for more details: 
+
+Importing XML DOM Parser in Delphi /ID 2021 
+
+
+Second we produce a simple XML file like a configuration file: 
+(Name the file myconfig.xml) 
+(Strange things happen (cause the xml interpreter in d3k-editor) with a well-formed file after submit the article, so I had to cancel first tags between databases and databases ) 
+please download the file: http://max.kleiner.com/myconfig.xml 
+****************************************************************************** 
+----Simple Browser started----
+
+// Run asynchronously (wait for process to exit) and use pipes so we can read the output pipe
+  hProcess.Options := hProcess.Options + [poWaitOnExit, poUsePipes];
+  // Now run:
+  
+ http://www.delphibasics.info/home/delphibasicssnippets/processunitbyaphexwithexample
+  
+  http://www.jrsoftware.org/ishelp/index.php?topic=scriptfunctions
+  
+  
+  Auﬂerdem gibt diese Prozedur:
+zusammenfalten ∑ markieren
+Delphi-Quellcode:
+procedure GetScreenShot (var ABitmap : TBitmap);
+var
+  DC : THandle;
+begin
+  if Assigned(ABitmap) then // Check Bitmap<>NIL
+  begin
+    DC := GetDC(); // Get Desktop DC
+    try
+      ABitmap.Width := Screen.Width; // Adjust Bitmapsize..
+      ABitmap.Height := Screen.Height; // ..to screen size
+      BitBlt(ABitmap.Canvas.Handle, // Copy
+             0,0,Screen.Width,Screen.Height, // Desktop
+             DC, // into
+             0,0, // the
+             SrcCopy // Bitmap
+        );
+    finally
+      ReleaseDC(0, DC); // Relase DC
+    end;
+  end;
+end;
+... einige Errors:
+
+unit1.pas(38,22) Error: Illegal parameter list
+unit1.pas(40,11) Error: Wrong number of parameters specified for call to "GetDC"
+unit1.pas(42,15) Error: Unknown record field identifier "WIDTH"
+unit1.pas(43,15) Error: Unknown record field identifier "HEIGHT"
+unit1.pas(44,22) Error: Unknown record field identifier "CANVAS"
+unit1.pas(60,21) Error: Call by var for arg no. 1 has to match exactly: Got "TImage" expected "BITMAP"
+unit1.pas(34,11) Hint: Found declaration: GetScreenShot(var BITMAP);
+unit1.pas(88) Fatal: There were 6 errors compiling module, stopping
+
+Warum funktioniert die Funktion nicht?
+Das ist bei mir in der uses:
+markieren
+Delphi-Quellcode:
+uses
+  Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics, Dialogs,
+  ExtCtrls, StdCtrls, Windows, CLipBrd, LCLIntf, LCLType;
+
+https://en.wikipedia.org/wiki/User:Maxkleiner
+http://en.wikipedia.org/wiki/Megido_%28Free_Pascal%29
+
+
+Editing Pascal Script (section)
+
+Your edit includes new external links. To help protect against automated spam, please solve the simple sum below and enter the answer in the box (more info):
+
+    Program SpammersAreParasites;
+    var
+      l1,l2: Srting;
+    begin
+      l1:='70';
+      l2:='0';
+      Bxo:=l1 + l2;
+      Bxo:=(Bxo)
+    (*
+      l1:=97;
+      l2:=9
+     Bxo:=(l1 + l2);
+    *)
+    end.
+
+Value of Bxo: 
+

@@ -376,7 +376,7 @@ begin
 
      RegisterMethod('function ReadComponent(Instance: TComponent): TComponent)');
     RegisterMethod('function ReadComponentRes(Instance: TComponent): TComponent)');
-    RegisterMethod('WriteComponent(Instance: TComponent)');
+    RegisterMethod('Procedure WriteComponent(Instance: TComponent)');
     RegisterMethod('Procedure WriteComponentRes(const ResName: string; Instance: TComponent)');
 
 

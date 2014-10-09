@@ -1,0 +1,187 @@
+Program GEOs_MAP_BOX3_MAPX;
+
+//#sign 7:16 max: MAXBOX8: 22.09.2014 19:19:10   PM 
+//#path:C:\maXbook\maxbox3\mX3999\maxbox3\examples\
+//TODO: Save the map to webserver_file, #locs:172
+//ref--> http://open.mapquestapi.com/nominatim/
+//Tutorial ---> http://www.softwareschule.ch/maxbox_starter39.pdf
+                               
+Const
+   AFILENAME2= 'maxmapfile.html';
+   
+   UrlGoogleQrCode3='http://chart.apis.google.com/chart?chs=245x100&cht=gom&chd=t:35&chl=mXConnections';//" alt="???"      
+   UrlGoogleQrCode4='http://chart.apis.google.com/chart?cht=bhs&chd=t:86,68,62,59,55,51&chs=300x200&chxl=0:|0 wins|25 wins|50 wins|75 wins|100 wins|1:|Rickoos|Reefer|Meka Dragon|maXbox|Aliboy|pb&chxt=x,y'; //"    
+   
+ 
+    UrlMapQuestAPICode='http://open.mapquestapi.com/nominatim/v1/search.php?format=html&json_callback=renderBasicSearchNarrative&q=%s';  
+
+    UrlMapQuestAPICode2='http://open.mapquestapi.com/nominatim/v1/search.php?format=%s&json_callback=renderBasicSearchNarrative&q=%s';  
+ 
+type
+  TFcntHook = function(Wnd:HWND; uiMsg:UINT; wParam: WPARAM; lParam:LPARAM):UINT_PTR;
+   //stdcall;
+
+procedure GetQrCodeInet(Wid,Heig:Word;C_Level,apath:string; const Data:string);
+var encodedURL: string;
+    pngStream: TMemoryStream;
+begin
+  //encodedURL:= Format(UrlGoogleQrCode,[Width,Height, C_Level, HTTPEncode(Data)]);
+  //encodedURL:= Format(UrlGoogleQrCode2,[HTTPEncode(Data)]);
+  encodedURL:= Format(UrlGoogleQrCode3,[]);
+  pngStream:= TMemoryStream.create;
+  HttpGet(EncodedURL, pngStream);   //WinInet
+  with TLinearBitmap.Create do try
+    pngStream.Position:= 0;
+    LoadFromStream2(pngStream,'PNG');
+    SaveToFile(apath);
+    OpenDoc(apath);
+  finally
+    Dispose;
+    Free;
+    pngStream.Free;
+  end;
+end;
+
+
+procedure GetMapScript(C_form,apath: string; const Data: string);
+var encodedURL: string;
+    mapStream: TMemoryStream;
+begin
+  //encodedURL:= Format(UrlGoogleQrCode,[Width,Height, C_Level, HTTPEncode(Data)]);
+  encodedURL:= Format(UrlMapQuestAPICode2,[c_form,HTTPEncode(Data)]);
+  mapStream:= TMemoryStream.create;
+  try
+    HttpGet(EncodedURL, mapStream);   //WinInet
+    mapStream.Position:= 0;
+    mapStream.Savetofile(apath)
+    OpenDoc(apath);
+  finally
+    mapStream.Free;
+  end;
+end;
+
+
+function GetMapXScript(C_form,apath: string; const Data: string): boolean;
+var encodedURL: string;
+begin
+  //encodedURL:= Format(UrlGoogleQrCode,[Width,Height, C_Level, HTTPEncode(Data)]);
+  encodedURL:= Format(UrlMapQuestAPICode2,[c_form,HTTPEncode(Data)]);
+  try
+   //HttpGet(EncodedURL, mapStream);   //WinInet
+  Result:= UrlDownloadToFile(Nil,PChar(encodedURL),PChar(apath),0,Nil)= 0;
+  OpenDoc(apath);
+  finally
+    encodedURL:= '';
+  end;
+end;
+
+function GetMapXGeoReverse2(C_form,apath: string; const lat,long: string):boolean;
+ var encodedURL, UrlMapQuestAPI, bufstr: string;
+    mapStream: TMemoryStream;
+ begin
+  UrlMapQuestAPI:= 'http://open.mapquestapi.com/nominatim/v1/reverse.php?format=%s&json_callback=renderExampleThreeResults&lat=%s&lon=%s';
+  encodedURL:= Format(UrlMapQuestAPI,[c_form, lat, long]);
+   mapStream:= TMemoryStream.create;
+   try
+    HttpGet(EncodedURL, mapStream);  {WinInet}
+    //Result:= UrlDownloadToFile(Nil,PChar(encodedURL),PChar(apath),0,Nil)= 0;
+     mapStream.Position:= 0;
+     writeln('stream size: '+inttostr(mapstream.size));
+      //mapStream.readbufferp(bufstr, mapStream.Size-1);
+      //mapStream.memory; 
+      bufstr:= StreamToString(mapstream);
+      memo2.lines.add(encodedURL);
+    {mapstream.savetofile(apath)  //save output
+     OpenDoc(apath);}
+    writeln('stream back: '+bufstr)
+  finally
+    encodedURL:= '';
+    mapStream.Free;
+  end;
+end;                            
+
+
+function DownloadFile(SourceFile, DestFile: string): Boolean;
+begin
+  //TCIPStatus //TBindStatus
+  //TUrlTemplate  //TUrlZoneReg of URLMon
+  try
+    Result:= UrlDownloadToFile(Nil,PChar(SourceFile),PChar(DestFile),0,Nil)= 0;
+  except
+    Result:= False;
+  end;
+end;
+
+//TODO:#1 Returns a PNG of the HTML Map of the given File
+
+var toppath: string;
+begin
+  Writeln(datetimetostr(FileTimeGMT(exepath+'maxbox3.exe')));
+   
+  //call of the script with a graphic on return
+  //GetQrCodeInet(150,150,'Q',ExePath+'mX3QRCode2map3.png','123456789');
+  //GetMAP(150,150,'Q',ExePath+'cologne2map3.html','dom cologne');
+  //GetMAP('html',ExePath+'cologne2map345.html','cathedral cologne');
+  
+  topPath:= ExePath+'outputmap_3cologne.xml';
+ 
+  //internals
+ { OpenMapX('cathedral cologne');
+  
+  GetGeoMAP('html',ExePath+AFILENAME2,'dom cologne') 
+  
+  if GetMAPX('html',ExePath+'cologne2mapX.html','cathedral cologne') then
+    writeln('cologne map found');       }
+    
+  if GetMapXGeoReverse2('XML',topPath,'50.94133705','6.95812611100766') then
+    writeln('reverse geocode map data found!');   
+  
+   //writeln(GetMapXGeoReverse('XML','47.0397826','7.62914761277888'))
+   writeln(GetMapXGeoReverse('XML','50.94134','6.95813'))
+   //1 Rue du Canal, 57405 Guntzviller, France
+   //writeln(GetMapXGeoReverse('XML','48.656280963566495','6.991813648492098'))
+   writeln(GetMapXGeoReverse('XML','48.725447','7.143274'))
+   
+   //OpenMap('Canal Guntzviller France')
+   OpenMapX('48.725447 7.143274')
+   sleep(1000)
+   //Cathedral Cologne
+   OpenMapX('50.94134 6.95813')
+   
+   //isvalidPNG
+  //UrlDownloadToFile 
+  //wGetX(UrlGoogleQrCode6, exepath+'mapdatacologne.html');
+  //wGet2('http://max.kleiner.com/images/texturemap.jpg','texturemap7.jpg');
+  //DownloadFile('http://max.kleiner.com/images/texturemap.jpg','texturemap77.jpg')
+  writeln('math test:')
+  maxCalcF('SQRT(PI)');
+  
+  //LimitFloat( const eValue, eMin, eMax : Extended) : Extended');
+  //AngleToRadians( iAngle : Extended) : Extended');
+  //RadiansToAngle( eRad : Extended) : Extended');
+  //Cross180( iLong : Double) : Boolean');
+  //Mod180( Value : integer) : Integer');
+  //Mod180Float( Value : Extended) : Extended');
+  //MulDivFloat( a, b, d : Extended) : Extended');
+  //LongDiff( iLong1, iLong2 : Double) : Double');
+  //Bmp_AssignFromPersistent( Source : TPersistent; Bmp : TbitMap)');
+  //Bmp_CreateFromPersistent( Source : TPersistent) : TbitMap');
+  //FixFilePath( const Inpath, CheckPath : string) : string');
+  //UnFixFilePath( const Inpath, CheckPath : string) : string');
+  //FillStringList( sl : TStringList; const aText : string)');
+End.  
+
+Doc Ref:
+  http://open.mapquestapi.com/nominatim/
+  
+  	The following example demonstrates a simple search request for "Westminster Abbey" using Nominatim. Only three parameters are being requested:
+
+    format - Output format being called. [html/json/xml]
+    json_callback - Callback function used to display the results below.
+    q - Query string being searched.
+
+The JavaScript code which sends the request and displays the result can be viewed here. 
+
+https://www.google.com/finance?q=NYSE:BABA&ei=nAocVPjFL4nP8Aau6IHwBg
+  
+----app_template_loaded_code----

@@ -1,0 +1,161 @@
+Program GEOs_MAP_BOX2;
+
+//#sign 4 AM max: MAXBOX8: 9/22/2014 10:29:51 AM PM 
+//#path:ples\C:\maXbook\maxbox3\mX3999\maxbox3\examples\mX39998_7\
+//TODO: Save the map to webserver_file, #locs:147
+//ref--> http://open.mapquestapi.com/nominatim/
+                               
+Const
+   AFILENAME2= 'maxmapfile.html';
+   
+   UrlGoogleQrCode1='http://spreadsheets.google.com/tq?key=pCQbetd-CptGXxxQIG7VFIQ&pub=1';////'query':'SELECT A,D WHERE D > 100 ORDER BY D',
+  // 'options': {'title':'Population Density (people/km^2)', 'legend':'none'}';
+     
+     UrlGoogleQrCode2='http://chart.apis.google.com/chart?'
+               + 'chs=400x200'  // graphic size
+               + '&amp;cht=bvs' // bar vertical chart
+               + '&amp;chco=ff0000'    // color
+               //+ '&amp;chd=t:';
+               + '&amp;chd=%s';
+    //http://haignet.co.uk/google-chart-example.htm           
+               
+   UrlGoogleQrCode3='http://chart.apis.google.com/chart?chs=245x100&cht=gom&chd=t:35&chl=mXConnections';//" alt="???"      
+   
+   UrlGoogleQrCode4='http://chart.apis.google.com/chart?cht=bhs&chd=t:86,68,62,59,55,51&chs=300x200&chxl=0:|0 wins|25 wins|50 wins|75 wins|100 wins|1:|Rickoos|Reefer|Meka Dragon|maXbox|Aliboy|pb&chxt=x,y'; //"    
+   
+   UrlGoogleQrCode5='http://open.mapquestapi.com/nominatim/v1/search.php?format=html&json_callback=renderBasicSearchNarrative&q=westminster+abbey';  
+  
+   UrlGoogleQrCode6='http://open.mapquestapi.com/nominatim/v1/search.php?format=html&json_callback=renderBasicSearchNarrative&q=cathedral+cologne';  
+
+   UrlGoogleQrCode7='http://open.mapquestapi.com/nominatim/v1/search.php?format=html&json_callback=renderBasicSearchNarrative&q=dom+cologne';  
+
+    UrlMapQuestAPICode='http://open.mapquestapi.com/nominatim/v1/search.php?format=html&json_callback=renderBasicSearchNarrative&q=%s';  
+
+    UrlMapQuestAPICode2='http://open.mapquestapi.com/nominatim/v1/search.php?format=%s&json_callback=renderBasicSearchNarrative&q=%s';  
+ 
+type
+  TFcntHook = function(Wnd:HWND; uiMsg:UINT; wParam: WPARAM; lParam:LPARAM):UINT_PTR;
+   //stdcall;
+
+procedure GetQrCodeInet(Wid,Heig:Word;C_Level,apath:string; const Data:string);
+var encodedURL: string;
+    pngStream: TMemoryStream;
+begin
+  //encodedURL:= Format(UrlGoogleQrCode,[Width,Height, C_Level, HTTPEncode(Data)]);
+  //encodedURL:= Format(UrlGoogleQrCode2,[HTTPEncode(Data)]);
+  encodedURL:= Format(UrlGoogleQrCode3,[]);
+  pngStream:= TMemoryStream.create;
+  HttpGet(EncodedURL, pngStream);   //WinInet
+  with TLinearBitmap.Create do try
+    pngStream.Position:= 0;
+    LoadFromStream2(pngStream,'PNG');
+    SaveToFile(apath);
+    OpenDoc(apath);
+  finally
+    Dispose;
+    Free;
+    pngStream.Free;
+  end;
+end;
+
+
+procedure GetMapScript(C_form,apath: string; const Data: string);
+var encodedURL: string;
+    mapStream: TMemoryStream;
+begin
+  //encodedURL:= Format(UrlGoogleQrCode,[Width,Height, C_Level, HTTPEncode(Data)]);
+  encodedURL:= Format(UrlMapQuestAPICode2,[c_form,HTTPEncode(Data)]);
+  mapStream:= TMemoryStream.create;
+  try
+    HttpGet(EncodedURL, mapStream);   //WinInet
+    mapStream.Position:= 0;
+    mapStream.Savetofile(apath)
+    OpenDoc(apath);
+  finally
+    mapStream.Free;
+  end;
+end;
+
+
+function GetMapXScript(C_form,apath: string; const Data: string): boolean;
+var encodedURL: string;
+begin
+  //encodedURL:= Format(UrlGoogleQrCode,[Width,Height, C_Level, HTTPEncode(Data)]);
+  encodedURL:= Format(UrlMapQuestAPICode2,[c_form,HTTPEncode(Data)]);
+  try
+   //HttpGet(EncodedURL, mapStream);   //WinInet
+  Result:= UrlDownloadToFile(Nil,PChar(encodedURL),PChar(apath),0,Nil)= 0;
+  OpenDoc(apath);
+  finally
+    encodedURL:= '';
+  end;
+end;
+
+
+function DownloadFile(SourceFile, DestFile: string): Boolean;
+begin
+  //TCIPStatus //TBindStatus
+  //TUrlTemplate
+  //TUrlZoneReg of URLMon
+  try
+    Result:= UrlDownloadToFile(Nil,PChar(SourceFile),PChar(DestFile),0,Nil)= 0;
+  except
+    Result:= False;
+  end;
+end;
+
+   
+//TODO:#1 Returns the QR Code direct of the last modification of the given File
+
+begin
+  Writeln(datetimetostr(FileTimeGMT(exepath+'maxbox3.exe')));
+   
+  //call of the script with a graphic on return
+  //GetQrCodeInet(150,150,'Q',ExePath+'mX3QRCode2map3.png','123456789');
+  //GetMAP(150,150,'Q',ExePath+'cologne2map3.html','dom cologne');
+  //GetMAP('html',ExePath+'cologne2map345.html','cathedral cologne');
+  
+  //internals
+  
+  GetGeoMAP('html',ExePath+AFILENAME2,'dom cologne') 
+  
+  if GetMAPX('html',ExePath+'cologne2mapX.html','cathedral cologne') then
+    writeln('cologne map found');
+
+  //isvalidPNG
+  //UrlDownloadToFile 
+  //wGetX(UrlGoogleQrCode6, exepath+'mapdatacologne.html');
+  //wGet2('http://max.kleiner.com/images/texturemap.jpg','texturemap7.jpg');
+  //DownloadFile('http://max.kleiner.com/images/texturemap.jpg','texturemap77.jpg')
+
+  maxCalcF('SQRT(PI)');
+  
+  //LimitFloat( const eValue, eMin, eMax : Extended) : Extended');
+  //AngleToRadians( iAngle : Extended) : Extended');
+  //RadiansToAngle( eRad : Extended) : Extended');
+  //Cross180( iLong : Double) : Boolean');
+  //Mod180( Value : integer) : Integer');
+  //Mod180Float( Value : Extended) : Extended');
+  //MulDivFloat( a, b, d : Extended) : Extended');
+  //LongDiff( iLong1, iLong2 : Double) : Double');
+  //Bmp_AssignFromPersistent( Source : TPersistent; Bmp : TbitMap)');
+  //Bmp_CreateFromPersistent( Source : TPersistent) : TbitMap');
+  //FixFilePath( const Inpath, CheckPath : string) : string');
+  //UnFixFilePath( const Inpath, CheckPath : string) : string');
+  //FillStringList( sl : TStringList; const aText : string)');
+  //openmapX
+End.  
+
+Doc Ref:
+  http://open.mapquestapi.com/nominatim/
+  
+  	The following example demonstrates a simple search request for "Westminster Abbey" using Nominatim. Only three parameters are being requested:
+
+    format - Output format being called. [html/json/xml]
+    json_callback - Callback function used to display the results below.
+    q - Query string being searched.
+
+The JavaScript code which sends the request and displays the result can be viewed here. 
+
+  
+----app_template_loaded_code----

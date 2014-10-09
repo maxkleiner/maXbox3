@@ -1,0 +1,87 @@
+PROGRAM GeoCodingMemStreamDemo;
+//Doc at http://open.mapquestapi.com/nominatim/
+//#sign:21 PMmax: MAXBOX8: 22.09.2014 19:40:53   9:41:53 
+//#path:ples\C:\maXbook\maxbox3\mX3999\maxbox3\examples\es\
+//Ex. of Reverse Geocoding with OpenStreetMap /mapquestAPI
+
+Const 
+  UrlMapQuestAPICode2='http://open.mapquestapi.com/nominatim/v1/search.php?format=%s&json_callback=renderBasicSearchNarrative&q=%s';  
+  
+
+//<FUNCTION>
+function GetMapXScript(C_form,apath: string; const Data: string): boolean;
+  var encodedURL: string;
+begin
+  encodedURL:= Format(UrlMapQuestAPICode2,[c_form,HTTPEncode(Data)]);
+  try
+    //HttpGet(EncodedURL, mapStream);   //WinInet
+    Result:= UrlDownloadToFile(Nil,PChar(encodedURL),PChar(apath),0,Nil)= 0;
+    OpenDoc(apath);
+  finally
+    encodedURL:= '';
+  end;
+end;
+
+
+function GetLocalStream(C_form: string; const lat,long: string):boolean;
+ var encodedURL, UrlMapQuestAPI, bufstr: string;
+     mStream: TMemoryStream;
+     idhttp: TIdHttp;// THTTPSend;
+     len: integer;
+ begin
+   UrlMapQuestAPI:= 'http://192.168.1.43:9000';
+   encodedURL:= UrlMapQuestAPI;
+   idHTTP:= TIdHTTP.Create(NIL)
+   mStream:= TMemoryStream.create;
+   try
+     //HttpGet(EncodedURL, mStream);  {WinInet}
+     idHTTP.Get1(EncodedURL, mStream)
+     mStream.Position:= 0;
+     writeln('stream size: '+inttostr(mStream.size));
+     //mStream.memory; 
+     len:= mStream.Size - mStream.Position;  
+     SetLength(bufstr, len);
+     mStream.readbuffer(bufstr, len)
+     writeln('debug stream local back: '+bufstr)
+   finally
+     encodedURL:= '';
+     mStream.Free;
+     idHTTP.Disconnect
+     idHTTP.Free;
+     result:= true;
+   end;
+ end;                            
+
+
+Begin  //Main
+//<Executable statements>
+    writeln(GetMapXGeoReverse('XML','47.0397826','7.62914761277888'))
+       //writeln('reverse geocode map data found!');   
+   //Test with OpenMapX('oberburg') 
+  //OpenMapX('ubs ag burgdorf') ;
+   
+   if GetLocalStream('XML','47.0397826','7.62914761277888') then
+    writeln('reverse indy geocode local map data found!');   
+   
+End. 
+
+Ref:
+http://embarcadero.newsgroups.archived.at/public.delphi.vcl.components.using/200907/0907292775.html
+Note: in both cases, this code is assuming D2007 or earlier.  In D2009 and
+later, String is Unicode now, so you need to know the Encoding of the
+TStream contents ahead of time in order for the bytes to be interpretted as,
+or converted to, Unicode correctly.  Otherwise, you would have to change #1
+to operate on AnsiString or RawByteString instead (#2 may not work correctly
+in D2009+ is a proper Encoding is not specified).
+
+-- 
+Test Ref:  XML, JSON, HTML
+
+----app_template_loaded_code----
+<!-- Script Size:  1.00 KB  --><!-- TWO STEPS TO INSTALL DYNAMIC CLOCK:
+  1.  Copy the coding into the HEAD of your HTML document
+  2.  Add the last code into the BODY of your HTML document  --><!-- STEP ONE: Paste this code into the HEAD of your HTML document  -->
+<SCRIPT language=JavaScript>
+<!-- The JavaScript Source!! http://javascript.internet.com -->
+
+ 

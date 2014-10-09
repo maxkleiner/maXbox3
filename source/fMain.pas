@@ -116,6 +116,7 @@
          9890       build 98_6 5 more units fileclass set ,dmmcanvas, led set, morse gen
          9925       build 98_7 maps, maXmap, downloadengine
          9938       build 98_8 IDL Syntax, maXmap, downloadengine , openmapX
+         10050      build 100 3 units, cgi, openmapX3, runbytecode, synwrap, cgi 
 
                   [the last one before V4 in 2015]
                    V4.0   in  June 2015
@@ -165,9 +166,9 @@ const
    ALLUNITLIST = 'docs\maxbox3_9.xml'; //'in /docs;
    INCLUDEBOX = 'pas_includebox.inc';
    BOOTSCRIPT = 'maxbootscript.txt';
-   MBVERSION = '3.9.9.98';
+   MBVERSION = '3.9.9.100';
    MBVER = '399';              //for checking!
-   MBVER2 = '39998';              //for checking!
+   MBVER2 = '399100';              //for checking!
    EXENAME ='maXbox3.exe';
    MXSITE = 'http://www.softwareschule.ch/maxbox.htm';
    MXVERSIONFILE = 'http://www.softwareschule.ch/maxvfile.txt';
@@ -530,6 +531,7 @@ type
     Tutorial31Closure1: TMenuItem;
     GEOMapView1: TMenuItem;
     SynIdlSyn1: TSynIdlSyn;
+    Run1: TMenuItem;
     procedure IFPS3ClassesPlugin1CompImport(Sender: TObject; x: TPSPascalCompiler);
     procedure IFPS3ClassesPlugin1ExecImport(Sender: TObject; Exec: TPSExec; x: TPSRuntimeClassImporter);
     procedure PSScriptCompile(Sender: TPSScript);
@@ -789,6 +791,7 @@ type
     procedure WebCam1Click(Sender: TObject);
     procedure Tutorial31Closure1Click(Sender: TObject);
     procedure GEOMapView1Click(Sender: TObject);
+    procedure Run1Click(Sender: TObject);
     //procedure Memo1DropFiles(Sender: TObject; X,Y: Integer; AFiles: TStrings);
   private
     STATSavebefore: boolean;
@@ -1879,6 +1882,12 @@ uses
   //uPSI_GIS_SysUtils,
   uPSI_LedNumber,
   uPSI_StStrL,         //3.9.9.98_8
+  uPSI_indGnouMeter,
+  uPSI_Sensors,
+  uPSI_pwmain,   //beta but stable, 2015 V4
+  uPSI_pwnative_out,
+  uPSI_HTMLUtil,
+  uPSI_synwrap1,
 
   ///
    //MDIFrame,
@@ -2946,6 +2955,12 @@ begin
  SIRegister_cparserutils(X);
  SIRegister_LedNumber(X);
  SIRegister_StStrL(X);
+ SIRegister_indGnouMeter(X);
+ SIRegister_Sensors(X);
+ SIRegister_pwnative_out(X);
+ SIRegister_HTMLUtil(X);
+ SIRegister_synwrap1(X);
+ SIRegister_pwmain(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4272,7 +4287,12 @@ begin
   RIRegister_cparserutils_Routines(Exec); //3.9.9.98_7
   RIRegister_LedNumber(X);
   RIRegister_StStrL_Routines(EXec);
-
+  RIRegister_indGnouMeter(X);
+  RIRegister_Sensors(X);
+  RIRegister_pwnative_out_Routines(Exec);
+  RIRegister_HTMLUtil_Routines(Exec);
+  RIRegister_synwrap1_Routines(Exec);
+  RIRegister_pwmain_Routines(Exec);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -4457,13 +4477,13 @@ begin
       //last_fName10:= 'PRELAST_FILE11';
 
       last_fontsize:= 11;
-
       IPPORT:= 8080;
       IPHOST:= '127.0.0.1';
       COMPORT:= 3;
       //NAVWIDTH:= 100; min
       lbintflistwidth:= 350;
   // if (ParamStr(1) = '') then begin   //bug
+   SetCurrentDir(ExtractFilePath(ParamStr(0)));   //3.9.9.100
     if fileexists(DEFINIFILE) then LoadFileNameFromIni;  //script file
     DefFileread;
   // end;
@@ -4563,7 +4583,8 @@ begin
  try
   if (ParamStr(1) <> '') then begin
      //showmessage('this is param debug');
-     act_Filename:= ParamStr(1);
+     SetCurrentDir(ExtractFilePath(ParamStr(0))); //3.9.9.100 !
+    act_Filename:= ParamStr(1);
      memo1.Lines.LoadFromFile(act_Filename);
      memo2.Lines.Add(Act_Filename + CLIFILELOAD);
      statusBar1.panels.items[0].text:= Act_Filename + CLIFILELOAD;
@@ -4996,6 +5017,11 @@ begin
   end;
 end;
 
+function RunCompiledScript3(Bytecode: AnsiString; out RuntimeErrors: AnsiString): Boolean;
+begin
+  result:= maxform1.RunCompiledScript2(Bytecode, RuntimeErrors);
+end;
+
 
 procedure SwapChar(var X,Y: char);
 var tmp: char;
@@ -5392,6 +5418,8 @@ begin
 
   Sender.AddFunction(@DownloadFile, 'function DownloadFile(SourceFile, DestFile: string): Boolean;');
   Sender.AddFunction(@DownloadFileOpen, 'function DownloadFileOpen(SourceFile, DestFile: string): Boolean;');
+  Sender.AddFunction(@RunCompiledScript3, 'function RunByteCode(Bytecode: AnsiString; out RuntimeErrors: AnsiString): Boolean;');
+  Sender.AddFunction(@RunCompiledScript3, 'function RunCompiledScript2(Bytecode: AnsiString; out RuntimeErrors: AnsiString): Boolean;');
 
   Sender.AddFunction(@IsApplication, 'function IsApplication: Boolean;');
   Sender.AddFunction(@IsTerminalSession, 'function IsTerminalSession: Boolean;');
@@ -5484,7 +5512,7 @@ end;
 
 // facade and mediator pattern
 procedure TMaxForm1.Compile1Click(Sender: TObject);
-var mybytecode: string;
+var //mybytecode: string;
     stopw: TStopwatch;
     //debugoutform: TDebugoutput //static;
   procedure OutputMessages;
@@ -5608,15 +5636,14 @@ begin
       statusBar1.panels[1].text:= 'Form Active Lines: '+inttoStr(memo2.Lines.count-1);
       end
     end;
-
-    if STATShowBytecode then begin
+   { if STATShowBytecode then begin        //refactor 3.9.9.100
       mybytecode:= '';
       //PSScript.Comp.OnUses:= IFPS3ClassesPlugin1CompImport;
       PSScript.GetCompiled(mybytecode);   //compiler.getOutput
-      psscript.Comp.GetOutput(mybytecode);
+      //psscript.Comp.GetOutput(mybytecode);
       showAndSaveBCode(mybytecode);
       statusBar1.panels[1].text:= 'ByteCode Saved: '+mybytecode;
-    end;
+    end;}
      with ledimage do begin
         visible:= false;
        end;
@@ -5664,6 +5691,25 @@ begin
     end;
 end;
 
+procedure TMaxForm1.Run1Click(Sender: TObject);
+begin
+  //runs only precondition compile syntax check
+  if not PSScript.Execute then begin
+      memo1.SelStart := PSScript.ExecErrorPosition;
+      memo2.Lines.Add(PSScript.ExecErrorToString +' at '+Inttostr(PSScript.ExecErrorProcNo)
+                       +'.'+Inttostr(PSScript.ExecErrorByteCodePosition));
+      with ledimage do begin
+        parent:= statusbar1;
+        align:= alleft;
+        picture.bitmap.loadfromResourcename(HINSTANCE,'LED_RED_ON')
+       //bitmap.LoadFromResName
+      end;
+    end else begin
+    memo2.Lines.Add(' mX3 runs only executed: '+dateTimetoStr(Now())+
+              '  Memoryload: '+inttoStr(GetMemoryLoad) +'% use');
+    end;
+end;
+
 function TMaxForm1.RunCompiledScript(bytecode: ansistring; out RTErrors: string): boolean;
 begin
  //psscript.LoadExec;
@@ -5671,7 +5717,7 @@ begin
  result:= psscript.Exec.LoadData(bytecode)
     and psscript.Exec.RunScript and (psscript.Exec.ExceptionCode = erNoError);
  if not result then RTErrors:= PSErrorToString(psscript.Exec.ExceptionCode,'');
- //psscript.RuntimeImporter.CreateAndRegister(psscript,false);
+ //psscript.RuntimeImporter.CreateAndRegister(psscript.exec,false);
 end;
 
 function TMaxForm1.RunCompiledScript2(Bytecode: AnsiString; out RuntimeErrors: AnsiString): Boolean;
@@ -5679,26 +5725,56 @@ var
   Runtime: TPSExec;
   ClassImporter: TPSRuntimeClassImporter;
 begin
-  Runtime := TPSExec.Create;
-  ClassImporter := TPSRuntimeClassImporter.CreateAndRegister(Runtime, false);
+  Runtime:= TPSExec.Create;
+  //ClassImporter := TPSRuntimeClassImporter.CreateAndRegister(Runtime, false);
   try
     //ExtendRuntime(Runtime, ClassImporter);
     //IFPS3ClassesPlugin1ExecImport(Self, runtime, classImporter);
   //x: TIFPSRuntimeClassImporter);
+   // PSScript1Compile(PSScript1);
+   // PSScript1ExecImport(PSScript1, runtime, PSScript1.RuntimeImporter);
+
+    result:= psscript.Exec.LoadData(bytecode)
+    and psscript.Exec.RunScript and (psscript.Exec.ExceptionCode = erNoError);
+    if not result then RunTimeErrors:= PSErrorToString(psscript.Exec.ExceptionCode,'');
+
+ {  PSScript.RuntimeImporter.CreateAndRegister(runtime, false);
     Result:= Runtime.LoadData(Bytecode)
           and Runtime.RunScript
-          and (Runtime.ExceptionCode = erNoError);
-    if not Result then
-      RuntimeErrors:=  PSErrorToString(Runtime.LastEx, '');
+          and (Runtime.ExceptionCode = erNoError);  }
+     memo2.lines.add(bytecode);
+    //PSScript1.SetCompiled(Bytecode);
+    if not result then begin
+      IFPS3DataToText(Bytecode,Bytecode);
+      memo2.lines.add(bytecode);
+    end;
+    //if not Result then
+      //RuntimeErrors:=  PSErrorToString(Runtime.LastEx, '');
   finally
-    ClassImporter.Free;
+    //ClassImporter.Free;
     Runtime.Free;
   end;
 end;
 
+//helper
+function LoadFile(const FileName: TFileName): string;
+   begin
+     with TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite) do begin
+       try
+         SetLength(Result, Size);
+         Read(Pointer(Result)^, Size);
+       except
+         Result := '';  // Deallocates memory
+         Free;
+         raise;
+       end;
+       Free;
+     end;
+   end;
+
 
 procedure TMaxForm1.LoadBytecode1Click(Sender: TObject);
-var bcerrorcode: string;
+var bcerrorcode, sdata, afilename: string;
 begin
  with TOpenDialog.Create(self) do begin
     Filter:= 'ByteCode files (*.psb)|*.PSB';
@@ -5706,13 +5782,19 @@ begin
     defaultExt:= fileextension;
     title:= 'PascalScript ByteCode Open';
     InitialDir:= ExtractFilePath(application.ExeName)+'*.psb';
+    //SetCurrentDir(ExtractFilePath(ParamStr(0)));   //3.9.9.100
     if execute then begin
+    //filename:=
+     Memo2.lines.add('ByteCode Start of: '+filename+' '+datetimetostr(now)); //end else
+      sdata:= loadFile(filename);
+    //filename:= ExtractFilePath(ParamStr(0)) + ChangeFileExt(SCRIPTFILE,'.out');
          if MessageDlg(RCSTRMB+': Run ByteCode now?',
                   mtConfirmation, [mbYes,mbNo], 0) = mrYes then
-         if RunCompiledScript2(Filename, bcerrorcode) then begin
+         if RunCompiledScript2(sdata, bcerrorcode) then begin
             sysutils.beep;
-            showmessage('Byte Code run success')
-         end else
+            showmessage('Byte Code Run Success!');
+         Memo2.lines.add('ByteCode Success Message of: '+filename+' '+bcerrorcode); //end else
+        end else
       Memo2.lines.add('ByteCode Error Message: '+bcerrorcode); //end else
     end;
   //this open and free
@@ -5849,6 +5931,7 @@ begin
     SaveFileOptionsToIni(Act_Filename);
     STATEdchanged:= false;
     statusBar1.panels[2].text:= ' S';
+    memo1.Gutter.BorderColor:= clgreen;      //3.9.9.100
   end else
     Saveas3Click(sender);
 end;
@@ -5967,18 +6050,32 @@ begin
   end
 end;
 
+ {procedure TpsForm1.btnSaveCompClick(Sender: TObject);
+var
+  OutFile, sdata: string;
+  Fx: Longint ;
+begin
+  PSScript1.GetCompiled(sData);
+  OutFile:= ExtractFilePath(ParamStr(0)) + ChangeFileExt(SCRIPTFILE,'.out');
+  Fx:= FileCreate(OutFile) ;
+  FileWrite(Fx,sData[1],Length(sData));
+  FileClose(Fx) ;
+end;}
+
 
 procedure TMaxForm1.showAndSaveBCode(const bdata: string);
 var outfile: string;
     fx: longint;
 begin
  //numWritten:= 0;
- outfile:= ExtractFilePath(paramstr(0))+extractFilename(act_filename)+BYTECODE;
+ //outfile:= ExtractFilePath(paramstr(0))+extractFilename(act_filename)+BYTECODE;
+ outfile:= ExtractFilePath(ParamStr(0)) +
+        ChangeFileExt(extractFilename(act_filename),'.psb');
  //fx:= fileCreate(outfile);
  //fileWrite(fx, bdata[1], length(bdata));
  //nfileWrite(fx, bdata, length(bdata));
-
  //fileClose(fx);
+
  AssignFile(f, outfile); //BYTECODE
  {$I-}
  Rewrite(f); //1
@@ -5996,10 +6093,19 @@ begin
 end;
 
 procedure TMaxForm1.SBytecode1Click(Sender: TObject);
+var mybytecode: string;
 begin
- sBytecode1.Checked:= not sBytecode1.Checked;
- if sBytecode1.Checked then STATShowBytecode:= true else
-   STATShowBytecode:= false;
+ //sBytecode1.Checked:= not sBytecode1.Checked;
+ //if sBytecode1.Checked then STATShowBytecode:= true else
+   //STATShowBytecode:= false;
+    //if STATShowBytecode then begin
+      mybytecode:= '';
+      //PSScript.Comp.OnUses:= IFPS3ClassesPlugin1CompImport;
+      PSScript.GetCompiled(mybytecode);   //compiler.getOutput
+      //psscript.Comp.GetOutput(mybytecode);
+      showAndSaveBCode(mybytecode);
+      statusBar1.panels[1].text:= 'ByteCode Saved: '+mybytecode;
+    //end;
 end;
 
 procedure TMaxForm1.ScriptExplorer1Click(Sender: TObject);
@@ -6125,6 +6231,7 @@ begin
                   mtConfirmation, [mbYes,mbNo], 0) = mrYes then
          Save2Click(self);
          statusBar1.panels[2].text:= ' S';
+         memo1.Gutter.BorderColor:= clgreen;
        end else
         STATEdchanged:= false;
     last_fName:= Act_Filename;
@@ -6722,8 +6829,11 @@ var  p: TBufferCoord;
   if activelinecolor1.checked and StatActiveyellow then
       memo1.ActiveLineColor:= clYellow;
     //   else memo1.ActiveLineColor:= clNone;
-  if Changes * [scAll, scModified] <> [] then
+  if Changes * [scAll, scModified] <> [] then begin
     Statusbar1.Panels[1].Text:= ModifiedStrs[memo1.Modified];
+    //memo1.Gutter.BorderColor:= clyellow;
+  end;
+
   {if Changes * [scAll, scCaretX, scCaretY] <> [] then begin
     p:= memo1.CaretXY;
     Statusbar1.Panels[0].Text := Format('%6d:%3d',[p.Line, p.Char]);
@@ -8708,6 +8818,7 @@ begin
   memo1.Refresh; //2.8.1
   //debug statusBar1.SimpleText:= ' editior changed';
   statusBar1.panels[2].text:= ' M!'+' T:'+intToStr(numprocessthreads);
+  memo1.Gutter.BorderColor:= clwebyellow;  //clweblightyellow;
 end;
 
 
@@ -9493,6 +9604,7 @@ end;
 
 procedure TMaxForm1.DebugRun1Click(Sender: TObject);
 begin
+ memo1.Gutter.Gradient:= true;
  if cedebug.Running then begin
     FResume:= True
   end else begin

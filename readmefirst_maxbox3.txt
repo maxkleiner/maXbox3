@@ -1,9 +1,10 @@
 ****************************************************************
-Release Notes maXbox 3.9.9.98 October 2014
+Release Notes maXbox 3.9.9.100 November 2014
 ****************************************************************
 Add 8 Units, 1 Tutors, maXmap, OpenStreetView, MAPX, timers
 Function Menu/View/GEO Map View, DownloadFile, wgetX, sensors
 StreamUtils, IDL Syntax, OpenStreetMap, OpenMapX, LPT1
+ByteCode2, runByteCode, sensor panel, CGI of Powtils
 
 1006 unit uPSI_cyRunTimeResize;
 1007 unit uPSI_jcontrolutils;
@@ -12,9 +13,18 @@ StreamUtils, IDL Syntax, OpenStreetMap, OpenMapX, LPT1
 1010 unit uPSI_cparserutils; (+GIS_SysUtils) 
 1011 unit uPSI_LedNumber;
 1012 unit uPSI_StStrL;
+1013 unit uPSI_indGnouMeter;
+1014 unit uPSI_Sensors;
+1015 unit uPSI_pwnative_out; //CGI of powtils
+1016 unit uPSI_HTMLUtil;
+1017 unit uPSI_synwrap1; //httpsend
+1018 unit StreamWrap1
+1019 unit uPSI_pwmain; {beta}
+1020 unit pwtypes 
 
-SHA1:  maXbox3.exe 7C600FFC801FFF2AAEC83DD220202DDF5271C64D
-CRC32: maXbox3.exe E5450391
+
+SHA1:  maXbox3.exe B1CFFA2139BEF2D27D17C8212331A1E8C7584BD2
+CRC32: maXbox3.exe 304FC6C2
 
 
 ****************************************************************

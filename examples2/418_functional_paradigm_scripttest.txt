@@ -1,0 +1,476 @@
+PROGRAM Functionals;
+
+//////////////////////////////////////////////////////////////////////
+//  #sign: max: MAXBOX8: 10/7/2014 7:21:14 PM 
+//  Purpose: shows functions without state or vars,  no sideeffects //
+//  #path>SCON\C:\maXbook\EKON15\PASCON\\maxbox3\examples\          //
+//  Lines of Code #locs:364
+//////////////////////////////////////////////////////////////////////
+
+Const TEXTOUT = 'hi world of code coverage with cover age functions';
+
+{TYPE 
+<Type declarations>} 
+//<FUNCTION>
+//<PROCEDURE> 
+
+//{$I C:\maXbook\EKON15\PASCON\164_code_reviews.txt}
+
+//{$I ..\..\..\EKON15\PASCON\164_code_reviews.txt}
+//{$I ..\..\..\EKON15\PASCON\pas_includebox.inc}
+//{$I ..\..\..\EKON15\PASCON\pas_includebox_laz.inc}
+
+function CheckIEStartCommand: string;
+begin
+  Application.ProcessMessages;
+  with TRegistry.Create do try
+     rootkey:= HKey_Classes_Root;
+     OpenKey('\htmlfile\shell\open\command',false);
+     try 
+       result:= ReadString('');
+     except
+       result:= ''; 
+     end;
+     CloseKey;
+  finally
+     //isinteger
+     Free;
+  end;
+end;
+
+
+//TODO: no functional function, does have vars
+function SplitToken(const Text: string; SplitChar: Char;
+                            var First, Last: string): Boolean;
+var SplitPos: Integer;
+begin
+  Result:= False;
+  SplitPos:= Pos(SplitChar, Text);
+  if SplitPos = 0 then Exit;
+  First:= Trim(Copy(Text, 1, SplitPos -1));
+  Last:= Trim(Copy(Text, SplitPos +1, Length(Text) -SplitPos));
+  Result:= (First <>'') and (Last <>'');
+end;
+
+Procedure HideWindowForSecondsT(secs: integer);   
+Var T : tdateTime;
+begin
+  ShowWindow(Self.Handle, SW_Hide);
+  ShowWindow(Application.Handle, SW_Hide);
+  T:= Time;
+  Repeat
+    Application.ProcessMessages;
+  Until Time - T > secs / 24 / 3600;
+  ShowWindow(Self.Handle, SW_Show);
+  ShowWindow(Application.Handle, SW_Show);
+end;
+
+
+procedure Functional_1;
+var i: longint;
+begin
+  for i:= 0 to getFilelist(TStringlist.create,Exepath+'crypt\*.*').count-1 do  
+  //proc block
+     writeln(getFilelist(TStringlist.create,Exepath+'crypt\*.*').strings[i]); 
+end;        
+
+procedure Functional_2;
+var i: longint;
+begin
+  for i:= 0 to getFilelist1(Exepath+'crypt\*.*').count-1 do  
+  //func block
+     writeln(getFilelist1(Exepath+'crypt\*.*').strings[i]); 
+end;        
+
+procedure Functional_3;
+begin
+  //func block direct
+  Writeln(getFilelist1(Exepath+'crypt\*.*').Strings[2]); 
+end;        
+
+procedure Functional_4;
+begin
+  //func block direct
+  try
+    //Writeln(getComPorts.Strings[0]);
+    if iscom(0) then writeln('com found ');
+    if checkcom(0) = 0 then writeln('com found ');
+  except
+    showmessageBig('no_comports found'); 
+  end  
+end;   
+
+procedure Functional_5;
+var i: integer;
+begin
+ writeln(mbversion)
+ if mbverI >= 399 then
+ for i:= 0 to ALGetLocalIPs.Count-1 do 
+    PrintF('ipname2 of %-20s is: %s',[ALgetLocalIPs[i],
+                      ALIPAddrToName(ALgetLocalIPs[i])]);
+end;
+
+procedure Powtooltestdrive;
+begin
+ //Init;
+
+ //OffReadln;
+
+ //Lcase(const s: astr): astr;
+ //Ucase(const s: astr): astr;
+
+{ Posted Variable Functions } 
+// note: function names changed to 'post' in 1.7.X rather than old CGI
+ //CountPostVars: longword;
+ //GetPostVar(const name: astr): astr; overload;
+ {GetPostVar(const name: astr; filter: TFilterFunc): astr; overload;
+ GetPostVar_S(const name: astr; Security: integer): astr;
+ GetPostVar_SF(const name: astr; Security: integer): astr;
+ GetPostVarAsFloat(const name: astr): double;
+ GetPostVarAsInt(const name: astr): longint;
+ GetPostVar_SafeHTML(const name: astr): astr; }
+ //FetchPostVarName(idx: longword): astr;
+ {FetchPostVarVal(idx: longword): astr; overload;
+ FetchPostVarVal(idx: longword; filter: TFilterFunc): astr; overload;
+ FetchPostVarName_S(idx: longword; Security: integer): astr;
+ FetchPostVarVal_S(idx: longword; Security: integer): astr;
+ IsPostVar(const name: astr): bln;}
+
+{ TODO get cgi var based on a valid set of characters such as A..Z, 1..9, a..z
+  type TCharSet = set of char;
+       GetCgiVar(const input: astr; CharSet: TCharSet): bln;
+  Use the pwstrfilter unit, with Alpha, numeric, alphanumeric sets     }
+
+
+{ Abstract for Posts (cgi vars), Vars (macros), and Cookies }
+ //CountAny: longword;
+ //GetAny(const name: astr): astr; overload;
+ //GetAny(const name: astr; filter: TFilterFunc): astr; overload;
+ //GetAny_S(const name: astr; Security: integer): astr;
+ //7GetAnyAsFloat(const name: astr): double;
+ //GetAnyAsInt(const name: astr): longint;
+ //IsAny(const name: astr): byte;
+
+{ Cookie s }
+ //CountCookies: longword;
+ {FetchCookieName(idx: longword): astr;
+ FetchCookieVal(idx: longword): astr; overload;
+ FetchCookieVal(idx: longword; filter: TFilterFunc): astr; overload;
+ GetCookie(const name: astr): astr; overload;
+ GetCookie(const name: astr; filter: TFilterFunc): astr; overload;
+ GetCookieAsFloat(const name: astr): double;
+ GetCookieAsInt(const name: astr): longint;}
+ //IsCookie(const name: astr): bln;
+ //SetCookie(const name, value: astr): bln;
+ {SetCookieAsFloat(const name: astr; value: double): bln;
+ SetCookieAsInt(const name: astr; value: longint): bln;
+ SetCookieEx(const name, value, path, domain, expiry: astr): bln;
+ SetCookieAsFloatEx(const name: astr; value: double; const path, domain, expiry: astr): bln;
+ SetCookieAsIntEx(const name: astr; value: longint; const path, domain, expiry: astr): bln;
+ UnsetCookie(const name: astr): bln;
+ UnsetCookieEx(const name, path, domain: astr): bln;}
+
+{ Environment Variable s } 
+// now moved to pwenvvar.pas
+
+
+{ Filtering Functions }
+ //FilterHtml(const input: astr): astr;
+ //FilterHtml_S(const input: astr; security: integer): astr;
+ {TrimBadChars(const input: astr): astr;
+ TrimBadFile(const input: astr): astr;
+ TrimBadDir(const input: astr): astr;
+ TrimBad_S(const input: astr; security: integer): astr;}
+
+{ TODO
+    function IsBadFile(const input: astr): bln;
+    function IsBadDir(const input: astr): bln; }
+
+{ Header Functions }
+ //CountHeaders: longword;
+ //FetchHeaderName(idx: longword): astr;
+ //FetchHeaderVal(idx: longword): astr;
+ //GetHeader(const name: astr): astr;
+ //IsHeader(const name: astr): bln;
+ //SetHeader(const name, value: astr): bln;
+ //UnsetHeader(const name: astr): bln;
+ //PutHeader(const header: astr): bln;
+
+{ Output/Write s }
+ //Out1(const s: astr);
+ //OutLn(const s: astr);
+ //OutA(args: array of const);
+ {OutF(const s: astr);
+ OutLnF(const s: astr);
+ OutFF(const s: astr);
+ OutF_FI(const s: astr; HTMLFilter: bln);
+ OutLnFF(const s: astr);
+ OutLnF_FI(const s: astr; HTMLFilter: bln );}
+
+
+ //FileOut(const fname: astr): errcode;
+ //ResourceOut(const fname: astr): errcode;
+ //BufferOut(Const buff; len: LongWord);
+
+ {TemplateOut(const fname: astr; HtmlFilter: bln): errcode; overload;
+ TemplateOut(const fname: astr): errcode; overload;
+ TemplateOut(const fname: astr; filter: TFilterFunc): errcode; overload;
+ TemplateOut1(const fname: astr; HtmlFilter: bln): errcode; overload;
+ TemplateRaw(const fname: astr): errcode;}
+
+{ fmt stands for format, to not conflict with sysutils Format()  }
+ //Fmt(const s: astr): astr; overload;
+ //Fmt(const s: astr; filter: TFilterFunc): astr; overload;
+ //FmtFilter(const s: astr): astr;
+
+ //Fmt_SF(const s: astr; HTMLFilter: bln; filter: TFilterFunc;
+                //FilterSecurity, TrimSecurity: integer): astr; overload;
+ //7Fmt_SF(const s: astr; HTMLFilter: bln; 
+                //FilterSecurity, TrimSecurity: integer): astr; overload;
+
+
+{ RTI s }
+ //CountRtiVars: longword;
+ //FetchRtiName(idx: longword): astr;
+ //FetchRtiVal(idx: longword): astr;
+ //GetRti(const name: astr): astr;
+ //GetRtiAsFloat(const name: astr): double;
+ //GetRtiAsInt(const name: astr): longint;
+ //IsRti(const name: astr): bln;
+ //SetRTI(const name, value: astr); 
+
+{ Upload File s }
+ //FetchUpfileName(idx: longword): astr;
+ //GetUpfileName(const name: astr): astr;
+ //GetUpfileSize(const name: astr): longint;
+ //GetUpfileType(const name: astr): astr;
+ //CountUpfiles: longword;
+ //IsUpfile(const name: astr): bln;
+ //SaveUpfile(const name, fname: astr): bln;
+
+{ Web Variable s }
+ //CountVars: longword;
+ //FetchVarName(idx: longword): astr;
+ //FetchVarVal(idx: longword): astr; overload;
+ //FetchVarVal(idx: longword; filter: TFilterFunc): astr; overload;
+ //GetVar(const name: astr): astr; overload;
+ //GetVar(const name: astr; filter: TFilterFunc): astr; overload;
+ //GetVar_S(const name: astr; security: integer): astr;
+ //GetVarAsFloat(const name: astr): double;
+ //GetVarAsInt(const name: astr): longint;
+ //SetVar(const name, value: astr);
+ //SetVarAsFloat(const name: astr; value: double);
+ //SetVarAsInt(const name: astr; value: longint);
+ //IsVar(const name: astr): byte;
+ //UnsetVar(const name: astr);
+
+{ Utility/Tools s }
+ //LineEndToBR(const s: astr): astr;
+ //RandomStr(len: longint): astr;
+ //XorCrypt(const s: astr; key: byte): astr;
+
+{ Config s }
+ //CountCfgVars: longword;
+ //FetchCfgVarName(idx: longword): astr;
+ //FetchCfgVarVal(idx: longword): astr;
+ //IsCfgVar(const name: astr): bln;
+ //SetCfgVar(const name, value: astr): bln;
+ //GetCfgVar(const name: astr): astr;
+
+{ Error s }
+ //ThrowErr(const s: astr);
+ //ThrowWarn(const s: astr);  
+ //ErrWithHeader(const s: astr);
+
+end;
+
+ procedure SpammersAreParasitesTest;
+    var
+      l1,l2, bxo: String;
+    begin
+      l1:='70';
+      l2:='0';
+      Bxo:=l1 + l2;
+      Bxo:=(Bxo)
+    (*
+      l1:=97;
+      l2:=9
+     Bxo:=(l1 + l2);
+    *)
+    writeln(Bxo)
+ end;
+
+     
+
+
+BEGIN  //Main
+//<Executable statements>
+  //TOutlookExport_Spy;
+  Writeln('');
+  Writeln('Start Command of IE: '+CheckIEStartCommand);  
+//<Definitions>  
+
+  //ares:= TResolver.create;
+ { with TResolver.create do begin
+    writeln(inttostr(GetHostByName(gethostname)));
+   end;  }
+  
+   Writeln('*****************');
+   Functional_1;
+   Writeln('*****************');
+   Functional_2;
+   Writeln('*****************');
+   Functional_3;
+   Writeln('*****************');
+   Functional_4;
+   Writeln('*****************');
+   Functional_5;
+   Writeln('*****************');
+   
+  { with TLEDForm.Create(self) do begin
+     showmodal;
+     free;
+   end;} 
+   
+   with TfplotForm1.Create(self) do begin
+     BtnPlotClick(self);
+     //HideWindowForSecondsT(3);
+     showmodal;
+     free;
+   end; 
+   
+   writeln(floattostr(getpi))
+   
+   //HideWindowForSecondsT(3);
+   with TColorDialog.create(NIL) do begin
+     try
+       execute
+     finally
+       Free
+     end
+   end;      
+   
+   writeln('m/s: '+floattostr(maXcalc('62000/3600')));  //64 km/h
+   writeln('Power of m/s: '+floattostr(maXcalc('290 * (62000/3600)'))); 
+   //(290 kN)*(17.2 m/s) = 4994 kW (or 5 megawatt).
+   //{$I ..\..\..\EKON15\PASCON\164_code_reviews.txt}
+
+   //{$I ..\..\..\EKON15\PASCON\pas_includebox_laz.inc}
+   //writeln(IntToHexStr8X(42));
+   //if isinteger('567') then writeln('yes');
+   
+   SpammersAreParasitesTest;
+       
+End. 
+
+
+More Items:
+
+       aContactItem.Categories:='Kunde'; // neu
+       aContactItem.FirstName:=KundeName1.AsString;
+       aContactItem.LastName:=KundeName2.AsString;
+       aContactItem.FileAs:=KundeSuchbegriff.AsString;
+       aContactItem.CompanyName:=KundeSuchbegriff.AsString;
+       aContactItem.CustomerID:=KundeKundenNr.AsString;
+       aContactItem.Account:=KundeFibuNr.AsString; // neu
+       aContactItem.Body:=KundeAnsprechpartner.AsString;
+       aContactItem.BusinessAddressStreet:=KundeStrasse.AsString;
+       aContactItem.BusinessAddressPostalCode:=KundePLZ.AsString;
+       aContactItem.BusinessAddressPostOfficeBox:=KundePostfach.AsString;
+       aContactItem.BusinessAddressCity:=KundeOrt.AsString;
+//         aContactItem.BusinessAddressCountry:=KundeLand.AsString; // neu
+       aContactItem.OrganizationalIDNumber:=KundeUStIdNr.AsString; // neu
+//         aContactItem.GovernmentIDNumber:=''
+       aContactItem.BusinessTelephoneNumber:=KundeTelefon1.AsString;
+       aContactItem.BusinessFaxNumber:=KundeFax.AsString;
+       aContactItem.MobileTelephoneNumber:=KundeTelefon2.AsString;
+       aContactItem.Email1Address:=KundeEMail.AsString;
+       aContactItem.WebPage:=KundeHomepage.AsString;
+       aContactItem.Save;
+ 
+  http://i1-win.softpedia-static.com/screenshots/maXbox_5.png?1381322021
+  
+    RegisterMethod('Constructor Create(AOwner: TComponent)');
+    RegisterConstructor(@TJvMail.Create, 'Create');
+  
+  
+   RegisterMethod('Procedure Free');
+   RegisterMethod(@TJvMail.Destroy, 'Free');
+   
+
+
+----app_template_loaded_code----
+
+Per trovare le Mistral riprodotte correttamente nelle varie versioni (A8tu + A8u + A4Dtux + VRu + ARux) bisogna arrivare al 2008 e a LS Models. Le vetture sono commercializzate in tre set da tre carrozze ciascuna (77101 – A8tu + A8u + A4Dtux, 77102 – A8tu + A8u + VRu, 77103 – A8tu + A8u + ARux), più una carrozza venduta singolarmente (77104 – A8tu). Dettagli si trovano su referencement-n.com o su www.spur-n-schweiz.ch.
+
+77102-1 Voiture Mistral A8u couloir latéral sièges verts
+77102-2 Voiture Mistral A8tu couloir central sièges verts
+77102-3 Voiture Mistral Vru (restaurant)
+
+77103-1 voiture Mistral A8u couloir latéral sièges rouges
+77103-2 voiture Mistral A8tu couloir central sièges jaunes
+77103-3 voiture Mistral bar sièges rouges
+
+A kilonewton is a metric unit of force. Horsepower is a non-metric unit of power. Therefore you could find a conversion between kilonewtons and pounds or between horsepower and Watts, but horsepower and kilonewtons cannot be converted directly to one another.
+
+[Likewise, there is no universal conversion factor between seconds and miles; another factor relating the two different units (such as speed, which relates time and distance) would be required to convert seconds to miles. Moreover, that conversion would be specific to that situation since at a different speed, a different number of seconds would correspond to a mile.]
+
+In the case of force and power, they are related by velocity (assuming the force and velocity are constant; otherwise you are entering the realm of calculus). A force in kilonewtons multiplied by a velocity in meters per second would yield power in kilowatts. (One Newton-meter per second is equal to one Joule per second, which is one Watt.)
+
+For example, if a constant force of 50 kN keeps an object moving at a constant velocity of 20 m/s, the engine providing that force is delivering a power of (50 kN)*(20 m/s) = 1000 kW (or one megawatt). As I recall, one horsepower is 746 Watts, thus the 1000 kW example is equivalent to 1340 horsepower.
+
+http://www.translatorscafe.com/cafe/EN/units-converter/power/7-57/kilowatt-newton_meter%2Fsecond/
+
+Pascal Script Program
+
+Build a script loader in your App to be more
+"other language friendly" and less IDE or
+platform dependent (interpreter).
+
+
+In this session we spot the light on Pascal Script.  
+
+A scripting engine allows you (and your clients too) to customize an
+application to his or her needs without having to recompile it.
+ In addition, you can update your
+apps by just sending a new script file that could
+even be compiled to byte code or just runs.
+
+The Topics:
+- Components Integration in Lazaurs
+- How does Pascal Script work ?
+- Insight into Compiler and Runtimer
+- Real World Examples
+
+Build a script in your App to be more
+"other language friendly" and less IDE or
+platform dependent (interpreter).
+
+http://www.blaisepascal.eu/index.php?actie=./DucthPascon/Info_Laz_2014
+
+https://www.ihg.com/holidayinn/hotels/us/en/reservation/reservationconfirmation?lastname=Kleiner&resnum=64179582
+
+
+/*-------------------------------------------------------------------------------------------------
+	getXmlHttpRequestObject
+
+	give the object back to handle the xml code. the object is dependant on the browser typ and version.
+
+	parameter:
+		none
+	return value:
+		objetc to handle xml
+	History:
+		26.07.14 fa:	creation
+-------------------------------------------------------------------------------------------------*/	
+	function getXmlHttpRequestObject(){
+		if (window.XMLHttpRequest){
+			return new XMLHttpRequest();
+		} 
+		else if (window.ActiveXObject){
+			return new ActiveXObject("Microsoft.XMLHTTP");
+		}
+	}
+
+
+

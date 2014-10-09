@@ -63,10 +63,26 @@ end;
 procedure SIRegister_TOutline(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TCustomOutline', 'TOutline') do
-  with CL.AddClassN(CL.FindClass('TCustomOutline'),'TOutline') do
-  begin
+  with CL.AddClassN(CL.FindClass('TCustomOutline'),'TOutline') do begin
   //RegisterPublishedProperties;
-  end;
+      RegisterpublishedProperties;
+    RegisterProperty('ALIGNMENT', 'TALIGNMENT', iptrw);
+    RegisterProperty('CAPTION', 'String', iptrw);
+    RegisterProperty('CHECKED', 'BOOLEAN', iptrw);
+    RegisterProperty('COLOR', 'TColor', iptrw);
+    //RegisterProperty('CANVAS', 'TCanvas', iptrw);
+    RegisterProperty('FONT', 'TFont', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CTL3D', 'Boolean', iptrw);
+     //RegisterProperty('FONT', 'TFont', iptrw);
+     RegisterProperty('SORTED', 'Boolean', iptrw);
+     RegisterProperty('Visible', 'Boolean', iptrw);
+     RegisterProperty('TEXT', 'String', iptrw);
+    RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
+    RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
+    RegisterProperty('MAXLENGTH', 'Integer', iptrw);
+   end;
 end;
 
 (*----------------------------------------------------------------------------*)
@@ -76,7 +92,8 @@ begin
   with CL.AddClassN(CL.FindClass('TCustomGrid'),'TCustomOutline') do begin
   RegisterPublishedProperties;
     RegisterMethod('Constructor Create( AOwner : TComponent)');
-    RegisterMethod('Function Add( Index : LongInt; const Text : string) : LongInt');
+      RegisterMethod('Procedure Free');
+     RegisterMethod('Function Add( Index : LongInt; const Text : string) : LongInt');
     RegisterMethod('Function AddChild( Index : LongInt; const Text : string) : LongInt');
     RegisterMethod('Function AddChildObject( Index : LongInt; const Text : string; const Data : Pointer) : LongInt');
     RegisterMethod('Function AddObject( Index : LongInt; const Text : string; const Data : Pointer) : LongInt');
@@ -103,6 +120,7 @@ begin
     SetDefaultPropery('Items');
     RegisterProperty('SelectedItem', 'Longint', iptrw);
     RegisterProperty('Parent', 'TWinControl', iptRW);
+    RegisterProperty('CANVAS', 'TCanvas', iptrw);
     RegisterProperty('ONCLICK', 'TNotifyEvent', iptrw);
     RegisterProperty('ONDBLCLICK', 'TNotifyEvent', iptrw);
     RegisterProperty('ONENTER', 'TNotifyEvent', iptrw);
@@ -122,7 +140,8 @@ begin
   with CL.AddClassN(CL.FindClass('TPersistent'),'TOutlineNode') do begin
   RegisterPublishedProperties;
     RegisterMethod('Constructor Create( AOwner : TCustomOutline)');
-    RegisterMethod('Procedure ChangeLevelBy( Value : TChangeRange)');
+    RegisterMethod('Procedure Free');
+     RegisterMethod('Procedure ChangeLevelBy( Value : TChangeRange)');
     RegisterMethod('Procedure Collapse');
     RegisterMethod('Procedure Expand');
     RegisterMethod('Procedure FullExpand');
@@ -161,8 +180,7 @@ begin
   CL.AddTypeS('TOutlineBitmap', '( obPlus, obMinus, obOpen, obClose, obLeaf )');
   CL.AddTypeS('TOutlineBitmaps', 'set of TOutlineBitmap');
   CL.AddTypeS('TOutlineType', '( otStandard, otOwnerDraw )');
-  CL.AddTypeS('TOutlineOption', '( ooDrawTreeRoot, ooDrawFocusRect, ooStretchBi'
-   +'tmaps )');
+  CL.AddTypeS('TOutlineOption', '( ooDrawTreeRoot, ooDrawFocusRect, ooStretchBitmaps )');
   CL.AddTypeS('TOutlineOptions', 'set of TOutlineOption');
   SIRegister_TCustomOutline(CL);
   SIRegister_TOutline(CL);
@@ -172,6 +190,9 @@ end;
 
 procedure TControlParentR(Self: TControl; var T: TWinControl); begin T := Self.Parent; end;
 procedure TControlParentW(Self: TControl; T: TWinControl); begin Self.Parent:= T; end;
+
+procedure TControlCanvasR(Self: TCustomoutline; var T: TCanvas); begin T := Self.Canvas; end;
+procedure TControlCanvasW(Self: TCustomoutline; T: TCanvas); begin {Self.Canvas:= T;} end;
 
 (*----------------------------------------------------------------------------*)
 procedure TCustomOutlineSelectedItem_W(Self: TCustomOutline; const T: Longint);
@@ -278,7 +299,8 @@ procedure RIRegister_TCustomOutline(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TCustomOutline) do begin
     RegisterConstructor(@TCustomOutline.Create, 'Create');
-    RegisterMethod(@TCustomOutline.Add, 'Add');
+     RegisterMethod(@TCustomOutline.Destroy, 'Free');
+      RegisterMethod(@TCustomOutline.Add, 'Add');
     RegisterMethod(@TCustomOutline.AddChild, 'AddChild');
     RegisterMethod(@TCustomOutline.AddChildObject, 'AddChildObject');
     RegisterMethod(@TCustomOutline.AddObject, 'AddObject');
@@ -304,7 +326,8 @@ begin
     RegisterPropertyHelper(@TCustomOutlineItems_R,nil,'Items');
     RegisterPropertyHelper(@TCustomOutlineSelectedItem_R,@TCustomOutlineSelectedItem_W,'SelectedItem');
     RegisterPropertyHelper(@TControlParentR, @TControlParentW, 'PARENT');
- 		RegisterEventPropertyHelper(@TITEMONCLICK_R,@TITEMONCLICK_W,'ONCLICK');
+    RegisterPropertyHelper(@TControlCanvasR, @TControlCanvasW, 'CANVAS');
+ 	  RegisterEventPropertyHelper(@TITEMONCLICK_R,@TITEMONCLICK_W,'ONCLICK');
  		RegisterEventPropertyHelper(@TITEMONDBLCLICK_R,@TITEMONDBLCLICK_W,'ONDBLCLICK');
  		RegisterEventPropertyHelper(@TITEMONENTER_R,@TITEMONENTER_W,'ONENTER');
  		RegisterEventPropertyHelper(@TITEMONEXIT_R,@TITEMONEXIT_W,'ONEXIT');
@@ -317,7 +340,8 @@ procedure RIRegister_TOutlineNode(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TOutlineNode) do begin
     RegisterConstructor(@TOutlineNode.Create, 'Create');
-    RegisterMethod(@TOutlineNode.ChangeLevelBy, 'ChangeLevelBy');
+     RegisterMethod(@TOutlineNode.Destroy, 'Free');
+      RegisterMethod(@TOutlineNode.ChangeLevelBy, 'ChangeLevelBy');
     RegisterMethod(@TOutlineNode.Collapse, 'Collapse');
     RegisterMethod(@TOutlineNode.Expand, 'Expand');
     RegisterMethod(@TOutlineNode.FullExpand, 'FullExpand');

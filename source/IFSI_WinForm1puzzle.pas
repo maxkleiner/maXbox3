@@ -620,7 +620,7 @@ procedure getGEOMapandRunAsk;
    //ascript:= 'http://www.softwareschule.ch/examples/demoscript.txt';
   apath:= ExePath+'geomapX.html';
   ascript:= 'Cathedral Cologne';
-    if InputQuery('Get Web GEO Map','Please enter a GEO search location:',ascript) then
+    if InputQuery('Get Web GEO Map - Tutorial 39','Please enter a GEO search location:',ascript) then
      begin
      //writeln('you entered: '+(string(ascript)));
     // wGet(ascript,'scriptdemo.txt');
