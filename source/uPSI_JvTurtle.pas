@@ -64,6 +64,7 @@ begin
     RegisterProperty('PenDown', 'Boolean', iptrw);
     RegisterProperty('PenWidth', 'Integer', iptrw);
     RegisterMethod('Function DoCom : string');
+    RegisterMethod('procedure SetPos(x,y: integer);');
     RegisterMethod('Procedure Turn( AAngle : Real)');
     RegisterMethod('Procedure Right( AAngle : Real)');
     RegisterMethod('Procedure Left( AAngle : Real)');
@@ -189,6 +190,7 @@ begin
     RegisterPropertyHelper(@TJvTurtlePenDown_R,@TJvTurtlePenDown_W,'PenDown');
     RegisterPropertyHelper(@TJvTurtlePenWidth_R,@TJvTurtlePenWidth_W,'PenWidth');
     RegisterMethod(@TJvTurtle.DoCom, 'DoCom');
+    RegisterMethod(@TJvTurtle.SetPos, 'SetPos');
     RegisterMethod(@TJvTurtle.Turn, 'Turn');
     RegisterMethod(@TJvTurtle.Right, 'Right');
     RegisterMethod(@TJvTurtle.Left, 'Left');

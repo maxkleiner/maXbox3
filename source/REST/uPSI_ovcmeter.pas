@@ -227,6 +227,7 @@ begin
   with CL.Add(TOvcCustomMeter) do begin
     RegisterConstructor(@TOvcCustomMeter.Create, 'Create');
     RegisterMethod(@TOvcCustomMeter.Free, 'Free');
+    RegisterMethod(@TOvcCustomMeter.SetBounds, 'SetBounds');
     RegisterPropertyHelper(@TOvcCustomMeterBorderStyle_R,@TOvcCustomMeterBorderStyle_W,'BorderStyle');
     RegisterPropertyHelper(@TOvcCustomMeterCtl3D_R,@TOvcCustomMeterCtl3D_W,'Ctl3D');
     RegisterPropertyHelper(@TOvcCustomMeterInvertPercent_R,@TOvcCustomMeterInvertPercent_W,'InvertPercent');

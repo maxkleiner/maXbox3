@@ -6,7 +6,7 @@ as an OpenToolsAPI to modify the maXbox GUI - V3.5 -V3.8.6 , version check
    actual 3.9.8 , new ipport, comport, iphost, appname, open examples, intflist
    locs=   1624   , last is gotoline, intfnavlist, configfileclick
   DoEditorExecuteCommand(EditorCommand: word);
-  Updated to 3.9.9.85 /80/82/91/94/95/96/98/100 , locs=3727, MBVERIALL, ResetKeyPressed;
+  Updated to 3.9.9.85 /80/82/91/94/95/96/98/100/101 , locs=3727, MBVERIALL, ResetKeyPressed;
 }
 
 interface
@@ -674,6 +674,8 @@ begin
     RegisterMethod('procedure Tutorial31Closure1Click(Sender: TObject);');
     RegisterMethod('procedure GEOMapView1Click(Sender: TObject);');
     RegisterMethod('procedure Run1Click(Sender: TObject');
+    RegisterMethod('procedure GPSSatView1Click(Sender: TObject);');
+    RegisterMethod('procedure N3DLab1Click(Sender: TObject);');
 
 
    //RegisterMethod('procedure defFilereadUpdate;');
@@ -702,10 +704,10 @@ begin
  CL.AddConstantN('ALLUNITLIST','String').SetString( 'docs\maxbox3_9.xml');
  CL.AddConstantN('INCLUDEBOX','String').SetString('pas_includebox.inc');
  CL.AddConstantN('BOOTSCRIPT','String').SetString('maxbootscript.txt');
- CL.AddConstantN('MBVERSION','String').SetString('3.9.9.100');
- CL.AddConstantN('VERSION','String').SetString('3.9.9.100');
- CL.AddConstantN('MBVERIALL','Integer').SetInt(399100);
- CL.AddConstantN('MBVER2','String').SetString('399100');
+ CL.AddConstantN('MBVERSION','String').SetString('3.9.9.101');
+ CL.AddConstantN('VERSION','String').SetString('3.9.9.101');
+ CL.AddConstantN('MBVERIALL','Integer').SetInt(399101);
+ CL.AddConstantN('MBVER2','String').SetString('399101');
  CL.AddConstantN('EXENAME','String').SetString( 'maXbox3.exe');
  CL.AddConstantN('MXINTERNETCHECK','String').SetString( 'www.ask.com');
  CL.AddConstantN('MBVER','String').SetString('399');
@@ -3708,8 +3710,10 @@ begin
     RegisterMethod(@TMaxForm1.Tutorial31Closure1Click, 'Tutorial31Closure1Click');
     RegisterMethod(@TMaxForm1.GEOMapView1Click, 'GEOMapView1Click');
     RegisterMethod(@TMaxForm1.Run1Click, 'Run1Click');
+    RegisterMethod(@TMaxForm1.GPSSatView1Click, 'GPSSatView1Click');
+    RegisterMethod(@TMaxForm1.N3DLab1Click, 'N3DLab1Click');
 
-     //  GetWebScript1Click
+         //  GetWebScript1Click
    end;
 end;
 

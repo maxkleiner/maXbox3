@@ -2,8 +2,8 @@ unit IFSI_WinForm1puzzle;
 {
 //Contains most of the win32 specific functions and test functions,  by mX3
 //procedure TMyLabel.setLabelEvent(labelclick: TLabel; eventclick: TNotifyEvent);
-//more various functions for mainroutine and script language locs=2903
-// forms.application namespace! for find component, getbox
+//more various functions for mainroutine and script language locs=6101
+// forms.application namespace! for find component, getbox, navigation
 }
 {$I PascalScript.inc}
 interface
@@ -90,6 +90,7 @@ type
 
   //THexSet2 = (1..9, A..F);
   mTByteArray = array of Byte;
+  TNavPos = (tLat, tLon);
 
 
 (*----------------------------------------------------------------------------*)
@@ -402,8 +403,12 @@ function IsCOMConnected: Boolean;
  function DownloadFile(SourceFile, DestFile: string): Boolean;
  function DownloadFileOpen(SourceFile, DestFile: string): Boolean;
  function OpenMap(const Data: string): boolean;
+ function GetGeoCode(C_form,apath: string; const data: string; sfile: boolean): string;
+ Function getFileCount(amask: string): integer;
+ function CoordinateStr(Idx: Integer; PosInSec: Double; PosLn: TNavPos): string;
 
-  
+
+
 implementation
 
 uses
@@ -444,7 +449,7 @@ uses
   ,ExtCtrls
   ,IdcoderMime
   ,SvcMgr ,WinSvc, ScktCnst, ScktMain, avicap, uPSI_LinarBitmap
-   ,WinInet, winsock, Cport, gsUtils, lazFileUtils, JvStrUtils, JCLNTFS2;
+   ,WinInet, winsock, Cport, gsUtils, lazFileUtils, JvStrUtils, JCLNTFS2, XmlVerysimple;
 
   //,Registry
   //,Grids
@@ -705,6 +710,50 @@ if result <> '' then
   Source.ReadBuffer( result[1], Length( result) * SizeOf( AnsiChar))
 end;
 
+type TShowFmt = (sfNautical, sfStatute, sfMetric);
+
+const
+  OneEighty  = 180*3600;                         // Sec of arc
+  ThreeSixty = 360*3600;                         //
+
+function CoordinateStr(Idx: Integer; PosInSec: Double; PosLn: TNavPos): string;
+
+const
+  FmtStrArray: array[tLat..tLon, 0..3] of string =
+
+ { Lat }  (('%s %d %.2d %.2d',  '%s %d %.2d.%4:.2d',     '%s %5:.4f',
+               // D M S               D M.m                 D.d
+
+                      '%1:.2d%2:.2d.%4:.2d,%0:s'),
+                        //  Waypoint per NMEA
+
+ { Lon }   ('%s %d %.2d %.2d',  '%s %d %.2d.%4:.2d',     '%s %5:.4f',
+
+                      '%1:.3d%2:.2d.%4:.2d,%0:s'));
+
+var
+  Pos, Deg, Min, Sec, Dec: Integer;
+  Dd: Double;
+  C: Char;
+begin
+  if (PosInSec > OneEighty) then
+    PosInSec := PosInSec - ThreeSixty;
+
+  case PosLn of
+    tLat: if (PosInSec <= 0) then C := 'S' else C := 'N';
+    tLon: if (PosInSec <= 0) then C := 'W' else C := 'E';
+  end; {case}
+
+  PosInSec := Abs(PosInSec);
+  Dd  := PosInSec/3600;                          // DDD.ddd..
+  Pos := Round(PosInSec);
+  Deg := (Pos div 3600);                         // DDD
+  Min := (Pos mod 3600) div 60;                  // MM
+  Sec := (Pos mod 60) mod 60;                    // SS
+  Dec := Round(1.667*Sec);                       // mm
+  Result := Format(FmtStrArray[PosLN, Idx], [C, Deg, Min, Sec, Dec, Dd]);
+end;
+
 
 
 function GetMapXGeoReverse(C_form:string; const lat,long: string): string;
@@ -730,7 +779,83 @@ function GetMapXGeoReverse(C_form:string; const lat,long: string): string;
     encodedURL:= '';
     mapStream.Free;
   end;
-end;                            
+end;
+
+
+procedure SaveString(const AFile, AText: string);
+begin
+  with TFileStream.Create(AFile, fmCreate) do
+  try
+    WriteBuffer(AText[1], Length(AText));
+  finally
+    Free;
+  end;
+end;
+
+
+function GetGeoCode(C_form,apath: string; const data: string; sfile: boolean): string;
+ var encodURL, alat, alon: string;
+    mapStream: TStringStream;
+    xmlDoc: TXmlVerySimple; //TALXMLDocument;
+    Nodes: TXmlNodeList;
+    Node: TXmlNode;
+    it: integer;
+ begin
+   encodURL:= Format(UrlMapQuestAPICode2,[c_form,HTTPEncode(Data)]);
+   mapStream:= TStringStream.create('');
+   xmldoc:= TXmlVerySimple.create;
+   try
+     Wininet_HttpGet(EncodURL, mapStream);  {WinInet}
+     //local tester
+     //mapstream.writestring(loadstringfromfile(apath));
+     mapStream.Position:= 0;
+     //writeln('string stream size: '+inttostr(mapstream.size));
+     //writeln('string stream cont: '+mapstream.datastring);
+     if sfile then begin
+      SaveString(apath, mapStream.datastring);
+       //OpenDoc(apath);
+       S_ShellExecute(apath,'',seCmdOpen);
+     end;
+     xmlDoc.loadfromStream(mapstream);
+     //writeln('childcounts: '+inttostr(xmlDoc.root.childnodes.count))
+     if xmlDoc.root.childnodes.count > 0 then begin
+       Nodes:= XmlDoc.Root.FindNodes('place');    //or result
+       for it:= 0 to TXMLNodeList(nodes).count-1 do begin
+         //for Node in Nodes do
+         Node:= TXMLNode(nodes.items[it]);
+         alon:= node.attribute['lon'];
+         alat:= node.attribute['lat'];
+       end;
+       //result:= 'GEO Topic found: '+(node.text)+CRLF
+       result:= result+('latitude: '+alat+'  longitude: '+alon);
+       Nodes.Free;
+     end;
+   finally
+     encodURL:= '';
+     mapStream.Free;
+     xmlDoc.Free;
+   end;
+ end;   
+
+ 
+ Function getFileCount(amask: string): integer;
+var
+  DOSerr: integer;
+  fsrch: TsearchRec;
+begin
+  result:= 0;
+  doserr:= FindFirst(amask{'*.*'},faAnyFile, fsrch);
+  if (DOSerr = 0) then begin
+    while (DOSerr = 0) do begin
+      if (fsrch.Attr and faDirectory) = 0 then inc(result);
+      //writeln(searchRecName)
+      DOSerr:= findNext(fsrch);
+    end;
+   sysutils.findClose(fsrch);
+  end;
+end;
+                         
+
 
 
 
@@ -5638,6 +5763,8 @@ begin
   CL.AddTypeS('LRESULT','Longint');
     CL.AddTypeS('HHOOK', 'LongWord');
     CL.AddTypeS('HINST','THandle');
+    CL.AddTypeS('TNavPos','(tLat, tLon)');
+
  CL.AddTypeS('TFNHookProc','function (code: Integer; wparam: WPARAM; lparam: LPARAM): LRESULT stdcall;');
   CL.AddConstantN('FILEOPENORD','LongInt').SetInt( 1536);
  CL.AddConstantN('MULTIFILEOPENORD','LongInt').SetInt( 1537);

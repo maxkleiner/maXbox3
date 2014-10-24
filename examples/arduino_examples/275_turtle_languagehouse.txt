@@ -1,0 +1,1419 @@
+program Turtle_Language_Demo;
+//http://www.turtleprinter.com/en/
+
+//*********************************************************************
+// world of fractals, patterns & topology with Turtle, loc's=277, also ex. 252_/  
+// Basic turtle object used in for ex. game and beginners.
+// you can switch in main between the functions(), Voice is on! 
+//*********************************************************************
+(*RRRR    EEEEEE   AAAA   DDDDD    MM     MM   EEEEEE 
+ RR  RR   EE       AA AA  DD  DD   MMMM MMMM   EE    
+ RRRRR    EEEE    AAAAAA  DD   DD  MM MMM MM   EEEE
+ RR  RR   EE      AA   AA DD   DD  MM  M  MM   EE
+ RR   RR  EEEEEE AA    AA DDDDD    MM  M  MM   EEEEEE *)
+ 
+{This script creates a leaf. It is an example of an "iterated function system".} 
+
+Const
+  DAT = 1200;
+  
+type
+  TMemor= array[1..DAT] of double;
+  
+  //TJvTurtle = class(TComponent);
+var
+  cFrm: TForm;
+  myturtle: TJvTurtle;
+  mp: TPoint;
+  //pbox: TPaintBox;
+  //mpan: TPanel;
+  
+
+procedure Sierpinski(a,b,c: TPoint; Recdeepth: integer; aCanvas: TCanvas);
+{ Sierpinski Dreieck (Rekursiv)
+Algorithmus von Alleinherrscher ([url]www.delphipraxis.net[/url])
+28.10.2009 , MX, small correction by c.y, cause sinus() won't work, just cos }
+var new_a,new_b,new_c: TPoint;
+begin
+  acanvas.Pen.Color:= clred;
+  with acanvas do begin
+    moveto((a.x),(a.y));
+    lineto((b.x),(b.y));
+    lineto((c.x),(c.y));
+    lineto((a.x),(a.y));
+  end;
+  new_c.x:= (a.x+b.x ) div 2;
+  new_c.y:= (a.y+b.y) div 2;
+  new_a.x:= (b.x+c.x ) div 2;
+  new_a.y:= (b.y+c.y) div 2;
+  new_b.x:= (a.x+c.x) div 2;
+  new_b.y:= (a.y+c.y) div 2;             
+  if Recdeepth > 0 then begin
+    Sierpinski(a,new_c,new_b, Recdeepth-1, aCanvas);
+    Sierpinski(new_c,b,new_a, Recdeepth-1, aCanvas);
+    Sierpinski(new_b,new_a,c, Recdeepth-1, aCanvas);
+  end;
+end; 
+
+procedure Sierpinski_Setup(vForm: TForm);
+var a,b,c:TPoint;
+    awidth, atop, aleft, i: integer;
+begin
+  awidth:=650;
+  atop:=680;
+  aleft:=50;
+  //edgepoints of first triangle left, bottom:
+  a.x:= aleft;
+  a.y:= atop;
+  b.X:= awidth+a.x;
+  b.y:= atop;
+  c.X:= awidth div 2+aleft;
+  c.y:= atop - awidth;
+  //c.y:= round(atop-Cos((60/360)*2*Pi)*awidth);
+  vForm.canvas.pen.Width:= 1;
+  for i:= 1 to 6 do begin
+    Sierpinski(a,b,c,i,vForm.canvas);
+    sleep(500)
+  end;  
+end; 
+
+
+procedure Barnsleyfern(aright: integer);
+var p, q, pt, qt: single;
+  p1, p2, p3, x: byte;
+  i: integer;
+begin
+p:=0
+q:=0
+i:=0;
+with myTurtle do begin     //@turtle language
+    //canvas:=  cFrm.canvas;
+    //canvas.assign(cFrm)
+    canvas:= cFrm.canvas;
+    canvas.Pen.Color:= clgreen;
+    penDown:= true;
+    //penup
+    penWidth:= 1;
+//# you can change the number of iterations
+//# also change the maps if you like
+ repeat 
+   inc(i)
+   p1:= random(255);
+   p2:= random(255);
+   p3:= random(30);
+ //pc p1,p2,p3
+ //canvas.Pen.Color:= RGB2TColor(p1,p2,p3);
+   canvas.Pen.Color:= SetRGBValue(p1,p2,p3);
+   x:= random(100)
+   pt:= p
+   qt:= q
+ if x < 86 then begin
+  p:=0.85*pt+0.04*qt
+  q:=-0.04*pt+0.85*qt+1.6
+ end; 
+ if (x >= 86) and (x < 93) then begin
+  p:=-0.15*pt+0.28*qt
+  q:=0.26*pt+0.24*qt+0.44
+ end;
+ if (x >=93) and (x < 99) then begin
+  p:=0.2*pt-0.26*qt
+  q:=0.23*pt+0.22*qt+1.6
+ end;
+ if (x >= 99) then begin
+  p:=0;
+  q:=0.16*qt;
+ end;
+ //go 50*p+200, 50*(500-q)
+  mp.x:= round(50*p+200)+aright;
+  mp.y:= round(50*(14-q));
+  position:= mp
+ //writeln(inttoStr(mp.y))
+  pendown:= true;
+  moveforward(1);
+  pendown:= false;
+  movebackward(1);
+ //sleep(0)
+ until i > 60000;
+  mp.x:= 0; mp.y:= 0;
+  position:= mp;
+  //Free;
+ end;
+end;
+
+
+procedure TurtleFractal;
+{#this program draws a bit of the Mandelbrot
+#set. It uses advanced maths. To find out
+#more, go to http://en.wikipedia.org/wiki/Mandelbrot_set}
+var p, xr, c1, c2, xt, yt, m, x,y: single;
+    q,s,kmax,i,j,k: byte;
+begin
+ p:=0
+ q:=0
+ i:=0;
+with myTurtle do begin  ////@turtle language
+    //canvas.assign(cFrm)
+    canvas:= cFrm.canvas;
+    canvas.Pen.Color:= clgreen;
+    penDown:= true;
+    penWidth:= 3;
+//cs 500,500
+//# q sets the resolution. 100 is low res
+//# 200 is higher res, but takes a while
+ q:= 170;
+ s:= 40
+ xr:= 0.02/q
+ kmax:= 70
+ m:= 240/(kmax-s);
+for i:= 10 to q-1 do
+ for j:= 1 to q-1 do begin
+  c1:=-0.12+i*xr
+  c2:=-0.92+j*xr
+  x:=0
+  y:=0
+  k:=0    //comment set to structure test
+  p:=0
+  while p < 1 do begin
+   xt:= x*x-y*y+c1;
+   yt:= 2*x*y+c2
+   x:= xt
+   y:= yt
+   k:= k+1
+   if x*x + y*y > 100 then p:=1;
+   if k > kmax then p:=1;
+  end;
+  if k > s then begin
+   //pcolor default  m*(kmax+1-k), m*(kmax+1-k), m*(k-s) 
+    canvas.Pen.Color:= SetRGBValue(round(m*(kmax+1-k)),
+                   round((kmax+1-k)),round(m*(k-s)));
+    mp.x:= round(500*i/q); 
+    mp.y:= round(530*(1-j/q));
+    position:= mp;
+    //canvas.lineto(mp.x, mp.y)
+    //go 500*i/q, 500*(1 - j/q)
+    moveforward(1)
+  end
+ end;
+end; //with
+end;
+
+procedure turtleFirst(firstpoint: smallint; acolor: TColor);
+begin
+  with myTurtle do begin
+    //canvas.assign(cFrm)
+    canvas:= cFrm.canvas;
+    canvas.Pen.Color:= acolor;
+    penDown:= true;
+    //penup
+    penWidth:= 10;
+    mp.x:= 190; mp.y:= 200;
+    Position:= mp;
+    //pencolor
+   {moveforward(200)
+    //right(90)
+    turn(270)
+    moveforward(50)}
+    //# house body
+    turn(firstpoint)    //180
+    moveforward(100)
+    right(90)
+    moveforward(100)
+    turn(90)
+    moveforward(30)
+    //pendown:= false;
+    right(140)
+    moveforward(105)
+    right(80)
+    moveforward(105)
+    right(140)
+    moveforward(30)
+    turn(90)
+    moveforward(100)
+  end;  
+end; 
+
+procedure TurtleEasy;
+begin
+  with myTurtle do begin
+    //canvas.assign(cFrm)
+    canvas:= cFrm.canvas;
+    canvas.Pen.Color:= clred;
+    penDown:= true;
+    //penup
+    penWidth:= 10;
+    mp.x:= 190; mp.y:= 200;
+    Position:= mp;
+    //right(90)    //180
+    moveforward(100)
+    right(90)    //180
+    moveforward(100)
+    //movebackward(100)
+    left(90)    //180
+    moveforward(100)
+   end;
+end; 
+
+
+
+procedure TurtleEasyHouse(aturn: integer);
+begin
+  //penup
+  {forward 50
+  pendown
+  pw 2}
+
+  with myTurtle do begin
+    //canvas.assign(cFrm)
+    canvas:= cFrm.canvas;
+    canvas.Pen.Color:= clblue;
+    penWidth:= 12;
+    penDown:= true;
+    //mp.x:= 520; mp.y:= 400;
+    //Position:= mp;
+    position:= point(520, 400); //TPoint(520,400);
+    //go 200, 200
+    //# house body
+    turn(aturn)
+    left(90)
+    moveforward(100)
+    right(90)
+    moveforward(100)
+    left(90)
+    moveforward(30)
+    right(140)
+    moveforward(105)
+    right(80)     //roof point
+    moveforward(105)
+    right(140)
+    moveforward(30)
+    left(90)
+    moveforward(100)  
+  end;  
+end;
+
+procedure turtletwo;
+var t1, t2: TJvTurtle;
+begin
+//TurtleDrawingWindow w  = new TurtleDrawingWindow ();
+ t1:= TJvTurtle.create(self);
+ t2:= TJvTurtle.create(self);
+  t1.canvas:= cFrm.canvas;
+  t1.canvas.Pen.Color:= clblue;
+  t1.penWidth:= 12;
+  t1.penDown:= true;
+  t1.Position:= point(600, 400);
+   
+  t2.canvas:= cFrm.canvas;
+  t2.canvas.Pen.Color:= clpurple;
+  t2.penWidth:= 12;
+  t2.penDown:= true;
+  t2.Position:= point(550,420);
+  
+ //Turtle t1 = new Turtle ();
+ //Turtle t2 = new Turtle ();
+ //w.add (t1);
+ //w.add (t2);
+ //w.setVisible (true);
+   t2.turn(-45);
+    for it:= 0 to 4 do begin
+      t1.moveforward(100);
+      t1.turn(90);
+      t2.moveforward(100);
+      t2.turn(90);
+    end;
+  t1.Free;
+  t2.Free;  
+    
+ end;
+  
+
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  try
+    with cFrm do begin
+      caption:= '3D Printing Doodle Sim Turtle by maXbox((((*))))';  
+      height:= 750;
+      width:= 800;
+      color:= clblack; //clwhite
+      Position:= poScreenCenter;
+      show;
+      //canvas.assign(myturtle.canvas)
+    end;
+    Application.processMessages;
+  except
+    Exit;
+  end  
+end;
+
+//main theme
+begin
+//*************maXbox graphics series***********************************
+  //processMessagesOff;  for speed
+  {with memo2 do begin
+    height:= 190;
+    color:= clblack;
+    font.size:= 18;
+    font.color:= clred;
+  end;  }
+  myturtle:= TJvTurtle.create(self);
+  loadForm();
+  //Sierpinski_Setup(cFrm);
+  //Voice('Chaos done and gone') 
+    //turtleEasy;
+    turtleFirst(90, clred);
+    //turtleFractal;
+    //Barnsley's fern an early IFS.
+    turtleFirst(180, clgreen);
+    //Barnsleyfern(100);
+    turtleFirst(90, clblue);
+    turtleFirst(360, clyellow);
+    TurtleEasyHouse(90);
+    turtletwo;
+    
+    {for it:= 1 to 36 do
+      TurtleEasyHouse(it*15); }
+     {it:= 1;
+     repeat 
+      inc(it)
+      TurtleEasyHouse(it);
+      sleep(100)
+      cFrm.invalidate;
+     until isKeypressed;} 
+    
+
+    
+  myTurtle.Free; 
+  writeln(getascii)   
+  speak('this is');   
+  
+ 
+End.
+
+
+just inside maxbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+                              
+                              
+                              
+performance start is: 17:25:09:093
+performance stop is: 17:26:06:062
+0 h elapsed run time is: 00:56:969                              
+
+
+TurtleDrawingWindow w  = new TurtleDrawingWindow ();
+ Turtle t1 = new Turtle ();
+ Turtle t2 = new Turtle ();
+ w.add (t1);
+ w.add (t2);
+ w.setVisible (true);
+ t2.turn (-45);
+ for (int i = 0; i < 4; i++) {
+   t1.move (100);
+   t1.turn (90);
+   t2.move (100);
+   t2.turn (90);
+ }
+
+Summary
+
+Drawing component that allows the drawing of the path of a turtle.
+
+run\JvTurtle.pas
+
+
+[edit] Pascal
+
+ run\JvTurtle.pas
+
+ TJvTurtle = class(TComponent);
+
+
+[edit] Description
+
+    JVCLInfo
+
+Basic turtle object used in for ex. childgame. Assign a canvas (ex. form.canvas) to the TJvTurtle, and a starting point (position: ex. 100, 100). From this point on you can start by moving your turtle across the screen, while it leaves it's trail (it draws a line). Make sure your pen is down, or it will not draw (PenDown property set to true). Easy made functions like Moveforward, Movebackward, Turn, .... allow you to control the turtles movement.
+
+run\JvTurtle.pas
+
+
+[edit] About
+[edit] Navigation
+[-] TJvTurtle
+ TJvTurtle
+ TJvTurtle.Area
+ TJvTurtle.Canvas
+ TJvTurtle.Create@TComponent
+ TJvTurtle.Destroy
+ TJvTurtle.DoCom
+ TJvTurtle.DoRepaintRequest
+ TJvTurtle.DoRequestBackground
+ TJvTurtle.DoRequestFilter
+ TJvTurtle.DoRequestImageSize
+ TJvTurtle.Heading
+ TJvTurtle.Interpret
+ TJvTurtle.Mark
+ TJvTurtle.MoveBackward
+ TJvTurtle.MoveForward
+ TJvTurtle.OnRepaintRequest
+ TJvTurtle.OnRequestBackground
+ TJvTurtle.OnRequestFilter
+ TJvTurtle.OnRequestImageSize
+ TJvTurtle.PenDown
+ TJvTurtle.PenWidth
+ TJvTurtle.Position
+ TJvTurtle.Right
+ TJvTurtle.Turn
+
+run\JvTurtle.pas 
+
+constructor TCustomCntrl.Create(AOwner:TComponent);
+begin
+  inherited Create(AOwner);
+
+  pBox:=TPaintBox.Create(self);
+  pBox.parent:=self;
+  pBox.SetBounds(0,0,width,height);
+  Canvas.Assign(pBox.canvas);     //<ERROR HERE
+
+end;     
+
+
+reset
+penup
+forward 50
+pendown
+pw 2
+go 200, 200
+
+# house body
+
+turnleft 90
+forward 100
+turnright 90
+forward 100
+turnleft 90
+
+forward 30
+turnright 140
+forward 105
+turnright 80
+forward 105
+turnright 140
+forward 30
+
+
+turnleft 90
+forward 100
+
+# attic window
+
+go 120, 90
+turnleft 90
+forward 60
+turnleft 90
+
+repeat 90 [
+  forward 1.05 
+  turnleft  2
+]
+
+# attic window middle line
+
+go 150, 90
+turnright 180
+forward 30
+
+# attic window diagonal lines
+
+tr 45
+go 135, 77
+forward 10
+go 135, 82
+forward 10
+
+go 160, 79
+forward 10
+go 160, 84
+forward 10
+tl 45
+
+# door
+
+go 120,200
+forward 50
+tr 90
+forward 30
+tr 90
+forward 50
+
+# door knob
+
+go 145, 175
+
+repeat 24 [
+  forward 1
+  tr  15
+]
+
+# window
+
+go 160,140
+tr 180
+forward 25
+tr 90
+forward 25
+tr 90
+forward 25
+tr 90 
+forward 25
+tr 90
+
+# window centre lines
+
+go 172.5,140
+forward 25
+tr 90
+
+go 160,127.5
+forward 25
+
+# window diagonal lines
+#pw 1
+tl 45
+go 164, 134
+forward 5
+go 164, 138
+forward 5
+
+go 177, 121
+forward 5
+go 177, 125
+forward 5
+tr 45
+
+go 230,150
+
+
+
+----------------------------
+reset
+canvassize 500,500
+pencolor 0,255,0
+
+p=0
+q=0
+
+# you can change the number of iterations
+# also change the maps if you like
+repeat 60000 [
+ p1 = random 0,255
+ p2 = random 0,255
+ p3 = random 0,30
+ pc p1,p2,p3
+ x = random 1,100
+ pt = p
+ qt = q
+ if x < 86 [
+  p=0.85*pt+0.04*qt
+  q=-0.04*pt+0.85*qt+1.6
+ ]
+ if (x >= 86) and (x < 93) [
+  p=-0.15*pt+0.28*qt
+  q=0.26*pt+0.24*qt+0.44
+ ]
+ if (x >=93) and (x < 99) [
+  p=0.2*pt-0.26*qt
+  q=0.23*pt+0.22*qt+1.6
+ ]
+ if (x >= 99) [
+  p=0
+  q=0.16*qt
+ ]
+ go 50*p+200, 50*(500-q)
+ pendown
+ forward 1
+ penup
+ backward 1
+]
+
+go 0,0
+
+
+#this program draws a bit of the Mandelbrot
+#set. It uses advanced maths. To find out
+#more, go to http://en.wikipedia.org/wiki/Mandelbrot_set
+
+reset
+cs 500,500
+cc 0,0,0
+# q sets the resolution. 100 is low res
+# 200 is higher res, but takes a while
+q=100
+s=40
+xr=0.02/q
+kmax=70
+m=240/(kmax-s)
+
+for i = 10 to q-1 [
+ for j = 1 to q-1 [
+  c1 = -0.12+i*xr
+  c2 = -0.92+j*xr
+  x=0
+  y=0
+  k=0
+  p=0
+  while p < 1 [
+   xt=x*x-y*y+c1
+   yt=2*x*y+c2
+   x=xt
+   y=yt
+   k=k+1
+   if x*x + y*y > 100 [
+    p=1
+   ]
+   if k > kmax [
+    p=1
+   ]
+  ]
+  if k > s [
+   pc m*(kmax+1-k), m*(kmax+1-k), m*(k-s) 
+   go 500*i/q, 500*(1 - j/q)
+   forward 1
+  ]
+ ]
+]
+
+
+3d ekon18
+
+   3d print in delphi
+   
+   http://www.cnc-arena.com/de/forum/gcode-programmierung-fuer-3d-in-c--22109.html
+   
+   http://replicat.org/mcodes
+   
+   http://www.doodle3d.com/help/g-code
+   
+   http://simplegcoder.com/js_editor/
+   
+   G0 X1.78 Z.1
+G1 Z0 F.008
+G2 X1.72 Z-.03 R.03
+G1 Z-.315
+X1.542 Z-.445
+X1.461 Z-1.75
+X1.35 Z-1.81 
+
+http://www.doodle3d.com/help/api-documentation
+
+//for the example you need the 'httprocessing' library by Chris Allick and Daniel Shiffman.
+//You can add the library through Sketch>import library>add library... and search for 'httprocessing'
+import httprocessing.*;
+String boxIP = "10.0.0.188";
+PostRequest post = new PostRequest("http://"+boxIP+"/d3dapi/printer/print");
+void setup() {
+post.addData("gcode", "G28 X0.0 Y0.0 Z0.0"); //Send the printer to the x0 and y0 position
+post.addData("start", "true");
+post.send();
+size(100, 100);
+}
+void draw() {
+//press a key to activate
+if (keyPressed) {
+point(mouseX,mouseY);
+//makes the printer move to the mouse location.
+//Note that the X and Y will expand if you expand the size() and it is possible that you make the printer move outside of its border!
+//This can do harm to your 3Dprinter!!
+post.addData("gcode", "G1 X"+mouseX+" Y"+mouseY+" F5000");
+post.addData("start", "true");
+post.send();
+}
+
+
+Cheloniidae is broken into two major pieces: The turtle, which executes drawing commands, and the turtle drawing window, which displays the output. Materially, these are analogous to a piece of chalk and a chalkboard, respectively. To create visible output, a turtle drawing window and a turtle must each be created, the turtle must be added to the window (these steps are handled automatically if your class inherits from SingleTurtleScene), and then drawing commands must be issued to the turtle. This code, for example, will produce a square:
+
+ import cheloniidae.*;
+ import cheloniidae.frames.*;
+ import static cheloniidae.frames.CoreCommands.*;
+ public class Square extends SingleTurtleScene {
+   public static void main (String[] args) {new Square ();}
+   public TurtleCommand commands () {
+     return repeat (4, move (100), turn (90));
+   }
+ }
+
+
+ Your Desktop 3D Printer
+
+The Carey 3D Printer has been engineered from inside out to minimize its size and to make it the perfect compact desktop 3D printer that offers a large printing area. Its external dimensions of 275x275x360mm allow us to accommodate all internal parts efficiently to minimize space, including a printing filament roll and a printing volume of 170x170x160mm. Its design and color combination capabilities help integrate the 3D printer with your other desktop devices.
+
+We have redesigned the extruder hot-end, and have included a powerful ceramic heating cartridge along with a double temperature control with thermal security, which allows for continuous operation for hours without overheating the cool-end, even when using new materials and with printing temperatures exceeding 300ºC (572ºF). This feature also allows for ready availability, having the printer ready to operate in under 1-minute time. The printing filament traction system has also been improved by preventing the traction wheel to hit the filament in the event of a jam, which could lead to future printing problems.
+
+Its heavy duty unibody aluminum chassis, along with its light extruder, allow for high printing speeds. The materials the printer parts are made of have been carefully selected to be both strong and lightweight, and were tested for structural resistance in our manufacturing facilities.
+
+The printer features printing “bed” autoleveling for easier printing support change. It also supports SD cards and features an LCD screen for standalone printing. The Carey is designed to make 3D printing easy for all types of users, so they will only have to worry about the pieces to print.
+
+Ready to use, you only have to get it out of the box and install the software and drivers on your computer, and in case you have the G-code files, you can even insert an SD card in the Carey printer to quickly start printing. Each printer is individually tested and is delivered with the test printed piece, so you can be sure about its printing quality.
+
+Technical Features
+
+    Printing technology: FFF (Fused Filament Fabrication)
+    Printing volume: 170x170x160m
+    Layer resolution: 100µ (0.1mm)
+    X-Y-Z precision: 20µ (0.02mm)
+    Filament diameter: 1.75mm
+    Heated bed: No
+    Bed autoleveling: Yes
+    Printing material: PLA (any material that does not require a heated bed)
+    Time to first print-out: <1m
+    Injector diameter: 0.4mm
+    Filament capacity: 500gr
+    Dimensions: 275x275x360
+    Approx. weight: 7Kg
+    Chassis: Unibody aluminum
+    Body: Aluminum/stainless steel/acrylic
+    Printing bed: Acrylic/tempered glass
+    X-Y-Z lineal guides: Igus®
+    Electronics: SAV MKI
+    LCD with rotary selector
+    Firmware: Marlin (modified)
+    Software: Ope Source (Cura, Slic3r)
+    Storage temperature: 0-35ºC (32-95ºF)
+    Operating temperature: 0-35ºC (32-95ºF)
+    Power: 220V-1.5A-50Hz
+    CE Compliant
+
+
+    Contents
+
+    1 Arduino G-Code Interpreter
+        1.1 Introduction
+        1.2 Files
+            1.2.1 Installation
+        1.3 Usage
+            1.3.1 Firmware Configuration
+                1.3.1.1 X_STEPS_PER_INCH
+                1.3.1.2 X_STEPS_PER_MM
+                1.3.1.3 X_MAX_SPEED
+                1.3.1.4 X_MOTOR_STEPS
+                1.3.1.5 Y_*, Z_*
+                1.3.1.6 FAST_XY_FEEDRATE and FAST_Z_FEEDRATE
+            1.3.2 Sending Commands
+        1.4 Implementation
+            1.4.1 G-Codes
+            1.4.2 M Codes
+        1.5 TODO
+        1.6 Bugs
+
+         Introduction
+
+G-Code is a commonly use language to control CNC machines. G-Code is a light-weight, simple to parse format, designed to be able to run on modest hardware, such as the Arduino loaded with this firmware (in this case). It is a format that is prepared in advance and created from the digital design files (CAD files).
+
+Several software packages can generate G-Code, so using this firmware allows you a degree of flexibility.
+Files
+
+The G-Code firmware source is available from SourceForge as part of the RepRap Arduino firmware package. Make sure you get the latest version.
+Installation
+
+Once you download the proper files, there are a couple steps you need to do:
+
+    Copy the folders in reprap-arduino-firmware-x.y/library to arduino-00xx/hardware/libraries
+    Open the GCode_Interpreter sketch in reprap-arduino-firmware-x.y/gcode/GCode_Interpreter/GCode_Interpreter.pde with the Arduino software.
+    Configure the firmware (see below)
+    Upload the sketch to your Arduino. 
+
+Ubuntu users will also have to upgrade their avr-gcc; the standard one contains a bug. See this link for details.
+Usage
+Firmware Configuration
+
+In order for the firmware to operate properly, you must configure the proper variables in the firmware and then upload the firmware to your Arduino. The values are stored in the file _init.pde. An example version is included in the distribution called _init.pde.dist.
+
+We'll cover each of the variables below:
+X_STEPS_PER_INCH
+
+This variable stores how many steps to take to move the X axis 1 inch. You will need to set this as accurately as possible if you want your machine to be accurate. There are two ways to set it:
+
+    Move and Measure - slap a pen or marker on as a toolhead and draw a 1000 step line. Measure it and divide 1000 by the length in inches.
+    Calculate Step Size - this one is the preferred way of doing things. Its rather easy to calculate step size based on your drive mechanism. 
+
+For threaded rod drive systems:
+
+Find your TPI (threads per inch). for example, 1/4"-20 threaded rod means that there are 20 threads per inch (aka 20 turns = 1 inch.) Simply take that number and multiply it by the steps in a revolution. With a 400 step motor, it would be 8000 steps per inch.
+
+For belt/pulley systems:
+
+    Find the circumference of your drive pulley. (remember circumference = 2*pi*r) (say: 2.75")
+    Calculate step size (ie: circumference / steps per revolution) (say: 2.75" / 400 = 0.00625")
+    Divide 1 inch by step size (1" / 0.00625" = 160 steps/inch) 
+
+X_STEPS_PER_MM
+
+This variable stores how many steps to take to move the X axis 1mm. You can either calculate it independently, or take the number above and divide by 25.4.
+X_MAX_SPEED
+
+This variable stores the maximum speed of the stepper in RPM (revolutions per minute). This is important as it determines the fastest speed to move the stepper. Start low and work your way up if you are unsure of the proper speed.
+X_MOTOR_STEPS
+
+This variable stores the number of steps per revolution. This is important as it factors into how many steps to take for a line, as well as how fast your stepper will move. Your stepper will have a fixed number of steps per revolution and should say it on the datasheet.
+
+If you are driving your stepper in half-stepping mode, double the number of steps. Similarly, if you are using a microstepper driver, multiply the steps by the appropriate factor. Make sure you use this new step number when you are calculating steps per inch/mm.
+Y_*, Z_*
+
+These variables are the same as the variables above, but allow for different drive systems on the Y and Z axes respectively. You must still fill them out, even if all drive systems are the same.
+FAST_XY_FEEDRATE and FAST_Z_FEEDRATE
+
+These define the maximum feedrates used for the G0 command. The feedrates are given in mm/minute.
+Sending Commands
+
+The Arduino firmware waits for commands on the serial port and will start processing a command after either encountering a newline, or when there are no more characters to read.
+
+There are several ways to control the machine through the G-Code Firmware:
+
+    You can either write your own custom host software to send commands,
+    Use Zach Smith's [ReplicatorG|http://replicat.org/ ReplicatorG]
+    use the RepRap host software to send commands,
+    or use the Processing app that we've bundled to send commands. 
+
+Implementation
+
+Due to the limited size and processing power available on the Arduino, only a limited subset of G-Code has been implemented. However, the vast majority of uses of G-Code are limited to these commands. Below, we cover the implemented commands as well as limitations.
+G-Codes
+
+G0 - Rapid Motion
+
+Implemented - only supports X, Y, and Z axes.
+
+G1 - Coordinated Motion
+
+Implemented - only supports X, Y, and Z axes.
+
+G2 - Arc - Clockwise
+
+Implemented
+
+G3 - Arc - Counter Clockwise
+
+Implemented
+
+G4 - Dwell
+
+Impemented.
+
+G20 - Inches as units
+
+Implemented.
+
+G21 - Millimeters as units
+
+Implemented.
+
+G28 - Go Home
+
+Implemented.
+
+G30 - Go Home via Intermediate Point
+
+Implemented.
+
+G90 - Absolute Positioning
+
+Implemented.
+
+G91 - Incremental Positioning
+
+Implemented.
+
+G92 - Set current as home
+
+Implemented. =)
+M Codes
+
+See: MCodeReference
+TODO
+
+    Explore implementing offsets. 
+
+Bugs
+
+    None so far, but they are lurking. 
+
+------------------------------------------------
+The Doodle3D WiFi-Box makes almost all 3D printers wirelessly controllable through a simple REST API. This means you can control them using Processing, openFrameworks, JavaScript, Arduino, Cinder etc. Basically any language that can send and receive HTTP requests (AJAX).
+So what could you make? You can think of Doodle3D as the first application written on top of the API, it makes 3D printing a simple sketch child's play. Another example is Cura, which uses the API to enable wirelessly sending a print to your printer. Using the WiFi-Box you could control a printer using a Kinect, influence a print with sound input, maybe create a cup designer or adding an embeddable print button to an existing design application.
+Doodle3D API
+
+Our API enables you to go to a url, and retrieve a json object with information. Like retrieving status info using the following url:
+{ip address of WiFi-Box}/d3dapi/info/status 
+This will give you among other things the status of your printer:
+
+{
+    data:
+    {
+        state: "printing",
+        hotend: 27,
+        hotend_target: 220,
+        bed: 30,
+        bed_target: 70,
+        current_line: 5,
+        buffered_lines: 200,
+        total_lines: 2000,
+        has_control: true,
+    },
+    status: "success"
+}
+
+But you can also set things in motion, you could for example print something by sending G-code in a POST request to the following url:
+{ip address of WiFi-Box}/d3dapi/printer/print
+A basic example in html:
+
+<html>
+<body>
+
+    <form action="http://192.168.5.1/d3dapi/printer/print" 
+        enctype="x-www-form-urlencoded" method="POST">
+        <textarea name="gcode">G1 X100 Y100</textarea>
+        <input type="hidden" name="start" value="true">
+        <input type="hidden" name="first" value="true">
+        <input type="submit" value="Print" />
+    </form>
+
+</body>
+</html>
+
+The basic guidelines are:
+
+    Read-only requests are send as GET, with arguments encoded in the url.
+    State-changing requests are send as POST, with arguments encoded like forms do (similar to GET but transmitted as post data instead).
+    Responses always contain json data as detailed below and always share some basic uniformity (see http://labs.omniti.com/labs/jsend ).
+
+Tip: you can always use the IP address http://192.168.5.1/ when the WiFi-Box is connected to your computer by an ethernet cable.
+
+More technical info can be found at our wiki. You can also browse through our source code for more (up to date) undocumented features:
+
+    API sourcecode in Lua
+    usage in Javascript in our code
+    pairing using connect.doodle3d and listing WiFiBoxes connected to your network
+
+REST API's
+More background on REST API's:
+
+    REST API Tutorial
+    What exactly is RESTful programming?
+    Representational state transfer
+    Intro to REST
+    What is an api?
+    Processing, JSON & The New York Times
+
+We are not the first to open up a REST API, other examples:
+
+    Twitter
+    Facebook
+    Github
+    Flickr
+    Stack overflow
+    Wordpress
+    Thumblr
+    Instagram
+    Google Maps
+    New York Times
+
+Tools:
+
+    Use JSONView to make json more readable in your browser.
+    Use a REST client to test sending post requests from your browser.
+        RESTClient for Firefox
+        Postman for Chrome
+    A Processing library for simple HTTP communication
+    An alternative Processing library for simple HTTP communication
+    Download our own Processing library
+    Downloadable Processing examples for the Doodle3D API
+
+Examples
+jQuery: request printer status
+
+<html>
+<head>
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script>
+    var api = "http://192.168.5.1/d3dapi/"; //you can use this address when using the UTP cable
+    $(function() {
+        
+        //get current status from Doodle3D WiFiBox
+        $.ajax({
+          url: api+"info/status",
+          dataType: 'json',
+          success: function(response) {
+            $("#divStatus").html("status: " + response.data.state);
+          }
+        });
+    
+    });
+    </script>
+</head>
+<body>
+
+    <div id="divStatus"></div>
+
+</body>
+</html>
+
+jQuery: generate a list of boxes on your network:
+
+<html>
+<head>
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script>
+
+    var api = "http://connect.doodle3d.com/api/";
+    $(function() {
+        
+        var list = $("#boxes");
+        $.ajax({
+          url: api+"list.php",
+          dataType: 'json',
+          success: function(response) {
+            var boxes = response.data;
+            jQuery.each(boxes, function (index,box) {
+                list.append("<li><a href='http://"+box.localip+"'>"+box.wifiboxid+"</a></li>");
+            });
+          }
+        });
+    });
+
+    </script>
+</head>
+<body>
+
+    <ul id="boxes"></ul>
+
+</body>
+</html>
+
+Processing: request boxes on your network:
+
+Using the HTTProcessing library (you can import it through the Library manager)
+
+import httprocessing.*;
+
+GetRequest get = new GetRequest("http://connect.doodle3d.com/api/list.example");
+get.send(); // program will wait untill the request is completed
+println("response: " + get.getContent());
+
+JSONObject response = JSONObject.parse(get.getContent());
+println("status: " + response.getString("status"));
+JSONArray boxes = response.getJSONArray("data");
+println("boxes: ");
+for(int i=0;i<boxes.size();i++) {
+  JSONObject box = boxes.getJSONObject(i);
+  println("  wifiboxid: " + box.getString("wifiboxid"));
+}
+
+There are downloadable examples to help you get started with the API through processing or you can download our own library here. Unfortunately we haven't got a importable library yet.
+API Reference
+Categories
+
+    config
+    info
+    network
+    printer
+    sketch
+    system
+    test
+    update
+
+Config
+
+The config API allows you to change the settings stored on the Doodle3D WiFi-Box, like the default bed temperature.
+Retrieve the list of setting keys and their values
+
+GET: /config/all
+
+response: returns all keys and their values.
+
+{
+  data: {
+    doodle3d.simplify.minDistance: 3,
+    printer.baudrate: "115200",
+    printer.bed.height: 220,
+    printer.bed.temperature: 70,
+    printer.bed.width: 220,
+    ....etc.....
+    },
+    "status": "success"
+}
+
+Retrieve the value of a key
+
+GET: /config/?printer.type=
+
+This call returns the value of a certain key (in this case printer.type) from the settings panel.
+
+response: 
+
+{
+    data:
+    {
+        printer.type: "ultimaker"
+    },
+    status: "success"
+}
+
+Change the value of a key
+
+POST: /config
+requires: key=value
+enctype: x-www-form-urlencoded
+
+Example:
+
+<form action="http://192.168.5.1/d3dapi/config" enctype="x-www-form-urlencoded" method="POST">
+<label>Printer temperature:</label>
+<input type="text" name="printer.temperature" value="230"/>
+<input type="submit"/>
+</form>
+
+response:
+
+{
+    data:
+    {
+        more_info: "http://doodle3d.com/api",
+        substituted_ssid: "Doodle3D-87354A",
+        validation:
+        {
+            printer.temperature: "ok"
+        }
+    },
+    status: "success"
+}
+
+Info
+Basic info
+
+GET: /info
+
+Implemented since version 0.10.2
+
+response:
+
+{
+    data:
+    {
+        wifibox: Doodle3D-4CC2FE
+    },
+    status: "success"
+}
+
+Get status info
+
+GET: /info/status
+
+Combination of:
+
+    printer/state
+    printer/temperature
+    printer/progress
+    info/access
+
+response:
+
+{
+    data:
+    {
+        bed: 0,
+        bed_target: 0,
+        buffered_lines: 0,
+        current_line: 0,
+        has_control: true,
+        hotend: 20,
+        hotend_target: 0,
+        state: "idle",
+        total_lines: 0,
+    },
+    status: "success"
+}
+
+or when there's no printer connected:
+
+{
+    data:
+    {
+        more_info: "http://doodle3d.com/api",
+        state: "disconnected",
+    },
+    status: "success"
+}
+
+Download logfiles
+
+GET: /info/logfiles
+
+response:
+
+wifibox-logs.tgz will be returned as a download.
+Check whether you are in control of the printing process
+
+GET: /info/access
+Network
+Scan for available wireless networks
+
+GET: /network/scan
+List known networks
+
+GET: /network/known
+Info about the current network
+
+GET: /network/status
+Connect to an existing WiFi network
+
+POST: /network/associate
+
+ssid: (string) (required) name of WiFi network
+phrase: (string) (optional) password of WiFi network
+recreate: (bool) (optional) should the configuration be recreated or just updated?
+Disconnects from the current WiFi network
+POST: /network/disassociate
+Activate a Wireless AccessPoint
+
+POST: /network/openap
+Activate an accesspoint using the ssid and key stored in /config/?network.ap.ssid= and /config/?network.ap.key=
+Remove a network from known networks
+
+POST: /network/remove
+
+ssid: (string) (required)
+Signin at connect.doodle3d.com
+
+GET: /network/signin
+
+When connected to the internet through an existing WiFi network you can use this method to signin at connect.doodle3d.com.
+Check if WiFi-Box is alive
+
+GET: /network/alive
+
+This method will always return 'alive' when it is called. It's meant to be a light-weight way of checking if the browser can still reach the WiFiBox.
+Printer
+
+Control the 3D printer.
+Request the printer temperatures
+
+GET: /printer/temperature
+Request the progress of a print
+
+GET: /printer/progress
+Request the state of the printer
+
+GET: /printer/state
+
+Possible printer states:
+
+    unknown: not sure what's going on
+    disconnected: printer disconnected
+    connecting: printer connecting (printer found, but driver has not yet finished setting up the connection)
+    idle: printer found and ready to use, but idle
+    buffering: printer is buffering (recieving) data, but not yet printing
+    printing: the printer is printing
+    stopping: when you stop (abort) a print it prints the endcode
+
+Request all supported printer types
+
+GET: /printer/listall
+Make the printer heatup to the heatup temperature
+
+POST: /printer/heatup
+
+This heatup temperature is stored in config
+Make the printer print something
+
+POST: /printer/print
+gcode: (string) (required) See: G-Code (please limit the amount of GCODE to 500 lines).
+first: (bool) (optional) (default: false) Normally gcode chunks will be concatenated, but if you set this to true the buffer is cleared first.
+start: (bool) (optional) (default: false) Only when this argument is true will printing be started.
+ 
+By sending G-Code you can instruct the printer to do something.
+ 
+Example:
+
+<html>
+<body>
+
+    <form action="http://192.168.5.1/d3dapi/printer/print"
+        enctype="x-www-form-urlencoded" method="POST">
+        <textarea name="gcode">G1 X100 Y100</textarea>
+        <input type="hidden" name="start" value="true">
+        <input type="hidden" name="first" value="true">
+        <input type="submit" value="Print" />
+    </form>
+
+</body>
+</html>
+
+Make the printer stop the running print
+
+POST: /printer/stop
+
+gcode: (string) (optional) See: G-Code (please limit the amount of GCODE to 500 lines)
+
+Stops the current print as soon as possible and clears the G-Code buffer. You can also add some G-Code for a finishing move.
+Sketch
+
+Manage the sketches saved on the WiFi-Box.
+
+GET: /sketch/?id=1
+
+POST: /sketch
+
+data: (string) (required)
+
+GET: /sketch/status
+
+POST: /sketch/clear
+System
+
+GET: /system/fwversions
+Update
+
+GET: /update/status
+
+POST: /update/download
+
+POST: /update/install
+
+POST: /update/clear
+
+    G-code
+
+‹ Debugging up G-code ›
+
+    Log in or register to post comments
+
+Last updated 2/4/2014. Created by rick on 29/11/2013.
+Edited by BartZuidervaart, peteruithoven, wouter. Log in to edit this page.
+
+
+Hi guys,
+
+Last year I started working on a little application to create 3D models with. Existing software was so complex to use I didn't feel in control of my own 3D printer, so I started working on this app.
+
+It works by creating a drawing using your mouse or finger on a PC or tablet. With a few easy controls you can then quickly highten, twist and turn your drawing in the third dimension. When you're happy with the result you can send it to a 3D printer with just one press of the button. Generating gcode for your printer happens automatically.
+
+A beta version has already been successfully used by a lot of people and because of this, we decided to start a kickstarter campaign.
+With those funds we'd like to create a beautiful product including the WiFi-box, which enables wireless access to any (supported) 3D printer you connect to it.
+
+The image below gives an impression of the interface. Check out our project on kickstarter: http://doodle3d.com/kickstarter22.
+The project will be released as open source after the campaign has ended, so you can see exactly how your artwork comes to life. smile
+If you like the project, be sure to spread the word!
+
+Best regards,
+Rick 
+
+
+----code_cleared_checked----

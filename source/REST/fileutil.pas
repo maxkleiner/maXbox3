@@ -422,12 +422,12 @@ begin
 
 function FileSize(const Filename: string): int64;
 begin
-  //Result:= FileSize(FileName);
+  Result:= FileSize(FileName);
 end;
 
 function GetFileDescription(const AFilename: string): string;
 begin
-  //Result:= GetFileDescription(AFilename);
+  Result:= LazFileUtils.GetFileDescription(AFilename);
 end;
 
 {$IFDEF darwin}

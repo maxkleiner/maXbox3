@@ -1,0 +1,1465 @@
+PROGRAM DLL_Tutor_2;
+
+///////////////////////////////////////////////////////////////////////////
+//  #sign:Administrator: PC08: 24/10/2014 02:33:28 PM 
+//  Purpose: how to call a dll function, still on progress with lots of experiments 
+//  #path>les2\E:\maxbox3\mXGit39988\maxbox3\examples2\es\                
+//  Lines of Code #locs:763
+///////////////////////////////////////////////////////////////////////////
+
+Const TEXTOUT = 'hi world of dll func in opcode ';
+
+{$DEFINE MSWINDOWS}
+
+//############################################################################
+// Archimedes DLL Architect Tutor Tour
+//############################################################################
+//TODO: Button with stop event, change color and save bitmap as png
+  //TODO: transfer the App to a dll stub function!
+  //{ TODO : the following line looks like a bug... }
+
+{type  
+  PROCESS_MEMORY_COUNTERS = record
+    cb : DWORD;
+    PageFaultCount : DWORD;
+    PeakWorkingSetSize : DWORD;
+    WorkingSetSize : DWORD; //Task managers MemUsage number
+    QuotaPeakPagedPoolUsage : DWORD;
+    QuotaPagedPoolUsage : DWORD;
+    QuotaPeakNonPagedPoolUsage : DWORD;
+    QuotaNonPagedPoolUsage : DWORD;
+    PagefileUsage : DWORD; //TaskMan's VM Size number
+    PeakPagefileUsage : DWORD;
+  end;
+  TProcessMemoryCounters = PROCESS_MEMORY_COUNTERS;}
+  { _OSVERSIONINFOA = record
+    dwOSVersionInfoSize: DWORD;
+    dwMajorVersion: DWORD;
+    dwMinorVersion: DWORD;
+    dwBuildNumber: DWORD;
+    dwPlatformId: DWORD;
+    szCSDVersion: array[0..127] of AnsiChar; { Maintenance AnsiString for PSS usage }
+  {end;
+ //TIntegerList
+ //var aos: TOSVersionInfo;
+
+//  function  {**************************************************}
+ Function GetProcessMemoryInfo(Process: THandle; var MemoryCounters: TProcessMemoryCounters;
+                                    cb: DWORD): BOOL; //stdcall;; 
+     External 'GetProcessMemoryInfo@psapi.dll stdcall';
+     
+ Function OpenProcess2(dwDesiredAccess:DWORD; bInheritHandle:BOOL; dwProcessId:DWORD):THandle;
+     External  'OpenProcess@kernel32.dll stdcall';
+
+ procedure GetVersionEx3(out verinfo: TOSVersionInfo);    //var verinfo: TOSVersionInfo
+     External  'GetVersionExA@kernel32.dll stdcall';
+
+{TYPE <Type declarations>} 
+  var FWait, switch: Boolean;
+      FValueA, FValueB: Float;
+      //asd: TDoubleArray;
+     
+//<FUNCTION>
+//<PROCEDURE> 
+{*****************************************************}
+//function GetProcessMemoryInfo; external 'psapi.dll';
+{*****************************************************}
+
+function ProcessMemoryUsage(ProcessID : DWORD): DWORD;
+var ProcessHandle : THandle;
+    MemCounters   : TProcessMemoryCounters;
+begin
+  Result:= 0;
+  //PROCESS_QUERY_INFORMATION Required to retrieve certain information about process, such as its token, exit code, and priority class   - 0x0400
+  //PROCESS_VM_READ Required to read memory in a process using ReadProcessMemory.
+  ProcessHandle:= OpenProcess2(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                               false, ProcessID);
+  writeln('Process Handle inside: '+inttostr(ProcessHandle));
+  try
+    if GetProcessMemoryInfo(ProcessHandle,
+                            MemCounters, sizeof(MemCounters))
+    then Result:= MemCounters.WorkingSetSize;
+  finally
+    CloseHandle(ProcessHandle);
+  end;
+end;
+
+function ProcessPageUsage(ProcessID: DWORD): DWORD;
+var ProcessHandle : THandle;
+    MemCounters   : TProcessMemoryCounters;
+begin
+  Result:= 0;
+  ProcessHandle:= OpenProcess2(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                                false, ProcessID);
+  try
+    if GetProcessMemoryInfo(ProcessHandle, 
+                              MemCounters, sizeof(MemCounters))
+    then Result:= MemCounters.PagefileUsage;
+  finally
+    CloseHandle(ProcessHandle);
+  end;
+end;
+
+function ProcessAllRec(ProcessID : DWORD): TProcessMemoryCounters;
+var ProcessHandle : THandle;
+    MemCounters   : TProcessMemoryCounters;
+begin
+  //Result:= NULL;
+  ProcessHandle:= OpenProcess2(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                               false, ProcessID);
+  try
+    if GetProcessMemoryInfo(ProcessHandle,
+                            MemCounters, sizeof(MemCounters))
+    then Result:= MemCounters;
+  finally
+    CloseHandle(ProcessHandle);
+  end;
+end;
+
+Procedure OVCInternationalDemoClass;
+begin
+ with TOvcIntlSup.Create do begin
+    //Function InternationalDate( ForceCentury : Boolean) : string');
+    writeln('InternationalDate: '+InternationalDate(true));
+    //Function InternationalDatePChar( Dest : PChar; ForceCentury : Boolean) : PChar');
+    writeln('InternationalLongDate: '+InternationalLongDate(false,false));
+    //Function InternationalTime( ShowSeconds : Boolean) : string');
+    writeln('InternationalTime: '+InternationalTime(false));
+    //Function InternationalTimePChar( Dest : PChar; ShowSeconds : Boolean) : PChar');
+    //Function MonthStringToMonth( const S : string; Width : Byte) : Byte');
+    writeln(Country)
+    Free;
+  end;
+  //TerminateProcess( hProcess : THandle; uExitCode : UINT) : BOOL');
+  //GetExitCodeProcess( hProcess : THandle; var lpExitCode : DWORD) : BOOL');
+ //FatalExit( ExitCode : Integer)');
+ //ExecuteAndWait(cmdLine : String; visibility : Word;
+   //                     timeout : Cardinal = MaxInt;
+     //                   killAppOnTimeOut : Boolean = True) : Integer;
+  //GetTemporaryFilesPath : String;
+ //GetTemporaryFileName : String; //Zero
+ //TPanelStyle //TFontLook
+ //FindFileInPaths(const fileName, paths : String) : String;  //MakeForm
+ //PathsToString(const paths : TStrings) : String;
+ //StringToPaths(const pathsString : String; paths : TStrings);
+ //MacroExpandPath(const aPath : String) : String;
+ //TOnGetItemEvent //TCacheRecord
+   //tMessagefunc
+   //EFilerException(CL: TPSPascalCompiler);
+//EInvalidFileSignature(CL: TPSPascalCompiler);
+//TTextWriter(CL: TPSPascalCompiler);
+//TTextReader(CL: TPSPascalCompiler);
+//TBinaryWriter(CL: TPSPascalCompiler);
+//TBinaryReader(CL: TPSPascalCompiler);
+//TPersistentObjectList(CL: TPSPascalCompiler);
+//TPersistentObject(CL: TPSPascalCompiler);
+//IPersistentObject(CL: TPSPascalCompiler);
+//TVirtualWriter(CL: TPSPascalCompiler);
+//TVirtualReader(CL: TPSPascalCompiler);
+//PersistentClasses(CL: TPSPascalCompiler);
+end;    
+
+
+function SplitToken(const Text: string; SplitChar: Char;
+                          var First, Last: string): Boolean;
+var  SplitPos: Integer;
+begin
+  Result:= False;
+  SplitPos:= Pos(SplitChar, Text);
+  if SplitPos = 0 then Exit;
+  First:= Trim(Copy(Text, 1, SplitPos -1));
+  Last:= Trim(Copy(Text, SplitPos +1, Length(Text) -SplitPos));
+  Result:= (First <>'') and (Last <>'');
+end;
+
+
+function TForm1_scrollAllNode(aNode: TalXmlNode): Integer;
+Var aStack: Tstack;
+    i: integer;
+begin
+  Result := 0;
+  aStack := Tstack.Create;
+  try
+     For i := 0 to aNode.ChildNodes.Count - 1 do
+        aStack.Push((ANode.ChildNodes[i]));
+         While astack.Count > 0 do begin
+        inc(result);
+        aNode := TalxmlNode(astack.Pop);
+        If assigned(ANode.ChildNodes) then
+          For i := 0 to ANode.ChildNodes.Count - 1 do
+            aStack.Push((ANode.ChildNodes[i]));
+           If assigned(ANode.AttributeNodes) then
+          For i := 0 to ANode.attributeNodes.Count - 1 do
+            aStack.Push((ANode.AttributeNodes[i]));
+      end;
+  finally
+    aStack.Free;
+  end;
+end;
+
+
+function CheckPSAPILoaded: Boolean;
+var hPSAPI: THandle;
+begin
+  if hPSAPI = 0 then begin
+{$IFDEF MSWINDOWS}
+    hPSAPI:= LoadLibrary('PSAPI.dll');
+    //writeln('debug DLL handle '+inttostr(hPSAPI));
+    if hPSAPI > 32 then result:= true;
+    if hPSAPI < 32 then begin
+      hPSAPI:= 0;
+      Result:= False;
+      Exit;
+    end;
+ {$ENDIF}   
+  end; 
+end;
+
+function IntToStrZeroPad(Value, Count: Integer): AnsiString;
+begin
+  Result := IntToStr(Value);
+  if Length(Result) < Count then
+    Result := StrFillChar('0', Count - Length(Result)) + Result;
+end;
+
+function JclGUIDToString(const GUID: TGUID): string;
+begin
+  {$IFDEf CLR}
+  Result := GUID.ToString();
+  {$ELSE}
+  Result := Format('{%.8x-%.4x-%.4x-%.2x%.2x-%.2x%.2x%.2x%.2x%.2x%.2x}',
+    [GUID.D1, GUID.D2, GUID.D3, GUID.D4[0], GUID.D4[1], GUID.D4[2],
+     GUID.D4[3], GUID.D4[4], GUID.D4[5], GUID.D4[6], GUID.D4[7]]);
+  {$ENDIF CLR}
+end;
+
+{BOOL GetVersionEx( 
+  LPOSVERSIONINFO lpVersionInformation );}
+
+function GetOsVersionInfo2: TOSVersionInfo; 
+var
+  verInfo: TOSVersionInfo;
+begin
+  verinfo.dwOSVersionInfoSize:= sizeof(verinfo);
+  GetVersionEx(Verinfo);
+  result:= Verinfo;
+end;  
+
+function GetOsVersionInfo3: TOSVersionInfo; 
+var
+  verInfo: TOSVersionInfo;
+begin
+  verinfo.dwOSVersionInfoSize:= sizeof(verinfo);
+  GetVersionEx3(Verinfo);
+  result:= Verinfo;
+end; 
+
+function IsWindowsVista: boolean;
+var
+  verInfo: TOSVersionInfo;
+begin
+  verinfo.dwOSVersionInfoSize:= Sizeof(verinfo);
+  GetVersionEx(Verinfo);
+  result:= Verinfo.dwMajorVersion >=6;
+end;
+
+procedure readln1(var ast: string);
+begin
+  inputquery('maXbox Console Input','please type a string:',ast);
+end;
+
+  procedure learnX;
+    //uses crt;
+    var a,b,c,e,f,right: integer;
+        d: real;
+    label one{, two, tre, fur, fiv};
+    begin
+      //textbackground(green);
+      //7textcolor(white);
+      //clrscr;
+    repeat
+    inc(f);
+    until f=100000;
+    randomize;
+    one:
+    e:=random(3)+1;
+    b:=random(200)+1;
+    c:=random(200)+1;
+    if e=1 then d:=b+c;
+    if e=2 then d:=b-c;
+    if e=3 then d:=b*c;
+    writeln(' '+inttostr(b));
+    if e=1 then write(' + ');
+    if e=2 then write(' - ');
+    if e=3 then write(' x ');
+    writeln(inttostr(c));
+    writeln('______');
+    //readln2; ?
+    //readln1
+    a:= strtoint(readln('type some a'));
+    if a=d then begin
+    inc(right);
+    writeln('HORRAY! YOU GOT IT RIGHT! you have '+inttostr(right)+' points!');
+    end else begin
+      right:=right-1;
+      writeln('WRONG! you have '+inttostr(right)+' points');
+    end;
+    goto one;
+    end;
+    
+    
+function CharPos(C: AnsiChar; const S : string): Integer;
+var
+  i : Integer;
+begin
+  for i := 1 to length(S) do
+    if (S[i] = C) then begin
+      Result := i;
+      Exit;
+    end;
+  Result := 0;
+end;
+
+    
+    { Split Internet formated (ampersand '&' separated) parameters }
+{ from Parms into Dest }
+procedure SplitParams2(const Parms : string; Dest : TStrings);
+var
+  P : Integer;
+  Temp : string;
+begin
+  if not Assigned(Dest) then
+    Exit;
+
+  Dest.Clear;
+  Temp := Parms;
+
+  P := CharPos('&', Temp);
+  while P > 0 do begin
+    Dest.Add(Copy(Temp, 1, P - 1));
+    Temp := Copy(Temp, P + 1, Length(Temp) - P);
+    P := CharPos('&', Temp);
+  end;
+  Dest.Add(Temp);
+end;
+
+procedure SplitHttpResponse2(const S: string; var V, MsgID, Msg: string);
+var
+  P: Integer;
+  Temp: string;
+begin
+  Temp := S;
+  P := CharPos(' ', Temp);
+  V := Copy(Temp, 6, P - 6);
+  Temp := Copy(Temp, P + 1, Length(Temp) - P);
+  P := CharPos(' ', Temp);
+  MsgID := Copy(Temp, 1, P - 1);
+  Msg := Copy(Temp, P + 1, Length(Temp) - P);
+  //DOSToNetPath
+end;
+
+
+CONST 
+  UrlMapQuestAPICode2='http://open.mapquestapi.com/nominatim/v1/search.php?format=%s&json_callback=renderBasicSearchNarrative&q=%s';  
+
+
+function GetMapXGeocodeReverse(C_form,apath: string; const data: string): string;
+ var encodURL, alat, alon: string;
+    mapStream: TStringStream;
+    xmlDoc: TXmlVerySimple; //TALXMLDocument;
+    Nodes: TXmlNodeList;
+    Node: TXmlNode;
+ begin
+   encodURL:= Format(UrlMapQuestAPICode2,[c_form,HTTPEncode(Data)]);
+   mapStream:= TStringStream.create('');
+   xmldoc:= TXmlVerySimple.create;
+   try
+     HttpGet(EncodURL, mapStream);  {WinInet}
+    
+     //local tester
+     //mapstream.writestring(loadstringfromfile(apath));
+     mapStream.Position:= 0;
+     writeln('string stream size: '+inttostr(mapstream.size));
+     writeln('string stream cont: '+mapstream.datastring);
+     {SaveStringtoFile(apath, mapStream.datastring) OpenDoc(apath); }
+   
+     xmlDoc.loadfromStream(mapstream);
+     writeln('childcounts: '+inttostr(xmlDoc.root.childnodes.count))  
+     if xmlDoc.root.childnodes.count > 0 then begin  
+       Nodes:= XmlDoc.Root.FindNodes('place');    //or result
+       for it:= 0 to TXMLNodeList(nodes).count-1 do begin
+         //for Node in Nodes do
+         Node:= TXMLNode(nodes.items[it]);
+         alon:= node.attribute['lon']
+         alat:= node.attribute['lat']
+       end;
+       //result:= 'GEO Topic found: '+(node.text)+CRLF
+       result:= result+('latitude: '+alat+'  longitude: '+alon)
+       Nodes.Free;
+     end;
+   finally
+     encodURL:= '';
+     mapStream.Free;
+     xmlDoc.Free;
+   end;
+ end;  
+ 
+ 
+ procedure SaveString(const AFile, AText: string);
+begin
+  with TFileStream.Create(AFile, fmCreate) do
+  try
+    WriteBuffer(AText, Length(AText));
+  finally
+    Free;
+  end;
+end;
+
+procedure ALSaveStringtoFile(Str: AnsiString; filename: AnsiString);
+Var AStringStream: TStringStream;
+    AMemoryStream: TMemoryStream;
+begin
+  AMemoryStream := TMemoryStream.Create;
+  try
+
+    AStringStream := TStringStream.Create(str);
+    try
+      AmemoryStream.LoadFromStream(AstringStream);
+      AmemoryStream.SaveToFile(String(filename));
+    finally
+      AStringStream.Free;
+    end;
+
+  finally
+    AMemoryStream.Free;
+  end;
+end;
+
+                          
+
+function GetGeoCode(C_form,apath: string; const data: string; sfile: boolean): string;
+ var encodURL, alat, alon: string;
+    mapStream: TStringStream;
+    xmlDoc: TXmlVerySimple; //TALXMLDocument;
+    Nodes: TXmlNodeList;
+    Node: TXmlNode;
+ begin
+   encodURL:= Format(UrlMapQuestAPICode2,[c_form,HTTPEncode(Data)]);
+   mapStream:= TStringStream.create('');
+   xmldoc:= TXmlVerySimple.create;
+   try
+     HttpGet(EncodURL, mapStream);  {WinInet}
+     //local tester
+     //mapstream.writestring(loadstringfromfile(apath));
+     mapStream.Position:= 0;
+     //writeln('string stream size: '+inttostr(mapstream.size));
+     //writeln('string stream cont: '+mapstream.datastring);
+     if sfile then begin
+      SaveStringtoFile(apath, mapStream.datastring);
+       OpenDoc(apath);
+     end;
+     xmlDoc.loadfromStream(mapstream);
+     //writeln('childcounts: '+inttostr(xmlDoc.root.childnodes.count))  
+     if xmlDoc.root.childnodes.count > 0 then begin  
+       Nodes:= XmlDoc.Root.FindNodes('place');    //or result
+       for it:= 0 to TXMLNodeList(nodes).count-1 do begin
+         //for Node in Nodes do
+         Node:= TXMLNode(nodes.items[it]);
+         alon:= node.attribute['lon']
+         alat:= node.attribute['lat']
+       end;
+       //result:= 'GEO Topic found: '+(node.text)+CRLF
+       result:= result+('latitude: '+alat+'  longitude: '+alon)
+       Nodes.Free;
+     end;
+   finally
+     encodURL:= '';
+     mapStream.Free;
+     xmlDoc.Free;
+   end;
+ end;   
+ 
+ 
+ Function getFileCount(amask: string): integer;
+var
+  DOSerr: integer;
+  //fsrch: TsearchRec;
+begin
+  result:= 0;
+  doserr:= FindFirst(amask{'*.*'},faAnyFile);
+  if (DOSerr = 0) then begin
+    while (DOSerr = 0) do begin
+      if (searchRecAttr and faDirectory) = 0 then inc(result);
+      //writeln(searchRecName)
+      DOSerr:= findNext;
+    end;
+   findClose;
+  end;
+end;
+                         
+
+
+procedure iputilstest;
+begin
+
+  { Misc utility routines }
+   {InClassA(Addr : LongInt) : Boolean;
+   InClassB(Addr : LongInt) : Boolean;
+   InClassC(Addr : LongInt) : Boolean;
+   InClassD(Addr : LongInt) : Boolean;}
+   //InMulticast(Addr : LongInt) : Boolean;
+
+   //IpCharCount(const Buffer; BufSize : DWORD; C : AnsiChar) : DWORD;
+   //IpCompStruct(const S1, S2; Size : Cardinal) : Integer;
+   //IpMaxInt(A, B : Integer) : Integer;
+   //IpMinInt(A, B : Integer) : Integer;
+   //IpSafeFree(var Obj);
+   //IpShortVersion : string;
+
+  { CRC routines }
+   //!!!InternetSumPrim(var Data; DataSize, CurCrc : DWORD) : DWORD;
+   //!!!InternetSumOfStream(Stream : TStream; CurCrc : DWORD) : DWORD;
+   //!!!InternetSumOfFile(const FileName : string) : DWORD;
+   //MD5SumOfFile(const FileName : string) : string;
+   //MD5SumOfStream(Stream : TStream) : string;
+   //MD5SumOfStreamDigest(Stream : TStream) : TIpMD5Digest;
+   //MD5SumOfString(const S : string) : string;
+   //MD5SumOfStringDigest(const S : string) : TIpMD5Digest;
+
+   //SafeYield : LongInt; {-Allow other processes a chance to run}
+   //AllTrimSpaces(Strng: string) : string;
+   //!!!CharPos(C: AnsiChar; const S : string): Integer;
+   //CharPosIdx(C: AnsiChar; const S : string; Idx: Integer): Integer;
+   //NthCharPos(C: AnsiChar; const S : string; Nth: Integer): Integer;
+   //RCharPos(C: AnsiChar; const S : string): Integer;
+   //RCharPosIdx(C: AnsiChar; const S : string; Idx: Integer): Integer;
+   //RNthCharPos(C: AnsiChar; const S : string; Nth: Integer): Integer;
+   //!!!RPos(const Substr: string; const S: string): Integer;
+   //((!!!PosIdx(const SubStr, S: string; Idx: Integer): Integer;
+
+
+{address handling}
+//type
+  //ACharSet = set of AnsiChar;
+
+{ Structure to hold pieces of a URI (Uniform Resource Identifier) }
+{ field names are derived from terminology used in:               }
+{ RFC-2396 "Uniform Resource Identifiers (URI): Generic Syntax"   }
+
+  (*TIpAddrRec = record
+    Scheme     : string;
+    UserName   : string;                                                 {!!.03}
+    Password   : string;                                                 {!!.03}
+    Authority  : string;
+    Port       : string;
+    Path       : string;
+    Fragment   : string;
+    Query      : string;
+    QueryDelim : AnsiChar;
+  end;*)
+  
+  //{$IFDEF IP_LAZARUS}
+  //procedure Initialize(var AddrRec: TIpAddrRec);
+  //procedure Finalize(var AddrRec: TIpAddrRec);
+  //{$ENDIF}
+
+   //ExtractEntityName(const NamePath: string): string;
+   //ExtractEntityPath(const NamePath: string): string;
+   //IpParseURL(const URL : string; var Rslt : TIpAddrRec) : Boolean;
+   //BuildURL(const OldURL, NewURL: string): string;
+   //PutEscapes(const S : string; EscapeSet : CharSet) : string;
+   //RemoveEscapes(const S : string; EscapeSet : CharSet) : string;
+   //SplitParams(const Parms : string; Dest : TStrings);
+   //NetToDOSPath(const PathStr : string) : string;
+   //DOSToNetPath(const PathStr : string) : string;
+   //SplitHttpResponse(const S : string; var V, MsgID, Msg: string);
+   //FieldFix(Fields : TStrings);
+   //AppendSlash(APath : string) : string;
+   //RemoveSlash(APath : string) : string;
+   //GetParentPath(const Path : string) : string;
+
+{ File/Directory Stuff }
+   //GetLocalContent(const TheFileName: string): string;
+   //!!!DirExists(Dir : string): Boolean;
+   //GetTemporaryFile(const Path : string) : string;
+   //GetTemporaryPath: string;
+   //AppendBackSlash(APath : string) : string;
+   //!!!RemoveBackSlash(APath: string) : string;
+
+{ date stuff }
+
+  { convert Net date (as spec'ed in RFC 2616) to Delphi TDateTime }
+   //INetDateStrToDateTime(const DateStr: string): TDateTime;
+  { convert Delphi TDateTime to Net date (as spec'ed in RFC 2616) }
+   //DateTimeToINetDateTimeStr(DateTime: TDateTime): string;
+  { return the current local TimeZone "bias" in minutes from UTC (GMT) }
+   //!!!TimeZoneBias : Integer;
+
+   //SplitCookieFields(const Data: string; Fields: TStrings);
+end;
+
+
+procedure TForm1ButtonClickLinesCount(Sender: TObject);
+var OpenDialog: TOpenDialog;
+begin
+ openDialog:= TOpenDialog.create(self);
+ if OpenDialog.Execute then begin
+   sr:= OpenDialog.FileName;
+   //sr:= IntToStr(TextFileLineCount(OpenDialog.FileName));
+ end;
+ openDialog.Free;
+end;
+
+
+ 
+
+var  verInfo: TOSVersionInfo;
+     aProcessHandle : THandle;
+     filestr: string;
+     along: longint;
+     afrm: TForm;
+     //apgs: TGPS;
+     //acc: acharset;
+     //apos: TNavPos;
+     //mydom: TDOMDocument //TRefClass;  //TDOMNode;
+     //ahd: TIpAddrRec, TIpBaseAccess; //TIpMD5Digest; //TIpHandle;
+
+Begin  //Main
+//<Executable statements> //TOutlookExport_Spy;
+  Writeln('');
+  //Writeln('Start Command of DLL: '+CheckIEStartCommand);  
+//<Definitions>  
+   //ares:= TResolver.create;
+ { with TResolver.create do begin
+   //writeln(inttostr(GetHostByName(gethostname)));
+    Free;   end;  }
+    {repeat 
+     TApplication_PaintView(aform.canvas);
+     switch:= NOT switch;
+     Sleep(20);
+   until isKeyPressed or FWait;}
+    {with TledForm.create(self) do begin
+    showmodal; free; end;} 
+ //  GetMacAddresses(const Machine: string; const Addresses: TStrings):Integer;
+   OVCInternationalDemoClass;
+  
+ //GetProcessMemoryInfo(Process 
+     writeln('workset mem from dll '+inttostr(ProcessMemoryUsage(GetCurrentProcessID)));
+     writeln('workset page from dll '+inttostr(ProcessPageUsage(GetCurrentProcessID)));
+     writeln('workset memproc test in bytes '
+                 +inttostr(ProcessAllRec(GetCurrentProcessID).workingsetsize));
+     writeln('proc peak max. workingset in K '
+              +inttostr(ProcessAllRec(GetCurrentProcessID).PeakWorkingSetSize div 1024));
+     writeln('proc peak max. paged use in K '
+              +inttostr(ProcessAllRec(GetCurrentProcessID).QuotaPeakPagedPoolUsage));
+     writeln('proc page peak file usage K '
+              +inttostr(getProcMemInfo(GetCurrentProcessID).PeakPagefileUsage div 1024));
+     if CheckPSAPILoaded then
+        writeln('!workset! mem from dll in K '
+              +inttostr(getProcMemInfo(GetCurrentProcessID).Workingsetsize div 1024));
+ 
+    // SplitImages(self);
+     //deletefiles(PICPATH,'*.bmp');
+      //GetCurrentHwProfile( var lpHwProfileInfo : THWProfileInfo) : BOOL');
+        //SetPriorityClass  //GetPriorityClass
+     //OpenClipboard(   //booleantostr(false);
+     //JclGUIDToString  //TJclNumericFormat 
+          //function IsClass(Address: Pointer): Boolean;
+          //function IsObject(Address: Pointer): Boolean;
+           //IsClass(Address: Pointer): Boolean;
+           //IsObject(Address: Pointer): Boolean;
+           //ReadKey  //IntToStrZeroPad //  StrFillChar //EndDialog( 
+         //GetDlgItem(  //SetDlgItemInt( //dialogbox
+         //TQuaternionList(CL: TPSPascalCompiler);
+   //TByteList(CL: TPSPascalCompiler);
+   //TSingleList(CL: TPSPascalCompiler);
+   //TIntegerList(CL: TPSPascalCompiler);
+   //TTexPointList(CL: TPSPascalCompiler);
+   //TVectorList(CL: TPSPascalCompiler);
+   //TAffineVectorList(CL: TPSPascalCompiler);
+   //TBaseVectorList(CL: TPSPascalCompiler);
+   //TBaseList(CL: TPSPascalCompiler);
+   //VectorLists(CL: TPSPascalCompiler); 
+   //TXIntegerList
+   //TJclSimpleLog  //jExecute 
+  
+   writeln('get current dir '+GetCurrentDir);
+   //GetCurrentModule  
+   //GetModuleFileName(hmod, szPath, MAX_PATH);
+//HMODULE hmod = GetCurrentModule();
+//TCHAR szPath[MAX_PATH + 1] = 0;          
+//DWORD dwLen = GetModuleFileHName(hmod, szPath, MAX_PATH);    
+  //GetModuleHandle               
+   writeln(booleantostr(samepath(exepath, exepath)))
+       
+  verinfo:= GetOsVersionInfo2; //script dll
+  writeln('OS Verinfo Major: '+inttostr(Verinfo.dwMajorVersion))
+  writeln('OS Verinfo Minor: '+inttostr(Verinfo.dwMinorVersion))
+  writeln('OS VerSizeinfo '+inttostr(Verinfo.dwOSVersionInfoSize))
+  
+  verinfo:= GetOsVersionInfo; //internal dll
+  writeln('OS Verinfo Major: '+inttostr(Verinfo.dwMajorVersion))
+  writeln('OS Verinfo Minor: '+inttostr(Verinfo.dwMinorVersion))
+  writeln('OS VerSizeinfo '+inttostr(Verinfo.dwOSVersionInfoSize))
+  
+  verinfo:= GetOsVersionInfo3; //dll external
+  writeln('OS Verinfo Major: '+inttostr(Verinfo.dwMajorVersion))
+  writeln('OS Verinfo Minor: '+inttostr(Verinfo.dwMinorVersion))
+  writeln('OS VerSizeinfo '+inttostr(Verinfo.dwOSVersionInfoSize))
+  
+  //Function IsDelphiProject( const FileName : string) : Boolean');
+  writeln(booleantoStr(IsDelphiProject(exepath+'maxbox3.exe')));
+  //FileBackup(const 
+  aProcessHandle:= OpenProcess2(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                               false, GetCurrentProcessID);
+  writeln('Process Handle direct: '+inttostr(aProcessHandle));
+  aProcessHandle:= OpenProcess2($0400 or $0010, false, GetCurrentProcessID);
+  writeln('Process Handle direct: '+inttostr(aProcessHandle));
+  
+  writeln(sha1(exepath+'maxbox3.exe'));
+  
+  //filestr:= loadfileasstring(exepath+'maxbox3_9.exe');
+  //writeln(synsha1(filestr));
+  //learnX;
+   //writeln(getascii)
+   writeln(chr(208)+chr(203)+'LPHI');
+   readln1(sr);
+   writeln('you type: '+sr)
+   //BuildURL
+   //InternetSumOfFile
+   //MD5SumOfFile
+   //IpParseURL
+   writeln(inttostr(maxlongint))
+   writeln(inttostr(high(along)-1));
+   //MSLanguages
+   
+  //GetGeoCode
+    //outputmap_2cologne.xml
+ //7 writeln('just coordinates back test: ')
+  //writeln(GetMapXGeocodeReverse('xml',ExePath+'outputmap_2cologne.xml',                                                   'cathedral cologne'))
+ 
+   { writeln(GetGeoCode('xml',ExePath+'outputmap_2cologne.xml',                                                   'cathedral cologne',false));
+ 
+   writeln(GetGeoCode('xml',ExePath+'outputmap_2cologne.xml',                                                   'church cologne',false));}
+   
+   writeln(inttostr(getfilecount(exepath+'\web\*.*')));
+   writeln(inttostr(getfilecount(exepath+'\crypt\*.*')-1));
+   writeln(inttostr(getfilecount(exepath+'\*.*')));
+ 
+     //latitude: '50.94133705'  longitude: '6.95812076100766'
+  
+    //afrm:= TForm.create(self)
+    //afrm.show;
+    with TComSelectForm.create(self) do begin
+    //parent:= aFrm;
+    //Show;
+    //Coordinatestr
+    Free;
+  end;  
+  
+  //ComPortSelect
+   
+     
+End. 
+
+//DOC
+Small set for arduino and android unit testing 
+
+http://glscene.sourceforge.net/wikka/HomePage
+
+
+Positioned in the foothills of Mount Parnassos, historic Delphi was traditionally believed to be the geographical  centre of the world – the meeting point of two eagles dispatched by Zeus. For many centuries it was also the religious and spiritual centre of the ancient Greek world and the Delphic oracle was consulted by visitors from across a wide region. 
+unit Unit1;
+
+interface
+
+pascal delphi 
+
+uses Windows,
+     Messages,
+     SysUtils,
+     Variants,
+     Classes,
+     Graphics,
+     Controls,
+     Forms,
+     Dialogs,
+     Contnrs,
+     StdCtrls,
+     xmldom,
+     XMLIntf,
+     msxmldom,
+     XMLDoc,
+     AlFcnString,
+     AlXmlDoc,
+     ExtCtrls,
+     OleCtrls,
+     SHDocVw,
+     ComObj,
+     ALFcnFile,
+     ALStringList;
+
+{------------------------------------}
+Const WM_XmlFullyLoaded = WM_user + 1;
+
+type
+
+  PPROCESS_MEMORY_COUNTERS = ^PROCESS_MEMORY_COUNTERS;
+  PROCESS_MEMORY_COUNTERS = record
+    cb : DWORD;
+    PageFaultCount : DWORD;
+    PeakWorkingSetSize : DWORD;
+    WorkingSetSize : DWORD; //Task managers MemUsage number
+    QuotaPeakPagedPoolUsage : DWORD;
+    QuotaPagedPoolUsage : DWORD;
+    QuotaPeakNonPagedPoolUsage : DWORD;
+    QuotaNonPagedPoolUsage : DWORD;
+    PagefileUsage : DWORD; //TaskMan's VM Size number
+    PeakPagefileUsage : DWORD;
+  end;
+  TProcessMemoryCounters = PROCESS_MEMORY_COUNTERS;
+
+  TForm1 = class(TForm)
+    ButtonLoadXmlWithALXmlDocument: TButton;
+    ButtonLoadXmlWithXmlDocument: TButton;
+    MemoLoadXmlWithALXmlDocument: TMemo;
+    MemoLoadXmlWithXmlDocument: TMemo;
+    MainOpenDialog: TOpenDialog;
+    ButtonGenerate100000NodeWithALXmlDocument: TButton;
+    MemoGenerate100000NodeWithALXmlDocument: TMemo;
+    MemoGenerate100000NodeWithXmlDocument: TMemo;
+    ButtonGenerate100000NodeWithXmlDocument: TButton;
+    ButtonParseXMLWithALXmlDocumentInSaxMode: TButton;
+    MemoParseXmlWithALXmlDocumentInSaxMode: TMemo;
+    Panel1: TPanel;
+    Label8: TLabel;
+    Label12: TLabel;
+    Panel2: TPanel;
+    PanelWebBrowser: TPanel;
+    procedure ButtonLoadXmlWithALXmlDocumentClick(Sender: TObject);
+    procedure ButtonLoadXmlWithXmlDocumentClick(Sender: TObject);
+    procedure ButtonGenerate100000NodeWithALXmlDocumentClick(Sender: TObject);
+    procedure ButtonGenerate100000NodeWithXmlDocumentClick(Sender: TObject);
+    procedure ButtonParseXMLWithALXmlDocumentInSaxModeClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormCreate(Sender: TObject);
+  private
+    FnodeCount: Integer;
+    Function scrollAllNode(aNode: iXmlNode): Integer; overload;
+    Function scrollAllNode(aNode: TalXmlNode): Integer; overload;
+  public
+    { Public declarations }
+  end;
+
+function GetProcessMemoryInfo(Process : THandle; var MemoryCounters : TProcessMemoryCounters; cb : DWORD) : BOOL; stdcall;
+function ProcessMemoryUsage(ProcessID : DWORD): DWORD;
+
+var
+  Form1: TForm1;
+
+implementation
+
+//{$R *.dfm}
+
+{**************************************************}
+function GetProcessMemoryInfo; external 'psapi.dll';
+
+{****************************************************}
+function ProcessMemoryUsage(ProcessID : DWORD): DWORD;
+var ProcessHandle : THandle;
+    MemCounters   : TProcessMemoryCounters;
+begin
+  Result := 0;
+  ProcessHandle := OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                               false,
+                               ProcessID);
+  try
+    if GetProcessMemoryInfo(ProcessHandle,
+                            MemCounters,
+                            sizeof(MemCounters))
+    then Result := MemCounters.WorkingSetSize;
+  finally
+    CloseHandle(ProcessHandle);
+  end;
+end;
+
+{****************************************************************}
+Function CreateEmptyXMLDocument(Rootname:AnsiString):IXMLDocument;
+Var aXmlDoc: TXMLDocument;
+begin
+  aXmlDoc := TXMLDocument.Create(nil);
+  Result := aXmlDoc;
+  with result do begin
+    Options := [];
+    ParseOptions := [];
+    FileName := '';
+  end;
+End;
+
+{******************************************************}
+function TForm1.scrollAllNode(aNode: iXmlNode): Integer;
+Var aStack: Tstack;
+    i: integer;
+begin
+  Result := 0;
+  aStack := Tstack.Create;
+  try
+      For i := 0 to aNode.ChildNodes.Count - 1 do
+        aStack.Push(pointer(ANode.ChildNodes[i]));
+      While astack.Count > 0 do begin
+        inc(result);
+        aNode := ixmlNode(astack.Pop);
+        If assigned(ANode.ChildNodes) then
+          For i := 0 to ANode.ChildNodes.Count - 1 do
+            aStack.Push(pointer(ANode.ChildNodes[i]));
+
+        If assigned(ANode.AttributeNodes) then
+          For i := 0 to ANode.AttributeNodes.Count - 1 do
+            aStack.Push(pointer(ANode.AttributeNodes[i]));
+      end;
+  finally
+    aStack.Free;
+  end;
+
+end;
+
+//############################################################################
+// Archimedes Spiral App
+//############################################################################
+
+procedure SIRegister_TOvcIntlSup(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TObject', 'TOvcIntlSup') do
+  with CL.AddClassN(CL.FindClass('TObject'),'TOvcIntlSup') do begin
+    RegisterMethod('Constructor Create');
+    Procedure Free');
+    Function CurrentDateString( const Picture : string; Pack : Boolean) : string');
+    Function CurrentDatePChar( Dest : PChar; Picture : PChar; Pack : Boolean) : PChar');
+    Function CurrentTimeString( const Picture : string; Pack : Boolean) : string');
+    Function CurrentTimePChar( Dest : PChar; Picture : PChar; Pack : Boolean) : PChar');
+    Function DateToDateString(const Picture:string; Julian:TStDate;Pack : Boolean) : string');
+  Function DateToDatePChar(Dest:PChar;Picture:PChar;Julian:TStDate;Pack:Boolean):PChar');
+  Function DateTimeToDatePChar(Dest:PChar;Picture:PChar;DT:TDateTime;Pack:Bool): PChar');
+    Function DateStringToDMY( const Picture, S : string; var Day, Month, Year : Integer; Epoch : Integer) : Boolean');
+    Function DatePCharToDMY(Picture,S:PChar;var Day,Month,Year:Integer;Epoch:Integer):Bool');
+    Function DateStringIsBlank( const Picture, S : string) : Boolean');
+    Function DatePCharIsBlank( Picture, S : PChar) : Boolean');
+    Function DateStringToDate( const Picture, S : string; Epoch : Integer) : TStDate');
+    Function DatePCharToDate( Picture, S : PChar; Epoch : Integer) : TStDate');
+    Function DayOfWeekToString( WeekDay : TDayType) : string');
+    Function DayOfWeekToPChar( Dest : PChar; WeekDay : TDayType) : PChar');
+    Function DMYtoDateString( const Picture : string; Day, Month, Year : Integer; Pack : Boolean; Epoch : Integer) : string');
+    Function DMYtoDatePChar( Dest : PChar; Picture : PChar; Day, Month, Year : Integer; Pack : Boolean; Epoch : Integer) : PChar');
+    Function InternationalCurrency( FormChar : Char; MaxDigits : Byte; Float, AddCommas, IsNumeric : Boolean) : string');
+    Function InternationalCurrencyPChar( Dest : PChar; FormChar : Char; MaxDigits : Byte; Float, AddCommas, IsNumeric : Boolean) : PChar');
+    Function InternationalDate( ForceCentury : Boolean) : string');
+    Function InternationalDatePChar( Dest : PChar; ForceCentury : Boolean) : PChar');
+  Function InternationalLongDate( ShortNames : Boolean; ExcludeDOW : Boolean) : string');
+  Function InternationalLongDatePChar(Dest:PChar;ShortNames:Boolean; ExcludeDOW:Boolean):PChar');
+    Function InternationalTime( ShowSeconds : Boolean) : string');
+    Function InternationalTimePChar( Dest : PChar; ShowSeconds : Boolean) : PChar');
+    Function MonthStringToMonth( const S : string; Width : Byte) : Byte');
+    Function MonthPCharToMonth( S : PChar; Width : Byte) : Byte');
+    Function MonthToString( Month : Integer) : string');
+    Function MonthToPChar( Dest : PChar; Month : Integer) : PChar');
+    Procedure ResetInternationalInfo');
+    Function TimeStringToHMS(const Picture,S:string;var Hour,Minute,Second: Integer):Boolean');
+    Function TimePCharToHMS( Picture, S : PChar; var Hour, Minute, Second : Integer):Boolean');
+    Function TimeStringToTime( const Picture, S : string) : TStTime');
+    Function TimePCharToTime( Picture, S : PChar) : TStTime');
+    Function TimeToTimeString( const Picture : string; T : TStTime; Pack : Boolean) : string');
+    Function TimeToTimePChar(Dest:PChar;Picture: PChar; T : TStTime; Pack : Boolean) : PChar');
+    Function TimeToAmPmString( const Picture : string; T : TStTime; Pack : Boolean) : string');
+    Function TimeToAmPmPChar(Dest: PChar; Picture:PChar; T: TStTime; Pack : Boolean) : PChar');
+    RegisterProperty('AutoUpdate', 'Boolean', iptrw);
+    RegisterProperty('CurrencyLtStr', 'string', iptrw);
+    RegisterProperty('CurrencyRtStr', 'string', iptrw);
+    RegisterProperty('DecimalChar', 'Char', iptrw);
+    RegisterProperty('CommaChar', 'Char', iptrw);
+    RegisterProperty('Country', 'string', iptr);
+    RegisterProperty('CurrencyDigits', 'Byte', iptrw);
+    RegisterProperty('ListChar', 'Char', iptrw);
+    RegisterProperty('SlashChar', 'Char', iptrw);
+    RegisterProperty('TrueChar', 'Char', iptrw);
+    RegisterProperty('FalseChar', 'Char', iptrw);
+    RegisterProperty('YesChar', 'Char', iptrw);
+    RegisterProperty('NoChar', 'Char', iptrw);
+    RegisterProperty('OnWinIniChange', 'TNotifyEvent', iptrw);
+  end;
+end;
+
+initialization 
+  MyIntObject:= TMyObject.Create; 
+finalization 
+  MyIntObject.Free; 
+
+But how about the DLL is written in C++?
+
+At the very end we call a C++ DLL from maXbox:
+First of all, you have to translate the header-file (should be delivered with the DLL), which is like an interface-section in OP. Headers in c usually contain all sorts of definitions which are relevant outside the module. In our c++ example it looks like: 
+
+/*FILE: income.h */ 
+class CIncome 
+{ 
+  public: 
+    virtual double __stdcall GetIncome( double aNetto ) = 0 ; 
+    virtual void   __stdcall SetRate( int aPercent, int  aYear ) = 0 ; 
+    virtual void   __stdcall FreeObject() = 0 ; 
+} ;
+
+Then you translate it to an Abstract Class in a unit of her own: 
+
+//FILE: income.pas 
+interface 
+type 
+CIncome = class 
+   public 
+   function GetIncome(const aNetto: double): double; 
+                               virtual; stdcall; abstract; 
+   procedure SetRate(const aPercent: Integer; aYear: integer); 
+                               virtual; stdcall; abstract; 
+   procedure FreeObject; virtual; stdcall; abstract; 
+end;
+
+
+
+
+----app_template_loaded_code----
+
+10 vor 10 kannst Du entweder live am PC schauen
+http://www.srf.ch/livestream/player/srf-1
+
+oder anschliessend an die Sendung:
+http://www.srf.ch/sendungen/10vor10
+
+
+Short for Dynamic Link Library, a library of executable functions or data that can be used by a Windows application. Typically, a DLL provides one or more particular functions and a program accesses the functions by creating either a static or dynamic link to the DLL. A static link remains constant during program execution while a dynamic link is created by the program as needed. DLLs can also contain just data. DLL files usually end with the extension .dll,.exe., drv, or .fon.
+
+A DLL can be used by several applications at the same time. Some DLLs are provided with the Windows operating system and available for any Windows application. Other DLLs are written for a particular application and are loaded with the application.
+
+
+Disclaimer: The foregoing release may contain forward-looking statements that
+can be identified by terminology such as 'seek', 'not pursue', 'not approvable',
+'continue', 'believes', 'believe', 'will', 'remained open to exploring',
+'would', 'could', or similar expressions, or by express or implied discussions
+regarding Addex Therapeutics, formerly known as, Addex Pharmaceuticals, its
+business, the potential approval of its products by regulatory authorities, or
+regarding potential future revenues from such products. Such forward-looking
+statements reflect the current views of Addex Therapeutics regarding future
+
+events, future economic performance or prospects, and, by their very nature. 
+
+
+ 4 down vote favorite
+3
+	
+
+--------------ADK ----------------Delphi--------------------
+Java Native Interface (JNI)
+
+    Java Native Interface (JNI) is one of the intersting interface by java By using Java Native Interface (JNI) you can operate with other applications and libraries.
+
+JNI is the native programming interface for java that is part of JDK. Using JNI you can operate with other applications and libraries written in other language such as C,C++. But the basic question arises when should I use the JNI ?
+
+    You want some platform specific information and the standard Java class library may not support the platform-dependent features needed by your application.
+    You have some library application written in other language and you want to use it in your java application.
+    You want Java should interact with some low level programming language.
+
+Below is given Simple Example; See that methods have 'native' KeyWord:
+
+public native void displayHelloWorld();
+public native void displayOther();
+private native String getLine(String prompt);
+
+The DLL we are going to use is firstJNI.DLL This DLL can be generated by VC++ or borland. Which we will discuss later.
+
+//firstJNI.java
+
+class firstJNI
+{
+    public native void displayHelloWorld();
+    public native void displayOther();
+    private native String getLine(String prompt);
+
+    static {
+     System.loadLibrary("firstJNI");//This is firstJNI.DLL
+     /*if generated by borland
+     System.loadLibrary("firstjni");//This is firstjni.dll
+     */
+    }
+
+     public static void main(String[] args) 
+     {
+        firstJNI JN=new firstJNI();
+        JN.displayHelloWorld();
+        JN.displayOther();
+        
+        String input = JN.getLine("Enter Some Thing "); 
+        System.out.println("You Entered " + input); 
+     }
+}
+
+Compile the above code using (What does this mean ?)
+
+prompt>javac firstJNI.java
+
+Then create header File using (What does this mean ?)
+
+prompt>javah javah -jni HelloWorld
+
+This will create firstJNI.h file. In the header File you will see
+
+-------------------------------------
+JNIEXPORT void JNICALL Java_firstJNI_displayHelloWorld
+(JNIEnv *, jobject);
+
+/*
+ * Class:     firstJNI
+ * Method:    displayOther
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_firstJNI_displayOther
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     firstJNI
+ * Method:    getLine
+ * Signature: (Ljava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_firstJNI_getLine
+  (JNIEnv *, jobject, jstring);
+----------------------------------------------
+
+Don't edit header File
+
+Now let see how to generate DLL using VC++, Click: File->New->Win32Dynamic-Link Library Give name and Select A simple DLL project You will have firstJNI.CPP file Below is given the firstJNI.cpp file
+
+// MYVCDLL.cpp : Defines the entry point for the DLL application.
+//
+
+#include "stdafx.h"
+#include "D:\Kanad\Study\codeToad Articles\firstJNI.h"
+#include "jni.h" //can copy or give full path
+#include <math.h>
+
+BOOL APIENTRY DllMain( HANDLE hModule, 
+                       DWORD  ul_reason_for_call, 
+                       LPVOID lpReserved
+                     )
+{
+    return TRUE;
+}
+
+extern "C" __declspec(dllexport) int getMemorySize();
+//And your function definition should look like this: 
+extern "C" __declspec(dllexport) int getMemorySize()
+{     //do something 
+
+MEMORYSTATUS memoryStatus;  
+int MB=1024*1024 ;
+double memSize;  
+memoryStatus.dwLength=sizeof(MEMORYSTATUS);  
+
+GlobalMemoryStatus(&memoryStatus);  
+
+__int64 size= memoryStatus.dwTotalPhys;  
+
+memSize=(double)size/MB;  
+
+printf("\nTotal Memory %.0lf MB",ceil(memSize));
+
+ return 0;
+}
+
+JNIEXPORT void JNICALL 
+Java_firstJNI_displayHelloWorld(JNIEnv *env, jobject obj) 
+{
+    printf("Hello world! This is using VC++ DLL\n");
+
+}
+
+JNIEXPORT void JNICALL 
+Java_firstJNI_displayOther(JNIEnv *env, jobject obj) 
+{
+    
+    printf("Hello world! This is using VC++ DLL Other Function \n");
+    getMemorySize();
+    
+}
+
+JNIEXPORT jstring JNICALL
+Java_firstJNI_getLine(JNIEnv *env, jobject obj, jstring enter)
+{
+
+    char buf[128];
+    const char *str = env->GetStringUTFChars(enter, 0);
+    printf("\n%s", str);
+    env->ReleaseStringUTFChars(enter, str);
+    scanf("%s", buf);
+    return env->NewStringUTF(buf);
+
+}
+
+Now I have questions about how can I use .dll file written in C++/C in my java application. I am developing application for android using Eclipse and I have some dll files and I haven't their source ... How can I use them in my project ???
+
+
+
+
+First a disclaimer - I'm a bit sketchy on this, it's been a while since I've used JNI.
+
+Many JNI examples assume you own the code for the library you want to call, which in my experience is rarely the case. In the example you sight the javah util has been used to generate a header file, against which cpp implementation has been written - this is why you can see the jni header file and various Java keywords in the cpp file.
+
+In order to use a 3rd party dll, you first need the documentation for that dll, without that you're dead in the water. The reason you need the documentation is that you're going to provide a wrapper dll that simply delegates to the 3rd party dll - you need to know how to call it and how to perform any type mappings. Obviously it's this wrapper that will contain all the JNI stuff to allow Java to make the call to that wrapper, which in turn calls the 3rd party dll.
+
+There's various ways to do this but the easiest way I know is to use SWIG, which will generate all the C++ code required for the wrapper dll. It also helps to have someone that knows C++ on hand - they'll be invaluable writing interface files (.i or .swg files) that SWIG uses to generate the wrapper code.
+
+http://stackoverflow.com/questions/5908660/how-to-import-dll-to-android-java-project-working-with-eclipse
+
+http://stackoverflow.com/questions/5908660/how-to-import-dll-to-android-java-project-working-with-eclipse                                                                                    
+The Android SDK is the default software when dealing with Android on a computer. The vast majority of rooted users have run into the SDK, whether they know it or not, when they use the ever-popular Android Debug Bridge, or ADB for short. While the SDK does very well for its intended purposes and works perfectly, anything created to augment or help out is always exciting and fun.
+
+
+
+The Android SDK is the default software when dealing with Android on a computer. The vast majority of rooted users have run into the SDK, whether they know it or not, when they use the ever-popular Android Debug Bridge, or ADB for short. While the SDK does very well for its intended purposes and works perfectly, anything created to augment or help out is always exciting and fun.
+
+
+	
+
+    public native void displayHelloWorld();
+    public native void displayOther();
+    private native String getLine(String prompt);
+           
+    //firstJNI.java
+     
+    class firstJNI
+    {
+        public native void displayHelloWorld();
+        public native void displayOther();
+        private native String getLine(String prompt);
+     
+        static {
+         System.loadLibrary("firstJNI");//This is firstJNI.DLL
+         /*if generated by borland
+         System.loadLibrary("firstjni");//This is firstjni.dll
+         */
+        }
+     
+         public static void main(String[] args)
+         {
+            firstJNI JN=new firstJNI();
+            JN.displayHelloWorld();
+            JN.displayOther();
+            
+            String input = JN.getLine("Enter Some Thing ");
+            System.out.println("You Entered " + input);
+         }
+    }
+           
+    prompt>javac firstJNI.java
+           
+    prompt>javah javah -jni HelloWorld
+           
+    -------------------------------------
+    JNIEXPORT void JNICALL Java_firstJNI_displayHelloWorld
+    (JNIEnv *, jobject);
+     
+    /*
+     * Class:     firstJNI
+     * Method:    displayOther
+     * Signature: ()V
+     */
+    JNIEXPORT void JNICALL Java_firstJNI_displayOther
+      (JNIEnv *, jobject);
+     
+    /*
+     * Class:     firstJNI
+     * Method:    getLine
+     * Signature: (Ljava/lang/String;)Ljava/lang/String;
+     */
+    JNIEXPORT jstring JNICALL Java_firstJNI_getLine
+      (JNIEnv *, jobject, jstring);
+    ----------------------------------------------
+           
+    // MYVCDLL.cpp : Defines the entry point for the DLL application.
+    //
+     
+    #include "stdafx.h"
+    #include "D:KanadStudycodeToad ArticlesfirstJNI.h"
+    #include "jni.h" //can copy or give full path
+    #include <math.h>
+     
+    BOOL APIENTRY DllMain( HANDLE hModule,
+                           DWORD  ul_reason_for_call,
+                           LPVOID lpReserved
+                         )
+    {
+        return TRUE;
+    }
+     
+    extern "C" __declspec(dllexport) int getMemorySize();
+    //And your function definition should look like this:
+    extern "C" __declspec(dllexport) int getMemorySize()
+    {     //do something
+     
+    MEMORYSTATUS memoryStatus;  
+    int MB=1024*1024 ;
+    double memSize;  
+    memoryStatus.dwLength=sizeof(MEMORYSTATUS);  
+     
+    GlobalMemoryStatus(&memoryStatus);  
+     
+    __int64 size= memoryStatus.dwTotalPhys;  
+     
+    memSize=(double)size/MB;  
+     
+    printf("nTotal Memory %.0lf MB",ceil(memSize));
+     
+     return 0;
+    }
+     
+    JNIEXPORT void JNICALL
+    Java_firstJNI_displayHelloWorld(JNIEnv *env, jobject obj)
+    {
+        printf("Hello world! This is using VC++ DLLn");
+     
+    }
+     
+    JNIEXPORT void JNICALL
+    Java_firstJNI_displayOther(JNIEnv *env, jobject obj)
+    {
+        
+        printf("Hello world! This is using VC++ DLL Other Function n");
+        getMemorySize();
+        
+    }
+     
+    JNIEXPORT jstring JNICALL
+    Java_firstJNI_getLine(JNIEnv *env, jobject obj, jstring enter)
+    {
+     
+        char buf[128];
+        const char *str = env->GetStringUTFChars(enter, 0);
+        printf("n%s", str);
+        env->ReleaseStringUTFChars(enter, str);
+        scanf("%s", buf);
+        return env->NewStringUTF(buf);
+     
+    }
+
+public native void displayHelloWorld();
+public native void displayOther();
+private native String getLine(String prompt);
+	
+//firstJNI.java
+
+class firstJNI
+{
+    public native void displayHelloWorld();
+    public native void displayOther();
+    private native String getLine(String prompt);   }
+    
+    
+    
+    
+        program learn;
+    uses crt;
+    var a,b,c,e,f,right: integer; d:real;
+    label 1,2,3,4,5;
+    begin
+    textbackground(green);
+    textcolor(white);
+    clrscr;
+    repeat
+    inc(f);
+    until f=100000;
+    randomize;
+    1:
+    e:=random(3)+1;
+    b:=random(200)+1;
+    c:=random(200)+1;
+    if e=1 then d:=b+c;
+    if e=2 then d:=b-c;
+    if e=3 then d:=b*c;
+    writeln(' ',b:3);
+    if e=1 then write('+ ');
+    if e=2 then write('- ');
+    if e=3 then write('x ');
+    writeln(c:3);
+    writeln('______');
+    readln(a);
+    if a=d then
+    begin
+    inc(right);
+    writeln('HORRAY! YOU GOT IT RIGHT! you have ',right,' points!');
+    end
+    else
+    begin
+    right:=right-1;
+    writeln('WRONG! you have ',right,' points');
+    end;
+    goto 1;
+    end.
+    
+    program veryweird;
+uses crt;
+type aaa=array[1..40,1..12] of char;
+var a,b,c,d,e,pa,pd:integer; f:aaa; g:char;
+label 1,2,3,4;
+begin
+pa:=1;
+pd:=1;
+writeln('hello');
+writeln('press the arrow keys to move');
+2:
+IF KeyPressed THEN
+BEGIN
+g:=readkey;
+CASE g OF
+'H' :
+begin
+if pd=1 then goto 2;
+f[pa,pd]:='_';
+pd:=pd-1;
+f[pa,pd]:='@';
+end;
+'K' :
+begin
+if pa=1 then goto 2;
+f[pa,pd]:='_';
+pa:=pa-1;
+f[pa,pd]:='@';
+end;
+'M' :
+begin
+if pa=40 then goto 2;
+f[pa,pd]:='_';
+pa:=pa+1;
+f[pa,pd]:='@';
+end;
+'P' :
+begin
+if pd=12 then goto 2;
+f[pa,pd]:='_';
+pd:=pd+1;
+f[pa,pd]:='@';
+end;
+end;
+clrscr;
+for a:=1 to 12 do writeln(f[1,a],f[2,a],f[3,a],f[4,a],f[5,a],f[6,a],f[7,a],f[8,a],f[9,a],f[10,a],f[11,a],f[12,a],f[13,a],f[14,a],f[15,a],f[16,a],f[17,a],f[18,a],f[19,a],f[20,a],f[21,a],f[22,a],f[23,a],f[24,a],f[25,a],f[26,a],f[27,a],f[28,a],f[29,a],f[30,a],f[31,a],f[32,a],f[33,a],f[34,a],f[35,a],f[36,a],f[37,a],f[38,a],f[39,a],f[40,a]);
+goto 2;
+end
+
+REM Java compiler
+call javac -verbose -classpath %APK_SDK_PLATFORM%\android.jar -d bin\classes src\com\pascal\lcltest\LCLActivity.java
+
+http://useruploadedfiles.programmersheaven.com/index.php?dir=48584%2F
+
+----Simple Browser started----
+----Simple Browser started----
+
+"There is a theory which states that if ever anybody discovers
+exactly what the Universe is for and why it is here, it will
+instantly disappear and be replaced by something even more
+bizarre and inexplicable. There is another theory which states
+that this has already happened."
+-- Douglas Adams

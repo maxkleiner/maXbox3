@@ -2,12 +2,12 @@ maXbox
 ======
 
 ****************************************************************
-Release Notes maXbox 3.9.9.100 November 2014
+Release Notes maXbox 3.9.9.101 November 2014
 ****************************************************************
-Add 15 Units, 2 Tutors, maXmap, OpenStreetView, MAPX, timers
+Add 27 Units, 1 Tutor, maXmap, OpenStreetView, MAPX, timers
 Function Menu/View/GEO Map View, DownloadFile, wgetX, sensors
-StreamUtils, IDL Syntax, OpenStreetMap, OpenMapX, LPT1
-ByteCode2, runByteCode, sensor panel, CGI of Powtils
+StreamUtils, IDL Syntax, OpenStreetMap, OpenMapX, LPT1, LazDOM
+ByteCode2, runByteCode, sensors, CGI-Powtils, IPUtils2, GPS_2
 
 1006 unit uPSI_cyRunTimeResize;
 1007 unit uPSI_jcontrolutils;
@@ -24,9 +24,21 @@ ByteCode2, runByteCode, sensor panel, CGI of Powtils
 1018 unit StreamWrap1
 1019 unit uPSI_pwmain; {beta}
 1020 unit pwtypes 
+1021 uPSI_W32VersionInfo
+1022 unit uPSI_IpAnim;
+1023 unit uPSI_IpUtils; //iputils2 (TurboPower)
+1024 unit uPSI_LrtPoTools;
+1025 unit uPSI_Laz_DOM;
+1026 unit uPSI_hhAvComp;
+1027 unit uPSI_GPS2;
+1028 unit uPSI_GPS;
+1029 unit uPSI_GPSUDemo; // formtemplate TFDemo
+1030 unit uPSI_NMEA;     // GPS
+1031 unit uPSI_ScreenThreeDLab;
+1032 unit uPSI_Spin; //VCL	
 
-SHA1:  maXbox3.exe B1CFFA2139BEF2D27D17C8212331A1E8C7584BD2
-CRC32: maXbox3.exe 304FC6C2
+SHA1:  maXbox3.exe 786FA3035226AC3F62F6F6B9E2E2B94C1D659297
+CRC32: maXbox3.exe 612D41BB
 
 
 ****************************************************************

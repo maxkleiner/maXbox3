@@ -240,7 +240,7 @@ begin
  S.RegisterDelphiFunction(@FileCreateUTF81, 'FileCreateUTF81', cdRegister);
  S.RegisterDelphiFunction(@FileCreateUtf82, 'FileCreateUtf82', cdRegister);
  S.RegisterDelphiFunction(@FileSizeUtf8, 'FileSizeUtf8', cdRegister); *)
- //S.RegisterDelphiFunction(@GetFileDescription, 'GetFileDescription', cdRegister);
+ S.RegisterDelphiFunction(@GetFileDescription, 'GetFileDescription', cdRegister);
  S.RegisterDelphiFunction(@GetAppConfigDirUTF8, 'GetAppConfigDirUTF8', cdRegister);
  S.RegisterDelphiFunction(@GetAppConfigFileUTF8, 'GetAppConfigFileUTF8', cdRegister);
  S.RegisterDelphiFunction(@GetTempFileNameUTF8, 'GetTempFileNameUTF8', cdRegister);

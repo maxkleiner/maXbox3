@@ -1,0 +1,454 @@
+{***************************************************************
+ * Project  : Performance Tickcount GPS Analog Meter and Time Routines
+ * App Name :  517_animation7.TXT, 491_analogmeter.TXT, #locs=324
+ * Purpose  : Demonstrates bitblock component2
+ * Date     : #sign>Administrator: PC08: 24/10/2014 04:25:26 PM 
+ * History  : convert analogmeter to maXbox Aug 2014
+ *          : add time routines and tickcount to LED
+            : animates a sprite, if XP then ProcessMessagesOFF;
+ ****************************************************************}
+ //TODO: transfer the FmtStrArray to :
+ //E:\maxbox3\mXGit39988\maxbox3\source\REST\GPS.pas
+  
+
+                             UNIT NavUtils;
+
+                               INTERFACE
+
+
+type
+  TPos = (tLat, tLon);
+  TShowFmt = (sfNautical, sfStatute, sfMetric);
+
+const
+  OneEighty  = 180*3600;                         // Sec of arc
+  ThreeSixty = 360*3600;                         //
+
+      function CoordinateStr2(Idx: Integer; PosInSec: Double; PosLn: TPos): string;
+      function UserUnits(Val: Double; sUnit: Char; ShowFmt: TShowFmt): string;
+      function MagCourse(TC, MV: Double): Double;
+
+
+
+                             IMPLEMENTATION
+
+//uses
+  //SysUtils;
+
+
+{Formats Position in sec into lat or lon string per Idx selection}
+
+
+//const
+//  FmtStrArray: array[tLat..tLon, 0..3] of string =
+
+type 
+     Tint = array[0..3] of byte;
+var
+  FmtStrArray : array[0..1] of Tint;
+  
+  //TODO: transfer the FmtStrArray to :
+  //todo
+  
+  //array[tLat..tLon, 0..3] of string =
+
+ (*{ Lat }  (('%s %d %.2d %.2d',  '%s %d %.2d.%4:.2d',     '%s %5:.4f',
+               // D M S               D M.m                 D.d
+
+                      '%1:.2d%2:.2d.%4:.2d,%0:s'),
+                        //  Waypoint per NMEA
+
+ { Lon }   ('%s %d %.2d %.2d',  '%s %d %.2d.%4:.2d',     '%s %5:.4f',
+
+                      '%1:.3d%2:.2d.%4:.2d,%0:s'));*)
+
+function CoordinateStr2(Idx: Integer; PosInSec: Double; PosLn: TPos): string;
+var
+  Pos, Deg, Min, Sec, Dec: Integer;
+  Dd: Double;
+  C: Char;
+begin
+  if (PosInSec > OneEighty) then
+    PosInSec := PosInSec - ThreeSixty;
+
+  case PosLn of
+    tLat: if (PosInSec <= 0) then C := 'S' else C := 'N';
+    tLon: if (PosInSec <= 0) then C := 'W' else C := 'E';
+  end; {case}
+
+  PosInSec := Abs(PosInSec);
+  Dd  := PosInSec/3600;                          // DDD.ddd..
+  Pos := Round(PosInSec);
+  Deg := (Pos div 3600);                         // DDD
+  Min := (Pos mod 3600) div 60;                  // MM
+  Sec := (Pos mod 60) mod 60;                    // SS
+  Dec := Round(1.667*Sec);                       // mm
+  //Result := Format(FmtStrArray[ord(PosLN)][Idx], [C, Deg, Min, Sec, Dec, Dd]);
+end;
+
+
+{Magnetic course fom true course TC and magnetic variation MV}
+
+function MagCourse(TC, MV: Double): Double;
+begin
+  Result := TC-MV;
+  if (Result >= 360) then
+    Result := Result-360;
+  if (Result < 0) then
+    Result := Result+360;
+end;
+
+
+function UserUnits(Val: Double; sUnit: Char; ShowFmt: TShowFmt): string;
+begin
+  try
+    if (UpperCase(sUnit) = 'M') then
+      case ShowFmt of
+        sfNautical: Result := Format('%.0f ft', [3.28*Val]);
+        sfStatute : Result := Format('%.0f ft', [3.28*Val]);
+        sfMetric  : Result := Format('%.0f M',  [Val]);
+      end;
+    if (UpperCase(sUnit) = 'K') then
+      case ShowFmt of
+        sfNautical: Result := Format('%.1f', [Val]);
+        sfStatute : Result := Format('%.1f', [1.150779*Val]);
+        sfMetric  : Result := Format('%.1f', [1.852000*Val]);
+      end;
+  except
+    Result := '--';
+  end;
+end;
+
+
+function FindWindowByTitle(WindowTitle: string): Hwnd;
+var
+  NextHandle: Hwnd;
+  NextTitle: array[0..260] of char;
+begin
+  // Get the first window
+  NextHandle := GetWindow(Application.Handle, GW_HWNDFIRST);
+  while NextHandle > 0 do begin
+    // retrieve its text
+    //GetWindowText(NextHandle, pchar(NextTitle)), 255);
+    if Pos(WindowTitle, {Strpas}NextTitle) <> 0 then begin
+      Result := NextHandle;
+      Exit;
+    end
+    else
+      // Get the next window
+      NextHandle := GetWindow(NextHandle, GW_HWNDNEXT);
+  end;
+  Result := 0;
+end;
+
+
+procedure AppendValueToStrings(const SL: TStrings; StartingValue: Integer);
+var
+  i: Integer;
+begin
+  Assert(Assigned(SL),'not assigned');  // Make sure a valid TStrings has been passed in
+  for i := 0 to SL.Count - 1 do begin
+    SL[i] := IntToStr(StartingValue) + ' ' + SL[i];
+    Inc(StartingValue);
+  end;
+end;
+
+function GrabLine2(const s: string; ALine: Integer): string;
+var
+  sl: TStringList;
+begin
+  sl := TStringList.Create;
+  try
+    sl.LoadFromFile(s);
+    Result := sl[ALine - 1]; // index off by one
+  finally
+    sl.Free;
+  end;
+end;
+
+
+
+function LinesCount2(sfilename:string):double;
+var
+ hFile : TextFile;
+ sLine : String;
+ iLinescount: Double;
+begin
+result:=0;
+if not FileExists(sfilename) then exit;
+
+AssignFile(hFile, sFileName);
+Reset(hFile);
+closefile(hfile);
+
+iLinescount:=0;
+{while NOT EOF(hFile) do begin
+   ReadLn(hFile, sLine);
+   iLinescount:=iLinescount+1;
+ end;}
+
+result:=iLinescount;
+end;
+
+
+function GetLinesCount(sFileName : String): Integer;
+var
+oSL : TStringlist;
+begin
+oSL := TStringlist.Create;
+oSL.LoadFromFile(sFileName);
+result := oSL.Count;
+oSL.Free;
+end; //[/DELPHI]
+
+function CalcTickCount(afunc: TFunc; fn:string): string;
+var s, f, a, b, c : cardinal;
+    ia, ib, ic : integer;
+begin
+   Screen.Cursor := crHourGlass;
+   try
+   s := GetTickCount();
+   ia := round(LinesCount(fn));
+   f := GetTickCount();
+   a := f -s;
+   finally
+   Screen.Cursor := crDefault;
+   end;
+end;   
+
+function getStringTickCount2: string;
+begin
+  result:= 'cr:= GetTickCount();'+CRLF+ 
+           'ia:= round(LinesCount(fn));'+CRLF+
+           'f:= GetTickCount();'+CRLF+
+           'a:= f -cr;'+CRLF+
+           'PrintF(''Lines: %.n Ticks: %.n'',[ia *1.0, a *1.0]);'
+end;           
+ 
+
+Const FName = 'maxboxlog2.log'; //'firstdemo3.txt';
+var SL: TStringlist;
+
+var
+s, f, a, b, c : cardinal;
+ia, ib, ic : integer;
+fn : string;
+begin               //main
+
+   // function CoordinateStr2(Idx: Integer; PosInSec: Double; PosLn: TPos): string;
+  writeln(CoordinateStr(2, 50.34, tlat));
+    //getgeocode
+    
+  {with TComSelectForm.create(self) do begin
+    //parent:= aFrm;
+    Show;
+    //Coordinatestr
+  end;} 
+  
+  {maxform1.GPSSatview1click(self); 
+  with TGPS.create(self) do begin
+    ShowSetupDialog;
+    if connected then 
+      open;
+    writeln('connected: '+botostr(connected))  
+    //SetBounds(0,0,200,200)
+  end;}
+
+{ SL := TStringList.Create;
+try
+  SL.LoadFromFile(exepath+FName);
+  AppendValueToStrings(SL, 10);
+  SL.SaveToFile(exepath+FName);
+finally
+  SL.Free;
+end;} 
+
+  
+  writeln('linescount1 '+floattoStr(linescount(exepath+FName)));  
+  sleep(500)
+  //writeln('linescount2 '+inttoStr(TextFileLineCount(exepath+'firstdemo3.txt')));  
+  writeln('linescount2 '+floattoStr(getlinescount(exepath+FName)));  
+
+
+fn := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)))+FName;
+
+if not FileExists(fn) then begin
+MessageBox(HInstance, 'File does not exist.', 'Error', MB_ICONSTOP OR MB_OK);
+//exit;
+  mycopyfile(exepath+'maxboxlog.log', exepath+'maxboxlog2.log');
+
+end;
+
+Screen.Cursor := crHourGlass;
+try
+s := GetTickCount();
+ia := round(LinesCount(fn));
+f := GetTickCount();
+a := f -s;
+
+s := GetTickCount();
+ib := Round(getLinesCount(fn));
+f := GetTickCount();
+b := f -s;
+
+{s := GetTickCount();
+ic := GetLinesCount(fn);
+f := GetTickCount();
+c := f -s;  }
+
+ PrintF('Lines: %.n Ticks: %.n', [ia *1.0, a *1.0]);
+ PrintF('Lines: %.n Ticks: %.n', [ib *1.0, b *1.0]);
+//Label3.Caption := Format('Lines: %.n Ticks: %.n', [ic *1.0, c *1.0]);
+finally
+Screen.Cursor := crDefault;
+end;    
+
+OpenDoc(exepath+FName)
+
+{Memo1.Lines.LoadFromFile(YourFileNameHere);
+AppendValueToStrings(Memo1.Lines, 10);
+Memo1.Lines.SaveToFile(YourFileNameHere);}
+
+ { with TFormLab3D.create(self) do begin
+    //formcreate(self)
+    Caption:= 'mX3onscript';
+    //image.picture.bitmap:= getbitmap(Exepath+'examples\citymax.bmp');
+    show;
+    //SpinEditDistance
+  end;  }
+  
+  //writeln(getStringTickCount2);
+  writeln(getStringTickCount);
+
+
+end.  // NavUtils
+
+(*ref:
+
+http://www.delphipages.com/forum/showthread.php?t=201629
+
+
+TCustomGPS = class (TComponent)
+  private
+    // COM Port components
+    FCOMPort: TComPort;
+    FCOMDataPacket: TComDataPacket;
+
+    // State of the TGPS component
+    FConnected: Boolean;
+
+    // COM Port parameters
+    FPort: TPort;
+    FBaudRate: TBaudRate;
+    FDataBits: TDataBits;
+    FStopBits: TStopBits;
+    FParity: TComParity;
+    FFlowControl: TComFlowControl;
+
+    // GPS informations
+    FSatellites: TSatellites;
+    FGPSDatas: TGPSDatas;
+
+    // Componants links
+    FLinks: TList;
+    FHasLink: Boolean;
+
+    // Notifications
+    FOnSatellitesChange: TGPSSatEvent;
+    FOnGPSDatasChange: TGPSDatasEvent;
+    FOnAfterOpen: TNotifyEvent;
+    FOnAfterClose: TNotifyEvent;
+    procedure CallOnSatellitesChange();
+    procedure CallOnGPSDatasChange();
+
+    procedure SetConnected(const Value: Boolean);
+
+    procedure SetPort(const Value: TPort);
+    procedure SetBaudRate(const Value: TBaudRate);
+    procedure SetDataBits(const Value: TDataBits);
+    procedure SetStopBits(const Value: TStopBits);
+    procedure SetParity(const Value: TComParity);
+    procedure SetFlowControl(const Value: TComFlowControl);
+
+    // Packets interpreting
+    procedure PacketRecv(Sender: TObject; const Str: String);
+
+    // COM Port connection
+    procedure COMPortAfterConnect(Sender: TObject);
+    procedure COMPortAfterDisconnect(Sender: TObject);
+
+    // Componants links
+    function HasLink(): Boolean;
+  protected
+    procedure DoOnSatellitesChange(NbSat, NbSatUse: Shortint;
+      Sats: TSatellites); dynamic;
+    procedure DoOnGPSDatasChange(GPSDatas: TGPSDatas); dynamic;
+    procedure DoAfterClose(); dynamic;
+    procedure DoAfterOpen(); dynamic;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy(); override;
+    procedure Open();
+    procedure Close();
+    procedure ShowSetupDialog();
+
+    // Componants links
+    procedure RegisterLink(AGPSLink: TGPSLink);
+    procedure UnRegisterLink(AGPSLink: TGPSLink);
+
+    // GPS informations
+    property Satellites: TSatellites read FSatellites;
+    property GPSDatas: TGPSDatas read FGPSDatas;
+  published
+    // State of the TGPS component
+    property Connected: Boolean
+      read FConnected write SetConnected default False;
+
+    // COM Port parameters
+    property Port: TPort read FPort write SetPort;
+    property BaudRate: TBaudRate read FBaudRate write SetBaudRate;
+    property DataBits: TDataBits read FDataBits write SetDataBits;
+    property StopBits: TStopBits read FStopBits write SetStopBits;
+    property Parity: TComParity read FParity write SetParity;
+    property FlowControl: TComFlowControl
+      read FFlowControl write SetFlowControl;
+
+    // Notifications
+    property OnSatellitesChange: TGPSSatEvent
+      read FOnSatellitesChange write FOnSatellitesChange;
+    property OnGPSDatasChange: TGPSDatasEvent
+      read FOnGPSDatasChange write FOnGPSDatasChange;
+    property OnAfterOpen: TNotifyEvent read FOnAfterOpen write FOnAfterOpen;
+    property OnAfterClose: TNotifyEvent read FOnAfterClose write FOnAfterClose;
+  end;
+
+
+http://useruploadedfiles.programmersheaven.com/48584/NMEA.pas
+
+
+
+    Program SpammersAreParasites;
+    var
+      l1,l2: Srting;
+    begin
+      l1:='70';
+      l2:='0';
+      Bxo:=l1 + l2;
+      Bxo:=(Bxo)
+    (*
+      l1:=97;
+      l2:=9
+     Bxo:=(l1 + l2);
+    *)
+    //end.
+
+(*? Value of Bxo:    *)
+
+{"There is a theory which states that if ever anybody discovers
+exactly what the Universe is for and why it is here, it will
+instantly disappear and be replaced by something even more
+bizarre and inexplicable. There is another theory which states
+that this has already happened."
+-- Douglas Adams }
+
+

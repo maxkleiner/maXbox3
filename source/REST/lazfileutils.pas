@@ -151,7 +151,7 @@ function FileCreateUTF8(Const FileName : string; Rights: Cardinal) : THandle; ov
 Function FileCreateUtf8(Const FileName : String; ShareMode : Integer; Rights : Cardinal) : THandle; overload;
 
 function FileSizeUtf8(const Filename: string): int64;*)
-//function GetFileDescription(const AFilename: string): string;
+function GetFileDescription(const AFilename: string): string;
 
 
 function GetAppConfigDirUTF8(Global: Boolean; Create: boolean = false): string;
@@ -293,6 +293,11 @@ Const MaxDirs = 129;
        DirSeparators : set of char = ['/','\'];
 
 
+function GetFileDescription(const AFilename: string): string;
+begin
+  Result:= LazFileUtils.GetFileDescription(AFilename);
+end;
+       
 
 function FindAllFiles(const SearchPath: String; SearchMask: String;
   SearchSubDirs: Boolean): TStringList;

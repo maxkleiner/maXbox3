@@ -79,6 +79,113 @@ end;
  end;
 
 
+ // Search for the first available port
+
+function ComPortSelect: Integer;
+var
+  s: string;
+  n: Integer;
+
+  function DeviceAvail(const Dev: string): Boolean;
+  var
+    hDev: Cardinal;
+    IsModem: Boolean;
+    ComDevProp: TCommProp;
+  begin
+    hDev := CreateFile(PChar(Dev), GENERIC_READ, 0, nil, OPEN_EXISTING, 0, 0);
+    GetCommProperties(hdev, ComDevProp);
+    isModem := ComDevProp.dwProvSubType = PST_MODEM;
+    CloseHandle(hDev);
+    Result := (hDev <> INVALID_HANDLE_VALUE) and not IsModem;
+  end;
+
+begin
+  s := ParamStr(1);                        // ie COM9
+  if DeviceAvail(s) then                   // User forcing Com selection
+    begin
+      Delete(s, 1, 3);
+      n := StrToInt(s);
+    end
+  else
+    for n := 10 downto 1 do                // Virtual devices are popular
+      begin
+        s := 'COM' + IntToStr(n);
+        if DeviceAvail(s) then Break;
+      end;
+  Result := n;                             // Zero if no port is detected
+end;
+
+function LinesCount(sfilename:string):double;
+var
+ hFile : TextFile;
+ sLine : String;
+ iLinescount: Double;
+begin
+result:=0;
+if not FileExists(sfilename) then exit;
+
+AssignFile(hFile, sFileName);
+Reset(hFile);
+
+iLinescount:=0;
+while NOT EOF(hFile) do
+ begin
+   ReadLn(hFile, sLine);
+   iLinescount:=iLinescount+1;
+ end;
+ closefile(hfile);
+
+result:=iLinescount;
+end;
+
+
+function TextFileLineCount(const FileName: string): integer;
+const
+ BuffSize = 4096;
+var
+ i: integer;
+ FileVar: File;
+ MoreData: boolean;
+ Buffer: array[1..BuffSize] of char;
+ BuffCount: integer;
+begin
+ Result := 0;
+ Application.ProcessMessages;
+ {$I-}
+ AssignFile(FileVar, FileName);
+ try
+   Reset(FileVar, 1);
+   MoreData := True;
+ except
+   MoreData := False;
+ end;
+ while MoreData do begin
+   try
+     BlockRead(FileVar, Buffer, BuffSize, BuffCount);
+     for i := 1 to BuffCount do
+       if Buffer[i] = #13 then
+         Inc(Result);
+     MoreData := BuffCount = BuffSize;
+   except
+     MoreData := False;
+   end;
+ end;
+ CloseFile(FileVar);
+end;
+
+function GetLinesCount(sFileName : String): Integer;
+var
+oSL: TStringlist;
+begin
+  oSL:= TStringlist.Create;
+  oSL.LoadFromFile(sFileName);
+  result:= oSL.Count;
+  oSL.Free;
+end; //[/DELPHI]
+
+
+
+
 function ComposeDateTime(Date,Time : TDateTime) : TDateTime;
 begin
   if Date < 0 then Result := trunc(Date) - frac(Time)
@@ -952,6 +1059,10 @@ CL.AddDelphiFunction('Function OpenWindowStation( lpszWinSta : PChar; fInherit :
  CL.AddDelphiFunction('function ComponentToStringProc(Component: TComponent): string;');
  CL.AddDelphiFunction('function StringToComponentProc(Value: string): TComponent;');
  CL.AddDelphiFunction('procedure MyCopyFile(Name1,Name2:string);');
+ CL.AddDelphiFunction('function ComPortSelect: Integer;');
+ CL.AddDelphiFunction('function LinesCount(sfilename:string):Double;');
+ CL.AddDelphiFunction('function TextFileLineCount(const FileName: string): integer;');
+ CL.AddDelphiFunction('function GetLinesCount(sFileName : String): Integer;');
 
  CL.AddTypeS('TFNTimerProc', 'TObject');
  CL.AddConstantN('GW_HWNDFIRST','LongInt').SetInt( 0);
@@ -2134,6 +2245,10 @@ begin
  S.RegisterDelphiFunction(@ComponentToStringProc, 'ComponentToStringProc', cdRegister);
  S.RegisterDelphiFunction(@StringToComponentProc, 'StringToComponentProc', cdRegister);
  S.RegisterDelphiFunction(@MyCopyFile, 'MyCopyFile', cdRegister);
+ S.RegisterDelphiFunction(@ComPortSelect, 'ComPortSelect', cdRegister);
+ S.RegisterDelphiFunction(@LinesCount, 'LinesCount', cdRegister);
+ S.RegisterDelphiFunction(@TextFileLineCount, 'TextFileLineCount', cdRegister);
+ S.RegisterDelphiFunction(@GetLinesCount, 'GetLinesCount', cdRegister);
 
  S.RegisterDelphiFunction(@GetDeviceCaps, 'GetDeviceCaps', CdStdCall);
  //S.RegisterDelphiFunction(@GetGraphicsMode, 'GetGraphicsMode', CdStdCall);

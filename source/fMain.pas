@@ -116,8 +116,9 @@
          9890       build 98_6 5 more units fileclass set ,dmmcanvas, led set, morse gen
          9925       build 98_7 maps, maXmap, downloadengine
          9938       build 98_8 IDL Syntax, maXmap, downloadengine , openmapX
-         10050      build 100 3 units, cgi, openmapX3, runbytecode, synwrap, cgi 
-
+         10050      build 100 3 units, cgi, openmapX3, runbytecode, synwrap, cgi
+         10140      build 101 DOM Support, IPUtils, geocode, compass, GPSDemo, 3DDemo
+            
                   [the last one before V4 in 2015]
                    V4.0   in  June 2015
  ************************************************************************** }
@@ -166,9 +167,9 @@ const
    ALLUNITLIST = 'docs\maxbox3_9.xml'; //'in /docs;
    INCLUDEBOX = 'pas_includebox.inc';
    BOOTSCRIPT = 'maxbootscript.txt';
-   MBVERSION = '3.9.9.100';
+   MBVERSION = '3.9.9.101';
    MBVER = '399';              //for checking!
-   MBVER2 = '399100';              //for checking!
+   MBVER2 = '399101';              //for checking!
    EXENAME ='maXbox3.exe';
    MXSITE = 'http://www.softwareschule.ch/maxbox.htm';
    MXVERSIONFILE = 'http://www.softwareschule.ch/maxvfile.txt';
@@ -532,6 +533,8 @@ type
     GEOMapView1: TMenuItem;
     SynIdlSyn1: TSynIdlSyn;
     Run1: TMenuItem;
+    GPSSatView1: TMenuItem;
+    N3DLab1: TMenuItem;
     procedure IFPS3ClassesPlugin1CompImport(Sender: TObject; x: TPSPascalCompiler);
     procedure IFPS3ClassesPlugin1ExecImport(Sender: TObject; Exec: TPSExec; x: TPSRuntimeClassImporter);
     procedure PSScriptCompile(Sender: TPSScript);
@@ -792,6 +795,8 @@ type
     procedure Tutorial31Closure1Click(Sender: TObject);
     procedure GEOMapView1Click(Sender: TObject);
     procedure Run1Click(Sender: TObject);
+    procedure GPSSatView1Click(Sender: TObject);
+    procedure N3DLab1Click(Sender: TObject);
     //procedure Memo1DropFiles(Sender: TObject; X,Y: Integer; AFiles: TStrings);
   private
     STATSavebefore: boolean;
@@ -1688,7 +1693,7 @@ uses
   uPSI_pingsend,
   uPSI_blcksock,
   uPSI_asn1util,
-  uPSI_dnssend, 
+  uPSI_dnssend,
   uPSI_clamsend,
   uPSI_ldapsend,
   uPSI_mimemess,
@@ -1888,6 +1893,20 @@ uses
   uPSI_pwnative_out,
   uPSI_HTMLUtil,
   uPSI_synwrap1,
+  uPSI_W32VersionInfo,
+  uPSI_IpAnim,
+  uPSI_IpUtils,
+  uPSI_LrtPoTools,
+  uPSI_Laz_DOM,
+  uPSI_hhAvComp,          //3.9.9.101
+  uPSI_GPS2,
+  uPSI_GPS,
+  uPSI_GPSUDemo,
+  GPSUDemo, //for form call;
+  uPSI_NMEA,        //3.9.9.101
+  uPSI_ScreenThreeDLab,
+  ScreenThreeDLab,   //form call
+  uPSI_Spin,
 
   ///
    //MDIFrame,
@@ -2213,6 +2232,7 @@ begin
   SIRegister_JclSimpleXml(X);
   SIRegister_CheckLst(X);
   SIRegister_ToolWin(x);     //moved up!!
+  SIRegister_Spin(X);        //3.9.9.101
 
   SIRegister_ComCtrls(X); //3.9 moved up
   SIRegister_StBase(X);
@@ -2961,6 +2981,17 @@ begin
  SIRegister_HTMLUtil(X);
  SIRegister_synwrap1(X);
  SIRegister_pwmain(X);
+ SIRegister_W32VersionInfo(X);
+ SIRegister_IpAnim(X);
+ SIRegister_IpUtils(X);
+ SIRegister_LrtPoTools(X);
+ SIRegister_Laz_DOM(X);
+ SIRegister_hhAvComp(X);
+ SIRegister_GPS2(X);
+ SIRegister_GPS(X);
+ SIRegister_GPSUDemo(X);
+ SIRegister_NMEA(X);        //3.9.9.101
+ SIRegister_ScreenThreeDLab(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4293,6 +4324,22 @@ begin
   RIRegister_HTMLUtil_Routines(Exec);
   RIRegister_synwrap1_Routines(Exec);
   RIRegister_pwmain_Routines(Exec);
+  RIRegister_W32VersionInfo_Routines(Exec);
+  RIRegister_W32VersionInfo(X);
+  RIRegister_IpAnim(X);
+  RIRegister_IpUtils(X);
+  RIRegister_IpUtils_Routines(Exec);
+  RIRegister_LrtPoTools_Routines(Exec);
+  RIRegister_Laz_DOM(X);
+  RIRegister_hhAvComp(X);
+  RIRegister_hhAvComp_Routines(Exec);
+  RIRegister_GPS2(X);
+  RIRegister_GPS(X);
+  RIRegister_GPS_Routines(Exec);
+  RIRegister_GPSUDemo(X);
+  RIRegister_NMEA_Routines(Exec); //3.9.9.101
+  RIRegister_ScreenThreeDLab(X);
+  RIRegister_Spin(X);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -4586,8 +4633,8 @@ begin
      SetCurrentDir(ExtractFilePath(ParamStr(0))); //3.9.9.100 !
     act_Filename:= ParamStr(1);
      memo1.Lines.LoadFromFile(act_Filename);
-     memo2.Lines.Add(Act_Filename + CLIFILELOAD);
-     statusBar1.panels.items[0].text:= Act_Filename + CLIFILELOAD;
+     memo2.Lines.Add(Act_Filename + CLIFILELOAD+' '+getCurrentDir);
+     statusBar1.panels.items[0].text:= Act_Filename + CLIFILELOAD+' '+getCurrentDir;
      CB1SCList.Items.Add((Act_Filename));   //3.9 wb  bugfix 3.9.3.6
      CB1SCList.ItemIndex:= CB1SCList.Items.Count-1;
      Compile1Click(self);
@@ -4773,6 +4820,12 @@ function MyReadln(const question: string): string;
 begin
   Result:= InputBox(question, RCSTRMB, '');
 end;
+
+procedure myreadln1(var ast: string);
+begin
+  inputquery('maXbox Console Input','please type a string:',ast);
+end;
+
 
 {procedure mySleep(vmsec: cardinal);
 begin
@@ -5078,6 +5131,7 @@ begin
   Sender.AddFunction(@MyWriteln, 'procedure Println(s: string);');  //alias
   Sender.AddFunction(@MyWrite, 'procedure Write(S: string);');
   Sender.AddFunction(@MyReadln, 'function Readln(question: string): string;');
+  Sender.AddFunction(@MyReadln1, 'procedure Readln1(var ast: string);');
   Sender.AddFunction(@ImportTest, 'function ImportTest(S1: string;'+
                      's2:longint; s3:Byte; s4:word; var s5:string): string;');
   // new self function
@@ -5415,6 +5469,9 @@ begin
   Sender.AddFunction(@OpenMap, 'function OpenMap(const Data: string): boolean;');
   Sender.AddFunction(@OpenMap, 'function OpenMapX(const Data: string): boolean;');
   Sender.AddFunction(@OpenMap, 'function OpenStreetMap(const Data: string): boolean;');
+  Sender.AddFunction(@GetGeoCode, 'function GetGeoCode(C_form,apath: string; const data: string; sfile: boolean): string;');
+  Sender.AddFunction(@getFileCount, 'Function getFileCount(amask: string): integer;');
+  Sender.AddFunction(@CoordinateStr, 'function CoordinateStr(Idx: Integer; PosInSec: Double; PosLn: TNavPos): string;');
 
   Sender.AddFunction(@DownloadFile, 'function DownloadFile(SourceFile, DestFile: string): Boolean;');
   Sender.AddFunction(@DownloadFileOpen, 'function DownloadFileOpen(SourceFile, DestFile: string): Boolean;');
@@ -5692,8 +5749,11 @@ begin
 end;
 
 procedure TMaxForm1.Run1Click(Sender: TObject);
+ var stopw: TStopwatch;    //3.8.2
 begin
   //runs only precondition compile syntax check
+  stopw:= TStopwatch.Create;    //3.8.2
+  stopw.Start;
   if not PSScript.Execute then begin
       memo1.SelStart := PSScript.ExecErrorPosition;
       memo2.Lines.Add(PSScript.ExecErrorToString +' at '+Inttostr(PSScript.ExecErrorProcNo)
@@ -5705,9 +5765,11 @@ begin
        //bitmap.LoadFromResName
       end;
     end else begin
-    memo2.Lines.Add(' mX3 runs only executed: '+dateTimetoStr(Now())+
-              '  Memoryload: '+inttoStr(GetMemoryLoad) +'% use');
-    end;
+    stopw.Stop;
+    memo2.Lines.Add(' mX3 run mode executed: '+dateTimetoStr(Now())+
+    '  Runtime: '+stopw.GetValueStr +'  Memoryload: '+inttoStr(GetMemoryLoad) +'% use');
+    stopw.Free;
+   end;
 end;
 
 function TMaxForm1.RunCompiledScript(bytecode: ansistring; out RTErrors: string): boolean;
@@ -5733,6 +5795,7 @@ begin
   //x: TIFPSRuntimeClassImporter);
    // PSScript1Compile(PSScript1);
    // PSScript1ExecImport(PSScript1, runtime, PSScript1.RuntimeImporter);
+    PSScriptExecute(PSScript);   //3.9.9.101
 
     result:= psscript.Exec.LoadData(bytecode)
     and psscript.Exec.RunScript and (psscript.Exec.ExceptionCode = erNoError);
@@ -5781,7 +5844,7 @@ begin
     FileName:= '*.psb';
     defaultExt:= fileextension;
     title:= 'PascalScript ByteCode Open';
-    InitialDir:= ExtractFilePath(application.ExeName)+'*.psb';
+    InitialDir:= ExtractFilePath(application.ExeName)+'\examples\*.psb';
     //SetCurrentDir(ExtractFilePath(ParamStr(0)));   //3.9.9.100
     if execute then begin
     //filename:=
@@ -5882,6 +5945,7 @@ begin
      IntfNavigator1Click(Self);
      IntfNavigator1Click(Self);
     end;
+    memo1.Gutter.BorderColor:= clwindow;      //3.9.9.100
 end;
 
 procedure TMaxForm1.Saveas3Click(Sender: TObject);
@@ -6029,6 +6093,7 @@ begin
      IntfNavigator1Click(Self);
      IntfNavigator1Click(Self);
     end;
+    memo1.Gutter.BorderColor:= clwindow;      //3.9.9.100
    //if intfnavigator1.checked then LoadInterfaceList;
     //else      lbintflist.Free;
 end;
@@ -6069,7 +6134,7 @@ var outfile: string;
 begin
  //numWritten:= 0;
  //outfile:= ExtractFilePath(paramstr(0))+extractFilename(act_filename)+BYTECODE;
- outfile:= ExtractFilePath(ParamStr(0)) +
+ outfile:= ExtractFilePath(ParamStr(0))+'examples\'+
         ChangeFileExt(extractFilename(act_filename),'.psb');
  //fx:= fileCreate(outfile);
  //fileWrite(fx, bdata[1], length(bdata));
@@ -6086,8 +6151,8 @@ begin
    CloseFile(f)
  end;
  memo2.Lines.Add('');
- memo2.Lines.Add('-----PS-BYTECODE (PSB) mX4-----');
- memo2.Lines.Add('-----BYTECODE saved as '+outfile+'-----');
+ memo2.Lines.Add('-----PS-BYTECODE (PSB) mX4-----'+timetostr(time));
+ memo2.Lines.Add('-----BYTECODE saved as: '+outfile+' -----');
  memo2.Lines.Append(bdata);
    //delete(locstr, 80, length(locstr)-80);  //after cut
 end;
@@ -6572,7 +6637,7 @@ begin
       SaveToFile(fN);
      Free;
    end;
-  memo2.Lines.Add(extractFileName(filen) +' in .ini stored');
+  memo2.Lines.Add(extractFileName(filen) +' in .ini stored: '+timetostr(time));
   statusBar1.panels[0].text:= last_fName +' last in .ini stored';
  end;
 end;
@@ -7535,6 +7600,18 @@ procedure TMaxForm1.MP3Player1Click(Sender: TObject);
 begin
   //call mp3player
   FormSetMP3FormCreate;
+end;
+
+procedure TMaxForm1.N3DLab1Click(Sender: TObject);
+var FormLab3D: TFormLab3D;
+begin
+  FormLab3D:= TFormLab3D.Create(self);
+  try
+    FormLab3D.ShowModal;
+  finally
+    FormLab3D.Free;
+  end;
+// modal
 end;
 
 procedure TMaxForm1.N4GewinntGame1Click(Sender: TObject);
@@ -8745,6 +8822,18 @@ begin
   end;
 end;
 
+procedure TMaxForm1.GPSSatView1Click(Sender: TObject);
+//  FDemo: TFDemo;
+begin
+  FDemo:= TFDemo.Create(self);
+  try
+    FDemo.ShowModal;
+  finally
+    FDemo.Free;
+  end;
+  //the view
+end;
+
 procedure TMaxForm1.ThreadDemo1Click(Sender: TObject);
 begin
   StartThreadDemo;
@@ -9582,6 +9671,7 @@ begin
      IntfNavigator1Click(Self);
     end;
   memo1.SetFocus;
+  memo1.Gutter.BorderColor:= clWindow;      //3.9.9.100
 end;
 
 procedure TMaxForm1.CB1SCListDrawItem(Control: TWinControl; Index: Integer; aRect: TRect;

@@ -244,6 +244,7 @@ type
     property PenDown: Boolean read FPenDown write SetPenDown;
     property PenWidth: Integer read GetWidth write SetPenWidth;
     function DoCom: string;
+    procedure SetPos(x,y: integer);
     procedure Turn(AAngle: Real);
     procedure Right(AAngle: Real);
     procedure Left(AAngle: Real);
@@ -894,6 +895,12 @@ end;
 procedure TJvTurtle.SetPenDown(const Value: Boolean);
 begin
   FPenDown := Value;
+end;
+
+procedure TJvTurtle.SetPos(x, y: integer);
+begin
+  Fposition.X:= x;
+  Fposition.y:= y;
 end;
 
 procedure TJvTurtle.SetPosition(const Value: TPoint);
