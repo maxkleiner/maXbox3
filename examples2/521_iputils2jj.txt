@@ -1,0 +1,1408 @@
+   program All_LottoCombinations_bit_Power;
+//****************************************************************************
+// To provide a fast algo with large numbers (45bit ore more) can turn into a
+// complicated debate. Here's a solution for compiler or interpreter.
+// ZWEIHOCHFUENFUNDVIERZIG = 351
+// 84372088832; by Max & Beat Str ae hl      
+// time consuming is about 45 sec.( minutes maXbox) without optimisation days!!
+// number of lotto spheres are 45 wi th  6 c  ros ses on it(change), _ 97
+//http://delphi.org/2014/01/every-android-api-for-delphi/
+//http://chuacw.ath.cx/blogs/chuacw/archive/2013/11/07/jni-the-old-way-of-doing-it-and-the-oo-way.aspx
+                                                              
+                                                      
+const NUMBER_OF_SPHERES =  45; //45; //45; //45; //36; //36; // 45; //36; //19; //45; //19; //45; //16;
+      NUMBER_OF_BITS_ARRAY_UPPER_END = 255;
+                                            
+var  counter, counterCopy, counterOffset, range: int64;
+     bitCounter, bitCount, bitPosition, combCounter: integer;
+     byteFragmentIndexOfCounter: integer;
+     positionOfLowestBitOutOfSix: integer;
+     numberOfBits: array[0..NUMBER_OF_BITS_ARRAY_UPPER_END] of byte;
+     before, after: TDateTime;        
+     combstr: string;
+     lottoList: TStringList; 
+
+function powerOf2(exponent: integer): int64;
+var shifter: int64;
+    counter: integer;
+begin
+  shifter:= 1;
+  for counter:= 1 to exponent do
+    shifter:= shifter + shifter;
+  result:= shifter;
+end;
+
+procedure presetBitCountLookupTable(highestIndex: integer);
+var arrayIndex: integer;
+    numberOfBitsSet: integer;
+    byteValue: integer;
+begin
+  //preset bit count lookup table
+  for arrayIndex:= 0 to highestIndex do begin 
+     byteValue:= arrayIndex;
+     numberOfBitsSet:= 0;
+     for bitCounter:= 1 to 8 do begin
+        if ((byteValue and 1) = 1) then
+          inc(numberOfBitsSet);
+        byteValue:= byteValue shr 1;
+     end;
+    numberOfBits[arrayIndex]:= numberOfBitsSet;
+  end;
+end;
+
+begin  //main
+  presetBitCountLookupTable(NUMBER_OF_BITS_ARRAY_UPPER_END);
+  range:= powerOf2(NUMBER_OF_SPHERES); 
+  lottoList:= TStringlist.create;
+  before:= Time;
+  combCounter:= 0;  
+  counter:= 0;
+  lottoList.add('All lotto combinations 6 from ' +IntToStr(NUMBER_OF_SPHERES));
+  lottoList.add('**********************************************************');
+  while counter < range do begin  //check cases
+      bitCount:= 0;
+      counterCopy:= counter;                         
+      for byteFragmentIndexOfCounter:= 0 to 5 do begin
+         bitCount:= bitCount+numberOfBits[counterCopy mod 256];
+         counterCopy:= counterCopy shr 8;
+      end;
+      if (bitCount=6) then begin  
+        counterCopy:= counter;
+        positionOfLowestBitOutOfSix:= -1;
+        inc(combCounter);
+        //write('combination #' + inttostr(combinationCounter) +': ');
+        for bitCounter:=1 to NUMBER_OF_SPHERES do begin
+            if ((counterCopy and 1) = 1) then begin
+               //write(inttoStr(bitCounter) +' ');
+               combstr:=  combstr+ ' '+IntToStr(bitCounter);
+               if (positionOfLowestBitOutOfSix= -1) then
+                 positionOfLowestBitOutOfSix:= bitCounter;
+            end;
+          counterCopy:= counterCopy shr 1;
+        end;
+        //writeln(' ');
+        lottoList.add('# '+IntToStr(combCounter)+': '+ combstr)
+        combstr:= '';  
+        counterOffset:= 1;
+        bitPosition:= 1;
+        while (bitPosition<positionOfLowestBitOutOfSix) do begin
+          counterOffset:= counterOffset + counterOffset;
+          inc(bitPosition);
+        end;
+        counter:= counter + counterOffset;
+      end else
+        counter:= counter + 1;
+  end; //while
+  after:= Time;
+  Writeln('Save lotto file at: ' +TimeToStr(after) + ' '+DateToStr(date));
+  lottoList.SaveToFile( 'All_lotto_combinations222asmall.txt');
+  lottoList.Free;                                            
+  Writeln('Lotto report started at: '+ FormatDateTime('hh:nn:ss.zzz',before));
+  Writeln('Lotto report ended at: '+ FormatDateTime('hh:nn:ss.zzz',after));
+  Writeln('Lotto report lasted: '+FormatDateTime('hh:nn:ss.zzz',after-before));
+  Writeln('6 of ' +IntToStr(NUMBER_OF_SPHERES)+' are: ' +IntToStr(combCounter));
+end. 
+
+
+//files at:
+www.softwareschule.ch/download/97_pas_lottocombinations_beat_plus.pdf
+for compiler file at:
+www.softwareschule.ch/download/maxbox97_lottoproject_allcombinations_dpr.txt
+
+{
+maXbox 97_pas_lottocombinations_beat_plus Compiled done: 28.04.2010 14:41:56
+--------------------------------------------------------
+Save lotto file at: 15:27:42 28.04.2010
+Lotto report started at: 14:41:56.970
+Lotto report ended at: 15:27:42.867
+Lotto report lasted: 00:45:45.897
+6 of 45 are: 8145060
+ruNMax executed on: 28.04.2010 15:27:55 }
+
+
+
+
+You may know this:
+Lotto combination 1-2-3-4-5-6 has the same chance of being drawn as any other
+lottery combination. But the combination 1,2,3,4,5,6 should not be played. It
+represents a weird arrangement of lottery numbers. Why?
+If one hits the jackpot, you should be advised to never play the statistically
+dreadful 1,2,3,4,5,6!
+
+1. If the lotto 6/45 has a total of 8,145,060 comb., and only one is drawn as 
+the winner, the probability is undeniably 1 / 8,145,060.
+
+All shapes have, however, the same probability of appearance. Reality only has
+a different idea! There been thousands of lotto drawings conducted worldwide.
+We should have seen by now a lottery combination of the type 1,2,3,4,5,6. There
+has been none so far or you know anyone?.
+
+2. Furthermore, you can use the code to generate all lotto combinations in
+lexicographic order for any experiment or game. Beware! The output files can be
+extremely large, for 6/45 is about 240 MB!
+
+One interesting point at all is the binominal coefficient. It means that you get
+the same amount of combinations with 6 or 39 tips (crosses) of 45!
+
+Cause the mathematics shows
+3. Combination (binominal coefficient)= nCr = n!/(k! * (n-k)!)
+                                             45! /6! * 39!
+so you can see 6 or 39 are interchangeable...
+
+The probabilities are equal, but the combinations are not equal.
+--------------------------------------------------------------------------- 
+
+
+Save lotto file at: 20:39:02 23.02.2012
+Lotto report started at: 20:01:18.301
+Lotto report ended at: 20:39:02.817
+Lotto report lasted: 00:37:44.516
+6 of 45 are: 8145060
+
+Save lotto file at: 16:03:52 03.03.2012
+Lotto report started at: 15:24:44.918
+Lotto report ended at: 16:03:52.675
+Lotto report lasted: 00:39:07.757
+6 of 45 are: 8145060
+
+Save lotto file at: 18:40:36 13.03.2012
+Lotto report started at: 18:04:50.610
+Lotto report ended at: 18:40:36.269
+Lotto report lasted: 00:35:45.659
+6 of 45 are: 8145060
+ mX3 executed: 13.03.2012 18:40:41  Runtime: 0:35:50.526
+ 
+Save lotto file at: 15:56:11 23.03.2012
+Lotto report started at: 15:18:17.630
+Lotto report ended at: 15:56:11.506
+Lotto report lasted: 00:37:53.876
+6 of 45 are: 8145060
+ mX3 executed: 23.03.2012 15:56:15  Runtime: 0:37:57.666
+
+Save lotto file at: 08:20:12 PM 10/04/2012
+Lotto report started at: 19:39:22.643
+Lotto report ended at: 20:20:12.960
+Lotto report lasted: 00:40:50.317
+
+Save lotto file at: 01:37:10 PM 17/04/2012
+Lotto report started at: 12:56:14.394
+Lotto report ended at: 13:37:10.338
+Lotto report lasted: 00:40:55.944
+6 of 45 are: 8145060 Save lotto file at: 05:57:35 PM 24/04/2012
+Lotto report started at: 17:16:40.614
+Lotto report ended at: 17:57:35.574
+Lotto report lasted: 00:40:54.960
+6 of 45 are: 8145060
+
+Save lotto file at: 10:21:22 PM 10/05/2012
+Lotto report started at: 21:44:52.695
+Lotto report ended at: 22:21:22.748
+Lotto report lasted: 00:36:30.053
+6 of 45 are: 8145060
+ mX3 executed: 10/05/2012 10:21:26 PM  Runtime: 0:36:34.432     Save lotto file at: 05:54:23 PM 19/05/2012
+Lotto report started at: 17:14:47.219
+Lotto report ended at: 17:54:23.290
+Lotto report lasted: 00:39:36.071
+6 of 45 are: 8145060
+
+Save lotto file at: 09:57:57 PM 22/05/2012
+Lotto report started at: 21:19:37.512
+Lotto report ended at: 21:57:57.733
+Lotto report lasted: 00:38:20.221
+
+
+Save lotto file at: 04:45:16 PM 14/06/2012  V 3.9.1
+Lotto report started at: 16:08:21.549
+Lotto report ended at: 16:45:16.676
+Lotto report lasted: 00:36:55.127
+6 of 45 are: 8145060
+ mX3 executed: 14/06/2012 04:45:21 PM  Runtime: 0:36:59.838 
+ 
+ 
+ Save lotto file at: 04:07:24 PM 30/08/2012
+Lotto report started at: 15:31:14.890
+Lotto report ended at: 16:07:24.214
+Lotto report lasted: 00:36:09.324
+6 of 45 are: 8145060
+ mX3 executed: 30/08/2012 04:07:28 PM  Runtime: 0:36:13.333
+ Save lotto file at: 10:49:05 PM 22/09/2012
+Lotto report started at: 22:09:26.888
+Lotto report ended at: 22:49:05.424
+Lotto report lasted: 00:39:38.536
+
+Save lotto file at: 06:54:48 PM 25/09/2012 3.9.3.5
+Lotto report started at: 18:18:15.245
+Lotto report ended at: 18:54:48.999
+Lotto report lasted: 00:36:33.754
+6 of 45 are: 8145060  --------------------------------------------------------
+Save lotto file at: 12:58:32 PM 30/09/2012
+Lotto report started at: 12:20:16.786
+Lotto report ended at: 12:58:32.673
+Lotto report lasted: 00:38:15.887
+6 of 45 are: 8145060
+Save lotto file at: 04:51:09 PM 10/10/2012
+Lotto report started at: 16:12:53.598
+Lotto report ended at: 16:51:09.968
+Lotto report lasted: 00:38:16.370
+6 of 45 are: 8145060
+
+Save lotto file at: 05:18:15 PM 24/10/2012
+Lotto report started at: 16:39:05.988
+Lotto report ended at: 17:18:15.680
+Lotto report lasted: 00:39:09.692
+6 of 45 are: 8145060
+
+Save lotto file at: 06:34:27 PM 24/10/2012
+Lotto report started at: 17:54:55.216
+Lotto report ended at: 18:34:27.247
+Lotto report lasted: 00:39:32.031
+6 of 45 are: 8145060
+
+Save lotto file at: 03:47:15 PM 25/10/2012
+Lotto report started at: 15:07:48.939
+Lotto report ended at: 15:47:15.682
+Lotto report lasted: 00:39:26.743
+6 of 45 are : 8145060
+ mX3 executed: 25/10/2012 03:47:19 PM  Runtime: 0:39:30.565
+
+Save lotto file at: 04:58:04 PM 30/10/2012
+Lotto report started at: 16:17:32.187
+Lotto report ended at: 16:58:04.980
+Lotto report lasted: 00:40:32.793
+
+Save lotto file at: 05:43:12 PM 30/10/2012
+Lotto report started at: 17:05:30.266
+Lotto report ended at: 17:43:12.909
+Lotto report lasted: 00:37:42.643
+
+Save lotto file at: 06:43:55 PM 13/11/2012
+Lotto report started at: 18:06:16.736
+Lotto report ended at: 18:43:55.448
+Lotto report lasted: 00:37:38.712
+6 of 45 are: 8145060
+
+Save lotto file at: 06:01:35 PM 20/11/2012
+Lotto report started at: 17:23:30.552
+Lotto report ended at: 18:01:35.646
+Lotto report lasted: 00:38:05.094
+6 of 45 are: 8145060
+ mX3 executed: 20/11/2012 06:01:39 PM  Runtime: 0:38:8.995
+PascalScript maXbox3 - RemObjects & SynEdit2
+
+Save lotto file at: 05:19:46 PM 28/11/2012
+Lotto report started at: 16:42:23.112
+Lotto report ended at: 17:19:46.677
+Lotto report lasted: 00:37:23.565
+6 of 45 are: 8145060
+ mX3 executed: 28/11/2012 05:19:50 PM  Runtime: 0:37:27.386
+ 
+ Save lotto file at: 02:00:17 PM 03/12/2012
+Lotto report started at: 13:22:55.249
+Lotto report ended at: 14:00:17.597
+Lotto report lasted: 00:37:22.348
+6 of 45 are: 8145060
+ mX3 executed: 03/12/2012 02:00:21 PM  Runtime: 0:37:26.201
+PascalScript maXbox3 - RemObjects & SynEdit
+
+Save lotto file at: 12:08:37 PM 18/12/2012
+Lotto report started at: 11:29:08.726
+Lotto report ended at: 12:08:37.528
+Lotto report lasted: 00:39:28.802
+6 of 45 are: 8145060
+
+Save lotto file at: 04:58:13 PM 06/01/2013
+Lotto report started at: 16:20:55.735
+Lotto report ended at: 16:58:13.138
+Lotto report lasted: 00:37:17.403
+
+Save lotto file at: 12:38:29 PM 14/01/2013
+Lotto report started at: 12:01:10.619
+Lotto report ended at: 12:38:29.551
+Lotto report lasted: 00:37:18.932
+6 of 45 are: 8145060
+
+Save lotto file at: 11:51:04 PM 20/01/2013
+Lotto report started at: 23:14:56.472
+Lotto report ended at: 23:51:04.237
+Lotto report lasted: 00:36:07.765
+6 of 45 are: 8145060
+Save lotto file at: 11:16:42 AM 21/01/2013
+Lotto report started at: 10:40:36.981
+Lotto report ended at: 11:16:42.920
+Lotto report lasted: 00:36:05.939
+6 of 45 are: 8145060
+
+Save lotto file at: 11:39:16 PM 04/02/2013
+Lotto report started at: 23:03:00.741
+Lotto report ended at: 23:39:16.992
+Lotto report lasted: 00:36:16.251
+6 of 45 are: 8145060
+ mX3 executed: 04/02/2013 11:39:21 PM  Runtime: 0:36:20.603  Memoryload: 37% used --------------------------------------------------------
+Save lotto file at: 09:26:30 PM 27/02/2013
+Lotto report started at: 20:47:16.179
+Lotto report ended at: 21:26:30.831
+Lotto report lasted: 00:39:14.652
+6 of 45 are: 8145060
+ mX3 executed: 27/02/2013 09:26:34 PM  Runtime: 0:39:18.506  Memoryload: 32% use
+ Save lotto file at: 09:47:21 AM 17/03/2013
+Lotto report started at: 09:07:58.405
+Lotto report ended at: 09:47:21.637
+Lotto report lasted: 00:39:23.232
+6 of 45 are: 8145060
+
+Save lotto file at: 10:43:20 AM 30/03/2013
+Lotto report started at: 10:05:41.858
+Lotto report ended at: 10:43:20.992
+Lotto report lasted: 00:37:39.134
+6 of 45 are: 8145060
+ mX3 executed: 30/03/2013 10:43:24 AM  Runtime: 0:37:43.33  Memoryload: 30% use
+ 
+ Save lotto file at: 09:07:17 PM 03/04/2013
+Lotto report started at: 20:27:43.627
+Lotto report ended at: 21:07:17.007
+Lotto report lasted: 00:39:33.380
+6 of 45 are: 8145060
+ mX3 executed: 03/04/2013 09:07:20 PM  Runtime: 0:39:37.273  Memoryload: 32% use
+ 
+ Save lotto file at: 01:21:20 PM 09/04/2013
+Lotto report started at: 12:43:37.824
+Lotto report ended at: 13:21:20.557
+Lotto report lasted: 00:37:42.733
+6 of 45 are: 8145060
+ mX3 executed: 09/04/2013 01:21:24 PM  Runtime: 0:37:46.606  Memoryload: 33% use maXbox3 097_pas_lottocombinations_beat_plus.txt Compiled done: 11/05/2013 12:11:13 PM
+--------------------------------------------------------
+Save lotto file at: 12:50:25 PM 11/05/2013
+Lotto report started at: 12:11:13.760
+Lotto report ended at: 12:50:25.184
+Lotto report lasted: 00:39:11.424
+6 of 45 are: 8145060
+ mX3 executed: 11/05/2013 12:50:28 PM  Runtime: 0:39:15.323  Memoryload: 33% use
+PascalScript maXbox3 - RemObjects & SynEdit
+
+Save lotto file at: 12:59:59 PM 12/05/2013
+Lotto report started at: 12:22:24.276
+Lotto report ended at: 12:59:59.385
+Lotto report lasted: 00:37:35.109
+6 of 45 are: 8145060
+ mX3 executed: 12/05/2013 01:00:02 PM  Runtime: 0:37:38.993  Memoryload: 31% use
+
+Save lotto file at: 11:55:56 AM 30/05/2013
+Lotto report started at: 11:16:18.609
+Lotto report ended at: 11:55:56.536
+Lotto report lasted: 00:39:37.927
+6 of 45 are: 8145060
+ mX3 executed: 30/05/2013 11:56:08 AM  Runtime: 0:39:50.361  Memoryload: 38% use
+ 
+ Lotto report started at: 09:46:45.417
+Lotto report ended at: 10:26:22.703
+Lotto report lasted: 00:39:37.286     #perf:120:0:45.631
+6 of 45 are: 8145060
+ mX3 executed: 31/05/2013 10:26:26 AM  Runtime: 0:39:41.158  Memoryload: 33% use  Save lotto file at: 04:46:37 PM 03/06/2013
+Lotto report started at: 16:07:01.032
+Lotto report ended at: 16:46:37.798
+Lotto report lasted: 00:39:36.766
+6 of 45 are: 8145060--------------------------------------------------------
+Save lotto file at: 05:30:05 PM 15/06/2013
+Lotto report started at: 16:52:04.433
+Lotto report ended at: 17:30:05.172
+Lotto report lasted: 00:38:00.739
+6 of 45 are: 8145060
+ mX3 executed: 15/06/2013 05:30:08 PM  Runtime: 0:38:4.780  Memoryload: 31% use
+PascalScript maXbox3 - RemObjects & SynEdit--------------------------------------------------------
+Save lotto file at: 10:10:17 PM 21/07/2013
+Lotto report started at: 21:28:25.919
+Lotto report ended at: 22:10:17.554
+Lotto report lasted: 00:41:51.635
+6 of 45 are: 8145060
+ mX3 executed: 21/07/2013 10:10:21 PM  Runtime: 0:41:55.598  Memoryload: 30% use Save lotto file at: 07:43:40 PM 22/07/2013
+Lotto report started at: 19:03:22.474
+Lotto report ended at: 19:43:40.545
+Lotto report lasted: 00:40:18.071
+6 of 45 are: 8145060
+ mX3 executed: 22/07/2013 07:43:44 PM  Runtime: 0:40:22.60  Memoryload: 31% useSave lotto file at: 05:57:40 PM 28/08/2013
+Lotto report started at: 17:19:23.799
+Lotto report ended at: 17:57:40.591
+Lotto report lasted: 00:38:16.792
+6 of 45 are: 8145060
+ mX3 executed: 28/08/2013 05:57:44 PM  Runtime: 0:38:21.815  Memoryload: 29% use
+    Save lotto file at: 11:24:18 PM 28/08/2013
+Lotto report started at: 22:46:04.874
+Lotto report ended at: 23:24:18.936
+Lotto report lasted: 00:38:14.062
+6 of 45 are: 8145060
+ mX3 executed: 28/08/2013 11:24:36 PM  Runtime: 0:38:31.674  Memoryload: 35% use
+
+Save lotto file at: 02:09:36 PM 08/09/2013
+Lotto report started at: 13:31:41.665
+Lotto report ended at: 14:09:36.804
+Lotto report lasted: 00:37:55.139
+6 of 45 are: 8145060
+ mX3 executed: 08/09/2013 02:09:40 PM  Runtime: 0:37:59.149  Memoryload: 31% use
+ 
+ --------------------------------------------------------
+Save lotto file at: 06:29:59 PM 08/09/2013
+Lotto report started at: 17:52:09.589
+Lotto report ended at: 18:29:59.175
+Lotto report lasted: 00:37:49.586
+6 of 45 are: 8145060
+ mX3 executed: 08/09/2013 06:30:02 PM  Runtime: 0:37:53.595  Memoryload: 30% use Save lotto file at: 05:27:40 PM 12/09/2013
+Lotto report started at: 16:48:06.843
+Lotto report ended at: 17:27:40.621
+Lotto report lasted: 00:39:33.778
+6 of 45 are: 8145060
+
+Save lotto file at: 11:14:39 AM 17/09/2013
+Lotto report started at: 10:36:24.704
+Lotto report ended at: 11:14:39.874
+Lotto report lasted: 00:38:15.170
+6 of 45 are: 8145060
+ mX3 executed: 17/09/2013 11:14:43 AM  Runtime: 0:38:19.210  Memoryload: 32% use
+P
+
+Save lotto file at: 10:29:40 PM 27/09/2013
+Lotto report started at: 21:52:58.200
+Lotto report ended at: 22:29:40.150
+Lotto report lasted: 00:36:41.950
+6 of 45 are: 8145060
+ mX3 executed: 27/09/2013 10:29:44 PM  Runtime: 0:36:46.357  Memoryload: 35% use--------------------------------------------------------
+Save lotto file at: 11:18:08 AM 28/09/2013
+Lotto report started at: 10:41:12.370
+Lotto report ended at: 11:18:08.619
+Lotto report lasted: 00:36:56.249
+6 of 45 are: 8145060
+
+Save lotto file at: 04:14:32 PM 07/10/2013
+Lotto report started at: 15:38:02.854
+Lotto report ended at: 16:14:32.684
+Lotto report lasted: 00:36:29.830
+6 of 45 are: 8145060
+ mX3 executed: 07/10/2013 04:14:36 PM  Runtime: 0:36:33.974  Memoryload: 38% use
+
+Save lotto file at: 08:49:18 PM 07/10/2013
+Lotto report started at: 20:12:58.848
+Lotto report ended at: 20:49:18.132
+Lotto report lasted: 00:36:19.284
+6 of 45 are: 8145060
+ mX3 executed: 07/10/2013 08:49:21 PM  Runtime: 0:36:23.327  Memoryload: 34% use
+
+Save lotto file at: 06:09:25 PM 08/10/2013
+Lotto report started at: 17:32:58.824
+Lotto report ended at: 18:09:25.721
+Lotto report lasted: 00:36:26.897
+6 of 45 are: 8145060
+ mX3 executed: 08/10/2013 06:09:29 PM  Runtime: 0:36:30.898  Memoryload: 33% use
+Save lotto file at: 06:08:24 PM 15/10/2013
+Lotto report started at: 17:28:43.717
+Lotto report ended at: 18:08:24.968
+Lotto report lasted: 00:39:41.251
+6 of 45 are: 8145060
+ mX3 executed: 15/10/2013 06:08:28 PM  Runtime: 0:39:45.322  Memoryload: 34% use
+
+Save lotto file at: 11:40:30 AM 16/10/2013
+Lotto report started at: 11:02:39.601
+Lotto report ended at: 11:40:30.481
+Lotto report lasted: 00:37:50.880
+6 of 45 are: 8145060
+ mX3 executed: 16/10/2013 11:40:34 AM  Runtime: 0:37:54.920  Memoryload: 33% use
+
+Save lotto file at: 10:09:11 PM 16/10/2013
+Lotto report started at: 21:29:19.327
+Lotto report ended at: 22:09:11.248
+Lotto report lasted: 00:39:51.921
+6 of 45 are: 8145060
+ mX3 executed: 16/10/2013 10:09:14 PM  Runtime: 0:39:56.8  Memoryload: 33% use
+
+Lotto report started at: 21:55:49.981
+Lotto report ended at: 22:35:16.583
+Lotto report lasted: 00:39:26.602
+6 of 45 are: 8145060
+ mX3 executed: 18/10/2013 10:35:20 PM  Runtime: 0:39:30.642  Memoryload: 30% use
+
+Lotto report started at: 14:40:16.887
+Lotto report ended at: 15:19:25.643
+Lotto report lasted: 00:39:08.756
+6 of 45 are: 8145060
+ mX3 executed: 20/10/2013 03:19:29 PM  Runtime: 0:39:13.249  Memoryload: 34% use
+ 
+ Save lotto file at: 10:35:40 AM 10/11/2013
+Lotto report started at: 09:54:23.254
+Lotto report ended at: 10:35:40.959
+Lotto report lasted: 00:41:17.705
+6 of 45 are: 8145060
+ mX3 executed: 10/11/2013 10:35:44 AM  Runtime: 0:41:21.855  Memoryload: 32% use
+ 
+ Save lotto file at: 06:09:45 PM 11/11/2013
+Lotto report started at: 17:27:38.174
+Lotto report ended at: 18:09:45.726
+Lotto report lasted: 00:42:07.552
+6 of 45 are: 8145060
+ mX3 executed: 11/11/2013 06:09:49 PM  Runtime: 0:42:12.18  Memoryload: 25% use
+
+
+Save lotto file at: 08:06:18 PM 11/11/2013
+Lotto report started at: 19:23:38.809
+Lotto report ended at: 20:06:18.018
+Lotto report lasted: 00:42:39.209
+6 of 45 are: 8145060
+
+Save lotto file at: 12:01:33 PM 13/11/2013
+Lotto report started at: 11:20:15.603
+Lotto report ended at: 12:01:33.446
+Lotto report lasted: 00:41:17.843
+6 of 45 are: 8145060
+ mX3 executed: 13/11/2013 12:01:37 PM  Runtime: 0:41:21.987  Memoryload: 25% use
+
+Save lotto file at: 09:05:39 AM 28/11/2013
+Lotto report started at: 08:27:46.710
+Lotto report ended at: 09:05:39.404
+Lotto report lasted: 00:37:52.694
+6 of 45 are: 8145060
+ mX3 executed: 28/11/2013 09:05:43 AM  Runtime: 0:37:56.836  Memoryload: 32% use
+ 
+ Save lotto file at: 11:10:34 PM 13/12/2013
+Lotto report started at: 22:31:06.784
+Lotto report ended at: 23:10:34.668
+Lotto report lasted: 00:39:27.884
+6 of 45 are: 8145060
+ mX3 executed: 13/12/2013 11:10:38 PM  Runtime: 0:39:32.248  Memoryload: 20% use
+ 
+ Save lotto file at: 12:08:18 PM 14/12/2013
+Lotto report started at: 11:27:22.818
+Lotto report ended at: 12:08:18.934
+Lotto report lasted: 00:40:56.116
+6 of 45 are: 8145060
+ mX3 executed: 14/12/2013 12:08:33 PM  Runtime: 0:41:10.857  Memoryload: 31% use
+
+Save lotto file at: 01:10:57 PM 14/12/2013
+Lotto report started at: 12:30:01.717
+Lotto report ended at: 13:10:57.817
+Lotto report lasted: 00:40:56.100
+6 of 45 are: 8145060
+ mX3 executed: 14/12/2013 01:11:02 PM  Runtime: 0:41:0.784  Memoryload: 28% use
+    
+    Save lotto file at: 05:32:13 PM 14/12/2013
+Lotto report started at: 16:51:11.572
+Lotto report ended at: 17:32:13.613
+Lotto report lasted: 00:41:02.041
+6 of 45 are: 8145060
+ mX3 executed: 14/12/2013 05:32:17 PM  Runtime: 0:41:6.225  Memoryload: 22% use
+ 
+
+Save lotto file at: 11:25:10 AM 15/12/2013
+Lotto report started at: 10:49:15.559
+Lotto report ended at: 11:25:10.819
+Lotto report lasted: 00:35:55.260
+6 of 45 are: 8145060
+ mX3 executed: 15/12/2013 11:25:14 AM  Runtime: 0:35:59.417  Memoryload: 22% use
+
+Save lotto file at: 10:24:26 PM 15/12/2013
+Lotto report started at: 21:48:24.445
+Lotto report ended at: 22:24:26.370
+Lotto report lasted: 00:36:01.925
+6 of 45 are: 8145060
+ mX3 executed: 15/12/2013 10:24:30 PM  Runtime: 0:36:6.449  Memoryload: 23% use
+ 
+ Save lotto file at: 12:46:12 AM 03/01/2014
+Lotto report started at: 00:10:01.351
+Lotto report ended at: 00:46:12.473
+Lotto report lasted: 00:36:11.122
+6 of 45 are: 8145060
+ mX3 executed: 03/01/2014 12:46:16 AM  Runtime: 0:36:15.564  Memoryload: 22% use
+ 
+ Save lotto file at: 10:22:01 AM 04/01/2014
+Lotto report started at: 09:45:53.182
+Lotto report ended at: 10:22:01.494
+Lotto report lasted: 00:36:08.312
+6 of 45 are: 8145060
+ mX3 executed: 04/01/2014 10:22:05 AM  Runtime: 0:36:12.816  Memoryload: 24% use
+ 
+ Save lotto file at: 07:33:47 PM 04/01/2014
+Lotto report started at: 18:57:23.582
+Lotto report ended at: 19:33:47.779
+Lotto report lasted: 00:36:24.197
+6 of 45 are: 8145060
+ mX3 executed: 04/01/2014 07:33:52 PM  Runtime: 0:36:29.251  Memoryload: 29% use
+ 
+ Save lotto file at: 09:05:40 PM 04/01/2014
+Lotto report started at: 20:29:35.882
+Lotto report ended at: 21:05:40.775
+Lotto report lasted: 00:36:04.893
+6 of 45 are: 8145060
+ mX3 executed: 04/01/2014 09:05:44 PM  Runtime: 0:36:9.189  Memoryload: 23% use
+
+Lotto report ended at: 16:48:10.875
+Lotto report lasted: 00:36:24.821
+6 of 45 are: 8145060
+ mX3 executed: 06/01/2014 04:48:15 PM  Runtime: 0:36:30.37  Memoryload: 35% use
+
+
+Save lotto file at: 07:34:10 PM 14/01/2014
+Lotto report started at: 18:54:02.464
+Lotto report ended at: 19:34:10.694
+Lotto report lasted: 00:40:08.230
+6 of 45 are: 8145060
+ mX3 executed: 14/01/2014 07:34:17 PM  Runtime: 0:40:15.844  Memoryload: 23% use
+ 
+ Save lotto file at: 12:17:39 AM 15/01/2014
+Lotto report started at: 23:37:31.824
+Lotto report ended at: 00:17:39.091
+Lotto report lasted: 23:19:52.733
+6 of 45 are: 8145060
+ mX3 executed: 15/01/2014 12:17:42 AM  Runtime: 23:19:48.389  Memoryload: 21% use
+ 
+ --------------------------------------------------------
+Save lotto file at: 07:46:50 PM 15/01/2014
+Lotto report started at: 19:08:14.360
+Lotto report ended at: 19:46:50.551
+Lotto report lasted: 00:38:36.191
+6 of 45 are: 8145060
+ mX3 executed: 15/01/2014 07:46:54 PM  Runtime: 0:38:40.495  Memoryload: 22% use
+ Save lotto file at: 09:10:42 PM 15/01/2014
+Lotto report started at: 20:32:13.892
+Lotto report ended at: 21:10:42.859
+Lotto report lasted: 00:38:28.967
+6 of 45 are: 8145060
+ mX3 executed: 15/01/2014 09:10:53 PM  Runtime: 0:38:39.781  Memoryload: 31% use
+ 
+ Lotto report started at: 22:07:57.288
+Lotto report ended at: 22:16:20.140
+Lotto report lasted: 00:08:22.852
+6 of 36 are: 1947792
+
+Save lotto file at: 10:28:06 PM 21/01/2014  3.9.9.20!
+Lotto report started at: 22:20:29.306
+Lotto report ended at: 22:28:06.861
+Lotto report lasted: 00:07:37.555
+6 of 36 are: 1947792
+
+Save lotto file at: 02:35:39 PM 22/01/2014
+Lotto report started at: 14:27:10.579
+Lotto report ended at: 14:35:39.284
+Lotto report lasted: 00:08:28.705
+
+Save lotto file at: 09:50:16 AM 24/01/2014
+Lotto report started at: 09:08:35.056
+Lotto report ended at: 09:50:16.048
+Lotto report lasted: 00:41:40.992
+6 of 45 are: 8145060
+ mX3 executed: 24/01/2014 09:50:40 AM  Runtime: 0:42:5.654  Memoryload: 30% use
+ 
+ Save lotto file at: 11:09:18 PM 24/01/2014
+Lotto report started at: 22:30:29.178
+Lotto report ended at: 23:09:18.428
+Lotto report lasted: 00:38:49.250
+6 of 45 are: 8145060
+ mX3 executed: 24/01/2014 11:09:22 PM  Runtime: 0:38:54.16  Memoryload: 25% use
+
+Lotto report started at: 00:03:54.220
+Lotto report ended at: 00:12:01.619
+Lotto report lasted: 00:08:07.399
+6 of 36 are: 1947792 
+
+Save lotto file at: 02:44:19 PM 25/01/2014
+Lotto report started at: 14:05:27.226
+Lotto report ended at: 14:44:19.749
+Lotto report lasted: 00:38:52.523
+6 of 45 are: 8145060
+ mX3 executed: 25/01/2014 02:44:23 PM  Runtime: 0:38:57.27  Memoryload: 29% use
+ 
+ Save lotto file at: 04:57:25 PM 27/01/2014
+Lotto report started at: 16:18:40.512
+Lotto report ended at: 16:57:25.023
+Lotto report lasted: 00:38:44.511
+6 of 45 are: 8145060
+ mX3 executed: 27/01/2014 04:57:31 PM  Runtime: 0:38:51.385  Memoryload: 30% use
+ 
+ 
+ Save lotto file at: 08:26:06 PM 07/02/2014
+Lotto report started at: 19:43:51.802
+Lotto report ended at: 20:26:06.364
+Lotto report lasted: 00:42:14.562
+6 of 45 are: 8145060
+ mX3 executed: 07/02/2014 08:26:16 PM  Runtime: 0:42:25.504  Memoryload: 48% use
+ 
+ Save lotto file at: 08:01:59 PM 09/02/2014
+Lotto report started at: 19:23:34.474
+Lotto report ended at: 20:01:59.097
+Lotto report lasted: 00:38:24.623
+6 of 45 are: 8145060
+ mX3 executed: 09/02/2014 08:02:04 PM  Runtime: 0:38:30.927  Memoryload: 30% use
+ 
+ Save lotto file at: 01:26:15 PM 10/02/2014
+Lotto report started at: 12:44:22.303
+Lotto report ended at: 13:26:15.077
+Lotto report lasted: 00:41:52.774         //with event model
+6 of 45 are: 8145060
+ mX3 executed: 10/02/2014 01:26:18 PM  Runtime: 0:41:57.176  Memoryload: 40% use
+ 
+ Save lotto file at: 02:09:13 PM 10/02/2014
+Lotto report started at: 13:30:30.551
+Lotto report ended at: 14:09:13.315
+Lotto report lasted: 00:38:42.764
+6 of 45 are: 8145060
+ mX3 executed: 10/02/2014 02:09:16 PM  Runtime: 0:38:47.38  Memoryload: 41% use
+ 
+ 
+ Save lotto file at: 12:33:58 PM 08/03/2014
+Lotto report started at: 11:55:02.411
+Lotto report ended at: 12:33:58.540
+Lotto report lasted: 00:38:56.129
+6 of 45 are: 8145060
+ mX3 executed: 08/03/2014 12:34:10 PM  Runtime: 0:39:8.911  Memoryload: 31% use
+ 
+ Save lotto file at: 04:52:56 PM 19/03/2014    3.9.9.92
+Lotto report started at: 16:15:48.302
+Lotto report ended at: 16:52:56.020
+Lotto report lasted: 00:37:07.718
+6 of 45 are: 8145060
+ mX3 executed: 19/03/2014 04:53:03 PM  Runtime: 0:37:15.687  Memoryload: 34% use
+
+Save lotto file at: 05:32:28 PM 19/03/2014
+Lotto report started at: 17:24:41.172
+Lotto report ended at: 17:32:28.894
+Lotto report lasted: 00:07:47.722
+6 of 36 are: 1947792
+ mX3 executed: 19/03/2014 05:32:29 PM  Runtime: 0:7:49.168  Memoryload: 35% use
+
+    Save lotto file at: 10:30:06 PM 19/03/2014
+Lotto report started at: 21:53:04.922
+Lotto report ended at: 22:30:06.755
+Lotto report lasted: 00:37:01.833
+6 of 45 are: 8145060
+ mX3 executed: 19/03/2014 10:30:31 PM  Runtime: 0:37:27.618  Memoryload: 43% use
+ 
+ Save lotto file at: 12:05:01 PM 20/03/2014  //3.9.9.92
+Lotto report started at: 11:28:04.458
+Lotto report ended at: 12:05:01.669
+Lotto report lasted: 00:36:57.211
+6 of 45 are: 8145060
+ mX3 executed: 20/03/2014 12:05:06 PM  Runtime: 0:37:2.873  Memoryload: 30% use
+ 
+ Save lotto file at: 12:29:33 PM 20/03/2014
+Lotto report started at: 12:21:49.702
+Lotto report ended at: 12:29:33.801
+Lotto report lasted: 00:07:44.099
+6 of 36 are: 1947792
+ mX3 executed: 20/03/2014 12:29:34 PM  Runtime: 0:7:45.553  Memoryload: 31% use
+ 
+ 
+ Save lotto file at: 12:17:58 PM 27/03/2014    //3.9.9.94
+Lotto report started at: 11:39:15.155
+Lotto report ended at: 12:17:58.008
+Lotto report lasted: 00:38:42.853
+6 of 45 are: 8145060
+ mX3 executed: 27/03/2014 12:18:04 PM  Runtime: 0:38:49.619  Memoryload: 38% use
+ 
+ Save lotto file at: 12:45:42 PM 27/03/2014
+Lotto report started at: 12:37:35.931
+Lotto report ended at: 12:45:42.258
+Lotto report lasted: 00:08:06.327
+6 of 36 are: 1947792
+ mX3 executed: 27/03/2014 12:45:43 PM  Runtime: 0:8:7.939  Memoryload: 37% use
+ 
+ Save lotto file at: 09:52:47 PM 27/03/2014
+Lotto report started at: 21:14:03.166
+Lotto report ended at: 21:52:47.999
+Lotto report lasted: 00:38:44.833
+6 of 45 are: 8145060
+ mX3 executed: 27/03/2014 09:52:52 PM  Runtime: 0:38:50.465  Memoryload: 38% use
+ 
+ Save lotto file at: 11:48:09 PM 28/03/2014
+Lotto report started at: 23:40:05.142
+Lotto report ended at: 23:48:09.873
+Lotto report lasted: 00:08:04.731
+6 of 36 are: 1947792
+ mX3 executed: 28/03/2014 11:48:10 PM  Runtime: 0:8:6.501  Memoryload: 32% use
+ 
+ Save lotto file at: 09:53:20 PM 29/03/2014
+Lotto report started at: 21:14:48.861
+Lotto report ended at: 21:53:20.446
+Lotto report lasted: 00:38:31.585
+6 of 45 are: 8145060
+ mX3 executed: 29/03/2014 09:53:27 PM  Runtime: 0:38:38.937  Memoryload: 34% use
+ 
+ Save lotto file at: 11:49:18 PM 08/04/2014
+Lotto report started at: 23:41:12.900
+Lotto report ended at: 23:49:18.078
+Lotto report lasted: 00:08:05.178
+6 of 36 are: 1947792
+ mX3 executed: 08/04/2014 11:49:19 PM  Runtime: 0:8:6.968  Memoryload: 36% use
+ 
+ Save lotto file at: 08:50:02 AM 09/04/2014
+Lotto report started at: 08:11:04.787
+Lotto report ended at: 08:50:02.509
+Lotto report lasted: 00:38:57.722
+6 of 45 are: 8145060
+ mX3 executed: 09/04/2014 08:50:07 AM  Runtime: 0:39:3.682  Memoryload: 39% use
+ 
+ Save lotto file at: 07:57:29 PM 09/04/2014
+Lotto report started at: 19:49:25.025
+Lotto report ended at: 19:57:29.944
+Lotto report lasted: 00:08:04.919
+6 of 36 are: 1947792
+ mX3 executed: 09/04/2014 07:57:30 PM  Runtime: 0:8:6.376  Memoryload: 37% use
+ 
+ Lotto report started at: 11:27:27.799
+Lotto report ended at: 11:35:39.156
+Lotto report lasted: 00:08:11.357
+6 of 36 are: 1947792
+ mX3 executed: 10/04/2014 11:35:39 AM  Runtime: 0:8:12.837  Memoryload: 39% use
+
+Save lotto file at: 06:37:27 PM 11/04/2014
+Lotto report started at: 18:29:05.716
+Lotto report ended at: 18:37:27.103
+Lotto report lasted: 00:08:21.387
+6 of 36 are: 1947792
+ mX3 executed: 11/04/2014 06:37:28 PM  Runtime: 0:8:23.235  Memoryload: 30% use
+ 
+ Save lotto file at: 07:21:04 PM 11/04/2014
+Lotto report started at: 18:41:05.751
+Lotto report ended at: 19:21:04.610
+Lotto report lasted: 00:39:58.859
+6 of 45 are: 8145060
+ mX3 executed: 11/04/2014 07:21:11 PM  Runtime: 0:40:6.890  Memoryload: 30% use
+ 
+ Save lotto file at: 12:59:48 AM 12/04/2014
+Lotto report started at: 00:51:41.634
+Lotto report ended at: 00:59:48.982
+Lotto report lasted: 00:08:07.348
+6 of 36 are: 1947792
+ mX3 executed: 12/04/2014 12:59:49 AM  Runtime: 0:8:9.118  Memoryload: 39% use
+
+Save lotto file at: 10:05:19 AM 12/04/2014
+Lotto report started at: 09:26:27.184
+Lotto report ended at: 10:05:19.991
+Lotto report lasted: 00:38:52.807
+6 of 45 are: 8145060
+ mX3 executed: 12/04/2014 10:05:27 AM  Runtime: 0:39:0.701  Memoryload: 31% use
+ 
+ Save lotto file at: 05:16:06 PM 23/04/2014
+Lotto report started at: 16:37:16.881
+Lotto report ended at: 17:16:06.292
+Lotto report lasted: 00:38:49.411
+6 of 45 are: 8145060
+ mX3 executed: 23/04/2014 05:16:16 PM  Runtime: 0:39:0.57  Memoryload: 48% use //3.9.9.95
+ 
+ Save lotto file at: 08:34:47 PM 26/04/2014
+Lotto report started at: 19:55:41.067
+Lotto report ended at: 20:34:47.666
+Lotto report lasted: 00:39:06.599
+6 of 45 are: 8145060
+ mX3 executed: 26/04/2014 08:35:03 PM  Runtime: 0:39:22.793  Memoryload: 35% use
+
+Save lotto file at: 09:29:46 PM 04/05/2014
+Lotto report started at: 20:50:44.686
+Lotto report ended at: 21:29:46.847
+Lotto report lasted: 00:39:02.161
+6 of 45 are: 8145060
+ mX3 executed: 04/05/2014 09:29:50 PM  Runtime: 0:39:6.827  Memoryload: 38% use
+ 
+ Lotto report started at: 20:41:05.588
+Lotto report ended at: 21:22:35.452
+Lotto report lasted: 00:41:29.864
+6 of 45 are: 8145060
+ mX3 executed: 15/05/2014 09:22:45 PM  Runtime: 0:41:40.304  Memoryload: 50% use
+ 
+ Lotto report started at: 23:59:46.422
+Lotto report ended at: 00:08:19.734
+Lotto report lasted: 23:51:26.688
+6 of 36 are: 1947792
+ mX3 executed: 16/05/2014 12:08:20 AM  Runtime: 23:51:25.108  Memoryload: 35% use
+ 
+ Save lotto file at: 05:09:24 PM 16/05/2014
+Lotto report started at: 16:28:43.986
+Lotto report ended at: 17:09:24.178
+Lotto report lasted: 00:40:40.192
+6 of 45 are: 8145060
+ mX3 executed: 16/05/2014 05:09:27 PM  Runtime: 0:40:44.643  Memoryload: 32% use
+ 
+ Save lotto file at: 09:06:36 PM 19/05/2014
+Lotto report started at: 20:58:03.477
+Lotto report ended at: 21:06:36.845
+Lotto report lasted: 00:08:33.368
+6 of 36 are: 1947792
+ mX3 executed: 19/05/2014 09:06:37 PM  Runtime: 0:8:34.948  Memoryload: 49% use
+
+    Save lotto file at: 10:14:20 PM 19/05/2014
+Lotto report started at: 22:05:33.415
+Lotto report ended at: 22:14:20.398
+Lotto report lasted: 00:08:46.983
+6 of 36 are: 1947792
+ mX3 executed: 19/05/2014 10:14:21 PM  Runtime: 0:8:48.905  Memoryload: 59% use
+ 
+Lotto report started at: 11:07:24.042
+Lotto report ended at: 11:15:56.940
+Lotto report lasted: 00:08:32.898
+6 of 36 are: 1947792
+ mX3 executed: 20/05/2014 11:15:57 AM  Runtime: 0:8:34.426  Memoryload: 29% use
+ 
+ Save lotto file at: 12:24:22 PM 20/05/2014
+Lotto report started at: 11:43:31.100
+Lotto report ended at: 12:24:22.051
+Lotto report lasted: 00:40:50.951
+6 of 45 are: 8145060
+ mX3 executed: 20/05/2014 12:24:31 PM  Runtime: 0:41:0.811  Memoryload: 28% use
+
+Save lotto file at: 04:01:14 PM 22/05/2014
+Lotto report started at: 15:52:31.324
+Lotto report ended at: 16:01:14.666
+Lotto report lasted: 00:08:43.342
+6 of 36 are: 1947792
+ mX3 executed: 22/05/2014 04:01:17 PM  Runtime: 0:8:46.582  Memoryload: 53% use
+
+Save lotto file at: 09:19:56 AM 16/07/2014
+Lotto report started at: 08:41:21.593
+Lotto report ended at: 09:19:56.634
+Lotto report lasted: 00:38:35.041
+6 of 45 are: 8145060
+ mX3 executed: 16/07/2014 09:20:06 AM  Runtime: 0:38:45.592  Memoryload: 30% use //3.9.9.98
+
+Save lotto file at: 05:30:01 PM 19/07/2014
+Lotto report started at: 16:49:43.123
+Lotto report ended at: 17:30:01.505
+Lotto report lasted: 00:40:18.382
+6 of 45 are: 8145060
+ mX3 executed: 19/07/2014 05:30:08 PM  Runtime: 0:40:26.706  Memoryload: 40% use
+ 
+ 
+Save lotto file at: 01:30:40 PM 20/07/2014
+Lotto report started at: 13:22:35.766
+Lotto report ended at: 13:30:40.805
+Lotto report lasted: 00:08:05.039
+6 of 36 are: 1947792
+ mX3 executed: 20/07/2014 01:30:41 PM  Runtime: 0:8:6.719  Memoryload: 39% use
+ 
+ 
+ Save lotto file at: 08:40:11 PM 20/07/2014
+Lotto report started at: 20:01:37.547
+Lotto report ended at: 20:40:11.342
+Lotto report lasted: 00:38:33.795
+6 of 45 are: 8145060
+ mX3 executed: 20/07/2014 08:40:21 PM  Runtime: 0:38:44.552  Memoryload: 35% use
+ 
+ Save lotto file at: 12:26:13 PM 23/07/2014
+Lotto report started at: 11:47:37.815
+Lotto report ended at: 12:26:13.048
+Lotto report lasted: 00:38:35.233
+6 of 45 are: 8145060
+ mX3 executed: 23/07/2014 12:26:19 PM  Runtime: 0:38:42.207  Memoryload: 45% use
+ 
+ Save lotto file at: 05:02:46 PM 23/07/2014
+Lotto report started at: 16:24:23.400
+Lotto report ended at: 17:02:46.097
+Lotto report lasted: 00:38:22.697
+6 of 45 are: 8145060
+ mX3 executed: 23/07/2014 05:03:04 PM  Runtime: 0:38:42.342  Memoryload: 34% use
+
+Save lotto file at: 03:04:07 PM 28/07/2014
+Lotto report started at: 14:24:45.121
+Lotto report ended at: 15:04:07.520
+Lotto report lasted: 00:39:22.399
+6 of 45 are: 8145060
+ mX3 executed: 28/07/2014 03:04:33 PM  Runtime: 0:39:49.448  Memoryload: 48% use
+
+    Save lotto file at: 06:30:23 PM 29/07/2014
+Lotto report started at: 17:50:47.365
+Lotto report ended at: 18:30:23.015
+Lotto report lasted: 00:39:35.650
+6 of 45 are: 8145060
+ mX3 executed: 29/07/2014 06:30:30 PM  Runtime: 0:39:43.892  Memoryload: 51% use
+
+    Save lotto file at: 09:30:15 PM 29/07/2014
+Lotto report started at: 20:51:22.801
+Lotto report ended at: 21:30:15.301
+Lotto report lasted: 00:38:52.500
+6 of 45 are: 8145060
+ mX3 executed: 29/07/2014 09:30:37 PM  Runtime: 0:39:15.558  Memoryload: 37% use
+ 
+ Save lotto file at: 08:39:20 PM 13/08/2014
+Lotto report started at: 20:00:31.045
+Lotto report ended at: 20:39:20.395
+Lotto report lasted: 00:38:49.350
+6 of 45 are: 8145060
+ mX3 executed: 13/08/2014 08:39:29 PM  Runtime: 0:38:59.146  Memoryload: 33% use
+
+
+    Lotto report started at: 18:09:33.170
+Lotto report ended at: 18:48:14.797
+Lotto report lasted: 00:38:41.627
+6 of 45 are: 8145060
+ mX3 executed: 15/08/2014 06:48:34 PM  Runtime: 0:39:2.16  Memoryload: 45% use
+ 
+ 
+ Save lotto file at: 12:17:38 AM 17/08/2014
+Lotto report started at: 23:38:49.413
+Lotto report ended at: 00:17:38.980
+Lotto report lasted: 23:21:10.433
+6 of 45 are: 8145060
+ mX3 executed: 17/08/2014 12:17:44 AM  Runtime: 23:21:3.669  Memoryload: 28% use
+ 
+ Lotto report started at: 17:23:19.404
+Lotto report ended at: 18:02:38.706
+Lotto report lasted: 00:39:19.302
+6 of 45 are: 8145060
+ mX3 executed: 01/09/2014 06:02:46 PM  Runtime: 0:39:28.424  Memoryload: 44% use
+ 
+Save lotto file at: 11:35:12 AM 02/09/2014        //3.9.9.98_6
+Lotto report started at: 11:26:49.707
+Lotto report ended at: 11:35:12.962
+Lotto report lasted: 00:08:23.255
+6 of 36 are: 1947792
+ mX3 executed: 02/09/2014 11:35:13 AM  Runtime: 0:8:24.997  Memoryload: 52% use
+
+Save lotto file at: 09:04:44 PM 03/09/2014
+Lotto report started at: 20:25:27.041
+Lotto report ended at: 21:04:44.363
+Lotto report lasted: 00:39:17.322
+6 of 45 are: 8145060
+ mX3 executed: 03/09/2014 09:05:05 PM  Runtime: 0:39:39.790  Memoryload: 48% use
+ 
+ 
+Save lotto file at: 09:42:11 AM 04/09/2014
+Lotto report started at: 09:34:06.177
+Lotto report ended at: 09:42:11.572
+Lotto report lasted: 00:08:05.395
+6 of 36 are: 1947792
+
+ mX3 executed: 04/09/2014 09:42:15 AM  Runtime: 0:8:9.935  Memoryload: 46% use
+ Save lotto file at: 11:56:41 PM 10/09/2014
+Lotto report started at: 23:48:37.590
+Lotto report ended at: 23:56:41.690
+Lotto report lasted: 00:08:04.100
+6 of 36 are: 1947792
+ mX3 executed: 10/09/2014 11:56:42 PM  Runtime: 0:8:5.723  Memoryload: 34% use
+
+Save lotto file at: 09:04:16 PM 15/09/2014
+Lotto report started at: 20:25:38.616
+Lotto report ended at: 21:04:16.671
+Lotto report lasted: 00:38:38.055
+6 of 45 are: 8145060
+ mX3 executed: 15/09/2014 09:04:21 PM  Runtime: 0:38:43.780  Memoryload: 36% use
+ 
+ Save lotto file at: 12:09:49 PM 09/10/2014
+Lotto report started at: 11:32:26.665
+Lotto report ended at: 12:09:49.411
+Lotto report lasted: 00:37:22.746
+6 of 45 are: 8145060
+ mX3 executed: 09/10/2014 12:09:58 PM  Runtime: 0:37:33.21  Memoryload: 37% use
+
+Save lotto file at: 03:06:43 PM 09/10/2014
+Lotto report started at: 14:58:53.065
+Lotto report ended at: 15:06:43.634
+Lotto report lasted: 00:07:50.569
+6 of 36 are: 1947792
+ mX3 executed: 09/10/2014 03:06:45 PM  Runtime: 0:7:53.759  Memoryload: 46% use
+
+Lotto report started at: 23:41:27.549
+Lotto report ended at: 23:49:20.885
+Lotto report lasted: 00:07:53.336
+6 of 36 are: 1947792
+ mX3 executed: 09/10/2014 11:49:21 PM  Runtime: 0:7:55.282  Memoryload: 46% use
+
+Lotto report started at: 23:43:31.244
+Lotto report ended at: 23:51:49.816
+Lotto report lasted: 00:08:18.572
+6 of 36 are: 1947792
+ mX3 executed: 22/10/2014 11:51:50 PM  Runtime: 0:8:20.372  Memoryload: 65% use
+
+Save lotto file at: 03:07:09 PM 24/10/2014
+Lotto report started at: 14:58:47.213
+Lotto report ended at: 15:07:09.865
+Lotto report lasted: 00:08:22.652
+6 of 36 are: 1947792
+ mX3 executed: 24/10/2014 03:07:10 PM  Runtime: 0:8:24.712  Memoryload: 54% use
+
+Save lotto file at: 05:37:17 PM 24/10/2014
+Lotto report started at: 17:28:57.547
+Lotto report ended at: 17:37:17.953
+Lotto report lasted: 00:08:20.406
+6 of 36 are: 1947792
+ mX3 executed: 24/10/2014 05:37:18 PM  Runtime: 0:8:22.69  Memoryload: 54% use
+
+Save lotto file at: 11:16:14 AM 25/10/2014
+Lotto report started at: 10:36:31.414
+Lotto report ended at: 11:16:14.079
+Lotto report lasted: 00:39:42.665
+6 of 45 are: 8145060
+ mX3 executed: 25/10/2014 11:16:21 AM  Runtime: 0:39:50.929  Memoryload: 28% use
+
+
+ <iframe src="http://www.slideshare.net/slideshow/embed_code/28344552" width="342" height="291" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px 1px 0; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe> <div style="margin-bottom:5px"> <strong> <a href="https://www.slideshare.net/maxkleiner1/ekon-sonar-20134" title="Software Qualitiy with Sonar Tool 2013_4" target="_blank">Software Qualitiy with Sonar Tool 2013_4</a> </strong> from <strong><a href="http://www.slideshare.net/maxkleiner1" target="_blank">Max Kleiner</a></strong> </div>
+ 
+ [slideshare id=28344552&doc=ekonsonar20134-131117163738-phpapp01]
+ 
+ <iframe src="http://www.slideshare.net/slideshow/embed_code/28344552" width="342" height="291" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px 1px 0; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe> <div style="margin-bottom:5px"> <strong> <a href="https://www.slideshare.net/maxkleiner1/ekon-sonar-20134" title="Software Qualitiy with Sonar Tool 2013_4" target="_blank">Software Qualitiy with Sonar Tool 2013_4</a> </strong> from <strong><a href="http://www.slideshare.net/maxkleiner1" target="_blank">Max Kleiner</a></strong> </div>
+ 
+ <iframe src="http://www.slideshare.net/slideshow/embed_code/28344552" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px 1px 0; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe> <div style="margin-bottom:5px"> <strong> <a href="https://www.slideshare.net/maxkleiner1/ekon-sonar-20134" title="Software Qualitiy with Sonar Tool 2013_4" target="_blank">Software Qualitiy with Sonar Tool 2013_4</a> </strong> from <strong><a href="http://www.slideshare.net/maxkleiner1" target="_blank">Max Kleiner</a></strong> </div>
+ 
+ <iframe src="http://www.slideshare.net/maxkleiner1/slideshelf" width="490px" height="470px" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:none;" allowfullscreen webkitallowfullscreen mozallowfullscreen></iframe>
+ <iframe src="http://www.slideshare.net/slideshow/embed_code/28344552" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px 1px 0; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe> <div style="margin-bottom:5px"> <strong> <a href="https://www.slideshare.net/maxkleiner1/ekon-sonar-20134" title="Software Qualitiy with Sonar Tool 2013_4" target="_blank">Software Qualitiy with Sonar Tool 2013_4</a> </strong> from <strong><a href="http://www.slideshare.net/maxkleiner1" target="_blank">Max Kleiner</a></strong> </div>
+ 
+ <iframe src="http://www.slideshare.net/slideshow/embed_code/14772005" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px 1px 0; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe> <div style="margin-bottom:5px"> <strong> <a href="https://www.slideshare.net/maxkleiner1/metrics-ekon-142kleiner" title="Metrics ekon 14_2_kleiner" target="_blank">Metrics ekon 14_2_kleiner</a> </strong> from <strong><a href="http://www.slideshare.net/maxkleiner1" target="_blank">Max Kleiner</a></strong> </div>
+                                                     
+
+
+
+
+
+
+ $(BDS)\lib;$(BDSUSERDIR)\Imports;$(BDS)\Imports;$(BDS)\Lib\Indy10;$(BDSCOMMONDIR)\Dcp;$(BDS)\include;$(BDS)\RaveReports\Lib;C:\Users\js\Documents\RAPWare\source;C:\Users\js\Documents\RAPWare\source\components;C:\Users\js\Documents\RAPWare\source\components\common;C:\Users\js\Documents\RAPWare\source\components\controls\webbrowser;C:\Users\js\Documents\RAPWare\source\components\mapi;E:\Komponenten\Jedi\jcl\jcl\source;E:\Komponenten\Jedi\jvcl\run;E:\Komponenten\RaizeMenu;E:\Program Files\Raize\RC5\Lib\RS2009;E:\KomponentenD2009\JsDB;E:\Program Files\kbmMemTable\Source\D2009;E:\Komponenten\DBComboBox;E:\Komponenten\Kalender;$(BDS)\RBuilder\Source;E:\Program Files\CodeGear\RAD Studio\6.0\RBuilder\TeeChart\TeePro900;e:\program files\codegear\rad studio\6.0\rbuilder\teechart\teepro800;e:\program files\codegear\rad studio\6.0\rbuilder\lib;E:\Program Files\Steema Software\TeeChart Standard 8 for Delphi 2009\Delphi12\Lib\;E:\Program Files\Borland\Reports\TRotadedLabel\Sources;E:\Program Files\EXTRA\D2009\SOURCE;E:\Program Files\Pragnaan\PsRBExportDevices 11.06\Source;E:\Komponenten\PBrowseFolder;E:\Komponenten\EDITINT;E:\Program Files\Borland\Delphi7\RBuilder\Source;E:\Komponenten\TParser;E:\maxbox3\Pascal Script for Delphi\Dcu\D12;E:\maxbox3\Pascal Script for Delphi\Source;E:\maxbox3\source\synedit\SynEdit\Source;E:\Komponenten\Jedi\jcl\jcl\source\windows;E:\Komponenten\Jedi\jcl\jcl\source\common
+ 
+ 
+ SHA256: 	5420752fd1f08e1d0181093d99ea238fa2308f56aa660116e4160381f962e374
+File name: 	maXbox3.exe
+Detection ratio: 	2 / 54
+Analysis date: 	2014-08-16 20:38:49 UTC ( 1 minute ago ) 
+
+
+ Compilation timestamp 2014-08-15 11:33:31
+Entry Point 0x01110A74
+Number of sections 10
+PE sections
+Name Virtual address Virtual size Raw size Entropy MD5
+.text 4096 17839216 17839616 6.59 a36d4aa8ada63b46ca4fbea1a35c233d
+.itext 17846272 48056 48128 6.62 5120fb4379983e985ab1df7389377081
+.data 17895424 260624 261120 5.58 7056f56461336c5df9ecb763b16fb954
+.bss 18157568 364996 0 0.00 d41d8cd98f00b204e9800998ecf8427e
+.idata 18526208 54512 54784 5.53 471e2200e3ec95051bed034e22d3ed8f
+.edata 18583552 77 512 0.90 9aa53590ac3f908825f940bcc75bcf80
+.tls 18587648 208 0 0.00 d41d8cd98f00b204e9800998ecf8427e
+.rdata 18591744 24 512 0.28 f09c453ca289202c0e225d73458c951a
+.reloc 18595840 1136264 1136640 6.75 8f22501921e23fd9f94e78b47106edd1
+.rsrc 19734528 3354624 3354624 5.26 ae71bb02e7be883bfab4a54589b2f7a2
+PE imports
+[+] AVICAP32.DLL
+[+] AVICAP32.dll
+[+] GLU32.dll
+[+] IMAGEHLP.DLL
+[+] MSVCRT.DLL
+[+] MSVFW32.DLL
+[+] OpenGL32.dll
+[+] SHFolder.dll
+[+] URLMON.DLL
+[+] advapi32.dll
+[+] comctl32.dll
+[+] comdlg32.dll
+[+] gdi32.dll
+[+] imagehlp.dll
+[+] imm32.dll
+[+] iphlpapi.dll
+[+] kernel32.dll
+[+] mpr.dll
+[+] msacm32.dll
+[+] ole32.dll
+[+] oleacc.dll
+[+] oleaut32.dll
+[+] oledlg.dll
+[+] opengl32.dll
+[+] shell32.dll
+[+] shlwapi.dll
+[+] user32.dll
+[+] usp10.dll
+[+] version.dll
+[+] winhttp.dll
+[+] wininet.dll
+[+] winmm.dll
+[+] winspool.drv
+[+] ws2_32.dll
+[+] wsock32.dll
+PE exports
+CreateIncome
+Number of PE resources by type
+RT_BITMAP 675
+RT_STRING 303
+RT_RCDATA 142
+RT_CURSOR 31
+RT_GROUP_CURSOR 26
+RT_ICON 10
+WAVE 9
+RT_GROUP_ICON 4
+RT_DIALOG 2
+RT_MESSAGETABLE 1
+RT_MANIFEST 1
+RT_VERSION 1
+Number of PE resources by language
+NEUTRAL 575
+ENGLISH US 205
+GERMAN 188
+SPANISH MODERN 80
+ITALIAN 66
+CATALAN DEFAULT 20
+SLOVENIAN DEFAULT 20
+FRENCH BELGIAN 11
+SWEDISH 9
+CZECH DEFAULT 9
+DANISH DEFAULT 8
+ENGLISH UK 7
+FRENCH 2
+PORTUGUESE 1
+DUTCH 1
+POLISH DEFAULT 1
+RUSSIAN 1
+GERMAN SWISS 1
+ExifTool file metadata
+SpecialBuild
+mX4
+
+CodeSize
+17887744
+
+SubsystemVersion
+4.0
+
+Comments
+reduce to the max
+
+LinkerVersion
+2.25
+
+ImageVersion
+0.0
+
+FileSubtype
+0
+
+FileVersionNumber
+3.9.9.98
+
+LanguageCode
+German (Swiss)
+
+FileFlagsMask
+0x003f
+
+FileDescription
+maXbox Delphi VM
+
+CharacterSet
+Windows, Latin1
+
+InitializedDataSize
+4808192
+
+FileOS
+Win32
+
+TimeStamp
+2014:08:15 12:33:31+01:00
+
+MIMEType
+application/octet-stream
+
+LegalCopyright
+Free Pascal Script
+
+FileVersion
+3.9.9.98
+
+SpeziellesBuild
+mX4 Compiler Engine
+
+FileType
+Win32 EXE
+
+PEType
+PE32
+
+InternalName
+Sunprise mX4
+
+FileAccessDate
+2014:08:16 21:39:13+01:00
+
+ProductVersion
+3.9 Solar mX4
+
+UninitializedDataSize
+0
+
+OSVersion
+4.0
+
+FileCreateDate
+2014:08:16 21:39:13+01:00
+
+OriginalFilename
+maxbox3_9.exe
+
+Subsystem
+Windows GUI
+
+MachineType
+Intel 386 or later, and compatibles
+
+CompanyName
+kleiner kommunikation
+
+LegalTrademarks
+maXbox
+
+ProductName
+maXbox
+
+ProductVersionNumber
+3.9.9.98
+
+EntryPoint
+0x1110a74
+
+ObjectFileType
+Executable application
+
+https://www.virustotal.com/en/file/5420752fd1f08e1d0181093d99ea238fa2308f56aa660116e4160381f962e374/analysis/1408221529/
+
+ MD5 b28580072180001b8499be575947e82b
+SHA1 9332386628c609d8dae419c5d76f010c89380bd7
+SHA256 5420752fd1f08e1d0181093d99ea238fa2308f56aa660116e4160381f962e374
+ssdeep
+393216:5uc7EHQSAK0wVHFv/fHAw64Oq97UgEdW:dAQwjfg1PqJE
+
+imphash 15065f9eff6ad9b458f5675dc8094c04
+File size 21.6 MB ( 22696960 bytes )
+File type Win32 EXE
+Magic literal
+PE32 executable for MS Windows (GUI) Intel 80386 32-bit
+
+TrID 	Windows ActiveX control (36.4%)
+Inno Setup installer (34.3%)
+InstallShield setup (13.4%)
+Win32 EXE PECompact compressed (generic) (13.0%)
+Win32 Executable (generic) (1.4%)
+
+
+C:\MAXBOX3\TIFFREAD.DLL
+C:\MAXBOX3\MIDAS.DLL
+C:\MAXBOX3\INCOME.DLL
+C:\MAXBOX3\DMATH.DLL
+C:\MAXBOX3\DBXINT30.DLL
+C:\MAXBOX3\EXAMPLES\INCOME.DLL
+C:\MAXBOX3\EXERCICES\UNITTESTS.EXE
+C:\MAXBOX3\EXERCICES\PLOTIT3D.EXE
+C:\MAXBOX3\EXERCICES\CHESS\OWLCHESS.EXE
+C:\MAXBOX3\EXERCICES\CHESS\CHESS.DLL
+C:\MAXBOX3\EXERCICES\CHESS\BWCC.DLL
+C:\MAXBOX3\SOURCE\MAXBOX_RES.DLL
+C:\MAXBOX3\SOURCE\DMATH_DLL\DMATH_EXTENDED.DLL
+C:\MAXBOX3\SOURCE\DMATH_DLL\DMATH.DLL
+C:\MAXBOX3\SOURCE\HEX_EDITOR_MX\HEXEDITMX.EXE
+
+https://www.virustotal.com/en/file/17e0d19c9fadcc3c16cfcaac7b3e1453050dca8c83241d41f204da638ae4c113/analysis/1412860921/
+
+
+Powtils is a collection of Web utilities for FPC and Delphi. It includes support for sessions, cookies, databases, electronic tables, strong security, templates, wrappers, and extensions with an easy to use API. It provides alternative to ASP, Ruby, and PHP for those who want to compile Web applications in modern Pascal. 
+
+Maybe due to increased popularity of maXbox the total number of open bug reports has grown, now 30+ and counting. New reports are opened faster than developers can solve them. Most of them are minor, none of them are critical.
+
+
+ Net Applications: Windows 8 verliert Marktanteile
+Meldung vorlesen und MP3-Download
+
+Während Windows 8 Marktanteile verliert, verbucht Windows 7 leichte Zuwächse. XP ist weiterhin beliebt und belegt in der Statistik von Net Applications den zweiten Platz. Der Anteil von OS X und Linux verändert sich kaum.
+
+Laut Untersuchungen der Marktforscher von Net Applications zur Verbreitung von PC- Betriebssystemen hat Windows 8.x zuletzt Marktanteile verloren – und das ausgerechnet an den Vorgänger Windows 7. Auf lediglich 12,3 Prozent der beobachteten Rechner sollen die aktuellen Windows-Versionen laufen, was einem Rückgang von 1,1 Prozent im Vergleich zu August entspricht. Windows 7 hingegen konnte sich im letzten Monat um 1,5 Punkte verbessern und erreicht somit eine neue Bestmarke von 52,7 Prozent. Trotz eingestelltem Support ging die Nutzung von Windows XP nur leicht zurück (minus 2,5 Prozent). Das über zehn Jahre alte Betriebssystem findet sich mit 23,9 Prozent auf dem zweiten Platz in der Statistik wieder.
+
+POST git-receive-pack (chunked)
+Pushing to https://github.com/maxkleiner/maXbox3.git
+To https://github.com/maxkleiner/maXbox3.git
+   6c6c432..ad8dddd  masterbox2 -> masterbox2
+updating local tracking ref 'refs/remotes/maXbox3Remote/masterbox2'

@@ -33,7 +33,7 @@ implementation
 
 
 uses
-   NMEA, Windows, Strutils, Tlhelp32, Forms;
+   NMEA, Windows, Strutils, Tlhelp32, Forms, winsock, mmsystem, dialogs;
  
  
 procedure Register;
@@ -216,6 +216,36 @@ begin
   Result := 0;
 end;
 
+function IPAddrToHostName(const IP: string): string;
+var
+  i: Integer;
+  p: PHostEnt;
+begin
+  Result := '';
+  i      := inet_addr(PChar(IP));
+  if i <> u_long(INADDR_NONE) then
+  begin
+    p := GetHostByAddr(@i, SizeOf(Integer), PF_INET);
+    if p <> nil then Result := p^.h_name;
+  end
+  else
+    Result := 'Invalid IP address';
+end;
+
+procedure SendMCICommand(Cmd: string);
+var
+  RetVal: Integer;
+  ErrMsg: array[0..254] of char;
+begin
+  RetVal := mciSendString(PChar(Cmd), nil, 0, 0);
+  if RetVal <> 0 then begin
+    {get message for returned value}
+    mciGetErrorString(RetVal, ErrMsg, 255);
+    MessageDlg(StrPas(ErrMsg), mtError, [mbOK], 0);
+  end;
+end;
+
+
 
 
 
@@ -245,6 +275,10 @@ CL.AddDelphiFunction('procedure DeleteLine(StrList: TStringList; SearchPattern: 
 CL.AddDelphiFunction('function KillTask(ExeFileName: string): Integer;');
 CL.AddDelphiFunction('procedure KillProcess(hWindowHandle: HWND);');
 CL.AddDelphiFunction('function FindWindowByTitle(WindowTitle: string): Hwnd;');
+CL.AddDelphiFunction('function IPAddrToHostName(const IP: string): string;');
+CL.AddDelphiFunction('function URLAddrToHostName(const IP: string): string;');
+CL.AddDelphiFunction('procedure SendMCICommand(Cmd: string);');
+
 
 end;
 
@@ -270,7 +304,12 @@ begin
  S.RegisterDelphiFunction(@KillTask, 'KillTask', cdRegister);
  S.RegisterDelphiFunction(@KillProcess, 'KillProcess', cdRegister);
  S.RegisterDelphiFunction(@FindWindowByTitle, 'FindWindowByTitle', cdRegister);
+ S.RegisterDelphiFunction(@IPAddrToHostName, 'IPAddrToHostName', cdRegister);
+ S.RegisterDelphiFunction(@IPAddrToHostName, 'URLAddrToHostName', cdRegister);
+ S.RegisterDelphiFunction(@SendMCICommand, 'SendMCICommand', cdRegister);
 
+//SendMCICommand
+ //IPAddrToHostName
  //ApWinExecAndWait32
 
 end;

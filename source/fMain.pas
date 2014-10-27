@@ -117,7 +117,7 @@
          9925       build 98_7 maps, maXmap, downloadengine
          9938       build 98_8 IDL Syntax, maXmap, downloadengine , openmapX
          10050      build 100 3 units, cgi, openmapX3, runbytecode, synwrap, cgi
-         10140      build 101 DOM Support, IPUtils, geocode, compass, GPSDemo, 3DDemo
+         10162      build 101 DOM Support, IPUtils, geocode, compass, GPSDemo, 3DDemo
             
                   [the last one before V4 in 2015]
                    V4.0   in  June 2015
@@ -1907,6 +1907,8 @@ uses
   uPSI_ScreenThreeDLab,
   ScreenThreeDLab,   //form call
   uPSI_Spin,
+  uPSI_DynaZip,
+  uPSI_clockExpert,
 
   ///
    //MDIFrame,
@@ -2992,6 +2994,8 @@ begin
  SIRegister_GPSUDemo(X);
  SIRegister_NMEA(X);        //3.9.9.101
  SIRegister_ScreenThreeDLab(X);
+ SIRegister_DynaZip(X);
+ SIRegister_clockExpert(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4340,6 +4344,8 @@ begin
   RIRegister_NMEA_Routines(Exec); //3.9.9.101
   RIRegister_ScreenThreeDLab(X);
   RIRegister_Spin(X);
+  RIRegister_DynaZip(X);
+  RIRegister_clockExpert(X);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -5472,6 +5478,7 @@ begin
   Sender.AddFunction(@GetGeoCode, 'function GetGeoCode(C_form,apath: string; const data: string; sfile: boolean): string;');
   Sender.AddFunction(@getFileCount, 'Function getFileCount(amask: string): integer;');
   Sender.AddFunction(@CoordinateStr, 'function CoordinateStr(Idx: Integer; PosInSec: Double; PosLn: TNavPos): string;');
+  Sender.AddFunction(@Debugln, 'procedure Debugln(DebugLOGFILE: string; E: string);');
 
   Sender.AddFunction(@DownloadFile, 'function DownloadFile(SourceFile, DestFile: string): Boolean;');
   Sender.AddFunction(@DownloadFileOpen, 'function DownloadFileOpen(SourceFile, DestFile: string): Boolean;');
@@ -6653,11 +6660,16 @@ begin
      memo2.Lines.Add(Act_Filename + FILELOAD);
      statusBar1.panels[0].text:= Act_Filename + FILELOAD;
    except
-     Showmessage('Invalid File Path - Please Set <File Open/Save As...>');
+     Showmessage('Invalid File Path - Please Set <File Open/Save As...or open maxboxdef.ini.Backup>');
+     memo1.Lines.LoadFromFile(values['PRELAST_FILE']);
+     Act_Filename:= values['PRELAST_FILE'];
+     Showmessage('Prelast file loaded: '+Act_Filename + FILELOAD);
+     memo2.Lines.Add('Exception! Prelast file loaded: '+Act_Filename + FILELOAD);
    end;
    Free;
  end;
 end;
+
 
 procedure TMaxForm1.LinuxShellScript1Click(Sender: TObject);
 begin
@@ -7889,6 +7901,14 @@ begin
    [mbYes,mbNo,mbcancel], 0) of
     end;
   end; *)
+  try
+    CopyFile(PChar(Exepath+DEFINIFILE),
+       PChar(ChangeFileExt(Exepath+DEFINIFILE, '.ini.BACKUP')), False);
+  except
+    MessageDlg('Could not make a backup of' +DEFINIFILE+', please verify you have enough permissions', mtWarning, [mbOK], 0);
+    //Exit;
+  end;
+  //copyfile(  DEFINIFILE
   fprintOut.Free;
   fAutoComplete.Free;
   debugout.Free;
@@ -8461,6 +8481,8 @@ begin
   factivelinecolor:= clWebLightYellow; //clcream; //clsilver;       //teal, lime
   memo1.RightEdgeColor:= clYellow;
   memo1.Gutter.Color:= clMoneyGreen;
+  memo1.Gutter.Gradient:= true;
+
   //ActiveLineColor1Click(self);
   if intfnavigator1.checked then
     lbintfList.Color:= clskyblue;

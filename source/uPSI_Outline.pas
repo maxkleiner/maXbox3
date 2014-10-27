@@ -79,6 +79,10 @@ begin
      RegisterProperty('SORTED', 'Boolean', iptrw);
      RegisterProperty('Visible', 'Boolean', iptrw);
      RegisterProperty('TEXT', 'String', iptrw);
+     RegisterProperty('Data', 'String', iptrw);
+
+    // property Data: Pointer read FData write FData;
+
     RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
     RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
     RegisterProperty('MAXLENGTH', 'Integer', iptrw);
@@ -154,7 +158,7 @@ begin
     RegisterProperty('Parent', 'TOutlineNode', iptr);
     RegisterProperty('Expanded', 'Boolean', iptrw);
     RegisterProperty('Text', 'string', iptrw);
-    RegisterProperty('Data', 'Pointer', iptrw);
+    RegisterProperty('Data', 'string', iptrw);
     RegisterProperty('Index', 'LongInt', iptr);
     RegisterProperty('Level', 'Cardinal', iptrw);
     RegisterProperty('HasItems', 'Boolean', iptr);

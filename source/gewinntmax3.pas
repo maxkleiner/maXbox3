@@ -266,7 +266,7 @@ begin
   mpFrmDlg:= TJvDualListDialog.create(self);
    with mpFrmDlg do begin
      list1:= getList;
-     width:= 1000;
+     width:= 1100;
      height:= 550;
      resizable:= true;
      ScrollBars:= ssboth;

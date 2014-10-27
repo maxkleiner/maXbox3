@@ -406,6 +406,8 @@ function IsCOMConnected: Boolean;
  function GetGeoCode(C_form,apath: string; const data: string; sfile: boolean): string;
  Function getFileCount(amask: string): integer;
  function CoordinateStr(Idx: Integer; PosInSec: Double; PosLn: TNavPos): string;
+ procedure Debugln(DebugLOGFILE: string; E: string);
+
 
 
 
@@ -855,9 +857,6 @@ begin
   end;
 end;
                          
-
-
-
 
 function DownloadFile(SourceFile, DestFile: string): Boolean;
 begin
@@ -4484,6 +4483,39 @@ begin
           getUserNameWin, getComputerNameWin, E.Message,'at:  '+Addr]));
   System.Close(FErrorLog);
   MessageDlg(MBVERSION +' '+E.Message +'. occured at: '+Addr,mtError,[mbOK],0);
+  //MessageBox(0, pChar(MBVERSION +' '+E.Message +'. occured at: '+Addr), 'ExceptionLog', MB_OKCANCEL)
+end;
+
+procedure Debugln(DebugLOGFILE: string; E: string);
+var
+  Addr: string[64];
+  FErrorLog: System.Text;
+  FileNamePath, userName: string;
+  userNameLen: dWord;
+  mem: TMemoryStatus;
+begin
+  //writes errorlog.txt file
+  mem.dwLength:= sizeOf(TMemoryStatus);
+  GlobalMemoryStatus(mem);
+  UserNameLen := 255;
+  SetLength(userName, UserNameLen);
+  if not FileExists(debugLOGFILE) then
+     FileCreate(debugLOGFILE);
+
+  //FileNamePath:= extractFilePath(DebugLOGFILE);
+  AssignFile(FErrorLog, DebugLOGFILE);
+  try
+    System.Append(FErrorlog);
+  except
+    on EInOutError do Rewrite(FErrorLog);
+  end;
+  Addr:= inttoStr(mem.dwAvailPageFile div 1024) + 'pgf; mem:'
+               +inttoStr(mem.dwAvailPhys div 1024);
+  Writeln(FErrorLog, Format('%s %s [%s] %s %s [%s]',[DateTimeToStr(Now),'V:'+MBVERSION,
+          getUserNameWin, getComputerNameWin, E,'at:  '+Addr]));
+  System.Close(FErrorLog);
+  maxForm1.memo2.Lines.Add('Debug add '+MBVERSION +' '+E +'. occured at: '+Addr)
+  //MessageDlg(MBVERSION +' '+E +'. occured at: '+Addr,mtError,[mbOK],0);
   //MessageBox(0, pChar(MBVERSION +' '+E.Message +'. occured at: '+Addr), 'ExceptionLog', MB_OKCANCEL)
 end;
 

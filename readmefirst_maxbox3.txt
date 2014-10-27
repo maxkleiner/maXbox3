@@ -33,10 +33,13 @@ ByteCode2, runByteCode, sensors, CGI-Powtils, IPUtils2, GPS_2
 1030 unit uPSI_NMEA;     // GPS
 1031 unit uPSI_ScreenThreeDLab;
 1032 unit uPSI_Spin; //VCL	
+1033 unit uPSI_DynaZip;
+1034 unit uPSI_clockExpert;
+1035 unit debugLn
 
 
-SHA1:  maXbox3.exe 786FA3035226AC3F62F6F6B9E2E2B94C1D659297
-CRC32: maXbox3.exe 612D41BB
+SHA1:  maXbox3.exe E951E93E67DE0E815D3F7441842994BAEA06F21A
+CRC32: maXbox3.exe 78459738
 
 
 ****************************************************************

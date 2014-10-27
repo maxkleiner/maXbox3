@@ -197,7 +197,7 @@ begin
  CL.AddDelphiFunction('Function RNthCharPos( C : AnsiChar; const S : string; Nth : Integer) : Integer');
  CL.AddDelphiFunction('Function IpRPos( const Substr : string; const S : string) : Integer');
  CL.AddDelphiFunction('Function IpPosIdx( const SubStr, S : string; Idx : Integer) : Integer');
-  CL.AddTypeS('ACharSet', 'set of AnsiChar');
+  CL.AddTypeS('ATCharSet', 'set of AnsiChar');
   CL.AddTypeS('TIpAddrRec', 'record Scheme : string; UserName : string; Password'
    +': string; Authority : string; Port : string; Path : string; Fragment : string; Query : string; QueryDelim : AnsiChar; end');
  CL.AddDelphiFunction('Procedure Initialize( var AddrRec : TIpAddrRec)');
@@ -206,8 +206,8 @@ begin
  CL.AddDelphiFunction('Function ExtractEntityPath( const NamePath : string) : string');
  CL.AddDelphiFunction('Function IpParseURL( const URL : string; var Rslt : TIpAddrRec) : Boolean');
  CL.AddDelphiFunction('Function BuildURL( const OldURL, NewURL : string) : string');
- CL.AddDelphiFunction('Function PutEscapes( const S : string; EscapeSet : ACharSet) : string');
- CL.AddDelphiFunction('Function RemoveEscapes( const S : string; EscapeSet : ACharSet) : string');
+ CL.AddDelphiFunction('Function PutEscapes( const S : string; EscapeSet : ATCharSet) : string');
+ CL.AddDelphiFunction('Function RemoveEscapes( const S : string; EscapeSet : ATCharSet) : string');
  CL.AddDelphiFunction('Procedure SplitParams( const Parms : string; Dest : TStrings)');
  CL.AddDelphiFunction('Function NetToDOSPath( const PathStr : string) : string');
  CL.AddDelphiFunction('Function DOSToNetPath( const PathStr : string) : string');

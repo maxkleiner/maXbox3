@@ -15,7 +15,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ComCtrls, ExtCtrls, Serial, SerDlgs;
+  StdCtrls, ComCtrls, ExtCtrls, Serial, SerDlgs, Buttons;
 
 type
   TBuf = array[0..15] of byte;
@@ -53,6 +53,8 @@ type
     Label8: TLabel;
     Panel1: TPanel;
     Image1: TImage;
+    Button4: TButton;
+    BitBtn1: TBitBtn;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -69,6 +71,7 @@ type
     procedure Button3Click(Sender: TObject);
     procedure FormActivate(Sender: TObject);
     procedure edtfreetextChange(Sender: TObject);
+    procedure BitBtn1Click(Sender: TObject);
 
   private
     { Private-Deklarationen }
@@ -100,7 +103,7 @@ var
 implementation
 
 {$R *.DFM}
-
+  uses gsutils;
 
 procedure TForm1.Serial1COMRemoved(Sender: TObject);
 // Ereignis innerhalb TSerial
@@ -415,6 +418,15 @@ procedure TForm1.Timer1Timer(Sender: TObject);
 begin
   LabelTrmBuf.Caption:= IntToStr(Serial1.BufTrm)+' Byte';
   LabelRecBuf.Caption:= IntToStr(Serial1.BufRec)+' Byte';
+end;
+
+procedure TForm1.BitBtn1Click(Sender: TObject);
+begin
+// wait for an own monitor
+  if fileexists(ExtractFilePath(ParamStr(0))+'examples\488_AsyncTerminal2.txt') then
+    S_ShellExecute(ExtractFilePath(ParamStr(0))+'maxbox3.exe',
+        ExtractFilePath(ParamStr(0))+'examples\488_AsyncTerminal2.txt',seCmdOpen) else
+   MessageDlg('Could not open monitor script: 488_AsyncTerminal2.txt, please verify script', mtWarning, [mbOK], 0);
 end;
 
 procedure TForm1.Button1OpenClick(Sender: TObject);
