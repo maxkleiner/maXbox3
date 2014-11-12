@@ -246,6 +246,99 @@ begin
 end;
 
 
+const
+  adEmpty = $00000000;
+  adTinyInt = $00000010;
+  adSmallInt = $00000002;
+  adInteger = $00000003;
+  adBigInt = $00000014;
+  adUnsignedTinyInt = $00000011;
+  adUnsignedSmallInt = $00000012;
+  adUnsignedInt = $00000013;
+  adUnsignedBigInt = $00000015;
+  adSingle = $00000004;
+  adDouble = $00000005;
+  adCurrency = $00000006;
+  adDecimal = $0000000E;
+  adNumeric = $00000083;
+  adBoolean = $0000000B;
+  adError = $0000000A;
+  adUserDefined = $00000084;
+  adVariant = $0000000C;
+  adIDispatch = $00000009;
+  adIUnknown = $0000000D;
+  adGUID = $00000048;
+  adDate = $00000007;
+  adDBDate = $00000085;
+  adDBTime = $00000086;
+  adDBTimeStamp = $00000087;
+  adBSTR = $00000008;
+  adChar = $00000081;
+  adVarChar = $000000C8;
+  adLongVarChar = $000000C9;
+  adWChar = $00000082;
+  adVarWChar = $000000CA;
+  adLongVarWChar = $000000CB;
+  adBinary = $00000080;
+  adVarBinary = $000000CC;
+  adLongVarBinary = $000000CD;
+  adChapter = $00000088;
+  adFileTime = $00000040;
+  adPropVariant = $0000008A;
+  adVarNumeric = $0000008B;
+  adArray = $00002000;
+
+
+function ConvertAdoToTypeName(FieldType: SmallInt): string;
+begin
+  case FieldType of
+    adChar             : Result := 'Char';
+    adVarChar          : Result := 'VarChar';
+    adBSTR             : Result := 'BSTR';
+    adWChar            : Result := 'WChar';
+    adVarWChar         : Result := 'VarWChar';
+    adBoolean          : Result := 'Boolean';
+    adTinyInt          : Result := 'TinyInt';
+    adUnsignedTinyInt  : Result := 'UnsignedTinyInt';
+    adSmallInt         : Result := 'SmallInt';
+    adUnsignedSmallInt : Result := 'UnsignedSmallInt';
+    adInteger          : Result := 'Integer';
+    adUnsignedInt      : Result := 'UnsignedInt';
+    adBigInt           : Result := 'BigInt';
+    adUnsignedBigInt   : Result := 'UnsignedBigInt';
+    adSingle           : Result := 'Single';
+    adDouble           : Result := 'Double';
+    adDecimal          : Result := 'Decimal';
+    adNumeric          : Result := 'Numeric';
+    adVarNumeric       : Result := 'VarNumeric';
+    adCurrency         : Result := 'Currency';
+    adDBDate           : Result := 'DBDate';
+    adDBTime           : Result := 'DBTime';
+    adDate             : Result := 'Date';
+    adDBTimeStamp      : Result := 'DBTimeStamp';
+    adFileTime         : Result := 'FileTime';
+    adLongVarChar      : Result := 'LongVarChar';
+    adLongVarWChar     : Result := 'LongVarWChar';
+    adBinary           : Result := 'Binary';
+    adVarBinary        : Result := 'VarBinary';
+    adLongVarBinary    : Result := 'LongVarBinary';
+    adGUID             : Result := 'GUID';
+    adEmpty            : Result := 'Empty';
+    adError            : Result := 'Error';
+    adArray            : Result := 'Array';
+    adChapter          : Result := 'Chapter';
+    adIDispatch        : Result := 'IDispatch';
+    adIUnknown         : Result := 'IUnknown';
+    adPropVariant      : Result := 'PropVariant';
+    adUserDefined      : Result := 'UserDefined';
+    adVariant          : Result := 'Variant';
+  else
+    Result := 'Unknown';
+  end;
+end;
+
+
+
 
 
 
@@ -278,6 +371,11 @@ CL.AddDelphiFunction('function FindWindowByTitle(WindowTitle: string): Hwnd;');
 CL.AddDelphiFunction('function IPAddrToHostName(const IP: string): string;');
 CL.AddDelphiFunction('function URLAddrToHostName(const IP: string): string;');
 CL.AddDelphiFunction('procedure SendMCICommand(Cmd: string);');
+CL.AddDelphiFunction('function mciGetErrorString(err: integer; atext: pchar; length: integer): boolean;');
+CL.AddDelphiFunction('function ConvertAdoToTypeName(FieldType: SmallInt): string;');
+
+
+//mciGetErrorString(RetVal, ErrMsg, 255);
 
 
 end;
@@ -307,6 +405,10 @@ begin
  S.RegisterDelphiFunction(@IPAddrToHostName, 'IPAddrToHostName', cdRegister);
  S.RegisterDelphiFunction(@IPAddrToHostName, 'URLAddrToHostName', cdRegister);
  S.RegisterDelphiFunction(@SendMCICommand, 'SendMCICommand', cdRegister);
+ S.RegisterDelphiFunction(@mciGetErrorString, 'mciGetErrorString', cdRegister);
+ S.RegisterDelphiFunction(@ConvertAdoToTypeName, 'ConvertAdoToTypeName', cdRegister);
+
+ //mciGetErrorString
 
 //SendMCICommand
  //IPAddrToHostName

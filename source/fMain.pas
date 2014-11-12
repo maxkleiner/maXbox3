@@ -118,6 +118,7 @@
          9938       build 98_8 IDL Syntax, maXmap, downloadengine , openmapX
          10050      build 100 3 units, cgi, openmapX3, runbytecode, synwrap, cgi
          10162      build 101 DOM Support, IPUtils, geocode, compass, GPSDemo, 3DDemo
+         10208      build 110 external app, mcisendstring, sqlscriptparser
             
                   [the last one before V4 in 2015]
                    V4.0   in  June 2015
@@ -167,9 +168,9 @@ const
    ALLUNITLIST = 'docs\maxbox3_9.xml'; //'in /docs;
    INCLUDEBOX = 'pas_includebox.inc';
    BOOTSCRIPT = 'maxbootscript.txt';
-   MBVERSION = '3.9.9.101';
+   MBVERSION = '3.9.9.110';
    MBVER = '399';              //for checking!
-   MBVER2 = '399101';              //for checking!
+   MBVER2 = '399110';              //for checking!
    EXENAME ='maXbox3.exe';
    MXSITE = 'http://www.softwareschule.ch/maxbox.htm';
    MXVERSIONFILE = 'http://www.softwareschule.ch/maxvfile.txt';
@@ -535,6 +536,7 @@ type
     Run1: TMenuItem;
     GPSSatView1: TMenuItem;
     N3DLab1: TMenuItem;
+    ExternalApp1: TMenuItem;
     procedure IFPS3ClassesPlugin1CompImport(Sender: TObject; x: TPSPascalCompiler);
     procedure IFPS3ClassesPlugin1ExecImport(Sender: TObject; Exec: TPSExec; x: TPSRuntimeClassImporter);
     procedure PSScriptCompile(Sender: TPSScript);
@@ -797,6 +799,7 @@ type
     procedure Run1Click(Sender: TObject);
     procedure GPSSatView1Click(Sender: TObject);
     procedure N3DLab1Click(Sender: TObject);
+    procedure ExternalApp1Click(Sender: TObject);
     //procedure Memo1DropFiles(Sender: TObject; X,Y: Integer; AFiles: TStrings);
   private
     STATSavebefore: boolean;
@@ -814,6 +817,7 @@ type
     STATOtherHL: boolean;
     STATAutoBookmark: boolean;
     Act_Filename: string[255];
+    ExternalApp: string[255];
     Def_FName: string[255];
     Last_fName: string[255];
     Last_fName1: string[255];
@@ -1909,7 +1913,12 @@ uses
   uPSI_Spin,
   uPSI_DynaZip,
   uPSI_clockExpert,
-
+  uPSI_SortUtils,
+  uPSI_BitmapConversion,
+  uPSI_JclTD32,  //3.9.9.110
+  uPSI_ZDbcUtils,
+  uPSI_ZScriptParser,
+ 
   ///
    //MDIFrame,
   uPSI_St2DBarC,
@@ -2996,6 +3005,11 @@ begin
  SIRegister_ScreenThreeDLab(X);
  SIRegister_DynaZip(X);
  SIRegister_clockExpert(X);
+ SIRegister_SortUtils(X);
+ //SIRegister_BitmapConversion(X); down with LinearBitmap
+ SIRegister_JclTD32(X);
+ SIRegister_ZDbcUtils(X);
+ SIRegister_ZScriptParser(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -3173,6 +3187,7 @@ begin
   SIRegister_DBXIndyChannel(X);
   SIRegister_LinarBitmap(X);
   SIRegister_PNGLoader(X);
+  SIRegister_BitmapConversion(X);
   //SIRegister_IniFiles(X);
   SIRegister_IdThread(X);
   SIRegister_fMain(X);
@@ -4346,6 +4361,11 @@ begin
   RIRegister_Spin(X);
   RIRegister_DynaZip(X);
   RIRegister_clockExpert(X);
+  RIRegister_BitmapConversion_Routines(Exec);
+  RIRegister_SortUtils_Routines(Exec);
+  RIRegister_JclTD32(X);
+  RIRegister_ZDbcUtils_Routines(EXec);
+  RIRegister_ZScriptParser(X);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -5479,6 +5499,9 @@ begin
   Sender.AddFunction(@getFileCount, 'Function getFileCount(amask: string): integer;');
   Sender.AddFunction(@CoordinateStr, 'function CoordinateStr(Idx: Integer; PosInSec: Double; PosLn: TNavPos): string;');
   Sender.AddFunction(@Debugln, 'procedure Debugln(DebugLOGFILE: string; E: string);');
+  Sender.AddFunction(@IntToFloat, 'function IntToFloat(i: Integer): double;');
+  Sender.AddFunction(@AddThousandSeparator, 'function AddThousandSeparator(S: string; myChr: Char): string;');
+  Sender.AddFunction(@mymcisendstring, 'function mciSendString(cmd: PChar; ret: PChar; len: integer; callback: integer): cardinal;');
 
   Sender.AddFunction(@DownloadFile, 'function DownloadFile(SourceFile, DestFile: string): Boolean;');
   Sender.AddFunction(@DownloadFileOpen, 'function DownloadFileOpen(SourceFile, DestFile: string): Boolean;');
@@ -6441,6 +6464,15 @@ filepath:= ExtractFilePath(Application.ExeName);
       except
         COMPort:= COMPort;
       end;
+      try
+        ExternalApp:= deflist.Values['APP'];       //3.9.9.110
+        if fileexists(ExternalApp) then
+          ExternalApp1.Caption:= 'App: '+extractfilename(ExternalApp);
+      except
+        ExternalApp1.Caption:= 'External App';
+        //ExternalApp:= last_fName1;
+      end;
+
       if last_fontsize = 0 then last_fontsize:= 8;   //bug 3.6
       memo1.Font.Size:= last_fontsize;
       memo2.Font.Size:= last_fontsize;
@@ -6518,6 +6550,7 @@ filepath:= ExtractFilePath(Application.ExeName);
       deflist.Values['IPHOST']:= '127.0.0.1';
       deflist.Values['IPPORT']:= '8080';
       deflist.Values['VERSIONCHECK']:= 'Y';
+      deflist.Values['APP']:= 'C:\WINDOWS\System32\Calc.exe';
 
       deflist.SaveToFile(fN);
     end;
@@ -8203,6 +8236,19 @@ begin
   memo2.Lines.Add(FileNewExt(Act_Filename,'.rtf')+' as RTF output stored');
 
 end;
+
+procedure TMaxForm1.ExternalApp1Click(Sender: TObject);
+begin
+ // has an app entry in ini
+   if fileExists(ExternalApp) then begin
+     S_ShellExecute(Externalapp,'',seCmdOpen);
+     ExternalApp1.Caption:= 'App: '+extractfilename(ExternalApp);
+     memo2.Lines.Add(ExternalApp+' External App loaded') end
+   else begin
+     ExternalApp1.Caption:= 'External App';
+     memo2.Lines.Add('External App '+ExternalApp +' not found: check in ini-file [APP=]')
+   end;
+ end;
 
 procedure TMaxForm1.ImportfromClipboard1Click(Sender: TObject);
 begin

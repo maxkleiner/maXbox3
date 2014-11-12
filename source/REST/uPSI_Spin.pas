@@ -81,7 +81,17 @@ begin
     RegisterProperty('MaxValue', 'LongInt', iptrw);
     RegisterProperty('MinValue', 'LongInt', iptrw);
     RegisterProperty('Value', 'LongInt', iptrw);
-  end;
+    RegisterpublishedProperties;
+    RegisterProperty('ALIGNMENT', 'TALIGNMENT', iptrw);
+    RegisterProperty('CAPTION', 'String', iptrw);
+    RegisterProperty('CHECKED', 'BOOLEAN', iptrw);
+    RegisterProperty('COLOR', 'TColor', iptrw);
+    RegisterProperty('CANVAS', 'TCanvas', iptrw);
+    RegisterProperty('FONT', 'TFont', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CTL3D', 'Boolean', iptrw);
+   end;
 end;
 
 (*----------------------------------------------------------------------------*)

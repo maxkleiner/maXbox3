@@ -78,6 +78,65 @@ end;
   end;
  end;
 
+ procedure Formanimation(Sender: TObject; adelay: integer);
+
+  procedure delay(msec: Longint);
+  var
+    start, stop: Longint;
+  begin
+    start := GetTickCount;
+    repeat
+      stop := GetTickCount;
+      Application.ProcessMessages;
+    until (stop - start) >= msec;
+  end;
+var
+  maxx, maxy: Integer;
+
+  MyHand: HWND;
+  MyDc: HDC;
+  MyCanvas: TCanvas;
+  hal, hat, hak, haa: Integer;
+begin
+  maxx := (Sender as TForm).Width;
+  maxy := (Sender as TForm).Height;
+  hal  := 2;
+  hat  := 2;
+
+  MyHand   := GetDesktopWindow;
+  MyDc     := GetWindowDC(MyHand);
+  MyCanvas := TCanvas.Create;
+  MyCanvas.Handle := MyDC;
+  MyCanvas.Brush.Color := (Sender as TForm).Color;
+
+  repeat
+    if hat + (maxy div 24) >= maxy then
+    begin
+      hat := maxy
+    end
+    else
+    begin
+      hat := hat + (maxy div 24);
+    end;
+
+    if hal + (maxx div 24) >= maxx then
+    begin
+      hal := maxx
+    end
+    else
+    begin
+      hal := hal + (maxx div 24);
+    end;
+    hak := (Sender as TForm).Left + ((Sender as TForm).Width div 2) - (hal div 2);
+    haa := (Sender as TForm).Top + ((Sender as TForm).Height div 2) - (hat div 2);
+    MyCanvas.Rectangle(hak, haa, hak + hal, haa + hat);
+    delay(adelay); //10
+  until (hal = maxx) and (hat = maxy);
+  (Sender as TForm).Show;
+  //mciGetErrorString(
+end;
+
+
 
  // Search for the first available port
 
@@ -503,8 +562,6 @@ repeat
   until (aResult.hWnd = hWnd) or (not IsWindow(hWnd));
 Result := aResult.Result;
 end;
-
-
 
 
 type
@@ -1063,6 +1120,8 @@ CL.AddDelphiFunction('Function OpenWindowStation( lpszWinSta : PChar; fInherit :
  CL.AddDelphiFunction('function LinesCount(sfilename:string):Double;');
  CL.AddDelphiFunction('function TextFileLineCount(const FileName: string): integer;');
  CL.AddDelphiFunction('function GetLinesCount(sFileName : String): Integer;');
+ CL.AddDelphiFunction('procedure Formanimation(Sender: TObject; adelay: integer);');
+
 
  CL.AddTypeS('TFNTimerProc', 'TObject');
  CL.AddConstantN('GW_HWNDFIRST','LongInt').SetInt( 0);
@@ -2224,6 +2283,7 @@ begin
  S.RegisterDelphiFunction(@ComposeDateTime, 'ComposeDateTime', cdRegister);
  S.RegisterDelphiFunction(@FullTimeToStr, 'FullTimeToStr', cdRegister);
  S.RegisterDelphiFunction(@GetBaseAddress, 'GetBaseAddress', cdRegister);
+ S.RegisterDelphiFunction(@FormAnimation, 'FormAnimation', cdRegister);
 
  S.RegisterDelphiFunction(@GetMorseID, 'GetMorseID', cdRegister);
  S.RegisterDelphiFunction(@GetMorseString2, 'GetMorseString2', cdRegister);

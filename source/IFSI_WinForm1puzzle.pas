@@ -407,8 +407,9 @@ function IsCOMConnected: Boolean;
  Function getFileCount(amask: string): integer;
  function CoordinateStr(Idx: Integer; PosInSec: Double; PosLn: TNavPos): string;
  procedure Debugln(DebugLOGFILE: string; E: string);
-
-
+ function IntToFloat(i: Integer): double;
+function AddThousandSeparator(S: string; myChr: Char): string;
+function mymciSendString(cmd: PChar; ret: PChar; len: integer; callback: integer): cardinal;
 
 
 implementation
@@ -557,6 +558,23 @@ end;
    //SendMessage(maxform1.memo2.Handle, EM_SCROLL, SB_LINEDOWN, 0);
    result:= maxform1.Memo2.Lines[maxform1.Memo2.Lines.Count-1];
  end;
+
+function IntToFloat(i: Integer): double;
+begin
+  result:= i;
+end;
+
+function AddThousandSeparator(S: string; myChr: Char): string;
+var
+  I: Integer;
+begin
+  Result:= S;
+  I:= Length(S) - 2;
+  while I > 1 do begin
+    Insert(myChr, Result, I);
+    I:= I - 3;
+  end;
+end;
 
 
 function IsInternetConnected: Boolean;
@@ -5004,6 +5022,11 @@ end;
     for i:=1 to Len div 2 do
       Swap(S[i],S[Len+1-i]);
   end;}
+
+function mymciSendString(cmd: PChar; ret: PChar; len: integer; callback: integer): cardinal;
+begin
+  result:= mciSendString(cmd, ret, len, callback);
+end;
 
 procedure playMP3(mp3path: string);
   //liststr: string;

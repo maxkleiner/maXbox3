@@ -1,7 +1,7 @@
 ****************************************************************
-Release Notes maXbox 3.9.9.101 November 2014
+Release Notes maXbox 3.9.9.110 November 2014
 ****************************************************************
-Add 27 Units, 1 Tutor, maXmap, OpenStreetView, MAPX, timers
+Add 32 Units, 1 Tutor, maXmap, OpenStreetView, MAPX, timers
 Function Menu/View/GEO Map View, DownloadFile, wgetX, sensors
 StreamUtils, IDL Syntax, OpenStreetMap, OpenMapX, LPT1, LazDOM
 ByteCode2, runByteCode, sensors, CGI-Powtils, IPUtils2, GPS_2
@@ -36,10 +36,14 @@ ByteCode2, runByteCode, sensors, CGI-Powtils, IPUtils2, GPS_2
 1033 unit uPSI_DynaZip;
 1034 unit uPSI_clockExpert;
 1035 unit debugLn
+1036 uPSI_SortUtils;
+1037 uPSI_BitmapConversion;
+1038 unit uPSI_JclTD32;
+1039 unit uPSI_ZDbcUtils;
+1040 unit uPSI_ZScriptParser;
 
-
-SHA1:  maXbox3.exe E951E93E67DE0E815D3F7441842994BAEA06F21A
-CRC32: maXbox3.exe 78459738
+SHA1:  maXbox3.exe DE5935DF492D3C1DA27D8DB8BD0651583A0E1EE3
+CRC32: maXbox3.exe 740110DB
 
 
 ****************************************************************

@@ -1,0 +1,341 @@
+{****************************************************************
+ *
+ * Project  : EKON18 System Information Series
+ * App Name:  136_sysinformation_dll, #locs=176
+ * Purpose  : Demonstrates of 3 imported functions from Windows API
+ * History  : system demo for mX3 beta, container == component(class) + service(intf)
+ ****************************************************************}
+program SysDLLTestFrame;
+
+const kernelX = 'kernel32.dll';
+
+function  MyMessageBeep(para: integer): byte;
+     external 'MessageBeep@user32.dll stdcall';  
+
+function MyGetTickCount: Longint;
+  external 'GetTickCount@kernel32.dll stdcall';
+ 
+procedure MySleep(Milliseconds: Cardinal);
+  //external 'Sleep@'+kernelX+' stdcall';
+  external 'Sleep@kernel32.dll stdcall';
+
+function PlayMetaFile(DC: HDC; MF: HMETAFILE): BOOL; 
+                                    //stdcall;
+  external 'PlayMetaFile@gdi32.dll stdcall';
+
+//function mygetColorDialog: Longint;
+  //external 'GetColorDialog@colorproject1.dll stdcall';
+
+ 
+var
+  mytimestamp: TDateTime;
+  E: Extended;
+  songpath, command1, command2: string;
+
+function OctToDec(OctStr: string): string;
+var
+  DecNum: single;
+  i: byte;
+  aError: Boolean;
+  charset: set of char;
+begin
+  DecNum:=0;
+  aError:=False;
+  charset:= ['1','2','3','4','5','6','7']
+  for i:=Length(OctStr) downto 1 do begin
+    if OctStr[i] in charset then begin
+      aError:= True;
+      ShowMessage('This is not octal number');
+      Break;
+    end;
+    DecNum:= DecNum+StrToInt(OctStr[i])*Power(8, Length(OctStr)-i);
+  end;
+  if not aError then
+    Result:= FloatToStr(DecNum)
+  else Result:='';
+end;
+
+function TColorDialogDLL: integer;
+begin
+  with TColorDialog.create(self) do begin
+     try
+       execute
+       result:= color;
+     finally
+       free
+     end
+  end;       
+end;
+
+procedure PNGTester;
+var png: TLinearBitmap; //TPNGLoader; //TLinearBitmap; //TPortableNetworkGraphic;
+    fimage: Timage;
+    afrm: Tform;
+begin
+  png:= TLinearBitmap.Create; //TPNGLoader.Create;
+  try
+  // RegisterMethod('Procedure LoadFromFile( const FileName, FileType : string; Bitmap : TLinearBitmap)');
+    //png.LoadFromFile(Exepath+'golgraph16.png');
+    if not fileExists(Exepath+'golgraph37.png') then
+      if DownloadFile('http://www.softwareschule.ch/images/golgraph37.png',
+                                Exepath+'golgraph37.png') then 
+      ShowMessage('We had to Download of golgraph37.png succesful!');
+      Sleep(500);
+    png.LoadFromFile(Exepath+'golgraph37.png');
+  
+    fimage:= TImage.create(self);
+    afrm:= TForm.create(self)
+    with afrm do begin
+      setbounds(0,0,545,550);
+      fimage.parent:= afrm;
+      //fimage.picture.loadfromfile(Exepath+'golgraph42.png');
+      //fimage.picture.loadfromfile(Exepath+'\examples\citymax.bmp');
+      png.Assignto(fimage.picture.bitmap);
+      writeln(inttostr(png.width)) 
+      fimage.AutoSize:= True;
+      show;
+      //canvas.brush.bitmap:= NIL;
+      //png.Assignto(canvas.brush.bitmap);
+      //Canvas.StretchDraw(Bounds(50,500,50,50),png);
+    end;  
+  finally
+    png.Free;
+    //fimage.Free;
+  end;
+end;
+
+
+Procedure DateTimeExample;
+Var
+  S, S1 : String;
+begin
+  {Time, Date, and Now are all basically interchangable.}
+  {They all return a DateTime value.}
+  S1:=DateToStr(Now2);
+  Case DayOfWeek(Date) of
+     1: S:='Sunday';
+     2: S:='Monday';
+     3: S:='Tuesday';
+     4: S:='Wednesday';
+     5: S:='Thursday';
+     6: S:='Friday';
+     7: S:='Saturday';
+  Else S:='Noneday';
+  End; {Case}
+  writeln(S+' '+S1+' '+TimeToStr(Time));
+end;
+
+begin
+  writeln(Format('Pi starts off as %.15f', [E]));
+  dateTimeExample;
+  writeln('machine name is: '+getHostName)
+  writeln('user name is: '+getUserName)
+  mytimestamp:= GetFileCreationTime(exepath+'maxbox3.exe')
+  writeln(datetimetoStr(mytimestamp)+' Creation Date of maXbox3')
+  writeln('oct to dec '+(OcttoDec('888')))
+  writeln('tick count from func ' +IntToStr(GetTickCount));
+  writeln('tick count from api   ' +IntToStr(MyGetTickCount));
+  
+  for it:= 2 to 10 do begin
+    MyMessageBeep(it*10);
+    MySleep(1000);
+  end;  
+  
+  //Heavy Testing - most pitfalls : Case Sensitiv! , static linking linux, and in case of win64 dll
+  
+  //ExecuteShell('cmd','/c rundll32.exe shell32.dll Control_RunDLL')
+  //ExecuteShell('cmd','/c rundll32.exe income.dll _SayHello2')
+  //RunDll32.exe msrating.dll,RatingSetupUI
+  //ExecuteShell('cmd','/c rundll32.exe msrating.dll RatingSetupUI')
+  //also Applet!
+  //ExecuteShell('cmd','/c rundll32.exe shell32.dll Control_RunDLL wscui.cpl')
+  //ExecuteShell('cmd','/c tasklist /m /fi "imagename eq rundll32.exe"');
+  
+  
+  {songpath:= Exepath+'examples\';
+  command1:= 'play "'+songpath+'maxbox.wav"';
+  command2:= 'play "'+songpath+'moon.wav"';
+  SendMCICommand('open waveaudio shareable');
+  SendMCICommand(command1);
+  SendMCICommand(command2);
+  SendMCICommand(command1);
+  SendMCICommand('close waveaudio'); }
+  
+  //writeln(inttostr(TColorDialogDLL));
+   {it:= TColorDialogDLL;
+   with TForm.create(self) do begin
+     try
+     color:= it;
+     showmodal
+     finally
+     free;
+   end; 
+   end;} 
+    pNGTester;
+  
+end.   
+
+
+*******************************************************
+There is no place like 127.0.0.1 
+ref:
+http://windows7tips.com/rundll32-vista-windows-7.html
+
+alias name of a dll: 
+
+
+function PlayMetaFile(DC: HDC; MF: HMETAFILE): BOOL; stdcall;
+function PaintRgn(DC: HDC; RGN: HRGN): BOOL; stdcall;
+function PolyPolygon(DC: HDC; var Points; var nPoints; p4: Integer):
+  BOOL; stdcall;
+function PtInRegion(RGN: HRGN; p2, p3: Integer): BOOL; stdcall;
+
+Then, in the implementation portion, instead of providing each function's code, the unit refers to the external definition in a DLL:
+
+const 
+  gdi32 = 'gdi32.dll';
+   
+function PlayMetaFile; external gdi32 name 'PlayMetaFile';
+function PaintRgn; external gdi32 name 'PaintRgn';
+function PolyPolygon; external gdi32 name 'PolyPolygon';
+function PtInRegion; external gdi32 name 'PtInRegion';
+
+//$(LazarusDir)\lcl;$(LazarusDir)\lcl\interfaces\$(LCLWidgetType)
+
+	Note 	
+    {
+Windows.PAS makes heavy use of the {$EXTERNALSYM identifier} directive. This directive} 
+has little to do with Delphi itself; it applies to C++Builder. The symbol prevents the corresponding Delphi symbol from appearing in the C++ translated header file. This action helps keep the Delphi and C++ identifiers in synch, so that code can be shared between the two languages.
+
+
+User Accounts
+RunDll32.exe shell32.dll,Control_RunDLL nusrmgr.cpl
+
+Unplug/Eject Hardware
+RunDll32.exe shell32.dll,Control_RunDLL hotplug.dll
+
+Windows Security Center
+RunDll32.exe shell32.dll,Control_RunDLL wscui.cpl
+
+
+A DLL uses the PE executable format, and it's not too tricky to read that information out of the file.
+
+See this MSDN article on the PE File Format for an overview. You need to read the MS-DOS header, then read the IMAGE_NT_HEADERS structure. This contains the IMAGE_FILE_HEADER structure which contains the info you need in the Machine member which contains one of the following values
+
+    IMAGE_FILE_MACHINE_I386 (0x014c)
+    IMAGE_FILE_MACHINE_IA64 (0x0200)
+    IMAGE_FILE_MACHINE_AMD64 (0x8664)
+
+This information should be at a fixed offset in the file, but I'd still recommend traversing the file and checking the signature of the MS-DOS header and the IMAGE_NT_HEADERS to be sure you cope with any future changes. 
+http://stackoverflow.com/questions/495244/how-can-i-test-a-windows-dll-to-determine-if-it-is-32bit-or-64bit
+
+The structure of a script is as follows (keywords are shown in ALLCAPS bold): 
+
+PROGRAM
+
+CONST 
+
+<Constant declarations> 
+TYPE 
+
+<Type declarations> 
+VAR 
+
+<Variable declarations> 
+BEGIN 
+
+<Executable statements> 
+END. 
+ 
+
+Note that: 
+The main code must be within the begin and end. keywords. 
+All statements in the script use the semicolon ";" as terminator. Only the last statement (END.) uses a dot as terminator. 
+
+
+function BinToOct(BinStr: string): string;
+var
+  i: Integer;
+  OctPart: single;
+  LastPart, OctStr: string;
+  Error: Boolean;
+begin
+  Error:=False;
+  OctStr:='';
+  case Length(BinStr) mod 3 of
+    1: BinStr:='00'+BinStr;
+    2: BinStr:='0'+BinStr;
+  end;
+
+  while Length(BinStr)>0 do
+  begin
+    LastPart:=Copy(BinStr, Length(BinStr)-2, 3);
+    Delete(BinStr, Length(BinStr)-2, 3);
+    OctPart:=0;
+    for i:=1 to 3 do
+      if not ((LastPart[i] ='1') or (LastPart[i] ='0')) then begin
+        ShowMessage('This is not binary number');
+        Error:=True;
+        Break;
+      end
+      else
+        OctPart:=OctPart+StrToInt(LastPart[i])*Power(2, 3-i);
+    OctStr:=OctStr+FloatToStr(OctPart);
+  end;
+  Result:='';
+  if Error<>True then begin
+    for i:=1 to Length(OctStr) do
+      Result:=Result+OctStr[Length(OctStr)-i+1];
+    while (Result[1]='0') and (Length(Result)>1) do
+      Delete(Result, 1, 1);
+  end;
+end;
+
+http://www.techsupportalert.com/content/how-windows7-vista64-support-32bit-applications.htm
+
+ WOW64 emulates 32-bit Windows
+
+Under Windows 64-bit, 32-bit applications run on top of an emulation of a 32-bit operating system that is called Windows 32-bit on Windows 64-bit, or WOW64 for short.  WOW64 intercepts all operating system calls made by a 32-bit application.
+
+For each operating system call made, WOW64 generates native 64-bit system calls, converting 32-bit data structures into 64-bit aligned structures. The appropriate native 64-bit system call is passed to the operating system kernel, and any output data from the 64-bit system call is converted into a format appropriate for the calling application before being passed back.
+
+Like 32-bit applications, WOW64 runs in user mode so any errors that occur in translating an operating system call will only occur at that level. The 64-bit operating system kernel cannot be affected.
+
+Since WOW64 runs in user mode, all 32-bit application code must also run in user mode. This explains why 32-bit kernel mode device drivers and applications that rely on them, will not work under Windows 64-bit.
+
+The WOW64 emulator consists of the following DLLs, the only 64-bit DLLS that can be loaded into a 32-bit process:
+
+Wow64.dll – the core emulation infrastructure and the links to the Ntoskrnl.exe entry-point functions.
+Wow64Win.dll – the links to the Win32k.sys entry-point functions.
+Wow64Cpu.dll – switches the processor from 32-bit to 64-bit mode.
+Ntdll.dll – 64-bit version.
+
+Wow64.dll loads the 32-bit version (x86) of Ntdll.dll and all necessary 32-bit DLLs which are mostly unmodified 32-bit binaries..However, some of these DLLs have been modified to behave differently on WOW64 than they do on 32-bit Windows. This is usually because they share memory with 64-bit system components.
+
+ procedure SendMCICommand(Cmd: string);
+var
+  RetVal: Integer;
+  ErrMsg: array[0..254] of char;
+begin
+  RetVal := mciSendString(PChar(Cmd), nil, 0, 0);
+  if RetVal <> 0 then
+  begin
+    {get message for returned value}
+    mciGetErrorString(RetVal, ErrMsg, 255);
+    MessageDlg(StrPas(ErrMsg), mtError, [mbOK], 0);
+  end;
+end;
+
+
+http://en.wikipedia.org/wiki/Four-dimensional_space
+
+On 64-bit versions of Windows, two rundll32.exe programs exist:
+
+    64-bit: C:\Windows\System32\rundll32.exe
+    32-bit: C:\Windows\SysWOW64\rundll32.exe
+
+If you are trying to do this from a 32-bit program, you might need to use C:\Windows\Sysnative or temporarily turn off WoW64 file system redirection. See the Microsoft documentation.
+
+It is not possible to load a 32bit version DLL with 64bit version of Lazarus compiler so we had to recompile it.
+The 64 bit version of Lazarus/FPC would by default produce 64 bit binaries.
+To create a new DLL project (if you started Lazarus for the first time) click on Project -> new project -> Library. Give it a big name and save it into an empty folder. The project will initially consist of only two files. An .lpi file containing all compiler settings and and .lpr file containing source code, these two files are all you need, additional units are saved as individual .pas files. 
