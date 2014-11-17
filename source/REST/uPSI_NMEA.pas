@@ -27,14 +27,31 @@ procedure SIRegister_NMEA(CL: TPSPascalCompiler);
 { run-time registration functions }
 procedure RIRegister_NMEA_Routines(S: TPSExec);
 
+
+(*procedure ItemHTDrawEx(Canvas: TCanvas; Rect: TRect;
+  const State: TOwnerDrawState; const Text: string; var Width: Integer;
+  CalcType: TJvHTMLCalcType;  MouseX, MouseY: Integer; var MouseOnLink: Boolean;
+  var LinkName: string; Scale: Integer = 100);
+  { example for Text parameter : 'Item 1 <b>bold</b> <i>italic ITALIC <br><FONT COLOR="clRed">red <FONT COLOR="clgreen">green <FONT COLOR="clblue">blue </i>' }
+function ItemHTDraw(Canvas: TCanvas; Rect: TRect;
+  const State: TOwnerDrawState; const Text: string; Scale: Integer = 100): string;
+function ItemHTDrawHL(Canvas: TCanvas; Rect: TRect;
+  const State: TOwnerDrawState; const Text: string; MouseX, MouseY: Integer; Scale: Integer = 100): string;
+function ItemHTWidth(Canvas: TCanvas; Rect: TRect;
+  const State: TOwnerDrawState; const Text: string; Scale: Integer = 100): Integer;
+function ItemHTPlain(const Text: string): string;
+function ItemHTHeight(Canvas: TCanvas; const Text: string; Scale: Integer = 100): Integer;
+function PrepareText(const A: string): string; deprecated;*)
+
+
 procedure Register;
 
 implementation
 
 
 uses
-   NMEA, Windows, Strutils, Tlhelp32, Forms, winsock, mmsystem, dialogs;
- 
+   NMEA, Windows, Strutils, Tlhelp32, Forms, winsock, mmsystem, dialogs, db, ShellAPI, JvVCLUtils, graphics;
+
  
 procedure Register;
 begin
@@ -337,9 +354,157 @@ begin
   end;
 end;
 
+function GetTableName(const AField: TField): string;
+begin
+  if AField.Origin <> '' then
+  begin
+    Result := AField.Origin;
+    Delete(Result, Pos('.', Result) + 1, Length(Result));
+  end
+  else
+    Result := '';
+end;
+
+function GetFieldName(const AField: TField): string;
+begin
+  if AField.Origin <> '' then
+  begin
+    Result := AField.Origin;
+    Delete(Result, 1, Pos('.', Result));
+    if Result = '' then
+      Result := AField.FieldName;
+  end
+  else
+    Result := AField.FieldName;
+end;
 
 
+procedure LoadResourceFile2(aFile:string; ms:TMemoryStream);
+var
+   HResInfo: HRSRC;
+   HGlobal: THandle;
+   Buffer, GoodType : pchar;
+   I: integer;
+   Ext:string;
+begin
+  ext:=uppercase(extractfileext(aFile));
+  ext:=copy(ext,2,length(ext));
+  if ext='HTM' then ext:='HTML';
+  Goodtype:=pchar(ext);
+  aFile:=changefileext(afile,'');
+  HResInfo := FindResource(HInstance, pchar(aFile), GoodType);
+  HGlobal := LoadResource(HInstance, HResInfo);
+  if HGlobal = 0 then
+     raise EResNotFound.Create('Can''t load resource: '+aFile);
+  Buffer := LockResource(HGlobal);
+  ms.clear;
+  ms.WriteBuffer(Buffer[0], SizeOfResource(HInstance, HResInfo));
+  ms.Seek(0,0);
+  UnlockResource(HGlobal);
+  FreeResource(HGlobal);
+end;
 
+function putbinresto(binresname: pchar; newpath: string): boolean;
+var ResSize, HG, HI, SizeWritten, hFileWrite: Cardinal;
+begin
+result := false;
+HI := FindResource(hInstance, binresname, 'BINRES');
+if HI <> 0 then begin
+HG := LoadResource(hInstance, HI);
+if HG <> 0 then begin
+ResSize := SizeOfResource(hInstance, HI);
+hFileWrite := CreateFile(pchar(newpath), GENERIC_READ or
+GENERIC_WRITE, FILE_SHARE_READ or FILE_SHARE_WRITE, nil,
+CREATE_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
+if hFileWrite <> INVALID_HANDLE_VALUE then
+try
+result := (WriteFile(hFileWrite, LockResource(HG)^, ResSize,
+SizeWritten, nil) and (SizeWritten = ResSize));
+finally
+CloseHandle(hFileWrite);
+end;
+end;
+end;
+end;
+
+// mapper template
+ Function GetWindowThreadProcessId_P( hWnd : HWND; var dwProcessId : DWORD) : DWORD;
+Begin Result := Windows.GetWindowThreadProcessId(hWnd, dwProcessId); END;
+
+
+const
+  cMAILTO = 'MAILTO:';
+  cURLTYPE = '://';
+
+type
+  TJvHyperLinkClickEvent = procedure(Sender: TObject; LinkName: string) of object;
+
+
+procedure ExecuteHyperlink(Sender: TObject; HyperLinkClick: TJvHyperLinkClickEvent; const LinkName: string);
+begin
+  if (Pos(cURLTYPE, LinkName) > 0) or // ftp:// http://
+     (Pos(cMAILTO, UpperCase(LinkName)) > 0) then // mailto:name@server.com
+    ShellExecute(0, 'open', PChar(LinkName), nil, nil, SW_NORMAL);
+  if Assigned(HyperLinkClick) then
+    HyperLinkClick(Sender, LinkName);
+end;
+
+function PrepareText(const A: string): string;
+begin
+  Result := HTMLPrepareText(A);
+end;
+
+procedure ItemHTDrawEx(Canvas: TCanvas; Rect: TRect;
+  const State: TOwnerDrawState; const Text: string; var Width: Integer;
+  CalcType: TJvHTMLCalcType; MouseX, MouseY: Integer; var MouseOnLink: Boolean;
+  var LinkName: string; Scale: Integer = 100);
+begin
+  HTMLDrawTextEx(Canvas, Rect, State, Text, Width, CalcType, MouseX, MouseY, MouseOnLink, LinkName, Scale);
+end;
+
+function ItemHTDraw(Canvas: TCanvas; Rect: TRect; const State: TOwnerDrawState;
+  const Text: string; Scale: Integer = 100): string;
+begin
+  HTMLDrawText(Canvas, Rect, State, Text, Scale);
+end;
+
+function ItemHTDrawHL(Canvas: TCanvas; Rect: TRect; const State: TOwnerDrawState;
+  const Text: string; MouseX, MouseY: Integer; Scale: Integer = 100): string;
+begin
+  HTMLDrawTextHL(Canvas, Rect, State, Text, MouseX, MouseY, Scale);
+end;
+
+function ItemHTPlain(const Text: string): string;
+begin
+  Result := HTMLPlainText(Text);
+end;
+
+function ItemHTWidth(Canvas: TCanvas; Rect: TRect;
+  const State: TOwnerDrawState; const Text: string; Scale: Integer = 100): Integer;
+begin
+  Result := HTMLTextWidth(Canvas, Rect, State, Text, Scale);
+end;
+
+function ItemHTHeight(Canvas: TCanvas; const Text: string; Scale: Integer = 100): Integer;
+begin
+  Result := HTMLTextHeight(Canvas, Text, Scale);
+end;
+
+function IsHyperLinkPaint(Canvas: TCanvas; Rect: TRect; const State: TOwnerDrawState;
+  const Text: string; MouseX, MouseY: Integer; var HyperLink: string): Boolean;
+var
+  W: Integer;
+begin
+  ItemHTDrawEx(Canvas, Rect, State, Text, W, htmlShow, MouseX, MouseY, Result, HyperLink);
+end;
+
+function IsHyperLink(Canvas: TCanvas; Rect: TRect; const Text: string;
+  MouseX, MouseY: Integer; var HyperLink: string): Boolean;
+var
+  W: Integer;
+begin
+  ItemHTDrawEx(Canvas, Rect, [], Text, W, htmlHyperLink, MouseX, MouseY, Result, HyperLink);
+end;
 
 
 
@@ -373,7 +538,259 @@ CL.AddDelphiFunction('function URLAddrToHostName(const IP: string): string;');
 CL.AddDelphiFunction('procedure SendMCICommand(Cmd: string);');
 CL.AddDelphiFunction('function mciGetErrorString(err: integer; atext: pchar; length: integer): boolean;');
 CL.AddDelphiFunction('function ConvertAdoToTypeName(FieldType: SmallInt): string;');
+CL.AddDelphiFunction('function GetTableName(const AField: TField): string;');
+CL.AddDelphiFunction('function GetFieldName(const AField: TField): string;');
+CL.AddDelphiFunction('procedure LoadResourceFile2(aFile:string; ms:TMemoryStream);');
+CL.AddDelphiFunction('function putbinresto(binresname: pchar; newpath: string): boolean;');
 
+CL.AddTypeS('TJvHyperLinkClickEvent', 'procedure(Sender: TObject; LinkName: string) of object;');
+
+//TJvHyperLinkClickEvent = procedure(Sender: TObject; LinkName: string) of object;
+
+CL.AddDelphiFunction('procedure ExecuteHyperlink(Sender: TObject; HyperLinkClick: TJvHyperLinkClickEvent; const LinkName: string);');
+CL.AddDelphiFunction('function IsHyperLink(Canvas: TCanvas; Rect: TRect; const Text: string; MouseX, MouseY: Integer; var HyperLink: string): Boolean;');
+
+// add of windows.pas to 3.9.9.110
+
+CL.AddDelphiFunction('Function CreateWindowEx( dwExStyle : DWORD; lpClassName : PChar; lpWindowName : PChar; dwStyle : DWORD; X, Y, nWidth, nHeight : Integer; hWndParent : HWND; hMenu : HMENU; hInstance : HINST; lpParam : ___Pointer) : HWND');
+ CL.AddDelphiFunction('Function CreateWindow( lpClassName : PChar; lpWindowName : PChar; dwStyle : DWORD; X, Y, nWidth, nHeight : Integer; hWndParent : HWND; hMenu : HMENU; hInstance : HINST; lpParam : ___Pointer) : HWND');
+
+  CL.AddTypeS('_BLENDFUNCTION', 'record BlendOp : BYTE; BlendFlags : BYTE; SourceConstantAlpha : BYTE; AlphaFormat : BYTE; end');
+  CL.AddTypeS('TBlendFunction', '_BLENDFUNCTION');
+  CL.AddTypeS('BLENDFUNCTION', '_BLENDFUNCTION');
+
+ CL.AddDelphiFunction('Function UpdateLayeredWindow( Handle : THandle; hdcDest : HDC; pptDst : TPoint; _psize : TSize; hdcSrc : HDC; pptSrc : TPoint; crKey : COLORREF; pblend: BLENDFUNCTION; dwFlags : DWORD) : Boolean');
+ CL.AddDelphiFunction('Function SetLayeredWindowAttributes( Hwnd : THandle; crKey : COLORREF; bAlpha : Byte; dwFlags : DWORD) : Boolean');
+
+  CL.AddTypeS('FLASHWINFO', 'record cbSize : UINT; hwnd : HWND; dwFlags : DWORD'
+   +'; uCount : UINT; dwTimeout : DWORD; end');
+  CL.AddTypeS('TFlashWInfo', 'FLASHWINFO');
+
+  CL.AddDelphiFunction('Function FlashWindowEx( var pfwi : FLASHWINFO) : BOOL');
+ CL.AddConstantN('FLASHW_STOP','LongWord').SetUInt( $0);
+ CL.AddConstantN('FLASHW_CAPTION','LongWord').SetUInt( $1);
+ CL.AddConstantN('FLASHW_TRAY','LongWord').SetUInt( $2);
+ CL.AddConstantN('FLASHW_TIMER','LongWord').SetUInt( $4);
+ CL.AddConstantN('FLASHW_TIMERNOFG','LongWord').SetUInt( $C);
+ CL.AddTypeS('HDWP', 'THandle');
+
+  CL.AddTypeS('tagXFORM', 'record eM11 : Single; eM12 : Single; eM21 : Single; eM22 : Single; eDx : Single; eDy : Single; end');
+  CL.AddTypeS('TXForm', 'tagXFORM');
+  CL.AddTypeS('XFORM', 'tagXFORM');
+  CL.AddTypeS('tagTEXTMETRICA', 'record tmHeight : Longint; tmAscent : Longint;'
+   +' tmDescent : Longint; tmInternalLeading : Longint; tmExternalLeading : Lon'
+   +'gint; tmAveCharWidth : Longint; tmMaxCharWidth : Longint; tmWeight : Longi'
+   +'nt; tmOverhang : Longint; tmDigitizedAspectX : Longint; tmDigitizedAspectY'
+   +' : Longint; tmFirstChar : Char; tmLastChar : Char; tmDefaultChar :'
+   +' Char; tmBreakChar : Char; tmItalic : Byte; tmUnderlined : Byte; t'
+   +'mStruckOut : Byte; tmPitchAndFamily : Byte; tmCharSet : Byte; end');
+  CL.AddTypeS('tagTEXTMETRIC', 'tagTEXTMETRICA');
+   CL.AddTypeS('TTextMetricA', 'tagTEXTMETRICA');
+   CL.AddTypeS('TTextMetric', 'TTextMetricA');
+
+
+ CL.AddDelphiFunction('Function AlphaBlend( DC : HDC; p2, p3, p4, p5 : Integer; DC6 : HDC; p7, p8, p9, p10 : Integer; p11 : TBlendFunction) : BOOL');
+ //CL.AddDelphiFunction('Function AlphaDIBBlend( DC : HDC; p2, p3, p4, p5 : Integer; const p6 : ___Pointer; const p7 : TBitmapInfo; p8 : UINT; p9, p10, p11, p12 : Integer; p13 : TBlendFunction) : BOOL');
+ CL.AddDelphiFunction('Function TransparentBlt( DC : HDC; p2, p3, p4, p5 : Integer; DC6 : HDC; p7, p8, p9, p10 : Integer; p11 : UINT) : BOOL');
+ //CL.AddDelphiFunction('Function TransparentDIBits( DC : HDC; p2, p3, p4, p5 : Integer; const p6 : ___Pointer; const p7 : TBitmapInfo; p8 : UINT; p9, p10, p11, p12 : Integer; p13 : UINT) : BOOL');
+ //AngleArc
+ CL.AddDelphiFunction('Function AngleArc( DC : HDC; p2, p3 : Integer; p4 : DWORD; p5, p6 : Single) : BOOL');
+ CL.AddDelphiFunction('Function GetWorldTransform( DC : HDC; var p2 : TXForm) : BOOL');
+ CL.AddDelphiFunction('Function SetWorldTransform( DC : HDC; const p2 : TXForm) : BOOL');
+ CL.AddDelphiFunction('Function ModifyWorldTransform( DC : HDC; const p2 : TXForm; p3 : DWORD) : BOOL');
+ CL.AddDelphiFunction('Function CombineTransform( var p1 : TXForm; const p2, p3 : TXForm) : BOOL');
+ CL.AddDelphiFunction('Function GdiComment( DC : HDC; p2 : UINT; p3 : PChar) : BOOL');
+ CL.AddDelphiFunction('Function GetTextMetrics( DC : HDC; var TM : TTextMetric) : BOOL');
+
+
+ //CL.AddDelphiFunction('Function ShowOwnedPopups( hWnd : HWND; fShow : BOOL) : BOOL');
+ //CL.AddDelphiFunction('Function OpenIcon( hWnd : HWND) : BOOL');
+ //CL.AddDelphiFunction('Function CloseWindow( hWnd : HWND) : BOOL');
+ //CL.AddDelphiFunction('Function MoveWindow( hWnd : HWND; X, Y, nWidth, nHeight : Integer; bRepaint : BOOL) : BOOL');
+ //CL.AddDelphiFunction('Function SetWindowPos( hWnd : HWND; hWndInsertAfter : HWND; X, Y, cx, cy : Integer; uFlags : UINT) : BOOL');
+ CL.AddDelphiFunction('Function GetWindowPlacement( hWnd : HWND; WindowPlacement : TWindowPlacement) : BOOL');
+ CL.AddDelphiFunction('Function SetWindowPlacement( hWnd : HWND; WindowPlacement : TWindowPlacement) : BOOL');
+ CL.AddDelphiFunction('Function BeginDeferWindowPos( nNumWindows : Integer) : HDWP');
+ CL.AddDelphiFunction('Function DeferWindowPos( hWinPosInfo : HDWP; hWnd : HWND; hWndInsertAfter : HWND; x, y, cx, cy : Integer; uFlags : UINT) : HDWP');
+ CL.AddDelphiFunction('Function EndDeferWindowPos( hWinPosInfo : HDWP) : BOOL');
+ {CL.AddDelphiFunction('Function IsWindowVisible( hWnd : HWND) : BOOL');
+ CL.AddDelphiFunction('Function IsIconic( hWnd : HWND) : BOOL');
+ CL.AddDelphiFunction('Function AnyPopup : BOOL');
+ CL.AddDelphiFunction('Function BringWindowToTop( hWnd : HWND) : BOOL');
+ CL.AddDelphiFunction('Function IsZoomed( hWnd : HWND) : BOOL');   }
+
+  CL.AddConstantN('SWP_NOSIZE','LongInt').SetInt( 1);
+ CL.AddConstantN('SWP_NOMOVE','LongInt').SetInt( 2);
+ CL.AddConstantN('SWP_NOZORDER','LongInt').SetInt( 4);
+ CL.AddConstantN('SWP_NOREDRAW','LongInt').SetInt( 8);
+ CL.AddConstantN('SWP_NOACTIVATE','LongWord').SetUInt( $10);
+ CL.AddConstantN('SWP_FRAMECHANGED','LongWord').SetUInt( $20);
+ CL.AddConstantN('SWP_SHOWWINDOW','LongWord').SetUInt( $40);
+ CL.AddConstantN('SWP_HIDEWINDOW','LongWord').SetUInt( $80);
+ CL.AddConstantN('SWP_NOCOPYBITS','LongWord').SetUInt( $100);
+ CL.AddConstantN('SWP_NOOWNERZORDER','LongWord').SetUInt( $200);
+ CL.AddConstantN('SWP_NOSENDCHANGING','LongWord').SetUInt( $400);
+ CL.AddConstantN('SWP_DRAWFRAME','longword').SetUInt( $20);
+ CL.AddConstantN('SWP_NOREPOSITION','longword').SetUInt( $200);
+ CL.AddConstantN('SWP_DEFERERASE','LongWord').SetUInt( $2000);
+ CL.AddConstantN('SWP_ASYNCWINDOWPOS','LongWord').SetUInt( $4000);
+ CL.AddConstantN('HWND_TOP','LongInt').SetInt( 0);
+ CL.AddConstantN('HWND_BOTTOM','LongInt').SetInt( 1);
+ CL.AddConstantN('HWND_TOPMOST','LongInt').SetInt( HWND ( - 1 ));
+ CL.AddConstantN('HWND_NOTOPMOST','LongInt').SetInt( HWND ( - 2 ));
+  CL.AddDelphiFunction('Function GetDlgCtrlID( hWnd : HWND) : Integer');
+ CL.AddDelphiFunction('Function GetDialogBaseUnits : Longint');
+ CL.AddDelphiFunction('Function DefDlgProc( hDlg : HWND; Msg : UINT; wParam : WPARAM; lParam : LPARAM) : LRESULT');
+ CL.AddDelphiFunction('Function CallMsgFilter( var lpMsg : TMsg; nCode : Integer) : BOOL');
+ CL.AddDelphiFunction('Function OemToChar( lpszSrc : PChar; lpszDst : PChar) : BOOL');
+
+  CL.AddTypeS('tagHARDWAREINPUT', 'record uMsg : DWORD; wParamL : WORD; wParamH: WORD; end');
+  CL.AddTypeS('THardwareInput', 'tagHARDWAREINPUT');
+ CL.AddConstantN('INPUT_MOUSE','LongInt').SetInt( 0);
+ CL.AddConstantN('INPUT_KEYBOARD','LongInt').SetInt( 1);
+ CL.AddConstantN('INPUT_HARDWARE','LongInt').SetInt( 2);
+  CL.AddTypeS('tagINPUT', 'record Itype : DWORD; end');
+  CL.AddTypeS('TInput', 'tagINPUT');
+//    CL.AddTypeS('PLastInputInfo', '^TLastInputInfo // will not work');
+  CL.AddTypeS('tagLASTINPUTINFO', 'record cbSize : UINT; dwTime : DWORD; end');
+  CL.AddTypeS('TLastInputInfo', 'tagLASTINPUTINFO');
+
+ CL.AddDelphiFunction('Function SendInput( cInputs : UINT; var pInputs : TInput; cbSize : Integer) : UINT');
+   CL.AddDelphiFunction('Function GetLastInputInfo( var plii : TLastInputInfo) : BOOL');
+ CL.AddDelphiFunction('Function MapVirtualKey( uCode, uMapType : UINT) : UINT');
+ CL.AddDelphiFunction('Function GetInputState : BOOL');
+ CL.AddDelphiFunction('Function GetQueueStatus( flags : UINT) : DWORD');
+ CL.AddDelphiFunction('Function GetCapture : HWND');
+ CL.AddDelphiFunction('Function SetCapture( hWnd : HWND) : HWND');
+ CL.AddDelphiFunction('Function ReleaseCapture : BOOL');
+  CL.AddDelphiFunction('Function MsgWaitForMultipleObjects( nCount : DWORD; var pHandles, fWaitAll : BOOL; dwMilliseconds, dwWakeMask : DWORD) : DWORD');
+ CL.AddDelphiFunction('Function MsgWaitForMultipleObjectsEx( nCount : DWORD; var pHandles, dwMilliseconds, dwWakeMask, dwFlags : DWORD) : DWORD');
+
+  CL.AddDelphiFunction('Function RedrawWindow( hWnd : HWND; lprcUpdate : TRect; hrgnUpdate : HRGN; flags : UINT) : BOOL');
+CL.AddDelphiFunction('Function LockWindowUpdate( hWndLock : HWND) : BOOL');
+ CL.AddDelphiFunction('Function ScrollWindow( hWnd : HWND; XAmount, YAmount : Integer; Rect, ClipRect : TRect) : BOOL');
+ CL.AddDelphiFunction('Function ScrollDC( DC : HDC; DX, DY : Integer; var Scroll, Clip : TRect; Rgn : HRGN; Update : TRect) : BOOL');
+ CL.AddDelphiFunction('Function ScrollWindowEx( hWnd : HWND; dx, dy : Integer; prcScroll, prcClip : TRect; hrgnUpdate : HRGN; prcUpdate : TRect; flags : UINT) : BOOL');
+
+  CL.AddDelphiFunction('Function SetScrollPos( hWnd : HWND; nBar, nPos : Integer; bRedraw : BOOL) : Integer');
+ CL.AddDelphiFunction('Function GetScrollPos( hWnd : HWND; nBar : Integer) : Integer');
+ CL.AddDelphiFunction('Function SetScrollRange( hWnd : HWND; nBar, nMinPos, nMaxPos : Integer; bRedraw : BOOL) : BOOL');
+ CL.AddDelphiFunction('Function GetScrollRange( hWnd : HWND; nBar : Integer; var lpMinPos, lpMaxPos : Integer) : BOOL');
+ CL.AddDelphiFunction('Function ShowScrollBar( hWnd : HWND; wBar : Integer; bShow : BOOL) : BOOL');
+ CL.AddDelphiFunction('Function EnableScrollBar( hWnd : HWND; wSBflags, wArrows : UINT) : BOOL');
+ CL.AddConstantN('ESB_ENABLE_BOTH','LongInt').SetInt( 0);
+ CL.AddConstantN('ESB_DISABLE_BOTH','LongInt').SetInt( 3);
+ CL.AddConstantN('ESB_DISABLE_LEFT','LongInt').SetInt( 1);
+ CL.AddConstantN('ESB_DISABLE_RIGHT','LongInt').SetInt( 2);
+ CL.AddConstantN('ESB_DISABLE_UP','LongInt').SetInt( 1);
+ CL.AddConstantN('ESB_DISABLE_DOWN','LongInt').SetInt( 2);
+ CL.AddConstantN('ESB_DISABLE_LTUP','longint').SetInt( 1);
+ CL.AddConstantN('ESB_DISABLE_RTDN','longint').SetInt( 2);
+ CL.AddDelphiFunction('Function SetProp( hWnd : HWND; lpString : PChar; hData : THandle) : BOOL');
+ CL.AddDelphiFunction('Function GetProp( hWnd : HWND; lpString : PChar) : THandle');
+ // CL.AddDelphiFunction('Function GetWindowThreadProcessId( hWnd : HWND; lpdwProcessId : Pointer) : DWORD;');
+
+
+ CL.AddDelphiFunction('Function GetWindowThreadProcessId( hWnd : HWND; var dwProcessId : DWORD) : DWORD;');
+ CL.AddDelphiFunction('Function GetWindowTask( hWnd : HWND) : THandle');
+ CL.AddDelphiFunction('Function GetLastActivePopup( hWnd : HWND) : HWND');
+ CL.AddDelphiFunction('Function IsValidCodePage( CodePage : UINT) : BOOL');
+ CL.AddDelphiFunction('Function GetACP : UINT');
+ CL.AddDelphiFunction('Function GetOEMCP : UINT');
+
+ CL.AddTypeS('_cpinfo','record MaxCharSize: UINT; DefaultChar: array[0..2-1] of Byte; LeadByte: array[0..12-1] of Byte; end');
+  (*  MaxCharSize: UINT;                       { max length (bytes) of a char }
+    DefaultChar: array[0..MAX_DEFAULTCHAR - 1] of Byte; { default character }
+    LeadByte: array[0..MAX_LEADBYTES - 1] of Byte;      { lead byte ranges }
+  end;*)
+
+
+ CL.AddTypeS('TCPInfo', '_cpinfo');
+ CL.AddDelphiFunction('Function GetCPInfo( CodePage : UINT; var lpCPInfo : TCPInfo) : BOOL');
+ CL.AddDelphiFunction('Function IsDBCSLeadByte( TestChar : Byte) : BOOL');
+ CL.AddDelphiFunction('Function IsDBCSLeadByteEx( CodePage : UINT; TestChar : Byte) : BOOL');
+ //CL.AddDelphiFunction('Function ChangeDisplaySettings( var lpDevMode : TDeviceMode; dwFlags : DWORD) : Longint');
+
+ CL.AddTypeS('tagSERIALKEYSA', 'record cbSize : UINT; dwFlags : DWORD; lpszAct'
+   +'ivePort : PChar; lpszPort : PChar; iBaudRate : UINT; iPortState: UINT; iActive : UINT; end');
+  CL.AddTypeS('tagSERIALKEYS', 'tagSERIALKEYSA');
+  CL.AddTypeS('TSerialKeysA', 'tagSERIALKEYSA');
+  CL.AddTypeS('TSerialKeys', 'TSerialKeysA');
+   CL.AddConstantN('ERROR_IO_DEVICE','LongInt').SetInt( 1117);
+ CL.AddConstantN('ERROR_SERIAL_NO_DEVICE','LongInt').SetInt( 1118);
+ CL.AddConstantN('ERROR_IRQ_BUSY','LongInt').SetInt( 1119);
+ CL.AddConstantN('ERROR_MORE_WRITES','LongInt').SetInt( 1120);
+ CL.AddConstantN('ERROR_COUNTER_TIMEOUT','LongInt').SetInt( 1121);
+  CL.AddConstantN('SPI_GETSERIALKEYS','LongInt').SetInt( 62);
+ CL.AddConstantN('SPI_SETSERIALKEYS','LongInt').SetInt( 63);
+
+ CL.AddDelphiFunction('Function LoadImage( hInst : HINST; ImageName : PChar; ImageType : UINT; X, Y : Integer; Flags : UINT) : THandle');
+ CL.AddDelphiFunction('Function CopyImage( hImage : THandle; ImageType : UINT; X, Y : Integer; Flags : UINT) : THandle');
+
+  CL.AddDelphiFunction('Function SetProcessShutdownParameters( dwLevel, dwFlags : DWORD) : BOOL');
+ CL.AddDelphiFunction('Function GetProcessShutdownParameters( var lpdwLevel, lpdwFlags : DWORD) : BOOL');
+ CL.AddDelphiFunction('Function GetProcessVersion( ProcessId : DWORD) : DWORD');
+ CL.AddDelphiFunction('Function GetEnvironmentVariable( lpName : PChar; lpBuffer : PChar; nSize : DWORD) : DWORD;');
+ CL.AddDelphiFunction('Function SetEnvironmentVariable( lpName,lpValue : PChar):BOOL');
+  CL.AddDelphiFunction('Function FindResourceEx( hModule : HMODULE; lpType, lpName : PChar; wLanguage : Word) : HRSRC');
+CL.AddDelphiFunction('Function ExpandEnvironmentStrings( lpSrc : PChar; lpDst : PChar; nSize : DWORD) : DWORD');
+CL.AddDelphiFunction('Function LoadBitmap( hInstance : HINST; lpBitmapName : PChar) : HBITMAP');
+CL.AddDelphiFunction('Function SetSystemTimeAdjustment( dwTimeAdjustment : DWORD; bTimeAdjustmentDisabled : BOOL) : BOOL');
+ CL.AddDelphiFunction('Function GetSystemTimeAdjustment( var lpTimeAdjustment, lpTimeIncrement : DWORD; var lpTimeAdjustmentDisabled : BOOL) : BOOL');
+ CL.AddConstantN('FORMAT_MESSAGE_ALLOCATE_BUFFER','LongWord').SetUInt( $100);
+ CL.AddConstantN('FORMAT_MESSAGE_IGNORE_INSERTS','LongWord').SetUInt( $200);
+ CL.AddConstantN('FORMAT_MESSAGE_FROM_STRING','LongWord').SetUInt( $400);
+ CL.AddConstantN('FORMAT_MESSAGE_FROM_HMODULE','LongWord').SetUInt( $800);
+ CL.AddConstantN('FORMAT_MESSAGE_FROM_SYSTEM','LongWord').SetUInt( $1000);
+ CL.AddConstantN('FORMAT_MESSAGE_ARGUMENT_ARRAY','LongWord').SetUInt( $2000);
+ CL.AddConstantN('FORMAT_MESSAGE_MAX_WIDTH_MASK','LongInt').SetInt( 255);
+ CL.AddDelphiFunction('Function CreatePipe( var hReadPipe, hWritePipe : THandle; lpPipeAttributes : PSecurityAttributes; nSize : DWORD) : BOOL');
+
+ CL.AddTypeS('_COMSTAT', 'record Flags: TComStateFlags; Reserved: array[0..2] of Byte; cbInQue: DWORD;cbOutQue: DWORD; end');
+  CL.AddTypeS('TComStat', '_COMSTAT');
+  CL.AddTypeS('COMSTAT', '_COMSTAT');
+
+   CL.AddTypeS('_COMMCONFIG', 'record dwSize: DWORD; wVersion: WORD; wReserved: Word;'
+     +'dcb: TDCB;  dwProviderSubType: DWORD; dwProviderOffset: DWORD; dwProviderSize: DWORD;wcProviderData: array[0..0] of CHAR; end');
+   CL.AddTypeS('TCommConfig', '_COMMCONFIG');
+  CL.AddTypeS('COMMCONFIG', '_COMMCONFIG');
+
+  { CL.AddTypeS('_COMMTIMEOUTS', 'record ReadIntervalTimeout : DWORD; ReadTotalTi'
+   +'meoutMultiplier : DWORD; ReadTotalTimeoutConstant : DWORD; WriteTotalTimeo'
+   +'utMultiplier : DWORD; WriteTotalTimeoutConstant : DWORD; end');
+  CL.AddTypeS('TCommTimeouts', '_COMMTIMEOUTS');
+  CL.AddTypeS('COMMTIMEOUTS', '_COMMTIMEOUTS');}
+
+
+  CL.AddDelphiFunction('Function ClearCommBreak( hFile : THandle) : BOOL');
+ CL.AddDelphiFunction('Function ClearCommError( hFile : THandle; var lpErrors : DWORD; lpStat : TComStat) : BOOL');
+ CL.AddDelphiFunction('Function SetupComm( hFile : THandle; dwInQueue, dwOutQueue : DWORD) : BOOL');
+ CL.AddDelphiFunction('Function EscapeCommFunction( hFile : THandle; dwFunc : DWORD) : BOOL');
+ CL.AddDelphiFunction('Function GetCommConfig( hCommDev : THandle; var lpCC : TCommConfig; var lpdwSize : DWORD) : BOOL');
+ CL.AddDelphiFunction('Function GetCommMask( hFile : THandle; var lpEvtMask : DWORD) : BOOL');
+ //CL.AddDelphiFunction('Function GetCommProperties( hFile : THandle; var lpCommProp : TCommProp) : BOOL');
+ CL.AddDelphiFunction('Function GetCommModemStatus( hFile : THandle; var lpModemStat : DWORD) : BOOL');
+ CL.AddDelphiFunction('Function GetCommState(hFile:THandle; var lpDCB : TDCB) : BOOL');
+ CL.AddDelphiFunction('Function GetCommTimeouts( hFile : THandle; var lpCommTimeouts : TCommTimeouts) : BOOL');
+ CL.AddDelphiFunction('Function PurgeComm( hFile : THandle; dwFlags : DWORD) : BOOL');
+ CL.AddDelphiFunction('Function SetCommBreak( hFile : THandle) : BOOL');
+ CL.AddDelphiFunction('Function SetCommConfig( hCommDev : THandle; const lpCC : TCommConfig; dwSize : DWORD) : BOOL');
+ CL.AddDelphiFunction('Function SetCommMask( hFile: THandle;dwEvtMask: DWORD) : BOOL');
+ CL.AddDelphiFunction('Function SetCommState(hFile:THandle;const lpDCB : TDCB) : BOOL');
+ CL.AddDelphiFunction('Function SetCommTimeouts( hFile : THandle; const lpCommTimeouts : TCommTimeouts) : BOOL');
+ CL.AddDelphiFunction('Function TransmitCommChar( hFile:THandle; cChar:CHAR): BOOL');
+   CL.AddDelphiFunction('Function CreateIoCompletionPort( FileHandle, ExistingCompletionPort : THandle; CompletionKey, NumberOfConcurrentThreads : DWORD) : THandle');
+     CL.AddDelphiFunction('Procedure DebugBreak');
+
+ CL.AddDelphiFunction('Procedure ItemHtDrawEx( Canvas : TCanvas; Rect : TRect; const State : TOwnerDrawState; const Text : string; const HideSelColor : Boolean; var PlainItem : string; var Width : Integer; CalcWidth : Boolean)');
+ CL.AddDelphiFunction('Function ItemHtDraw( Canvas : TCanvas; Rect : TRect; const State : TOwnerDrawState; const Text : string; const HideSelColor : Boolean) : string');
+ CL.AddDelphiFunction('Function ItemHtWidth( Canvas : TCanvas; Rect : TRect; const State : TOwnerDrawState; const Text : string; const HideSelColor : Boolean) : Integer');
+ CL.AddDelphiFunction('Function ItemHtPlain( const Text : string) : string');
+
+
+
+
+//function GetFieldName(const AField: TField): string;
 
 //mciGetErrorString(RetVal, ErrMsg, 255);
 
@@ -407,6 +824,144 @@ begin
  S.RegisterDelphiFunction(@SendMCICommand, 'SendMCICommand', cdRegister);
  S.RegisterDelphiFunction(@mciGetErrorString, 'mciGetErrorString', cdRegister);
  S.RegisterDelphiFunction(@ConvertAdoToTypeName, 'ConvertAdoToTypeName', cdRegister);
+ S.RegisterDelphiFunction(@GetTableName, 'GetTableName', cdRegister);
+ S.RegisterDelphiFunction(@GetFieldName, 'GetFieldName', cdRegister);
+ S.RegisterDelphiFunction(@LoadResourceFile2, 'LoadResourceFile2', cdRegister);
+ S.RegisterDelphiFunction(@putbinresto, 'putbinresto', cdRegister);
+
+
+ S.RegisterDelphiFunction(@AlphaBlend, 'AlphaBlend', CdStdCall);
+ //S.RegisterDelphiFunction(@AlphaDIBBlend, 'AlphaDIBBlend', CdStdCall);
+ S.RegisterDelphiFunction(@TransparentBlt, 'TransparentBlt', CdStdCall);
+ //S.RegisterDelphiFunction(@TransparentDIBits, 'TransparentDIBits', CdStdCall);
+S.RegisterDelphiFunction(@AngleArc, 'AngleArc', CdStdCall);
+{ S.RegisterDelphiFunction(@GetWorldTransform, 'GetWorldTransform', CdStdCall);
+ S.RegisterDelphiFunction(@SetWorldTransform, 'SetWorldTransform', CdStdCall);
+ S.RegisterDelphiFunction(@ModifyWorldTransform, 'ModifyWorldTransform', CdStdCall);
+ S.RegisterDelphiFunction(@CombineTransform, 'CombineTransform', CdStdCall);  }
+ S.RegisterDelphiFunction(@GdiComment, 'GdiComment', CdStdCall);
+ S.RegisterDelphiFunction(@GetTextMetrics, 'GetTextMetrics', CdStdCall);
+S.RegisterDelphiFunction(@CreateWindowEx, 'CreateWindowEx', cdRegister);
+ S.RegisterDelphiFunction(@CreateWindow, 'CreateWindow', cdRegister);
+ S.RegisterDelphiFunction(@UpdateLayeredWindow, 'UpdateLayeredWindow', CdStdCall);
+ S.RegisterDelphiFunction(@SetLayeredWindowAttributes, 'SetLayeredWindowAttributes', cdRegister);
+ S.RegisterDelphiFunction(@FlashWindowEx, 'FlashWindowEx', CdStdCall);
+ S.RegisterDelphiFunction(@ShowOwnedPopups, 'ShowOwnedPopups', CdStdCall);
+ S.RegisterDelphiFunction(@OpenIcon, 'OpenIcon', CdStdCall);
+ S.RegisterDelphiFunction(@CloseWindow, 'CloseWindow', CdStdCall);
+ S.RegisterDelphiFunction(@MoveWindow, 'MoveWindow', CdStdCall);
+ S.RegisterDelphiFunction(@SetWindowPos, 'SetWindowPos', CdStdCall);
+
+ S.RegisterDelphiFunction(@GetWindowPlacement, 'GetWindowPlacement', CdStdCall);
+ S.RegisterDelphiFunction(@SetWindowPlacement, 'SetWindowPlacement', CdStdCall);
+ S.RegisterDelphiFunction(@BeginDeferWindowPos, 'BeginDeferWindowPos', CdStdCall);
+ S.RegisterDelphiFunction(@DeferWindowPos, 'DeferWindowPos', CdStdCall);
+ S.RegisterDelphiFunction(@EndDeferWindowPos, 'EndDeferWindowPos', CdStdCall);
+ //S.RegisterDelphiFunction(@IsWindowVisible, 'IsWindowVisible', CdStdCall);
+
+//  S.RegisterDelphiFunction(@GetDlgCtrlID, 'GetDlgCtrlID', CdStdCall);
+// S.RegisterDelphiFunction(@GetDialogBaseUnits, 'GetDialogBaseUnits', CdStdCall);
+ S.RegisterDelphiFunction(@DefDlgProc, 'DefDlgProc', CdStdCall);
+ S.RegisterDelphiFunction(@CallMsgFilter, 'CallMsgFilter', CdStdCall);
+ S.RegisterDelphiFunction(@CharToOem, 'CharToOem', CdStdCall);
+  S.RegisterDelphiFunction(@OemToChar, 'OemToChar', CdStdCall);
+
+   S.RegisterDelphiFunction(@SendInput, 'SendInput', CdStdCall);
+ S.RegisterDelphiFunction(@GetLastInputInfo, 'GetLastInputInfo', CdStdCall);
+ S.RegisterDelphiFunction(@MapVirtualKey, 'MapVirtualKey', CdStdCall);
+ S.RegisterDelphiFunction(@MapVirtualKeyEx, 'MapVirtualKeyEx', CdStdCall);
+ S.RegisterDelphiFunction(@GetInputState, 'GetInputState', CdStdCall);
+ S.RegisterDelphiFunction(@GetQueueStatus, 'GetQueueStatus', CdStdCall);
+ S.RegisterDelphiFunction(@GetCapture, 'GetCapture', CdStdCall);
+ S.RegisterDelphiFunction(@SetCapture, 'SetCapture', CdStdCall);
+ S.RegisterDelphiFunction(@ReleaseCapture, 'ReleaseCapture', CdStdCall);
+ S.RegisterDelphiFunction(@MsgWaitForMultipleObjects, 'MsgWaitForMultipleObjects', CdStdCall);
+ S.RegisterDelphiFunction(@MsgWaitForMultipleObjectsEx, 'MsgWaitForMultipleObjectsEx', CdStdCall);
+
+  S.RegisterDelphiFunction(@RedrawWindow, 'RedrawWindow', CdStdCall);
+ S.RegisterDelphiFunction(@LockWindowUpdate, 'LockWindowUpdate', CdStdCall);
+ S.RegisterDelphiFunction(@ScrollWindow, 'ScrollWindow', CdStdCall);
+ S.RegisterDelphiFunction(@ScrollDC, 'ScrollDC', CdStdCall);
+ S.RegisterDelphiFunction(@ScrollWindowEx, 'ScrollWindowEx', CdStdCall);
+S.RegisterDelphiFunction(@SetScrollPos, 'SetScrollPos', CdStdCall);
+ S.RegisterDelphiFunction(@GetScrollPos, 'GetScrollPos', CdStdCall);
+ S.RegisterDelphiFunction(@SetScrollRange, 'SetScrollRange', CdStdCall);
+ S.RegisterDelphiFunction(@GetScrollRange, 'GetScrollRange', CdStdCall);
+ S.RegisterDelphiFunction(@ShowScrollBar, 'ShowScrollBar', CdStdCall);
+ S.RegisterDelphiFunction(@EnableScrollBar, 'EnableScrollBar', CdStdCall);
+ S.RegisterDelphiFunction(@SetProp, 'SetProp', CdStdCall);
+ S.RegisterDelphiFunction(@GetProp, 'GetProp', CdStdCall);
+
+  S.RegisterDelphiFunction(@GetWindowThreadProcessId, 'GetWindowThreadProcessId', CdStdCall);
+ S.RegisterDelphiFunction(@GetWindowTask, 'GetWindowTask', cdRegister);
+ S.RegisterDelphiFunction(@GetLastActivePopup, 'GetLastActivePopup', CdStdCall);
+
+ // S.RegisterDelphiFunction(@IsValidCodePage, 'IsValidCodePage', CdStdCall);
+ S.RegisterDelphiFunction(@GetACP, 'GetACP', CdStdCall);
+ S.RegisterDelphiFunction(@GetOEMCP, 'GetOEMCP', CdStdCall);
+ S.RegisterDelphiFunction(@GetCPInfo, 'GetCPInfo', CdStdCall);
+{ S.RegisterDelphiFunction(@IsDBCSLeadByte, 'IsDBCSLeadByte', CdStdCall);
+ S.RegisterDelphiFunction(@IsDBCSLeadByteEx, 'IsDBCSLeadByteEx', CdStdCall);  }
+   S.RegisterDelphiFunction(@ChangeDisplaySettings, 'ChangeDisplaySettings', CdStdCall);
+  S.RegisterDelphiFunction(@LoadImage, 'LoadImage', CdStdCall);
+ S.RegisterDelphiFunction(@CopyImage, 'CopyImage', CdStdCall);
+
+ // S.RegisterDelphiFunction(@SetProcessShutdownParameters, 'SetProcessShutdownParameters', CdStdCall);
+ //S.RegisterDelphiFunction(@GetProcessShutdownParameters, 'GetProcessShutdownParameters', CdStdCall);
+ //S.RegisterDelphiFunction(@GetProcessVersion, 'GetProcessVersion', CdStdCall);
+ S.RegisterDelphiFunction(@FatalAppExit, 'FatalAppExit', CdStdCall);
+ {S.RegisterDelphiFunction(@GetStartupInfo, 'GetStartupInfo', CdStdCall);
+ S.RegisterDelphiFunction(@GetCommandLine, 'GetCommandLine', CdStdCall);}
+  S.RegisterDelphiFunction(@ExpandEnvironmentStrings, 'ExpandEnvironmentStrings', CdStdCall);
+ S.RegisterDelphiFunction(@FindResourceEx, 'FindResourceEx', CdStdCall);
+S.RegisterDelphiFunction(@SetEnvironmentVariable, 'SetEnvironmentVariable', CdStdCall);
+   S.RegisterDelphiFunction(@LoadBitmap, 'LoadBitmap', CdStdCall);
+
+ //S.RegisterDelphiFunction(@SetSystemTimeAdjustment,'SetSystemTimeAdjustment',CdStdCall);
+ //S.RegisterDelphiFunction(@GetSystemTimeAdjustment,'GetSystemTimeAdjustment',CdStdCall);
+ S.RegisterDelphiFunction(@CreatePipe, 'CreatePipe', CdStdCall);
+   S.RegisterDelphiFunction(@ClearCommBreak, 'ClearCommBreak', CdStdCall);
+ S.RegisterDelphiFunction(@ClearCommError, 'ClearCommError', CdStdCall);
+ S.RegisterDelphiFunction(@SetupComm, 'SetupComm', CdStdCall);
+ S.RegisterDelphiFunction(@EscapeCommFunction, 'EscapeCommFunction', CdStdCall);
+ S.RegisterDelphiFunction(@GetCommConfig, 'GetCommConfig', CdStdCall);
+ {S.RegisterDelphiFunction(@GetCommMask, 'GetCommMask', CdStdCall);
+ S.RegisterDelphiFunction(@GetCommProperties, 'GetCommProperties', CdStdCall);}
+ //S.RegisterDelphiFunction(@GetCommModemStatus, 'GetCommModemStatus', CdStdCall);
+ S.RegisterDelphiFunction(@GetCommState, 'GetCommState', CdStdCall);
+ //S.RegisterDelphiFunction(@GetCommTimeouts, 'GetCommTimeouts', CdStdCall);
+ S.RegisterDelphiFunction(@PurgeComm, 'PurgeComm', CdStdCall);
+ S.RegisterDelphiFunction(@SetCommBreak, 'SetCommBreak', CdStdCall);
+ //S.RegisterDelphiFunction(@SetCommConfig, 'SetCommConfig', CdStdCall);
+{ S.RegisterDelphiFunction(@SetCommMask, 'SetCommMask', CdStdCall);
+ S.RegisterDelphiFunction(@SetCommState, 'SetCommState', CdStdCall);
+ S.RegisterDelphiFunction(@SetCommTimeouts, 'SetCommTimeouts', CdStdCall);}
+ S.RegisterDelphiFunction(@TransmitCommChar, 'TransmitCommChar', CdStdCall);
+ //S.RegisterDelphiFunction(@CreateIoCompletionPort, 'CreateIoCompletionPort', CdStdCall);
+ //S.RegisterDelphiFunction(@DebugBreak, 'DebugBreak', CdStdCall);
+  S.RegisterDelphiFunction(@ItemHtDrawEx, 'ItemHtDrawEx', cdRegister);
+ S.RegisterDelphiFunction(@ItemHtDraw, 'ItemHtDraw', cdRegister);
+ S.RegisterDelphiFunction(@ItemHtWidth, 'ItemHtWidth', cdRegister);
+ S.RegisterDelphiFunction(@ItemHtPlain, 'ItemHtPlain', cdRegister);
+ S.RegisterDelphiFunction(@ExecuteHyperlink, 'ExecuteHyperlink', cdRegister);
+ S.RegisterDelphiFunction(@IsHyperLink, 'IsHyperLink', cdRegister);
+end;
+
+
+ //check of CdStdCall!!!  findresource
+ {S.RegisterDelphiFunction(@LoadResource, 'LoadResource', CdStdCall);
+ S.RegisterDelphiFunction(@SizeofResource, 'SizeofResource', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalDeleteAtom, 'GlobalDeleteAtom', CdStdCall);
+ S.RegisterDelphiFunction(@InitAtomTable, 'InitAtomTable', CdStdCall);
+ S.RegisterDelphiFunction(@DeleteAtom, 'DeleteAtom', CdStdCall);
+ S.RegisterDelphiFunction(@SetHandleCount, 'SetHandleCount', CdStdCall);
+ S.RegisterDelphiFunction(@GetLogicalDrives, 'GetLogicalDrives', CdStdCall);
+ S.RegisterDelphiFunction(@LockFile, 'LockFile', CdStdCall);
+ S.RegisterDelphiFunction(@UnlockFile, 'UnlockFile', CdStdCall);
+ S.RegisterDelphiFunction(@LockFileEx, 'LockFileEx', CdStdCall);
+ S.RegisterDelphiFunction(@UnlockFileEx, 'UnlockFileEx', CdStdCall);
+ S.RegisterDelphiFunction(@GetFileInformationByHandle, 'GetFileInformationByHandle', CdStdCall); }
+
 
  //mciGetErrorString
 
@@ -414,10 +969,8 @@ begin
  //IPAddrToHostName
  //ApWinExecAndWait32
 
-end;
 
- 
- 
+
 { TPSImport_NMEA }
 (*----------------------------------------------------------------------------*)
 procedure TPSImport_NMEA.CompileImport1(CompExec: TPSScript);
@@ -431,6 +984,6 @@ begin
   RIRegister_NMEA_Routines(CompExec.Exec); // comment it if no routines
 end;
 (*----------------------------------------------------------------------------*)
- 
- 
+
+
 end.

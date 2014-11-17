@@ -11,7 +11,7 @@ code implementing the class wrapper is fpr mX3 Win & Linux
  All: jvjclutils/jvctrutils/jvvclutils/dbtables/db/
   queryperformancecounter, REST Routines, boolean - bool (longbool)}
   //APPCOMMAND Shell Consts 3.9.9.80
- // TBytes  one and only   , TMemoryStatus , ISwindow ,assignfile, closefile  fix
+ // TBytes  one and only   , TMemoryStatus , ISwindow ,assignfile, closefile  fix, bugfix loadresource
 
 {$I PascalScript.inc}
 interface
@@ -1688,6 +1688,7 @@ CL.AddDelphiFunction('Function CompareFileTime( const lpFileTime1, lpFileTime2 :
  CL.AddDelphiFunction('Function StrToBoolDef( S : string; Default : Boolean) : Boolean');
  CL.AddDelphiFunction('Function LoadStr( Ident : Integer) : string');
  CL.AddDelphiFunction('function FindStringResource(Ident: Integer): string)');
+ CL.AddDelphiFunction('function FindStringRes(Ident: Integer): string)');
  CL.AddDelphiFunction('Function FileOpen( FileName : string; Mode : LongWord) : Integer');
  CL.AddDelphiFunction('Function FileCreate( FileName : string) : Integer;');
  CL.AddDelphiFunction('Function FileCreate2( FileName : string; Rights : Integer) : Integer;');
@@ -3315,6 +3316,7 @@ begin
  S.RegisterDelphiFunction(@StrToBoolDef, 'StrToBoolDef', cdRegister);
  S.RegisterDelphiFunction(@LoadStr, 'LoadStr', cdRegister);
  S.RegisterDelphiFunction(@FindStringResource, 'FindStringResource',cdRegister);
+ S.RegisterDelphiFunction(@FindStringResource, 'FindStringRes',cdRegister);
  S.RegisterDelphiFunction(@FileOpen, 'FileOpen', cdRegister);
  S.RegisterDelphiFunction(@FileCreate, 'FileCreate', cdRegister);
  S.RegisterDelphiFunction(@FileCreate2, 'FileCreate2', cdRegister);
@@ -3488,9 +3490,9 @@ begin
  S.RegisterDelphiFunction(@GetSafeCallExceptionAddr, 'GetSafeCallExceptionAddr', cdRegister);}
  S.RegisterDelphiFunction(@LoadLibrary, 'LoadLibrary', CdStdCall);
  S.RegisterDelphiFunction(@FreeLibrary, 'FreeLibrary', CdStdCall);
- S.RegisterDelphiFunction(@FreeModule, 'FreeModule', cdRegister);
+ S.RegisterDelphiFunction(@FreeModule, 'FreeModule', CdStdCall);
  S.RegisterDelphiFunction(@FreeLibraryAndExitThread, 'FreeLibraryAndExitThread', CdStdCall);
- S.RegisterDelphiFunction(@DisableThreadLibraryCalls, 'DisableThreadLibraryCalls', cdRegister);
+ S.RegisterDelphiFunction(@DisableThreadLibraryCalls, 'DisableThreadLibraryCalls', CdStdCall);
  S.RegisterDelphiFunction(@GetSafeCallExceptionMsg, 'GetSafeCallExceptionMsg', cdRegister);
 
  //S.RegisterDelphiFunction(@LoadModule, 'LoadModule', cdRegister);
@@ -3693,17 +3695,17 @@ S.RegisterDelphiFunction(@SetLineBreakStyle,'SetLineBreakStyle', cdRegister); //
  S.RegisterDelphiFunction(@Yield, 'Yield', cdRegister);
  S.RegisterDelphiFunction(@GetShortPathName, 'GetShortPathName', CdStdCall);
  S.RegisterDelphiFunction(@GetVersion, 'GetVersion', CdStdCall);
- S.RegisterDelphiFunction(@GetCValue, 'GetCValue', cdRegister);
- S.RegisterDelphiFunction(@GetMValue, 'GetMValue', cdRegister);
- S.RegisterDelphiFunction(@GetYValue, 'GetYValue', cdRegister);
- S.RegisterDelphiFunction(@GetKValue, 'GetKValue', cdRegister);
+ S.RegisterDelphiFunction(@GetCValue, 'GetCValue', CdStdCall);
+ S.RegisterDelphiFunction(@GetMValue, 'GetMValue', CdStdCall);
+ S.RegisterDelphiFunction(@GetYValue, 'GetYValue', CdStdCall);
+ S.RegisterDelphiFunction(@GetKValue, 'GetKValue', CdStdCall);
  S.RegisterDelphiFunction(@CMYK, 'CMYK', cdRegister);
  //S.RegisterDelphiFunction(@RGB, 'RGB', cdRegister);
- S.RegisterDelphiFunction(@PaletteRGB, 'PaletteRGB', cdRegister);
- S.RegisterDelphiFunction(@PaletteIndex, 'PaletteIndex', cdRegister);
- S.RegisterDelphiFunction(@GetRValue, 'GetRValue', cdRegister);
- S.RegisterDelphiFunction(@GetGValue, 'GetGValue', cdRegister);
- S.RegisterDelphiFunction(@GetBValue, 'GetBValue', cdRegister);
+ S.RegisterDelphiFunction(@PaletteRGB, 'PaletteRGB', CdStdCall);
+ S.RegisterDelphiFunction(@PaletteIndex, 'PaletteIndex', CdStdCall);
+ S.RegisterDelphiFunction(@GetRValue, 'GetRValue', CdStdCall);
+ S.RegisterDelphiFunction(@GetGValue, 'GetGValue', CdStdCall);
+ S.RegisterDelphiFunction(@GetBValue, 'GetBValue', CdStdCall);
 
 
 S.RegisterDelphiFunction(@Set8087CW,'Set8087CW', cdRegister); //Win
@@ -3734,12 +3736,12 @@ S.RegisterDelphiFunction(@SetMultiByteConversionCodePage,'SetMultiByteConversion
  S.RegisterDelphiFunction(@ReallocMemory, 'ReallocMemory', CdCdecl);
  S.RegisterDelphiFunction(@StringOfChar1, 'StringOfChar1', cdRegister);
  S.RegisterDelphiFunction(@StringOfChar2, 'StringOfChar2', cdRegister);
- S.RegisterDelphiFunction(@FindResource, 'FindResource', cdRegister);
- S.RegisterDelphiFunction(@LoadResource, 'LoadResource', cdRegister);
- S.RegisterDelphiFunction(@SizeofResource, 'SizeofResource', cdRegister);
- S.RegisterDelphiFunction(@LockResource, 'LockResource', cdRegister);
- S.RegisterDelphiFunction(@UnlockResource, 'UnlockResource', cdRegister);
- S.RegisterDelphiFunction(@FreeResource, 'FreeResource', cdRegister);
+ S.RegisterDelphiFunction(@FindResource, 'FindResource', CdStdCall);
+ S.RegisterDelphiFunction(@LoadResource, 'LoadResource', CdStdCall);
+ S.RegisterDelphiFunction(@SizeofResource, 'SizeofResource', CdStdCall);
+ S.RegisterDelphiFunction(@LockResource, 'LockResource', CdStdCall);
+ S.RegisterDelphiFunction(@UnlockResource, 'UnlockResource', CdStdCall);
+ S.RegisterDelphiFunction(@FreeResource, 'FreeResource', CdStdCall);
  S.RegisterDelphiFunction(@AttemptToUseSharedMemoryManager, 'AttemptToUseSharedMemoryManager', cdRegister);
  S.RegisterDelphiFunction(@ShareMemoryManager, 'ShareMemoryManager', cdRegister);
 
@@ -4061,11 +4063,11 @@ S.RegisterDelphiFunction(@KeyboardStateToShiftState2, 'KeyboardStateToShiftState
   S.RegisterDelphiFunction(@keybd_event, 'keybd_event', CdStdCall);
  S.RegisterDelphiFunction(@mouse_event, 'mouse_event', CdStdCall);
  S.RegisterDelphiFunction(@OemKeyScan, 'OemKeyScan', CdStdCall);
- S.RegisterDelphiFunction(@GET_APPCOMMAND_LPARAM, 'GET_APPCOMMAND_LPARAM', cdRegister);
- S.RegisterDelphiFunction(@GET_DEVICE_LPARAM, 'GET_DEVICE_LPARAM', cdRegister);
- S.RegisterDelphiFunction(@GET_MOUSEORKEY_LPARAM, 'GET_MOUSEORKEY_LPARAM', cdRegister);
- S.RegisterDelphiFunction(@GET_FLAGS_LPARAM, 'GET_FLAGS_LPARAM', cdRegister);
- S.RegisterDelphiFunction(@GET_KEYSTATE_LPARAM, 'GET_KEYSTATE_LPARAM', cdRegister);
+ S.RegisterDelphiFunction(@GET_APPCOMMAND_LPARAM, 'GET_APPCOMMAND_LPARAM', CdStdCall);
+ S.RegisterDelphiFunction(@GET_DEVICE_LPARAM, 'GET_DEVICE_LPARAM', CdStdCall);
+ S.RegisterDelphiFunction(@GET_MOUSEORKEY_LPARAM, 'GET_MOUSEORKEY_LPARAM', CdStdCall);
+ S.RegisterDelphiFunction(@GET_FLAGS_LPARAM, 'GET_FLAGS_LPARAM', CdStdCall);
+ S.RegisterDelphiFunction(@GET_KEYSTATE_LPARAM, 'GET_KEYSTATE_LPARAM', CdStdCall);
   S.RegisterDelphiFunction(@GlobalMemoryStatus, 'GlobalMemoryStatus', CdStdCall);
  S.RegisterDelphiFunction(@LocalAlloc, 'LocalAlloc', CdStdCall);
  S.RegisterDelphiFunction(@CreateEvent, 'CreateEvent', CdStdCall);
@@ -4113,8 +4115,7 @@ S.RegisterDelphiFunction(@KeyboardStateToShiftState2, 'KeyboardStateToShiftState
  S.RegisterDelphiFunction(@IsWindowEnabled, 'IsWindowEnabled', CdStdCall);
 
 
- 
-  //S.RegisterDelphiFunction(@system.Addr, 'Addr', CdStdCall);
+   //S.RegisterDelphiFunction(@system.Addr, 'Addr', CdStdCall);
   // CL.AddDelphiFunction('function Addr(Varname: string ): ___Pointer;');
  { procedure SysFreeString(const S: WideString); stdcall;
   external oleaut name 'SysFreeString';

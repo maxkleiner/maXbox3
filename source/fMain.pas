@@ -119,7 +119,8 @@
          10050      build 100 3 units, cgi, openmapX3, runbytecode, synwrap, cgi
          10162      build 101 DOM Support, IPUtils, geocode, compass, GPSDemo, 3DDemo
          10208      build 110 external app, mcisendstring, sqlscriptparser
-            
+         10217      build 110_1 two units, bugfix stdcall
+
                   [the last one before V4 in 2015]
                    V4.0   in  June 2015
  ************************************************************************** }
@@ -1918,7 +1919,9 @@ uses
   uPSI_JclTD32,  //3.9.9.110
   uPSI_ZDbcUtils,
   uPSI_ZScriptParser,
- 
+  uPSI_JvIni,
+  uPSI_JvFtpGrabber,
+  
   ///
    //MDIFrame,
   uPSI_St2DBarC,
@@ -3010,6 +3013,8 @@ begin
  SIRegister_JclTD32(X);
  SIRegister_ZDbcUtils(X);
  SIRegister_ZScriptParser(X);
+ SIRegister_JvFtpGrabber(X);
+ SIRegister_JvIni(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4366,6 +4371,9 @@ begin
   RIRegister_JclTD32(X);
   RIRegister_ZDbcUtils_Routines(EXec);
   RIRegister_ZScriptParser(X);
+  RIRegister_JvFtpGrabber(X);
+  //RIRegister_JvIni(X);
+  RIRegister_JvIni_Routines(Exec);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -8246,7 +8254,8 @@ begin
      memo2.Lines.Add(ExternalApp+' External App loaded') end
    else begin
      ExternalApp1.Caption:= 'External App';
-     memo2.Lines.Add('External App '+ExternalApp +' not found: check in ini-file [APP=]')
+     memo2.Lines.Add('External App '+ExternalApp +' not found: check in ini-file [APP=]');
+     memo2.Lines.Add('External App Example'+ExternalApp +'APP=C:\windows\system32\calc.exe')
    end;
  end;
 
