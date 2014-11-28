@@ -1,0 +1,184 @@
+{***************************************************************
+ * Project  : Strips Routines with REGEX
+ * App Name :  530_3DLab.TXT, 517_animation7.TXT, 491_analogmeter.TXT, #locs=146
+ * Purpose  : Demonstrates bitblock component2
+ * Date     : #sign> AM  max: MAXBOX8: 11/27/2014 11:50:59 AM M 
+ * History  : convert analogmeter to maXbox Aug 2014
+ *          : add REGEX time routines and tickcount to LED
+ ****************************************************************}
+ //TODO: transfer the strip to a REGEX func
+ //E:\maxbox3\mXGit39988\maxbox3\source\REST\GPS.pas
+ //striptags is of informatic championship
+   
+ Program StripFunctions_REGEX;
+                        
+ {Formats Position in sec into lat or lon string per Idx selection}
+
+
+  function ReadUntil(const ReadFrom, len: Integer; const C: Char; s: string): Integer;
+  var
+    j: Integer;
+  begin
+    for j := ReadFrom to Len do
+      if (s[j] = C) then begin
+        Result := j;
+        Exit;
+      end;
+    Result := Len+1;
+  end;
+ 
+function StripTags2(const S: string): string;
+var
+  Len: Integer;
+  i, APos: Integer;
+begin
+  Len := Length(S);
+  i := 0;
+  Result := '';
+  while (i <= Len) do begin
+    Inc(i);
+    APos := ReadUntil(i, len, '<', s);
+    Result := Result + Copy(S, i, APos-i);
+    i := ReadUntil(APos+1,len, '>',s);
+  end;
+end;
+
+FUNCTION Strip(const SubString: String; MainString: String): String;
+{ =================================================================== }
+VAR i,j: Integer;
+
+BEGIN{Strip}
+    j := length(SubString);
+    If j <> 0 Then Begin
+       i := Pos(SubString,MainString);
+       While i <> 0 Do Begin
+           Delete(MainString, i, j);
+           i := Pos(SubString,MainString);
+       End;
+   End;
+   result:= MainString;
+END{Strip};
+
+
+FUNCTION StripAny(const SubString: String; MainString: String): String;
+{ =================================================================== }
+VAR i,j: Integer;
+      s: char;
+BEGIN{Strip}
+    //j := Ord(SubString[0]);
+     j := length(SubString);
+    While j > 0 Do Begin
+       s := SubString[j];
+       i := Pos(s,MainString);
+       While i <> 0 Do Begin
+           Delete(MainString,i,1);
+           i := Pos(s,MainString);
+       End;
+       Dec(j);
+   End;
+   result:= MainString;
+END{Strip};
+
+  
+procedure AppendValueToStrings(const SL: TStrings; StartingValue: Integer);
+var
+  i: Integer;
+begin
+  Assert(Assigned(SL),'not assigned');  // Make sure valid TStrings has been passed in
+  for i := 0 to SL.Count - 1 do begin
+    SL[i] := IntToStr(StartingValue) + ' ' + SL[i];
+    Inc(StartingValue);
+  end;
+end;
+
+function GrabLine2(const s: string; ALine: Integer): string;
+var
+  sl: TStringList;
+begin
+  sl := TStringList.Create;
+  try
+    sl.LoadFromFile(s);
+    Result := sl[ALine - 1]; // index off by one
+  finally
+    sl.Free;
+  end;
+end;
+
+
+function GetLinesCount(sFileName : String): Integer;
+var
+oSL : TStringlist;
+begin
+oSL := TStringlist.Create;
+oSL.LoadFromFile(sFileName);
+result := oSL.Count;
+oSL.Free;
+end; //[/DELPHI]
+
+Const FName = 'maxboxlog2.log'; //'firstdemo3.txt';
+      Testtext = 'goodbye! cruel, harsh world!..?';
+var   FormLab3D: TFormLab3D;
+
+Begin               //main
+
+//OpenDoc(exepath+FName)
+{Memo1.Lines.LoadFromFile(YourFileNameHere);
+AppendValueToStrings(Memo1.Lines, 10);
+Memo1.Lines.SaveToFile(YourFileNameHere);}
+  //maxform1.N3dlab1click(self);
+
+  writeln(Strip('<br/>','<p>This is text.<br/>This is line 2</p>'))
+  writeln(StripString('<p>This is text.<br/>This is line 2</p>','<br/>'))
+  writeln(StripAny('<br/>','<p>This is text.<br/>This is line 2</p>'))
+  
+  writeln(Strip('!',testtext));
+  writeln(StripAny('!,.?',testtext));
+ 
+  sr:= StripTags2('<p>This is text.<br/> This is line 2</p>');
+  //ShowMessage(s);   // will display 'This is text.This is line 2'
+  writeln(sr);   // will display 'This is text.This is line 2'
+  
+  Writeln(ReplaceRegExpr ('([</pbr>])*',
+                          '<p>This is text.<br/> This is line 2</p>','', True))
+  Writeln(ReplaceRegExpr ('<[^>]*>',
+                          '<p>This is text.<br/> This is line 2</p>','', True))
+ 
+End.  // StripUtils
+
+//#sign:max: MAXBOX8: 11/27/2014 11:50:59 AM 
+//#tech:perf: 0:0:8.350 threads: 10 192.168.1.43 11:50:59 AM 3.9.9.120
+
+
+ref:
+
+http://stackoverflow.com/questions/11229831/regular-expression-to-remove-html-tags-from-a-string
+
+http://www.delphipages.com/forum/showthread.php?t=201629
+http://useruploadedfiles.programmersheaven.com/48584/NMEA.pas
+
+
+    Program SpammersAreParasites;
+    var
+      l1,l2: Srting;
+    begin
+      l1:='70';
+      l2:='0';
+      Bxo:=l1 + l2;
+      Bxo:=(Bxo)
+    (*
+      l1:=97;
+      l2:=9
+     Bxo:=(l1 + l2);
+    *)
+    //end.
+
+(*? Value of Bxo:    *)
+
+{"There is a theory which states that if ever anybody discovers
+exactly what the Universe is for and why it is here, it will
+instantly disappear and be replaced by something even more
+bizarre and inexplicable. There is another theory which states
+that this has already happened."
+-- Douglas Adams }
+
+

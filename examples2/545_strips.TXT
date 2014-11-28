@@ -1,0 +1,283 @@
+{***************************************************************
+ * Project  : Strips and Time Routines
+ * App Name :  530_3DLab.TXT, 517_animation7.TXT, 491_analogmeter.TXT, #locs=246
+ * Purpose  : Demonstrates bitblock component2
+ * Date     : #sign>3 AM max: MAXBOX8: 11/26/2014 8:41:39 AM  M 
+ * History  : convert analogmeter to maXbox Aug 2014
+ *          : add time routines and tickcount to LED
+            : animates a sprite, if XP then ProcessMessagesOFF;
+ ****************************************************************}
+ //TODO: transfer the strip to a REGEX func
+ //E:\maxbox3\mXGit39988\maxbox3\source\REST\GPS.pas
+ //striptags is of informatic championship
+  
+ Program StripFunctions;
+                        
+
+type
+  TPos = (tLat, tLon);
+  TShowFmt = (sfNautical, sfStatute, sfMetric);
+
+const
+  OneEighty  = 180*3600;                         // Sec of arc
+  ThreeSixty = 360*3600;                         //
+
+
+{Formats Position in sec into lat or lon string per Idx selection}
+
+
+  function ReadUntil(const ReadFrom, len: Integer; const C: Char; s: string): Integer;
+  var
+    j: Integer;
+  begin
+    for j := ReadFrom to Len do
+      if (s[j] = C) then begin
+        Result := j;
+        Exit;
+      end;
+    Result := Len+1;
+  end;
+ 
+function StripTags2(const S: string): string;
+var
+  Len: Integer;
+  i, APos: Integer;
+begin
+  Len := Length(S);
+  i := 0;
+  Result := '';
+  while (i <= Len) do begin
+    Inc(i);
+    APos := ReadUntil(i, len, '<', s);
+    Result := Result + Copy(S, i, APos-i);
+    i := ReadUntil(APos+1,len, '>',s);
+  end;
+end;
+
+FUNCTION Strip(const SubString: String; MainString: String): String;
+{ =================================================================== }
+VAR i,j: Integer;
+
+BEGIN{Strip}
+    j := length(SubString);
+    If j <> 0 Then Begin
+       i := Pos(SubString,MainString);
+       While i <> 0 Do Begin
+           Delete(MainString, i, j);
+           i := Pos(SubString,MainString);
+       End;
+   End;
+   result:= MainString;
+END{Strip};
+
+
+FUNCTION StripAny(const SubString: String; MainString: String): String;
+{ =================================================================== }
+VAR i,j: Integer;
+      s: char;
+BEGIN{Strip}
+    //j := Ord(SubString[0]);
+     j := length(SubString);
+    While j > 0 Do Begin
+       s := SubString[j];
+       i := Pos(s,MainString);
+       While i <> 0 Do Begin
+           Delete(MainString,i,1);
+           i := Pos(s,MainString);
+       End;
+       Dec(j);
+   End;
+   result:= MainString;
+END{Strip};
+
+  
+  //TODO: transfer the FmtStrArray to :
+function CoordinateStr2(Idx: Integer; PosInSec: Double; PosLn: TPos): string;
+var
+  aPos, Deg, Min, Sec, aDec: Integer;
+  Dd: Double;
+  C: Char;
+begin
+  if (PosInSec > OneEighty) then
+    PosInSec := PosInSec - ThreeSixty;
+  case PosLn of
+    tLat: if (PosInSec <= 0) then C := 'S' else C := 'N';
+    tLon: if (PosInSec <= 0) then C := 'W' else C := 'E';
+  end; {case}
+  PosInSec := Abs(PosInSec);
+  Dd  := PosInSec/3600;                          // DDD.ddd..
+  aPos := Round(PosInSec);
+  Deg := (aPos div 3600);                         // DDD
+  Min := (aPos mod 3600) div 60;                  // MM
+  Sec := (aPos mod 60) mod 60;                    // SS
+  aDec := Round(1.667*Sec);                       // mm
+  //Result := Format(FmtStrArray[ord(PosLN)][Idx], [C, Deg, Min, Sec, Dec, Dd]);
+end;
+
+
+{Magnetic course fom true course TC and magnetic variation MV}
+function MagCourse(TC, MV: Double): Double;
+begin
+  Result := TC-MV;
+  if (Result >= 360) then
+    Result := Result-360;
+  if (Result < 0) then
+    Result := Result+360;
+end;
+
+
+function UserUnits(Val: Double; sUnit: Char; ShowFmt: TShowFmt): string;
+begin
+  try
+    if (UpperCase(sUnit) = 'M') then
+      case ShowFmt of
+        sfNautical: Result := Format('%.0f ft', [3.28*Val]);
+        sfStatute : Result := Format('%.0f ft', [3.28*Val]);
+        sfMetric  : Result := Format('%.0f M',  [Val]);
+      end;
+    if (UpperCase(sUnit) = 'K') then
+      case ShowFmt of
+        sfNautical: Result := Format('%.1f', [Val]);
+        sfStatute : Result := Format('%.1f', [1.150779*Val]);
+        sfMetric  : Result := Format('%.1f', [1.852000*Val]);
+      end;
+  except
+    Result := '--';
+  end;
+end;
+
+procedure AppendValueToStrings(const SL: TStrings; StartingValue: Integer);
+var
+  i: Integer;
+begin
+  Assert(Assigned(SL),'not assigned');  // Make sure valid TStrings has been passed in
+  for i := 0 to SL.Count - 1 do begin
+    SL[i] := IntToStr(StartingValue) + ' ' + SL[i];
+    Inc(StartingValue);
+  end;
+end;
+
+function GrabLine2(const s: string; ALine: Integer): string;
+var
+  sl: TStringList;
+begin
+  sl := TStringList.Create;
+  try
+    sl.LoadFromFile(s);
+    Result := sl[ALine - 1]; // index off by one
+  finally
+    sl.Free;
+  end;
+end;
+
+
+function GetLinesCount(sFileName : String): Integer;
+var
+oSL : TStringlist;
+begin
+oSL := TStringlist.Create;
+oSL.LoadFromFile(sFileName);
+result := oSL.Count;
+oSL.Free;
+end; //[/DELPHI]
+
+Const FName = 'maxboxlog2.log'; //'firstdemo3.txt';
+      Testtext = 'goodbye! cruel, harsh world!..?';
+var FN: sTRING;
+    FormLab3D: TFormLab3D;
+
+Begin               //main
+// function CoordinateStr2(Idx: Integer; PosInSec: Double; PosLn: TPos): string;
+  writeln(CoordinateStr(2, 50.34, tlat));
+    //getgeocode
+{ SL := TStringList.Create;
+try
+  SL.LoadFromFile(exepath+FName);
+  AppendValueToStrings(SL, 10);
+  SL.SaveToFile(exepath+FName);
+finally
+  SL.Free;
+end;} 
+
+fn:= IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)))+FName;
+if not FileExists(fn) then begin
+  MessageBox(hinstance, 'File does not exist.', 'Error',MB_ICONSTOP OR MB_OK);
+  writeln('MessageBox(HInstance,''File not exists.'',''Error'',''MB_ICONSTOP OR MB_OK');
+end;
+
+//OpenDoc(exepath+FName)
+{Memo1.Lines.LoadFromFile(YourFileNameHere);
+AppendValueToStrings(Memo1.Lines, 10);
+Memo1.Lines.SaveToFile(YourFileNameHere);}
+
+ (* FormLab3D:= TFormLab3D.create(self);
+  FormLab3D.formcreate(self);
+  with FormLab3D do begin
+    ComboBoxFigure.itemindex:= 2;
+    //ComboBoxFigure.onclick;
+    SpinEditDistance.value:= 12;
+    show;
+    update;
+  end;*)  
+  {with TFormLab3D.create(self) do begin
+    //formcreate(self)
+    Caption:= 'mX3_3D_LAB_FAB_onscript';
+    //ComboBoxFigure.Items[ComboBoxFigure.ItemIndex]
+    ComboBoxFigure.itemindex:= 2;
+    //ComboBoxFigure.items[2];
+    //image.picture.bitmap:= getbitmap(Exepath+'examples\citymax.bmp');
+    SpinEditDistance:= 50;
+    show;
+  end;}  
+  
+  //maxform1.N3dlab1click(self);
+
+  sr:= StripTags2('<p>This is text.<br/>This is line 2</p>');
+  //ShowMessage(s);   // will display 'This is text.This is line 2'
+  writeln(sr);   // will display 'This is text.This is line 2'
+  
+  writeln(Strip('<br/>','<p>This is text.<br/>This is line 2</p>'))
+  writeln(StripString('<p>This is text.<br/>This is line 2</p>','<br/>'))
+  writeln(StripAny('<br/>','<p>This is text.<br/>This is line 2</p>'))
+  
+  writeln(Strip('!',testtext));
+  writeln(StripAny('!,.?',testtext));
+  
+end.  // StripUtils
+
+//#sign: max: MAXBOX8: 11/26/2014 8:41:39 AM 
+//#tech:10perf: 0:0:9.628 threads: 6 192.168.1.43 8:41:39 AM 3.9.9.110
+
+
+ref:
+
+http://www.delphipages.com/forum/showthread.php?t=201629
+
+http://useruploadedfiles.programmersheaven.com/48584/NMEA.pas
+
+
+    Program SpammersAreParasites;
+    var
+      l1,l2: Srting;
+    begin
+      l1:='70';
+      l2:='0';
+      Bxo:=l1 + l2;
+      Bxo:=(Bxo)
+    (*
+      l1:=97;
+      l2:=9
+     Bxo:=(l1 + l2);
+    *)
+    //end.
+
+(*? Value of Bxo:    *)
+
+{"There is a theory which states that if ever anybody discovers
+exactly what the Universe is for and why it is here, it will
+instantly disappear and be replaced by something even more
+bizarre and inexplicable. There is another theory which states
+that this has already happened."
+-- Douglas Adams }
+
+

@@ -1,7 +1,27 @@
 ****************************************************************
-Release Notes maXbox 3.9.9.101 November 2014
+Release Notes maXbox 3.9.9.120 December 2014 CODEsign
 ****************************************************************
-Add 27 Units, 1 Tutor, maXmap, OpenStreetView, MAPX, timers
+Add 10 Units, 1Slides, NeuralNetwork, Pan3D View, GDIBackend
+
+1043 unit uPSI_NeuralNetwork;
+1044 unit uPSI_StExpr;
+1045 unit uPSI_GR32_Geometry;
+1046 unit uPSI_GR32_Containers;
+1047 unit uPSI_GR32_Backends_VCL,
+1048 unit uPSI_StSaturn; //Venus+Pluto+Mars+Merc+JupSat+++
+1049 unit uPSI_JclParseUses;
+1050 unit uPSI_JvFinalize;
+1051 unit uPSI_panUnit1;
+1052 unit uPSI_DD83u1;  //Arduino Tester
+
+SHA1:  maXbox3.exe 3EFB12E5729BDAA745373C2743F9DD1E93C9295D
+CRC32: maXbox3.exe 9435E377
+
+
+****************************************************************
+Release Notes maXbox 3.9.9.110 November 2014 CODEsign
+****************************************************************
+Add 36 Units, 1 Tutor, maXmap, OpenStreetView, MAPX, timers
 Function Menu/View/GEO Map View, DownloadFile, wgetX, sensors
 StreamUtils, IDL Syntax, OpenStreetMap, OpenMapX, LPT1, LazDOM
 ByteCode2, runByteCode, sensors, CGI-Powtils, IPUtils2, GPS_2
@@ -33,10 +53,20 @@ ByteCode2, runByteCode, sensors, CGI-Powtils, IPUtils2, GPS_2
 1030 unit uPSI_NMEA;     // GPS
 1031 unit uPSI_ScreenThreeDLab;
 1032 unit uPSI_Spin; //VCL	
+1033 unit uPSI_DynaZip;
+1034 unit uPSI_clockExpert;
+1035 unit debugLn
+1036 uPSI_SortUtils;
+1037 uPSI_BitmapConversion;
+1038 unit uPSI_JclTD32;
+1039 unit uPSI_ZDbcUtils;
+1040 unit uPSI_ZScriptParser;
+1041 uPSI_JvIni,
+1042 uPSI_JvFtpGrabber;
 
 
-SHA1:  maXbox3.exe 786FA3035226AC3F62F6F6B9E2E2B94C1D659297
-CRC32: maXbox3.exe 612D41BB
+SHA1:  maXbox3.exe C47713EE2CFFD66F569249E63A16D10874B484B1
+CRC32: maXbox3.exe 2242B697
 
 
 ****************************************************************

@@ -1,0 +1,350 @@
+PROGRAM TreeD_Panorama;
+
+//////////////////////////////////////////////////////////////////////
+//  #sign:22 max: MAXBOX8: 27.11.2014 14:46:40 
+//  Purpose: Grabs 3D View of pictures,  more info see below        //
+//  #path>ples\C:\maXbook\maxbox3\mX3999\maxbox3\examples\          //
+//  Lines of Code #locs:745
+//////////////////////////////////////////////////////////////////////
+
+Const TEXTOUT = 'Hi world of 3D Bee';
+
+//############################################################################
+// Panoramic Viewer Demo Spiral Architect
+//############################################################################
+//TODO: Button with pic color and save bitmap as png
+//Panoramic Viewer Demo Source and pic: sejour2048.jpg
+
+
+//<FUNCTION>
+
+function SplitToken(const Text: string; SplitChar: Char;
+    var First, Last: string): Boolean;
+var  SplitPos: Integer;
+begin
+  Result:= False;
+  SplitPos:= Pos(SplitChar, Text);
+  if SplitPos = 0 then Exit;
+  First:= Trim(Copy(Text, 1, SplitPos -1));
+  Last:= Trim(Copy(Text, SplitPos +1, Length(Text) -SplitPos));
+  Result:= (First <>'') and (Last <>'');
+end;
+
+
+Begin  //Main
+  //TOutlookExport_Spy;
+  Writeln('');
+  Writeln('Start 3D View Command GLScene/OpenGL: '+datetimetostr(now));  
+//<Definitions> 
+
+  maxform1.panView1click(self) 
+
+  {with TledForm.create(self) do begin
+    showmodal;
+    free; end;} 
+End. 
+
+Doc:
+
+Panoramic Viewer Demo (with Source)
+See PanUnit1.pas or Unit1.pas header & code for more details.
+
+Eric Grange
+http://glscene.org
+
+Source Ref:
+{
+  Simple spherical panorama viewer using GLScene
+
+  The sample input images are by Philippe Hurbain. http://philohome.free.fr/
+
+  Other resources on how to make your own spherical or cylindrical panorama:
+    http://www.fh-furtwangen.de/~dersch/
+    http://www.panoguide.com/
+
+  Why IPIX patents regarding use of fisheye photos are questionable:
+    http://www.worldserver.com/turk/quicktimevr/fisheye.html
+
+  10/12/02 - EG - Updated for GLScene v0.9+
+}
+unit Unit1;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs, jpeg,
+  ComCtrls, StdCtrls, GLScene, GLObjects, ExtCtrls, GLMisc, ExtDlgs,
+  GLTexture, KeyBoard, GLCadencer, GLWin32Viewer;
+
+type
+  TForm1 = class(TForm)
+    GLSceneViewer1: TGLSceneViewer;
+    GLScene1: TGLScene;
+    Panel1: TPanel;
+    GLCamera1: TGLCamera;
+    BtnLoad: TButton;
+    TrackBar1: TTrackBar;
+    LabelYaw: TLabel;
+    LabelPitch: TLabel;
+    OpenPictureDialog1: TOpenPictureDialog;
+    Label1: TLabel;
+    Sphere1: TGLSphere;
+    GLMaterialLibrary1: TGLMaterialLibrary;
+    Label2: TLabel;
+    GLCadencer1: TGLCadencer;
+    procedure GLSceneViewer1MouseDown(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure GLSceneViewer1MouseMove(Sender: TObject; Shift: TShiftState;
+      X, Y: Integer);
+    procedure BtnLoadClick(Sender: TObject);
+    procedure TrackBar1Change(Sender: TObject);
+    procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure FormKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure GLCadencer1Progress(Sender: TObject; const deltaTime,
+      newTime: Double);
+  private
+    { Private declarations }
+      mx, my : integer;
+      pitch, yaw : single; // in degree
+      procedure PanCameraAround(dx, dy : single);
+  public
+    { Public declarations }
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+uses VectorGeometry;
+
+//{$R *.DFM}
+
+procedure TForm1.GLSceneViewer1MouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  mx:=x;
+  my:=y;
+end;
+
+procedure TForm1.GLSceneViewer1MouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+var
+   dx, dy, f : Single;
+begin
+  if Shift=[ssLeft] then
+    begin
+     f:=0.2*40/GLCamera1.FocalLength;
+     dx:=(x-mx)*f;
+     dy:=(y-my)*f;
+     PanCameraAround(dx, dy);
+    end;
+  mx:=x;
+  my:=y;
+end;
+
+procedure TForm1.BtnLoadClick(Sender: TObject);
+begin
+  with OpenPictureDialog1 do
+    if Execute then
+    GLMaterialLibrary1.Materials[0].Material.Texture.Image.LoadFromFile(FileName);
+end;
+
+procedure TForm1.TrackBar1Change(Sender: TObject);
+begin
+  GLCamera1.FocalLength:=TrackBar1.Position;
+end;
+
+procedure TForm1.FormMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+begin
+   TrackBar1.Position:=TrackBar1.Position+Round(2*WheelDelta/120);
+end;
+
+procedure TForm1.GLCadencer1Progress(Sender: TObject; const deltaTime,
+  newTime: Double);
+const step_size = 20;
+var
+   delta : Single;
+   dx, dy : Single;
+begin
+   delta:=step_size * 40/GLCamera1.FocalLength * deltaTime;
+   dx:=0;
+   dy:=0;
+   if IsKeyDown(VK_LEFT)  then dx:=dx+delta;
+   if IsKeyDown(VK_UP)    then dy:=dy+delta;
+   if IsKeyDown(VK_RIGHT) then dx:=dx-delta;
+   if IsKeyDown(VK_DOWN)  then dy:=dy-delta;
+   PanCameraAround(dx, dy);
+end;
+
+procedure TForm1.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  key:=0; // all keys handled by Form1
+end;
+
+procedure TForm1.PanCameraAround(dx, dy : single);
+begin
+  pitch:=pitch+dy;
+  yaw:=yaw-dx;
+
+  if pitch>90 then pitch:=90;
+  if pitch<-90 then pitch:=-90;
+  if yaw>360 then yaw:=yaw-360;
+  if yaw<0 then yaw:=yaw+360;
+
+  GLCamera1.Up.SetVector(0, 1, 0);
+  GLCamera1.Direction.SetVector( sin(DegToRad(yaw)),
+                                 sin(DegToRad(pitch)),
+                                -cos(DegToRad(yaw)));
+
+  labelPitch.caption:=format('Pitch: %3f', [pitch]);
+  labelYaw.caption:=format('Yaw: %3f', [yaw]);
+end;
+
+end.
+
+
+//############################################################################
+// Archimedes Spiral App
+//############################################################################
+
+unit ArchSpiralMain;
+
+interface
+
+uses
+  w3system, w3components, w3ctrls, w3application, w3game, w3gameapp,
+  w3polygons, w3inet, w3graphics;
+
+type
+  TApplication = class(TW3CustomGameApplication)
+  private
+    FValueA: Float;
+    FValueB: Float;
+    FWait: Boolean;
+    procedure HandleClick(Sender:TObject);
+  protected
+    procedure ApplicationStarting; override;
+    procedure ApplicationClosing; override;
+    procedure PaintView(Canvas: TW3Canvas); override;
+  end;
+
+implementation
+
+//############################################################################
+// TApplication
+//############################################################################
+
+procedure TApplication.ApplicationStarting;
+begin
+  inherited;
+
+  FValueA := 3.0;
+  FValueB := 1.4;
+
+  GameView.OnClick := Self.HandleClick;
+
+  // Initialize refresh interval, set this to 1 for optimal speed
+  GameView.Delay := 10;
+ 
+  // Start the redraw-cycle with framecounter active
+  // Note: the framecounter impacts rendering speed. Disable
+  // the framerate for maximum speed (false)
+  GameView.StartSession(true);
+end;
+
+procedure TApplication.ApplicationClosing;
+begin
+  GameView.EndSession;
+  inherited;
+end;
+
+procedure TApplication.HandleClick(Sender: TObject);
+begin
+  FWait := not FWait;
+end;
+
+// Note: In a real live game you would try to cache as much
+// info as you can. Typical tricks are: 
+//   1: Only get the width/height when resized
+//   2: Pre-calculate strings, especially RGB/RGBA values
+//   3: Only redraw what has changed, avoid a full repaint
+// The code below is just to get you started
+
+procedure TApplication.PaintView(Canvas: TW3Canvas);
+var
+  cx, cy: Integer;
+  i: Integer;
+  angle: Float;
+  x, y: Float;
+begin
+  if FWait then
+    exit;
+
+  FValueB := FValueB + 0.001;
+
+  // Clear background
+  Canvas.FillStyle := 'rgba(0,0,99,0.08)';
+  Canvas.FillRectF(0, 0, GameView.Width, GameView.Height);
+
+  // Draw our framerate on the screen
+//  Canvas.font := '10pt verdana';
+//  Canvas.FillStyle := 'rgb(255,255,255)';
+//  Canvas.FillTextF('FPS:' + IntToStr(GameView.FrameRate) + ' / ' + floatToStr(FbValue) ,10,20,MAX_INT);
+
+  cx := GameView.width div 2;
+  cy := GameView.Height div 2;
+  Canvas.BeginPath;
+
+  for i := 42 downto 0 do
+  begin
+    angle := FValueB * i;
+    x := cx + (FValueA + FValueB * angle) * cos(angle);
+    y := cy + (FValueA + FValueB * angle) * sin(angle);
+    if i = 42 then Canvas.MoveToF(x, y) else Canvas.LineToF(x,y);
+  end;
+
+  Canvas.StrokeStyle := '#FFF';
+  Canvas.Stroke;
+end;
+
+
+end.
+
+More Items:
+       aContactItem.Categories:='Kunde'; // neu
+       aContactItem.FirstName:=KundeName1.AsString;
+       aContactItem.LastName:=KundeName2.AsString;
+       aContactItem.FileAs:=KundeSuchbegriff.AsString;
+       aContactItem.CompanyName:=KundeSuchbegriff.AsString;
+       aContactItem.CustomerID:=KundeKundenNr.AsString;
+       aContactItem.Account:=KundeFibuNr.AsString; // neu
+       aContactItem.Body:=KundeAnsprechpartner.AsString;
+       aContactItem.BusinessAddressStreet:=KundeStrasse.AsString;
+       aContactItem.BusinessAddressPostalCode:=KundePLZ.AsString;
+       aContactItem.BusinessAddressPostOfficeBox:=KundePostfach.AsString;
+       aContactItem.BusinessAddressCity:=KundeOrt.AsString;
+//         aContactItem.BusinessAddressCountry:=KundeLand.AsString; // neu
+       aContactItem.OrganizationalIDNumber:=KundeUStIdNr.AsString; // neu
+//         aContactItem.GovernmentIDNumber:=''
+       aContactItem.BusinessTelephoneNumber:=KundeTelefon1.AsString;
+       aContactItem.BusinessFaxNumber:=KundeFax.AsString;
+       aContactItem.MobileTelephoneNumber:=KundeTelefon2.AsString;
+       aContactItem.Email1Address:=KundeEMail.AsString;
+       aContactItem.WebPage:=KundeHomepage.AsString;
+       aContactItem.Save;
+ 
+  http://i1-win.softpedia-static.com/screenshots/maXbox_5.png?1381322021
+  
+    RegisterMethod('Constructor Create(AOwner: TComponent)');
+    RegisterConstructor(@TJvMail.Create, 'Create');
+  
+   RegisterMethod('Procedure Free');
+   RegisterMethod(@TJvMail.Destroy, 'Free');
+ // function GetMacAddresses(const Machine: string; const Addresses: TStrings):Integer;
+
+----app_template_loaded_code----

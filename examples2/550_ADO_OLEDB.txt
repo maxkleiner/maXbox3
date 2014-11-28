@@ -1,0 +1,207 @@
+ //https://github.com/maxkleiner/maXbox3/blob/masterboxexamples/469_formarrow_datepicker.txt 
+Program Demo_ADO_OLEDB_Result;
+{ ****************************************************************
+  Sourcefile : 3#file:550_ADO_OLEDB.txt
+  Typ : Form-Unit
+  Engineer : MK
+  First Release : 10.01.1997
+  Compiler : DevC+Delphi, OS: W7
+  Purpose : Ermöglicht Suche und Oeffnen einer Schatzung
+  Revisions : 25.10.96 first dialog to open a date
+            :#sign:3 max: MAXBOX7: 24.11.2014 11:58:31 
+            : 23.04.2014 migrate to maXbox - #locs:146
+ **************************************************************** }
+
+type TdbOpenDlg = TForm;
+  var //BeginDate: TDateTime;
+      dbOpenDlg: TdbOpenDlg;
+      //brDateForm: TDateTimePicker; //TJvPickdate; 
+      //TODO: eliminate the global vars
+      
+//http://edn.embarcadero.com/article/10270
+
+Const
+  adCmdTxt = $00000001;
+  adExecNoRecords = $00000080;
+
+procedure RunScriptADOOLE_3();
+var
+ ADOCommand: Variant;
+ ADORecordset: Variant;
+ ADOConnection: Variant;
+ exeStr, DSNString: string;
+begin
+  exeStr:= 'INSERT INTO Table1 (FirstName, LastName, Phone)'+
+                'VALUES (''MaxNewNew3'', ''Box545'', ''031-333 77 88'')';
+  DSNString:= 'Provider=MSDASQL;DSN=mx3base;Uid=sa;Pwd=admin';
+ try
+  ADOConnection:= CreateOleObject('ADODB.Connection');
+  ADOConnection.ConnectionString:=  DSNString;
+  ADOConnection.Open;
+ try
+   ADOCommand:= CreateOleObject('ADODB.Command');
+   ADOCommand.ActiveConnection:= ADOConnection;
+     ADOCommand.CommandText:= exeStr;      
+     ADOCommand.Execute(NULL, NULL, adCmdTxt or adExecNoRecords);
+ finally
+   ADOConnection.Close;
+ end;
+ except
+    MsgBox('GetExceptionMessage_ADOOLE', 'mbError', MB_OK);
+ end;
+end;
+
+procedure ShowRecordsADOOLE_3();
+var
+ ADOCommand: Variant;
+ ADORecordset: Variant;
+ ADOConnection: Variant;
+ queryStr, DSNString: string;
+begin
+  queryStr:= 'Select * from Table1';
+  DSNString:= 'Provider=MSDASQL;DSN=mx3base;Uid=sa;Pwd=admin';
+ try
+  ADOConnection:= CreateOleObject('ADODB.Connection');
+  ADOConnection.ConnectionString:=  DSNString;
+  ADOConnection.Open;
+ try
+   ADOCommand:= CreateOleObject('ADODB.Command');
+   ADOCommand.ActiveConnection:= ADOConnection;
+     ADOCommand.CommandText:= queryStr;      
+    ADOCommand.CommandType:= adCmdTxt;
+ 
+     //ADOCommand.Execute(NULL, NULL, adCmdTxt or adExecNoRecords);
+  ADORecordset:= CreateOleObject('ADODB.Recordset');
+   ADORecordset:= 
+       ADOCommand.Execute(NULL, NULL, adCmdTxt);
+   ADORecordset.movefirst;
+   it:= 0;
+   While Not ADORecordset.EOF do begin
+       //writeln(ADORecordset().Value)
+       inc(it)
+       writeln('founds: '+inttostr(it));
+    ADORecordset.MoveNext
+  End; 
+ 
+ finally
+  //ADOCommand:= unassigned;
+  //ADOCommand.Close;
+   writeln(ADOCommand.CommandText)
+   ADOConnection.Close;
+   //ADOConnection.Free;
+   //ADOCommand.close;
+   //ADOConnection:= Unassigned;
+      //Sheet := Unassigned;
+ end;
+ except
+    MsgBox('GetExceptionMessage_ADOOLE', 'mbError', MB_OK);
+ end;
+end;
+ 
+
+//---
+//On 2014-11-19 13:52, Silvia Rothen wrote:
+//> http://codereview.stackexchange.com/questions/35934/using-ado-to-run-sql-script-with-go-syntax-in-inno-setup
+
+procedure TDlg_Button1Click(Sender: TObject);
+begin
+  dbOpenDlg.ModalResult:= mrOK;
+end;
+
+procedure TDlg_CalBtnFromClick(Sender: TObject);
+var BeginDate: TDateTime;
+//const A='';
+
+begin
+  dbOpenDlg:= TdbOpenDlg.Create(self)
+  with dbOpenDlg do begin
+    setBounds(0,0,400,400)
+  end;
+  with TBitBtn.Create(dbopenDlg) do begin
+    parent:= dbopenDlg;
+    setBounds(20,300,150,40)
+    caption:= 'OK Date';
+    glyph.LoadFromRes(getHINSTANCE,'TPSIMPORT_COMOBJ');
+    onClick:= @TDlg_Button1Click;
+  end;
+  try
+    with TDateTimePicker.Create(dbopenDlg) do begin
+      parent:= dbopenDlg;
+      SetBounds(20,20,100,100);
+      if dbOpenDlg.showModal = mrOK then
+        beginDate:= Datetime;
+      PrintF('date back time: ',[dateTimetoStr(Datetime)]);
+      Voice('You set the date '+datetoStr(begindate));
+    end;
+  finally
+    dbopenDlg.Release; //or free
+  end;
+end;
+
+
+begin //main
+  //TDlg_CalBtnFromClick(self);
+  RunScriptADOOLE_3()
+  //ShowRecordsADOOLE_3()
+ end.
+
+
+ Ref
+ //' Specify the connection string
+  AConnection.ConnectionString = "Provider=Microsoft.Jet.OLEDB.4.0;" + _
+  "Data Source=C:\Microsoft Visual Studio\VB98\biblio.mdb"
+  ' Activate the connection
+  AConnection.Open
+  ' Create a new Command object
+  Set Cmd = ADO.CreateCommand
+  ' To create an ADO command you can also use the following code:
+  ' Set Cmd = CreateObject("ADODB.Command")
+  ' Specify the connection
+  Cmd.ActiveConnection = AConnection
+  ' Specify command type and text
+  Cmd.CommandText = "Select * From Authors WHERE Authors.[Year Born] < MyParam"
+  Cmd.CommandType = adCmdText
+  ' Create a new parameter
+  Set Prm = Cmd.CreateParameter("MyParam", adInteger, adParamInput)
+  Cmd.Parameters.Append Prm
+  ' Specify the parameter value
+  Prm.Value = 1940
+  ' Execute the command
+  Set RecSet = Cmd.Execute
+  ' Execute the command
+  RecSet.MoveFirst
+  While Not RecSet.EOF
+    Log.Message RecSet("Author").Value, RecSet("Year Born").Value
+    RecSet.MoveNext
+  WEnd
+  AConnection.Close
+End Sub
+
+
+Doc: Status
+    API
+    Training
+    Shop
+    Blog
+    About
+
+    © 2014 GitHub, Inc.
+    Terms
+    Privacy
+    Security
+    Contact
+    
+    Anforderung:
+    Ein Datum ist zu wählen und nach Bestätigung zu hören. 
+    Aufgabe:
+    Alles unnötige ist auszukommentieren.
+    
+  14.6.2014  
+    
+  S. 251 - 268 im C++ Buch  Aufräumarbeiten
+    
+  S. 11 -Skript Use Case
+  
+  Tool: Musterlösung 469_formarrow_datepicker_ibz.txt
+  
+  

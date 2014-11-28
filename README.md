@@ -2,6 +2,26 @@ maXbox
 ======
 
 ****************************************************************
+Release Notes maXbox 3.9.9.120 December 2014 CODEsign
+****************************************************************
+Add 10 Units, 1Slides, NeuralNetwork, Pan3D View, GDIBackend
+
+1043 unit uPSI_NeuralNetwork;
+1044 unit uPSI_StExpr;
+1045 unit uPSI_GR32_Geometry;
+1046 unit uPSI_GR32_Containers;
+1047 unit uPSI_GR32_Backends_VCL,
+1048 unit uPSI_StSaturn; //Venus+Pluto+Mars+JupSat+++
+1049 unit uPSI_JclParseUses;
+1050 unit uPSI_JvFinalize;
+1051 unit uPSI_panUnit1;
+1052 unit uPSI_DD83u1;  //Arduino Tester
+
+SHA1:  maXbox3.exe 3EFB12E5729BDAA745373C2743F9DD1E93C9295D
+CRC32: maXbox3.exe 9435E377
+
+
+****************************************************************
 Release Notes maXbox 3.9.9.110 November 2014
 ****************************************************************
 Add 36 Units, 1 Tutor, maXmap, OpenStreetView, MAPX, timers

@@ -1,0 +1,189 @@
+{***************************************************************
+ * Project  : System Time from Internet with TimeTunnel
+ * App Name: time_machine2
+ * Purpose  : Demonstrates the functions of SNTP time sync
+ * Date  : 14/10/2010  -  time slot, locs= 130
+ * History  : add a voice of result, filter test
+ ***************************************************************}
+Program Time_Machine2;
+
+//{$IFDEF MSWINDOWS}{$R *.dfm}{$ELSE}{$R *.xfm}{$ENDIF}
+
+const 
+ DIM = 790;
+
+Type
+  TXYVector = array[0..DIM] of TFloatPoint; 
+  TMath_Func = PROCEDURE (var x: single);
+
+var
+  mySTime: TIdSNTP;
+  //mytime: TIDDayTime;
+  myindex: integer;
+  cFrm: TForm;
+  amp, freq, i: byte;
+  fct7x, fct8x: TMath_Func;
+  fPoints: TXYVector;
+
+procedure drawChart(vPoints: TXYVector; vcolor: integer);
+var
+  i, hsize, 
+  origx, origy, xRngPixs, yRngPixs: integer;
+begin
+  with cFrm.canvas do begin
+    hsize:= cFrm.Height -1 div 2;
+     { Paint a coordinate cross }
+    origx:= (cfrm.Width div 2);
+    origy:= (cfrm.Height div 2);
+    Pen.Color:= clwhite;
+    Pen.Style:= psSolid;
+    Pen.Width:= 1;
+    MoveTo(1, origy);
+    LineTo(cfrm.Width - 1, origy);
+    MoveTo(origx, 1);
+    LineTo(origx, cFrm.Height - 1);
+    { Paint some tickmarks and label the axis }
+    Font.Name:= 'Georgia';
+    Font.Size:= 18;
+    Font.Color:= clblue;
+    xRngPixs:= (cFrm.Width - 20) div 4; { pixels in Pi }
+    yRngPixs:= (cFrm.Height - 20) div 2; { pixels in 1 }
+    TextOut(origx -2 * xRngPixs +2, origy -210,'maXPlot TimeTunnel');
+    Pen.Color:= vcolor;
+    MoveTo(0, hsize -((round(vPoints[0].Y))));
+    for i:= 0 to DIM do
+      LineTo(i, round(vPoints[i].Y));
+  end;
+end; 
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  amp:= 110;
+  freq:= 440;
+  with cFrm do begin
+    caption:= 'maXFunCPlotter(((((\*/)))))';  
+    BorderStyle:= bsDialog;
+    height:= 440;
+    width:= 800;
+    color:= clblack;
+    //onPaint:= @PaintBox1Paint;
+    Show;
+  end  
+end;
+
+PROCEDURE exp2(var x: single);
+BEGIN
+  x:= exp(-0.2*x)*sin((pi/4)*x);
+END;
+
+PROCEDURE sin2(var x: single);
+BEGIN
+  x:= sin((pi/4)*x)*(sin(3*pi*x));
+END;
+
+PROCEDURE fct_table(start, amp, freq, color: integer; FCT: TMath_Func;
+                                         fct_name: string);
+var x, tempx: single;
+    origy, i: Integer;
+BEGIN
+  //Writeln('x   |   ' + fct_name);
+  origy:= cFrm.Height div 2;
+  x:= start;
+  for i:= 0 to (DIM) do begin
+    x:= i/freq
+    tempx:= x;
+    FCT(x);
+    fPoints[i].Y:= origy + (x * amp);
+    //Writeln(floatToStr(x) +' | '+ floatToStr((tempx)));
+  end;
+  DrawChart(fPoints, color)
+END;
+ 
+Begin
+{0.debian.pool.ntp.org
+1.debian.pool.ntp.org
+2.debian.pool.ntp.org
+3.debian.pool.ntp.org}
+  MyIndex := LastDelimiter('\.:','c:\filename.ext'); 
+  writeln('last delimit test '+inttoStr64(myindex))    
+  //writeln(TimeToStr(strtotime('14:15:12')))
+  writeln(strFilter('this is mX3 filter demo',['m','X','s'])) 
+  fct7x:= @exp2;
+  fct8x:= @sin2;
+  loadForm;
+  fct_table(40, amp, 50, clwhite, fct7x, 'exp2 function');
+  fct_table(40, 74, 100, clblue, fct8x, 'sin2 function');
+  for i:= 200 downto 160 do
+    fct_table(50, amp, i, clred, fct8x, '3D phase shifter2');
+  mySTime:= TIdSNTP.create(self);
+  try
+    //mySTime.host:='0.debian.pool.ntp.org'
+    mySTime.host:='time.windows.com'
+    
+    writeln('the internettime '+datetimetoStr(mystime.datetime));
+    if mySTime.Synctime then
+      writeln('operating system sync now!');
+  finally
+    mySTime.free;
+    Speak('your system time is now sync with the internet time '+TimeToStr(time))
+    cFrm.Free;
+  end;
+end.   
+
+ ---------------------------------------------------------------------
+-----------------------------------------------------------------------
+The Comp (computational) type is native to the Intel CPU and represents a 64-bit integer. A Comp is classified as a real, however, it does not behave like an ordinal type. Comp is maintained for backward compatibility only. Use the Int64  type for better performance.
+
+String quote = “if the facts don’t fit the theory, face the facts. – Albert Einstein”;
+<script type="text/javascript" src="http://www.brainyquote.com/link/quotebr.js"></script>
+
+debian.pool.ntp.org
+
+Stack := #0#0#0#0 + Stack;
+          Pointer((@Stack[1])^) := VarPtr;
+
+function SafeStr(const s: string): string;
+var
+ i : Longint;
+begin
+  Result:= s;
+  for i:= 1 to length(s) do begin
+    if s[i] in [#0..#31] then begin
+      Result := Copy(s, 1, i-1);
+      exit;
+    end;
+  end;
+end;
+
+procedure Set_Union(Dest, Src: PByteArray; ByteSize: Integer);
+var
+  i: Longint;
+begin
+  for i := ByteSize -1 downto 0 do
+    Dest^[i] := Dest^[i] OR Src^[i];
+end;
+
+procedure Set_Diff(Dest, Src: PByteArray; ByteSize: Integer);
+var
+  i: Longint;
+begin
+  for i := ByteSize -1 downto 0 do
+    Dest^[i] := Dest^[i] AND NOT Src^[i];
+end;
+
+procedure Set_Intersect(Dest, Src: PByteArray; ByteSize: Integer);
+var
+  i: Longint;
+begin
+  for i := ByteSize -1 downto 0 do
+    Dest^[i] := Dest^[i] AND Src^[i];
+end;
+
+http://max.kleiner.com/TEE_files/243_arnold.jpg
+ In dieser Auktion bieten auf ein 8-Teiliges SNCF Wagenset "le Capitole "
+Ein echter Hingucker nicht
+Mehr jeden Tag erhältlich Art-Nr.64045 ,64046.Roco
+1xTrix Art.22576 digitalisiert
+Mit Soundecoder Lenz DCC Gold und Soft-Drive Antrieb
+mit Maxon Motor

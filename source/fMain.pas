@@ -120,6 +120,7 @@
          10162      build 101 DOM Support, IPUtils, geocode, compass, GPSDemo, 3DDemo
          10208      build 110 external app, mcisendstring, sqlscriptparser
          10217      build 110_1 two units, bugfix stdcall
+         10288      build 120 8 units more, panview, planets, ActiveX 
 
                   [the last one before V4 in 2015]
                    V4.0   in  June 2015
@@ -169,9 +170,9 @@ const
    ALLUNITLIST = 'docs\maxbox3_9.xml'; //'in /docs;
    INCLUDEBOX = 'pas_includebox.inc';
    BOOTSCRIPT = 'maxbootscript.txt';
-   MBVERSION = '3.9.9.110';
+   MBVERSION = '3.9.9.120';
    MBVER = '399';              //for checking!
-   MBVER2 = '399110';              //for checking!
+   MBVER2 = '399120';              //for checking!
    EXENAME ='maXbox3.exe';
    MXSITE = 'http://www.softwareschule.ch/maxbox.htm';
    MXVERSIONFILE = 'http://www.softwareschule.ch/maxvfile.txt';
@@ -538,6 +539,8 @@ type
     GPSSatView1: TMenuItem;
     N3DLab1: TMenuItem;
     ExternalApp1: TMenuItem;
+    PANView1: TMenuItem;
+    Tutorial39GEOMaps1: TMenuItem;
     procedure IFPS3ClassesPlugin1CompImport(Sender: TObject; x: TPSPascalCompiler);
     procedure IFPS3ClassesPlugin1ExecImport(Sender: TObject; Exec: TPSExec; x: TPSRuntimeClassImporter);
     procedure PSScriptCompile(Sender: TPSScript);
@@ -801,6 +804,8 @@ type
     procedure GPSSatView1Click(Sender: TObject);
     procedure N3DLab1Click(Sender: TObject);
     procedure ExternalApp1Click(Sender: TObject);
+    procedure PANView1Click(Sender: TObject);
+    procedure Tutorial39GEOMaps1Click(Sender: TObject);
     //procedure Memo1DropFiles(Sender: TObject; X,Y: Integer; AFiles: TStrings);
   private
     STATSavebefore: boolean;
@@ -1921,7 +1926,18 @@ uses
   uPSI_ZScriptParser,
   uPSI_JvIni,
   uPSI_JvFtpGrabber,
-  
+  uPSI_NeuralNetwork,
+  uPSI_StExpr,
+  panUnit1,      //panorama Viewer
+  uPSI_GR32_Geometry,
+  uPSI_GR32_Containers,
+  uPSI_GR32_Backends_VCL,
+  uPSI_StSaturn,    //all other planets!
+  uPSI_JclParseUses,
+  uPSI_JvFinalize,    //3.9.9.120
+  uPSI_panUnit1,
+  uPSI_DD83u1,
+
   ///
    //MDIFrame,
   uPSI_St2DBarC,
@@ -3015,6 +3031,13 @@ begin
  SIRegister_ZScriptParser(X);
  SIRegister_JvFtpGrabber(X);
  SIRegister_JvIni(X);
+ SIRegister_NeuralNetwork(X);
+ SIRegister_StExpr(X);
+ SIRegister_StSaturn(X);
+ SIRegister_JclParseUses(X);
+ SIRegister_JvFinalize(X);     //3.9.9.120
+ SIRegister_panUnit1(X);
+ SIRegister_DD83u1(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -3049,6 +3072,10 @@ begin
   SIRegister_GR32_LowLevel(X);
   SIRegister_GR32_Filters(X);
   SIRegister_GR32_VectorMaps(X);
+  SIRegister_GR32_Geometry(X);
+  SIRegister_GR32_Containers(X);
+  SIRegister_GR32_Backends_VCL(X);
+
   SIRegister_LazFileUtils(X);
   SIRegister_FileUtil(X);
   SIRegister_IDECmdLine(X);
@@ -4372,8 +4399,21 @@ begin
   RIRegister_ZDbcUtils_Routines(EXec);
   RIRegister_ZScriptParser(X);
   RIRegister_JvFtpGrabber(X);
-  //RIRegister_JvIni(X);
+  RIRegister_JvIni(X);
   RIRegister_JvIni_Routines(Exec);
+  RIRegister_NeuralNetwork(X);
+  RIRegister_StExpr(X);
+  RIRegister_StExpr_Routines(Exec);
+  RIRegister_GR32_Geometry_Routines(Exec);
+  RIRegister_GR32_Containers(X);
+  RIRegister_GR32_Containers_Routines(Exec);
+  RIRegister_GR32_Backends_VCL(X);
+  RIRegister_StSaturn_Routines(Exec);
+  RIRegister_JclParseUses(X);
+  RIRegister_JclParseUses_Routines(Exec);
+  RIRegister_JvFinalize_Routines(Exec);  //3.9.9.120
+  RIRegister_panUnit1(X);
+  RIRegister_DD83u1(X);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -5824,7 +5864,11 @@ function TMaxForm1.RunCompiledScript2(Bytecode: AnsiString; out RuntimeErrors: A
 var
   Runtime: TPSExec;
   ClassImporter: TPSRuntimeClassImporter;
+  stopw: TStopwatch;    //3.9.9.120
+
 begin
+  stopw:= TStopwatch.Create;    //3.8.2
+  stopw.Start;
   Runtime:= TPSExec.Create;
   //ClassImporter := TPSRuntimeClassImporter.CreateAndRegister(Runtime, false);
   try
@@ -5855,6 +5899,10 @@ begin
     //ClassImporter.Free;
     Runtime.Free;
   end;
+    stopw.Stop;
+    memo2.Lines.Add(' mX3 byte code executed: '+dateTimetoStr(Now())+
+    '  Runtime: '+stopw.GetValueStr +'  Memoryload: '+inttoStr(GetMemoryLoad) +'% use');
+    stopw.Free;
 end;
 
 //helper
@@ -8315,6 +8363,11 @@ begin
   searchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter31.pdf');
 end;
 
+procedure TMaxForm1.Tutorial39GEOMaps1Click(Sender: TObject);
+begin
+  searchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter39.pdf');
+end;
+
 procedure TMaxForm1.tutorial4Click(Sender: TObject);
 begin
   searchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter4.pdf');
@@ -8440,6 +8493,23 @@ end;
 
 
 //----------------------- PlugIns---------------------------------------------
+procedure TMaxForm1.PANView1Click(Sender: TObject);
+begin
+ //start the pan view
+   panForm1:= TpanForm1.Create(self);
+  try
+    panForm1.Cursor:= CRHandpoint;
+    if fileExists(ExtractFilePath(ParamStr(0))+'\examples\sejour2048.jpg') then
+      panForm1.GLMaterialLibrary1.Materials[0].Material.Texture.Image.LoadFromFile(ExtractFilePath(ParamStr(0))+'\examples\sejour2048.jpg');
+    memo2.Lines.Add('OpenGL Panorama View start in single mode');
+     panForm1.ShowModal;
+    memo2.Lines.Add('OpenGL 3D Panorama View ended');
+   finally
+    panForm1.Cursor:= CRDefault;
+    panForm1.Free;
+  end;
+end;
+
 function TMaxForm1.ParseMacros(Str: String): String;
 var
   //e: TEditor;
@@ -9925,6 +9995,8 @@ end;
 procedure TMaxForm1.HEXEditor1Click(Sender: TObject);
 begin
   Showmessage('available V4 but you find one in ..\maxbox3\source\Hex_Editor_MX');
+  Application.CreateForm(THexForm2, HexForm2);
+  HexForm2.Show;
   //Application.CreateForm(THexForm2, HexForm2);
 end;
 
@@ -9937,7 +10009,7 @@ end;
 
 procedure TMaxForm1.HEXView1Click(Sender: TObject);
 begin
-   Showmessage('available in V4 you find one in ..\maxbox3\source\Hex_Editor_MX');
+  Showmessage('available in V4 you find one in ..\maxbox3\source\Hex_Editor_MX');
   Application.CreateForm(THexForm2, HexForm2);
   HexForm2.Show;
   {HexDump := CreateHexDump(TWinControl(NoteBook.Pages.Objects[3]));
@@ -10207,7 +10279,6 @@ begin
     aStrList.Free;
   end;
 end;
-
     //to set to late
    { RegisterMethod('Constructor Create(AOwner: TComponent)');
     RegisterConstructor(@TJvMail.Create, 'Create');

@@ -49,7 +49,8 @@ begin
  CL.AddConstantN('StdDate','Extended').setExtended( 2451545.0);
  CL.AddConstantN('OB2000','Extended').setExtended( 0.409092804);
  CL.AddTypeS('TStPlanetsRec', 'record RA, DC, Elong: Double; end');
-
+ CL.AddTypeS('TStEclipticalCord', 'record LO, BO, RO: Double; end');
+ CL.AddTypeS('TStRectangularCord', 'record X, Y, Z: Double; end');
 
  CL.AddTypeS('TStPlanetsArray', 'array[1..8] of TStPlanetsRec;');
  {TStPlanetsRec = packed record

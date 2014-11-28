@@ -1,6 +1,6 @@
 unit uPSI_NMEA;
 {
-  for GPS and David I
+  for GPS and David I and Detlef
 }
 interface
  
@@ -427,6 +427,130 @@ end;
 end;
 end;
 
+function StripTags(const S: string): string;
+var
+  Len: Integer;
+
+  function ReadUntil(const ReadFrom: Integer; const C: Char): Integer;
+  var
+    j: Integer;
+  begin
+    for j := ReadFrom to Len do
+      if (s[j] = C) then
+      begin
+        Result := j;
+        Exit;
+      end;
+    Result := Len+1;
+  end;
+
+var
+  i, APos: Integer;
+begin
+  Len := Length(S);
+  i := 0;
+  Result := '';
+  while (i <= Len) do begin
+    Inc(i);
+    APos := ReadUntil(i, '<');
+    Result := Result + Copy(S, i, APos-i);
+    i := ReadUntil(APos+1, '>');
+  end;
+end;
+
+FUNCTION Strip(const SubString: String; MainString: String): String;
+{ =================================================================== }
+VAR i,j: Integer;
+
+BEGIN{Strip}
+    j := length(SubString);
+    If j <> 0 Then Begin
+       i := Pos(SubString,MainString);
+       While i <> 0 Do Begin
+           Delete(MainString, i, j);
+           i := Pos(SubString,MainString);
+       End;
+   End;
+   result:= MainString;
+END{Strip};
+
+
+FUNCTION StripAny(const SubString: String; MainString: String): String;
+{ =================================================================== }
+VAR i,j: Integer;
+      s: char;
+BEGIN{Strip}
+    j := length(SubString);
+    While j > 0 Do Begin
+       s := SubString[j];
+       i := Pos(s,MainString);
+       While i <> 0 Do Begin
+           Delete(MainString,i,1);
+           i := Pos(s,MainString);
+       End;
+       Dec(j);
+   End;
+   result:= MainString;
+END{Strip};
+
+function SizeToString(size : Int64; const unitStr : String) : String;
+begin
+   if size<1024*1024 then
+      Result:=Format('%.1f k', [size*(1/1024)])
+   else if size<1024*1024*1024 then
+      Result:=Format('%.1f M', [size*(1/(1024*1024))])
+   else Result:=Format('%.1f G', [size*(1/(1024*1024*1024))]);
+   Result:=Result+unitStr;
+end;
+
+FUNCTION NumbertoString(No: Word): String;
+{ =================================================================== }
+
+    Function Num(No: Word): String;
+    { --------------------------------------------------------------- }
+    CONST Lo: Array[1..19] of String[ 9] =
+              ( 'one',     'two',      'three',   'four',    'five',
+                'six',     'seven',    'eight',   'nine',    'ten',
+                'eleven',  'twelve',   'thirteen','fourteen','fifteen',
+                'sixteen', 'seventeen','eighteen','nineteen');
+
+          Ten: Array[2..9] of String[5] =
+              ( 'twen', 'thir',  'for',  'fif',
+                'six',  'seven', 'eigh', 'nine');
+    Begin
+        If No < 20 Then Begin
+          If No <> 0 Then
+             Num := Lo[No]
+        End Else
+        If No mod 10 = 0 Then
+          Num := Ten[No div 10] + 'ty'
+        Else Num := Ten[No div 10] + 'ty-' + Lo[No mod 10];
+    End;
+
+VAR s: String;
+BEGIN
+    If No = 0 Then
+       result:= 'zero'
+    Else Begin
+       s := '';
+       If No >= 2000 Then Begin
+          s := Num(No div 1000)+ ' thousand ';
+          No := No mod 1000;
+       End;
+       If No >= 100 Then Begin
+          s := s + Num(No div 100) + ' hundred ';
+          No := No mod 100;
+       End;
+       If No <> 0 Then
+          s := trim(s + Num(No));
+    End;
+    result:= s;
+END;
+
+
+
+
+
 // mapper template
  Function GetWindowThreadProcessId_P( hWnd : HWND; var dwProcessId : DWORD) : DWORD;
 Begin Result := Windows.GetWindowThreadProcessId(hWnd, dwProcessId); END;
@@ -506,6 +630,43 @@ begin
   ItemHTDrawEx(Canvas, Rect, [], Text, W, htmlHyperLink, MouseX, MouseY, Result, HyperLink);
 end;
 
+function WinExecAndWait32(FileName: string; Visibility: Integer): Longword;
+var { by Pat Ritchey }
+  zAppName: array[0..512] of Char;
+  zCurDir: array[0..255] of Char;
+  WorkDir: string;
+  StartupInfo: TStartupInfo;
+  ProcessInfo: TProcessInformation;
+begin
+  StrPCopy(zAppName, FileName);
+  GetDir(0, WorkDir);
+  StrPCopy(zCurDir, WorkDir);
+  FillChar(StartupInfo, SizeOf(StartupInfo), #0);
+  StartupInfo.cb          := SizeOf(StartupInfo);
+  StartupInfo.dwFlags     := STARTF_USESHOWWINDOW;
+  StartupInfo.wShowWindow := Visibility;
+  if not CreateProcess(nil,
+    zAppName, // pointer to command line string
+    nil, // pointer to process security attributes
+    nil, // pointer to thread security attributes
+    False, // handle inheritance flag
+    CREATE_NEW_CONSOLE or // creation flags
+    NORMAL_PRIORITY_CLASS,
+    nil, //pointer to new environment block
+    nil, // pointer to current directory name
+    StartupInfo, // pointer to STARTUPINFO
+    ProcessInfo) // pointer to PROCESS_INF
+    then Result := WAIT_FAILED
+  else
+  begin
+    WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
+    GetExitCodeProcess(ProcessInfo.hProcess, Result);
+    CloseHandle(ProcessInfo.hProcess);
+    CloseHandle(ProcessInfo.hThread);
+  end;
+end; { WinExecAndWait32 }
+
+
 
 
 
@@ -542,6 +703,13 @@ CL.AddDelphiFunction('function GetTableName(const AField: TField): string;');
 CL.AddDelphiFunction('function GetFieldName(const AField: TField): string;');
 CL.AddDelphiFunction('procedure LoadResourceFile2(aFile:string; ms:TMemoryStream);');
 CL.AddDelphiFunction('function putbinresto(binresname: pchar; newpath: string): boolean;');
+CL.AddDelphiFunction('function StripTags(const S: string): string;');
+CL.AddDelphiFunction('FUNCTION Strip(const SubString: String; MainString: String): String;');
+CL.AddDelphiFunction('FUNCTION StripAny(const SubString: String; MainString: String): String;');
+CL.AddDelphiFunction('function SizeToString(size : Int64; const unitStr : String) : String;');
+CL.AddDelphiFunction('FUNCTION NumbertoString(No: Word): String;');
+CL.AddDelphiFunction('function WinExecAndWait32(FileName: string; Visibility: Integer): Longword;');
+
 
 CL.AddTypeS('TJvHyperLinkClickEvent', 'procedure(Sender: TObject; LinkName: string) of object;');
 
@@ -730,7 +898,7 @@ CL.AddDelphiFunction('Function LockWindowUpdate( hWndLock : HWND) : BOOL');
   CL.AddDelphiFunction('Function SetProcessShutdownParameters( dwLevel, dwFlags : DWORD) : BOOL');
  CL.AddDelphiFunction('Function GetProcessShutdownParameters( var lpdwLevel, lpdwFlags : DWORD) : BOOL');
  CL.AddDelphiFunction('Function GetProcessVersion( ProcessId : DWORD) : DWORD');
- CL.AddDelphiFunction('Function GetEnvironmentVariable( lpName : PChar; lpBuffer : PChar; nSize : DWORD) : DWORD;');
+ //CL.AddDelphiFunction('Function GetEnvironmentVariable( lpName : PChar; lpBuffer : PChar; nSize : DWORD) : DWORD;');
  CL.AddDelphiFunction('Function SetEnvironmentVariable( lpName,lpValue : PChar):BOOL');
   CL.AddDelphiFunction('Function FindResourceEx( hModule : HMODULE; lpType, lpName : PChar; wLanguage : Word) : HRSRC');
 CL.AddDelphiFunction('Function ExpandEnvironmentStrings( lpSrc : PChar; lpDst : PChar; nSize : DWORD) : DWORD');
@@ -835,10 +1003,10 @@ begin
  S.RegisterDelphiFunction(@TransparentBlt, 'TransparentBlt', CdStdCall);
  //S.RegisterDelphiFunction(@TransparentDIBits, 'TransparentDIBits', CdStdCall);
 S.RegisterDelphiFunction(@AngleArc, 'AngleArc', CdStdCall);
-{ S.RegisterDelphiFunction(@GetWorldTransform, 'GetWorldTransform', CdStdCall);
- S.RegisterDelphiFunction(@SetWorldTransform, 'SetWorldTransform', CdStdCall);
- S.RegisterDelphiFunction(@ModifyWorldTransform, 'ModifyWorldTransform', CdStdCall);
- S.RegisterDelphiFunction(@CombineTransform, 'CombineTransform', CdStdCall);  }
+ //S.RegisterDelphiFunction(@GetWorldTransform, 'GetWorldTransform', CdStdCall);
+ //S.RegisterDelphiFunction(@SetWorldTransform, 'SetWorldTransform', CdStdCall);
+ //S.RegisterDelphiFunction(@ModifyWorldTransform, 'ModifyWorldTransform', CdStdCall);
+ //S.RegisterDelphiFunction(@CombineTransform, 'CombineTransform', CdStdCall);
  S.RegisterDelphiFunction(@GdiComment, 'GdiComment', CdStdCall);
  S.RegisterDelphiFunction(@GetTextMetrics, 'GetTextMetrics', CdStdCall);
 S.RegisterDelphiFunction(@CreateWindowEx, 'CreateWindowEx', cdRegister);
@@ -857,10 +1025,10 @@ S.RegisterDelphiFunction(@CreateWindowEx, 'CreateWindowEx', cdRegister);
  S.RegisterDelphiFunction(@BeginDeferWindowPos, 'BeginDeferWindowPos', CdStdCall);
  S.RegisterDelphiFunction(@DeferWindowPos, 'DeferWindowPos', CdStdCall);
  S.RegisterDelphiFunction(@EndDeferWindowPos, 'EndDeferWindowPos', CdStdCall);
- //S.RegisterDelphiFunction(@IsWindowVisible, 'IsWindowVisible', CdStdCall);
+ S.RegisterDelphiFunction(@IsWindowVisible, 'IsWindowVisible', CdStdCall);
 
 //  S.RegisterDelphiFunction(@GetDlgCtrlID, 'GetDlgCtrlID', CdStdCall);
-// S.RegisterDelphiFunction(@GetDialogBaseUnits, 'GetDialogBaseUnits', CdStdCall);
+ S.RegisterDelphiFunction(@GetDialogBaseUnits, 'GetDialogBaseUnits', CdStdCall);
  S.RegisterDelphiFunction(@DefDlgProc, 'DefDlgProc', CdStdCall);
  S.RegisterDelphiFunction(@CallMsgFilter, 'CallMsgFilter', CdStdCall);
  S.RegisterDelphiFunction(@CharToOem, 'CharToOem', CdStdCall);
@@ -900,8 +1068,8 @@ S.RegisterDelphiFunction(@SetScrollPos, 'SetScrollPos', CdStdCall);
  S.RegisterDelphiFunction(@GetACP, 'GetACP', CdStdCall);
  S.RegisterDelphiFunction(@GetOEMCP, 'GetOEMCP', CdStdCall);
  S.RegisterDelphiFunction(@GetCPInfo, 'GetCPInfo', CdStdCall);
-{ S.RegisterDelphiFunction(@IsDBCSLeadByte, 'IsDBCSLeadByte', CdStdCall);
- S.RegisterDelphiFunction(@IsDBCSLeadByteEx, 'IsDBCSLeadByteEx', CdStdCall);  }
+ S.RegisterDelphiFunction(@IsDBCSLeadByte, 'IsDBCSLeadByte', CdStdCall);
+ //S.RegisterDelphiFunction(@IsDBCSLeadByteEx, 'IsDBCSLeadByteEx', CdStdCall);
    S.RegisterDelphiFunction(@ChangeDisplaySettings, 'ChangeDisplaySettings', CdStdCall);
   S.RegisterDelphiFunction(@LoadImage, 'LoadImage', CdStdCall);
  S.RegisterDelphiFunction(@CopyImage, 'CopyImage', CdStdCall);
@@ -910,8 +1078,8 @@ S.RegisterDelphiFunction(@SetScrollPos, 'SetScrollPos', CdStdCall);
  //S.RegisterDelphiFunction(@GetProcessShutdownParameters, 'GetProcessShutdownParameters', CdStdCall);
  //S.RegisterDelphiFunction(@GetProcessVersion, 'GetProcessVersion', CdStdCall);
  S.RegisterDelphiFunction(@FatalAppExit, 'FatalAppExit', CdStdCall);
- {S.RegisterDelphiFunction(@GetStartupInfo, 'GetStartupInfo', CdStdCall);
- S.RegisterDelphiFunction(@GetCommandLine, 'GetCommandLine', CdStdCall);}
+ S.RegisterDelphiFunction(@GetStartupInfo, 'GetStartupInfo', CdStdCall);
+ S.RegisterDelphiFunction(@GetCommandLine, 'GetCommandLine', CdStdCall);
   S.RegisterDelphiFunction(@ExpandEnvironmentStrings, 'ExpandEnvironmentStrings', CdStdCall);
  S.RegisterDelphiFunction(@FindResourceEx, 'FindResourceEx', CdStdCall);
 S.RegisterDelphiFunction(@SetEnvironmentVariable, 'SetEnvironmentVariable', CdStdCall);
@@ -925,17 +1093,17 @@ S.RegisterDelphiFunction(@SetEnvironmentVariable, 'SetEnvironmentVariable', CdSt
  S.RegisterDelphiFunction(@SetupComm, 'SetupComm', CdStdCall);
  S.RegisterDelphiFunction(@EscapeCommFunction, 'EscapeCommFunction', CdStdCall);
  S.RegisterDelphiFunction(@GetCommConfig, 'GetCommConfig', CdStdCall);
- {S.RegisterDelphiFunction(@GetCommMask, 'GetCommMask', CdStdCall);
- S.RegisterDelphiFunction(@GetCommProperties, 'GetCommProperties', CdStdCall);}
- //S.RegisterDelphiFunction(@GetCommModemStatus, 'GetCommModemStatus', CdStdCall);
+ S.RegisterDelphiFunction(@GetCommMask, 'GetCommMask', CdStdCall);
+ S.RegisterDelphiFunction(@GetCommProperties, 'GetCommProperties', CdStdCall);
+ S.RegisterDelphiFunction(@GetCommModemStatus, 'GetCommModemStatus', CdStdCall);
  S.RegisterDelphiFunction(@GetCommState, 'GetCommState', CdStdCall);
- //S.RegisterDelphiFunction(@GetCommTimeouts, 'GetCommTimeouts', CdStdCall);
+ S.RegisterDelphiFunction(@GetCommTimeouts, 'GetCommTimeouts', CdStdCall);
  S.RegisterDelphiFunction(@PurgeComm, 'PurgeComm', CdStdCall);
  S.RegisterDelphiFunction(@SetCommBreak, 'SetCommBreak', CdStdCall);
  //S.RegisterDelphiFunction(@SetCommConfig, 'SetCommConfig', CdStdCall);
-{ S.RegisterDelphiFunction(@SetCommMask, 'SetCommMask', CdStdCall);
+ S.RegisterDelphiFunction(@SetCommMask, 'SetCommMask', CdStdCall);
  S.RegisterDelphiFunction(@SetCommState, 'SetCommState', CdStdCall);
- S.RegisterDelphiFunction(@SetCommTimeouts, 'SetCommTimeouts', CdStdCall);}
+ {S.RegisterDelphiFunction(@SetCommTimeouts, 'SetCommTimeouts', CdStdCall);}
  S.RegisterDelphiFunction(@TransmitCommChar, 'TransmitCommChar', CdStdCall);
  //S.RegisterDelphiFunction(@CreateIoCompletionPort, 'CreateIoCompletionPort', CdStdCall);
  //S.RegisterDelphiFunction(@DebugBreak, 'DebugBreak', CdStdCall);
@@ -945,7 +1113,14 @@ S.RegisterDelphiFunction(@SetEnvironmentVariable, 'SetEnvironmentVariable', CdSt
  S.RegisterDelphiFunction(@ItemHtPlain, 'ItemHtPlain', cdRegister);
  S.RegisterDelphiFunction(@ExecuteHyperlink, 'ExecuteHyperlink', cdRegister);
  S.RegisterDelphiFunction(@IsHyperLink, 'IsHyperLink', cdRegister);
-end;
+ S.RegisterDelphiFunction(@StripTags, 'StripTags', cdRegister);
+ S.RegisterDelphiFunction(@Strip, 'Strip', cdRegister);
+ S.RegisterDelphiFunction(@StripAny, 'StripAny', cdRegister);
+ S.RegisterDelphiFunction(@SizeToString, 'SizeToString', cdRegister);
+ S.RegisterDelphiFunction(@NumbertoString, 'NumbertoString', cdRegister);
+ S.RegisterDelphiFunction(@WinExecAndWait32, 'WinExecAndWait32', cdRegister);
+
+  end;
 
 
  //check of CdStdCall!!!  findresource

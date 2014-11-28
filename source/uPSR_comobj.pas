@@ -13,7 +13,7 @@ procedure RIRegister_ComObj(cl: TPSExec);
 implementation
 uses
 {$IFDEF DELPHI3UP}
-  ComObj;
+  ComObj, ActiveX;
 {$ELSE}
   SysUtils, Ole2;
 {$ENDIF}
@@ -98,6 +98,10 @@ begin
   cl.RegisterDelphiFunction(@CreateClassID, 'CreateGUIDString', cdRegister);
   cl.RegisterDelphiFunction(@oleerror, 'olecheck', cdRegister);
   cl.RegisterDelphiFunction(@oleerror, 'oleerror', cdRegister);
+  cl.RegisterDelphiFunction(@CoCreateInstance, 'CoCreateInstance', cdRegister);
+  cl.RegisterDelphiFunction(@CoCreateInstance, 'CoCreateInstance2', cdRegister);
+  cl.RegisterDelphiFunction(@CoCreateGUID, 'CoCreateGUID', cdRegister);
+
 
   //ProgIDToClassID(const ProgID: string): TGUID;
 end;

@@ -31,6 +31,14 @@ begin
   cl.AddDelphiFunction('function CreateGUIDID: string;');
   cl.AddDelphiFunction('procedure OleError(ErrorCode: longint)');
   cl.AddDelphiFunction('procedure OleCheck(Result: HResult);');
+  cl.AddDelphiFunction('function CoCreateInstance(cid: TGUID; aobj: TObject; ctx: DWord; id: TGUID; un: TObject): HResult);');
+  cl.AddDelphiFunction('function CoCreateInstance2(cid: TGUID; unkOuter: IUnknown; ctx: longint; iid: TGUID; un: TObject): HResult);');
+  cl.AddDelphiFunction('function CoCreateGuid(var guid: TGUID): HResult;');
+
+  //function CoCreateInstance(const clsid: TCLSID; unkOuter: IUnknown;dwClsContext: Longint; const iid: TIID; var pv): HResult; stdcall;
 
   end;
 end.
+
+ //OleCheck(CoCreateInstance(ClassID, nil, CLSCTX_INPROC_SERVER or CLSCTX_LOCAL_SERVER, IID_IUnknown, Unknown));
+
