@@ -1,0 +1,75 @@
+program FastFTP_Uploader;
+
+// file read & write and FTP PUT function , _105, #locs=62
+// shows subroutines of assign file direct from filesystem to a FTP Upload!
+
+const myFTPFile = 'Assign_FTPFile_test.txt';   
+
+var
+  ftpUpStream: TFileStream;
+  myftp: TIdFTP;
+  mytcp: TIdTCPClient;
+  myftpURL, getFileStr: string;
+
+procedure AssignFileWrite_Read; 
+var 
+  mystring: string;
+  mylist: TStringlist; 
+begin 
+  //mystring:=('this is first'+ #13#10+'this is second');
+  //writes text from memo2 to file and read it again from web
+  mystring:= memo2.text;
+  try 
+    Assign2(mystring, myFTPFile);
+    mylist:= Reset2(myFTPFile); 
+  finally 
+    ShowMessage(mylist.text); 
+  end; 
+end;
+
+begin
+  //just set file with timestamp;
+  AssignFileWrite_Read;
+  //TFileStream.Create(afilename, fmOpenRead or fmShareCompat)
+  ftpUpStream:= TFileStream.create(myFTPFile, fmOpenRead)
+  myftpURL:= myFTPFile
+  getFileStr:= myFTPFile+'download.txt'
+  myftp:= TIdFTP.create(self);
+  try
+    with myftp do begin
+      Host:= 'www.softwareschule.ch'
+      Username:= 'soft';
+      Password:= '';
+    end;
+    //Connect to FTP server and Use PASV mode
+    myftp.Connect(true, 20)
+    myftp.Passive:= true;
+    //Change directory
+    myftp.ChangeDir('httpdocs/download')
+    //Upload a file
+    myftp.Put1(ftpUpStream, myftpURL, false);
+    //myftp.proxysettings:='';
+    myftp.Get2(myftpURL, getFileStr, true, false);
+  finally
+    ftpUpStream.Free;
+    //Disconnect is in Quit();
+    myftp.Quit;
+    myftp.Free;
+    //test sign finally
+    maxForm1.color:= clYellow;
+  end  
+  memo2.lines.LoadFromFile(getFileStr)
+end.
+
+Ref:
+-------------------------------------------------------------------------
+{RegisterMethod('Procedure Put1( const ASource : TStream; const ADestFile:
+               string; const AAppend : boolean);');
+RegisterMethod('Procedure Get2( const ASourceFile, ADestFile : string; const ACanOverwrite : boolean; AResume : Boolean);');                
+               }
+ftp.Host = "www.yourftpserveraddress.ch"
+ftp.Username = "YourFtpUsername"
+ftp.Password = "YourFtpPassword"
+
+
+  

@@ -1,0 +1,1749 @@
+{***************************************************************
+ * Project  : SIRegister_TStExpression and Strips Routines with REGEX
+ * App Name :  530_3DLab.TXT, 517_animation7.TXT, 491_analogmeter.TXT, #locs=1080
+ * Purpose  : Demonstrates STExpression adding func() at runtime
+ * Date     : #sign>Administrator: PC08: 08/01/2015 10:24:09 AM 
+ * History  : convert analogmeter to maXbox Aug 2014
+ *          : add REGEX time routines and tickcount to LED
+ ****************************************************************}
+ //TODO: transfer the strip to a REGEX func
+ //E:\maxbox3\mXGit39988\maxbox3\source\REST\GPS.pas
+ //ref: maXbox3/source/REST/uPSI_StExpr.pas
+   
+ Program CODEsign_StripFunctions_REGEX_SQL_Algebra_XML;
+ 
+ function  MyGUID(var pguid: TGUID): Longint;
+    external 'CoCreateGuid@Ole32.dll stdcall';
+
+ function  MySoundcard: Longint;
+    external 'waveOutGetNumDevs@winmm.dll stdcall';
+    
+ //7function  MyGUID2(pguid: TGUID): Longint;
+   // external 'CoCreateGuid@activex.dll stdcall';
+                        
+ {Formats Position in sec into lat or lon string per Idx selection}
+ {StatusCode(221) = StatusQuo}
+type 
+  TDateTime2 = Double;
+
+  function ReadUntil(const ReadFrom,len: Integer; const C: Char; s: string): Integer;
+  var
+    j: Integer;
+  begin
+    for j := ReadFrom to Len do
+      if (s[j] = C) then begin
+        Result := j;
+        Exit;
+      end;
+    Result := Len+1;
+  end;
+ 
+function StripTags2(const S: string): string;
+var
+  Len: Integer;
+  i, APos: Integer;
+begin
+  Len:= Length(S);
+  i:= 0;
+  Result:= '';
+  while (i <= Len) do begin
+    Inc(i);
+    APos:= ReadUntil(i, len, '<', s);
+    Result:= Result + Copy(S, i, APos-i);
+    i:= ReadUntil(APos+1,len, '>',s);
+  end;
+end;
+
+FUNCTION Strip(const SubString: String; MainString: String): String;
+{ =================================================================== }
+VAR i,j: Integer;
+
+BEGIN{Strip}
+    j := length(SubString);
+    If j <> 0 Then Begin
+       i := Pos(SubString,MainString);
+       While i <> 0 Do Begin
+           Delete(MainString, i, j);
+           i := Pos(SubString,MainString);
+       End;
+   End;
+   result:= MainString;
+END{Strip};
+
+
+FUNCTION StripAny(const SubString: String; MainString: String): String;
+{ =================================================================== }
+VAR i,j: Integer;
+      s: char;
+BEGIN{Strip}
+    //j := Ord(SubString[0]);
+     j := length(SubString);
+    While j > 0 Do Begin
+       s := SubString[j];
+       i := Pos(s,MainString);
+       While i <> 0 Do Begin
+           Delete(MainString,i,1);
+           i := Pos(s,MainString);
+       End;
+       Dec(j);
+   End;
+   result:= MainString;
+END{Strip};
+
+  
+procedure AppendValueToStrings(const SL: TStrings; StartingValue: Integer);
+var
+  i: Integer;
+begin
+  Assert(Assigned(SL),'not assigned');  // Make sure valid TStrings has been passed in
+  for i := 0 to SL.Count - 1 do begin
+    SL[i] := IntToStr(StartingValue) + ' ' + SL[i];
+    Inc(StartingValue);
+  end;
+end;
+
+function GrabLine2(const s: string; ALine: Integer): string;
+var
+  sl: TStringList;
+begin
+  sl := TStringList.Create;
+  try
+    sl.LoadFromFile(s);
+    Result := sl[ALine - 1]; // index off by one
+  finally
+    sl.Free;
+  end;
+end;
+
+
+function GetLinesCount(sFileName : String): Integer;
+var
+oSL : TStringlist;
+begin
+  oSL := TStringlist.Create;
+  oSL.LoadFromFile(sFileName);
+  result := oSL.Count;
+  oSL.Free;
+end; //[/DELPHI]
+
+function LinesCount2(sfilename:string): double;
+var
+ hFile : TextFile;
+ sLine : String;
+ iLinescount: Double;
+begin
+  result:=0;
+  if not FileExists(sfilename) then exit;
+  AssignFile(hFile, sFileName);
+  Reset(hFile);
+  closefile(hfile);
+  iLinescount:=0;
+  {while NOT EOF(hFile) do begin
+    ReadLn(hFile, sLine);
+    iLinescount:=iLinescount+1;
+  end;}
+ result:=iLinescount;
+end;
+
+
+function IsPrime(N: Integer): Boolean;
+var I: Integer;
+begin
+  for I:= 2 to N - 1 do
+    if (N mod I) = 0 then
+      exit;
+  result:= true;
+end;
+
+function IsPrime2(acti: integer): boolean;
+var
+  j: Integer;
+  isprim: boolean;
+begin
+  isprim:= true;
+  if acti=1 then isprim:= false;
+  for j:= 2 to round(sqrt(acti)) do 
+   if ((acti mod j) = 0) then begin
+     isprim:= false;
+     break
+   end;
+ result:= isprim;
+end;
+
+
+
+procedure STTester;
+var stitem: TStnetServeritem;
+    stuser: TStnetUseritem;
+    stneti: TStnetitem;
+
+     stcon: TStnetConnection;
+    // neti:  TStnetuserlogontimes;
+    stmess: TStNetMessage;
+    stperf: tSTNetPerformance;
+   A : array of char;
+   s : string;
+
+begin
+ 
+  //s := string(A);
+    // maximal 4 Zeichen des Arrays übernehmen
+  //s := Copy(string(A), 1, 4);
+  
+  with TStNetwork.create do begin
+    //writeln(inttostr(ord(server['max']))); 
+    stuser:= User['','max']
+    //getlogonhours
+    //stitem:= server['max']; 
+    free
+  end; 
+  
+  
+  with TStNetMessage.create(self) do begin
+    writeln(server)
+    server:= 'maXbox8';
+    msgtext:= 'this is from myy'+datetimetostr(now);
+    msgto:= 'max';
+    //Send;
+    free;
+  end;
+
+  //Can't manually create an object of this type.
+    //stneti:= TStnetitem.create;
+  
+  {with TStNetUseritem.create do begin
+    writeln(server)
+    writeln(domain)
+    //server:= 'maXbox8';
+    //msgtext:= 'this is from myy';
+    //msgto:= 'max';
+    //Send;
+    free;
+  end; }
+  
+  stperf:= tSTNetPerformance.create(self);
+  with stperf do begin
+    //localname:= 'maxbox8';
+    //localname:= 'Italien_18';
+    localname:= 'Users';
+    //queryperformance
+     //speed;
+    free
+  end;  
+  
+  with TStStreamRegex.create do begin
+    ignorecase:= true;
+    //inputstream:= '<p>This is text.<br/> This is line 2</p>';
+      
+    free
+  end;  
+ 
+  with TStRegex.create(self) do begin
+    inputfile:= exepath+'firstdemo.txt';
+    matchpattern.clear;
+    matchpattern.add('^(function)');
+    outputfile:= exepath+'firstdemoregex.txt'
+    writeln('outregex '+outputfile)
+    execute;
+    free
+  end;  
+ 
+  with TStRegex.create(self) do begin
+    //inputfile:= '<p>This is text.<br/> This is line 2</p>';
+    inputfile:= exepath+'geomapX.txt';
+    matchpattern.clear;
+    matchpattern.add('<[^>]*>');     //find all tags
+    outputfile:= exepath+'geomapXout.txt'
+    //writeln('outregex '+outputfile)
+    execute;
+    free
+  end;  
+ 
+  //replace StripTags
+  with TStRegex.create(self) do begin
+    //inputfile:= '<p>This is text.<br/> This is line 2</p>';
+    inputfile:= exepath+'geomapX.txt';
+    matchpattern.clear;
+    matchpattern.add('<[^>]*>');     //find all tags and strip it!
+    replacepattern.add('\z');        //Null expression
+    outputfile:= exepath+'geomapXoutreplace.txt'
+    //writeln('outregex '+outputfile)
+    execute;
+    free
+  end;  
+ 
+end;  
+  
+
+procedure STEXpressionPattern;
+begin
+    with TStExpression.create(self) do begin
+      AddConstant('MPI',3.14159);
+      srlist:= TStringlist.create;
+      GetIdentList(srlist);
+      for it:= 0 to srlist.count-1 do 
+        writeln(srlist.strings[it]);
+      srlist.Free;  
+      Expression:= '2^10 * ln(8 +MPI)';
+      writeln(floattoStr(AnalyzeExpression))
+      free;
+    end;  
+end;    
+
+  Function superPI(Value1 : TStFloat): TStFloat;
+  begin
+    result:= value1 * PI;
+  end; 
+  
+
+
+Const FName = 'maxboxlog2.log'; //'firstdemo3.txt';
+var fn : string;
+  
+procedure copytestFile;
+begin
+ fn:= IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)))+FName;
+  if not FileExists(fn) then begin
+    MessageBox(HInstance, 'File does not exist.', 'Error', MB_ICONSTOP OR MB_OK);
+    //exit;
+    mycopyfile(exepath+'maxboxlog.log', exepath+'maxboxlog2.log');
+  end
+end;
+
+function Customtimegettime: int64;
+var
+Frequenz: int64;
+Zeit: int64;
+begin
+  if QueryPerformanceFrequency(Frequenz) = true then{ist die Funktion verfügbar} begin
+     QueryPerformanceCounter(Zeit);
+     result:= Zeit div (Frequenz div 1000); {umrechnen auf 1/1000 Sekunde}
+     //writeln('QueryPerformanceFrequency available')
+  end
+    else
+  begin
+    result:= timegettime; {Wenn QueryPerformanceFrequency(Frequenz) nicht geht}
+  end;
+end;
+
+const
+TIMER_ID = 1; //Eine Constande als Timer ID
+
+var Zeit: int64;
+  Counter: integer; //Eine Variable zum Zählen der Timer Durchläufe
+
+procedure TForm1_OnTimer;
+var canvas: TCanvas;
+begin
+   inc(Counter); //Zähler um 1 erhöhen
+   if timegettime-Zeit>1000 then begin//Jeweil nach einer Sekunde
+   //begin
+     //Canvas.TextOut(10,10,inttostr(counter)); //Zähler ausgeben
+     writeln('API timer '+inttostr(counter))
+     zeit:= timegettime; //neue Start Zeit ermitteln
+     Counter := 0; //und Zähler wieder auf 0 setzen.
+   end;
+end;
+
+//procedure {TForm1_}WndProc(var Msg: TMessage; handled: boolean);
+procedure {TForm1_}WndProc(var Msg: TMsg; var handled: boolean);
+var
+  Point: TPoint;
+begin
+   if Msg.hwnd = Application.Handle then
+   if Msg.Message = WM_TIMER then {//Nachricht abfangen}    begin
+     if Msg.WParam = TIMER_ID then begin
+       TForm1_OnTimer  //OnTimer; //Timercode ausführen
+      Handled:= True;
+    end;
+   end;
+   { for all other messages, Handled remains False }
+  { so that other message handlers can respond }
+//inherited;
+end;
+
+const WM_FILEREADY = WM_USER + 2000;
+const Path = 'OverView.RTF';
+procedure TForm1_Button1Click(Sender: TObject);
+//const Path: PChar = 'OverView.RTF';
+begin
+  //PostMessage(Application.Handle, WM_FILEREADY, 0, integer(Path));
+end;
+
+
+//TMessageEvent = procedure (var Msg: TMsg; var Handled: Boolean) of object;
+procedure TForm1_TimerFormCreate(Sender: TObject);
+begin
+  SetTimer(self.Handle,TIMER_ID,1,nil); //Der Timer wurde erstellt
+  Counter := 0;
+  Zeit := Timegettime ; //Die Startzeit wird ermittelt
+  //application.onmessage:= @WndProc;
+  //application.OnWndProc
+end;
+procedure TForm1_FormDestroy(Sender: TObject);
+begin
+  killTimer(self.Handle,TIMER_ID); // das freigeben nicht vergessen
+end;
+
+{procedure TThreadTimer_Execute;
+begin
+while not Terminated do begin
+  QueryPerformanceCounter(aktuelleZeit);
+if (aktuelleZeit-altezeit)>0 then
+  begin //hier könnte man ein Intervall einstellen
+   ontimer;
+QueryPerformanceCounter(altezeit);
+end;
+end;
+end;}
+
+procedure TThreadTimer_OnTimer;
+var fcanvas: TCanvas;
+Zeit: int64;
+Counter: integer; //Eine Variable zum Zählen der Timer durchläufe
+begin
+inc(Counter); //Zähler um 1 erhöhen
+if timegettime-Zeit>1000 then begin//Jeweil nach einer Sekunde
+   FCanvas.Lock;
+   FCanvas.Rectangle(0,0,0,0);
+   FCanvas.TextOut(10,10,inttostr(counter)); //Zähler ausgeben
+   FCanvas.Unlock;
+   zeit:= timegettime; //neue Start Zeit ermitteln
+   Counter := 0; //und Zähler wieder auf 0 setzen.
+end;
+end;
+
+
+Function EinsteinEnergyCube: extended;
+// one sugar cube of 3 gram(m): E=mc^2 example
+begin
+ //result:= 0.003 * Power(300000000, 2);
+ result:= 3/1000 * Power(MetersPerLightSecond, 2);
+end; 
+
+
+procedure EinsteinmaXcalc;
+begin
+  Writeln('E=mc^2 example: '+FloatToStr(EinsteinEnergyCube)) 
+  Writeln('One Sugar Cube has Energy in Joule: '+FloatToStr(EinsteinEnergyCube)) 
+  PrintF('One Sugar Cube has Energy in Joule: %0.2E',[EinsteinEnergyCube]) 
+  PrintF('E=mc^2 example: 2 Days Power for Hamburg: %0.2E',[EinsteinEnergyCube]); 
+  PrintF('E=mc^2 example: Joule to kWh: %f',[EinsteinEnergyCube/3600000]); 
+  PrintF('E=mc^2 example: Joule to kWh: %0.2E kWh',[EinsteinEnergyCube/3600000]); 
+  //Writeln('');
+  ft:= MetersPerLightSecond;
+   writeln(floattostr(MetersPerLightSecond))
+   maXcalcF('3/1000 * (299792458^2)');
+   maXcalcF('3/1000 * ('+floattostr(ft)+'^2)');
+end;
+
+  
+Procedure SetADOSETAccess2;
+var 
+  adoquery: TAdoDataSet;
+  i, z: integer;
+begin  
+  adoquery:= TAdoDataSet.Create(self);
+  with adoquery do begin
+    cachesize:= 500;
+    {commandtext:= 'INSERT INTO Table1 (FirstName, LastName, Phone)'+
+                        'VALUES (''Max'', ''Box545'', ''031-333 77 88'')';}
+    ///commandText:= 'SELECT count(*) FROM Table1';
+    commandText:= 'SELECT count(*), firstname FROM Table1 '+
+                  //'firstname = ''maxnewnew3''';
+                  'GROUP BY firstname '+
+                  'HAVING count(firstname) > 1 ORDER BY count(firstname)';
+    //SQL.Add('Select * from patient where id = :id ');
+    //SQL.Add(commandText);
+    connectionString:= 'Provider=MSDASQL;DSN=mx3base;Uid=sa;Pwd=admin';
+  //try
+    Open;
+  //except   
+    //Writeln(intToStr(Recordcount)+' records found')
+  //end;
+  writeln('count test: ');
+  for i:= 0 to Recordcount - 1 do begin
+    for z:= 0 to Fieldcount - 1 do 
+      Write((Fields[z].asString)+'  ');
+    Writeln(#10)
+    Next;
+  end;
+    Close;
+    Free;        
+  end;
+end;
+
+procedure TFrmbtn_SetupClk(Send: TObject);
+var cport: TComport;
+    sbar: TStatusBar;
+begin
+  cPort.ShowSetupDialog;   //Opens predefined Setup Dialog (part of component)
+  sBar.Panels[0].Text:= 'Port in use ' + cPort.Port;  
+end;
+
+var btn_loop: TBitBtn;
+    myfrm: TForm;
+
+Procedure BtnFactory(a,b,c,d: smallint; title,apic: string;
+                        var abtn: TBitBtn; anEvent: TNotifyEvent; afrm: TForm);
+begin
+  abtn:= TBitBtn.create(afrm);
+  with abtn do begin
+    parent:= afrm;
+    setBounds(a,b,c,d)
+    font.size:= 12;
+    glyph.LoadFromResourceName(HINSTANCE, apic); 
+    mXButton(5,5,width, height,12,12,handle);
+    caption:= title;
+    onClick:= anEvent As TNotifyEvent; 
+  end;
+end; 
+
+ function GetMsgProc(nCode:Integer;wParam:wParam;lParam:lParam):LRESULT; //bstdcall;
+begin
+  Result:= 0;
+end;
+
+var
+  Hook:HHOOK;
+procedure SetHook;
+begin
+  Hook:= SetWindowsHookEx(WH_GETMESSAGE,@GetMsgProc,hInstance,0);
+end;
+
+procedure RemoveHook;
+begin
+  UnHookWindowsHookEx(Hook);
+end;
+
+function primeFactortest(anum: integer): string;
+var k: integer;
+begin 
+  for k:= 2 to round(SQRT(anum)) do 
+    if anum mod k = 0 then begin
+    //writeln(inttostr(k))
+    result:= result +' '+inttostr(k);
+    //exit
+   end; //else 
+    //result:= inttostr(anum)
+end;  
+
+
+const LOGPIXELSX = 100;
+    LOGPIXELSY = 200;
+procedure TWriterTestBuilder;
+var
+  FileStream: TFileStream;
+  Writer: TWriter;
+  Intt: Integer;
+  myStringBuilder: TStringList;
+  ahdc: HDC;
+ 
+begin
+  { Create the TFileStream object and the TWriter used to write data into files. }
+  FileStream := TFileStream.Create
+    ('C:\Users\Public\Documents\RAD Studio\stream.txt',
+    fmCreate or fmOpenWrite or fmShareDenyNone);
+  { $FF = 255. Used in creating the TWriter object as the second parameter : Buffer size. }
+  Writer := TWriter.Create;
+  // Writer.WriteListBegin;
+  //Writer.WriteString;
+  //Writer := TWriter.Create(FileStream, $FF, 2000);
+ 
+  { Create the string builder }
+(*  myStringBuilder := TStringBuilder.Create;
+ 
+  { Append content to the string builder }
+  myStringBuilder.Append(myString);
+  myStringBuilder.AppendLine;
+  myStringBuilder.Append(anotherString);
+  myStringBuilder.AppendLine;
+  myStringBuilder.Append(anotherStringTwo);
+ 
+  { Commence writing to file }
+  Writer.WriteListBegin;
+  Writer.WriteString(myStringBuilder.ToString);
+  Writer.WriteListEnd;
+ 
+  Writer.Destroy;
+  FileStream.Destroy;  *)
+  GetDeviceCaps(ahDC, LOGPIXELSX);
+  
+  //SetWindowExtEx(hDC, 64, 64, NULL); 
+  {  The SetViewportExtEx function sets the horizontal and vertical extents of the viewport for a device context by using the specified values.}
+  SetViewportExtEx(ahDC, GetDeviceCaps(ahDC, LOGPIXELSX), 
+                      GetDeviceCaps(ahDC, LOGPIXELSY), '0'); 
+
+end; 
+
+function isSound: boolean;
+begin
+  result:= mySoundcard > 0
+end;  
+      //issoundcard
+
+function myTime : Float;
+{ Returns time in seconds }
+var
+  H, M, S, C, mis : Word;
+begin
+  //blank
+  //GetTime(H, M, S,c, mis);
+  DecodeTime(now, H, M, S, c);
+  result:= 3600.0 * H + 60.0 * M + S + 0.01 * C;
+end;
+
+//------------------------------------------------------------------------------
+// check if two StringLists contain identical strings
+//------------------------------------------------------------------------------
+function ListIdentical(l1,l2:TStringList):Boolean;
+var ix : Integer;
+begin
+  Result:= False;
+  if l1.count = l2.count then begin
+    for ix := 0 to l1.count-1 do //begin
+      if (l1[ix] <> l2[ix]) then Exit;
+    //end;
+    Result:= True;
+  end;
+end;
+
+function ListIdentical2(l1,l2:TStringList): Boolean;
+begin
+  Result:= False;
+  if l1.count = l2.count then begin
+    for it:= 0 to l1.count-1 do
+      if (l1[it] <> l2[it]) then Exit;
+    Result:= True;
+  end;
+end;
+
+// Some method declaratinos may be very long.
+// Delphi can't compile these, so we need to spit them manually.
+const
+  cSplitPosition = 200;
+
+function SplitIntoLines(AString: string): string;
+begin
+  Result := '';
+  while (Length(AString) > cSplitPosition) do begin
+    Result := Result + LeftStr(AString, cSplitPosition) +
+      ''' +' + #13 + #10  + '      ''';
+    Delete(AString, 1, cSplitPosition);
+  end;
+  Result := Result + AString;
+end;
+
+
+
+
+procedure fmathtester;
+//var acom: ComplexForm; //TComplex;
+ var mint: integer;
+   testfloat: Float;
+   ttestfloat: TFloat;
+   testfloatd: double;
+   testfloate: extended;
+   
+ //abig: TBigIniFile;
+ //(aseclist: TAppIniFile; //7TSectionList;
+begin
+ //CSet
+   //CConvert
+   //CSwap
+   //ModuleName
+   //IniTextBufferSize
+   //cIniCount
+     //CReal(Z : TComplex) : Float;  { Re(Z) }
+ //CImag(Z : TComplex) : Float;  { Im(Z) }
+ //CAbs(Z : TComplex) : Float;   { |Z| }
+ //CArg(Z : TComplex) : Float;   { Arg(Z) }
+ // ---change !!CSgn(Z : TComplex) : Integer; { TComplex sign }
+
+ //CNeg(A : TComplex; var Z : TComplex);      { Z = -A }
+ //CConj(A : TComplex; var Z : TComplex);     { Z = A* }
+ //CAdd(A, B : TComplex; var Z : TComplex);   { Z = A + B }
+ //CSub(A, B : TComplex; var Z : TComplex);   { Z = A - B }
+ //CDiv(A, B : TComplex; var Z : TComplex);   { Z = A / B }
+ //CMult(A, B : TComplex; var Z : TComplex);  { Z = A * B }
+ //CLn(A : TComplex; var Z : TComplex);       { Z = Ln(A) }
+ //CExp(A : TComplex; var Z : TComplex);      { Z = Exp(A) }
+ //CPower(A, B : TComplex; var Z : TComplex); { Z = A^B }
+
+ //CIntPower(A : TComplex; N : Integer; var Z : TComplex);  { Z = A^N }
+ //CRealPower(A : TComplex; X : Float; var Z : TComplex);   { Z = A^X }
+ //CSqrt(A : TComplex; var Z : TComplex);                   { Z = Sqrt(A) }
+ //CRoot(A : TComplex; K, N : Integer; var Z : TComplex);   { Z = A^(1/N) }
+
+ //CSin(A : TComplex; var Z : TComplex);      { Z = Sin(A) }
+ //CCos(A : TComplex; var Z : TComplex);      { Z = Cos(A) }
+ //CTan(A : TComplex; var Z : TComplex);      { Z = Tan(A) }
+
+ //CArcSin(A : TComplex; var Z : TComplex);   { Z = ArcSin(A) }
+ //CArcCos(A : TComplex; var Z : TComplex);   { Z = ArcCos(A) }
+ //CArcTan(A : TComplex; var Z : TComplex);   { Z = ArcTan(A) }
+
+ //CSinh(A : TComplex; var Z : TComplex);     { Z = Sinh(A) }
+ //CCosh(A : TComplex; var Z : TComplex);     { Z = Cosh(A) }
+ //CTanh(A : TComplex; var Z : TComplex);     { Z = Tanh(A) }
+
+ //CArcSinh(A : TComplex; var Z : TComplex);  { Z = ArcSinh(A) }
+ //CArcCosh(A : TComplex; var Z : TComplex);  { Z = ArcCosh(A) }
+ //CArcTanh(A : TComplex; var Z : TComplex);  { Z = ArcTanh(A) }
+
+ //CLnGamma(A : TComplex; var Z : TComplex);  { Z = Ln(Gamma(A)) }
+     //TRoot
+     //EInvalidPath TShellFolder  TRootFolder
+     //InvokeContextMenu
+     //TShellFolder
+     //!! change TFunc in fmath
+     //NFACT
+     
+      //MathError : Integer');
+  //FMin( X, Y : Float) : Float');
+  //FMax( X, Y : Float) : Float');
+  //IMin( X, Y : Integer) : Integer');
+  //IMax( X, Y : Integer) : Integer');
+  //---change FSgn( X : Float) : Integer');
+  //Sgn0( X : Float) : Integer');
+  //DSgn( A, B : Float) : Float');
+ //FSwap( var X, Y : Float)');
+ //ISwap( var X, Y : Integer)');
+  //Expo( X : Float) : Float');
+  //---change FExp2( X : Float) : Float');
+  //---chabge FExp10( X : Float) : Float');
+  //---change FLog( X : Float) : Float');
+  //---change FLog2( X : Float) : Float');
+  //---change fLog10( X : Float) : Float');
+  //---change fLogA( X, A : Float) : Float');
+  //---change fIntPower( X : Float; N : Integer) : Float');
+  //---change fPower( X, Y : Float) : Float');
+  //Pythag( X, Y : Float) : Float');
+  //FixAngle( Theta : Float) : Float');
+  //-----change fTan( X : Float) : Float');
+  //fArcSin( X : Float) : Float');
+  //fArcCos( X : Float) : Float');
+  //fArcTan2( Y, X : Float) : Float');
+  {fSinCos( X : Float; var SinX, CosX : Float)');
+  fSinh( X : Float) : Float');
+  fCosh( X : Float) : Float');
+  fTanh( X : Float) : Float');
+  fArcSinh( X : Float) : Float');
+  fArcCosh( X : Float) : Float');
+  fArcTanh( X : Float) : Float'); }
+  //fSinhCosh( X : Float; var SinhX, CoshX : Float)');
+  //fFact( N : Integer) : Float');
+  //fBinomial( N, K : Integer) : Float');
+  //fGamma( X : Float) : Float');
+  //fSgnGamma( X : Float) : Integer');
+  //fLnGamma( X : Float) : Float');
+  //fIGamma( A, X : Float) : Float');
+  //fJGamma( A, X : Float) : Float');
+  //fBeta( X, Y : Float) : Float');
+  //fIBeta( A, B, X : Float) : Float');
+  //fErf( X : Float) : Float');
+  //fErfc( X : Float) : Float');
+  //fPBinom( N : Integer; P : Float; K : Integer) : Float');
+  
+  //FBinom( N : Integer; P : Float; K : Integer) : Float');
+  //PPoisson( Mu : Float; K : Integer) : Float');
+  //FPoisson( Mu : Float; K : Integer) : Float');
+  
+  //---change fDNorm( X : Float) : Float');
+  
+  //FNorm( X : Float) : Float');
+  //PNorm( X : Float) : Float');
+  //InvNorm( P : Float) : Float');
+  //---change fDStudent( Nu : Integer; X : Float) : Float');
+  //FStudent( Nu : Integer; X : Float) : Float');
+  //PStudent( Nu : Integer; X : Float) : Float');
+  //---change fDKhi2( Nu : Integer; X : Float) : Float');
+  //FKhi2( Nu : Integer; X : Float) : Float');
+  //PKhi2( Nu : Integer; X : Float) : Float');
+  //---change fDSnedecor( Nu1, Nu2 : Integer; X : Float) : Float');
+  //FSnedecor( Nu1, Nu2 : Integer; X : Float) : Float');
+  //PSnedecor( Nu1, Nu2 : Integer; X : Float) : Float');
+  //---change fDExpo( A, X : Float) : Float');
+  //FExpo( A, X : Float) : Float');
+  //---change fDBeta( A, B, X : Float) : Float');
+  //FBeta( A, B, X : Float) : Float');
+  //---change fDGamma( A, B, X : Float) : Float');
+  //FGamma( A, B, X : Float) : Float');
+ //RMarIn( Seed1, Seed2 : Integer)');
+  //IRanMar : LongInt');
+  //RanMar : Float');
+  //RanGaussStd : Float');
+  //RanGauss( Mu, Sigma : Float) : Float');
+  
+   //PI','Extended').setExtended( 3.14159265358979323846);
+ {LN2','Extended').setExtended( 0.69314718055994530942);
+ LN10','Extended').setExtended( 2.30258509299404568402);
+ LNPI','Extended').setExtended( 1.14472988584940017414);
+ INVLN2','Extended').setExtended( 1.44269504088896340736);
+ INVLN10','Extended').setExtended( 0.43429448190325182765);
+ TWOPI','Extended').setExtended( 6.28318530717958647693);
+ PIDIV2','Extended').setExtended( 1.57079632679489661923);  }
+ //SQRTPI','Extended').setExtended( 1.77245385090551602730);
+ //SQRT2PI','Extended').setExtended( 2.50662827463100050242);
+ {INVSQRT2PI','Extended').setExtended( 0.39894228040143267794);
+ LNSQRT2PI','Extended').setExtended( 0.91893853320467274178);
+ LN2PIDIV2','Extended').setExtended( 0.91893853320467274178);
+ SQRT2','Extended').setExtended( 1.41421356237309504880);
+ SQRT2DIV2','Extended').setExtended( 0.70710678118654752440);
+ GOLD','Extended').setExtended( 1.61803398874989484821);}
+// CGOLD','Extended').setExtended( 0.38196601125010515179);
+{ MACHEP','Extended').setExtended( 1.192093E-7);
+ MAXNUM','Extended').setExtended( 3.402823E+38);
+ MINNUM','Extended').setExtended( 1.175495E-38);
+ MAXLOG','Extended').setExtended( 88.72283);
+ MINLOG','Extended').setExtended( - 87.33655);
+ MAXFAC','LongInt').SetInt( 33);
+ MAXGAM','Extended').setExtended( 34.648);
+ MAXLGM','Extended').setExtended( 1.0383E+36);
+ MACHEP','Extended').setExtended( 2.220446049250313E-16);
+ MAXNUM','Extended').setExtended( 1.797693134862315E+308);
+ MINNUM','Extended').setExtended( 2.225073858507202E-308);
+ MAXLOG','Extended').setExtended( 709.7827128933840);
+ MINLOG','Extended').setExtended( - 708.3964185322641);
+ MAXFAC','LongInt').SetInt( 170);
+ MAXGAM','Extended').setExtended( 171.624376956302);
+ MAXLGM','Extended').setExtended( 2.556348E+305);
+ MACHEP','Extended').setExtended( 1.08420217248550444E-19);
+ MAXNUM','Extended').setExtended( 1.18973149535723103E+4932);
+ MINNUM','Extended').setExtended( 3.36210314311209558E-4932);
+ MAXLOG','Extended').setExtended( 11356.5234062941439);
+ MINLOG','Extended').setExtended( - 11355.137111933024);
+ MAXFAC','LongInt').SetInt( 1754);
+ MAXGAM','Extended').setExtended( 1755.455);
+ MAXLGM','Extended').setExtended( 1.04848146839019521E+4928);
+ MACHEP','Extended').setExtended( 1.818989404E-12);
+ MAXNUM','Extended').setExtended( 4.253529586E+37);
+ MINNUM','Extended').setExtended( 2.350988703E-38);
+ MAXLOG','Extended').setExtended( 8.664339757E+01);
+ MINLOG','Extended').setExtended( - 4.253529586E+01);
+ MAXFAC','LongInt').SetInt( 33);
+ MAXGAM','Extended').setExtended( 34.64809785);
+ MAXLGM','Extended').setExtended( 1.038324114E+36);  }
+ 
+ //FN_OK','LongInt').SetInt( 0);
+ //FN_DOMAIN','LongInt').SetInt( - 1);
+ //FN_SING','LongInt').SetInt( - 2);
+ //FN_OVERFLOW','LongInt').SetInt( - 3);
+ //FN_UNDERFLOW','LongInt').SetInt( - 4);
+ //FN_TLOSS','LongInt').SetInt( - 5);
+ //FN_PLOSS','LongInt').SetInt( - 6);
+ 
+ //NFACT','LongInt').SetInt( 33);
+
+   ttestfloat:= 3.402823E+38;
+   
+   testfloat:= 1.797693134862315E+308;
+   //ttestfloat:= 1.797693134862315E+308;
+   testfloatd:= 1.797693134862315E+308;    { 2^1024 }
+   testfloate:= 1.18973149535723103E+4932; { 2^16384 }
+   testfloate:= 1.18973149535723103E+4932; { 2^16384 }
+   
+   writeln(floattostr(ttestfloat))
+   writeln(floattostr(testfloatd))  //double
+   writeln(floattostr(testfloat))   //float 
+   writeln(floattostr(testfloate))   //extended 
+   printF('more precise at display %.18f',[testfloate]);
+     
+end;
+
+{"A picture is worth a thousand words (which is why it takes a
+thousand times longer to load...)"
+-- Eric Tilton, Composing Good HTML}
+
+function facttest(aNFact: integer): double;
+var FactArray : array[0..180] of Float;  { Table of factorials }
+begin
+  FactArray[0]:= 1.0;
+  FactArray[1]:= 1.0;
+  FactArray[2]:= 2.0;
+
+ for It := 3 to aNFACT do
+    FactArray[It] := FactArray[It - 1] * It;
+ result:= factarray[it-1]
+end; 
+  
+    
+
+Const Testtext = 'goodbye! cruel, harsh world!..?';
+
+//http://max.kleiner.com/TEE_files/tee_pins_2014.jpg
+
+ fullstringtext = 'Lecture 1: My First Program a Time Machine! 7 pages'+
+                  'Lecture 2: We program time and numbers  12 pages'+  
+             'Lecture 3: We need a Tool  14 pages          ' +
+             'Lecture 4: Modular Programming   5 pages     ' +
+        'Lecture 5: Object Oriented Programming   9 pages  ' +
+        'Lecture 6: Internet Programming          6 pages  ' +
+        'Lecture 7: Game Programming            7 pages    ' +
+        'Section 2 - DataBase Programming                   '+
+        ' Lecture 8: Operating System Coding         7 pages '+
+        'Lecture 9: Code a Query with SQL          7 pages   '+
+        'Lecture 10: Program a Statistic         7 pages      '+
+        'Lecture 11: Program a Form to View    8 pages         '+
+        'Lecture 12: DataBase  with SQL and Reports   11 pages '+
+        'Section 3 - Interface and Network Programming          '+
+        'Lecture 13: Crypto and Security Programming     13 pages '+
+        'Lecture 14: Parallel or Asynchronous Int Coding   9 pages '+
+        'Lecture 15: Serial Interface RS232 Coding      11 pages  '+
+        'Lecture 16: Event Driven API Coding        14 pages     '+
+        'Lecture 17: Web Server and Socket Interface Coding     9 pages '+
+        'Section 4 - Physical Computing and Internet of Things Programing '+
+        'Lecture 18: Arduino System Coding Part I & II   14 pages          '+
+        'Lecture 19: WinCOM Serial / Arduino Coding with Com Model 14 pages '+
+        'Lecture 20: Regular Expressions RegEx Coding  12 pages  '+
+        'Lecture 21: Android Programing (2015)   6 slides          '+
+        'Lecture 22: COM Services and Web Interface Coding 9 pages  '+
+        'Lecture 23: Real Time Systems Programming   11 pages      '+
+        'Lecture 24: Web of Things or IoT Programing  25 pages     '+
+        'Section 5 - Advanced Coding Concepts                      '+
+        'Lecture 25: Clean Code Topic       12 pages               '+
+        'Lecture 26: Socket Programming with TCP 13 pages          '+
+        'Lecture 27: XML & Tree Coding     11 pages                '+
+        'Lecture 28: DLL Libraries or Component Coding  16 pages   '+
+        'Lecture 29: UML Modeling & Scripting  10 pages            '+
+        'Lecture 30: GEO Map & GIS Coding Part I & II  10 pages    '+
+        'Lecture 31: Closures Coding Concept  13 pages'; 
+
+var   FormLab3D: TFormLab3D;
+      myfunc: TStMethod1Param;
+      s, f, a, b, c : cardinal;
+      ia, ib, ic, asum : integer;
+      tmps, tmps2: string;
+      adyn: TDynCardinalArray;
+      //asht: TShellTreeView;
+      udtGuid: TGuid;
+      
+      const MM_ISOTROPIC = 7;
+ 
+
+Begin               //main
+
+//OpenDoc(exepath+FName)
+{Memo1.Lines.LoadFromFile(YourFileNameHere);
+AppendValueToStrings(Memo1.Lines, 10);
+Memo1.Lines.SaveToFile(YourFileNameHere);}
+  //maxform1.N3dlab1click(self);
+
+  writeln(Strip('<br/>','<p>This is text.<br/>This is line 2</p>'))
+  writeln(StripString('<p>This is text.<br/>This is line 2</p>','<br/>'))
+  writeln(StripAny('<br/>','<p>This is text.<br/>This is line 2</p>'))
+  
+  writeln(Strip('!',testtext));
+  writeln(StripAny('!,.?',testtext));
+ 
+  sr:= StripTags2('<p>This is text.<br/> This is line 2</p>');
+  //ShowMessage(s);   // will display 'This is text.This is line 2'
+  writeln(sr);   // will display 'This is text.This is line 2'
+  
+  Writeln(ReplaceRegExpr ('([</pbr>])*',
+                          '<p>This is text.<br/> This is line 2</p>','', True))
+  Writeln(ReplaceRegExpr ('<[^>]*>',
+                          '<p>This is text.<br/> This is line 2</p>','', True))
+ //CL.AddDelphiFunction('Function AnalyzeExpr( const Expr: AnsiString) : Double');
+    
+    writeln(floattostr(AnalyzeExpr('2^10 * ln(8)')))
+    
+    //add a function at runtime!
+    with TStExpression.create(self) do begin
+      AddConstant('MPI',3.14159);
+      {srlist:= TStringlist.create;
+      GetIdentList(srlist);
+      for it:= 0 to srlist.count-1 do 
+        writeln(srlist.strings[it]);
+      srlist.Free;}
+      myfunc:= @superpi;
+      AddMethod1Param('getsuperpi', myfunc);  
+      Expression:= '2^10 * ln(8 +MPI)';
+      writeln(floattoStr(AnalyzeExpression))
+      Expression:= '2^10 * ln(8 +MPI)+ getsuperpi(42)';
+      writeln(floattoStr(AnalyzeExpression))
+      free;
+    end;  
+    
+  //STTester;
+    
+  copytestFile;
+  
+  s:= GetTickCount();
+  ia:= round(LinesCount(fn));
+  f:= GetTickCount();
+  a:= f -s;
+  s:= GetTickCount();
+  ib:= Round(getLinesCount(fn));
+  f:= GetTickCount();
+  b:= f -s;
+  PrintF('Lines: %.n Ticks: %.n', [ia *1.0, a *1.0]);
+  PrintF('Lines: %.n Ticks: %.n', [ib *1.0, b *1.0]);
+  
+  writeln('Customtimegettime '+int64tostr(Customtimegettime))
+  sleep(5000)
+  writeln('Customtimegettime '+int64tostr(Customtimegettime))
+  
+  TForm1_TimerFormCreate(self)
+  TForm1_FormDestroy(self)
+  
+   sr:= fullstringtext;
+   while pos('pages', sr) > 0 do begin
+     it:= pos('pages', sr);
+     tmps:= Copy(sr, 1, it - 1);
+     //writeln(inttostr(length(tmps)))
+     tmps2:= Copy(tmps, length(tmps)-2, it - 1);
+     writeln(inttostr(it)+': '+tmps +'> '+tmps2);
+     asum:= asum+ strtoint(trim(tmps2))
+     Delete(sr, 1, it);
+     //List.Add(tmp);
+     //writeln(inttostr(it)+tmps);
+   end;
+   writeln('total tutorials pages: '+inttoStr(asum));
+
+  SetADOSETAccess2;
+
+  myfrm:= TForm.create(self);
+  BtnFactory(340,440,150,55,'&Knight Ride','CL_MPPLAY',
+                    btn_loop,@TFrmbtn_SetupClk, myFrm);
+  myfrm.Free;
+  
+  //gettypeinfo(szExefl) as string!
+  
+  //Function PrimeFactors( N : Cardinal) : TDynCardinalArray
+    adyn:= PrimeFactors(127098);
+    for it:= 0 to length(adyn)-1 do 
+      write(inttostr(adyn[it])+' ');
+    maXcalcF('2*3*3*23*307')   
+    
+    writeln('primeFactortest: '+primeFactortest(127098));
+
+      writeln('')
+    adyn:= PrimeFactors(123456789);
+    for it:= 0 to length(adyn)-1 do 
+      write(inttostr(adyn[it])+' ');
+    maXcalcF('3*3*3607*3803')   
+    
+    with TALHTTPClient.create do begin
+      try
+        writeln('getback '+Get1('http://www.softwareschule.ch/maxbox.htm'))
+        writeln('gethead '+Head('http://www.softwareschule.ch/maxbox.htm'))
+        writeln('getTrace '+Trace('http://www.softwareschule.ch/maxbox.htm'))
+        writeln('geturl '+URL)
+        //ALANSIHTMLDecode(URL)
+        writeln('ALUTF8HTMLDecode '+ALUTF8HTMLDecode(URL))
+        //ALXMLTextElementEncode
+        //RequestMethod := HTTPrm_Trace;
+        writeln('reqmethd '+inttostr(ord(RequestMethod)));
+        writeln(RequestHeader.UserAgent)
+        //https://searchcode.com/codesearch/view/62390585/
+        writeln('gethead '+Head('http://www.softwareschule.ch/maxbox.htm'))
+     finally
+        Free;
+      end;  
+    end; 
+    
+    writeln('ALMakeKeyStrByGUID '+ALMakeKeyStrByGUID) 
+    
+    //CreateDir(ExePath + '\example_edition\5_Internet');
+    {CreateDir(ExePath + '\example_edition\06_Communication');
+    CreateDir(ExePath + '\example_edition\07_Geographical');
+    CreateDir(ExePath + '\example_edition\08_Operating');
+    CreateDir(ExePath + '\example_edition\09_Database');
+    CreateDir(ExePath + '\example_edition\10_Science');
+    CreateDir(ExePath + '\example_edition\11_Embedded');
+    CreateDir(ExePath + '\example_edition\12_Security');}
+    
+ {   ExecuteShell('cmd','/c dir C:\maXbook\maxbox3\mX3999\maxbox3\maxbox_base\example_edition\*.* > C:\maXbook\maxbox3\mX3999\maxbox3\maxbox_base\example_edition\exampleinfo.txt') }
+ 
+    //Setmapmode(FormLab3D.canvas.handle, MM_ISOTROPIC);
+    
+    writeln(inttostr(myguid(udtGuid)));
+    writeln(inttostr(udtGuid.d1));
+    writeln(inttostr(udtGuid.d2));
+    writeln(inttostr(udtGuid.d3));
+ 
+    IsEqualGUID(udtGuid,udtGuid)
+    
+    if mySoundcard > 0 then
+      writeln('soundcard found.');
+      //issoundcard
+     writeln(botostr(isSound)) 
+     
+     fmathtester;
+     
+   //  function facttest(NFact: integer): double;
+  writeln(floattostr(facttest(160)));
+  writeln(floattostr(fact(160)));
+
+    
+End.  // StripUtils more benefit than grief    - une pin -> kiefer - kiefer
+
+
+ref TUnicode_String = record
+        Length        : Word;
+        MaximumLength : Word;
+        Buffer        : PWideChar;
+    end;
+    PUnicode_String = ^TUnicode_String;
+    
+    http://wvware.sourceforge.net/caolan/mapmode.html
+    //shellctrls.pas
+    http://delphi.about.com/od/vclwriteenhance/a/gtrocheck-stv.htm
+
+    doc:
+    A new paradigm is emerging, and has been since about the turn of the millennium, one that’s in the process of reshaping what artists are: how they work, train, trade, collaborate, think of themselves and are thought of—even what art is—just as the solitary-genius model did two centuries ago. The new paradigm may finally destroy the very notion of “art” as such—that sacred spiritual substance—which the older one created.
+
+procedure SIRegister_TStExpression(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TStComponent', 'TStExpression') do
+  with CL.AddClassN(CL.FindClass('TStComponent'),'TStExpression') do
+  begin
+    RegisterMethod('Constructor Create( AOwner : TComponent)');
+    RegisterMethod('Function AnalyzeExpression : TStFloat');
+    RegisterMethod('Procedure AddConstant(const Name: AnsiString;Value:TStFloat)');
+    RegisterMethod('Procedure AddFunction0Param( const Name : AnsiString; FunctionAddr : TStFunction0Param)');
+    RegisterMethod('Procedure AddFunction1Param( const Name : AnsiString; FunctionAddr : TStFunction1Param)');
+    RegisterMethod('Procedure AddFunction2Param( const Name : AnsiString; FunctionAddr : TStFunction2Param)');
+    RegisterMethod('Procedure AddFunction3Param( const Name : AnsiString; FunctionAddr : TStFunction3Param)');
+    RegisterMethod('Procedure AddInternalFunctions');
+    RegisterMethod('Procedure AddMethod0Param( const Name : AnsiString; MethodAddr : TStMethod0Param)');
+    RegisterMethod('Procedure AddMethod1Param( const Name : AnsiString; MethodAddr : TStMethod1Param)');
+    RegisterMethod('Procedure AddMethod2Param( const Name : AnsiString; MethodAddr : TStMethod2Param)');
+    RegisterMethod('Procedure AddMethod3Param( const Name : AnsiString; MethodAddr : TStMethod3Param)');
+    RegisterMethod('Procedure AddVariable(const Name: AnsiString;VariableAddr: PStFloat)');
+    RegisterMethod('Procedure ClearIdentifiers');
+    RegisterMethod('Procedure GetIdentList( S : TStrings)');
+    RegisterMethod('Procedure RemoveIdentifier( const Name : AnsiString)');
+    RegisterProperty('AsInteger', 'Integer', iptr);
+    RegisterProperty('AsFloat', 'TStFloat', iptr);
+    RegisterProperty('AsString', 'AnsiString', iptr);
+    RegisterProperty('ErrorPosition', 'Integer', iptr);
+    RegisterProperty('Expression', 'AnsiString', iptrw);
+    RegisterProperty('LastError', 'Integer', iptr);
+    RegisterProperty('AllowEqual', 'Boolean', iptrw);
+    RegisterProperty('OnAddIdentifier', 'TNotifyEvent', iptrw);
+    RegisterProperty('OnGetIdentValue', 'TStGetIdentValueEvent', iptrw);
+  end;
+end;
+
+
+//#sign:Administrator: PC08: 08/01/2015 10:24:09 AM 
+//#tech:0perf: 10:22:18.533 threads: 6 192.168.1.40 10:24:09 AM 3.9.9.160
+
+
+ref:
+
+http://stackoverflow.com/questions/11229831/regular-expression-to-remove-html-tags-from-a-string
+
+http://www.delphipages.com/forum/showthread.php?t=201629
+http://useruploadedfiles.programmersheaven.com/48584/NMEA.pas
+
+
+    Program SpammersAreParasites;
+    var
+      l1,l2: Srting;
+    begin
+      l1:='70';
+      l2:='0';
+      Bxo:=l1 + l2;
+      Bxo:=(Bxo)
+    (*
+      l1:=97;
+      l2:=9
+     Bxo:=(l1 + l2);
+    *)
+    //end.
+
+(*? Value of Bxo:    *)
+
+{"There is a theory which states that if ever anybody discovers
+exactly what the Universe is for and why it is here, it will
+instantly disappear and be replaced by something even more
+bizarre and inexplicable. There is another theory which states
+that this has already happened."
+-- Douglas Adams }
+
+
+the term inbuild delphi engine means the fact that you can execute object pascal code as a script and the whole maXbox ist build by the delphi compiler including runtime library and system unit, the fact thats an interpreter and not a compiler results in the name delphi engine and not delphi compiler, but on the other side most of the about 1050 units are indeed precompiled by the compiler and follow the structure of the runtimer as interpreted script code
+
+'Interstellar' was incredible. The visuals, the score, the acting, were all amazing. The plot is definitely one of the most original I've seen in a while. Most of the critic reviews have said that some bits are a little too unbelievable, but I have to disagree. Yes, there were some parts that were definitely in the "fi" part of sci-fi. But the thing is, 'Interstellar' deals with concepts that we know very little about. We have no idea what the 4th or 5th dimension is like, or what it would be like to go through a wormhole or a black hole. I don't think it's fair to call something unbelievable, when we have absolutely no idea what WOULD be believable in those circumstances. Either way, excellent writing from the Nolan brothers. The visuals were outstanding, and will no doubt be nominated for an Oscar. The performances were excellent, though nothing Oscar worthy, as is the case with most of Nolan's films ('The Dark Knight' being the obvious exception). Hans Zimmer's score was amazing and blended perfectly with the film. All in all, 'Interstellar' is an excellent movie, which I personally think is Nolan's most beautiful film to date.
+
+
+<a title="maXbox - Download - heise online" href="/download/maxbox-1176464.html"><img alt="maXbox - Download - heise online" title="maXbox - Download - heise online" src="http://www.heise.de/software/icons/download_logo1.png" /></a>
+
+
+Piccolo
+
+SBB Re 4/4 “ - “TEE”
+
+    in den Warenkorb       Art. 734001  DC        Fr. 220.80
+                         
+    in den Warenkorb       Art. 734071  DC       Fr. 314.30
+                          Digital-Sound
+
+(09/2014)
+
+http://freefr.dl.sourceforge.net/project/maxbox/maxbox3.zip
+
+https://www.udemy.com/course-manage/edit-curriculum/?courseId=362266
+
+https://www.udemy.com/learn-coding-from-the-scratch
+
+https://www.udemy.com/learn-coding-from-the-scratch/test-video
+
+
+
+Congrats on publishing your course! Just a few more updates for your course to appear in our marketplace of nearly 3 million students
+We've reviewed your course titled: Learn Coding from the Scratch and have listed a few elements to fix before your course can be listed in search and discovery on Udemy. Below you'll find feedback for how you can make this course - and your next - as successful as possible. Then, 3 million Udemy students will be able to learn from you!
+
+Once you make all of the required changes below please respond to this email to let us know that you are ready for us to re-review your course. Our team will be happy to provide you with updated feedback on your courses!
+ 
+ 
+ Required Fixes Before Approval
+
+    Instructor Bio - Complete: You need to modify your name to standard first name and last name. You may put professional titles in the designation field (e.g. Dr., Atty., Prof., Ms., etc...) or you may just leave it blank. Any titles like Coach, Guru, Speaker, Trainer, etc..., should be in the Headline field.
+    Course Summary: Your course summary is super important for converting potential students! Make sure yours has clear & compelling copy, is thorough (>300 words) and includes keywords for SEO
+    Goals and Objectives: You should have more than 1 Goal/Objective
+    Title/Subtitle: Subtitle should reinforce the title with more detail. Check out this article for help to improve your course title! https://support.udemy.com/customer/portal/articles/1595443-what-makes-a-good-title-,
+    Course outline (Sections & Lectures): Use Sections to thoughtfully group lectures into a complete course outline, Use more appropriate/informative Section / Lecture titles so students can follow along with you!
+    Quality Image: Your image is how you present your course to the world! Make sure to follow these guidelines to be sure you're on track: https://support.udemy.com/customer/portal/articles/1552740-course-image-guidelines?b_id=3056
+    Intended Audience: You need to include more detail in this section -- don't be afraid to go into detail when describing your target audience!
+    Course Requirements: Try for a more actionable and clear breakdown of what is needed to take your course (specific softwares, additional materials, appropriate mindsets)
+    Course Complete: You must have at least 60% video content: This can include screencasts and mashups
+
+Recommendations For Improving Your Course
+
+    Engagement level: Consider ways to make your course more fun so students will more likely complete the course and leave you great reviews!
+    Multi-Media: Dynamic courses are great courses. Think about including some other media types (Video, Video Headshots, Video Mashup, PDF, PPT, etc) to enhance your course
+    All ScreenCast: Consider mixing up your content to be more than just screencast, for example use video, powerpoint, or animation explaining concepts before switching to screencast for the how-to sections. This will help your course be more engaging!
+    Intro Lecture: Include an Intro lecture as the first lecture of your course to set expectations, go over how the course is organized, and explain how students should interact with you and your material. Don't forget to introduce your (amazing) self as well!
+    Concluding Lecture: Include a Concluding lecture as the last lecture of your course to review what was covered, offer congratulations & thanks for completing your course, and offer ways continue their learning
+    Re-enforced learning: Consider including quizzes to re-enforce learning and to really make sure your students are learning, We find that students love summaries that re-enforce the key points covered in a given section. Consider including a lecture at the end of each section that reviews what a student should understand by that point
+    Promo Video Content: Consider including examples of the course material within the promo video: show how your students will learn, Make sure that your promo video accurately reflects the course experience
+
+ 
+Please let us know if you have any questions!
+We are looking forward to having your course in the market! 
+Best,
+Udemy Review Team
+
+As a trainer, I've found that nothing educates students into thinking algorithmically better than solving tiny, individual problems. They are to the brain what push-ups are for... whatever muscle group push-ups are for. For example: given a text, display a text made of every odd-ranked character in reverse order. Or, given an array of numbers, display all pairs of numbers whose sum is between 10 and 100.
+
+They don't need to be complex; they just need to be clever in that they will allow for an easy/inelegant solution, and a difficult/elegant solution. In time, the students will learn to prefer the difficult/elegant solution, and that is how their brains will "domesticate" themselves into thinking algorithmically.
+
+If you ask me (you didn't, but I'm answering anyway) books are a complete waste of time in this respect. Algorithmic thinking is nothing but a particular flavour of creativity; it'd be like trying to learn how to write a song by reading a manual.
+  
+Written 17 Nov.
+Downvote
+Comments6+
+Share1
+
+
+In this sense I agree but a book can help to start.
+ Code technologies in a book, address importance of simpler support of a syntax like simplification, and offer insight into a key role developers' play in code to  train your brain in CODEsign. Previously, it had been thought different OO-methods were required to  address many education segments, so this attempt at integration is  ambitious and I advise to start with procedural or functional programming first and then OOP.
+ 
+ http://www.slideshare.net/maxkleiner1/codesign-2015
+ 
+  HandleMessage interrupts the execution of the application so that Windows can process a single message from the Windows message queue before returning control to the application. If the message queue is empty, HandleMessage generates an OnIdle event and starts the process of updating the actions in the application.
+Note: If the application goes idle, HandleMessage may take a long time to return. Therefore, do not call HandleMessage when waiting for something message-based while priority actions are also being processed. Instead, call ProcessMessages when processing more than just messages.
+ 
+ 
+  How is the content and structure of an XML document validated?
+A) With a Document Type Definition (DTD)
+B) With an XML Schema Definition (XSD)
+C) With an XML Data Reduced (XDR)
+D) All of the above
+
+A Schema tests the structure
+If neither an XML schema nor a DTD is declared, only a syntax check is performed. 
+XML documents contain elements and attributes. They provide a flexible and powerful way to exchange data between applications and organizations. To specify the allowable structure and content of an XML document, you can write a DTD, an XDR schema, or an XSD schema. XSD schemas are the preferred method to specify XML grammars in the Microsoft .NET Framework, but DTDs and XDR (MS) schemas are also supported.
+
+
+
+What does the Contains clause of a package include?
+A) Unit files contained in current package
+B) Packages contained in the current package
+C) Resource files contained in the current package
+D) Forms contained in the current package
+
+Which most accurately describes a Component Template?
+A) A component whose methods are abstract and which has no published
+properties
+B) A special component designed to generate parameterized methods at
+compile time based on the parameter types
+C) A component that is saved to the Object Repository for the purpose of
+providing a boilerplate for visually subclassing new components
+D) A collection of one or more components that has been saved to the
+component palette and can be retrieved in one single operation 
+
+netcologne.dl.sourceforge.net/project/maxbox/maxbox3.zip
+
+<a title="maXbox - Download - heise online" href="/download/maxbox-1176464.html"><img alt="maXbox - Download - heise online" title="maXbox - Download - heise online" src="http://www.heise.de/software/icons/download_logo1.png" /></a>
+
+https://bitbucket.org/max_kleiner/maxbox3/wiki/maXbox%20Tutorials
+
+
+
+How is the content and structure of an XML document validated?
+multiple-choice
+What does the Contains clause of a package include?
+multiple-choice
+Which most accurately describes a Component Template?
+multiple-choice
+A ClientSocket is used to manage a single client connection to a TCP/IP server.
+true-false
+A Win32 construct does need a Handle property of a Canvas component which represents a device context?
+true-false
+A function is called with actual arguments placed in the same sequence as their matching formal __parameters__.
+fill-in-the-blanks
+A __Constant__ is a fixed numeric or character value represented by a name.
+fill-in-the-blanks
+In OOP method overloading supports which of the following
+multiple-choice
+Which information does a method require when writing a component?
+multiple-choice
+Given that a user is inputting data for a new __record__ in a database.
+fill-in-the-blanks
+Each computer on a TCP/IP network has a unique __address__ associated with it, the so called IPAddress.
+fill-in-the-blanks
+An IP address is always a 32-bit number and is usually represented in a dot notation, e.g. 192.168.0.1.
+true-false
+Streams are classes that let you read and __write__ data. They provide a common __interface__ for reading and writing to different media such as memory, strings, sockets, and BLOB fields.
+fill-in-the-blanks
+In cross-platform applications (maXbox runs on Linux or Mac), you should replace any hard-coded pathnames with the correct __pathname__ or set it relative for the system or use environment variables or at least define a single const to change.;)
+fill-in-the-blanks
+Apps must be aware that this could be the tick count on the server (or machine where the service provider directly managing the hardware is running), and is not necessarily the same machine on which the application is executing; thus, the __timestamps__ in these API messages can only be compared to each other, and not to the __value__ returned by GetTickCount on the processor on which the application is running.
+fill-in-the-blanks
+Queries, however, can also perform update, insert, and delete operations as well as retrieving records for display.
+true-false
+The SQL statement can be a query that contains hard-coded field names and values, or it can be a parameterized query that contains replaceable parameters that represent field values that must be bound into the statement before it is executed.
+true-false
+Permutation means arrangement of things. The word arrangement is used, if the order of things is considered. Combination means order of things.
+true-false
+When a new project or script is created, the first form added to the project automatically becomes the value of the Application's MainForm property. Once the application is run, you cannot change the main __form__ of the application.
+fill-in-the-blanks
+SQL is a wide topic with themes like normalization, __data definition language__ (DDL), data manipulation language (DML), __transaction control__ (TCL) and we just start studying a simple Select Query.
+fill-in-the-blanks
+A symmetric encryption algorithm is one in which the originator's and recipient's keys are __identical__. Encryption algorithms in which the originator and recipient have different keys are called __asymmetric__.
+fill-in-the-blanks
+So what are the risks? You can forget the password or the process could be interrupted resulting in a damaged file. So you can restore your file only in relation to the known password.
+true-false
+Parameters are important for all IT systems that offer __interfaces__ for user or programming access. In line 33 we start almost the same time a sound twice, yes it’s the same sound therefore you can hear the delay or an echo to prove its __parallel__!
+fill-in-the-blanks
+Serial communication is based on a __protocol__ and the standard RS 232.
+fill-in-the-blanks
+All event handlers are called immediately when the event occurs, otherwise you have to wait.
+true-false
+Nearly all other components use non-blocking (__asynchronous__) calls and act asynchronously. They require you to respond to events, set up state machines, and often perform wait loops.
+fill-in-the-blanks
+Host names are used both to make it easier on us humans, and to allow a computer to change its IP address without causing all of its potential clients (callers) to lose track of it.
+true-false
+Arduino hardware is programmed using a Wiring-based language (syntax and libraries), similar to C++ and Object Pascal with some slight simplifications and modifications, and a Processing-based integrated development environment like Delphi. Why is Arduino not a Computer?
+multiple-choice
+The Arduino can also be extended with the use of __Shields__ which circuit boards are containing other devices (e.g. GPS receivers, LED Cubes, LCD Displays, Sneakers, MIDI Synthesizers, Ethernet connections, etc.) that you can simply slot into the top of your Arduino to get extra functionality.
+fill-in-the-blanks
+Let’s begin with WinCOM (or DCOM for distributed) that stands for Component Object Model (COM) from Linux. We also can read Common Object Model.
+true-false
+
+https://www.udemy.com/learn-coding-from-the-scratch/?instructorPreviewMode=guest
+
+
+It IS impressive for a 2 year old to navigate an iPad to find her show, or even manipulate her singing dog to play her favourite song. But, isn't this just memory and habitual skills? We are so amazed at how kids can navigate these relatively more complex toys, because we sure never had the same intuition with them. But is it really a higher-form of learning? I suspect that it's not really. If these things break down, kids don't know why or how. They can't fix them--this just reveals a consumer-level of knowledge, still. Being a digital native, whatever that is, is largely passive.
+
+I really like the idea of true tinkering, creation, first principles and just making things from scratch. And not with just digital things: creating a meal, a garden, a wearable garment, a vehicle etc. Though, if we are going to talk digital--we need the programmers. Why is it that everyone can complain about what's wrong with Facebook, and no one can hack a better version?
+
+i think web of things has to be fragmented
+
+https://github.com/CriativaSoft/Arduino/tree/ide-1.5.x-autocomplete
+
+Listing 1
+void setup() 
+{
+  pinMode(8, OUTPUT);
+}
+ 
+void loop() 
+{
+  delay(500);
+  digitalWrite(8, HIGH);
+  delay(500);
+  digitalWrite(8, LOW); 
+}
+
+
+Listing 2
+void setup() 
+{
+  pinMode(7, INPUT);
+  pinMode(8, OUTPUT);
+}
+
+
+Listing 3
+void loop() 
+{
+  int val=digitalRead(7);
+  if(val==0)
+  {
+    digitalWrite(8, HIGH);
+  }
+  else
+  {
+    digitalWrite(8, LOW); 
+  }
+}
+
+
+
+Listing 4
+int pwmFreq;
+void setup() 
+{
+  pwmFreq=255;
+  pinMode(3, OUTPUT);
+  pinMode(5, OUTPUT);
+  pinMode(6, OUTPUT);
+}
+
+
+
+Listing 5
+void loop() 
+{
+  pwmFreq-=10;
+  if(pwmFreq<=0)pwmFreq=255;
+  analogWrite(3, pwmFreq);
+  analogWrite(5, pwmFreq);
+  analogWrite(6, pwmFreq);
+  delay(50);
+}
+
+
+Listing 6
+int rFreq, gFreq, bFreq;
+int counter;
+int colorChan;
+
+Listing 7
+void setup() 
+{
+  counter=0;
+  colorChan=0;
+  rFreq=bFreq=gFreq=255;
+  pinMode(3, OUTPUT);
+  pinMode(5, OUTPUT);
+  pinMode(6, OUTPUT);
+  pinMode(8, INPUT);
+}
+
+
+Listing 8
+void loop() 
+{
+  //Taster entprellen
+  if(digitalRead(8)==HIGH && counter==0)
+  {
+    counter=50;
+    colorChan++;
+    if(colorChan>2)colorChan=0;
+  }
+  if(counter>0)counter--;
+  
+  //Modifiziere Variable
+  switch(colorChan)
+  {
+    case 0:
+      rFreq=analogRead(0)/4;
+      break;
+    case 1:
+      gFreq=analogRead(0)/4;
+      break;
+    case 2:
+      bFreq=analogRead(0)/4;
+      break;
+  }
+  
+  //Aktualisiere PWM
+  analogWrite(3, rFreq);
+  analogWrite(5, gFreq);
+  analogWrite(6, bFreq);
+  delay(30);
+}
+
+
+Listing 9
+#include "TimerOne.h"
+#define sclockPin 1
+//dataPin is owned by system
+#define sdataPin 2
+#define sstrobePin 3
+ 
+byte datenwort;
+bool mussSenken;
+byte sendeGerade;
+
+
+
+Listing 10
+void setup() 
+{
+  Timer1.initialize(500); //2 KhZ Arbeitstakt
+  Timer1.attachInterrupt(intSr);
+  sendeGerade=0;
+  mussSenken=0;
+  datenwort=B01010101;
+  
+  pinMode(sclockPin, OUTPUT);
+  pinMode(sdataPin, OUTPUT);
+  pinMode(sstrobePin, OUTPUT);
+}
+
+
+
+Listing 11
+void intSr()
+{
+  digitalWrite(sstrobePin, LOW);
+  if(mussSenken==1)
+  {
+    if(sendeGerade==7)
+    {//Strobe senden, resetten
+      digitalWrite(sstrobePin, HIGH);
+      sendeGerade=0;
+    }
+    digitalWrite(sclockPin, LOW);
+    mussSenken=0;
+  }
+  else
+  {//Sende Nutzdaten
+    digitalWrite(sclockPin, HIGH);
+    mussSenken=1;  
+    //Ermittle Daten
+    byte mySendBit=datenwort&(1<<sendeGerade);
+    if(mySendBit==0)
+      digitalWrite(sdataPin, LOW);
+    else
+      digitalWrite(sdataPin, HIGH);
+    
+    sendeGerade++;
+  }
+}
+
+
+
+ TALHTTPClient = class(TComponent)
+  private
+    FProxyParams: TALHTTPClientProxyParams;
+    FRequestHeader: TALHTTPRequestHeader;
+    FProtocolVersion: TALHTTPProtocolVersion;
+    FRequestMethod: TALHTTPRequestMethod;
+    FURL: string;
+    FUserName: string;
+    FPassword: string;
+    FConnectTimeout: Integer;
+    FSendTimeout: Integer;
+    FReceiveTimeout: Integer;
+    FOnUploadProgress: TALHTTPClientUploadProgressEvent;
+    FOnDownloadProgress: TALHTTPClientDownloadProgressEvent;
+    FOnRedirect: TAlHTTPClientRedirectEvent;
+    FOnResponseHeaderAvalaible : TALHTTPServerResponseHeaderAvalaibleEvent;
+    FOnResponseBodyPartAvalaible : TALHTTPServerResponseBodyPartAvalaibleEvent;
+    FUploadBufferSize: Integer;
+  protected
+    procedure SetURL(const Value: string); virtual;
+    procedure SetUsername(const NameValue: string); virtual;
+    procedure SetPassword(const PasswordValue: string); virtual;
+    procedure OnProxyParamsChange(sender: Tobject; Const PropertyIndex: Integer); virtual;
+    procedure OnRequestHeaderChange(sender: Tobject; Const PropertyIndex: Integer); virtual;
+    procedure SetUploadBufferSize(const Value: Integer); virtual;
+  public
+    constructor Create(Owner: TComponent); override;
+    destructor Destroy; override;
+    procedure Execute(const aRequestDataStream: TStream; aResponseContentStream: TStream; aResponseContentHeader: TALHTTPResponseHeader); virtual;
+    Procedure Get(aUrl:String; aResponseContentStream: TStream; aResponseContentHeader: TALHTTPResponseHeader); overload;
+    Procedure GetD(aUrl: String; aResponseContentHeader: TALHTTPResponseHeader); overload;
+    Procedure Post(aUrl:String; aResponseContentStream: TStream; aResponseContentHeader: TALHTTPResponseHeader); overload;
+    Procedure Post(aUrl:String; aPostDataStream: TStream; aResponseContentStream: TStream; aResponseContentHeader: TALHTTPResponseHeader); overload;
+    Procedure PostUrlEncoded(aUrl:String; aPostDataStrings: TStrings; aResponseContentStream: TStream; aResponseContentHeader: TALHTTPResponseHeader; Const EncodeParams: Boolean=True); overload;
+    Procedure PostMultipartFormData(aUrl:String; aPostDataStrings: TStrings; aPostDataFiles: TALMultiPartFormDataContents; aResponseContentStream: TStream; aResponseContentHeader: TALHTTPResponseHeader); overload;
+    Function  Get(aUrl:String): String; overload;
+    Function  Post(aUrl:String): String; overload;
+    Function  Post(aUrl:String; aPostDataStream: TStream): String; overload;
+    Function  PostUrlEncoded(aUrl:String; aPostDataStrings: TStrings; Const EncodeParams: Boolean=True): String; overload;
+    Function  PostMultiPartFormData(aUrl:String; aPostDataStrings: TStrings; aPostDataFiles: TALMultiPartFormDataContents): String; overload;
+  published
+    property  URL: string read FURL write SetURL;
+    property  ConnectTimeout: Integer read FConnectTimeout write FConnectTimeout default 0;
+    property  SendTimeout: Integer read FSendTimeout write FSendTimeout default 0;
+    property  ReceiveTimeout: Integer read FReceiveTimeout write FReceiveTimeout default 0;
+    property  UploadBufferSize: Integer read FUploadBufferSize write SetUploadBufferSize default $8000;
+    property  ProxyParams: TALHTTPClientProxyParams read FProxyParams;
+    property  RequestHeader: TALHTTPRequestHeader read FRequestHeader;
+    Property  ProtocolVersion: TALHTTPProtocolVersion read FProtocolVersion write FProtocolVersion default HTTPpv_1_1;
+    Property  RequestMethod: TALHTTPRequestMethod read FRequestMethod write fRequestMethod default HTTPrm_get;
+    property  UserName: string read FUserName write SetUserName;
+    property  Password: string read FPassword write SetPassword;
+    property  OnUploadProgress: TALHTTPClientUploadProgressEvent read FOnUploadProgress write FOnUploadProgress;
+    property  OnDownloadProgress: TALHTTPClientDownloadProgressEvent read FonDownloadProgress write FonDownloadProgress;
+    property  OnRedirect: TAlHTTPClientRedirectEvent read FOnRedirect write FOnRedirect;
+    property  OnResponseHeaderAvalaible : TALHTTPServerResponseHeaderAvalaibleEvent read FOnResponseHeaderAvalaible write FOnResponseHeaderAvalaible;
+    property  OnResponseBodyPartAvalaible : TALHTTPServerResponseBodyPartAvalaibleEvent read FOnResponseBodyPartAvalaible write FOnResponseBodyPartAvalaible;
+  end;
+
+About Win64
+
+Unfortunatly, in win64 we lost all the FastCode heritage. 
+(that was mostly based on _ASM_). That mean that most of 
+the functions will be around 2x to 10x more slower. 
+you can try to launch /demo/ALStringBenchMark/
+in win64 and Win32 to see the difference in speed.
+This Unfortunatly make the Win64 support of Delphi
+like a "gadget", because most of the app demanding the
+win64 support are Server App (or dll) and this king 
+of app need all the power. I just Hope that 
+embarcadero will improuve the speed of the win64 
+functions, but i doubt they want to do them in _asm_ 
+because they want to go in multi plateforme, and
+they not really want to do dedicated _ASM_ for
+every plateforme, they instead want to improuve 
+their compiler. but i thing it's an utopia that
+their compiler will produce code that can compete
+with handly optimized _ASM_
+
+About Delphi D2009+ (Unicode)
+
+No mistake, Unicode was necessary for a product like Delphi. 
+But the way embarcadero decide to implement it?s questionable! 
+Indeed they decide to migrate the 8bit string to 16bit string 
+instead of choosing to implement Unicode through 8bit string 
+(UTF8).  This cause the migration of some Delphi app < d2009 
+very hard, especially on application that assume that string 
+is 8bit. Here a very good article about why to avoid to use 
+UFT-16: http://www.utf8everywhere.org/
+
+The main argument of embarcadero why choosing UTF16 instead 
+of UTF8 is because the windows API work in the background in 
+UTF16 and better to stay in the same way as the windows API. 
+This is still questionable when the strategy becomes to make 
+Delphi a multi platform product. 
+
+So I was facing the need to choose: stay in D2007, move to 
+freepascal (that implement Unicode through UTF8) or migrate 
+to Unicode. After studying the Unicode migration and discover 
+that it?s will be very hard to do (even in the Delphi I 
+discover some bugs in their own source code due to the 
+migration from ansi to Unicode like for exemple 
+http://qc.embarcadero.com/wc/qcmain.aspx?d=106424). 
+Also on lot of my applications the migration to Unicode was 
+really unnecessary, as they was already working in UTF8, 
+receive their input request in utf8 and output their response 
+in UTF8. Here the migration to UTF16 will mean: 
+Input (UTF8) => UTF16 => data processing => UTF16 => output(UTF8)
++ off course all the migration job (that include debugging).
+In fact, except the input/output to the "visual interface", 
+most (if not all) of the input/output of most of the 
+application will be done in 8bit string (ex: file storage, 
+client/server protocol, HTTP, Smtp, tcp, xml, html, database, 
+etc.). So I decide to go in Delphi Xe2 but to stay in 
+ansistring (8bit string). My first through was to replace 
+everywhere in my code all the String by AnsiString. 
+Unfortunately,  most of the usefull and needed string function 
+in D2009+ are not available in 8bit string like inttostr, 
+strtoint, strtofloat, Tstrings, TstringStream, etc. that 
+simply unbelievable, in their way to go in 16bit string, 
+embarcadero remove the 8bit support ! of course we can still 
+do ansistring(inttostr(x)) but this is very pity (and slow).
+So i decide to make my component like a "framework" to help 
+the fully support of 8bit string (mostly in UTF8). 
+
+I build a small application (available in /demo/ALStringToAnsiString/)
+to convert all string type and string function to their 
+ansistring equivalent. The conversion reflects my 
+programming style and quirks so you may need to tweek the 
+output or modify the converter so you have the code. Will 
+this work for your code? Probably not out of the Non Box but 
+you may only be left requiring only few little tweaks.
+
+You can also go in /demo/ALStringBenchMark/ to find an 
+application to benchmark ansiString vs Unicode String and 
+in /demo/ALSortedList/ to see the benchmark of TALStringList 
+(ansiString) vs TStringList (UnicodeString). In fact, most 
+of the Unicode function (when they are implemented correctly, 
+thanks to fastcode) will be close to the same speed as their 
+ansi equivalent. But no mistake, Unicode string will still 
+use 2x more memory and dependly of the application, this can 
+be not acceptable (exemple application that load huge list of 
+string in a TstringList or in an XML object).
+
+Under D2009+, ansiString Have now a codepage, and some 
+transliteration (OldCodePage => UTF16 => NewCodePage) will 
+happen when assigning one ansiString with different codepage 
+to another ansistring with another codepage. To avoid this 
+it?s important to always set project option to the code page 
+you want (eg. 65001 for UTF8) and also to call at the 
+beginning of the program SetMultiByteConversionCodePage(CP_UTF8); 
+Also it?s very important to avoid to use 2 differents 
+string type (eg UTF8string and aniString) even if they have 
+the same codepage, because compiler at compile time 
+don?t know that codepage is the same and will do a 
+transliteration (ex MyAnsiStringUTF8 := MyUTF8String will 
+result in UTF8 => UTF16 => UTF8). This is why we use in 
+all our code only AnsiString instead of UTF8String (even 
+when we assume that string contain only UTF8 char) to 
+avoid theses transliteration keep the rule to only use 
+AnsiString with SetMultiByteConversionCodePage and not type 
+like UTF8string or other
+
+Also about the compiler warning, when he detect a 
+transliteration you will have a warning, but he can not 
+always detect the transliteration Ex: MyFunctionNeedPWideChar(Pointer(aPansiChar))
+Here unfortunatly you will not get any "warning" nor 
+any "error" from the compiler.
+
+Everyone that want to join us in the development of this 
+8Bit string framework is welcome !
+
+Unlimited private and public hosted repositories. Free for small teams!
+
+http://codesnip.delphidabbler.com/screenshots
+
+I do really like that cause searching for code is time-wasting but what I miss is the context. I really like the idea of true tinkering, creation, first principles and just making things from scratch. So I do have about 550 examples as an app in  maXbox for searching and reuse the code. They also include snips but with the context of an app.
+
+I do really like that cause searching for code is time-wasting but what I miss is the context. I really like the idea of true tinkering, creation, first principles and just making things from scratch but then it must result in a running app; so I do have about 550 ../examples as an app in  maXbox for searching and reuse the code most of the time in a full text retrieval. They also include snips but with the context of an app.
+
+https://github.com/maxkleiner/maXbox3/releases
+
+http://www.codeforge.com/article/247910
+
+http://www.sourcecodeonline.com/details/maxbox.html
+
+http://www.spielemax.de/modellbahn/spur-tt/tillig-speisewagen-tee-db-iv.html
+TILLIG 01613 Reisezugwagenset TEE-Nostalgieexpress
+
+Crea tus scripts con esta herramienta.
+
+maXbox es una aplicación fácil de usar guionista desarrollado con un motor incorporado de Delphi en un archivo ejecutable. Está diseñado para los métodos de enseñanza, pruebas y análisis y de algoritmos.
+
+maXbox se basa en RemObjects Pascal Script, la evolución inteligente de programación.
+
+maXbox características:
+
+- Programación móvil de palo
+- Fácil de implementar con el código de texto o código de bytes
+- Gran biblioteca de ejemplos y ejercicios
+- Depuración y la función descompilar
+- Tutoriales en todo el mundo con maxbox arranque
+
+maXbox 3.9.9.120 se licencia como Freeware para el sistema operativo Windows. maXbox se ofrece como una descarga gratuita a todos los usuarios de software (Freeware).
+
+Hallo
+
+Die Wagengarnitur Erasmus, mit der Katalognummer 149757 beinhaltete diese 4 Wagen, mit den nachfolgend aufgeführten Betriebsnummern.
+
+61 80 19-94 050-0 Abteilwagen
+61 80 18-95 023-7 Großraumwagen
+61 80 88-80 107-0 Speisewagen
+61 80 88-90 201-3 Bar Wagen
+
+Alle 4 Wagen hatten Steildächer und Rote Schürzen, und auch federnde Gummiwulste an den Wagenenden, es waren die letzten von Lima gefertigten Modelle.

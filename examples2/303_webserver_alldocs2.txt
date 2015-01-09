@@ -1,7 +1,7 @@
 program Motion_HTTPServer_ALLDocuments2;
 
 // first httpserver docuserver script of webmax internet series
-// shows solution to send all docutypes in a MIME table, locs=85
+// shows solution to send all docutypes in a MIME table, #locs=85
 
 Const  IPADDR = '127.0.0.1';
        APORT = 8000;
@@ -9,7 +9,6 @@ Const  IPADDR = '127.0.0.1';
 var  HTTPServer: TIdCustomHTTPServer;
      //assl: TIdServerInterceptOpenSSL;
      //aMIMEMap: TIdMIMETable;
-
 
 function GetMIMEType(sFile: TFileName): string;
 var aMIMEMap: TIdMIMETable;
@@ -29,7 +28,8 @@ var localDoc: string;
     ByteSent: Cardinal;
 begin
   //RespInfo.ContentType:= 'text/HTML';
-  Writeln(Format('Command %s %s at %-10s received from %s:%d',[ReqInf.Command, ReqInf.Document, 
+  Writeln(Format('Command %s %s at %-10s received from %s:%d',
+                 [ReqInf.Command, ReqInf.Document, 
                        DateTimeToStr(Now),aThr.Connection.socket.binding.PeerIP,
                        aThr.Connection.socket.binding.PeerPort]));
   localDoc:= ExpandFilename(Exepath+'/web'+ReqInf.Document);
@@ -37,7 +37,8 @@ begin
   if FileExists(localDoc) then begin
     ByteSent:= HTTPServer.ServeFile(AThr, RespInf, LocalDoc);
     Writeln(Format('Serving file %s (%d bytes/ %d bytes sent) to %s:%d at %s',
-          [LocalDoc,ByteSent,FileSizeByName(LocalDoc), aThr.Connection.Socket.Binding.PeerIP,
+          [LocalDoc,ByteSent,FileSizeByName(LocalDoc),
+                       aThr.Connection.Socket.Binding.PeerIP,
            aThr.Connection.Socket.Binding.PeerPort, dateTimeToStr(now)]));
   end else begin
     RespInf.ResponseNo:= 404; //Not found RFC
@@ -53,7 +54,7 @@ procedure letOpenBrowser;   //test case
 begin
   //ShellAPI.ShellExecute(Handle,PChar('open'),'http://127.0.0.1:8000/',Nil,Nil,0);
    S_ShellExecute('http:'+IPADDR+':'+IntToStr(APORT)+'/index.htm','',seCmdOpen)
-   //S_ShellExecute('http:'+IPADDR+':'+IntToStr(APORT)+'/soa_delphi.pdf','',seCmdOpen)
+ //S_ShellExecute('http:'+IPADDR+':'+IntToStr(APORT)+'/soa_delphi.pdf','',seCmdOpen)
 end;
 
 procedure HTTPServerStartExecute(Sender: TObject);
@@ -68,14 +69,13 @@ begin
       bindings.items[0].IP:= IPADDR; //'127.0.0.1'; 
       Active:= true;
       onCommandGet:= @HTTPServerGet;
-      PrintF('Listening HTTP on %s:%d.', [Bindings[0].IP,Bindings[0].Port]);
+      PrintF('Listening HTTP on %s:%d.',[Bindings[0].IP,Bindings[0].Port]);
     end;
     letOpenBrowser;
     Showmessage('Click OK to close and shut down HTTPServer!');
     HTTPServer.Free;
   end;
 end;
-
 
 begin //main http server App 
   Writeln(GetIpAddress(getHostName))
@@ -84,6 +84,7 @@ begin //main http server App
   //GetTimeZoneInformation
 End.
 
+Doc:
 //***********************************Code Snippets******************
 
     RespInfo.ContentText:=

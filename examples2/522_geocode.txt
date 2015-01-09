@@ -1,0 +1,113 @@
+{***************************************************************
+ * Project  : GEO Code of OpenStreetMap and NEMA Time Routines
+ * App Name :  522_geocode.txt, #locs=66
+ * Purpose  : Demonstrates geo bitblock component3
+ * Date     : #sign>:22:0max: MAXBOX8: 27.12.2014 21:02:28 8 AM 
+ * History  : convert analogmeter to maXbox Aug 2014
+ *          : add time routines and tickcount to GEO
+ ****************************************************************}
+
+////////////////////////////////////////////////////////////////////////////////
+//     National Marine Electronics Association (NMEA)                         //
+//     Contains code to process GeoCode Coordinates in XML data fields        //
+//     max@kleiner.ch  October  2014                                          //
+////////////////////////////////////////////////////////////////////////////////
+
+Program GetGeoCode;
+
+{Delphi TDateTime from NMEA Date & Time fields}
+
+function DateTimeNMEA(const StrD, StrT: string): TDateTime;
+var
+  WinTimeRec: TSystemTime;
+  hh, mm, ss, dd, mn, yy: string;
+begin
+//   UTC  hhmmss                   UTC date ddmmyy
+  hh := Copy(StrT, 1, 2);       dd := Copy(StrD, 1, 2);
+  mm := Copy(StrT, 3, 2);       mn := Copy(StrD, 3, 2);
+  ss := Copy(StrT, 5, 2);       yy := Copy(StrD, 5, 2);
+
+  with WinTimeRec do
+    try
+      wYear:= 2000 + StrToInt(yy);    // yyyy
+      wMonth := StrToInt(mn);         // Jan = 1
+      wDayOfWeek := 0;                // Ignored
+      wDay := StrToInt(dd);
+      wHour:= StrToInt(hh);
+      wMinute := StrToInt(mm);
+      wSecond := StrToInt(ss);
+      wMilliseconds := 000;
+      Result := SystemTimeToDateTime(WinTimeRec);
+    except
+      Result := -1;
+    end;
+end;
+
+
+{Sets the computer system (UTC) clock, returns true if successful}
+
+function SysClockSet(const StrD, StrT: string): Boolean;
+var
+  WinTimeRec: TSystemTime;
+  DateTime: TDateTime;
+begin
+  DateTime := DateTimeNMEA(StrD, StrT);
+  DateTimeToSystemTime(DateTime, WinTimeRec);
+  Result := SetSystemTime(WinTimeRec);
+end;
+
+begin
+
+   writeln('Coord is: '+GetGeoCode('xml',ExePath+'outputmap2cologne.xml',                                                   'cathedral cologne', true));
+   // function CoordinateStr2(Idx: Integer; PosInSec: Double; PosLn: TPos): string;
+   writeln(CoordinateStr(2, 50.56, tlat));
+
+
+end.  // GeoCode
+
+doc:
+
+cathedral cologne
+result Coord is: latitude: '50.94133705'  longitude: '6.95812076100766'
+
+>>>  50°56'28.8"N 6°57'29.2"E
+
+http://maps.google.com/maps?q=+50.94133705,+6.95812076100766
+>>>
+https://www.google.com/maps/place/50%C2%B056%2728.8%22N+6%C2%B057%2729.2%22E/@50.9413371,6.9581208,17z/data=!3m1!4b1!4m2!3m1!1s0x0:0x0
+
+church cologne:
+result Coord is: latitude: '50.9636172'  longitude: '7.0031056'
+
+Please help. I only need the coordinates from this string
+
+"Latitude: +51.703155 N, Longitude: +5.250327 E 
+http://maps.google.com/maps?q=+51.703155,+5.250327 Sent from my android"
+
+result +51.703155, +5.250327
+
+
+
+ref:
+
+http://useruploadedfiles.programmersheaven.com/48584/NMEA.pas
+
+
+
+    Program SpammersAreParasites;
+    var
+      l1,l2: Srting;
+    begin
+      l1:='70';
+      l2:='0';
+      Bxo:=l1 + l2;
+      Bxo:=(Bxo)
+    (*
+      l1:=97;
+      l2:=9
+     Bxo:=(l1 + l2);
+    *)
+    end.
+
+? Value of Bxo: 
+

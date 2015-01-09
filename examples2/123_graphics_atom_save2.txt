@@ -1,0 +1,116 @@
+program Symmetrics_Graphics_Draw;
+
+//*********************************************************************
+// ...draw a symetric effect and paint with mouse, example _123, #locs=99
+//   it also mirrors the line in all 4 quadrants and save a PNG or else
+//   Nano Atom Model Simulator (NAMS)
+//*********************************************************************
+  
+type TXYVector = array[0..2] of TPoint;   
+
+var
+  cFrm: TForm;
+
+procedure SaveCanvas(vCanvas: TCanvas; FileName: string);
+var
+  Bmp: TBitmap;
+  bmp1: TLinearBitmap;
+  MyRect: TRect;
+begin
+  Bmp:= TBitmap.Create;
+  bmp1:= TLinearBitmap.create;
+  try
+    MyRect:= vCanvas.ClipRect;
+    Bmp.Width:= MyRect.Right - MyRect.Left;
+    Bmp.Height:= MyRect.Bottom - MyRect.Top;
+    Bmp.Canvas.CopyRect(MyRect, vCanvas, MyRect);
+    bmp1.Assign(Bmp)
+    Bmp1.SaveToFile(FileName);
+  finally
+    Bmp.Free;
+    bmp1.Free;
+  end;
+end; 
+  
+  
+procedure Image1MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+var
+  a,b,c,d,e,f:integer;
+begin
+  //if ssLeft in Shift then Spray(cfrm.Canvas, x, y, 4, clRed);
+  {Left mouse button pressed draws a figure also mirrors in all 4 quadrants
+   draws as position (x,y) (a,b) (c,d) and (e,f)}
+  cFrm.Canvas.Pen.color:= random(clwhite);      //change color
+  with cfrm.canvas do begin
+    MoveTo(X,Y);
+    if (shift=[ssLeft] ) then begin
+      LineTo(x+1,y+1);    //original line
+      {mirror in y-axis }
+      c:=x;
+      d:=Y+2*((cfrm.height div 2) - Y);
+      moveto(c,d);
+      lineto(c-1,d-1);
+      {mirror in x-axis}
+      b:=y;
+      a:=x+2*(cfrm.width div 2 - x);
+      moveto(a,b);
+      lineto(a-1,b+1);
+      {mirrors (a,b) in y-axis}
+      e:=a;f:=d;
+      moveto(e,f);
+      lineto(e+1,f-1);
+    end;
+  end;
+end;
+
+
+procedure ImageDblClick(Sender: TObject);
+var picidx: integer;
+begin
+  picidx:= random(10000);
+  SaveCanvas(cfrm.canvas, ExePath+intToStr(picidx)+'atomimage.png')
+  showmessage('Atom Image saved: '+ExePath+intToStr(picidx)+'atomimage.png');
+  OpenDoc(ExePath+intToStr(picidx)+'atomimage.png')
+  //cFrm.Free;
+end;
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  with cFrm do begin
+    height:= 550;
+    width:= 600;
+    Position:= poScreenCenter;
+    onMouseMove:= @Image1MouseMove;
+    onDblClick:= @ImageDblClick;
+    caption:= 'Atom sym 4 drawing - press mouse & move, save with dblclick!'; 
+    color:= clblack; 
+    show;
+    Canvas.Pen.width:= 24;
+    Canvas.Pen.color:= clyellow;
+  end  
+end;
+
+//main sym atom drawing
+begin
+//*****************maXbox graphics series**********************************
+  ProcessMessagesOFF;
+  loadForm();
+End.
+
+just inside maxbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+                                     
+
+(*
+ RRRRR    EEEEEE   AAAA   DDDDD    MM     MM   EEEEEE 
+ RR  RR   EE       AA AA  DD  DD   MMMM MMMM   EE    
+ RRRRR    EEEE    AAAAAA  DD   DD  MM MMM MM   EEEE
+ RR  RR   EE      AA   AA DD   DD  MM  M  MM   EE
+ RR   RR  EEEEEE AA    AA DDDDD    MM  M  MM   EEEEEE
+*)

@@ -58,6 +58,10 @@ begin
   MyWriteln2(floatToStr(getFormulavalue(acalcformat)));    //also FormatLn
 end;
 
+function maxcalcS(const acalcformat: String): string;
+begin
+  result:= floatToStr(getFormulavalue(acalcformat));    //get back FormatLn
+end;
 
 (* === compile-time registration functions === *)
 (*----------------------------------------------------------------------------*)
@@ -87,6 +91,7 @@ begin
   CL.AddDelphiFunction('procedure MCF( const Formula : string)');
  CL.AddDelphiFunction('Function FormulaValue( const Formula : string) : Extended');
   CL.AddDelphiFunction('procedure MaxCalcF( const Formula : string)');
+  CL.AddDelphiFunction('function MaxCalcS( const Formula : string): string');
 
  end;
 
@@ -99,6 +104,7 @@ begin
  S.RegisterDelphiFunction(@GetFormulaValue, 'FormulaValue', cdRegister);
  S.RegisterDelphiFunction(@maxCalcF, 'MCF', cdRegister);
  S.RegisterDelphiFunction(@maxCalcF, 'MaxCalcF', cdRegister);
+ S.RegisterDelphiFunction(@maxCalcS, 'MaxCalcS', cdRegister);
 
  //S.RegisterDelphiFunction(@Power, 'JPower', cdRegister);
 end;

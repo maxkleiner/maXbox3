@@ -1,0 +1,83 @@
+PROGRAM File_Wipe_Pattern;
+
+//Check the forensic task at the end of the app, #locs>62
+
+CONST 
+//<Constant declarations> 
+//TEXTOUT = 'hi world of code';
+   WIPEDIR='NewWipeDir\';
+
+TYPE 
+//<Type declarations> 
+   TFILE1 = integer;
+
+VAR 
+//<Variable declarations>
+  fileHandle: TFILE1;
+  textforfile, texr: string;
+  bytewrite, i, k: integer;
+    //textback : array[0..50] of char;
+  textback : string;
+  textbackp: pchar;
+    //textbackpp : stbuffer;
+
+ FUNCTION GetWipePattern(const signcount: integer): string;
+ begin
+   Randomize;
+   result:='';
+      for k:= 1 to signcount do
+        result:= result + Chr(Random(95)+33);
+ end; 
+
+//<PROCEDURE> 
+
+BEGIN  //Main
+//<Executable statements>
+
+    MkDir(ExePath+WIPEDIR);
+   
+   //for i:= 1 to 11 do  
+   {fileHandle:= FileCreate(wipepath+'newfile7.txt');
+   if fileHandle <> 0 then begin
+     textforfile:= 'meine neue Zeile in der Eile '#13#10
+              'auf Platte rter neue Zeile';
+     bytewrite:=FileWrite(fileHandle, textforfile,
+                                      length(textforfile));
+     Writeln('Zeichen in File '+intToStr(bytewrite)); 
+   end
+     FileClose(fileHandle);}
+     
+  for i:= 1 to 20 do begin 
+    fileHandle:= FileCreate(ExePath+WIPEDIR+'newfile'+intToStr(i)+'.txt');
+    if fileHandle <> 0 then begin
+      texr:= GetWipePattern(1024);
+      bytewrite:= FileWrite(fileHandle, texr, length(texr));
+      Writeln(Format('%d Wipe Signs in File %d',[i, bytewrite])); 
+    end;
+   FileClose(fileHandle); 
+  end; 
+    
+  //Writeln(LoadFileAsString(ExePath+WIPEDIR+'newfile4.txt'));}
+
+END. 
+
+----app_template_loaded----
+
+Doc:
+
+Task: Examine the LineFeed in the following Line with  /Options/Set Spec Chars:
+
+   tY9CvQUB G38i
+   EEA#j,yR\p> vheM*a1Z>I^Z=uls0f3
+
+Why will be a new line set in a file?
+
+%y01&c?*U[[|~hR"ZUqCB`9%$4cCr~b;hLGS$Rb|<F^-Z*G7JL+|sSB_wqX)2 )W-;e@R]K9# ;V!Y@vs5xuY3'D9c`TlWAt*ph`KY_>`w8sV!GOcb#\6 J6^FQIV$;/qylrh!nDvHJA1]^{ (jnNAt5DGp/u7Ymm_jIHVk`1`t 6H|a(w/A'e59S#Nmb[udbM9)F&oBdZgR_n/PU%n:f
+------------------------------------------------------------------   
+Solution: the difference is the ASCII Sign 32!   
+        before:
+        result:= result + Chr(Random(95)+32);
+        after:
+        result:= result + Chr(Random(95)+33);
+
+Therefore you avoid a line break in the file!

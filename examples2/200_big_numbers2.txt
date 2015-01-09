@@ -1,0 +1,326 @@
+{***************************************************************
+/*
+* System: maXbox :PRODUCT: Big Numbers Report
+* File: $RCS:200_big_numbers2.txt$:#locs=225
+* Purpose: Implements and defines big numbers type calculation
+*
+* Release V: 2.1.4
+* ©:public domain; Company: kleiner kommunikation
+* Author: Max
+*
+* Filepath: $E:\maxbox\maxbox3\examples\200_big_numbers2.txt$
+*
+* Created: 2011-02-09 by mX4
+* Modified: $Date: 2012-05-11 2:40p, 2013-04-11 $ @: Max
+* Revision: $LastChanged: 0.1$ 
+*/
+* ***************************************************************}
+Program Big_Numbers_Max;
+
+{ $Project$
+  $Workfile$
+  $Revision$
+  $DateUTC$
+  $Log$}
+  {class function StrToInt64(const S: string): Int64; overload;
+   class function StrToInt64(const S: string; const Default : Int64): Int64;
+  end;}
+
+
+CONST
+    cTiny = 1E-15;
+    
+var //mx:  TFloatDynArray;
+    tx: TFloatPoint;
+  //txa :TFloatPointArray;
+    Set1 : set of char;
+    Set2 : set of byte;
+
+function mCompareDate(const D1, D2: TDateTime): Integer;
+var LTM1, LTM2: TTimeStamp;
+    st: TSystemTime;
+begin
+   ltm1:= DateTimeToTimeStamp(D1);
+   LTM2:= DateTimeToTimeStamp(D2);
+   DateTimeToSystemTime(D1, sT);
+   D1:= SystemTimeToDateTime(sT);
+
+  if (LTM1.Date = LTM2.Date) then begin
+    if (LTM1.Time < LTM2.Time) then begin
+       Result:= -1;
+    end 
+    else begin
+      if (LTM1.Time > LTM2.Time) then
+        Result:= 1
+      else 
+        Result:= 0;
+    end;
+  end
+  else begin
+    if LTM1.Date > LTM2.Date then
+      Result:= 1
+    else
+      Result:= -1;
+  end;
+end;
+
+
+Function mStrToInt64(const S: string; const Default: Int64): Int64;
+begin
+  Result:= StrToInt64Def(Trim(S),Default);
+end;
+
+Function cStrToInt64(const S: string): Int64;
+begin
+  Result:= StrToInt64(Trim(S));
+end;
+
+procedure BIGMAXSCREEN;
+begin
+  try
+    CaptureScreenPNG(ExePath+'MyScreenBitmap.png');
+  finally
+    SearchandOpenDoc(ExePath+'MyScreenBitmap.png')
+  end;
+end; 
+
+function powerOf2(exponent: Integer): Int64;
+var shifter: int64;
+    counter: integer;
+begin
+  shifter:= 1;
+  for counter:= 1 to exponent do
+    shifter:= shifter + shifter;
+  result:= shifter;
+end;
+
+Function SuperPIN: extended;
+var myPi: extended;
+    k: integer;
+begin
+MyPi:= 0;
+for k:= 0 to 100 do begin
+  MyPi:= MyPi + 1/Power(16,k) * ((0.5*k+1)-(0.25*k + 4)-(0.125*k+5)-(0.125*k+6)) 
+end;
+  result:= myPi;
+end;
+
+
+const
+  aMINInt64 = $8000000000000000;
+  aMAXInt64 = $7FFFFFFFFFFFFFFF;
+
+var 
+  a,b: integer;
+  zb: boolean;
+  bigI, compi: Int64;
+  bigII: uInt64;
+  verybig, e: extended;
+  s: string;
+  myword: Word;
+  mydword: DWord;
+  longw: LongWord;
+  longi: Longint;
+
+
+  
+begin
+  Writeln('Big Numbers Function Tester ******************')
+  bigI:= round(Power(2,31)-1)
+  bigII:= round64(Power(2,62)-1)
+  writeln('limit test unint64 with round: '+intToStr64((bigII)))
+  //sum(234,45)
+  writeln('limit: '+intToStr((bigI)))
+  writeln('64bit: '+floatToStr(Power(2,64)))
+  writeln(format('64bit: %f',[Power(2,64)]));
+  writeln('Int64 max1 test: '+IntToStr64(aMinInt64)+'..'+IntToStr64(aMaxInt64))
+  writeln('Int64 max2 test: '+IntToStr64(MinInt64)+'..'+IntToStr64(MaxInt64))
+
+  bigI:= powerOf2(62) - powerOf2(62)-1
+  writeln('must -1: '+inttostr64((bigI)))
+
+  writeln('int function: '+inttoStr64(powerOf2(63)-1))         
+  writeln('lib function: '+floattostr(Power(2,63)))         
+  writeln('const direct '+intToStr64(MaxInt64))
+ 
+  bigI:= cStrToInt64(intToStr64(maxint64))
+  writeln('from convert back: '+intToStr64(bigI))
+  bigI:= round(Power(2,32))
+  writeln('too big for round: '+IntToStr64(bigI))
+  writeln('too big: '+IntToStr64(2*(MaxInt64)))
+  verybig:= MaxInt64;
+  writeln('not too big: '+floatToStr(2* verybig))
+  writeln('much more BIG: '+floatToStr(Power(2,100)))
+  writeln('much more BIGINT: '+FloatToStr(IntPower(2,1000)))
+
+  //Convert to 
+  Writeln(floatToStr(Power(2,100)));
+  Writeln(floatToStr(Exp(100*Ln(2))))
+  Writeln(floatToStr(Ln(Exp(1))))
+  //Writeln(floatToStr(SuperPIN))
+
+  compi:= 1844674407370955160;
+  compi:= 1844674407370955160;
+  //  18446744073709551616  = 2^64
+  //  1844674407370955161  fake
+  //  1844674407370955160  fake
+  //  9223372036854775807
+  bigII:= 2 * 9223372036854775805;
+  bigII:= 1844674407370955161;
+
+  writeln('unint64: '+int64tostr(bigII))
+  writeln(format('%.1d    ',[compi]))
+with TStopwatch.Create do begin
+     Start
+  Writeln('Big Lotto Combination 1600 of 5000!')
+  Writeln('')
+  Writeln(BinominalCoefficient(5000, 1600));    
+  Writeln('')
+  Writeln('Lotto Combination 6 of 45!')
+  Writeln(BinominalCoefficient(45, 6));    
+  Writeln('Lotto Combination 6 of 49!')
+  Writeln(BinominalCoefficient(49, 6));  
+  Writeln('');  
+  Writeln(FormatBigInt(BinominalCoefficient(60, 10)));  
+  Writeln('');  
+  
+  Writeln(FormatBigInt((BinominalCoefficient(5000, 1600))))
+  Writeln(''); 
+  Writeln(FormatInt(4100000))
+  writeln(FloatToStr((Power(2,64))))
+  writeln(((powerBig(10,308)))) //1.8 *10^308
+  writeln(((powerBig(2,1024))))
+  writeln('')
+  writeln(((powerBig(10,38))))  //3.4 *10^38
+  writeln(((powerBig(2,128))))
+    Stop
+   Writeln('Time: ' +(floattoStr(GetValueMSec/1000)));
+   Writeln('Time: ' +GetTimeString);
+    Free;
+    a:= -23456;
+    b:= -12;
+    writeln(inttostr(a-b))
+    //writeln(getAscii)
+end;    
+
+  //BIGMAXSCREEN
+  //OpenCDDrive
+  //boolean tester - small numbers;)
+  a:= 1;
+  b:= -1;
+  zb:= a=b;
+  if zb then write('true ') else write('false ');
+  zb:= a=-b;
+  if zb then write('true ') else write('false ');
+  //writeln2
+    longw:= -200;
+    longi:= -200;
+    myword:= -200;
+    mydword:= -200;
+   writeln(inttostr(longw))
+     writeln(inttostr(longi))
+      writeln(inttostr(myword))  //word
+        writeln(inttostr(mydword))   //dword
+        
+End.
+
+
+just inside maXbox
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_|      
+
+
+It's a matter of fact that programming is the only art that never ends - programming is the synthesizer in our live that sounds each time a BIT different.                   
+
+
+
+//examples to test the integrity and correctness in Groovy/Java
+---------------------------------
+
+/* Big Numbers in Groovy */
+package ch.ecotronics.maxbox
+
+println LONG.MAX_VALUE
+assert Long.MAX_VALUE == 9223372036854775807
+
+BigInteger big = 2 * Long.MAX_VALUE
+println big
+assert big == -2
+
+BigDecimal bigDec = 2.0 * Long.MAX_VALUE
+println bigDec
+assert bigDec == 18446744073709551614.0
+
+double bigger = Math.pow(2,1000)
+assert bigger == 1.1E+0301
+println bigger
+
+------------------------------------------------------------------------
+2^64 = 18446744073709551616
+
+Now that the "signed" Words are finally up-to-par with the unsigned integer types, Delphi 4 immediately introduces a new 64-bits integer type, called Int64, with a whopping range of -2^63..2^63 - 1  
+
+2^100=
+1267650600228229401496703205376
+
+ExecuteShell(ExePath+'maxbox3.exe', '"' + ExePath+'examples\218_biorythmus_studio.txt"');
+
+
+{** A power function from Jack Lyle. Said to be more powerful than the
+    Pow function that comes with Delphi. }
+function Power2(Base, Exponent : Double) : Double;
+{ raises the base to the exponent }
+  CONST
+    cTiny = 1e-15;
+
+  VAR
+    Power : Double; { Value before sign correction }
+
+  BEGIN
+    Power := 0;
+    { Deal with the near zero special cases }
+    IF (Abs(Base) < cTiny) THEN BEGIN
+      Base := 0.0;
+    END; { IF }
+    IF (Abs(Exponent) < cTiny) THEN BEGIN
+      Exponent := 0.0;
+    END; { IF }
+
+    { Deal with the exactly zero cases }
+    IF (Base = 0.0) THEN BEGIN
+      Power := 0.0;
+    END; { IF }
+    IF (Exponent = 0.0) THEN BEGIN
+      Power := 1.0;
+    END; { IF }
+
+    { Cover everything else }
+    IF ((Base < 0) AND (Exponent < 0)) THEN
+        Power := 1/Exp(-Exponent*Ln(-Base))
+    ELSE IF ((Base < 0) AND (Exponent >= 0)) THEN
+        Power := Exp(Exponent*Ln(-Base))
+    ELSE IF ((Base > 0) AND (Exponent < 0)) THEN
+        Power := 1/Exp(-Exponent*Ln(Base))
+    ELSE IF ((Base > 0) AND (Exponent >= 0)) THEN
+        Power := Exp(Exponent*Ln(Base));
+
+    { Correct the sign }
+    IF ((Base < 0) AND (Frac(Exponent/2.0) <> 0.0)) THEN
+      Result := -Power
+    ELSE
+      Result := Power;
+  END; { FUNCTION Pow }
+  
+  
+  
+
+
+
+
+----code_cleared_checked----
+
+Typing discipline 	static, strong, safe

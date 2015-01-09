@@ -410,6 +410,7 @@ function IsCOMConnected: Boolean;
  function IntToFloat(i: Integer): double;
 function AddThousandSeparator(S: string; myChr: Char): string;
 function mymciSendString(cmd: PChar; ret: PChar; len: integer; callback: integer): cardinal;
+function isSound: boolean;
 
 
 implementation
@@ -482,6 +483,11 @@ function getHostIP: string;
 begin
   //writeln(gethostname);
   result:= getIPAddress(getComputerNameWin);
+end;
+
+function isSound: boolean;
+begin
+  result:= waveOutGetNumDevs > 0;
 end;
 
 function IsNetworkConnected: Boolean;

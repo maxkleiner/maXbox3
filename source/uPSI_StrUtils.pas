@@ -3,7 +3,7 @@ unit uPSI_StrUtils;
 
 //imports by max  and imports more runtime lib functions of delphi2 up
  set constants and sets to provide is dependent from sysutils
- overload with leftstr2 ... correction   , getmem vars  TSearchRec bug! getdir!
+ overload with leftstr2 ... correction   , getmem vars  TSearchRec bug! getdir! , setstring!
 }
 interface
  
@@ -65,6 +65,18 @@ procedure RaiseException3(const Msg: string);
 begin
   { Exception mit Meldung auslösen }
   raise Exception.Create(Msg);
+end;
+
+// CL.AddDelphiFunction('procedure SetString(var s: string; buffer: PChar; len: Integer)');
+
+procedure mySetString(var s: string; buffer: PChar; len: Integer);
+begin
+  SetString(s,buffer, len);
+end;
+
+procedure mySetLength(var S: string; NewLength: Integer);
+begin
+  SetLength(s, newlength);
 end;
 
 
@@ -300,7 +312,7 @@ begin
  CL.AddDelphiFunction('procedure FillCharS(var p: string; count: integer; value: char);'); //fix3.8
  CL.AddDelphiFunction('procedure UniqueString(var str: AnsiString)');
  CL.AddDelphiFunction('procedure SetString(var s: string; buffer: PChar; len: Integer)');
- //CL.AddDelphiFunction('procedure SetLength(var S: string; NewLength: Integer)');
+ CL.AddDelphiFunction('procedure SetLength2(var S: string; NewLength: Integer)');
  CL.AddDelphiFunction('Function SearchBuf( Buf : PChar; BufLen : Integer; SelStart, SelLength : Integer; SearchString : String; Options : TStringSearchOptions) : PChar');
  CL.AddDelphiFunction('Function SearchBuf2( Buf : String; SelStart, SelLength : Integer; SearchString : String; Options : TStringSearchOptions) : Integer');
 
@@ -774,8 +786,8 @@ begin
  S.RegisterDelphiFunction(@HexToBin, 'HexToBin', cdRegister); //overload
  S.RegisterDelphiFunction(@BinToHex, 'BinToHex', cdRegister); //overload
  S.RegisterDelphiFunction(@UniqueString,'UniqueString', cdRegister);
- //S.RegisterDelphiFunction(@SetString, 'SetString', cdRegister);
- //S.RegisterDelphiFunction(@SetLength, 'SetLength', cdRegister);
+ S.RegisterDelphiFunction(@mySetString, 'SetString', cdRegister);
+ S.RegisterDelphiFunction(@mySetLength, 'SetLength2', cdRegister);
 
  //S.RegisterDelphiFunction(@StringofChar,'StringofChar', cdRegister);
  S.RegisterDelphiFunction(@ChangeFileExt,'ChangeFileExt', cdRegister);

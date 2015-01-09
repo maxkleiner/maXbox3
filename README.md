@@ -2,6 +2,24 @@ maXbox
 ======
 
 ****************************************************************
+Release Notes maXbox 3.9.9.160 January 2015 CODEsign
+****************************************************************
+Add 9 Units, 2 Slides, 1 Tutor, CLXUp, ExampleEdition, UnitConverter 
+
+1053 unit uPSI_BigIni                          //Hinzen
+1054 unit uPSI_ShellCtrls;                     //VCL
+1055 unit uPSI_fMath;                          //FMath
+1056 unit uPSI_fComp;                          //FMath
+1057 unit uPSI_HighResTimer;                   //Lauer
+1058 unit uconvMain; (Unit Converter)          //PS	
+1059 unit uPSI_uconvMain;                      //PS
+1060 unit uPSI_ParserUtils;                    //PS
+1061 unit uPSI_uPSUtils;                       //PS
+
+SHA1:  maXbox3.exe 8B4D7070BA40BDE17EEDBE78121BB8B474A1D6CF
+CRC32: maXbox3.exe 1B550873
+
+****************************************************************
 Release Notes maXbox 3.9.9.120 December 2014 CODEsign
 ****************************************************************
 Add 10 Units, 1Slides, NeuralNetwork, Pan3D View, GDIBackend

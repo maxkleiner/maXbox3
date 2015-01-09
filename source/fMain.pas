@@ -121,9 +121,10 @@
          10208      build 110 external app, mcisendstring, sqlscriptparser
          10217      build 110_1 two units, bugfix stdcall
          10288      build 120 8 units more, panview, planets, ActiveX 
+         10332      build 160 5 units ,hirestimer, unit converter , parser form, upsutils
 
                   [the last one before V4 in 2015]
-                   V4.0   in  June 2015
+                   V4.0   in  July 2015
  ************************************************************************** }
 
 unit fMain;
@@ -170,9 +171,9 @@ const
    ALLUNITLIST = 'docs\maxbox3_9.xml'; //'in /docs;
    INCLUDEBOX = 'pas_includebox.inc';
    BOOTSCRIPT = 'maxbootscript.txt';
-   MBVERSION = '3.9.9.120';
+   MBVERSION = '3.9.9.160';
    MBVER = '399';              //for checking!
-   MBVER2 = '399120';              //for checking!
+   MBVER2 = '399160';              //for checking!
    EXENAME ='maXbox3.exe';
    MXSITE = 'http://www.softwareschule.ch/maxbox.htm';
    MXVERSIONFILE = 'http://www.softwareschule.ch/maxvfile.txt';
@@ -541,6 +542,7 @@ type
     ExternalApp1: TMenuItem;
     PANView1: TMenuItem;
     Tutorial39GEOMaps1: TMenuItem;
+    UnitConverter1: TMenuItem;
     procedure IFPS3ClassesPlugin1CompImport(Sender: TObject; x: TPSPascalCompiler);
     procedure IFPS3ClassesPlugin1ExecImport(Sender: TObject; Exec: TPSExec; x: TPSRuntimeClassImporter);
     procedure PSScriptCompile(Sender: TPSScript);
@@ -806,6 +808,7 @@ type
     procedure ExternalApp1Click(Sender: TObject);
     procedure PANView1Click(Sender: TObject);
     procedure Tutorial39GEOMaps1Click(Sender: TObject);
+    procedure UnitConverter1Click(Sender: TObject);
     //procedure Memo1DropFiles(Sender: TObject; X,Y: Integer; AFiles: TStrings);
   private
     STATSavebefore: boolean;
@@ -1937,6 +1940,15 @@ uses
   uPSI_JvFinalize,    //3.9.9.120
   uPSI_panUnit1,
   uPSI_DD83u1,
+  uPSI_BigIni,
+  uPSI_ShellCtrls,
+  uPSI_fmath,
+  uPSI_fcomp,     //3.9.9.160
+  uPSI_HighResTimer,
+  uconvMain,
+  uPSI_uconvMain,
+  uPSI_ParserUtils,
+  uPSI_uPSUtils,   //3.9.9.160
 
   ///
    //MDIFrame,
@@ -2342,7 +2354,6 @@ begin
   SIRegister_IdSocks(X);
   SIRegister_IdComponent(X); //3.9.9.91
   SIRegister_IdIOHandlerThrottle(X);
-
   SIRegister_IdSocketHandle(X);
   SIRegister_IdIntercept(X);
   SIRegister_IdIOHandlerSocket(X);
@@ -2379,7 +2390,6 @@ begin
   SIRegister_ovctcary(X);
   SIRegister_DXPUtils(X);
   SIRegister_JclSysUtils(X);
-
   SIRegister_IdTCPConnection(X);  //3.1
   SIRegister_IdTCPClient(X);
   SIRegister_IdHTTPHeaderInfo(X);
@@ -3038,6 +3048,14 @@ begin
  SIRegister_JvFinalize(X);     //3.9.9.120
  SIRegister_panUnit1(X);
  SIRegister_DD83u1(X);
+ SIRegister_BigIni(X);
+ SIRegister_ShellCtrls(X);
+ SIRegister_fmath(X);
+ SIRegister_fcomp(X);     //3.9.9.160
+ SIRegister_HighResTimer(X);
+ SIRegister_uconvMain(X);
+ SIRegister_ParserUtils(X);
+ SIRegister_uPSUtils(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4414,6 +4432,17 @@ begin
   RIRegister_JvFinalize_Routines(Exec);  //3.9.9.120
   RIRegister_panUnit1(X);
   RIRegister_DD83u1(X);
+  RIRegister_BigIni(X);
+  RIRegister_BigIni_Routines(Exec);
+  RIRegister_ShellCtrls(X);
+  RIRegister_ShellCtrls_Routines(Exec);
+  RIRegister_fmath_Routines(Exec);
+  RIRegister_fcomp_Routines(Exec);
+  RIRegister_HighResTimer(X);
+  RIRegister_uconvMain(X);
+  RIRegister_ParserUtils_Routines(Exec);
+  RIRegister_uPSUtils_Routines(Exec);
+  RIRegister_uPSUtils(X);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -4712,6 +4741,8 @@ begin
      CB1SCList.Items.Add((Act_Filename));   //3.9 wb  bugfix 3.9.3.6
      CB1SCList.ItemIndex:= CB1SCList.Items.Count-1;
      Compile1Click(self);
+     maxform1.memo2.lines.add('CLI Console Call Log at: ' +DateTimeToStr(Now));
+     hlog.Add('>>>> Start Console Call Exe: {App_name} v{App_ver}{80@}{now}');
      if (ParamStr(2) = 'm') then begin
        //Compile1Click(self);!
        Application.Minimize;
@@ -5550,6 +5581,7 @@ begin
   Sender.AddFunction(@IntToFloat, 'function IntToFloat(i: Integer): double;');
   Sender.AddFunction(@AddThousandSeparator, 'function AddThousandSeparator(S: string; myChr: Char): string;');
   Sender.AddFunction(@mymcisendstring, 'function mciSendString(cmd: PChar; ret: PChar; len: integer; callback: integer): cardinal;');
+  Sender.AddFunction(@IsSound, 'function IsSound: Boolean;');
 
   Sender.AddFunction(@DownloadFile, 'function DownloadFile(SourceFile, DestFile: string): Boolean;');
   Sender.AddFunction(@DownloadFileOpen, 'function DownloadFileOpen(SourceFile, DestFile: string): Boolean;');
@@ -7842,6 +7874,19 @@ begin
   DoEditorExecuteCommand(ecBlockUnIndent);
 end;
 
+
+procedure TMaxForm1.UnitConverter1Click(Sender: TObject);
+// open unit converter
+//((var uconvFormLab3D: TFormLab3D;
+var fconvMain: TfconvMain;
+begin
+  fconvMain:= TfconvMain.Create(self);
+  try
+    fconvMain.ShowModal;
+  finally
+    fconvMain.Free;
+  end;
+end;
 
 procedure TMaxForm1.Info1Click(Sender: TObject);
 var
@@ -10163,7 +10208,6 @@ begin
       JavaSyntax1.Caption:= 'Java Syntax';
     end;
 end;
-
 
 function TMaxForm1.getCodeEnd: integer;
 var i: integer;

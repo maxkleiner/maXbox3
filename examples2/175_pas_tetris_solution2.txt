@@ -1,0 +1,788 @@
+{//*********************************************************************
+ logic game example with form, objects & structure, example _175; #locs=699
+ How to play: Create horizontal lines using the falling blocks. When you make a
+  line, it is cleared from the screen. The game is over when the blocks pile up
+  and reach the top of the screen. Use the left and right arrow keys to move
+  blocks,  and down arrow key to drop pieces faster. 
+  Runs in maXbox www.softwareschule.ch
+  ********************************************************************* }
+// declaration of 1 form class possible , bug of inc(score+5) solved!
+
+program TETRIS_Solution;
+
+const
+  GlassWidth=10;
+  GlassHeight=19; //orig is 23
+  BarWidth= 14;
+  BarHeight=14;
+  NextBarWidth= 9;
+  NextBarHeight=9;
+  TopOfs=    6;
+  LeftOfs=   5;
+  FieldWidth=4;
+  MaxFigureNumber=7;
+  MaxCornerNumber=4;
+  MaxFigureSize=  4;
+  MaxFigureColor= 7;
+
+
+type                                              
+  TMoveDirect=  (mdDown,mdLeft,mdRight);
+  TFigureCorner= (fc00,fc90,fc180,fc270);
+  TFigureCornerSet = set of TFigureCorner;
+  TFigureWorksheet1 = array [1..4] of Byte;
+  TFigureWorksheet = array [1..4] of TFigureWorksheet1;
+  TGlassWorkSheet1 = array [1..GlassWidth] of Byte;
+  TGlassWorkSheet = array [1..GlassHeight] of TGlassWorkSheet1;
+
+
+var
+  pForm: TForm;
+  sbutton: TButton;
+  label3, label4: TLabel;
+  Timer1: TTimer;
+  bevel3: TBevel;
+  GlassWS, OldGlassWS:  TGlassWorkSheet;
+  Triada, LCorner, RCorner: TFigureWorksheet;
+  LZigzag, RZigzag, Stick, Box: TFigureWorkSheet;
+  FigureWS: TFigureWorksheet;
+    Level,cntr:   Byte;
+    Score:        Longint;
+    ReentTimer:   Boolean;
+    ReentKeys:    Boolean;
+    FigureActive: Boolean;
+    FigureType:   Byte;
+    FigureX:      Byte;
+    FigureY:      Byte;
+    FigureCorner: TFigureCorner;
+    FigureMove:   TMoveDirect;
+    FirstColor:   Byte;
+    SecondColor:  Byte;
+    FirstFigure:  Byte;
+    SecondFigure: Byte;
+    NextTopOfs:   Integer;
+    NextLeftOfs:  Integer;
+    RedrawSheet:  Boolean;
+
+//----------------------Sub Routines--------------------------------------- 
+
+procedure Move(const Source: TFigureWorksheet;
+                      var Dest: TFigureWorksheet; count : Integer );
+//{$IFDEF PUREPASCAL}
+var
+  I,J: Integer;
+begin
+  //S:= PChar(@Source);
+  //D:= PChar(@Dest);
+  //if Cardinal(D) > Cardinal(S) then
+  //if D[1][1] > S[1][1] then
+   for J:= 1 to 4 do
+    for I:= 1 to 4  do
+     //if Source[J][I] > 0 then  //special effect
+      Dest[J][I]:= Source[J][I]
+end;
+
+
+procedure MoveOld(const Source: TGlassWorksheet;
+                      var Dest: TGlassWorksheet; count : Integer );
+//{$IFDEF PUREPASCAL}
+var
+  I,J: Integer;
+begin
+  //if high(S) = high(D) then Exit;
+  for J:= 1 to GlassHeight do
+    for I:= 1 to GlassWidth  do
+    //if Source[J][I] > 0 then
+      Dest[J][I]:= Source[J][I]
+end;
+
+procedure FillCharOldGlass(sign: byte);
+var
+  I,J: Byte;
+begin
+    for J:= 1 to GlassHeight  do
+      for I:= 1 to GlassWidth  do
+        OldGlassWS[J][I]:= sign;
+end;        
+
+procedure FillCharCS(sign: byte; var worksheet: TFigureWorksheet);
+var I,J: Byte;
+begin
+    for J:= 1 to 4  do
+      for I:= 1 to 4  do
+        worksheet[J][I]:= sign;
+end;
+
+procedure FillCharWS(sign: byte);
+var I,J: Byte;
+begin
+    for J:= 1 to 4 do
+      for I:= 1 to 4  do
+        FigureWS[J][I]:= sign;
+end;        
+
+procedure SetFigures;
+begin
+  Triada[1][1]:= 0;  Triada[1][2]:= 1;  Triada[1][3]:= 0;  Triada[1][4]:= 0;
+  Triada[2][1]:= 1;  Triada[2][2]:= 1;  Triada[2][3]:= 1;  Triada[2][4]:= 0;
+  Triada[3][1]:= 0;  Triada[3][2]:= 0;  Triada[3][3]:= 0;  Triada[3][4]:= 0;
+  Triada[4][1]:= 0;  Triada[4][2]:= 0;  Triada[4][3]:= 0;  Triada[4][4]:= 0;
+
+  FigureWS[1][1]:= 0; FigureWS[1][2]:= 0; FigureWS[1][3]:= 0; FigureWS[1][4]:= 0;
+  FigureWS[2][1]:= 0; FigureWS[2][2]:= 0; FigureWS[2][3]:= 0; FigureWS[2][4]:= 0;
+  FigureWS[3][1]:= 0; FigureWS[3][2]:= 0; FigureWS[3][3]:= 0; FigureWS[3][4]:= 0;
+  FigureWS[4][1]:= 0; FigureWS[4][2]:= 0; FigureWS[4][3]:= 0; FigureWS[4][4]:= 0;
+
+  LCorner[1][1]:= 1;  LCorner[1][2]:= 1;  LCorner[1][3]:= 1;  LCorner[1][4]:= 0;
+  LCorner[2][1]:= 1;  LCorner[2][2]:= 0;  LCorner[2][3]:= 0;  LCorner[2][4]:= 0;
+  LCorner[3][1]:= 0;  LCorner[3][2]:= 0;  LCorner[3][3]:= 0;  LCorner[3][4]:= 0;
+  LCorner[4][1]:= 0;  LCorner[4][2]:= 0;  LCorner[4][3]:= 0;  LCorner[4][4]:= 0;
+
+  RCorner[1][1]:= 1;  RCorner[1][2]:= 1;  RCorner[1][3]:= 1;  RCorner[1][4]:= 0;
+  RCorner[2][1]:= 0;  RCorner[2][2]:= 0;  RCorner[2][3]:= 1;  RCorner[2][4]:= 0;
+  RCorner[3][1]:= 0;  RCorner[3][2]:= 0;  RCorner[3][3]:= 0;  RCorner[3][4]:= 0;
+  RCorner[4][1]:= 0;  RCorner[4][2]:= 0;  RCorner[4][3]:= 0;  RCorner[4][4]:= 0;
+
+  LZigzag[1][1]:= 1;  LZigzag[1][2]:= 1;  LZigzag[1][3]:= 0;  LZigzag[1][4]:= 0;
+  LZigzag[2][1]:= 0;  LZigzag[2][2]:= 1;  LZigzag[2][3]:= 1;  LZigzag[2][4]:= 0;
+  LZigzag[3][1]:= 0;  LZigzag[3][2]:= 0;  LZigzag[3][3]:= 0;  LZigzag[3][4]:= 0;
+  LZigzag[4][1]:= 0;  LZigzag[4][2]:= 0;  LZigzag[4][3]:= 0;  LZigzag[4][4]:= 0;
+
+  RZigzag[1][1]:= 0;  RZigzag[1][2]:= 1;  RZigzag[1][3]:= 1;  RZigzag[1][4]:= 0;
+  RZigzag[2][1]:= 1;  RZigzag[2][2]:= 1;  RZigzag[2][3]:= 0;  RZigzag[2][4]:= 0;
+  RZigzag[3][1]:= 0;  RZigzag[3][2]:= 0;  RZigzag[3][3]:= 0;  RZigzag[3][4]:= 0;
+  RZigzag[4][1]:= 0;  RZigzag[4][2]:= 0;  RZigzag[4][3]:= 0;  RZigzag[4][4]:= 0;
+
+  Stick[1][1]:= 1;  Stick[1][2]:= 1;  Stick[1][3]:= 1;  Stick[1][4]:= 1;
+  Stick[2][1]:= 0;  Stick[2][2]:= 0;  Stick[2][3]:= 0;  Stick[2][4]:= 0;
+  Stick[3][1]:= 0;  Stick[3][2]:= 0;  Stick[3][3]:= 0;  Stick[3][4]:= 0;
+  Stick[4][1]:= 0;  Stick[4][2]:= 0;  Stick[4][3]:= 0;  Stick[4][4]:= 0;
+ 
+  Box[1][1]:= 1;  Box[1][2]:= 1;  Box[1][3]:= 0;  Box[1][4]:= 0;
+  Box[2][1]:= 1;  Box[2][2]:= 1;  Box[2][3]:= 0;  Box[2][4]:= 0;
+  Box[3][1]:= 0;  Box[3][2]:= 0;  Box[3][3]:= 0;  Box[3][4]:= 0;
+  Box[4][1]:= 0;  Box[4][2]:= 0;  Box[4][3]:= 0;  Box[4][4]:= 0;
+ 
+ {FWSheet[1][1]:= 0;  FWSheet[1][2]:= 0;  FWSheet[1][3]:= 0;  FWSheet[1][4]:= 0;
+  FWSheet[2][1]:= 0;  FWSheet[2][2]:= 0;  FWSheet[2][3]:= 0;  FWSheet[2][4]:= 0;
+  FWSheet[3][1]:= 0;  FWSheet[3][2]:= 0;  FWSheet[3][3]:= 0;  FWSheet[3][4]:= 0;
+  FWSheet[4][1]:= 0;  FWSheet[4][2]:= 0;  FWSheet[4][3]:= 0;  FWSheet[4][4]:= 0;}
+end;
+
+procedure SetFigureColor;
+var I,J: Byte;
+begin
+  for I:= 1 to MaxFigureSize do
+    for J:= 1 to MaxFigureSize do
+      if FigureWS[I][J] > 0 then FigureWS[I][J]:= SecondColor;
+end;
+
+function FigureXSize: Byte;
+var I,J,K: Byte;
+begin
+  K:= 0;
+  for J:= 1 to MaxFigureSize do
+    for I:= 1 to MaxFigureSize do
+      if FigureWS[J][I]>0 then
+        if K<I then K:= I;
+  result:= K;
+end;
+
+function FigureYSize: Byte;
+var I,J,K: Byte;
+begin
+  K:= 0;
+  for J:= 1 to MaxFigureSize do
+    for I:= 1 to MaxFigureSize do
+      if FigureWS[J][I]>0 then
+        if K<J then K:= J;
+  result:= K;
+end;
+
+//------------------------------------Procedures Routines-------------------
+procedure GenerateNewFigure;         
+begin
+  Timer1.Enabled:= False;
+  SecondFigure:= FirstFigure;
+  SecondColor:= FirstColor;
+  FigureType:= SecondFigure;
+  FigureX:= 5;
+  FigureY:= 0;
+  FigureCorner:= fc270;
+  FillCharWS(0);    //is 0 or 255?
+  writeln('debug figure: '+inttostr(figuretype))
+  case FigureType of
+    0: Move(Triada,FigureWS,SizeOf(FigureWS));
+    1: Move(LCorner,FigureWS,SizeOf(FigureWS));
+    2: Move(RCorner,FigureWS,SizeOf(FigureWS));
+    3: Move(LZigzag,FigureWS,SizeOf(FigureWS));
+    4: Move(RZigzag,FigureWS,SizeOf(FigureWS));
+    5: Move(Stick,FigureWS,SizeOf(FigureWS));
+    6: Move(Box,FigureWS,SizeOf(FigureWS));
+  end;
+  SetFigureColor;
+  FigureMove:= mdDown;
+  FirstFigure:= Random(MaxFigureNumber);
+  FirstColor:= Random(MaxFigureColor)+1;
+  Timer1.Enabled:= True;
+end;
+
+procedure ClearFigureIntoGlass;
+var I,J: Byte;
+begin
+  for J:= 1 to FigureYSize do
+    for I:= 1 to FigureXSize do
+      if FigureWS[J][I]>0 then
+        GlassWS[FigureY+J][FigureX+I]:= 0;
+end;
+
+procedure FormPaint(Sender: TObject);
+var
+  X1,Y1,X2,Y2: Integer;
+  NewRect:     TRect;
+  I,J:         Byte;
+  CurSheet:    TFigureWorksheet;
+  NextColor:   TColor;
+begin
+if RedrawSheet then FillCharoldGlass(255); //#255
+  for J:= 1 to GlassHeight do
+    for I:= 1 to GlassWidth do begin
+      if GlassWS[J][I]= OldGlassWS[J][I] then Continue;
+      X1:= LeftOfs+(I-1)*BarWidth;
+      X2:= X1+BarWidth;
+      Y1:= TopOfs+(J-1)*BarHeight;
+      Y2:= Y1+BarHeight;
+      case GlassWS[J][I] of
+        0: pForm.Canvas.Brush.Color:= clNavy;
+        1: pForm.Canvas.Brush.Color:= clSilver;
+        2: pForm.Canvas.Brush.Color:= clOlive;
+        3: pForm.Canvas.Brush.Color:= clGray;
+        4: pForm.Canvas.Brush.Color:= clBlue;
+        5: pForm.Canvas.Brush.Color:= clPurple;
+        6: pForm.Canvas.Brush.Color:= clAqua;
+        7: pForm.Canvas.Brush.Color:= clTeal;
+        8: pForm.Canvas.Brush.Color:= clWhite;
+      end;
+      if GlassWS[J][I]>0 then begin
+        NewRect := Rect(X1+1,Y1+1,X2-1,Y2-1);
+        pForm.Canvas.FillRect(NewRect);
+        pForm.Canvas.Pen.Color:= clGray;
+        pForm.Canvas.MoveTo(X1,Y1);
+        pForm.Canvas.LineTo(X1,Y2-1);
+        pForm.Canvas.LineTo(X2-1,Y2-1);
+        pForm.Canvas.Pen.Color:= clWhite;
+        pForm.Canvas.LineTo(X2-1,Y1);
+        pForm.Canvas.LineTo(X1,Y1);
+      end
+      else begin
+        NewRect:= Rect(X1,Y1,X2,Y2);
+        pForm.Canvas.FillRect(NewRect);
+      end;
+    end;
+  case FirstFigure of
+    0: Move(Triada,CurSheet,SizeOf(CurSheet));
+    1: Move(LCorner,CurSheet,SizeOf(CurSheet));
+    2: Move(RCorner,CurSheet,SizeOf(CurSheet));
+    3: Move(LZigzag,CurSheet,SizeOf(CurSheet));
+    4: Move(RZigzag,CurSheet,SizeOf(CurSheet));
+    5: Move(Stick,CurSheet,SizeOf(CurSheet));
+    6: Move(Box,CurSheet,SizeOf(CurSheet));
+  end;
+  case FirstColor of
+    0: NextColor:= clNavy;
+    1: NextColor:= clSilver;
+    2: NextColor:= clOlive;
+    3: NextColor:= clGray;
+    4: NextColor:= clBlue;
+    5: NextColor:= clPurple;
+    6: NextColor:= clAqua;
+    7: NextColor:= clTeal;
+    8: NextColor:= clWhite;
+  end;
+  for J:= 1 to MaxFigureSize-2 do
+    for I:= 1 to MaxFigureSize do begin
+      X1:= NextLeftOfs+(I-1)*NextBarWidth;
+      X2:= X1+NextBarWidth;
+      Y1:= NextTopOfs+(J-1)*NextBarHeight;
+      Y2:= Y1+NextBarHeight;
+      if CurSheet[J][I]>0 then begin
+        NewRect:= Rect(X1+1,Y1+1,X2-1,Y2-1);
+        pForm.Canvas.Brush.Color:= NextColor;
+        pForm.Canvas.FillRect(NewRect);
+        pForm.Canvas.Pen.Color:= clGray;
+        pForm.Canvas.MoveTo(X1,Y1);
+        pForm.Canvas.LineTo(X1,Y2-1);
+        pForm.Canvas.LineTo(X2-1,Y2-1);
+        pForm.Canvas.Pen.Color:= clWhite;
+        pForm.Canvas.LineTo(X2-1,Y1);
+        pForm.Canvas.LineTo(X1,Y1);
+      end
+      else begin   //foresight or clSilver
+        pForm.Canvas.Brush.Color:= random(clblue);
+        NewRect:= Rect(X1,Y1,X2,Y2);
+        pForm.Canvas.FillRect(NewRect);
+      end;
+    end;
+  MoveOld(GlassWS,OldGlassWS,SizeOf(OldGlassWS));
+end;
+
+function PutFigureIntoGlass(MoveDirect: TMoveDirect): Boolean;
+var
+  I,J: Byte;
+begin
+  result:= True;
+  if (FigureY+FigureYSize > GlassHeight) and (MoveDirect=mdDown) then begin
+    Dec(FigureY);
+    result:= False;
+    Exit;
+  end else
+    while (FigureX+FigureXSize > GlassWidth) and (MoveDirect=mdDown) do
+       Dec(FigureX);
+    for J:= 1 to FigureYSize do begin      //-1 anti Tetris !!
+      for I:= 1 to FigureXSize do begin
+        if (FigureWS[J][I] > 0) and
+          (GlassWS[FigureY+J][FigureX+I]>0) then begin
+          if (FigureY+J < 3) then begin
+            result:= false;
+            exit;
+          end;  
+          //writeln('glass debug :'+inttoStr(FigureY+J))
+          result:= False;
+          case MoveDirect of
+            mdDown:  Dec(FigureY);
+            mdRight: Dec(FigureX);
+            mdLeft:  Inc(FigureX);
+          end;
+          Exit;
+        end;
+      end;
+    end;
+  for J:= 1 to FigureYSize do
+    for I:= 1 to FigureXSize do
+      if FigureWS[J][I] > 0 then
+        GlassWS[FigureY+J][FigureX+I]:= FigureWS[J][I];
+  RedrawSheet:= False;
+  FormPaint(Self);
+  RedrawSheet:= True;
+end;
+
+procedure ScanFillLines;
+var
+  I,J,K,L: byte;
+begin
+  ClearFigureIntoGlass;
+  for J:= 1 to GlassHeight do begin
+    K:= 0;
+    for I:= 1 to GlassWidth do
+      if GlassWS[J][I]>0 then Inc(K);
+    if K = GlassWidth then begin   // if line is full
+      for L:= J downto 1 do
+        for I:= 1 to GlassWidth do
+          if L>1 then GlassWS[L][I]:= GlassWS[L-1][I];
+    end;
+  end;
+  PutFigureIntoGlass(FigureMove);
+end;
+
+
+procedure Timer1Timer(Sender: TObject);
+var
+  I,J: Byte;
+begin
+  if ReentTimer then Exit
+    else ReentTimer:= True;
+  if StrToInt(Label3.Caption)<>Level then Label3.Caption := IntToStr(Level);
+  if StrToInt(Label4.Caption)<>Score then Label4.Caption := IntToStr(Score);
+  if not FigureActive then begin
+    GenerateNewFigure;
+    if not PutFigureIntoGlass(FigureMove) then begin
+   if MessageDlg('Another Game..my Flame?',mtConfirmation,[mbYes,mbNo],0)=mrYes
+    then begin
+      FillCharOldGlass(250);   //#255
+      Timer1.Enabled:= False;
+       //SpeedButton7.Enabled := False;
+      ClearFigureIntoGlass;
+      FigureActive:= False;
+      pForm.KeyPreview:= true;
+      pform.SetFocus;
+      Level:= 1;
+      Score:= 0;
+      for J:= 1 to GlassHeight do
+        for I:= 1 to GlassWidth do GlassWS[J][I]:= 0;
+      RedrawSheet:= False;
+      FormPaint(Self);
+      RedrawSheet:= True;
+      timer1.enabled:= True; 
+    end 
+     else pForm.close
+     end; 
+   FigureActive:= true; 
+  end
+  else begin
+    ClearFigureIntoGlass;
+    Inc(FigureY);
+    if not PutFigureIntoGlass(FigureMove) then begin
+      //image1.visible:=true;  //linux gag
+      case FigureType of
+        0: Score:= Score+10;
+        1: Score:= Score+30;
+        2: Score:= Score+30;
+        3: Score:= Score+25;
+        4: Score:= Score+25;
+        5: Score:= Score+15;
+        6: Score:= Score+20;
+      end;
+      if Score>300 then Level:= 2;
+      if Score>700 then Level:= 3;
+      if Score>1300 then Level:= 4;
+      if Score>2000 then Level:= 5;
+      if Score>3000 then Level:= 6;
+      if Score>5000 then Level:= 7;
+      Timer1.Interval:= Round((7.1-Level)*100);
+      //timer1.interval:= 1000;
+      FigureActive:= false; //if true then timertest
+    end;
+  end;
+  ScanFillLines;
+  ReentTimer:= False;
+end;
+
+
+//it was a subprocedure with rotate figure
+procedure RotateFigureWorksheet(OldFigureCornet: TFigureCorner; CurSheet:
+        TFigureWorksheet; OldFigureCorner: TFigureCorner);
+var
+  VertFlag, HorizFlag, K,I,J:  Byte;
+begin
+  FillCharWS(0);
+  case FigureType of
+    0: Move(Triada,FigureWS,SizeOf(FigureWS));
+    1: Move(LCorner,FigureWS,SizeOf(FigureWS));
+    2: Move(RCorner,FigureWS,SizeOf(FigureWS));
+    3: Move(LZigzag,FigureWS,SizeOf(FigureWS));
+    4: Move(RZigzag,FigureWS,SizeOf(FigureWS));
+    5: Move(Stick,FigureWS,SizeOf(FigureWS));
+    6: Move(Box,FigureWS,SizeOf(FigureWS));
+  end;
+  FillCharCS(0, curSheet); //!!
+  for K:= 0 to Byte(FigureCorner) do begin
+    for I:= 1 to MaxFigureSize do
+      for J:= 1 to MaxFigureSize do
+        CurSheet[J][I]:= FigureWS[MaxFigureSize-I+1][J];
+    Move(CurSheet,FigureWS,SizeOf(FigureWS));
+  end;
+  SetFigureColor;
+  HorizFlag:= 0;
+  while HorizFlag=0 do begin
+    for I:= 1 to MaxFigureSize do
+      if FigureWS[1][I]>0 then HorizFlag:= 1;
+    if HorizFlag=0 then begin
+      for J:= 1 to MaxFigureSize-1 do
+        for I:= 1 to MaxFigureSize do
+          FigureWS[J][I]:= FigureWS[J+1][I];
+      for J:= 1 to MaxFigureSize do
+        FigureWS[MaxFigureSize][J]:= 0;
+    end;
+  end;
+  VertFlag:= 0;
+  while VertFlag=0 do begin
+    for J:= 1 to MaxFigureSize do
+      if FigureWS[J][1]>0 then VertFlag:= 1;
+    if VertFlag=0 then begin
+      for J:= 1 to MaxFigureSize do
+        for I:= 1 to MaxFigureSize-1 do
+          FigureWS[J][I]:= FigureWS[J][I+1];
+      for J:= 1 to MaxFigureSize do
+        FigureWS[J][MaxFigureSize]:= 0;
+    end;
+  end;
+end;
+
+procedure RotateFigure;
+var
+  OldFigureCornet, OldFigureCorner: TFigureCorner;
+  CurSheet: TFigureWorksheet;
+  figurecSet: TFigureCornerSet;
+begin
+  ClearFigureIntoGlass;
+  OldFigureCorner:= FigureCorner;
+  //if FigureCorner > fc00 then Dec(FigureCorner)
+  figurecset:= [fc90, fc180, fc270]
+  if FigureCorner in figurecset then Dec(FigureCorner)
+    else FigureCorner:= fc270;
+  RotateFigureWorksheet(oldfigurecornet, cursheet, oldfigurecorner);
+  if not PutFigureIntoGlass(mdDown) then begin
+    FigureCorner:= OldFigureCorner;
+    RotateFigureWorksheet(oldfigurecornet, cursheet, oldfigurecorner);
+    PutFigureIntoGlass(mdDown);
+  end;
+end;
+
+//----------------------- button & key controls------------------------------
+
+procedure CloseClick(Sender: TObject; var action: TCloseAction);
+begin
+  if Timer1 <> NIL then begin
+    Timer1.enabled:= false;
+    Timer1.Free;
+    Timer1:= NIL;
+  end;
+end;
+
+procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if ReentKeys then Exit
+    else ReentKeys:= True;
+  if not FigureActive then begin
+    ReentKeys:= False;
+    Exit;
+  end;
+  writeln('debug'+Chr(Key)+' - '+IntToStr(Key));  //alternate J,K,L
+  case Key of                                     //            M   for arrows!
+   {$IFDEF LINUX}4096{$ELSE}27{$ENDIF} : pForm.close;  //4096 linux.....
+   {$IFDEF LINUX}4115{$ELSE}38,75{$ENDIF} {Key_Up}:    RotateFigure;  //4115 
+   {$IFDEF LINUX}4117{$ELSE}40,77{$ENDIF}{Key_Down},                 //4117
+    32 {Key_Space}: begin    //VK_SPACE in win
+                repeat
+                  ClearFigureIntoGlass;
+                  Inc(FigureY);
+                until not PutFigureIntoGlass(mdDown);
+                Inc(Score);
+              end;
+  {$IFDEF LINUX}4114{$ELSE}37,74{$ENDIF}{Key_Left}:
+              if FigureX>0 then begin
+                ClearFigureIntoGlass;
+                Dec(FigureX);
+                PutFigureIntoGlass(mdLeft);
+              end;
+  {$IFDEF LINUX}4116{$ELSE}39,76{$ENDIF}{Key_Right}:
+              if FigureX+FigureXSize<GlassWidth then begin  
+                ClearFigureIntoGlass;
+                Inc(FigureX);
+                PutFigureIntoGlass(mdRight);
+              end;
+  end;
+  ReentKeys:= False;
+end;
+
+procedure BreakClick(Sender: TObject);
+var state: Tshiftstate;
+  keys: integer;
+begin
+  if Timer1.Enabled then begin
+    Timer1.Enabled:= False;
+    sbutton.caption:= 'Go On';
+    //SpeedButton1.Enabled := False;
+  end
+  else begin
+    Timer1.Enabled := True;
+    sbutton.caption:= 'Pause Game';
+    pForm.KeyPreview:= true;
+    //pForm.onClick;
+    //pForm.onKeyDown:= @FormKeyDown;
+    pform.SetFocus;
+    //figureActive:= true;
+    //SpeedButton7.Enabled := True;
+  end;
+end;
+
+procedure FormTCreate(Sender: TObject);
+var label1, label2: TLabel;
+   bevel1, bevel2, bevel4: TBevel;
+begin
+  FillCharOldGlass(250);
+  SetFigures;
+  cntr:= 0;
+  RedrawSheet:= True;
+  pform:= Tform.create(self); //constructors
+  bevel1:= TBevel.create(pform)
+  bevel1.parent:= pForm;
+  label1:= TLabel.create(pform)
+  label1.parent:= pForm;
+  bevel2:= TBevel.create(pform)
+  bevel2.parent:= pForm;
+  bevel3:= TBevel.create(pform)
+  bevel4:= TBevel.create(pform)
+  bevel4.parent:= pForm;
+  label2:= TLabel.create(pform)
+  label2.parent:= pForm;
+  label3:= TLabel.create(pform)
+  label3.parent:= pForm;
+  label4:= TLabel.create(pform)
+  label4.parent:= pForm;
+  sButton:= TButton.create(pform)
+  timer1:= TTimer.create(pform);
+  with pform do begin
+    caption:= 'Tetris boX3';  
+    BorderStyle:= bsDialog;
+    Position:= poScreenCenter;
+    //onKeyPress:= @FormKeyPress
+    onKeyDown:= @FormKeyDown;
+    onPaint:= @FormPaint;
+    onClose:= @CloseClick;
+    color:= clTeal;
+    //KeyPreview:= true;
+    show;
+  end;  
+  with SButton do begin
+    parent:= pForm;
+    caption:= 'Pause TBox'
+    top:= 20;
+    width:= 76;
+    onclick:= @Breakclick;
+  end;  
+  with Bevel3 do begin
+    parent:= pForm;
+    Top:= TopOfs-FieldWidth;
+    Left:= LeftOfs-FieldWidth;
+    Width:= GlassWidth*BarWidth+FieldWidth*2;
+    Height:= GlassHeight*BarHeight+FieldWidth*2;
+  end;
+  with Bevel4 do begin
+     Top:= 82;
+     Left:= (176);
+     Height:= NextBarHeight*(MaxFigureSize-1)+10;
+     Width:=NextBarWidth*MaxFigureSize+8;
+  end;   
+
+  pForm.ClientWidth:= Bevel3.Width+FieldWidth*3+100; 
+  pForm.ClientHeight:= Bevel3.Height+FieldWidth*2;
+  SButton.Left:= Bevel3.Width+FieldWidth*4;
+  Label2.Left:= Bevel4.Left+FieldWidth-6;
+  Label2.top:= Bevel4.Top+FieldWidth+55;
+  label2.caption:= 'Level / Score: ';
+  Bevel2.Left:= Label2.Left-8;
+  Bevel2.Width:= bevel4.Width+30;
+  Bevel2.Top:= Bevel4.Left+FieldWidth-20;
+  Bevel2.Height:= Bevel4.Height+22;
+  Label3.Left := Bevel4.Left+FieldWidth;
+  Label3.top  := Bevel4.Top+FieldWidth+77;
+  Label4.Left := Bevel4.Left+FieldWidth;
+  Label4.top  := Bevel4.Top+FieldWidth+100;
+  Label1.Left := Bevel4.Left+FieldWidth-8;
+  Label1.top  := Bevel4.Top+FieldWidth+145;
+  label1.caption:= 'Player: '+#13#10+GetUserName; //{$IFDEF LINUX}IndyGetHostName
+  Bevel1.Left:= Label2.Left-8;
+  Bevel1.Width:= bevel4.Width+30;
+  Bevel1.Top:= Bevel4.Left+FieldWidth+50;
+  Bevel1.Height:= Bevel4.Height-5;
+  NextTopOfs:= 86;
+  NextLeftOfs:= 180;
+  Level:= 1;
+  timer1.onTimer:= @Timer1Timer;
+  Timer1.Interval:= 2000; //Timer1.Interval := Round((6.5-Level)*100);
+  Score := 0;
+  ReentTimer:= False;
+  ReentKeys:= False;
+  FigureActive:= False;
+  Label3.Font.size:= 14;  //level
+  Label4.font.size:= 14;  //score
+  Label3.Font.color:= clRed;
+  Label4.font.color:= clRed;  
+  Label3.Caption:= '1';  //level
+  Label4.Caption:= '0';  //score
+  Randomize;
+  FirstFigure:= Random(MaxFigureNumber);
+  FirstColor:= Random(MaxFigureColor)+1;
+  pForm.BorderStyle:= bsDialog;
+end;
+
+//main of TETRIS
+begin
+//**************************** mX3 Game Series *******************************
+  //loadPForm();
+  ProcessMessagesOFF;
+  FormTCreate(self);
+  //initPuzzle();
+  //solver()
+  //testVerify
+end.
+//
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_| 
+          
+
+TestSequence:
+    RedrawSheet := False;
+    SetFigures;
+    GenerateNewFigure;
+    putfigureintoGlass(mddown);
+    //Timer1.Enabled := True;
+    FormPaint(Self);
+    RedrawSheet := True;
+
+// Reset Procedure
+
+procedure SpeedButton7Click(Sender: TObject);
+var
+  I,J: Byte;
+begin
+  Timer1.Enabled := False;
+  ClearFigureIntoGlass;
+  FigureActive := False;
+  Level := 1;
+  Score := 0;
+  for I := 1 to GlassHeight do
+    for J := 1 to GlassWidth do GlassWS[I,J] := 0;
+  RedrawSheet := False;
+  FormPaint(Self);
+  RedrawSheet := True;
+  Timer1.Enabled := True;
+end;
+
+
+//The Delphi function StrToInt for string-to-integer conversions generates an exception if the given string does not represent a valid integer. Examples: StrToInt('ABC') or StrToInt('1.5'). That's a nice thing for the automatic validation of user input: if you try to convert an invalid value that was entered, such as into an Edit box, then Delphi automatically displays an error message.
+
+But sometimes you don't want this behaviour, especially when you want to convert several strings into integer numbers, such as the stuff entered in a bunch of Edit boxes, or the strings of a StringGrid, a ListBox,... Then it would be annoying to show an error message for every conversion that goes wrong -- imagine 100 error messages, and each time the user has to click a button to close the dialog window :p
+
+If you use StrToIntDef (string-to-integer-default) instead, you'll never get an exception. If the string is invalid, then this function will return the default value that you provided. Example: StrToIntDef('ABC', 0) returns 0.
+
+Here's a simple source code example, using a TEdit and TLabel components:
+
+    The user has to enter the desired amounts of products into several edit boxes. After clicking a button, the amounts are displayed in labels. But if an amount entered is invalid, then act as if 0 was entered:
+
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  N: integer;
+begin
+  N := StrToIntDef(EditApples.Text, 0); // if invalid, result is 0
+  LabelApples.Caption := IntToStr(N);
+  N := StrToIntDef(EditPears.Text, 0);
+  LabelPears.Caption := IntToStr(N);
+  N := StrToIntDef(EditOranges.Text, 0);
+  LabelOranges.Caption := IntToStr(N);
+
+  // and so on...
+end;
+
+
+Note that FillChar fills the buffer with Byte values now, and no longer with Char values. A beter named function is FillMemory, defined in the Windows unit:
+
+   procedure FillMemory(Destination: Pointer; Length: DWORD; Fill: Byte);
+   begin
+     FillChar(Destination^, Length, Fill);
+   end;
+   
+TShiftState = set of (ssShift, ssAlt, ssCtrl,
+    ssLeft, ssRight, ssMiddle, ssDouble);} 
+    
+    
+OnKeyDown - called when any key on the keyboard is pressed.
+OnKeyUp - called when any key on the keyboard is released.
+OnKeyPress - called when a key corresponding to an ASCII character is pressed.
+     
+Problem:
+The KEYDOWN event does not get fired for the left/right arrow keys.
+When placed on a form with more than one other control, the left and right
+ arrow keys move the focus, instead of firing an event.
+
+Solution:
+You need to handle WM_GETDLGCODE to tell Windows
+what keyboard messages you want to process.
+
+       
+----code_cleared_checked----

@@ -1,0 +1,120 @@
+program Bitmap_Load_Solution_2;
+
+//Loads a bitmap with an aggregation from TPicture Class
+//A function stretches also a bitmap with specified number of pixels
+// in horizontal, vertical dimension, #locs=120
+
+const
+  PICPATH =  'examples\citymax.bmp';
+
+var
+  Image1: TImage;
+  frmMon: TForm;
+  
+procedure loadImage;
+begin
+  Image1.Picture.BitMap.LoadFromFile(ExePath+PICPATH);
+end; 
+
+procedure Image1MouseDown(Sender: TObject; Button: TMouseButton;
+Shift: TShiftState; X, Y: Integer);
+var i: byte;
+begin
+//test
+  Image1.Canvas.MoveTo(X,Y);
+  Image1.Canvas.Pen.Color:= clWebGold;
+  //Image1.Canvas.Brush.Color:= clWebGold;
+  for i:= 1 to 70 do
+    //Image1.Canvas.LineTo(X+random(140),Y+random(140));
+    Image1.Picture.Bitmap.Canvas.LineTo(X+random(60),Y+random(140));
+end;  
+
+Function RGB(R,G,B: Byte): TColor;
+Begin
+  Result:= B Shl 16 Or G Shl 8 Or R;
+End;
+
+function ResizeBmp(bitmp: TBitmap; wid, hei: Integer): Boolean;
+var 
+  TmpBmp: TBitmap;
+  ARect: TRect;
+begin
+  Result:= False;
+  try
+    TmpBmp:= TBitmap.Create;
+    try
+      TmpBmp.Width := wid;
+      TmpBmp.Height:= hei;
+      ARect:= Rect(50,50, wid, hei);
+      TmpBmp.loadfromfile(ExePath+PICPATH)
+      TmpBmp.Canvas.StretchDraw(ARect, Bitmp);
+      bitmp.Assign(TmpBmp);
+    finally
+      TmpBmp.Free;
+    end;
+    Result:= True;
+  except
+    Result:= False;
+  end;
+end;
+
+procedure InitForms;
+var ARect: TRect;
+    mystring: shortstring;
+begin
+ frmMon:= TForm.create(self);
+ with frmMon do begin
+   //FormStyle := fsStayOnTop;
+   Position := poScreenCenter;
+   caption:='click on the bitmap';
+   color:= clWebGold;
+   width:= 450;
+   height:= 480;
+   ARect:= Rect(50,50, 150, 80);
+   Show
+ end;
+ Image1:= TImage.create(frmMon);
+ with Image1 do begin
+   parent:= frmMon;
+   setbounds(140,200, 320,280);
+   onMousedown:= @Image1MouseDown;
+   Show;
+   //onMouseup:= @Image1MouseUp
+ end;
+   with frmMon.canvas do begin
+   //parent:= frmMon;
+    Pen.Color:= clBlack;
+    Pen.Style:= psSolid;
+    Pen.Width:= 10;
+    moveto(100,100)
+    lineto(200,200)
+    Ellipse(20,20,120,120)
+    TextRect(ARect, 50,60, 'bit the map');
+    mystring:= 'bit the map too'
+    TextRect1(ARect, mystring,  [tfSingleLine]);
+   //canvasorientation:= coRightToLeft;
+    // textout(50,50,'bit the map');
+     //show
+   end;
+end; 
+
+procedure LoadBitMap;
+var mybitmap: Tbitmap;
+     mycanvas: TCanvas;
+begin
+ mybitmap:= TBitmap.create;
+ mycanvas:= TCanvas.create;
+ if ResizeBmp(mybitmap, 350, 350) then begin
+   showmessage('picture resized');
+   Image1.Picture.Bitmap:= mybitmap
+ end;   
+ mybitmap.Free;
+ mycanvas.Free;  
+  //Image1.LoadFromFile(ExtractFilePath(Application.Exename) + 'Bild.bmp');
+end;
+
+begin
+  InitForms;
+  LoadBitMap; //Assign!
+  //loadImage;  //direct test
+end.  
