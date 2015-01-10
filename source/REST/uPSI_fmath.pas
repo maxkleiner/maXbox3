@@ -3,7 +3,7 @@ unit uPSI_fmath;
   from umath an extension in double
 }
 interface
- 
+
 uses
    SysUtils
   ,Classes
@@ -11,16 +11,16 @@ uses
   ,uPSRuntime
   ,uPSCompiler
   ;
- 
-type 
+
+type
 (*----------------------------------------------------------------------------*)
   TPSImport_fmath = class(TPSPlugin)
   protected
     procedure CompileImport1(CompExec: TPSScript); override;
     procedure ExecImport1(CompExec: TPSScript; const ri: TPSRuntimeClassImporter); override;
   end;
- 
- 
+
+
 { compile-time registration functions }
 procedure SIRegister_fmath(CL: TPSPascalCompiler);
 
@@ -259,8 +259,8 @@ begin
  S.RegisterDelphiFunction(@RanGauss, 'RanGauss', cdRegister);
 end;
 
- 
- 
+
+
 { TPSImport_fmath }
 (*----------------------------------------------------------------------------*)
 procedure TPSImport_fmath.CompileImport1(CompExec: TPSScript);
@@ -270,7 +270,7 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure TPSImport_fmath.ExecImport1(CompExec: TPSScript; const ri: TPSRuntimeClassImporter);
 begin
-  RIRegister_fmath(ri);
+  //RIRegister_fmath(ri);
   RIRegister_fmath_Routines(CompExec.Exec); // comment it if no routines
 end;
 (*----------------------------------------------------------------------------*)
