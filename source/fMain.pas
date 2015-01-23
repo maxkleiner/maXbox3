@@ -1,4 +1,4 @@
-{ ****************************************************************
+ { ****************************************************************
   sourcefile :    fMain.pas
   typ :  	        boundary-Unit
   author :  	    RemObjects, max kleiner, LoC's 1005
@@ -122,6 +122,7 @@
          10217      build 110_1 two units, bugfix stdcall
          10288      build 120 8 units more, panview, planets, ActiveX 
          10332      build 160 5 units ,hirestimer, unit converter , parser form, upsutils
+         10356      build 160_1 1 units ,DOS redirecter, createprocess , servicemanager
 
                   [the last one before V4 in 2015]
                    V4.0   in  July 2015
@@ -898,6 +899,7 @@ type
     procedure SetTodoMarks(myFile: string);
    //procedure DoEditorExecuteCommand(EditorCommand: word);
   //  procedure WebScannerDirect(urls: string);
+     procedure WMCopyData(var Msg: TWMCopyData); message WM_COPYDATA;
   public
     STATMemoryReport: boolean;
     IPHost: string[255];
@@ -1638,7 +1640,7 @@ uses
   uPSI_ALFcnSQL,
   uPSI_AsyncTimer,
   uPSI_ApplicationFileIO,  //9.85
-  uPSI_PsAPI,      //processmemory
+  uPSI_PsAPI,      //processmemory , createprocess, exitthread
   uPSI_ovcuser,
   uPSI_ovcurl,
   uPSI_ovcvlb,
@@ -1949,6 +1951,9 @@ uses
   uPSI_uconvMain,
   uPSI_ParserUtils,
   uPSI_uPSUtils,   //3.9.9.160
+  uPSI_ParserU,
+  uPSI_TypInfo,
+  uPSI_ServiceMgr,
 
   ///
    //MDIFrame,
@@ -3056,6 +3061,9 @@ begin
  SIRegister_uconvMain(X);
  SIRegister_ParserUtils(X);
  SIRegister_uPSUtils(X);
+ SIRegister_ParserU(X);
+ SIRegister_TypInfo(X);
+ SIRegister_ServiceMgr(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4443,6 +4451,9 @@ begin
   RIRegister_ParserUtils_Routines(Exec);
   RIRegister_uPSUtils_Routines(Exec);
   RIRegister_uPSUtils(X);
+  RIRegister_ParserU(X);
+  RIRegister_TypInfo_Routines(Exec); //last
+  RIRegister_ServiceMgr(X);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -6169,6 +6180,19 @@ begin
     //            'first example in: ..\examples\303_webserver');
  //start to webserver2
 end;
+
+procedure TMaxForm1.WMCopyData(var Msg: TWMCopyData);
+var
+  sText: array[0..99] of Char;
+begin
+  // generate text from parameter
+  // anzuzeigenden Text aus den Parametern generieren
+  StrLCopy(sText, Msg.CopyDataStruct.lpData, Msg.CopyDataStruct.cbData);
+  // write received text
+  // Empfangenen Text ausgeben
+  memo2.lines.add(sText);
+end;
+
 
 procedure TMaxForm1.WMDROP_THEFILES(var message: TWMDROPFILES);
 const

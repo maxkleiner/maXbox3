@@ -1603,6 +1603,8 @@ begin
     SocketService:= TSocketService.CreateNew(SvcMgr.Application, 0);
     SvcMgr.Application.CreateForm(TSocketForm, SocketForm);
     SvcMgr.Application.Run;
+    //SvcMgr.TService;
+    //timesetevent
 end;
 
 

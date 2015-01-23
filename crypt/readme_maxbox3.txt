@@ -1,7 +1,8 @@
 ****************************************************************
 Release Notes maXbox 3.9.9.160 January 2015 CODEsign
 ****************************************************************
-Add 9Units, 2Slides 1Tutor, CLXUp, ExampleEdition, UnitConverter
+Add 12 Units, 2Slides 1Tutor, CLXUp, ExampleEdition, UnitConv
+ExecuteProcess (MultiProcessor), ConsoleCapture (DOS)
 
 1053 unit uPSI_BigIni                          //Hinzen
 1054 unit uPSI_ShellCtrls;                     //VCL
@@ -12,9 +13,12 @@ Add 9Units, 2Slides 1Tutor, CLXUp, ExampleEdition, UnitConverter
 1059 unit uPSI_uconvMain;		       //PS
 1060 unit uPSI_ParserUtils;		       //PS
 1061 unit uPSI_uPSUtils;		       //PS
+1062 unit uPSI_ParserU;                        //PS
+1063 unit uPSI_TypInfo; {SubSet}               //VCL
+1064 unit uPSI_ServiceMgr;                     //mX	
 
-SHA1:  maXbox3.exe 8B4D7070BA40BDE17EEDBE78121BB8B474A1D6CF
-CRC32: maXbox3.exe 1B550873
+SHA1:  maXbox3.exe 9C80649752AABE948C34180552BEDC2AB295E82A
+CRC32: maXbox3.exe B4B4B5C7
 
 
 ****************************************************************

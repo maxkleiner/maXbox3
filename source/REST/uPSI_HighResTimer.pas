@@ -64,10 +64,10 @@ end;
 procedure SIRegister_TMMTimerThread(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TThread', 'TMMTimerThread') do
-  with CL.AddClassN(CL.FindClass('TThread'),'TMMTimerThread') do
-  begin
+  with CL.AddClassN(CL.FindClass('TThread'),'TMMTimerThread') do begin
     RegisterMethod('Constructor Create( CreateSuspended : Boolean)');
-    RegisterMethod('Procedure WaitNextTick');
+        RegisterMethod('Procedure Free');
+     RegisterMethod('Procedure WaitNextTick');
     RegisterProperty('Accuracy', 'Cardinal', iptrw);
     RegisterProperty('CountValue', 'Int64', iptr);
     RegisterProperty('Resolution', 'Cardinal', iptrw);
@@ -78,10 +78,10 @@ end;
 procedure SIRegister_THighResTimer(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TComponent', 'THighResTimer') do
-  with CL.AddClassN(CL.FindClass('TComponent'),'THighResTimer') do
-  begin
+  with CL.AddClassN(CL.FindClass('TComponent'),'THighResTimer') do begin
     RegisterMethod('Constructor Create( aOwner : TComponent)');
-    RegisterMethod('Procedure Calibrate( msCalibrateTime : Cardinal)');
+        RegisterMethod('Procedure Free');
+     RegisterMethod('Procedure Calibrate( msCalibrateTime : Cardinal)');
     RegisterMethod('Function GetTSCValue : Int64');
     RegisterMethod('Function GetHPValue : Int64');
     RegisterMethod('Function GetCountValue : Int64');
@@ -220,10 +220,10 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TMMTimerThread(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TMMTimerThread) do
-  begin
+  with CL.Add(TMMTimerThread) do begin
     RegisterConstructor(@TMMTimerThread.Create, 'Create');
-    RegisterMethod(@TMMTimerThread.WaitNextTick, 'WaitNextTick');
+     RegisterMethod(@TMMTimerThread.Destroy, 'Free');
+      RegisterMethod(@TMMTimerThread.WaitNextTick, 'WaitNextTick');
     RegisterPropertyHelper(@TMMTimerThreadAccuracy_R,@TMMTimerThreadAccuracy_W,'Accuracy');
     RegisterPropertyHelper(@TMMTimerThreadCountValue_R,nil,'CountValue');
     RegisterPropertyHelper(@TMMTimerThreadResolution_R,@TMMTimerThreadResolution_W,'Resolution');
@@ -233,10 +233,10 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_THighResTimer(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(THighResTimer) do
-  begin
+  with CL.Add(THighResTimer) do begin
     RegisterConstructor(@THighResTimer.Create, 'Create');
-    RegisterMethod(@THighResTimer.Calibrate, 'Calibrate');
+    RegisterMethod(@TMMTimerThread.Destroy, 'Free');
+      RegisterMethod(@THighResTimer.Calibrate, 'Calibrate');
     RegisterMethod(@THighResTimer.GetTSCValue, 'GetTSCValue');
     RegisterMethod(@THighResTimer.GetHPValue, 'GetHPValue');
     RegisterMethod(@THighResTimer.GetCountValue, 'GetCountValue');

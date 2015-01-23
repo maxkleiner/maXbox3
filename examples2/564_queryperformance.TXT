@@ -1,0 +1,190 @@
+PROGRAM Demo_QueryPerformanceCylceCount;
+//#sign:max: MAXBOX8: 1/18/2015 6:22:15 PM 
+
+ function  GetTimeZoneInformation(var timezone: TTimeZoneInformation): Longint;
+    external 'GetTimeZoneInformation@kernel32.dll stdcall';
+ 
+CONST 
+//<Constant declarations> #locs>168
+ TEXTOUT = 'Pointer as Parameter';  
+
+VAR 
+//<Variable declarations>
+  myform: TForm;
+  mybutton: TButton;
+  letts: charset;
+  adb: TDBImage;
+  
+procedure TuWasCallback(sender: TObject);
+begin
+  ShowMessage('you called me as callback, du hast mich gerufen');
+end;  
+
+FUNCTION DayInMonth(CONST w: WORD): STRING;
+  BEGIN
+    CASE w OF
+      1: RESULT := '1st';
+      2: RESULT := '2nd';
+      3: RESULT := '3rd';
+      4: RESULT := '4th';
+      5: RESULT := 'Last';
+      ELSE RESULT := 'Unknown'
+    END
+  END {DayInMonth};
+  
+  // Requires LongMonthNames from SysUtils
+// Returns 1 for 'January' .. 12 for 'December', 0 if invalid
+FUNCTION LongMonthNameToInteger(CONST Month: STRING): INTEGER;
+VAR MonthIndex: INTEGER;
+    NotFound : BOOLEAN;
+    fsets: TFormatSettings;
+BEGIN
+  RESULT := 0;
+  NotFound := TRUE;
+  MonthIndex := 0;
+  WHILE (MonthIndex < 12) AND NotFound DO BEGIN
+    INC(MonthIndex);
+    fsets:= ovformatsettings;
+    IF   Month = fsets.LongMonthNames[MonthIndex]
+    THEN BEGIN
+      NotFound := FALSE;
+      RESULT := MonthIndex
+    END
+  END
+END;
+
+var sstring, sout, p1: string;
+     j: byte;
+     c: TColor;
+  Start, Stop:  DWORD;    // D2-D5
+  Frequency:  Int64;
+  Start1, Stop1    :  Int64;    // D4-D5
+  TimeZoneInformation: TTimeZoneInformation;
+  fsets, fsettings: TFormatSettings;
+
+                              
+BEGIN  //Main
+//<Executable statements>
+   myform:= TForm.create(self);
+   myform.setbounds(0,0,500,300);
+   mybutton:= TButton.create(myform);
+   mybutton.caption:= 'CallBack';
+   mybutton.parent:= myform;
+   mybutton.setbounds(0,150,100,50);
+   sstring:='a;b;c;d;e;f;g;h;i;k;l;m;n;o;p';
+   with TStringGrid.create(myform) do begin
+      parent:= myform;
+      height:=150; width:=350;
+      // SplitString
+      j:= 1;
+      for it:= 1 to 4 do begin
+        //delete(sstring,it,2);
+        //SplitString(sstring,';',sout, sout)
+        //writeln(inttostr(it))
+        for j:= 1 to 4 do 
+          Cells[j,it]:= inttostr(it*j);
+      end;
+   //widthSetbounds(0,0,300,300)
+   end;
+   
+   myform.color:= clyellow;
+   mybutton.onClick:= @TuWasCallback;           
+   myform.showmodal;
+   mybutton.Free;
+   myform.Free;
+   {with TColorDialog.create(self) do begin
+      execute;
+      free;
+    end;}  
+   
+  sout:= 'Eint Sie Geist nie?';
+  letts:= strtoCharset(b64_XXEncode);
+  sout:= lowercase(sout);
+  p1:= '';
+  for it:= 1 to length(sout) do
+    if sout[it] in letts then p1:= p1+sout[it];                         
+  
+  writeln(p1)
+  if p1=ReverseString(p1) then begin
+    c:= RGB(220,150,50);
+    memo2.font.color:= c;
+    //memo1.color:= clblack;
+    memo1.font.color:= clblack;
+  end else
+    memo2.font.color:= clred;
+    
+ writeln(getLongMonthNames);
+ writeln(getLongDayNames);
+ //writeln(ovFormatSettings.LongMonthNames[2])
+ writeln(inttostr(LongMonthNameToInteger('December')))
+ writeln(inttostr(LongMonthNameToInteger('February')))
+ 
+ GetLocaleFormatSettings(LOCALE_SYSTEM_DEFAULT, fSettings);
+ writeln(fsettings.timeAMString);
+ writeln(fsettings.LongMonthNames[2])
+ writeln(fsettings.LongMonthNames[12])
+ writeln(fsettings.LongDayNames[7])
+ //ovFormatSettings;
+ writeln(' Current Time ' + FormatDateTime('mm/dd/yyyy hh:nn:ss', Now));
+
+  // See pp. 700-702 of "Tomes of Delphi 3: Win32 Core API."
+  it:= GetTimeZoneInformation(TimeZoneInformation);
+  writeln('GetTimeZoneInformation '+inttostr(it))
+  WITH TimeZoneInformation DO BEGIN
+    IF   StandardDate.wYear = 0
+    THEN writeln(' ' + 'StandardName1' + ' Starts ' +
+         DayInMonth(StandardDate.wDay) + ' ' +
+         fsettings.longDayNames[1+StandardDate.wDayofWeek] + ' of ' +
+         fsettings.LongMonthNames[StandardDate.wMonth])
+    ELSE writeln(' ' + 'StandardName2' + ' Starts ' +
+         Format('%2.2d/%2.2d/%4.4d %2.2d:%2.2d:%2.2d',
+         [StandardDate.wMonth, StandardDate.wDay,
+         StandardDate.wYear,
+         StandardDate.wHour, StandardDate.wMinute,
+         StandardDate.wSecond]))
+  END;
+//...
+   Start:= GetTickCount;
+   Sleep(2000);   // 2000 milliseconds = 2 seconds
+   Stop:= GetTickCount;
+   Writeln(IntToStr(Stop-Start) + ' ' +
+     Format( '%.3f', [ (Stop-Start)/1000 ])  + ' seconds')
+   
+   QueryPerformanceFrequency(Frequency);
+   QueryPerformanceCounter(Start1);
+   Sleep(2000);   // 2000 milliseconds = 2 seconds
+   QueryPerformanceCounter(Stop1);
+   Writeln( IntToStr(Stop1-Start1) + ' Freq: ' +
+                IntToStr(Frequency) +  ' ' +
+                Format( '%.6f', [ (Stop1-Start1)/Frequency ]) + ' seconds')  
+   
+   GLQueryPerformanceFrequency(Frequency);
+   GLQueryPerformanceCounter(Start1);
+   Sleep(2000);   // 2000 milliseconds = 2 seconds
+   QueryPerformanceCounter(Stop1);
+   Writeln( IntToStr(Stop1-Start1) + ' Freq: ' +
+                IntToStr(Frequency) +  ' ' +
+                Format( '%.6f', [ (Stop1-Start1)/Frequency ]) + ' seconds')  
+END. 
+
+http://www.efg2.com/Lab/Library/Delphi/DatesAndTimes/#GetCycleCount
+
+
+TIME_ZONE_ID_UNKNOWN
+0
+Daylight saving time is not used in the current time zone, because there are no transition dates or automatic adjustment for daylight saving time is disabled.
+TIME_ZONE_ID_STANDARD
+1
+The system is operating in the range covered by the StandardDate member of the TIME_ZONE_INFORMATION structure.
+TIME_ZONE_ID_DAYLIGHT
+2
+The system is operating in the range covered by the DaylightDate member of the TIME_ZONE_INFORMATION structure.
+
+LongDayNames 	Array of strings containing long day names, e.g., LongDayNames[1] = 'Sunday' and LongDayNames[7] = 'Saturday' (depends on locale settings) (See also ShortDayNames array)
+
+ checkbox als compliance
+ app sense von symantec, als feldstudie  in der nutzanalyse
+ ohne nutzer zum asm swot end
+ 
+ 
+----app_template_loaded_code----

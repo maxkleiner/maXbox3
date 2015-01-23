@@ -1,0 +1,251 @@
+PROGRAM myTurtle123_seq;
+// task: design each number from 0..10
+// process: download --> include --> loop
+// #sign:3 max: MAXBOX8: 12.01.2015 13:29:55 
+
+var cfrm: TForm;
+
+//function DownloadFile(SourceFile, DestFile: string): Boolean;
+
+procedure downloadnumbers;
+begin
+  if DownloadFile('http://192.168.1.43:9000/Nr9_Damian.inc',
+        Exepath+'\examples\ibznumbers\Nr9_Damian.inc') then
+      writeln('Download succesful!') else 
+       writeln('Download NOT succesful!');
+  UrlDownloadToFile(Nil,'http://192.168.1.43:9000/Nr9_Damian.inc',
+     Exepath+'\examples\ibznumbers\Nr9_Damian.inc',0,Nil);
+                   
+  writeln(inttostr(UrlDownloadToFile(Nil,'http://192.168.1.43:9000/Nr9_Damian.inc',Exepath+'\examples\ibznumbers\Nr9_Damian.inc',0,Nil)));
+     
+end;      
+
+    
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  try
+    with cFrm do begin
+      caption:= '((((TARTARUGA))))';  
+      height:= 600;
+      width:= 600;
+      color:= clblack;
+      Position:= poScreenCenter;
+      show;
+    end;
+  except
+    Exit;
+  end  
+end;
+
+procedure TurtleEasy1;
+begin
+  with TJVTurtle.create(self) do begin
+    canvas:= cFrm.canvas;
+    canvas.Pen.Color:= clred;
+    penDown:= true;
+    penWidth:= 30;
+    setpos(150,250)
+    turn(45)
+    moveforward(100)
+    right(135)
+    moveforward(200)
+    Free;
+  end;
+end;    
+
+procedure TurtleEasy2;
+var myturtle: TJVTurtle;
+begin
+  myturtle:= TJVTurtle.create(self);
+  with myTurtle do begin
+    //canvas.assign(cFrm)
+    canvas:= cFrm.canvas;
+    canvas.Pen.Color:= clgreen;
+    penDown:= true;
+    //penup
+    penWidth:= 30;
+    setpos(280,250);
+    //turn(45)
+    moveforward(100)
+    right(90)    //180
+    moveforward(100)
+    right(90)    //180
+    moveforward(100)
+    left(90)    //180
+    moveforward(100)
+    left(90)    //180
+    moveforward(100)
+    //movebackward(100)
+   end;
+   myturtle.Free;
+end;    
+
+procedure TurtleEasy3;
+begin
+  with TJVTurtle.create(self) do begin
+    canvas:= cFrm.canvas;
+    canvas.Pen.Color:= clblue;
+    penDown:= true;
+    penWidth:= 30;
+    setpos(430,300);
+    moveforward(100)
+    right(90)    
+    moveforward(100)
+    right(90)    
+    moveforward(100)
+    turn(180)    //or movebackward()
+    moveforward(100)
+    right(90)   
+    moveforward(100)
+    right(90)  //180
+    moveforward(100)
+    Free;
+   end;
+end;  
+
+procedure looprepaint;
+begin  
+   sleep(500) 
+   //cfrm.repaint;           
+end;
+
+function ShellCompare(Item1, Item2: ___Pointer): Integer;
+begin
+  {Result := Smallint(
+      TShellFolder(Item1).ParentShellFolder.CompareIDs(
+      SortColumn,
+      TShellFolder(Item1).RelativeID,
+      TShellFolder(Item2).RelativeID) ); }
+end;
+     
+procedure TForm1_ShellListView1ColumnClick(Sender: TObject;
+ Column: TListColumn);
+var
+  SortColumn: Integer;
+  ShellListView1: TShellListView;
+begin
+  SortColumn := Column.Index;
+  //ShellListView1.FolderList.Sort(ShellCompare);
+  ShellListView1.Invalidate;
+end;
+
+procedure TForm1_Button2Click(Sender: TObject);
+var
+  Dir: string;
+begin
+  Dir:= 'C:\maXbook';
+  if SelectDirectory(Dir, [sdAllowCreate, sdPerformCreate, sdPrompt], 0) then
+    ShowMessage('You selected ' + Dir)
+  else
+    ShowMessage('You did not select a folder');
+end;
+
+procedure RemoveFromRunKey(ApTitle: string);
+var
+  Reg: TRegistry;
+  TheKey: string;
+  ListOfEntries: TStringList;
+  i: integer;
+begin
+  Reg:= TRegistry.Create;
+  Reg.RootKey := HKEY_LOCAL_MACHINE;
+  TheKey:= 'Software\Microsoft\Windows\CurrentVersion\Run';
+  // Check if key exist...
+  // ...if yes, try to delete the entry for ApTitle
+  if not Reg.OpenKey(TheKey, False) then
+    ShowMessage('Key not found')
+  else begin
+    if Reg.DeleteValue(ApTitle) then
+      ShowMessage('Removed: ' + ApTitle)
+    else
+      ShowMessage('Not found: ' + ApTitle);
+  end;
+  Reg.CloseKey;
+  Reg.Free;
+end;
+
+//http://www.festra.com/eng/mtut07.htm
+procedure RunOnWinStart(ApTitle, ApPathFile: string; RunOnce: Boolean);
+var
+  Reg: TRegistry;
+  TheKey: string;
+begin
+  Reg:= TRegistry.Create;
+  Reg.RootKey:= HKEY_LOCAL_MACHINE;
+  TheKey:= 'Software\Microsoft\Windows\CurrentVersion\Run';
+  if RunOnce then TheKey:= TheKey + 'Once';
+  // Open key, or create it if it doesn't exist
+  Reg.OpenKey(TheKey, True);
+  Reg.WriteString(ApTitle, ApPathFile);
+  Reg.CloseKey;
+  Reg.Free;
+end;
+
+procedure StrtoIntDefDemo;
+var
+  Row, N1, N2: integer;
+  StringGrid1: TStringGrid;
+begin
+  for Row:= 0 to StringGrid1.RowCount - 1 do begin
+    N1:= StrToIntDef(StringGrid1.Cells[0, Row], -1);
+    N2:= StrToIntDef(StringGrid1.Cells[1, Row], -1);
+    if (N1 < 0) or (N2 < 0) then 
+      StringGrid1.Cells[3, Row]:= IntToStr(N1 + N2)
+    else
+      StringGrid1.Cells[3, Row]:= 'Invalid';
+  end; 
+end;
+
+function StripHTML(S: string): string;
+var
+  TagBegin, TagEnd, TagLength: integer;
+begin
+  TagBegin:= Pos( '<', S);      // search position of first < 
+  while (TagBegin > 0) do begin  // while there is a < in S
+    TagEnd:= Pos('>', S);              // find the matching > 
+    TagLength:= TagEnd - TagBegin + 1;
+    Delete(S, TagBegin, TagLength);     // delete the tag 
+    TagBegin:= Pos( '<', S);            // search for next <
+  end;
+  Result:= S;                   // give the result
+end;
+
+
+//https://www.dropbox.com/s/w0bfri6sm3dy5bn/Nr9_Damian.INC?dl=0
+
+ {$I ..\maxbox3\examples\Nr9_damian.inc}
+  
+
+BEGIN  //Main
+
+ includeoff;
+
+ downloadnumbers;
+
+ loadform;
+ //repeat 
+   TurtleEasy1;
+    looprepaint  
+   TurtleEasy2;
+    looprepaint
+   TurtleEasy3;
+    looprepaint
+   //{$I ..\SWS2014\damiannr9.txt}
+  // turtleEasy9(cfrm);
+ //until iskeypressed;
+ 
+ //TForm1_Button2Click(Self)
+    {@run as admin}
+  //RunOnWinStart('maXbox3', 'C:\maXbook\maxbox3\mX3999\maxbox\maxbox3.exe', True);
+  //RunOnWinStart('Calculator', 'calc.exe', False);
+  //RemoveFromRunKey('Calculator');
+      
+END. 
+
+Doc:
+C:\maxbook\maxbox3\mx39\maxbox3\maxbox3\docs\utils\Herleitung_4.jpg
+
+----app_template_loaded_code----
+----File #file:539_timeturtle123seqIBZshellctrl.txt

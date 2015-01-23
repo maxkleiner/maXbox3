@@ -1,20 +1,24 @@
 ****************************************************************
 Release Notes maXbox 3.9.9.160 January 2015 CODEsign
 ****************************************************************
-Add 9Units, 2Slides 1Tutor, CLXUp, ExampleEdition, UnitConverter
+Add 12 Units, 2Slides 1Tutor, CLXUp, ExampleEdition, UnitConv
+ExecuteProcess (MultiProcessor), ConsoleCapture (DOS)
 
 1053 unit uPSI_BigIni                          //Hinzen
 1054 unit uPSI_ShellCtrls;                     //VCL
 1055 unit uPSI_fMath;                          //FMath
 1056 unit uPSI_fComp;                          //FMath
-1057 unit uPSI_HighResTimer;		       //Lauer
-1058 unit uconvMain; (Unit Converter)	       //PS	
-1059 unit uPSI_uconvMain;		       //PS
-1060 unit uPSI_ParserUtils;		       //PS
-1061 unit uPSI_uPSUtils;		       //PS
+1057 unit uPSI_HighResTimer;                   //Lauer
+1058 unit uconvMain; (Unit Converter)          //PS
+1059 unit uPSI_uconvMain;                      //PS
+1060 unit uPSI_ParserUtils;                    //PS
+1061 unit uPSI_uPSUtils;                       //PS
+1062 unit uPSI_ParserU;                        //PS
+1063 unit uPSI_TypInfo; {SubSet}               //VCL
+1064 unit uPSI_ServiceMgr;                     //mX
 
-SHA1:  maXbox3.exe 8B4D7070BA40BDE17EEDBE78121BB8B474A1D6CF
-CRC32: maXbox3.exe 1B550873
+SHA1:  maXbox3.exe 9C80649752AABE948C34180552BEDC2AB295E82A
+CRC32: maXbox3.exe B4B4B5C7
 
 
 ****************************************************************
@@ -1850,7 +1854,6 @@ Tips of the Day for Version V3.5
 - To start from CD-ROM (read only mode) uncheck  in Menu /Options/Save before Compile         
 
 
-
 just inside maXbox
          ____    ___   _      ____    _   _   _
         |  _ \  |  _| | |    |  _ \  | | | | | |
@@ -1880,195 +1883,118 @@ http://sourceforge.net/projects/maxbox
 
 Dear software manufacturer,
 
-your software maXbox is listed in the heise software directory at <http://www.heise.de/software/download/maxbox/76464> and we recently started offering version CLX 3.2 (maxbox3clx.tar.gz) for download.
-
+your software maXbox is listed in the heise software directory for download
 Fortunately, our automatic virus checks (done in co-operation with AV-Test GmbH) with more than 40 virus scanners do not indicate a virus infection. Just in case you are interested in the scan result we are sending you the detailed scan report:
-
 ============================================================
-
-Scan report of: 39788-maxbox3clx.tar.gz
-
-AntiVir -
-Avast -
-AVG -
-BitDefender -
-CA-AV -
-ClamAV -
-Command -
-Command (Online) -
-Eset Nod32 -
-Fortinet -
-F-Prot -
-G Data -
-Ikarus -
-K7 Computing -
-Kaspersky -
-Kaspersky (Online) -
-McAfee -
-McAfee (BETA) -
-McAfee (Online) -
-McAfee GW Edition (Online) -
-Microsoft -
-Norman -
-Panda -
-Panda (Online) -
-PC Tools -
-QuickHeal -
-Rising -
-Sophos -
-Sophos (Online) -
-Sunbelt -
-Symantec -
-Symantec (BETA) -
-Trend Micro -
-Trend Micro (Cons.) -
-Trend Micro (CPR) -
-VBA32 -
-VirusBuster -
-
-============================================================
-
-The following updates have been used for the test (all times in GMT):
-
-AntiVir vdf_fusebundle.zip 2011-06-29 16:15
-Avast av5db.zip 2011-06-29 09:20
-AVG avg10cmd1191a4294.zip 2011-06-29 10:10
-BitDefender bdc.zip 2011-06-29 17:35
-CA-AV fv_nt86.exe 2011-06-29 19:10
-ClamAV daily.cvd 2011-06-29 17:00
-Command antivir-z-201106291210.zip 2011-06-29 16:45
-Command (Online) antivir-z-201106291210.zip 2011-06-29 16:45
-Eset Nod32 minnt3.exe 2011-06-29 13:45
-Fortinet vir_high 2011-06-29 18:35
-F-Prot antivir.def 2011-06-29 16:05
-G Data bd.zip 2011-06-29 18:45
-Ikarus t3sigs.vdb 2011-06-29 16:20
-K7 Computing k7cmdline.zip 2011-06-29 15:20
-Kaspersky kdb-i386-cumul.zip 2011-06-29 18:40
-Kaspersky (Online) kdb-i386-cumul.zip 2011-06-29 18:40
-McAfee avvdat-6392.zip 2011-06-29 16:25
-McAfee (BETA) avvwin_netware_betadat.zip 2011-06-29 19:25
-McAfee (Online) avvdat-6392.zip 2011-06-29 16:25
-McAfee GW Edition (Online) mfegw-cmd-scanner-windows.zip 2011-06-29 17:05
-Microsoft mpam-fe.exe 2011-06-29 13:35
-Norman nvc5oem.zip 2011-06-29 13:25
-Panda pav.zip 2011-06-29 12:15
-Panda (Online) pav.zip 2011-06-29 12:15
-PC Tools avdb.zip 2011-06-29 18:20
-QuickHeal qhadvdef.zip 2011-06-29 15:55
-Rising RavDef.zip 2011-06-29 06:50
-Sophos ides.zip 2011-06-29 19:30
-Sophos (Online) ides.zip 2011-06-29 19:30
-Sunbelt CSE39VT-EN-9725-F.sbr.sgn 2011-06-29 18:00
-Symantec streamset.zip 2011-06-29 19:25
-Symantec (BETA) symrapidreleasedefsv5i32.exe 2011-06-29 19:50
-Trend Micro lpt255.zip 2011-06-29 03:15
-Trend Micro (Cons.) cvsapi255.zip 2011-06-29 03:20
-Trend Micro (CPR) lpt256.zip 2011-06-29 19:20
-VBA32 vba32w-latest.rar 2011-06-29 09:45
-VirusBuster vdb.zip 2011-06-29 16:10
-
-
-Greetings,
-your heise software team
-
-Dear software manufacturer,
-
-your software maXbox is listed in the heise software directory at <http://www.heise.de/software/download/maxbox/76464>. You did grant us permission to make it available on our download servers.
-
-We would like to inform you that our automatic virus checks (done in co-operation with AV-Test GmbH) with more than 40 virus scanners generated some warnings in version 3.8 (maxbox3.zip).
-
 This is the detailed report:
+Scan-Report of: maxbox3.zip
+Ahnlab	OK
+Avast	OK
+AVG	OK
+Avira	OK
+Bitdefender	OK
+Command	OK
+Command (Online)	OK
+Eset Nod32	OK
+Fortinet	OK
+F-Prot	OK
+G Data	OK
+Ikarus	OK
+K7 Computing	OK
+Kaspersky	OK
+Kaspersky (Online)	OK
+McAfee	OK
+McAfee (BETA)	OK
+McAfee (Online)	OK
+McAfee GW Edition (Online)	OK
+Microsoft	OK
+Norman	OK
+Panda	OK
+Panda (Online)	OK
+QuickHeal	Suspicious (warning)
+Rising	OK
+Rising (Online)	OK
+Sophos	OK
+Sophos (Online)	OK
+Symantec	OK
+Symantec (BETA)	OK
+ThreatTrack	OK
+Total Defense	OK
+Trend Micro	OK
+Trend Micro (Cons.)	OK
+Trend Micro (CPR)	OK
+VBA32	OK
+VirusBuster	OK
+ 
+The following updates have been used for the test (all times in UTC):
+Ahnlab	sdscan-console.zip	2015-01-17	13:10
+Avast	av5stream.zip	2015-01-18	01:00
+AVG	avg10cmd1191a8405.zip	2015-01-17	09:40
+Avira	vdf_fusebundle.zip	2015-01-17	13:50
+Bitdefender	bdc.zip	2015-01-18	00:15
+Command	antivir-v2-z-201501172305.zip	2015-01-18	00:00
+Command (Online)	antivir-v2-z-201501172305.zip	2015-01-18	00:00
+Eset Nod32	minnt3.exe	2015-01-18	00:15
+Fortinet	vir_high	2015-01-18	00:25
+F-Prot	antivir.def	2015-01-18	00:30
+G Data	bd.zip	2015-01-18	00:55
+Ikarus	t3sigs.vdb	2015-01-17	21:35
+K7 Computing	K7Cmdline.zip	2015-01-16	12:45
+Kaspersky	kdb-i386-cumul.zip	2015-01-18	00:10
+Kaspersky (Online)	kdb-i386-cumul.zip	2015-01-18	00:10
+McAfee	avvdat-7684.zip	2015-01-17	19:05
+McAfee (BETA)	avvwin_netware_betadat.zip	2015-01-17	23:55
+McAfee (Online)	avvdat-7684.zip	2015-01-17	19:05
+McAfee GW Edition (Online)	mfegw-cmd-scanner-windows.zip	2015-01-17	21:45
+Microsoft	mpam-fe.exe	2015-01-17	23:20
+Norman	nse7legacy.zip	2015-01-17	06:55
+Panda	pav.zip	2015-01-17	10:55
+Panda (Online)	pav.zip	2015-01-17	10:55
+QuickHeal	qhadvdef.zip	2015-01-17	16:30
+Rising	rame.zip	2015-01-17	13:15
+Rising (Online)	rame.zip	2015-01-17	13:15
+Sophos	ides.zip	2015-01-17	23:05
+Sophos (Online)	ides.zip	2015-01-17	23:05
+Symantec	streamset.zip	2015-01-18	01:00
+Symantec (BETA)	symrapidreleasedefsv5i32.exe	2015-01-18	00:50
+ThreatTrack	CSE39VT-EN-36746-F.sbr.sgn	2015-01-18	00:35
+Total Defense	fv_nt86.exe	2015-01-17	20:20
+Trend Micro	itbl1503402100.zip	2015-01-18	00:30
+Trend Micro (Cons.)	hcoth1141795.zip	2015-01-17	17:15
+Trend Micro (CPR)	lpt418.zip	2015-01-17	20:00
+VBA32	vba32w-latest.rar	2015-01-16	21:00
+VirusBuster	vdb.zip	2015-01-17	17:30
+Name:
+    maXbox
+Hersteller-Link:
+    Offizielle Webseite	
+Sprache:
+    Deutsch/Englisch
+Betriebssysteme:
+    Windows XP, Vista, 7, 8, Linux, Mac OS X/Intel
+Download-Größe:
+    118 MByte
+Lizenz:
+    Open Source
+Preis:
+    kostenlos
+Einschränkungen:
+    keine
+Hersteller/Autor:
+    Kleiner Kommunikation
+E-Mail-Adresse:
+    k.A. 
+Bewertungsrang:
+    444
+Download-Rang:
+    2932
+Programmdaten aktualisieren
+(nur für Autoren/Hersteller)
+Datensatz zuletzt aktualisiert
+am 10.01.15
+Alle Angaben ohne Gewähr.
 
 ============================================================
-
-Scan report of: 51941-maxbox3.zip
-
-AntiVir -
-Avast -
-AVG -
-BitDefender -
-CA-AV -
-ClamAV -
-Command -
-Command (Online) -
-Eset Nod32 -
-Fortinet -
-F-Prot -
-G Data -
-Ikarus -
-K7 Computing -
-Kaspersky -
-Kaspersky (Online) -
-McAfee -
-McAfee (BETA) -
-McAfee (Online) -
-McAfee GW Edition (Online) -
-Microsoft -
-Norman -
-Panda -
-Panda (Online) -
-PC Tools -
-QuickHeal Suspicious (warning)
-Rising -
-Sophos NirSoft (PUA)
-Sophos (Online) NirSoft (PUA)
-Sunbelt -
-Symantec -
-Symantec (BETA) -
-Trend Micro -
-Trend Micro (Cons.) -
-Trend Micro (CPR) -
-VBA32 -
-VirusBuster -
-
-============================================================
-
-The following updates have been used for the test (all times in GMT):
-
-AntiVir vdf_fusebundle.zip 2011-12-20 14:00
-Avast av5db.zip 2011-12-20 10:00
-AVG avg10cmd1191a4653.zip 2011-12-20 10:50
-BitDefender bdc.zip 2011-12-20 15:50
-CA-AV fv_nt86.exe 2011-12-20 08:05
-ClamAV daily.cvd 2011-12-20 14:10
-Command antivir-z-201112201348.zip 2011-12-20 15:10
-Command (Online) antivir-z-201112201348.zip 2011-12-20 15:10
-Eset Nod32 minnt3.exe 2011-12-20 13:30
-Fortinet vir_high 2011-12-20 09:35
-F-Prot antivir.def 2011-12-20 14:55
-G Data bd.zip 2011-12-20 16:05
-Ikarus t3sigs.vdb 2011-12-20 13:25
-K7 Computing K7Cmdline.zip 2011-12-20 15:50
-Kaspersky kdb-i386-cumul.zip 2011-12-20 15:40
-Kaspersky (Online) kdb-i386-cumul.zip 2011-12-20 15:40
-McAfee avvdat-6565.zip 2011-12-19 17:10
-McAfee (BETA) avvwin_netware_betadat.zip 2011-12-20 15:35
-McAfee (Online) avvdat-6565.zip 2011-12-19 17:10
-McAfee GW Edition (Online) mfegw-cmd-scanner-windows.zip 2011-12-20 11:55
-Microsoft mpam-fe.exe 2011-12-20 13:35
-Norman nvc5oem.zip 2011-12-20 09:45
-Panda pav.zip 2011-12-20 15:35
-Panda (Online) pav.zip 2011-12-20 15:35
-PC Tools avdb.zip 2011-12-20 15:05
-QuickHeal qhadvdef.zip 2011-12-20 08:35
-Rising RavDef.zip 2011-12-20 07:00
-Sophos ides.zip 2011-12-20 12:45
-Sophos (Online) ides.zip 2011-12-20 12:45
-Sunbelt CSE39VT-EN-11279-F.sbr.sgn 2011-12-20 10:40
-Symantec streamset.zip 2011-12-20 16:15
-Symantec (BETA) symrapidreleasedefsv5i32.exe 2011-12-20 15:50
-Trend Micro lpt655.zip 2011-12-20 03:55
-Trend Micro (Cons.) cvsapi655.zip 2011-12-20 04:10
-Trend Micro (CPR) lpt656.zip 2011-12-20 11:35
-VBA32 vba32w-latest.rar 2011-12-20 15:15
-VirusBuster vdb.zip 2011-12-20 12:50
-
-
-This is most probably a false alarm. Therefore we are nevertheless offering the file for download but are also checking with the manufacturers of the anti-virus software. You should find an updated scan report in a few days at <http://www.heise.de/software/download/maxbox/76464> (Download-Button).
-
-Greetings,
-your heise software team
 
 Examples Info
     examples need internet
@@ -2084,273 +2010,17 @@ Examples Info
 075_pas_bitmap_Artwork.txt intelligence test
 065 bitcounter as performance test
 
-SHA1 CLX3 3.7.8.24
-39 68 15 24 F5 CE A8 41 3A 2E A1 78 C2 31 12 41 36 EE 09 AB 
-
-Win Version 3.9.8.8
-Amount of Functions: 6266
-Amount of Procedures: 3600
-Amount of Constructors: 604
-Totals of Calls: 10470
-
-
-Virus Check 3.9.9.1
-We would like to inform you that our automatic virus checks (done in co-operation with AV-Test GmbH) with more than 40 virus scanners generated some warnings in version 3.9.9.1 (maxbox3.zip).
-
-This is the detailed report:
-
-============================================================
-
-Scan report of: 83366-maxbox3.zip
-
-Ahnlab ERROR
-Avast -
-AVG -
-Avira -
-Bitdefender -
-Command ERROR
-Command (Online) ERROR
-Eset Nod32 -
-Fortinet -
-F-Prot -
-G Data -
-Ikarus -
-K7 Computing -
-Kaspersky -
-Kaspersky (Online) -
-McAfee -
-McAfee (BETA) -
-McAfee (Online) -
-McAfee GW Edition (Online) -
-Microsoft -
-Norman -
-Panda -
-Panda (Online) -
-QuickHeal Suspicious (warning)
-Rising -
-Sophos -
-Sophos (Online) -
-Symantec -
-Symantec (BETA) -
-ThreatTrack -
-Total Defense -
-Trend Micro -
-Trend Micro (Cons.) -
-Trend Micro (CPR) -
-VBA32 -
-VirusBuster -
-
-============================================================
-
-The following updates have been used for the test (all times in UTC):
-
-Ahnlab sdscan-console.zip 2013-06-19 16:25
-Avast av5stream.zip 2013-06-19 19:25
-AVG avg10cmd1191a5885.zip 2013-06-19 17:15
-Avira vdf_fusebundle.zip 2013-06-19 17:55
-Bitdefender bdc.zip 2013-06-19 19:05
-Command antivir-v2-z-201306191454.zip 2013-06-19 15:10
-Command (Online) antivir-v2-z-201306191454.zip 2013-06-19 15:10
-Eset Nod32 minnt3.exe 2013-06-19 17:55
-Fortinet vir_high 2013-06-19 17:45
-F-Prot antivir.def 2013-06-19 16:20
-G Data bd.zip 2013-06-19 18:55
-Ikarus t3sigs.vdb 2013-06-19 16:30
-K7 Computing K7Cmdline.zip 2013-06-19 16:15
-Kaspersky kdb-i386-cumul.zip 2013-06-19 18:00
-Kaspersky (Online) kdb-i386-cumul.zip 2013-06-19 18:00
-McAfee avvdat-7111.zip 2013-06-19 16:35
-McAfee (BETA) avvwin_netware_betadat.zip 2013-06-19 18:45
-McAfee (Online) avvdat-7111.zip 2013-06-19 16:35
-McAfee GW Edition (Online) mfegw-cmd-scanner-windows.zip 2013-06-19 17:30
-Microsoft mpam-fe.exe 2013-06-19 16:20
-Norman nse7legacy.zip 2013-06-19 15:00
-Panda pav.zip 2013-06-19 08:55
-Panda (Online) pav.zip 2013-06-19 08:55
-QuickHeal qhadvdef.zip 2013-06-19 16:30
-Rising RavDef.zip 2013-06-19 06:00
-Sophos ides.zip 2013-06-19 17:35
-Sophos (Online) ides.zip 2013-06-19 17:35
-Symantec streamset.zip 2013-06-19 19:20
-Symantec (BETA) symrapidreleasedefsv5i32.exe 2013-06-19 18:25
-ThreatTrack CSE39VT-EN-18864-F.sbr.sgn 2013-06-19 19:00
-Total Defense fv_nt86.exe 2013-06-19 18:20
-Trend Micro itbl1334001700.zip 2013-06-19 19:15
-Trend Micro (Cons.) hcoth1010195.zip 2013-06-19 17:25
-Trend Micro (CPR) lpt102.zip 2013-06-19 19:25
-VBA32 vba32w-latest.rar 2013-06-19 12:25
-VirusBuster vdb.zip 2013-06-18 11:00
-
-
-This is most probably a false alarm. Therefore we are nevertheless offering the file for download but are also checking with the manufacturers of the anti-virus software. You should find an updated scan report in a few days at <http://www.heise.de/download/maxbox-1176464.html> (Download-Button).
-
-Greetings,
-your heise software team
 
 Object Based Scripting Tool
 maXbox is a free scripter tool with an inbuilt delphi engine in one exe! It is designed for teaching, develop, test and analyzing apps and algorithms and runs under Windows and Linux (CLX) to set Delphi in a box without installation and no administration. The tool is based on an educational program with examples and exercises (from biorhythm, form building to how encryption works). Units are precompiled and objects invokable! With a 28 part tutorial for coders.
-00095A1C1454FFE78D1BDC76DD943EAADDAA4447
 
-
-[50128C3F]{vcl120.bpl  } Graphics.OutOfResources (Line 4155, "Graphics.pas" + 1) + $1C
-[50128CE2]{vcl120.bpl  } Graphics.GDIError (Line 4181, "Graphics.pas" + 13) + $0
-[501C9CE7]{vcl120.bpl  } Controls.TWinControl.WndProc (Line 9336, "Controls.pas" + 136) + $6
-[501CCD0C]{vcl120.bpl  } Controls.TWinControl.GetClientOrigin (Line 11377, "Controls.pas" + 3) + $9
-[50048010]{rtl120.bpl  } Classes.TThreadList.UnlockList (Line 3751, "Classes.pas" + 0) + $4
-[5012C914]{vcl120.bpl  } Graphics.FreeMemoryContexts (Line 6829, "Graphics.pas" + 12) + $5
-[501C9400]{vcl120.bpl  } Controls.TWinControl.MainWndProc (Line 9065, "Controls.pas" + 3) + $6
-[501C9415]{vcl120.bpl  } Controls.TWinControl.MainWndProc (Line 9068, "Controls.pas" + 6) + $0
-[50128D13]{vcl120.bpl  } Graphics.GDICheck (Line 4186, "Graphics.pas" + 1) + $4
-[5012D2C6]{vcl120.bpl  } Graphics.CopyBitmap (Line 7384, "Graphics.pas" + 19) + $7
-[500072AC]{rtl120.bpl  } System.TMonitor.Destroy (Line 10699, "System.pas" + 0) + $0
-[50006CAF]{rtl120.bpl  } System.TObject.CleanupInstance (Line 9940, "System.pas" + 17) + $0
-[50003FD0]{rtl120.bpl  } System.@FreeMem (Line 3457, "System.pas" + 2) + $0
-[50006BEC]{rtl120.bpl  } System.TObject.FreeInstance (Line 9810, "System.pas" + 2) + $2
-[500071FA]{rtl120.bpl  } System.@ClassDestroy (Line 10632, "System.pas" + 0) + $2
-[5012CC3E]{vcl120.bpl  } Graphics.TBitmapImage.Destroy (Line 7052, "Graphics.pas" + 16) + $6
-[5012EDBE]{vcl120.bpl  } Graphics.TBitmap.NewImage (Line 8688, "Graphics.pas" + 36) + $5
-[5012DD23]{vcl120.bpl  } Graphics.TBitmap.CopyImage (Line 7747, "Graphics.pas" + 13) + $F
-[5012FDA3]{vcl120.bpl  } Graphics.TBitmap.SetSize (Line 9495, "Graphics.pas" + 10) + $9
-[5012F60F]{vcl120.bpl  } Graphics.TBitmap.SetHeight (Line 9089, "Graphics.pas" + 1) + $A
-[502375A8]{vcl120.bpl  } CaptionedDockTree.DrawIcon (Line 602, "CaptionedDockTree.pas" + 21) + $8
-[50128245]{vcl120.bpl  } Graphics.TCanvas.Polyline (Line 3723, "Graphics.pas" + 6) + $7
-[502379CE]{vcl120.bpl  } CaptionedDockTree.TDockCaptionDrawer.DrawDockCaption (Line 679, "CaptionedDockTree.pas" + 50) + $1
-[50133198]{vcl120.bpl  } GraphUtil.ColorAdjustLuma (Line 465, "GraphUtil.pas" + 9) + $0
-[50236BA8]{vcl120.bpl  } CaptionedDockTree.TCaptionedDockTree.PaintDockFrame (Line 210, "CaptionedDockTree.pas" + 1) + $29
-[501D095B]{vcl120.bpl  } Controls.TDockTree.PaintSite (Line 13795, "Controls.pas" + 16) + $D
-[501CA027]{vcl120.bpl  } Controls.TWinControl.PaintControls (Line 9467, "Controls.pas" + 2) + $E
-[501287F2]{vcl120.bpl  } Graphics.TCanvas.Unlock (Line 3909, "Graphics.pas" + 7) + $5
-[501CF00C]{vcl120.bpl  } Controls.TCustomControl.PaintWindow (Line 12740, "Controls.pas" + 11) + $9
-[501C9F79]{vcl120.bpl  } Controls.TWinControl.PaintHandler (Line 9440, "Controls.pas" + 24) + $8
-[501C9CE7]{vcl120.bpl  } Controls.TWinControl.WndProc (Line 9336, "Controls.pas" + 136) + $6
-[5012C914]{vcl120.bpl  } Graphics.FreeMemoryContexts (Line 6829, "Graphics.pas" + 12) + $5
-[501C9400]{vcl120.bpl  } Controls.TWinControl.MainWndProc (Line 9065, "Controls.pas" + 3) + $6
-[501C9415]{vcl120.bpl  } Controls.TWinControl.MainWndProc (Line 9068, "Controls.pas" + 6) + $0
-[501CA670]{vcl120.bpl  } Controls.TWinControl.WMPaint (Line 9619, "Controls.pas" + 6) + $5
-[501C565A]{vcl120.bpl  } Controls.TControl.WndProc (Line 6642, "Controls.pas" + 91) + $6
-[50236BFB]{vcl120.bpl  } CaptionedDockTree.TCaptionedDockTree.WndProc (Line 249, "CaptionedDockTree.pas" + 28) + $0
-[501D15B4]{vcl120.bpl  } Controls.TDockTree.WindowProc (Line 14220, "Controls.pas" + 1) + $6
-[501C5280]{vcl120.bpl  } Controls.TControl.Perform (Line 6420, "Controls.pas" + 10) + $8
-[501CA7F5]{vcl120.bpl  } Controls.TWinControl.WMPaint (Line 9653, "Controls.pas" + 40) + $5
-[501CEF64]{vcl120.bpl  } Controls.TCustomControl.WMPaint (Line 12724, "Controls.pas" + 2) + $4
-[501C565A]{vcl120.bpl  } Controls.TControl.WndProc (Line 6642, "Controls.pas" + 91) + $6
-[501C9CE7]{vcl120.bpl  } Controls.TWinControl.WndProc (Line 9336, "Controls.pas" + 136) + $6
-[501D1CCA]{vcl120.bpl  } Controls.TDockTree.WndProc (Line 14476, "Controls.pas" + 74) + $5
-[50236BFB]{vcl120.bpl  } CaptionedDockTree.TCaptionedDockTree.WndProc (Line 249, "CaptionedDockTree.pas" + 28) + $0
-[501D15B4]{vcl120.bpl  } Controls.TDockTree.WindowProc (Line 14220, "Controls.pas" + 1) + $6
-[501C9400]{vcl120.bpl  } Controls.TWinControl.MainWndProc (Line 9065, "Controls.pas" + 3) + $6
-[500591DC]{rtl120.bpl  } Classes.StdWndProc (Line 12703, "Classes.pas" + 8) + $0
-[501C03E2]{vcl120.bpl  } Controls.FindControl (Line 2999, "Controls.pas" + 6) + $9
-[501EEABD]{vcl120.bpl  } Forms.TApplication.ProcessMessage (Line 9660, "Forms.pas" + 30) + $1
-[501EEB02]{vcl120.bpl  } Forms.TApplication.HandleMessage (Line 9690, "Forms.pas" + 1) + $4
-[501EEE2D]{vcl120.bpl  } Forms.TApplication.Run (Line 9827, "Forms.pas" + 26) + $3
-[004259E6]{bds.exe     } bds.bds (Line 198, "" + 8) + $FFFB
 
 https://github.com/maxkleiner/maXbox3.git
 
-
 http://downloads.sourceforge.net/project/maxbox/maxbox3clx.tar.gz
-
-
 http://de.sourceforge.jp/projects/sfnet_maxbox/downloads/maxbox3clx.tar.gz/
 http://www.mirrorservice.org/sites/downloads.sourceforge.net/m/ma/maxbox/maxbox3clx.tar.gz
 http://www.mirrorservice.org/sites/downloads.sourceforge.net/m/ma/maxbox/
-
-This is the detailed report:
-
-============================================================
-
-Scan report of: 114461-maxbox3.zip
-
-Ahnlab -
-Avast -
-AVG -
-Avira -
-Bitdefender -
-Command W32/Hupigon.C.gen!Eldorado
-Command (Online) W32/Hupigon.C.gen!Eldorado
-Dr.Web -
-Eset Nod32 -
-Fortinet -
-F-Prot W32/Hupigon.C.gen!Eldorado
-G Data -
-Ikarus -
-K7 Computing -
-Kaspersky -
-Kaspersky (Online) -
-McAfee -
-McAfee (BETA) -
-McAfee (Online) -
-McAfee GW Edition (Online) -
-Microsoft -
-Norman -
-Panda -
-Panda (Online) -
-QuickHeal BAT.MouseDis
-Rising -
-Sophos -
-Sophos (Online) -
-Symantec -
-Symantec (BETA) -
-ThreatTrack -
-Total Defense -
-Trend Micro -
-Trend Micro (Cons.) -
-Trend Micro (CPR) -
-VBA32 -
-VirusBuster -
-
-============================================================
-
-The following updates have been used for the test (all times in UTC):
-
-Ahnlab sdscan-console.zip 2014-02-12 08:45
-Avast av5stream.zip 2014-02-12 13:15
-AVG avg10cmd1191a6547.zip 2014-02-12 12:20
-Avira vdf_fusebundle.zip 2014-02-12 11:00
-Bitdefender bdc.zip 2014-02-12 12:45
-Command antivir-v2-z-201402121102.zip 2014-02-12 13:00
-Command (Online) antivir-v2-z-201402121102.zip 2014-02-12 13:00
-Dr.Web drweb-500-wcl.zip 2014-01-22 21:45
-Eset Nod32 minnt3.exe 2014-02-12 12:05
-Fortinet vir_high 2014-02-12 12:30
-F-Prot antivir.def 2014-02-11 10:20
-G Data bd.zip 2014-02-12 12:30
-Ikarus t3sigs.vdb 2014-02-12 09:40
-K7 Computing K7Cmdline.zip 2014-02-11 13:20
-Kaspersky kdb-i386-cumul.zip 2014-02-12 04:45
-Kaspersky (Online) kdb-i386-cumul.zip 2014-02-12 04:45
-McAfee avvdat-7346.zip 2014-02-11 16:50
-McAfee (BETA) avvwin_netware_betadat.zip 2014-02-12 13:15
-McAfee (Online) avvdat-7346.zip 2014-02-11 16:50
-McAfee GW Edition (Online) mfegw-cmd-scanner-windows.zip 2014-02-12 01:20
-Microsoft mpam-fe.exe 2014-02-12 12:30
-Norman nse7legacy.zip 2014-02-12 05:45
-Panda pav.zip 2014-02-12 09:35
-Panda (Online) pav.zip 2014-02-12 09:35
-QuickHeal qhadvdef.zip 2014-02-12 11:50
-Rising RavDef.zip 2014-01-28 01:45
-Sophos ides.zip 2014-02-12 09:55
-Sophos (Online) ides.zip 2014-02-12 09:55
-Symantec streamset.zip 2014-02-12 13:15
-Symantec (BETA) symrapidreleasedefsv5i32.exe 2014-02-12 12:25
-ThreatTrack CSE39VT-EN-26384-F.sbr.sgn 2014-02-12 12:40
-Total Defense fv_nt86.exe 2014-02-11 20:15
-Trend Micro itbl1408601200.zip 2014-02-12 12:40
-Trend Micro (Cons.) hcoth1059995.zip 2014-02-11 13:35
-Trend Micro (CPR) lpt602.zip 2014-02-12 11:25
-VBA32 vba32w-latest.rar 2014-02-12 11:50
-VirusBuster vdb.zip 2014-02-11 12:00
-
-
-We will recheck your software. In the meantime it will not be available on our download servers.
-
-Greetings,
-your heise software team
-
-
-
-
 
 httpde.sourceforge.jp%2Fprojects%2Fsfnet_maxbox%2Fdownloads%2Fmaxbox3clx.tar.gz%2F&ei=iir5UunlHYWxywO17YLYAg&usg=AFQjCNHecwAFuIbxLJ8nKZ2_NLcdAZpfpg
 

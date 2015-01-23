@@ -69,8 +69,8 @@ uses
   ,ImgList
   ,ShellCtrls
   ;
- 
- 
+
+
 procedure Register;
 begin
   RegisterComponents('Pascal Script', [TPSImport_ShellCtrls]);
@@ -81,8 +81,58 @@ end;
 procedure SIRegister_TShellListView(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TCustomShellListView', 'TShellListView') do
-  with CL.AddClassN(CL.FindClass('TCustomShellListView'),'TShellListView') do
-  begin
+  with CL.AddClassN(CL.FindClass('TCustomShellListView'),'TShellListView') do begin
+       RegisterPublishedProperties;
+    RegisterProperty('ALIGNMENT', 'TAlignment', iptrw);
+    RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
+    RegisterProperty('BORDERWIDTH', 'Integer', iptrw);
+    RegisterProperty('COLOR', 'TColor', iptrw);
+    RegisterProperty('FONT', 'TFont', iptrw);
+    RegisterProperty('Root', 'string', iptrw);
+    RegisterProperty('PopupMenu', 'TPopupMenu', iptrw);
+    RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
+    RegisterProperty('MAXLENGTH', 'Integer', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+    RegisterProperty('READONLY', 'Boolean', iptrw);
+    RegisterProperty('SCROLLBARS', 'TScrollStyle', iptrw);
+    RegisterProperty('ONCHANGE', 'TNotifyEvent', iptrw);
+    RegisterProperty('ONCLICK', 'TNotifyEvent', iptrw);
+    RegisterProperty('ONDBLCLICK', 'TNotifyEvent', iptrw);
+    RegisterProperty('ONENTER', 'TNotifyEvent', iptrw);
+    RegisterProperty('ONEXIT', 'TNotifyEvent', iptrw);
+    RegisterProperty('ONKEYDOWN', 'TKeyEvent', iptrw);
+    RegisterProperty('ONKEYPRESS', 'TKeyPressEvent', iptrw);
+    RegisterProperty('ONKEYUP', 'TKeyEvent', iptrw);
+    RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
+    RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
+    RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
+    RegisterProperty('ONChange', 'TTVChangedEvent', iptrw);
+    RegisterProperty('ONChanging', 'TTVChangingEvent', iptrw);
+    RegisterProperty('OnCollapsed', 'TTVExpandedEvent', iptrw);
+  RegisterProperty('OnCollapsing', 'TTVCollapsingEvent', iptrw);
+  RegisterProperty('OnCompare', 'TTVCompareEvent', iptrw);
+  RegisterProperty('OnAddition', 'TTVExpandedEvent', iptrw);
+  RegisterProperty('OnCustomDraw', 'TTVCustomDrawEvent', iptrw);
+  RegisterProperty('OnCustomDrawItem', 'TTVCustomDrawItemEvent', iptrw);
+   RegisterProperty('Images', 'TCustomImageList', iptrw);
+    RegisterProperty('Indent', 'Integer', iptrw);
+    //RegisterProperty('Items', 'TTreeNodes Integer', iptrw);
+    RegisterProperty('Items', 'TTreeNodes', iptrw);
+    RegisterProperty('ShowLines', 'boolean', iptrw);
+    RegisterProperty('ShowRoot', 'boolean', iptrw);
+    RegisterProperty('SortType', 'TSortType', iptrw);
+    RegisterProperty('StateImages', 'TCustomImageList', iptrw);
+    //RegisterProperty('Constraints', 'TCustomImageList', iptrw);
+    RegisterProperty('MultiSelect', 'boolean', iptrw);
+    RegisterProperty('AutoExpand', 'boolean', iptrw);
+    RegisterProperty('HotTrack', 'boolean', iptrw);
+    RegisterProperty('ShowHint', 'boolean', iptrw);
+    RegisterProperty('ToolTips', 'boolean', iptrw);
+    RegisterProperty('Visible', 'boolean', iptrw);
+    RegisterProperty('ShowColumnHeaders', 'boolean', iptrw);
+    RegisterProperty('ShowWorkAreas', 'boolean', iptrw);
+    RegisterProperty('Canvas', 'TCanvas', iptrw);
   end;
 end;
 
@@ -118,8 +168,59 @@ end;
 procedure SIRegister_TShellComboBox(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TCustomShellComboBox', 'TShellComboBox') do
-  with CL.AddClassN(CL.FindClass('TCustomShellComboBox'),'TShellComboBox') do
-  begin
+  with CL.AddClassN(CL.FindClass('TCustomShellComboBox'),'TShellComboBox') do begin
+       RegisterPublishedProperties;
+    RegisterProperty('ALIGNMENT', 'TAlignment', iptrw);
+    RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
+    RegisterProperty('BORDERWIDTH', 'Integer', iptrw);
+    RegisterProperty('COLOR', 'TColor', iptrw);
+    RegisterProperty('FONT', 'TFont', iptrw);
+     RegisterProperty('Root', 'string', iptrw);
+    RegisterProperty('PopupMenu', 'TPopupMenu', iptrw);
+    RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
+    RegisterProperty('MAXLENGTH', 'Integer', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+    RegisterProperty('READONLY', 'Boolean', iptrw);
+    RegisterProperty('SCROLLBARS', 'TScrollStyle', iptrw);
+    RegisterProperty('ONCHANGE', 'TNotifyEvent', iptrw);
+    RegisterProperty('ONCLICK', 'TNotifyEvent', iptrw);
+    RegisterProperty('ONDBLCLICK', 'TNotifyEvent', iptrw);
+    RegisterProperty('ONENTER', 'TNotifyEvent', iptrw);
+    RegisterProperty('ONEXIT', 'TNotifyEvent', iptrw);
+    RegisterProperty('ONKEYDOWN', 'TKeyEvent', iptrw);
+    RegisterProperty('ONKEYPRESS', 'TKeyPressEvent', iptrw);
+    RegisterProperty('ONKEYUP', 'TKeyEvent', iptrw);
+    RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
+    RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
+    RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
+    RegisterProperty('ONChange', 'TTVChangedEvent', iptrw);
+    RegisterProperty('ONChanging', 'TTVChangingEvent', iptrw);
+    RegisterProperty('OnCollapsed', 'TTVExpandedEvent', iptrw);
+  RegisterProperty('OnCollapsing', 'TTVCollapsingEvent', iptrw);
+  RegisterProperty('OnCompare', 'TTVCompareEvent', iptrw);
+  RegisterProperty('OnAddition', 'TTVExpandedEvent', iptrw);
+  RegisterProperty('OnCustomDraw', 'TTVCustomDrawEvent', iptrw);
+  RegisterProperty('OnCustomDrawItem', 'TTVCustomDrawItemEvent', iptrw);
+   RegisterProperty('Images', 'TCustomImageList', iptrw);
+    RegisterProperty('Indent', 'Integer', iptrw);
+    //RegisterProperty('Items', 'TTreeNodes Integer', iptrw);
+    RegisterProperty('Items', 'TTreeNodes', iptrw);
+    RegisterProperty('ShowLines', 'boolean', iptrw);
+    RegisterProperty('ShowRoot', 'boolean', iptrw);
+    RegisterProperty('SortType', 'TSortType', iptrw);
+    RegisterProperty('StateImages', 'TCustomImageList', iptrw);
+    //RegisterProperty('Constraints', 'TCustomImageList', iptrw);
+    RegisterProperty('MultiSelect', 'boolean', iptrw);
+    RegisterProperty('AutoExpand', 'boolean', iptrw);
+    RegisterProperty('HotTrack', 'boolean', iptrw);
+    RegisterProperty('ShowHint', 'boolean', iptrw);
+    RegisterProperty('ToolTips', 'boolean', iptrw);
+    RegisterProperty('Visible', 'boolean', iptrw);
+    RegisterProperty('ShowColumnHeaders', 'boolean', iptrw);
+    RegisterProperty('ShowWorkAreas', 'boolean', iptrw);
+    RegisterProperty('Canvas', 'TCanvas', iptrw);
+
   end;
 end;
 
@@ -146,8 +247,58 @@ end;
 procedure SIRegister_TShellTreeView(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TCustomShellTreeView', 'TShellTreeView') do
-  with CL.AddClassN(CL.FindClass('TCustomShellTreeView'),'TShellTreeView') do
-  begin
+  with CL.AddClassN(CL.FindClass('TCustomShellTreeView'),'TShellTreeView') do begin
+       RegisterPublishedProperties;
+    RegisterProperty('ALIGNMENT', 'TAlignment', iptrw);
+    RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
+    RegisterProperty('BORDERWIDTH', 'Integer', iptrw);
+    RegisterProperty('COLOR', 'TColor', iptrw);
+    RegisterProperty('FONT', 'TFont', iptrw);
+    RegisterProperty('Root', 'string', iptrw);
+    RegisterProperty('PopupMenu', 'TPopupMenu', iptrw);
+    RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
+    RegisterProperty('MAXLENGTH', 'Integer', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+    RegisterProperty('READONLY', 'Boolean', iptrw);
+    RegisterProperty('SCROLLBARS', 'TScrollStyle', iptrw);
+    RegisterProperty('ONCHANGE', 'TNotifyEvent', iptrw);
+    RegisterProperty('ONCLICK', 'TNotifyEvent', iptrw);
+    RegisterProperty('ONDBLCLICK', 'TNotifyEvent', iptrw);
+    RegisterProperty('ONENTER', 'TNotifyEvent', iptrw);
+    RegisterProperty('ONEXIT', 'TNotifyEvent', iptrw);
+    RegisterProperty('ONKEYDOWN', 'TKeyEvent', iptrw);
+    RegisterProperty('ONKEYPRESS', 'TKeyPressEvent', iptrw);
+    RegisterProperty('ONKEYUP', 'TKeyEvent', iptrw);
+    RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
+    RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
+    RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
+    RegisterProperty('ONChange', 'TTVChangedEvent', iptrw);
+    RegisterProperty('ONChanging', 'TTVChangingEvent', iptrw);
+    RegisterProperty('OnCollapsed', 'TTVExpandedEvent', iptrw);
+  RegisterProperty('OnCollapsing', 'TTVCollapsingEvent', iptrw);
+  RegisterProperty('OnCompare', 'TTVCompareEvent', iptrw);
+  RegisterProperty('OnAddition', 'TTVExpandedEvent', iptrw);
+  RegisterProperty('OnCustomDraw', 'TTVCustomDrawEvent', iptrw);
+  RegisterProperty('OnCustomDrawItem', 'TTVCustomDrawItemEvent', iptrw);
+   RegisterProperty('Images', 'TCustomImageList', iptrw);
+    RegisterProperty('Indent', 'Integer', iptrw);
+    //RegisterProperty('Items', 'TTreeNodes Integer', iptrw);
+    RegisterProperty('Items', 'TTreeNodes', iptrw);
+    RegisterProperty('ShowLines', 'boolean', iptrw);
+    RegisterProperty('ShowRoot', 'boolean', iptrw);
+    RegisterProperty('SortType', 'TSortType', iptrw);
+    RegisterProperty('StateImages', 'TCustomImageList', iptrw);
+    //RegisterProperty('Constraints', 'TCustomImageList', iptrw);
+    RegisterProperty('MultiSelect', 'boolean', iptrw);
+    RegisterProperty('AutoExpand', 'boolean', iptrw);
+    RegisterProperty('HotTrack', 'boolean', iptrw);
+    RegisterProperty('ShowHint', 'boolean', iptrw);
+    RegisterProperty('ToolTips', 'boolean', iptrw);
+    RegisterProperty('Visible', 'boolean', iptrw);
+    RegisterProperty('ShowColumnHeaders', 'boolean', iptrw);
+    RegisterProperty('ShowWorkAreas', 'boolean', iptrw);
+    RegisterProperty('Canvas', 'TCanvas', iptrw);
   end;
 end;
 
@@ -163,7 +314,8 @@ begin
     RegisterProperty('AutoRefresh', 'boolean', iptrw);
     RegisterProperty('Folders', 'TShellFolder Integer', iptr);
     SetDefaultPropery('Folders');
-    RegisterProperty('Path', 'string', iptrw);
+    RegisterProperty('RootFolder', 'TShellFolder', iptr);
+     RegisterProperty('Path', 'string', iptrw);
     RegisterProperty('AutoContextMenus', 'Boolean', iptrw);
     RegisterProperty('ObjectTypes', 'TShellObjectTypes', iptrw);
     RegisterProperty('Root', 'TRoot', iptrw);
@@ -376,6 +528,9 @@ begin T := Self.AutoContextMenus; end;
 
 (*----------------------------------------------------------------------------*)
 procedure TCustomShellListViewRootFolder_R(Self: TCustomShellListView; var T: TShellFolder);
+begin T := Self.RootFolder; end;
+
+procedure TCustomShellTreeViewRootFolder_R(Self: TCustomShellListView; var T: TShellFolder);
 begin T := Self.RootFolder; end;
 
 (*----------------------------------------------------------------------------*)
@@ -680,14 +835,14 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TCustomShellTreeView(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TCustomShellTreeView) do
-  begin
+  with CL.Add(TCustomShellTreeView) do begin
     RegisterConstructor(@TCustomShellTreeView.Create, 'Create');
         RegisterMethod(@TCustomShellTreeView.Destroy, 'Free');
      RegisterMethod(@TCustomShellTreeView.Refresh, 'Refresh');
     RegisterMethod(@TCustomShellTreeView.SelectedFolder, 'SelectedFolder');
     RegisterPropertyHelper(@TCustomShellTreeViewAutoRefresh_R,@TCustomShellTreeViewAutoRefresh_W,'AutoRefresh');
     RegisterPropertyHelper(@TCustomShellTreeViewFolders_R,nil,'Folders');
+    RegisterPropertyHelper(@TCustomShellTreeViewRootFolder_R,nil,'RootFolder');
     RegisterPropertyHelper(@TCustomShellTreeViewPath_R,@TCustomShellTreeViewPath_W,'Path');
     RegisterPropertyHelper(@TCustomShellTreeViewAutoContextMenus_R,@TCustomShellTreeViewAutoContextMenus_W,'AutoContextMenus');
     RegisterPropertyHelper(@TCustomShellTreeViewObjectTypes_R,@TCustomShellTreeViewObjectTypes_W,'ObjectTypes');
