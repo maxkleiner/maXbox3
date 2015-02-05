@@ -1,0 +1,439 @@
+{***************************************************************
+ * Project  : PSUtils Macro and Strips Routines with REGEX
+ * App Name :  560_PSUtils.TXT, 517_animation7.TXT, 491_analogmeter.TXT, #locs=358
+ * Purpose  : Demonstrates STExpression adding func() at runtime
+ * Date     : #sign>Administrator: PC08: 03/02/2015 10:32:54 PM 
+ * History  : convert analogmeter to maXbox Aug 2014
+ *          : add REGEX time routines and tickcount to LED
+ ****************************************************************}
+ //TODO: transfer the strip to a REGEX func
+ //E:\maxbox3\mXGit39988\maxbox3\source\REST\GPS.pas
+ //ref: maXbox3/source/REST/uPSI_StExpr.pas
+   
+ Program PSUtils_StripFunctions_REGEX;
+                        
+ {Formats Position in sec into lat or lon string per Idx selection}
+
+
+  function ReadUntil(const ReadFrom, len: Integer; const C: Char; s: string): Integer;
+  var
+    j: Integer;
+    aint6: tbytearray64;
+    //av: TView;
+    //asig: TMaxSig;
+  begin
+    for j := ReadFrom to Len do
+      if (s[j] = C) then begin
+        Result := j;
+        Exit;
+        //combinations
+      end;
+    Result := Len+1;
+  end;
+ 
+function StripTags2(const S: string): string;
+var
+  Len: Integer;
+  i, APos: Integer;
+begin
+  Len := Length(S);
+  i := 0;
+  Result := '';
+  while (i <= Len) do begin
+    Inc(i);
+    APos := ReadUntil(i, len, '<', s);
+    Result := Result + Copy(S, i, APos-i);
+    i := ReadUntil(APos+1,len, '>',s);
+  end;
+end;
+
+FUNCTION Strip(const SubString: String; MainString: String): String;
+{ =================================================================== }
+VAR i,j: Integer;
+
+BEGIN{Strip}
+    j := length(SubString);
+    If j <> 0 Then Begin
+       i := Pos(SubString,MainString);
+       While i <> 0 Do Begin
+           Delete(MainString, i, j);
+           i := Pos(SubString,MainString);
+       End;
+   End;
+   result:= MainString;
+END{Strip};
+
+
+FUNCTION StripAny(const SubString: String; MainString: String): String;
+{ =================================================================== }
+VAR i,j: Integer;
+      s: char;
+BEGIN{Strip}
+    //j := Ord(SubString[0]);
+     j := length(SubString);
+    While j > 0 Do Begin
+       s := SubString[j];
+       i := Pos(s,MainString);
+       While i <> 0 Do Begin
+           Delete(MainString,i,1);
+           i := Pos(s,MainString);
+       End;
+       Dec(j);
+   End;
+   result:= MainString;
+END{Strip};
+
+  
+procedure AppendValueToStrings(const SL: TStrings; StartingValue: Integer);
+var
+  i: Integer;
+begin
+  Assert(Assigned(SL),'not assigned');  // Make sure valid TStrings has been passed in
+  for i := 0 to SL.Count - 1 do begin
+    SL[i] := IntToStr(StartingValue) + ' ' + SL[i];
+    Inc(StartingValue);
+  end;
+end;
+
+function GrabLine2(const s: string; ALine: Integer): string;
+var
+  sl: TStringList;
+begin
+  sl := TStringList.Create;
+  try
+    sl.LoadFromFile(s);
+    Result := sl[ALine - 1]; // index off by one
+  finally
+    sl.Free;
+  end;
+end;
+
+
+function GetLinesCount(sFileName : String): Integer;
+var
+oSL : TStringlist;
+begin
+oSL := TStringlist.Create;
+oSL.LoadFromFile(sFileName);
+result := oSL.Count;
+oSL.Free;
+end; //[/DELPHI]
+
+procedure STEXpressionPattern;
+begin
+    with TStExpression.create(self) do begin
+      AddConstant('MPI',3.14159);
+      srlist:= TStringlist.create;
+      GetIdentList(srlist);
+      for it:= 0 to srlist.count-1 do 
+        writeln(srlist.strings[it]);
+      srlist.Free;  
+      Expression:= '2^10 * ln(8 +MPI)';
+      writeln(floattoStr(AnalyzeExpression))
+      free;
+    end;  
+end;    
+
+  Function superPI(Value1 : TStFloat): TStFloat;
+  begin
+    result:= value1 * PI;
+  end;  
+  
+  procedure TfrMain_btnCanvasPic(Sender: TObject);
+var bBitmap : TBitmap;
+   image1: TImage;
+begin
+ bBitmap := TBitmap.Create;
+ try
+  bBitmap.Handle := LoadBitmap(hInstance, 'ATHENA');
+  Image1.Width := bBitmap.Width;
+  Image1.Height := bBitmap.Height;
+  Image1.Canvas.Draw(0,0,bBitmap);
+ finally
+  bBitmap.Free;
+ end;
+end;
+
+procedure SIRegister_uPSUtilsTest;
+begin
+ //PSMainProcName','String').SetString( '!MAIN');
+ //PSMainProcNameOrg','String').SetString( 'Main Proc');
+ //PSLowBuildSupport','LongInt').SetInt( 12);
+ //PSCurrentBuildNo','LongInt').SetInt( 23);
+ //PSCurrentversion','String').SetString( '1.31');
+ //PSValidHeader','LongInt').SetInt( 1397769801);
+ //PSAddrStackStart','LongInt').SetInt( 1610612736);
+ //PSAddrNegativeStackStart','LongInt').SetInt( 1073741824);
+ //TPSBaseType','').SetString( Byte);
+ //btReturnAddress','LongInt').SetInt( 0);
+ //btU8','LongInt').SetInt( 1);
+ //btS8','LongInt').SetInt( 2);
+ //btU16','LongInt').SetInt( 3);
+ //btS16','LongInt').SetInt( 4);
+ //btU32','LongInt').SetInt( 5);
+ //btS32','LongInt').SetInt( 6);
+ //btSingle','LongInt').SetInt( 7);
+ //btDouble','LongInt').SetInt( 8);
+ //btExtended','LongInt').SetInt( 9);
+ //btString','LongInt').SetInt( 10);
+ // change btRecord','LongInt').SetInt( 11);
+ //btArray','LongInt').SetInt( 12);
+ //btPointer','LongInt').SetInt( 13);
+ //btPChar','LongInt').SetInt( 14);
+ //btResourcePointer','LongInt').SetInt( 15);
+ //btVariant','LongInt').SetInt( 16);
+ //btS64','LongInt').SetInt( 17);
+ //btU64','LongInt').SetInt( 30);
+ //btChar','LongInt').SetInt( 18);
+ //btWideString','LongInt').SetInt( 19);
+ //btWideChar','LongInt').SetInt( 20);
+ //btProcPtr','LongInt').SetInt( 21);
+ //btStaticArray','LongInt').SetInt( 22);
+ //btSet','LongInt').SetInt( 23);
+ //btCurrency','LongInt').SetInt( 24);
+ //btClass','LongInt').SetInt( 25);
+ //btInterface','LongInt').SetInt( 26);
+ //btNotificationVariant','LongInt').SetInt( 27);
+ //btUnicodeString','LongInt').SetInt( 28);
+ //btType','LongInt').SetInt( 130);
+ //btEnum','LongInt').SetInt( 129);
+ //btExtClass','LongInt').SetInt( 131);
+// CL.AddDelphiFunction('Function MakeHash( const s : TbtString) : Longint');
+ //CM_A','LongInt').SetInt( 0);
+ //CM_CA','LongInt').SetInt( 1);
+ //CM_P','LongInt').SetInt( 2);
+ //CM_PV','LongInt').SetInt( 3);
+ //CM_PO','LongInt').SetInt( 4);
+ //Cm_C','LongInt').SetInt( 5);
+ //Cm_G','LongInt').SetInt( 6);
+ //Cm_CG','LongInt').SetInt( 7);
+ //Cm_CNG','LongInt').SetInt( 8);
+ //Cm_R','LongInt').SetInt( 9);
+ //Cm_ST','LongInt').SetInt( 10);
+ //Cm_Pt','LongInt').SetInt( 11);
+ //CM_CO','LongInt').SetInt( 12);
+ //Cm_cv','LongInt').SetInt( 13);
+ //cm_sp','LongInt').SetInt( 14);
+ //cm_bn','LongInt').SetInt( 15);
+ //cm_vm','LongInt').SetInt( 16);
+ //cm_sf','LongInt').SetInt( 17);
+ //cm_fg','LongInt').SetInt( 18);
+ //cm_puexh','LongInt').SetInt( 19);
+ //cm_poexh','LongInt').SetInt( 20);
+ //cm_in','LongInt').SetInt( 21);
+ //cm_spc','LongInt').SetInt( 22);
+ //cm_inc','LongInt').SetInt( 23);
+ //cm_dec','LongInt').SetInt( 24);
+ //cm_nop','LongInt').SetInt( 255);
+ //Cm_PG','LongInt').SetInt( 25);
+ //Cm_P2G','LongInt').SetInt( 26);
+  //TbtU8', 'Byte');
+  //TbtS8', 'ShortInt');
+  //TbtU16', 'Word');
+  //TbtS16', 'SmallInt');
+  //TbtU32', 'Cardinal');
+  //TbtS32', 'Longint');
+  //TbtSingle', 'Single');
+  //TbtDouble', 'double');
+  //TbtExtended', 'Extended');
+  //tbtCurrency', 'Currency');
+  //tbts64', 'int64');
+  //Tbtu64', 'uint64');
+  //TbtString', 'string');
+  //(( Function MakeHash( const s : TbtString) : Longint');
+   writeln('MakeHash of: '+inttostr(MakeHash('to do const s : TbtString')));
+   writeln('JavaHash of: '+inttostr(JavaHashCode('to do const s : TbtString')));
+
+//   TbtString = {$IFDEF DELPHI2009UP}AnsiString{$ELSE}String{$ENDIF};
+   //PointerSize','LongInt').SetInt( IPointer ( 8 4 ));
+ //PSMaxListSize','LongInt').SetInt( Maxint div 16);
+  //PPointerList', '^TPointerList // will not work');
+  (*SIRegister_TPSList(CL);
+  TIFList', 'TPSList');
+  SIRegister_TPSStringList(CL);
+  TIFStringList', 'TPsStringList');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'TPSUnitList');
+  SIRegister_TPSUnit(CL);
+  SIRegister_TPSUnitList(CL);
+  TPSParserErrorKind','(iNoError,iCommentError,iStringError,iCharError,iSyntaxError)');*)
+  //TPSParserErrorEvent', 'Procedure ( Parser : TObject; Kind : TPSParserErrorKind)');
+  //SIRegister_TPSPascalParser(CL);
+ {CL.AddDelphiFunction('Function PSFloatToStr( E : Extended) : TbtString');
+ CL.AddDelphiFunction('Function FastLowerCase( const s : TbtString) : TbtString');
+ CL.AddDelphiFunction('Function Fw( const S : TbtString) : TbtString');
+ CL.AddDelphiFunction('Function FirstWord( const S : TbtString) : TbtString');
+ CL.AddDelphiFunction('Function PSIntToStr( I : LongInt) : TbtString');
+ CL.AddDelphiFunction('Function PSStrToIntDef( const S : TbtString; Def : LongInt) : LongInt');
+ CL.AddDelphiFunction('Function PSStrToInt( const S : TbtString) : LongInt');
+ CL.AddDelphiFunction('Function PSStrToFloat( const s : TbtString) : Extended');
+ CL.AddDelphiFunction('Function FastUpperCase( const s : TbtString) : TbtString');
+ CL.AddDelphiFunction('Function GRFW( var s : TbtString) : TbtString');
+ CL.AddDelphiFunction('Function GRLW( var s : TbtString) : TbtString');
+ FCapacityInc','LongInt').SetInt( 32);
+ CL.AddDelphiFunction('Function PSWideUpperCase( const S : WideString) : WideString');
+ CL.AddDelphiFunction('Function PSWideLowerCase( const S : WideString) : WideString');
+  }
+   writeln(FirstWord('const S : TbtString'));
+
+end;
+
+
+Const FName = 'maxboxlog2.log'; //'firstdemo3.txt';
+      Testtext = 'goodbye! cruel, harsh world!..?';
+var   FormLab3D: TFormLab3D;
+      myfunc: TStMethod1Param;
+      uuint: uint64;
+
+Begin               //main
+
+//OpenDoc(exepath+FName)
+{Memo1.Lines.LoadFromFile(YourFileNameHere);
+AppendValueToStrings(Memo1.Lines, 10);
+Memo1.Lines.SaveToFile(YourFileNameHere);}
+  //maxform1.N3dlab1click(self);
+
+  writeln(Strip('<br/>','<p>This is text.<br/>This is line 2</p>'))
+  writeln(StripString('<p>This is text.<br/>This is line 2</p>','<br/>'))
+  writeln(StripAny('<br/>','<p>This is text.<br/>This is line 2</p>'))
+  
+  writeln(Strip('!',testtext));
+  writeln(StripAny('!,.?',testtext));
+ 
+  sr:= StripTags2('<p>This is text.<br/> This is line 2</p>');
+  //ShowMessage(s);   // will display 'This is text.This is line 2'
+  writeln(sr);   // will display 'This is text.This is line 2'
+  
+  Writeln(ReplaceRegExpr ('([</pbr>])*',
+                          '<p>This is text.<br/> This is line 2</p>','', True))
+  Writeln(ReplaceRegExpr ('<[^>]*>',
+                          '<p>This is text.<br/> This is line 2</p>','', True))
+ //  CL.AddDelphiFunction('Function AnalyzeExpr( const Expr : AnsiString) : Double');
+    
+    writeln(floattostr(AnalyzeExpr('2^10 * ln(8)')))
+    
+    //add a function at runtime!
+    with TStExpression.create(self) do begin
+      AddConstant('MPI',3.14159);
+      {srlist:= TStringlist.create;
+      GetIdentList(srlist);
+      for it:= 0 to srlist.count-1 do 
+        writeln(srlist.strings[it]);
+      srlist.Free;}
+      myfunc:= @superpi;
+      AddMethod1Param('getsuperpi', myfunc);  
+      Expression:= '2^10 * ln(8 +MPI)';
+      writeln(floattoStr(AnalyzeExpression))
+      Expression:= '2^10 * ln(8 +MPI)+ getsuperpi(42)';
+      writeln(floattoStr(AnalyzeExpression))
+      free;
+      //TThreadClass
+      //TGetCounterValue
+    end;  
+    
+    //UpdateExeResource
+    //RaiseError
+    //function GetUsedUnitList(list: Tstringlist): string;
+    //GetUsedUnitList(list: Tstringlist): string;
+
+    //GetTokenName(TokenID: TPSPasToken): string;
+    //NewLine2
+    //MakeHash
+      // TbtString //= {$IFDEF DELPHI2009UP}AnsiString{$ELSE}String{$ENDIF};
+     //TPSPascalParser
+     //TPSUnitList
+       //TPSStringList
+         //TPSUnit
+         //MaxListSize
+      //FastLowerCase
+      //Fw
+      //FastUpperCase
+  //GRFW( var s : TbtString) : TbtString');
+  //GRLW( var s : TbtString) : TbtString');
+ //FCapacityInc','LongInt').SetInt( 32);
+  //WideUpperCase( const S : WideString) : WideString');
+  //WideLowerCase( const S : WideString) : WideString');
+   //Cm_C //CM_A
+    SIRegister_uPSUtilsTest;
+
+End.  // StripUtils
+
+
+ try
+    UpdateExeResource('C:\Users\Dexter\Documents\RAD Studio\Projects\Debug\Win32\Data.txt','C:\Users\Dexter\Documents\RAD Studio\Projects\Debug\Win32\project86.exe');
+  except
+    on E: Exception do
+      Writeln(E.ClassName, ': ', E.Message);
+  end;
+
+
+procedure SIRegister_TStExpression(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TStComponent', 'TStExpression') do
+  with CL.AddClassN(CL.FindClass('TStComponent'),'TStExpression') do
+  begin
+    RegisterMethod('Constructor Create( AOwner : TComponent)');
+    RegisterMethod('Function AnalyzeExpression : TStFloat');
+    RegisterMethod('Procedure AddConstant( const Name : AnsiString; Value : TStFloat)');
+    RegisterMethod('Procedure AddFunction0Param( const Name : AnsiString; FunctionAddr : TStFunction0Param)');
+    RegisterMethod('Procedure AddFunction1Param( const Name : AnsiString; FunctionAddr : TStFunction1Param)');
+    RegisterMethod('Procedure AddFunction2Param( const Name : AnsiString; FunctionAddr : TStFunction2Param)');
+    RegisterMethod('Procedure AddFunction3Param( const Name : AnsiString; FunctionAddr : TStFunction3Param)');
+    RegisterMethod('Procedure AddInternalFunctions');
+    RegisterMethod('Procedure AddMethod0Param( const Name : AnsiString; MethodAddr : TStMethod0Param)');
+    RegisterMethod('Procedure AddMethod1Param( const Name : AnsiString; MethodAddr : TStMethod1Param)');
+    RegisterMethod('Procedure AddMethod2Param( const Name : AnsiString; MethodAddr : TStMethod2Param)');
+    RegisterMethod('Procedure AddMethod3Param( const Name : AnsiString; MethodAddr : TStMethod3Param)');
+    RegisterMethod('Procedure AddVariable(const Name: AnsiString;VariableAddr: PStFloat)');
+    RegisterMethod('Procedure ClearIdentifiers');
+    RegisterMethod('Procedure GetIdentList( S : TStrings)');
+    RegisterMethod('Procedure RemoveIdentifier( const Name : AnsiString)');
+    RegisterProperty('AsInteger', 'Integer', iptr);
+    RegisterProperty('AsFloat', 'TStFloat', iptr);
+    RegisterProperty('AsString', 'AnsiString', iptr);
+    RegisterProperty('ErrorPosition', 'Integer', iptr);
+    RegisterProperty('Expression', 'AnsiString', iptrw);
+    RegisterProperty('LastError', 'Integer', iptr);
+    RegisterProperty('AllowEqual', 'Boolean', iptrw);
+    RegisterProperty('OnAddIdentifier', 'TNotifyEvent', iptrw);
+    RegisterProperty('OnGetIdentValue', 'TStGetIdentValueEvent', iptrw);
+  end;
+end;
+
+
+//#sign:Administrator: PC08: 03/02/2015 10:32:54 PM 
+//#tech:9.160perf:  threads: 4 192.168.1.40 10:32:54 PM 3.9.9.180.9.9.160
+
+
+ref:
+
+http://stackoverflow.com/questions/11229831/regular-expression-to-remove-html-tags-from-a-string
+
+http://www.delphipages.com/forum/showthread.php?t=201629
+http://useruploadedfiles.programmersheaven.com/48584/NMEA.pas
+
+
+    Program SpammersAreParasites;
+    var
+      l1,l2: Srting;
+    begin
+      l1:='70';
+      l2:='0';
+      Bxo:=l1 + l2;
+      Bxo:=(Bxo)
+    (*
+      l1:=97;
+      l2:=9
+     Bxo:=(l1 + l2);
+    *)
+    //end.
+
+(*? Value of Bxo:    *)
+
+{"There is a theory which states that if ever anybody discovers
+exactly what the Universe is for and why it is here, it will
+instantly disappear and be replaced by something even more
+bizarre and inexplicable. There is another theory which states
+that this has already happened."
+-- Douglas Adams }
+
+

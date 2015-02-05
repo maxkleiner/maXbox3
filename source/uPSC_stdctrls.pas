@@ -458,6 +458,7 @@ begin
     RegisterProperty('ONCLICK', 'TNotifyEvent', iptrw);
     RegisterProperty('ONENTER', 'TNotifyEvent', iptrw);
     RegisterProperty('ONEXIT', 'TNotifyEvent', iptrw);
+    RegisterProperty('WordWrap', 'BOOLEAN', iptrw);
 
     {$IFNDEF PS_MINIVCL}
     RegisterProperty('DRAGCURSOR', 'Longint', iptrw);

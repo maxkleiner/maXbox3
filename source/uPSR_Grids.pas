@@ -2,7 +2,7 @@ unit uPSR_Grids;
 {
    canvas and parent and more properties in    mX3.1
           mX3.1
-          rowheights, colwidths mX3.8
+          rowheights, colwidths mX3.8     , setfocus
 }
 interface
 Uses uPSRuntime;
@@ -266,7 +266,8 @@ begin
     RegisterMethod(@TStringGrid.Destroy, 'Free');
     RegisterMethod(@TStringGrid.Repaint, 'Repaint');
     RegisterMethod(@TStringGrid.MouseCoord, 'MouseCoord');
-    RegisterVirtualMethod(@TStringGrid.SetBounds, 'SETBOUNDS');
+      RegisterMethod(@TStringGrid.SetFocus, 'SetFocus');
+      RegisterVirtualMethod(@TStringGrid.SetBounds, 'SETBOUNDS');
     RegisterPropertyHelper(@TStringGridCells_R,@TStringGridCells_W,'Cells');
     RegisterPropertyHelper(@TStringGridCols_R,@TStringGridCols_W,'Cols');
     RegisterPropertyHelper(@TStringGridCol_R,@TStringGridCol_W,'Col');
@@ -308,6 +309,9 @@ begin
     RegisterVirtualMethod(@TDrawGrid.SetBounds, 'SETBOUNDS');
     RegisterPropertyHelper(@TControlParentR, @TControlParentW, 'PARENT');
     RegisterPropertyHelper(@TBitmapCanvas_R,NIL,'Canvas');
+    RegisterMethod(@TDrawGrid.SetFocus, 'SetFocus');
+    //RegisterMethod(@TDrawGrid.UpdateLoc, 'UpdateLoc');
+
     //RegisterPropertyHelper(@TDrawGridCells_R,@TDrawGridCells_W,'Cells');
     RegisterPropertyHelper(@TDrawGridCols_R,@TDrawGridCols_W,'ColWidths');
     RegisterPropertyHelper(@TDrawGridCol_R,@TDrawGridCol_W,'Col');

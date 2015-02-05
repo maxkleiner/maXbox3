@@ -1,0 +1,1370 @@
+unit U_SquareWordGrids;
+{Copyright © 14, Gary Darby,  www.DelphiForFun.org
+ This program may be used or modified for any non-commercial purpose
+ so long as this original notice remains in place.
+ All other rights are reserved , mX Adaption
+ }
+
+{ Generates, allows user play, and solves Square Word Grids with multiple dictionaries
+  and grid sizes.  Displaying a slected number of properly placed  letters proved
+  clues for the user trying to complete the puzzle given the set of letters to use.
+                                            selected
+  Program "DicMaint" found on DFF can be used to add additional words to Full.dic
+}
+
+interface
+
+{uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  shellAPI, StdCtrls, ExtCtrls, UDict, ComCtrls, dffutils, Spin, Grids, UComboV2
+  ;
+ }
+type
+  TCaserec=record
+    Size:integer;
+    Fillletters:string;
+    GridLetters:string;
+    Solution:string;
+  end;
+
+  TGrid2 = array of array of char;
+
+  //TForm1 = class(TForm)
+  var  
+    StaticText1: TStaticText;
+    Panel1: TPanel;
+    Memo22: TMemo;
+    GenBtn: TButton;
+    Grid: TStringGrid;
+    UserPlayGrp: TGroupBox;
+    Label1: TLabel;
+    Label2: TLabel;
+    Prefill: TSpinEdit;
+    Unused: TEdit;
+    StopPanel: TPanel;
+    DicGrp: TRadioGroup;
+    Label3: TLabel;
+    Sizegrp: TRadioGroup;
+    ResetBtn: TButton;
+    SearchBtn: TButton;
+    Label4: TLabel;
+    SolutionMemo: TMemo;
+    //PubDic:TDic;
+       procedure StaticText1Click(Sender: TObject);
+       procedure FormCreate(Sender: TObject);
+       procedure StopPanelClick(Sender: TObject);
+       procedure GridDrawCell(Sender: TObject; ACol, ARow: Integer;
+         Rect: TRect; State: TGridDrawState);
+       procedure GridKeyDown(Sender: TObject; var Key: Word;
+         Shift: TShiftState);
+       procedure SearchBtnClick(Sender: TObject);
+       procedure GridKeyPress(Sender: TObject; var Key: Char);
+       procedure genBtnClick(Sender: TObject);
+       procedure DicGrpClick(Sender: TObject);
+       procedure PrefillChange(Sender: TObject);
+       procedure SizegrpClick(Sender: TObject);
+       procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+       procedure FormActivate(Sender: TObject);
+       procedure ResetBtnClick(Sender: TObject);
+  //public
+    
+    var
+    N:integer; {word length}
+    square:array of string;  {the word square we're building}
+
+    {lists to hold words starting with each letter position of the start word
+     except no need to build a list for the 1st letter.  Also note that since
+     this is a dynamic array starting with index value 0, the Kth letter of the
+     source word is represented by list [K-2]}
+    lists:array of TStringList;
+    Loopcount:int64; {# of word tests made}
+    foundcount:integer; {solution found count}
+    CurrentCase:TCaserec;
+    solutioncount:integer;
+    deck:array of integer;
+       procedure SetupCase(Rec:TCaserec);
+       procedure SetupgridLetters(var caserec:TCaserec; NewDeck:boolean);
+       procedure setbusy(L,T:integer);
+       procedure SetUnbusy;
+       function  IsBusy:boolean;
+       // from DFFUtils!
+       function IgnoreSelectedDrawCell(Sender: TObject; ACol, ARow: Integer;
+                                 Rect: TRect; State: TGridDrawState):boolean;
+      {*********** Shuffle ***********}
+       procedure shuffle(var deck:array of integer);
+
+  //end;
+
+var
+  sqFrm: TForm;
+
+implementation
+
+//{$R *.DFM}
+
+var
+  Defaultrec:TCaseRec;
+  //=(Size:3; FillLetters:'AAENRTUY'; GridLetters:'..B......';Solution:'TUBERAANY');
+  {preload what is usually random pre-fills to control default letter order}
+  Defaultdeck:array[0..8] of integer; //=(9,4,7,8,1,5,6,2,3);
+
+{************ FormCreate ************}
+procedure FormCreate(Sender: TObject);
+var i:integer;
+begin
+  randomize;
+  reformatmemo(Memo22);
+  Defaultrec.size:= 3
+  Defaultrec.FillLetters:='AAENRTUY';
+  Defaultrec.GridLetters:='..B......';
+  Defaultrec.Solution:='TUBERAANY';
+  Defaultdeck[0]:=9
+  Defaultdeck[1]:=4
+ Defaultdeck[2]:=7
+ Defaultdeck[3]:=8
+ Defaultdeck[4]:=1
+ Defaultdeck[5]:=5
+ Defaultdeck[6]:=6
+ Defaultdeck[7]:=2
+ Defaultdeck[8]:=3
+
+  //pubdic.LoadmediumDic;
+  {setup up initial case}
+  Currentcase:=Defaultrec;
+  {set up and load the pre-fill order}
+  setlength(deck,9);
+  for i:=0 to high(deck) do deck[i]:=defaultdeck[i];
+  SetupgridLetters(currentcase,false);
+  SetupCase(currentcase);
+end;
+
+
+{******* FormActivate **********}
+procedure FormActivate(Sender: TObject);
+begin
+  //Grid.SetFocus;  {set up for user to solve}
+end;
+
+
+
+{************ StopBtnClick *************}
+procedure StopPanelClick(Sender: TObject);
+begin
+  sqfrm.tag:=1; {form's tag property is tested within Tryword function which will stop
+           the search if value becomes nonzero}
+end;
+
+
+  function CT: TCanvas;
+  var gitems: TDBGrid;
+  begin
+    Result:= gItems.Canvas;
+  end;
+
+
+procedure gItemsDrawColumnCell(Sender: TObject; const Rect: TRect;
+  DataCol: Integer; Column: TColumn; State: TGridDrawState);
+var
+  aRec: TRect;
+begin
+  //Evaluating gdSelected works fine, but not gdRowSelected
+  if gdSelected in State then begin
+    CT.Font.Color:= clRed;
+  end else begin
+    CT.Font.Color:= clWhite;
+  end;
+  CT.Brush.Style:= bsSolid;
+  CT.Brush.Color:= clBlack;
+  CT.Pen.Style:= psClear;
+  CT.FillRect(Rect);
+  CT.Brush.Style:= bsClear;
+  CT.Pen.Style:= psSolid;
+  aRec:= Rect;
+  DrawText(CT.Handle, PChar(Column.Field.AsString), Length(Column.Field.AsString),
+    aRec, 0);
+end;
+
+
+{*********** IgnoreSelectDrawCell *************}
+function IgnoreSelectedDrawCell(Sender: TObject; ACol, ARow: Integer;
+  Rect: TRect; State: TGridDrawState):boolean;
+{OK, here's the thing:  The Selected cell (current row and column) is drawn with
+ the highlight color and font color which bugs the heck out of me.}
+{Call this function from the OnDrawCell exit of any TStringGrid to redraw the
+ Selected cell with the default font but without the highlighting.   Result is
+ true if the selected cell has been redrawn, false otherwise. If your OnDrawCell
+ exit is doing other special drawing, call this function first so that  it can be
+ redrawn using your parameters.
+}
+
+var
+  g:TStringGrid;
+  astro: TAstronomy;
+begin
+  result:=false;
+  if sender is TstringGrid then begin
+    g:=TStringGrid(Sender); {G is just shorthand  for the grid object}
+    If (gdselected in state) then
+    with G, sqfrm.canvas do begin
+      if sqfrm.canvas.font<>g.Font then font.assign(g.font);  {1st time, get the proper font for the canvas}
+      brush.Color:=color;
+      fillrect(rect);
+      textrect(rect, rect.Left+2, rect.Top+2, cells[acol,arow]);
+      result:=true;
+    end;
+  end;
+end;
+
+{*********** Shuffle ***********}
+procedure shuffle(var deck:array of integer);
+{Shuffle = randomly rearrange  an array of integers}
+var  i,n,temp:integer;
+begin
+  i:= high(deck); {starting from the end of the deck}
+  while i>0 do begin
+    n:=random(i+1);  {pick a random card, "n",  at or below this card}
+    temp:=deck[i];   {and swap card "i" with card "n"}
+    deck[i]:=deck[n];
+    deck[n]:=temp;
+    dec(i);       {move to the next prior card}
+  end;            {and loop}
+end;
+
+
+
+{********* GridDrawCell **************}
+procedure GridDrawCell(Sender: TObject; ACol, ARow: Integer;
+  Rect: TRect; State: TGridDrawState);
+var
+  n:integer;
+begin  {just to turn off "select" highlighting}
+  ignoreSelectedDrawCell(sender,Acol,Arow,Rect,State);
+  {might as well center th letters while we're here}
+  with TStringGrid(sender), sqfrm.canvas  do begin
+    if gdfocused in State then brush.color:=clskyblue else brush.color:=color;;
+    rectangle1(rect);   //!!
+    n:=textwidth(cells[acol,arow]);
+    with rect do textout(left+(defaultcolwidth-n) div 2, top+2, cells[acol,arow]);
+  end;
+end;
+
+{******** Incgrid **********}
+procedure IncGrid(Grid:TStringgrid);
+{Move the cursor forward by 1 cell}
+begin
+  with grid do
+  begin
+    if col<colcount-1 then col:=col+1
+    else
+    begin
+      col:=0;
+      if row<rowcount-1 then row:=row+1
+      else
+      row:=0;
+    end;
+  end;
+end;
+
+{************ DecGrid ***********}
+procedure DecGrid(Grid:TStringGrid);
+{Back up the grid cursor by one cell}
+begin
+  with grid do
+  begin
+    if col>0 then col:=col-1
+    else
+    begin
+      col:=colcount-1;
+      if row>0 then row:=row-1
+      else
+      row:=rowcount-1;
+    end;
+  end;
+end;
+
+
+{************** GridKeyPress *************8}
+procedure GridKeyPress(Sender: TObject; var Key: Char);
+var
+  n,c,r:integer;
+  s:string;
+  OK:boolean;
+begin
+  If IsBusy then exit;
+  {Only allow adding letters to the grid that are in Unused letters box}
+  s:=Unused.Text;
+  n:=Pos(upcase(key),S);
+  if n>0 then
+  with grid do begin
+    delete(s,n,1);
+    {if replacing a character then put it back in Unused character set}
+    //if (length(cells[col,row])>0) and (cells[col,row][1] in ['A'..'Z'])
+    if (length(cells[col,row])>0) and (cells[col,row][1] > 'A') and
+                                     (cells[col,row][1] <'Z')
+
+    then
+    begin
+      S:=S+cells[col,row];
+      sortstrup(s);
+    end;
+    cells[col,row]:=upcase(key); {add the pressed character}
+    Unused.text:=s;
+    if s='' then
+    with currentcase do
+    begin  {all squares filled, check for solution}
+      OK:=true;
+      for c:=0 to size-1 do
+      begin
+        for r:=0 to size-1 do
+        begin
+          if grid.cells[c,r]<> solution[size*r+c+1] then
+          begin
+            OK:=false;
+            break;
+          end;
+        end;
+        if not OK then break;
+      end;
+      if OK then showmessage('You solved it! '+#13+'   Congratulations!');
+    end;
+    incGrid(grid);
+  end
+  else beep;
+  key:=#0;
+end;
+
+
+{************ GridKeyDown *************}
+procedure GridKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+var
+  OK:boolean;
+  s:string;
+begin
+  If IsBusy then exit;
+  ok:=true;
+  with grid do begin
+    //IF CHR(key) in ['a'..'z'] then key:=key and $20;
+    IF (CHR(key) > 'a') and (CHR(key) <'z') then key:=key and $20;
+   memo2.Lines.add(format('Key down: key= %d, (C:%d, R:%d) cell=%s',  //debug
+    [key,col,row,cells[col,row]]));
+    IF (KEY=VK_DELETE) or (chr(key)=' ') then begin
+      s:=Unused.text+cells[col,row];
+      sortstrup(s);
+      unused.Text:=s;
+      cells[col,row]:='';
+    end
+    else
+    if (key=VK_RETURN) or (key=VK_TAB) or (key=VK_RIGHT) then
+    begin
+      IncGrid(grid);
+      key:=0;
+    end
+    else If (key=VK_Left) or (key=VK_Back) then
+    begin
+      Decgrid(grid);
+      key:=0;
+    end;
+    //if not (chr(key) in ['A'..'Z']) then
+    IF (CHR(key) > 'A') and (CHR(key) <'Z') then begin
+      if (key=VK_UP) or (key=VK_Down) then
+      else  OK:=false;
+    end;
+  end;
+  if not OK then key:=0;
+end;
+
+
+{------------ GetNextNormalWord ---------}
+  function getnextNormalWord(var w:string):boolean;
+  var a,c,f:boolean;
+  {Get the next distionary word that is not an Abbreviation, Capitalized or forieign}
+  begin
+    result:=false;
+    //while pubdic.getnextword(w,a,c,f) do
+    //begin
+      if (not a) and (not c) and (not f) then
+      begin
+        result:=true;
+        //break;
+      end;
+    //end;
+  end;
+
+
+{************** SearchBtnClick ***************}
+procedure SearchBtnClick(Sender: TObject);
+var
+  alist:TStringList;
+  N:integer;
+  aletters:string;
+  i,j,c,r:integer;
+  w, sortw, s:string;
+  OK:boolean;
+  rows:array of string;
+  combo2:TComboset;
+  NewCtype: TComboType;
+  seconds:integer;
+  starttime:TDateTime;
+  tsel: TByteArray64;
+
+begin
+  {count letters placed in grid plus letters in edit area.  Must equal NxN for NxN grid}
+  {Make list of all possible N letter words}
+  Setupcase(currentcase);
+  solutioncount:=0;
+  screen.cursor:=crHourglass;
+  with solutionmemo do begin
+    clear;
+    sendtoback;
+  end;
+  label4.caption:='0 solutions found';
+  sqfrm.tag:=0;
+  With SearchBtn do SetBusy(left, top);
+  N:=currentcase.size;
+  aletters:=Currentcase.fillletters;
+  with Grid do
+  for c:=0 to colcount-1 do
+  for r:=0 to rowcount-1 do
+  //if  (length(cells[c,r])>0) and (cells[c,r][1] in ['A'..'Z'])
+  if  (length(cells[c,r])>0) and (cells[c,r][1] >'A')
+                           and (cells[c,r][1] <'Z')
+
+  then aletters:=aletters+cells[c,r][1];
+  if length(letters)<> N*N
+  then showmessage(format('There must be %d letters in grid + letters area',[N*N]))
+  else
+  with currentcase do begin
+    {build a list of all possible words}
+    combo2:=TComboset.create;
+    setlength(rows,size);
+    sortstrUp(aletters);
+    alist:=TStringList.create;
+    //pubdic.Setrange('a',size,'z',size);
+    while getnextNormalWord(w) do  {check all words of the correct length}
+    begin
+      OK:=true;
+      w:=uppercase(w);
+      for i:=1 to size do
+      if pos(w[i],aletters)=0 then
+      begin  {this word has a letter not in the list of all letters}
+        OK:=false; {so reject it}
+        break;
+      end;
+      if OK then alist.add(w);
+    end;
+    {Now check all combinations of "size" of "list.Count" words and
+    check only those sets that completely cover letters}
+    combo2.Setup(size,alist.count, combinationsrepeat);
+    loopcount:=0;
+    starttime:=now;
+    sqfrm.tag:=0;
+    with combo2 do while Getnext and (sqfrm.tag=0) do begin
+      inc(loopcount);
+      if loopcount and $fff =0 then
+      begin
+        application.processmessages;
+        If sqfrm.tag<>0 then break;
+        seconds:=trunc((now-starttime)*secsperday);
+        if (seconds>1) and (seconds mod 60 = 0) then
+        begin
+          if solutioncount=1 then s:='Want me to cheat and show a solution?'
+          else s:='Want me to continue searching?';
+          if messagedlg('Complete search is taking a while. '+s, mtconfirmation,
+                         [mbyes,mbno],0)=mryes
+          then
+          begin
+            with grid do
+            for c:=0 to size-1 do for r:=0 to size-1 do 
+                     grid.cells[c,r]:=solution[size*c+r+1];
+            unused.text:='';
+            sqfrm.tag:=1;
+            break;
+          end;
+        end;
+      end;
+      w:='';
+      combo2.selected:= tsel;
+      //TBytearray64(combo2.selected[2]):= 12345;
+      //combo2.TBytearray64(selected[2]):= 12345;
+ 
+      {procedure TComboSetSelected_R(Self: TComboSet; var T: ByteArray);
+      Begin T := Self.Selected; end;
+       }
+      
+      //combo2.selected[2];
+      for i:=1 to size do begin
+      
+        //w:=w + alist[combo2.selected[i]-1];
+        //w:=w + alist[selected];
+        //rows[i-1]:=alist[selected[i]-1];
+
+        //rows[i-1]:=alist[selected];
+      end;
+      sortw:=w;
+      SortStrUp(sortw);
+      NewCtype:= permutationsdown;
+      writeln(inttostr(ord(newctype)));
+      //NewCtype:= ord(newctype2(1));
+      if sortw= aletters then
+      begin   {this set of words has all of the right letters}
+        combo2.setup( size,size,permutationsdown); {permute words for correct order}
+        with combo2 do
+        while getnext and (sqfrm.tag=0) do
+        begin
+          w:='';
+          //for i:=1 to size do w:=w+rows[selected[i]-1];
+          {check that letters would match pre-filled letters}
+          OK:=true;
+          for j:= 1 to length(w) do
+          if (gridletters[j]<>'.') and (gridletters[j]<>w[j]) then
+          begin
+            ok:=false;
+            break;
+          end;
+          if OK then
+          begin
+           {a set of "size" words to which exactly covers set of letters to use}
+           {and prefilled letters in the proper place so now, if the coluimns
+           also form words, then we have a solution}
+
+            OK:=true;
+            for r:=0 to size-1 do
+            begin
+              s:='';
+              for c:=0 to size-1 do s:=s+ w[size*c +r+1];
+              //if not pubdic.lookup(s) then
+              begin
+                OK:=false;
+                break;
+              end;
+            end;
+          end;
+          if OK then
+          begin
+            inc(solutioncount);
+            if solutioncount=1 then s:='' else s:='s'; {keep grammer correct!}
+            label4.Caption:=inttostr(solutioncount)+ ' solution'+s+' found';
+            if solutioncount=1 then
+            with grid do
+            begin
+              for r:=0 to size-1 do
+              for c:=0 to size-1 do
+              begin
+                cells[c,r]:= w[r*size+c+1];
+              end;
+              unused.Text:='';
+            end
+            else
+            begin
+              with solutionmemo , memo22.lines do
+              begin
+                if solutioncount=2 then
+                begin
+                  Clear;
+                  bringtofront;
+                end;
+                add('----------');
+                add('Solution #'+inttostr(solutioncount));
+                for i:=0 to size-1 do add(copy(w,size*i+1,size)); //list[selected[i]-1]);
+              end;
+            end;
+          end;
+        end;
+      end;
+      if sqfrm.tag<>0 then break;
+    end;
+  end;
+  screen.cursor:=crdefault;
+  SetUnBusy;
+end;
+
+ var  aTest:TGrid2;
+       list:TStringlist;
+
+{------------ PossibleSolution -------------}
+   function PossibleSolution(row:integer):boolean;
+   {check if Test array columns  0 through row have words in List starting
+   with thos letters}
+   var
+     r,c,index:integer;
+     w,listW:string;
+     LenW:integer;
+   begin
+     result:=true;
+     for c:=0 to N-1 do
+     begin
+       w:=atest[c][0];
+       for r:=1 to row do w:=w+atest[c][r];
+       list.find(w,index);
+       if index<list.Count then
+       begin
+         listW:=list[index];
+         LenW:=row+1;;
+         if (length(ListW)>=LenW) and (copy(listw,1,lenW)<> w) then
+         begin
+           result:=false;
+           break;
+         end;
+       end
+       else result:=false;
+     end;
+   end;
+
+   {--------- GetNextRow -----------}
+   function getnextrow(next,row:integer):boolean;
+   var
+     c:integer;
+     tempstart:integer;
+     saveTest:TGrid2;
+   begin
+     result:=false;
+     //setlength2(savetest,N,N);
+     application.processmessages;
+     if sqfrm.tag>0 then exit;
+     next:=random(list.Count);
+     tempstart:=next;
+     if row=N then
+     begin
+       result:=true;
+       exit;
+     end
+     else
+     repeat
+       for c:=1 to N do atest[c-1][row]:=list[next][c];
+       if possibleSolution(row)
+       then
+       begin
+         savetest:=atest;
+         result:=getnextrow(next,row+1);
+         if not result then atest:=savetest;
+       end;
+       if not result then
+       begin;
+         if next=list.count-1 then next:=0
+         else inc(next);
+       end;
+     until result or (next=tempstart);
+   end;
+
+
+{************ GenBtnClick ***********}
+procedure genBtnClick(Sender: TObject);
+{Generate a new random puzzle}
+
+var
+  N,start,row,c,r:integer;
+  s:string;
+ // Test:TGrid;
+
+ // list:TStringlist;
+  OK:boolean;
+  loopcount:integer;
+
+   
+begin {GenBtnClick}
+  if isbusy then exit;
+
+  list:=TStringList.create;
+  N:=currentcase.Size;
+  Unused.Text:='';
+  {for this task, we'll take a random word of length N and then
+  check it as a possible top row of the grid (i.e. try all N length words that
+  start with the letters of the top row word.  For each word added  as a row candidate,
+  we'll trim the search spoace by making sure that there is at least one word
+  that begins with  the column leters built so far}
+  for c:=0 to N-1 do for r:=0 to N-1 do grid.cells[c,r]:='';
+  {1. Build a sorted list of N letter words}
+  list.clear;
+  {with pubdic do
+  begin
+    setrange('a',N,'z',N);
+    while getnextNormalWord(s) do list.add(uppercase(s));
+  end; }
+  list.sort;
+  //setlength2(aTest,n,n);
+  sqfrm.tag:=0;
+  with GenBtn do Setbusy(left,top);
+
+  screen.cursor:=crHourGlass;
+  loopcount:=0;
+  repeat
+    start:=random(list.count);
+    row:=0;
+    OK:=getnextrow(start,row);
+    application.processmessages;
+    inc(loopcount);
+    if loopcount and $f=0 then
+    begin
+      if messagedlg(format('No solution after trying %d start words.  Keep looking?',[loopcount]),
+                    mtconfirmation, [mbYes,mbNo],0)=mrNo then sqfrm.tag:=1;
+    end;
+  until OK or (sqfrm.tag<>0);
+
+  screen.cursor:=crDefault;
+  If not OK then Showmessage('No solution found');
+  if OK then
+  with currentcase do
+  begin
+    gridletters:='';
+    size:=N;
+    solution:='';
+    for c:=0 to N-1 do
+    for r:=0 to N-1 do
+    begin
+      solution:=solution+atest[c][r];
+    end;
+    setupgridletters(Currentcase, true);
+  end;
+  setupcase(currentcase);
+  list.free;
+  SetUnBusy;
+  //grid.setFocus;
+end;
+
+{********* DicGrpClick **********}
+procedure DicGrpClick(Sender: TObject);
+{select a different dictionary}
+begin
+  If isBusy then exit;
+  {case DicGrp.itemindex of
+    0:pubdic.LoadmediumDic;
+    1:pubdic.loadlargedic;
+  end;}
+  setunbusy;
+  genbtnclick(sender);
+end;
+
+{***** PrefillChange ***********}
+procedure PrefillChange(Sender: TObject);
+{User change the number of cell to pre-fill. Reinitialize the case}
+begin
+  If isbusy then exit;
+  setupgridletters(currentcase, false);
+  setupcase(currentcase);
+end;
+
+
+{******* SizeGrpClick ***********}
+procedure SizegrpClick(Sender: TObject);
+var
+   c,r:integer;
+begin
+  If isbusy then exit;
+  N:=Sizegrp.ItemIndex+3;
+  currentcase.Size:=N;
+  with grid do
+  begin
+    rowcount:=n;
+    colcount:=n;
+    adjustgridsize(TDrawgrid(grid));
+  end;
+  with grid do
+  for c:=0 to colcount-1  do
+  for r:=0 to rowcount-1 do  cells[c,r]:='';
+  Prefill.MaxValue:=N*N;
+  Prefill.MinValue:=0;
+  genbtnclick(sender);
+end;
+
+
+  function lettercount(s:string):integer;
+  var i:integer;
+  begin
+    result:=0;
+    //for i:=1 to length(s) do if s[i] in ['A'..'Z'] then inc(result);
+    for i:=1 to length(s) do if (s[i] > 'A') and (s[i] < 'Z') then inc(result);
+
+  end;
+
+
+{************ SetUpCase **********}
+procedure SetupCase(Rec:TCaserec);
+var
+  C,R:integer;
+  ch:char;
+
+begin  {SetupCase}
+  with rec do
+  begin
+    fillletters:=uppercase(fillletters);
+    sortstrup(fillLetters);
+    gridletters:=uppercase(gridletters);
+    if (size>=3) and (size<=5)
+    and (length(fillletters)+lettercount(GridLetters)=size*size)
+    then begin
+      Unused.text:=FillLetters;
+      size:=sizegrp.ItemIndex+3;
+      with Grid do
+      begin
+        colcount:=size;
+        rowcount:=size;
+        for r:=0 to size-1 do
+        for c:=0 to size-1 do
+        begin
+          ch:=rec.gridletters[size*r+c+1];
+          if  ch='.' then cells[c,r]:=''
+          else cells[c,r]:=ch;
+        end;
+      end;
+    end
+    else
+    showmessage('Error in case definition, Size must be 3, 4, or 5 and GridLetters + FillLetters must be Size*Size');
+    solutionmemo.sendtoback;
+    label4.Caption:='0 solutions found';
+  end;
+end;
+
+{********** SetupGridLetters *************}
+procedure setupGridLetters(var caserec:TCaseRec; NewDeck:boolean);
+  var
+    i,c:integer;
+  begin
+    with caserec do begin
+      gridletters:=solution;
+      if newdeck then begin
+        setlength(deck,size*size );
+        for i:=0 to size*size-1  do deck[i]:=i+1;
+        shuffle(deck);
+      end;
+      fillLetters:='';
+      for i:=0 to length(solution) -PreFill.value-1 do begin
+        c:=deck[i];
+        fillLetters:=fillLetters+solution[c];
+        gridletters[c]:='.'
+      end;
+    end;
+  end;
+
+{******** SetBusy ***********}
+procedure setbusy(L,T:integer);
+  begin
+    with stopPanel do
+    begin
+      top:=T;
+      Left:=L;
+      visible:=true;
+    end;
+  end;
+
+{************ SetUnBusy **********}
+procedure SetUnbusy;
+  begin
+    stopPanel.visible:=false;
+  end;
+
+{********** IsBusy **********}
+
+function IsBusy:boolean;
+begin
+  result:=StopPanel.visible;
+end;
+
+
+procedure StaticText1Click(Sender: TObject);
+begin
+  ShellExecute(hinstance, 'open', 'http://www.delphiforfun.org/',
+  '', '0', SW_SHOWNORMAL);
+  ShellExecute(0,'OPEN',PChar(Paramstr(0)),PChar(Paramstr(it)),'',sw_Show);
+end;
+
+procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+  CanClose:=true;
+end;
+
+procedure ResetBtnClick(Sender: TObject);
+begin
+  Setupcase(currentcase);
+end;
+
+
+procedure loadsqForm;
+begin
+ sqFrm:= TForm.create(self);
+  with sqfrm do begin
+  Left:= 495
+  Top:= 202
+  AutoScroll:= False
+  Caption:= 'fgenbtnclick'
+  ClientHeight := 728
+  ClientWidth := 974
+  Color := clBtnFace
+  Font.Charset := DEFAULT_CHARSET
+  Font.Color := clWindowText
+  Font.Height := -20
+  Font.Name := 'Arial'
+  Font.Style := []
+  OldCreateOrder := False
+  Position := poScreenCenter
+  OnActivate:= @FormActivate
+  OnCloseQuery := @FormCloseQuery
+  OnCreate := @FormCreate
+  PixelsPerInch := 120
+  TextHeight('23') // := 23
+  show;
+  end;
+  
+  StaticText1:= TStaticText.create(sqfrm)
+  with StaticText1 do begin
+    setBounds(0,705,974,23)
+    parent:= sqfrm;
+    Cursor := crHandPoint
+    Align := alBottom
+    Alignment := taCenter
+    Caption := 'Copyright '#169' 2014, Gary Darby,  www.DelphiForFun.org'
+    Font.Charset := DEFAULT_CHARSET
+    Font.Color := clBlue
+    Font.Height := -17
+    Font.Name := 'Arial'
+    Font.Style := [fsBold, fsUnderline]
+    ParentFont := False
+    TabOrder := 0
+    OnClick := @StaticText1Click
+  end;
+  Panel1:= TPanel.create(sqfrm)
+  with panel1 do begin
+    parent:= sqfrm;
+    setBounds(0,0,974,705)
+    Align := alClient
+    TabOrder := 1
+    Label4:= TLabel.create(sqfrm)
+  end;
+    with label4 do begin
+      parent:= panel1
+      setBounds(496,634,150,23)
+      Caption := '0 Solutions found'
+    end;
+    SolutionMemo:= TMemo.create(sqfrm)
+    with solutionmemo do begin
+      parent:= panel1
+      setbounds(16,512,457,185)
+      Lines.add('')
+      TabOrder := 8
+    end;
+    SearchBtn:= TButton.create(sqfrm)
+    with searchbtn do begin  
+      parent:= panel1
+      setbounds(488,536,209,57)
+      Caption := 'Let the program solve this puzzle'
+      Font.Charset := DEFAULT_CHARSET
+      Font.Color := clWindowText
+      Font.Height := -20
+      Font.Name := 'Arial'
+      Font.Style := [fsBold]
+      ParentFont := False
+      TabOrder := 7
+      //WordWrap := True
+      OnClick := @SearchBtnClick
+    end;
+    Memo22:= TMemo.create(sqfrm)
+    with memo22 do begin
+      parent:= panel1
+      setbounds(16,16,449,673)
+      Color := 15400959
+      Font.Charset := DEFAULT_CHARSET
+      Font.Color := clWindowText
+      Font.Height := -17
+      Font.Name := 'Arial'
+      Font.Style := []
+      Lines.add(
+        'Square Word Grids are an an extension of our '
+        +'Word Squares program previously explored.  "Word'
+        +'Squares" are square grids filled the same set of'
+        +'words in both the horizontal and vertical directions;'
+        +'1st row same as 1st column, 2nd row matches 2nd'
+        +'column, etc.'
+        +''+CRLF+CRLF
+        +'"Square Word Grids" still have words in every row '
+        +'and column, but not necessarily the same words.   '
+        +'These are harder to build and to solve because the'
+        +'search space for possible words is much larger.'
+        +'Many results for smaller grids will also be "Word'
+        +'Squares"!'
+        +' '+CRLF+CRLF
+        +'The program provides your choice of two dictionary'
+        +'sizes. Grids can be 3x3, 4x4, or 5x5 letters in size.'
+        +'An initial 3x3 default puzzle with one letter pre-filled is'
+        +'presented.  Users are given the set of unplaced letters'
+        +'with which to complete the grid by selecting a grid cell '
+        +'with Mouse clicks or arrow keys.   Pressing the "Del" or '
+        +'"Space" keys or typing over'
+        +'an already placed letter will return it to the'
+        +'"Unused" string.  If you get stuck, you can see more'
+        +'letters by increasing the  "Prefilled Letters" box'
+        +'value.'
+        +''+CRLF+CRLF
+        +'Generate will generate a new random puzzle using'
+        +'current parameters.  Larger puzzles with the large'
+        +'dictionary may take a minute or two.  The "Let'
+        +'program solve" button may take a very long time to'
+        +'solve a large puzzle.  Once every minutes it will offer '
+        +'to "cheat" and display the solution found by the '
+        +'Generate button.  Either Generate or Solve '
+        +'operations may be interrupted by clicking on the'
+        +'"Stop" button.')
+      ParentFont := False
+      ScrollBars := ssVertical
+      TabOrder := 0
+    end;
+    GenBtn:= TButton.create(sqfrm)
+    with genbtn do begin
+      parent:= panel1
+      setbounds(480,416,209,89)
+      Caption := 'Generate a new puzzle using given size and dictionary'
+      Font.Charset := DEFAULT_CHARSET
+      Font.Color := clWindowText
+      Font.Height := -20
+      Font.Name := 'Arial'
+      Font.Style := [fsBold]
+      ParentFont := False
+      TabOrder := 1;
+      //WordWraps(caption,'') // := True
+      OnClick := @genBtnClick
+    end;
+    Grid:= TStringGrid.create(sqfrm)
+    with grid do begin
+      parent:= panel1
+      setbounds(712,416,153,153)
+      ColCount := 3
+      DefaultColWidth := 48
+      DefaultRowHeight := 48
+      DefaultDrawing := False
+      FixedCols := 0
+      RowCount := 3
+      FixedRows := 0
+      Font.Charset := DEFAULT_CHARSET
+      Font.Color := clWindowText
+      Font.Height := -40
+      Font.Name := 'Arial'
+      Font.Style := []
+      Options := [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing]
+      ParentFont := False
+      ScrollBars := ssNone
+      //TabOrder := 2
+      OnDrawCell := @GridDrawCell
+      OnKeyDown := @GridKeyDown
+      OnKeyPress := @GridKeyPress
+    end;
+    UserPlayGrp:= TGroupBox.create(sqfrm)
+    with UserPlayGrp do begin
+      parent:= panel1
+      setbounds(480,232,473,169)
+      Caption := 'User play'
+      Font.Charset := DEFAULT_CHARSET
+      Font.Color := clWindowText
+      Font.Height := -20
+      Font.Name := 'Arial'
+      Font.Style := [fsBold]
+      ParentFont := False
+      TabOrder := 3
+      end;
+      with TLabel.create(sqfrm) do begin
+        parent:= UserPlayGrp
+        setbounds(24,120,61,24)
+        Caption := 'Pre-fill'
+      end;
+      with TLabel.create(sqfrm) do begin
+        parent:= UserPlayGrp
+        setbounds(160,120,66,24)
+        Caption := ' letters'
+      end;
+      with TLabel.create(sqfrm) do begin
+        parent:= UserPlayGrp
+        setbounds(16,40,365,24)
+        Caption := 'Enter letters in grid using these letters'
+      end;
+      Prefill:= TSpinEdit.create(sqfrm);
+      with prefill do begin
+        parent:= UserPlayGrp
+        setbounds(96,115,57,35)
+        MaxValue := 9
+        MinValue := 0
+        TabOrder := 0
+        Value := 1
+        //OnChange := @PrefillChange   Syntax Check not completed
+      end;
+      Unused:= TEdit.create(sqfrm)
+      with unused do begin
+        parent:= UserPlayGrp
+        setbounds(16,72,353,32)
+        CharCase := ecUpperCase
+        TabOrder := 1
+        Text := 'BAAENRTUY'
+      end;
+      ResetBtn:= TButton.create(sqfrm)
+      with resetbtn do begin  
+        parent:= UserPlayGrp
+        setbounds(312,120,129,25)
+        Caption := 'Start over'
+        TabOrder := 2
+        OnClick := @ResetBtnClick
+      end;
+    //end;
+    StopPanel:= TPanel.create(sqfrm)
+    with stoppanel do begin  
+      parent:= panel1
+      setbounds(736,40,209,97)
+      BorderWidth := 2
+      BorderStyle := bsSingle
+      Caption := 'STOP'
+      Color := clMoneyGreen
+      //UseDockManager := False;
+      FullRepaint := False
+      Font.Charset := DEFAULT_CHARSET
+      Font.Color := clWindowText
+      Font.Height := -25
+      Font.Name := 'Arial'
+      Font.Style := [fsBold]
+      ParentFont := False
+      TabOrder := 4
+      Visible := False
+      OnClick := @StopPanelClick
+    end;
+    DicGrp:= TRadioGroup.create(sqfrm)
+    with dicgrp do begin
+      parent:= panel1
+      setbounds(480,24,457,97)
+      Caption := 'Select Dictionary'
+      ItemIndex := 0
+      Items.add('Medium Dictionary')
+      items.add('Large Dictionary')
+      TabOrder := 5
+      OnClick := @DicGrpClick
+    end;
+    Sizegrp:= TRadioGroup.create(sqfrm)
+     with sizegrp do begin
+      parent:= panel1
+      setbounds(480,144,473,65)
+      Caption := 'Puzzle size'
+      Columns := 3
+      ItemIndex := 0
+      Items.add('3x3')
+      items.add('4x4')
+      items.add('5x5')
+      TabOrder := 6
+      OnClick := @SizegrpClick
+    end; 
+  end;
+
+
+var newctype: TCombotype;
+   //bigint: TInteger;
+   //adig: tdigit;
+
+begin
+       
+       //  Selected: ByteArray;
+  
+       newctype:= CombinationsCoLex;
+       //writeln(TCombotype('2'));
+     
+       //writeln(inttostr(ord(newctype(2))));
+       writeln(inttostr(ord(newctype)));
+       
+       writeln(floattostr(permutations(4,2)))
+       writeln(floattostr(combinations(4,2)))
+ 
+       writeln(floattostr(permutations(16,4)))
+       writeln(floattostr(combinations(16,4)))
+       writeln(floattostr(permutations(18,4)))
+       writeln(floattostr(combinations(18,4)))
+ 
+       with TComboset.create do begin
+         writeln(inttostr(GetRPermute(4,18)))
+         writeln(inttostr(GetRCombo(4,18)))
+         Free;
+       end;
+   //SetBaseVal(const newbase: integer);
+   //GetBasePower: integer;
+   //GetBase:integer;
+   //SetThreadSafe(newval:boolean);
+       
+       //;
+       
+    // procedure loadsqForm;  
+    loadsqForm;
+end.
+
+(* 180 lines of bad code to find a solution - worked fine for 3x3 but would
+   require 16! (over 20 trillion!} tests of permuted letters to solve a 4x4 puzzle}
+{*********** SearchBtnClick ************}
+procedure TForm1.SearchBtnClick(Sender: TObject);
+var
+  letters:string;
+  c,r:integer;
+  list, templist:TStringlist;
+  AllLists:array of TStringList;
+  stopflag:boolean;
+
+  {------------ FindNextWordList -----------}
+  function FindNextWord(list:TStringlist; var letters:string):boolean;
+  {recursive function to find the next of the N words to make a solution candidate}
+   {Each word found using the available "letters" is added to the "List" , those letters removed
+    from "Letters" string and the recursive call made.  When no letters remain, check for
+    a solution by seein if any arrangement of the list words into rows also produces valid
+    words in the correcsponding columns}
+    var
+    newletters:string;
+    combo:TComboset;
+    i, len, x, c, r:integer;
+    w:string;
+    OK:boolean;
+
+  begin
+    result:=false;
+    if stopflag then exit;
+    len:=length(letters);
+    combo:=TComboSet.create;
+    if len=0 then
+    with combo do
+    begin
+      result:=false;
+      ok:=false;
+      {check if this set of words could be a solution}
+      {some permutation of the N words in the list must also produce N words
+      when search columnwise}
+      setup(n,n,permutations);
+      while getnext do
+      begin
+        OK:=true;
+        templist.Clear;
+        for i:= 1 to n do templist.add(list[selected[i]-1]);
+        {templist is now loaded with the permuted words}
+        {check if the columns form words}
+        for c:=1 to n do
+        begin  {for each column of the permuted word order}
+          w:='';
+          for i:=0 to n-1 do w:=w+templist[i][c];
+          if not pubdic.lookup(w) then
+          begin
+            ok:=false;
+            break;
+          end;
+          if not OK then break;
+        end;
+        If OK then break; {found a set, stop checking}
+      end;
+
+      {check for word set already checked}
+      if OK then
+      with templist  do
+      begin
+        OK:=true;
+        for i:=0 to high(Alllists) do
+        if allLists[i].text=text then
+        begin  {We have already found this arrangement}
+          OK:=false;
+          break;
+        end;
+      end;
+
+
+      If OK then
+      with Grid do
+      for c:=0 to colcount-1 do
+      begin  {Check potential solution against pre-filled grid letters}
+        for r:=0 to rowcount-1 do
+        begin
+          if (trim(cells[c,r])<>'') and (cells[c,r][1]<>templist[r][c+1]) then
+          begin
+            ok:=false;
+            break;
+          end;
+        end;
+        if not OK then break;
+      end;
+
+      if OK then
+      begin
+        setlength(Alllists, length(allLists)+1);
+        allLists[high(allLists)]:=TStringList.Create;
+        alllists[high(alllists)].text:=templist.text;
+        //if length(alllists)<=100 then
+        begin
+          w:=list[list.count-1];
+          stopflag:=true;
+          //memo2.lines.add('Solution found!');
+          with grid do
+          for r:=0 to templist.count-1 do
+          begin
+            w:=templist[r];
+            for c:=1 to N do cells[c-1,r]:=w[c];
+
+          //memo2.lines.add('------------');
+          //if messagedlg('Continue searching?', mtconfirmation,[mbyes,mbno],0)=mrno
+          //   then stopflag:=true;
+          end;
+          unused.text:='';
+        end;
+        //label3.caption:=format('%d sets found',[length(alllists)]);
+        //label3.update;
+        list.delete(list.Count-1);
+        result:=true;
+      end;
+    end
+    else
+    begin
+      combo.setup(N,length(Letters),permutations);
+      //Check all permutaions choosing N of Len letters as valid words
+      with combo, pubdic do
+      while getnext do
+      begin
+        application.processmessages;
+        if tag<>0 then break;
+        w:='';
+        for i:=1 to N do w:=w +letters[selected[i]];
+        If lookup(W) then
+        begin
+          list.add(w); {add word to list}
+          newletters:=letters;
+          for i:=1 to N do
+          begin  {delete word letters from newletters}
+            x:=pos(w[i],newletters);
+            delete(newletters,x,1);
+          end;
+          result:=findnextword(list,newletters);
+          if not result then  list.delete(list.count-1)
+          else break; {stop if solution has been found}
+          //if result then break;
+        end;
+      end;
+    end;
+    combo.free;
+  end;
+
+begin  {SearchBtnClick}
+  {count letters placed in grid plus letters in edit area.  Must equal NxN for NxN grid}
+  {Make list of all possible N letter words}
+  Setupcase(currentcase);
+  with stopPanel do
+  begin
+    top:=searchbtn.top;
+    Left:=Searchbtn.Left;
+    visible:=true;
+  end;
+  letters:=Unused.text;
+  N:=spinedit1.value;
+  tag:=0;
+  with Grid do
+  for c:=0 to colcount-1 do
+  for r:=0 to rowcount-1 do
+  if  (length(cells[c,r])>0) and (cells[c,r][1] in ['A'..'Z'])
+  then letters:=letters+cells[c,r][1];
+  if length(letters)<> N*N
+  then showmessage(format('There must be %d letters in grid + letters area',[N*N]))
+  else
+  begin
+    list:=TStringList.create;
+    templist:=TStringlist.create;
+    stopflag:=false;
+    screen.cursor:=crHourGlass;
+    findNextWord( list,letters);
+    screen.cursor:=crDefault;
+    {Find sets of NxN words which use all letters}
+    {Find the sets that can be placed on the grid (honoring pre-placed letters}
+    list.Free;
+    templist.Free;
+  end;
+  stoppanel.visible:=false;
+end;
+*)

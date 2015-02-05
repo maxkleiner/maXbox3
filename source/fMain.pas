@@ -123,6 +123,7 @@
          10288      build 120 8 units more, panview, planets, ActiveX 
          10332      build 160 5 units ,hirestimer, unit converter , parser form, upsutils
          10356      build 160_1 1 units ,DOS redirecter, createprocess , servicemanager
+         10370      build 180 3 units ,BigNumbers, Dictionary
 
                   [the last one before V4 in 2015]
                    V4.0   in  July 2015
@@ -172,9 +173,9 @@ const
    ALLUNITLIST = 'docs\maxbox3_9.xml'; //'in /docs;
    INCLUDEBOX = 'pas_includebox.inc';
    BOOTSCRIPT = 'maxbootscript.txt';
-   MBVERSION = '3.9.9.160';
+   MBVERSION = '3.9.9.180';
    MBVER = '399';              //for checking!
-   MBVER2 = '399160';              //for checking!
+   MBVER2 = '399180';              //for checking!
    EXENAME ='maXbox3.exe';
    MXSITE = 'http://www.softwareschule.ch/maxbox.htm';
    MXVERSIONFILE = 'http://www.softwareschule.ch/maxvfile.txt';
@@ -938,7 +939,7 @@ uses
   uPSR_std,
   uPSC_std,
   uPSR_stdctrls,
-  uPSC_stdctrls,    //listbox   , memo
+  uPSC_stdctrls,    //listbox   , memo , button
   uPSC_classes,   //memory stream
   uPSR_classes,
   uPSR_forms,
@@ -1954,6 +1955,10 @@ uses
   uPSI_ParserU,
   uPSI_TypInfo,
   uPSI_ServiceMgr,
+  uPSI_UDict,
+  uPSI_ubigFloatV3,
+  uPSI_UBigIntsV4,
+  uPSI_UP10Build, //3.9.9.180
 
   ///
    //MDIFrame,
@@ -3064,6 +3069,10 @@ begin
  SIRegister_ParserU(X);
  SIRegister_TypInfo(X);
  SIRegister_ServiceMgr(X);
+ SIRegister_UDict(X);
+  SIRegister_ubigFloatV3(X);
+  SIRegister_UBigIntsV4(X);
+  SIRegister_UP10Build(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4454,6 +4463,11 @@ begin
   RIRegister_ParserU(X);
   RIRegister_TypInfo_Routines(Exec); //last
   RIRegister_ServiceMgr(X);
+  RIRegister_UDict(X);
+  RIRegister_ubigFloatV3(X);
+  RIRegister_UBigIntsV4(X);
+  RIRegister_UBigIntsV4_Routines(Exec);  //last 180
+  RIRegister_UP10Build_Routines(Exec);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -5475,7 +5489,6 @@ begin
   Sender.AddFunction(@wget2,'function wget2(aURL, afile: string): boolean;');
   Sender.AddFunction(@DownloadFileOpen,'function wgetX(aURL, afile: string): boolean;');
   Sender.AddFunction(@DownloadFile,'function wgetX2(aURL, afile: string): boolean;');
-
   Sender.AddFunction(@PrintList,'procedure PrintList(Value: TStringList);');
   Sender.AddFunction(@PrintImage,'procedure PrintImage(aValue: TBitmap; Style: TBitmapStyle);');
   Sender.AddFunction(@getEnvironmentInfo,' procedure getEnvironmentInfo;');
@@ -5495,6 +5508,7 @@ begin
   Sender.AddFunction(@SetArrayLength2Integer2,'procedure Set2DimIntArray(var arr: T2IntegerArray; asize1, asize2: integer);');
   Sender.AddFunction(@Set3DimIntArray,'procedure Set3DimIntArray(var arr: T3IntegerArray; asize1, asize2, asize3: integer);');
   Sender.AddFunction(@Set3DimStrArray,'procedure Set3DimStrArray(var arr: T3StringArray; asize1, asize2, asize3: integer);');
+  Sender.AddFunction(@SetArrayLength2Char2,'procedure SetArrayLength2Char2(var arr: T2CharArray; asize1, asize2: integer);');
 
   Sender.AddFunction(@SaveAsExcelFile,'function SaveAsExcelFile(AGrid: TStringGrid; ASheetName, AFileName: string; open: boolean): Boolean;');
   Sender.AddFunction(@SaveAsExcelFile,'function SaveAsExcel(aGrid: TStringGrid; aSheetName, aFileName: string; openexcel: boolean): Boolean;');

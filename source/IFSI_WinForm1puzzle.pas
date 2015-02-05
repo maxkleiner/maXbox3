@@ -59,6 +59,8 @@ type
 
    T2StringArray = array of array of string;
    T2IntegerArray = array of array of integer;
+   T2CharArray = array of array of char;
+
 
    T3StringArray = array of array of array of string;
    T3IntegerArray = array of array of array of integer;
@@ -298,6 +300,7 @@ procedure SetArrayLength2String(arr: T2StringArray; asize1, asize2: integer);
 procedure SetArrayLength2Integer(arr: T2IntegerArray; asize1, asize2: integer);
 procedure SetArrayLength2String2(var arr: T2StringArray; asize1, asize2: integer);
 procedure SetArrayLength2Integer2(var arr: T2IntegerArray; asize1, asize2: integer);
+procedure SetArrayLength2Char2(var arr: T2CharArray; asize1, asize2: integer);
 procedure Set3DimIntArray(var arr: T3IntegerArray; asize1, asize2, asize3: integer);
 procedure Set3DimStrArray(var arr: T3StringArray; asize1, asize2, asize3: integer);
 
@@ -2609,6 +2612,14 @@ begin
 end;
 
 procedure SetArrayLength2Integer2(var arr: T2IntegerArray; asize1, asize2: integer);
+var i: integer;
+begin
+   setlength(arr, asize1);
+   for i:= 0 to asize1 do
+     SetLength(arr[i], asize2);
+end;
+
+procedure SetArrayLength2Char2(var arr: T2CharArray; asize1, asize2: integer);
 var i: integer;
 begin
    setlength(arr, asize1);
@@ -5872,6 +5883,7 @@ begin
   CL.AddTypeS('TBitmapStyle','(bsNormal, bsCentered, bsStretched)');
   CL.AddTypeS('T2IntegerArray', 'array of array of integer;');
   CL.AddTypeS('T2StringArray', 'array of array of string;');
+  CL.AddTypeS('T2CharArray', 'array of array of char;');
   CL.AddTypeS('T3IntegerArray', 'array of array of array of integer;');
   CL.AddTypeS('T3StringArray', 'array of array of array of string;');
 

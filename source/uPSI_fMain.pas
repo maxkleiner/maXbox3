@@ -706,10 +706,10 @@ begin
  CL.AddConstantN('ALLUNITLIST','String').SetString( 'docs\maxbox3_9.xml');
  CL.AddConstantN('INCLUDEBOX','String').SetString('pas_includebox.inc');
  CL.AddConstantN('BOOTSCRIPT','String').SetString('maxbootscript.txt');
- CL.AddConstantN('MBVERSION','String').SetString('3.9.9.160');
- CL.AddConstantN('VERSION','String').SetString('3.9.9.160');
- CL.AddConstantN('MBVERIALL','Integer').SetInt(399160);
- CL.AddConstantN('MBVER2','String').SetString('399160');
+ CL.AddConstantN('MBVERSION','String').SetString('3.9.9.180');
+ CL.AddConstantN('VERSION','String').SetString('3.9.9.180');
+ CL.AddConstantN('MBVERIALL','Integer').SetInt(399180);
+ CL.AddConstantN('MBVER2','String').SetString('399180');
  CL.AddConstantN('EXENAME','String').SetString( 'maXbox3.exe');
  CL.AddConstantN('MXINTERNETCHECK','String').SetString( 'www.ask.com');
  CL.AddConstantN('MBVER','String').SetString('399');

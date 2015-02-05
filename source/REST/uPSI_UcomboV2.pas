@@ -50,6 +50,7 @@ procedure SIRegister_TComboSet(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TObject', 'TComboSet') do
   with CL.AddClassN(CL.FindClass('TObject'),'TComboSet') do begin
+    //RegisterProperty('Selected', 'TByteArray64 Integer', iptrw);
     RegisterProperty('Selected', 'TByteArray64', iptrw);
     RegisterProperty('RandomRank', 'int64', iptrw);
     RegisterMethod('Procedure Setup( newR, newN : word; NewCtype : TComboType)');
@@ -111,13 +112,14 @@ end;
 procedure SIRegister_UcomboV2(CL: TPSPascalCompiler);
 begin
  CL.AddConstantN('UMaxEntries','LongInt').SetInt( 600);
-  CL.AddTypeS('TCombotype', '( Combinations, Permutations, CombinationsDown, Pe'
+  CL.AddTypeS('TCombotype', '( uCombinations, uPermutations, CombinationsDown, Pe'
    +'rmutationsDown, CombinationsCoLex, CombinationsCoLexDown, PermutationsRepe'
-   +'at, PermutationsWithRep, PermutationsRepeatDown, CombinationsWithrep, Comb'
-   +'inationsRepeat, CombinationsRepeatDown )');
+   +'at, PermutationsWithRep, PermutationsRepeatDown, CombinationsWithrep, CombinationsRepeat, CombinationsRepeatDown )');
   CL.AddTypeS('TByteArray64', 'array[0..600 + 1] of int64;');
   SIRegister_TComboSet(CL);
 end;
+
+  //type TByteArray64 = ByteArray;
 
 (* === run-time registration functions === *)
 (*----------------------------------------------------------------------------*)
@@ -128,19 +130,31 @@ Begin Self.RandomRank := T; end;
 procedure TComboSetRandomRank_R(Self: TComboSet; var T: int64);
 Begin T := Self.RandomRank; end;
 
+//procedure TLinearBitmapPixelColor_W(Self: TLinearBitmap; const T: TColor; const t1: Integer; const t2: Integer);
+//begin Self.PixelColor[t1, t2] := T; end;
+
+
+{
 (*----------------------------------------------------------------------------*)
-procedure TComboSetSelected_W(Self: TComboSet; const T: ByteArray);
-Begin Self.Selected := T; end;
+procedure TComboSetSelected_W(Self: TComboSet; const T: ByteArray; const t1: integer);
+Begin Self.Selected[t1] := T[t1]; end;
 
 (*----------------------------------------------------------------------------*)
-procedure TComboSetSelected_R(Self: TComboSet; var T: ByteArray);
+procedure TComboSetSelected_R(Self: TComboSet; var T: ByteArray; const t1: integer);
+Begin T[t1] := Self.Selected[t1]; end;
+}
+
+procedure TComboSetSelected_W(Self: TComboSet; const T: TByteArray64);
+Begin Self.Selected:= T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TComboSetSelected_R(Self: TComboSet; var T: TByteArray64);
 Begin T := Self.Selected; end;
 
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TComboSet(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TComboSet) do
-  begin
+  with CL.Add(TComboSet) do begin
     RegisterPropertyHelper(@TComboSetSelected_R,@TComboSetSelected_W,'Selected');
     RegisterPropertyHelper(@TComboSetRandomRank_R,@TComboSetRandomRank_W,'RandomRank');
     RegisterMethod(@TComboSet.Setup, 'Setup');

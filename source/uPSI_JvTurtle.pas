@@ -63,6 +63,7 @@ begin
     RegisterProperty('Heading', 'Real', iptrw);
     RegisterProperty('PenDown', 'Boolean', iptrw);
     RegisterProperty('PenWidth', 'Integer', iptrw);
+    RegisterProperty('PenColor', 'TColor', iptrw);
     RegisterMethod('Function DoCom : string');
     RegisterMethod('procedure SetPos(x,y: integer);');
     RegisterMethod('Procedure Turn( AAngle : Real)');
@@ -131,6 +132,14 @@ procedure TJvTurtlePenWidth_R(Self: TJvTurtle; var T: Integer);
 begin T := Self.PenWidth; end;
 
 (*----------------------------------------------------------------------------*)
+procedure TJvTurtlePenColor_W(Self: TJvTurtle; const T: TColor);
+begin Self.canvas.Pen.Color := T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TJvTurtlePenColor_R(Self: TJvTurtle; var T: TColor);
+begin T := Self.canvas.Pen.Color; end;
+
+(*----------------------------------------------------------------------------*)
 procedure TJvTurtlePenDown_W(Self: TJvTurtle; const T: Boolean);
 begin Self.PenDown := T; end;
 
@@ -189,6 +198,7 @@ begin
     RegisterPropertyHelper(@TJvTurtleHeading_R,@TJvTurtleHeading_W,'Heading');
     RegisterPropertyHelper(@TJvTurtlePenDown_R,@TJvTurtlePenDown_W,'PenDown');
     RegisterPropertyHelper(@TJvTurtlePenWidth_R,@TJvTurtlePenWidth_W,'PenWidth');
+    RegisterPropertyHelper(@TJvTurtlePenColor_R,@TJvTurtlePenColor_W,'PenColor');
     RegisterMethod(@TJvTurtle.DoCom, 'DoCom');
     RegisterMethod(@TJvTurtle.SetPos, 'SetPos');
     RegisterMethod(@TJvTurtle.Turn, 'Turn');

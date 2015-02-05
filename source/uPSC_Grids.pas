@@ -1,7 +1,7 @@
 unit uPSC_Grids;
 {
 code implementing the class wrapper is taken from Carlo Kok's conv utility
-   canvas and parent and more properties in    mX3.1  EditorMode
+   canvas and parent and more properties in    mX3.1  EditorMode   , setfocus
 }
 interface
 Uses uPSCompiler;
@@ -50,6 +50,7 @@ begin
     RegisterMethod('function MouseCoord(X, Y: Integer): TGridCoord;');
     RegisterMethod('Function CellRect( ACol, ARow : Longint) : TRect');
     RegisterMethod('Procedure MouseToCell( X, Y : Integer; var ACol, ARow : Longint)');
+    RegisterMethod('Procedure SetFocus');
     RegisterProperty('Cells', 'string Integer Integer', iptrw);
     RegisterProperty('Cols', 'TStrings Integer', iptrw);
     RegisterProperty('Col', 'Integer', iptrw);
@@ -94,7 +95,10 @@ begin
     RegisterMethod('Procedure Repaint;');
     RegisterMethod('procedure SetBounds(x,y,w,h: Integer);virtual;');
     RegisterMethod('Procedure Invalidate');
-    RegisterProperty('Parent', 'TWinControl', iptRW);
+    //RegisterMethod('Procedure Invalidate');
+    RegisterMethod('Procedure SetFocus');
+    RegisterMethod('procedure UpdateLoc(const Loc: TRect);');
+     RegisterProperty('Parent', 'TWinControl', iptRW);
     RegisterProperty('Canvas', 'TCanvas', iptr);
     //RegisterProperty('Cells', 'string Integer Integer', iptrw);
     RegisterProperty('ColWidths', 'Integer Integer', iptrw);
