@@ -49,6 +49,12 @@ begin
   RegisterComponents('Pascal Script', [TPSImport_IdStack]);
 end;
 
+function CreateIDStack: TIdStack;
+begin
+  Result:= GStackClass.Create;
+end;
+
+
 (* === compile-time registration functions === *)
 (*----------------------------------------------------------------------------*)
 procedure SIRegister_TIdStack(CL: TPSPascalCompiler);

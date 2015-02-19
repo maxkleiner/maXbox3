@@ -1,0 +1,539 @@
+PROGRAM TShellTreeView_myTurtle123_seqPlus;
+// task: design each number from 0..10
+// process: download --> include --> loop #locs:486
+// #sign:Administrator: PC08: 18/02/2015 10:39:30 PM 
+//http://rvelthuis.de/help/shtrees.html
+
+  //TODO:   Shelltreeview1.Items[Lcount].Expand(True); items is missing!
+  
+
+var cfrm: TForm;
+
+//function DownloadFile(SourceFile, DestFile: string): Boolean;
+
+procedure TCustomShellTreeView_SetPath(const Value: string);
+var
+  P: Char;
+  //NewPIDL: PItemIDList;
+  Flags,
+  NumChars: LongWord;
+  DesktopShellFolder: TShellFolder;
+begin
+  NumChars := Length(Value);
+  Flags := 0;
+  //P := StringToOleStr(Value);
+  try
+    {OLECheck(DesktopShellFolder.ParseDisplayName(
+        0,
+        nil,
+        P,
+        NumChars,
+        NewPIDL,
+        Flags)
+     );   }
+    // DELPHI 6 PRO - Orginalquellcode
+    // FUpdating := True;
+    //FUpdating := false;
+
+    //SetPathFromID(NewPIDL);
+  except //on EOleSysError do
+    //raise EInvalidPath.CreateFmt(SErrorSettingPath, [Value]);
+  end;
+  //FUpdating := False;
+end;
+
+function NormalizePath(const Path: string): string;
+begin
+  Result := Path;
+  case Length(Result) of
+    0 : {AppError('Path can not be an empty string')};
+    //1 : if (UpCase(Result[1]) in ['A'..'Z']) then
+    1 : if (UpCase(Result[1]) > 'A') and (UpCase(Result[1]) < 'Z') then
+
+          Result := Result + ':\';
+    //2 : if (UpCase(Result[1]) in ['A'..'Z']) then
+    2 : if (UpCase(Result[1]) > 'A') and (UpCase(Result[1]) < 'Z') then
+
+          if Result[2] = ':' then
+            Result := Result + '\';
+    else
+        if not (Result[Length(Result)] = '\') then
+           Result := Result + '\';
+  end;
+end;
+
+
+procedure idetest;
+var mxc: TClass;
+begin
+  //mxc:= TFont;
+(*{var BorlandIDEServices: TBorlandIDEServices;
+begin
+  with (BorlandIDEServices as IOTAPackageServices) do
+  begin
+    for a := 0 to GetPackageCount - 1 do
+    begin
+      for i := 0 to GetComponentCount(a) - 1 do
+      begin
+        {get each component name with GetComponentName(a, i);}
+      end; 
+    end; *)
+    //if IsPublishedProp
+    Screen.ActiveControl;
+    Screen.onActiveFormChange 
+    //ModifyFont(ctrl);
+  end;
+ 
+
+procedure downloadnumbers;
+begin
+  if DownloadFile('http://192.168.1.43:9000/Nr9_Damian.inc',
+        Exepath+'\examples\ibznumbers\Nr9_Damian.inc') then
+      writeln('Download succesful!') else 
+       writeln('Download NOT succesful!');
+  UrlDownloadToFile(Nil,'http://192.168.1.43:9000/Nr9_Damian.inc',
+     Exepath+'\examples\ibznumbers\Nr9_Damian.inc',0,Nil);
+                   
+  writeln(inttostr(UrlDownloadToFile(Nil,'http://192.168.1.43:9000/Nr9_Damian.inc',Exepath+'\examples\ibznumbers\Nr9_Damian.inc',0,Nil)));
+     
+end;    
+
+procedure shellctrlclick(sender: TObject);
+begin
+   writeln(TShellTreeView(sender).SelectedFolder.PathName);
+end;      
+
+procedure LoadForm;
+var rote: TRootFolder;
+   ashellctrl: TShellTreeView;
+begin
+  cFrm:= TForm.create(self);
+  try
+    with cFrm do begin
+      caption:= '((((SHELL_TREE_VIEW PLUS))))';  
+      height:= 600;
+      width:= 600;
+      color:= clblack;
+      Position:= poScreenCenter;
+      show;
+    end;
+    
+    //ashellctrl.InnerTreeView;
+    
+    with TShellTreeView.create(self) do begin
+      parent:= cFrm;
+      setbounds(10,20,300,370)
+      ShowRoot:= true;
+      //ViewStyle:= VSreport;
+    //with InnerTreeView do
+    //begin
+       {Items.BeginUpdate;
+       try
+         FullExpand;
+       finally
+         Items.EndUpdate;
+       end; }
+       Items.BeginUpdate;
+       try
+         Items[1].Expand(True);
+       finally
+         Items.EndUpdate;
+       end
+       onclick:=  @shellctrlclick;
+        writeln(SelectedFolder.PathName);
+    
+      //Fullexpand;    very time consuming
+      //rfdesktop
+      //RootFolder:= rfPrograms;
+    end;
+  except
+    Exit;
+  end  
+end;
+
+procedure TForm1_ShellTreeView1Click(Sender: TObject);
+var
+  tree : TTreenode; 
+  temp : integer;
+  //label exit1;
+  ShelltreeView1: TShelltreeView;
+  edit1: TEdit;
+  lcount: integer;
+  anode: TTreenodes;
+begin
+  tree := ShelltreeView1.TopItem;
+  temp := 0;
+  if ShellTreeView1 = nil then exit; // this does stop exception?!
+  Shelltreeview1.Items[Lcount].Expand(True);
+  while temp < ShelltreeView1.Items.Count do begin
+    if  ShellTreeView1.Items[temp].Selected = true then begin
+      ShellTreeView1.Items[temp].Focused := True;
+      edit1.Text := ShellTreeView1.SelectedFolder.PathName;
+    end;
+    temp := temp +1;
+  end;
+end;
+
+procedure TurtleEasy1;
+begin
+  with TJVTurtle.create(self) do begin
+    canvas:= cFrm.canvas;
+    canvas.Pen.Color:= clred;
+    penDown:= true;
+    penWidth:= 30;
+    setpos(350,120)
+    turn(45)
+    moveforward(100)
+    right(135)
+    moveforward(200)
+    Free;
+  end;
+end;    
+
+procedure TurtleEasy2;
+var myturtle: TJVTurtle;
+begin
+  myturtle:= TJVTurtle.create(self);
+  with myTurtle do begin
+    //canvas.assign(cFrm)
+    canvas:= cFrm.canvas;
+    canvas.Pen.Color:= clgreen;
+    penDown:= true;
+    //penup
+    penWidth:= 30;
+    setpos(280,250);
+    //turn(45)
+    moveforward(100)
+    right(90)    //180
+    moveforward(100)
+    right(90)    //180
+    moveforward(100)
+    left(90)    //180
+    moveforward(100)
+    left(90)    //180
+    moveforward(100)
+    //movebackward(100)
+   end;
+   myturtle.Free;
+end;    
+
+procedure TurtleEasy3;
+begin
+  with TJVTurtle.create(self) do begin
+    canvas:= cFrm.canvas;
+    canvas.Pen.Color:= clblue;
+    penDown:= true;
+    penWidth:= 30;
+    setpos(430,300);
+    moveforward(100)
+    right(90)    
+    moveforward(100)
+    right(90)    
+    moveforward(100)
+    turn(180)    //or movebackward()
+    moveforward(100)
+    right(90)   
+    moveforward(100)
+    right(90)  //180
+    moveforward(100)
+    Free;
+   end;
+end;  
+
+procedure looprepaint;
+begin  
+   sleep(500) 
+   //cfrm.repaint;           
+end;
+
+function ShellCompare(Item1, Item2: ___Pointer): Integer;
+begin
+  {Result := Smallint(
+      TShellFolder(Item1).ParentShellFolder.CompareIDs(
+      SortColumn,
+      TShellFolder(Item1).RelativeID,
+      TShellFolder(Item2).RelativeID) ); }
+end;
+     
+procedure TForm1_ShellListView1ColumnClick(Sender: TObject;
+ Column: TListColumn);
+var
+  SortColumn: Integer;
+  ShellListView1: TShellListView;
+begin
+  SortColumn := Column.Index;
+  //ShellListView1.FolderList.Sort(ShellCompare);
+  ShellListView1.Invalidate;
+end;
+
+procedure TForm1_Button2Click(Sender: TObject);
+var
+  Dir: string;
+begin
+  Dir:= 'C:\maXbook';
+  if SelectDirectory(Dir, [sdAllowCreate, sdPerformCreate, sdPrompt], 0) then
+    ShowMessage('You selected ' + Dir)
+  else
+    ShowMessage('You did not select a folder');
+end;
+
+procedure RemoveFromRunKey(ApTitle: string);
+var
+  Reg: TRegistry;
+  TheKey: string;
+  ListOfEntries: TStringList;
+  i: integer;
+begin
+  Reg:= TRegistry.Create;
+  Reg.RootKey := HKEY_LOCAL_MACHINE;
+  TheKey:= 'Software\Microsoft\Windows\CurrentVersion\Run';
+  // Check if key exist...
+  // ...if yes, try to delete the entry for ApTitle
+  if not Reg.OpenKey(TheKey, False) then
+    ShowMessage('Key not found')
+  else begin
+    if Reg.DeleteValue(ApTitle) then
+      ShowMessage('Removed: ' + ApTitle)
+    else
+      ShowMessage('Not found: ' + ApTitle);
+  end;
+  Reg.CloseKey;
+  Reg.Free;
+end;
+
+//http://www.festra.com/eng/mtut07.htm
+procedure RunOnWinStart(ApTitle, ApPathFile: string; RunOnce: Boolean);
+var
+  Reg: TRegistry;
+  TheKey: string;
+begin
+  Reg:= TRegistry.Create;
+  Reg.RootKey:= HKEY_LOCAL_MACHINE;
+  TheKey:= 'Software\Microsoft\Windows\CurrentVersion\Run';
+  if RunOnce then TheKey:= TheKey + 'Once';
+  // Open key, or create it if it doesn't exist
+  Reg.OpenKey(TheKey, True);
+  Reg.WriteString(ApTitle, ApPathFile);
+  Reg.CloseKey;
+  Reg.Free;
+end;
+
+procedure StrtoIntDefDemo;
+var
+  Row, N1, N2: integer;
+  StringGrid1: TStringGrid;
+begin
+  for Row:= 0 to StringGrid1.RowCount - 1 do begin
+    N1:= StrToIntDef(StringGrid1.Cells[0, Row], -1);
+    N2:= StrToIntDef(StringGrid1.Cells[1, Row], -1);
+    if (N1 < 0) or (N2 < 0) then 
+      StringGrid1.Cells[3, Row]:= IntToStr(N1 + N2)
+    else
+      StringGrid1.Cells[3, Row]:= 'Invalid';
+  end; 
+end;
+
+function StripHTML(S: string): string;
+var
+  TagBegin, TagEnd, TagLength: integer;
+begin
+  TagBegin:= Pos( '<', S);      // search position of first < 
+  while (TagBegin > 0) do begin  // while there is a < in S
+    TagEnd:= Pos('>', S);              // find the matching > 
+    TagLength:= TagEnd - TagBegin + 1;
+    Delete(S, TagBegin, TagLength);     // delete the tag 
+    TagBegin:= Pos( '<', S);            // search for next <
+  end;
+  Result:= S;                   // give the result
+end;
+
+procedure STEXpressionPattern;
+begin
+    with TStExpression.create(self) do begin
+      AddConstant('MPI',3.14159);
+      srlist:= TStringlist.create;
+      GetIdentList(srlist);
+      for it:= 0 to srlist.count-1 do 
+        writeln(srlist.strings[it]);
+      srlist.Free;  
+      Expression:= '2^10 * ln(8 +MPI)';
+      writeln(floattoStr(AnalyzeExpression))
+      free;
+    end;  
+end;    
+
+function MediaToString(Media: DWORD): string;
+//const
+var MediaNames: array[0..7] of string; { =
+('GlobalMem', 'File', 'IStream', 'IStorage', 'GDI', 'MetaFile', 'EnhMetaFile', 'Unknown');                                    }
+var
+Medium: DWORD;
+MediumNum: integer;
+begin
+Result := '';
+MediumNum := 0;
+Medium := $0001;
+while (Media >= Medium) and (MediumNum <= High(MediaNames)) do begin
+   if (Media and Medium <> 0) then begin
+     if (Result <> '') then
+       Result:= Result+', ';
+     Result:= Result+MediaNames[MediumNum];
+   end;
+   inc(MediumNum);
+   Medium:= Medium shl 1;
+end;
+end;
+
+  procedure ModifyFont(ctrl: TControl);
+  var
+    f: TFont;
+  begin
+    if (IsPublishedProp(ctrl, 'Parentfont'))
+      and (GetOrdProp(ctrl, 'Parentfont') = Ord(-1))
+      and (IsPublishedProp(ctrl, 'font')) then begin
+      //f:= TFont(GetObjectProp(ctrl, 'font', TFont));
+      f.Name := 'Symbol';
+    end;
+  end;
+
+
+const
+  MAX_DATA = 32768; // Max bytes to render in preview
+
+function TFormMain_DataToHexDump(const Data: AnsiString): string;
+var
+i: integer;
+Offset: integer;
+Hex: string;
+ASCII: string;
+LineLength: integer;
+Size: integer;
+begin
+   Result := '';
+   LineLength := 0;
+   Hex := '';
+   ASCII := '';
+   Offset := 0;
+   Size := Length(Data);
+   if (Size > MAX_DATA) then
+   Size := MAX_DATA;
+   for i := 0 to Size-1 do begin
+   //if hex > 'a' then
+   Hex := Hex+IntToHex(ord(Data[i+1]), 2)+' ';
+   //if (Data[i+1] in [' '..#$7F]) then
+   //if (Data[i+1] > ' ') then
+   if (Data[i+1] > ' ') and (Data[i+1] < #$7F) then
+
+     ASCII:= ASCII+Data[i+1]
+   else
+   ASCII := ASCII+'.';
+   inc(LineLength);
+   if (LineLength = 16) or (i = Length(Data)-1) then begin
+   Result := Result+Format('%.8x %-48.48s %-16.16s'+#13+#10, [Offset, Hex, ASCII]);
+   inc1(Offset, LineLength);
+   LineLength := 0;
+   Hex := '';
+   ASCII := '';
+   end;
+   end;
+end;
+
+//https://www.dropbox.com/s/w0bfri6sm3dy5bn/Nr9_Damian.INC?dl=0
+
+ //{$I ..\maxbox3\examples\Nr9_damian.inc}
+  
+
+BEGIN  //Main
+
+ //includeoff;
+ //downloadnumbers;
+
+ loadform;
+ //repeat 
+   TurtleEasy1;
+    looprepaint  
+   TurtleEasy2;
+    looprepaint
+   TurtleEasy3;
+    looprepaint
+   //{$I ..\SWS2014\damiannr9.txt}
+  // turtleEasy9(cfrm);
+ //until iskeypressed;
+ 
+ //TForm1_Button2Click(Self)
+    {@run as admin}
+  //RunOnWinStart('maXbox3', 'C:\maXbook\maxbox3\mX3999\maxbox\maxbox3.exe', True);
+  //RunOnWinStart('Calculator', 'calc.exe', False);
+  //RemoveFromRunKey('Calculator');
+  
+  STEXpressionPattern;
+ 
+     writeln('MakeHash of: '+inttostr(MakeHash('to do const s : TbtString')));
+  
+   writeln('calc back as string: '+maXcalcS('ln(e)^10')+maXcalcS('ln(e)^10+1')+'3')
+ 
+   writeln('HEX_TEX: '+TFormMain_DataToHexDump(memo2.text));
+   
+   //datadohexdump
+   
+   //ExecuteShell('cmd','/c rundll32.exe url.dll,TelnetProtocolHandler 172.134.77.119')
+  srlist:= TStringlist.create;
+      //ConsoleCapture('C:\', 'cmd.exe', '/c dir *.* /s',srlist);
+      if ConsoleCapture('C:\', 'cmd.exe', '/c ping www.ibm.com',srlist) then
+         writeln(srlist.text);
+      srlist.Free;
+      
+END. 
+
+Doc:
+C:\maxbook\maxbox3\mx39\maxbox3\maxbox3\docs\utils\Herleitung_4.jpg
+
+http://www.swissdelphicenter.ch/en/showcode.php?id=770
+
+----app_template_loaded_code----
+----File #file:s.txt562_shellctrldemoplus.txttl.txt
+----Date #sign:Administrator: PC08: 18/02/2015 10:39:30 PM 
+
+http://www.bern.ch/online/aus_und_org/informatikkurse/kurse/it-sicherheit-fuer-neueintretende-mitarbeitende
+
+http://www.bernerzeitung.ch/region/bern/Zwei-Rechner-pro-Schulzimmer/story/20366124
+
+procedure ModifyFontsFor(ctrl: TWinControl);
+  procedure ModifyFont(ctrl: TControl);
+  var
+    f: TFont;
+  begin
+    if IsPublishedProp(ctrl, 'Parentfont')
+      and (GetOrdProp(ctrl, 'Parentfont') = Ord(false))
+      and IsPublishedProp(ctrl, 'font')
+      then begin
+      f := TFont(GetObjectProp(ctrl, 'font', TFont));
+      f.Name := 'Symbol';
+    end;
+  end;
+var
+  i: Integer;
+begin
+  ModifyFont(ctrl);
+  for i := 0 to ctrl.controlcount - 1 do
+    if ctrl.controls[i] is Twincontrol then
+      ModifyFontsfor(TWincontrol(ctrl.controls[i]))
+    else
+      Modifyfont(ctrl.controls[i]);
+end;
+
+procedure TForm1.Button2Click(Sender: TObject);
+begin
+  Modifyfontsfor(self);
+end;
+
+
+This should be an easy one- all I want to do is select some text/charts from a PDF, and then copy and paste into Word/Paint... I used to be able to do this (with Adobe Reader 9 I think it was), but since I upgraded to X I can't even select text, even if the Select Tool is on. Can anyone help??
+
+ 
+<a href='http://scholz2000.com/wp-content/uploads/2014/09/Broschuere_TIM_12.01.2015.pdf'>Broschuere_TIM_12.01.2015</a>
+<a href='http://scholz2000.com/wp-content/uploads/2014/09/Broschuere_WAS_11.01.2015.pdf'>Broschuere_WAS_11.01.2015</a>
+<a href='http://scholz2000.com/wp-content/uploads/2014/09/Broschuere_SAS_11.01.2015.pdf'>Broschuere_SAS_11.01.2015</a>
+<a href='http://scholz2000.com/wp-content/uploads/2014/09/Broschuere_MARS_11.01.2015.pdf'>Broschuere_MARS_11.01.2015</a>
+
+Thanks!

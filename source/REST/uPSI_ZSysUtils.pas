@@ -82,6 +82,7 @@ begin
  CL.AddDelphiFunction('Function StrToBoolEx( Str : string) : Boolean');
  CL.AddDelphiFunction('Function BoolToStrEx( Bool : Boolean) : String');
  CL.AddDelphiFunction('Function IsIpAddr( const Str : string) : Boolean');
+ CL.AddDelphiFunction('Function IsIP( const Str : string) : Boolean');       //alias
  CL.AddDelphiFunction('Function zSplitString( const Str, Delimiters : string) : TStrings');
  CL.AddDelphiFunction('Procedure PutSplitString( List : TStrings; const Str, Delimiters : string)');
  CL.AddDelphiFunction('Procedure AppendSplitString( List : TStrings; const Str, Delimiters : string)');
@@ -228,6 +229,7 @@ begin
  S.RegisterDelphiFunction(@StrToBoolEx, 'StrToBoolEx', cdRegister);
  S.RegisterDelphiFunction(@BoolToStrEx, 'BoolToStrEx', cdRegister);
  S.RegisterDelphiFunction(@IsIpAddr, 'IsIpAddr', cdRegister);
+ S.RegisterDelphiFunction(@IsIpAddr, 'IsIP', cdRegister);
  S.RegisterDelphiFunction(@SplitString, 'zSplitString', cdRegister);
  S.RegisterDelphiFunction(@PutSplitString, 'PutSplitString', cdRegister);
  S.RegisterDelphiFunction(@AppendSplitString, 'AppendSplitString', cdRegister);

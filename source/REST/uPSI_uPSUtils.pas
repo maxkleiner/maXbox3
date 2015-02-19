@@ -57,6 +57,75 @@ begin
   RegisterComponents('Pascal Script', [TPSImport_uPSUtils]);
 end;
 
+function ChangeAlpha(input: string): string;
+var
+  a: byte;//Char;
+begin
+  Result:= input;
+  for a:= ord('A') to ord('Z') do begin
+    Result:= StringReplace(Result,Chr(a), IntToStr(Ord(a)- 55),[rfReplaceAll]);
+  end;
+end;
+
+function ChangeAlphaTo(input: string; aoffset: byte): string;
+var
+  a: byte;//Char;
+begin
+  Result:= input;
+  for a:= ord('A') to ord('Z') do begin
+    Result:= StringReplace(Result,Chr(a),
+               IntToStr(Ord(a)- aoffset),[rfReplaceAll]);
+  end;
+end;
+
+
+
+function CalculateDigits(iban: string): Integer;
+var
+  v, l: Integer;
+  alpha: string;
+  number: Longint;
+  rest: Integer;
+begin
+  iban := UpperCase(iban);
+  if Pos('IBAN', iban) > 0 then
+    Delete(iban, Pos('IBAN', iban), 4);
+  iban := iban + Copy(iban, 1, 4);
+  Delete(iban, 1, 4);
+  iban := ChangeAlpha(iban);
+  v := 1;
+  l := 9;
+  rest := 0;
+  alpha := '';
+  try
+    while v <= Length(iban) do begin
+      if l > Length(iban) then
+        l := Length(iban);
+      alpha := alpha + Copy(iban, v, l);
+      number := StrToInt(alpha);
+      rest := number mod 97;
+      v := v + l;
+      alpha := IntToStr(rest);
+      l := 9 - Length(alpha);
+    end;
+  except
+    rest := 0;
+  end;
+  Result := rest;
+end;
+
+
+function CheckIBAN(iban: string): Boolean;
+begin
+  iban := StringReplace(iban, ' ', '', [rfReplaceAll]);
+  if CalculateDigits(iban) = 1 then
+    Result := True
+  else
+    Result := False;
+end;
+
+
+
 (* === compile-time registration functions === *)
 (*----------------------------------------------------------------------------*)
 procedure SIRegister_TPSPascalParser(CL: TPSPascalCompiler);
@@ -255,7 +324,13 @@ begin
  CL.AddConstantN('FCapacityInc','LongInt').SetInt( 32);
  CL.AddDelphiFunction('Function PSWideUpperCase( const S : WideString) : WideString');
  CL.AddDelphiFunction('Function PSWideLowerCase( const S : WideString) : WideString');
-end;
+ CL.AddDelphiFunction('function ChangeAlphaTo(input: string; aoffset: byte): string;');
+ CL.AddDelphiFunction('function CheckIBAN(iban: string): Boolean;');
+
+
+
+
+ end;
 
 (* === run-time registration functions === *)
 (*----------------------------------------------------------------------------*)
@@ -446,7 +521,11 @@ begin
  S.RegisterDelphiFunction(@GRLW, 'GRLW', cdRegister);
  S.RegisterDelphiFunction(@WideUpperCase, 'PSWideUpperCase', cdRegister);
  S.RegisterDelphiFunction(@WideLowerCase, 'PSWideLowerCase', cdRegister);
-end;
+ S.RegisterDelphiFunction(@ChangeAlphaTo, 'ChangeAlphaTo', cdRegister);
+ S.RegisterDelphiFunction(@CheckIBAN, 'CheckIBAN', cdRegister);
+
+
+ end;
 
 
 

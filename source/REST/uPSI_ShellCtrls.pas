@@ -1,6 +1,6 @@
 unit uPSI_ShellCtrls;
 {
-  of demo/examples in borland
+  of demo/examples in borland + rootfolder  +items
 }
 interface
  
@@ -118,7 +118,7 @@ begin
    RegisterProperty('Images', 'TCustomImageList', iptrw);
     RegisterProperty('Indent', 'Integer', iptrw);
     //RegisterProperty('Items', 'TTreeNodes Integer', iptrw);
-    RegisterProperty('Items', 'TTreeNodes', iptrw);
+    RegisterProperty('Items', 'TListItems', iptrw);
     RegisterProperty('ShowLines', 'boolean', iptrw);
     RegisterProperty('ShowRoot', 'boolean', iptrw);
     RegisterProperty('SortType', 'TSortType', iptrw);
@@ -157,7 +157,8 @@ begin
     RegisterProperty('ShellTreeView', 'TCustomShellTreeView', iptrw);
     RegisterProperty('ShellComboBox', 'TCustomShellComboBox', iptrw);
     RegisterProperty('Sorted', 'Boolean', iptrw);
-    RegisterProperty('OnAddFolder', 'TAddFolderEvent', iptrw);
+      RegisterProperty('Items', 'TListItems', iptrw);
+      RegisterProperty('OnAddFolder', 'TAddFolderEvent', iptrw);
     RegisterProperty('OnEditing', 'TLVEditingEvent', iptrw);
     RegisterMethod('Procedure CommandCompleted( Verb : String; Succeeded : Boolean)');
     RegisterMethod('Procedure ExecuteCommand( Verb : String; var Handled : Boolean)');
@@ -202,10 +203,11 @@ begin
   RegisterProperty('OnAddition', 'TTVExpandedEvent', iptrw);
   RegisterProperty('OnCustomDraw', 'TTVCustomDrawEvent', iptrw);
   RegisterProperty('OnCustomDrawItem', 'TTVCustomDrawItemEvent', iptrw);
+  RegisterPublishedProperties;
    RegisterProperty('Images', 'TCustomImageList', iptrw);
     RegisterProperty('Indent', 'Integer', iptrw);
     //RegisterProperty('Items', 'TTreeNodes Integer', iptrw);
-    RegisterProperty('Items', 'TTreeNodes', iptrw);
+    //RegisterProperty('Items', 'TTreeNodes', iptrw);
     RegisterProperty('ShowLines', 'boolean', iptrw);
     RegisterProperty('ShowRoot', 'boolean', iptrw);
     RegisterProperty('SortType', 'TSortType', iptrw);
@@ -233,7 +235,8 @@ begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
       RegisterMethod('Procedure Free');
       RegisterProperty('Path', 'string', iptrw);
-    RegisterProperty('Folders', 'TShellFolder Integer', iptr);
+      RegisterProperty('Items', 'Tstrings', iptrw);
+      RegisterProperty('Folders', 'TShellFolder Integer', iptr);
     RegisterProperty('Root', 'TRoot', iptrw);
     RegisterProperty('ObjectTypes', 'TShellObjectTypes', iptrw);
     RegisterProperty('ShellTreeView', 'TCustomShellTreeView', iptrw);
@@ -284,7 +287,10 @@ begin
    RegisterProperty('Images', 'TCustomImageList', iptrw);
     RegisterProperty('Indent', 'Integer', iptrw);
     //RegisterProperty('Items', 'TTreeNodes Integer', iptrw);
+   // RegisterProperty('Items', 'TListItems', iptrw);
     RegisterProperty('Items', 'TTreeNodes', iptrw);
+
+    //RegisterProperty('Columns', 'TListColumns', iptrw);
     RegisterProperty('ShowLines', 'boolean', iptrw);
     RegisterProperty('ShowRoot', 'boolean', iptrw);
     RegisterProperty('SortType', 'TSortType', iptrw);
@@ -432,10 +438,8 @@ begin
   SIRegister_TShellChangeNotifier(CL);
   CL.AddClassN(CL.FindClass('TOBJECT'),'TCustomShellComboBox');
   CL.AddClassN(CL.FindClass('TOBJECT'),'TCustomShellListView');
-  CL.AddTypeS('TAddFolderEvent', 'Procedure ( Sender : TObject; AFolder : TShel'
-   +'lFolder; var CanAdd : Boolean)');
-  CL.AddTypeS('TGetImageIndexEvent', 'Procedure ( Sender : TObject; Index : Int'
-   +'eger; var ImageIndex : Integer)');
+  CL.AddTypeS('TAddFolderEvent', 'Procedure (Sender: TObject; AFolder : TShellFolder; var CanAdd : Boolean)');
+  CL.AddTypeS('TGetImageIndexEvent', 'Procedure (Sender: TObject; Index: Integer; var ImageIndex: Integer)');
   SIRegister_TCustomShellTreeView(CL);
   SIRegister_TShellTreeView(CL);
   SIRegister_TCustomShellComboBox(CL);
@@ -597,6 +601,20 @@ begin Self.Path := T; end;
 procedure TCustomShellComboBoxPath_R(Self: TCustomShellComboBox; var T: string);
 begin T := Self.Path; end;
 
+procedure TCustomShellComboBoxItems_W(Self: TCustomShellComboBox; const T: Tstrings);
+begin Self.Items := T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TCustomShellComboBoxItems_R(Self: TCustomShellComboBox; var T: Tstrings);
+begin T := Self.Items; end;
+
+procedure TCustomShellListViewItems_W(Self: TCustomShellListView; const T: TListItems);
+begin Self.Items := T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TCustomShellListViewItems_R(Self: TCustomShellListView; var T: TListItems);
+begin T := Self.Items; end;
+
 (*----------------------------------------------------------------------------*)
 procedure TCustomShellTreeViewOnAddFolder_W(Self: TCustomShellTreeView; const T: TAddFolderEvent);
 begin Self.OnAddFolder := T; end;
@@ -660,6 +678,23 @@ begin Self.Path := T; end;
 (*----------------------------------------------------------------------------*)
 procedure TCustomShellTreeViewPath_R(Self: TCustomShellTreeView; var T: string);
 begin T := Self.Path; end;
+
+//procedure TCustomShellTreeViewItems_W(Self: TCustomShellTreeView; const T: TListItems);
+
+procedure TCustomShellTreeViewItems_W(Self: TCustomShellTreeView; const T: TTreeNodes);
+begin Self.Items:= T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TCustomShellTreeViewItems_R(Self: TCustomShellTreeView; var T: TTreeNodes);
+begin T := Self.Items; end;
+
+{procedure TCustomShellTreeViewCol_W(Self: TCustomShellTreeView; const T: string);
+begin Self.col := T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TCustomShellTreeViewCol_R(Self: TCustomShellTreeView; var T: string);
+begin T := Self.Path; end;
+}
 
 (*----------------------------------------------------------------------------*)
 procedure TCustomShellTreeViewFolders_R(Self: TCustomShellTreeView; var T: TShellFolder; const t1: Integer);
@@ -766,22 +801,22 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TShellListView(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TShellListView) do
-  begin
-  end;
+  with CL.Add(TShellListView) do  begin
+   RegisterPropertyHelper(@TCustomShellListViewItems_R,@TCustomShellListViewItems_W,'Items');
+   end;
 end;
 
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TCustomShellListView(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TCustomShellListView) do
-  begin
+  with CL.Add(TCustomShellListView) do begin
     RegisterConstructor(@TCustomShellListView.Create, 'Create');
     RegisterMethod(@TCustomShellListView.Destroy, 'Free');
     RegisterMethod(@TCustomShellListView.Back, 'Back');
     RegisterMethod(@TCustomShellListView.Refresh, 'Refresh');
     RegisterMethod(@TCustomShellListView.SelectedFolder, 'SelectedFolder');
     RegisterPropertyHelper(@TCustomShellListViewFolders_R,nil,'Folders');
+    RegisterPropertyHelper(@TCustomShellListViewItems_R,@TCustomShellListViewItems_W,'Items');
     RegisterPropertyHelper(@TCustomShellListViewRootFolder_R,nil,'RootFolder');
     RegisterPropertyHelper(@TCustomShellListViewAutoContextMenus_R,@TCustomShellListViewAutoContextMenus_W,'AutoContextMenus');
     RegisterPropertyHelper(@TCustomShellListViewAutoRefresh_R,@TCustomShellListViewAutoRefresh_W,'AutoRefresh');
@@ -801,20 +836,20 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TShellComboBox(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TShellComboBox) do
-  begin
-  end;
+  with CL.Add(TShellComboBox) do begin
+       RegisterPropertyHelper(@TCustomShellComboBoxItems_R,@TCustomShellComboBoxItems_W,'Items');
+   end;
 end;
 
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TCustomShellComboBox(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TCustomShellComboBox) do
-  begin
+  with CL.Add(TCustomShellComboBox) do begin
     RegisterConstructor(@TCustomShellComboBox.Create, 'Create');
       RegisterMethod(@TCustomShellComboBox.Destroy, 'Free');
       RegisterPropertyHelper(@TCustomShellComboBoxPath_R,@TCustomShellComboBoxPath_W,'Path');
-    RegisterPropertyHelper(@TCustomShellComboBoxFolders_R,nil,'Folders');
+      RegisterPropertyHelper(@TCustomShellComboBoxItems_R,@TCustomShellComboBoxItems_W,'Items');
+      RegisterPropertyHelper(@TCustomShellComboBoxFolders_R,nil,'Folders');
     RegisterPropertyHelper(@TCustomShellComboBoxRoot_R,@TCustomShellComboBoxRoot_W,'Root');
     RegisterPropertyHelper(@TCustomShellComboBoxObjectTypes_R,@TCustomShellComboBoxObjectTypes_W,'ObjectTypes');
     RegisterPropertyHelper(@TCustomShellComboBoxShellTreeView_R,@TCustomShellComboBoxShellTreeView_W,'ShellTreeView');
@@ -827,8 +862,8 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TShellTreeView(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TShellTreeView) do
-  begin
+  with CL.Add(TShellTreeView) do begin
+   RegisterPropertyHelper(@TCustomShellTreeViewItems_R,@TCustomShellTreeViewItems_W,'Items');
   end;
 end;
 
@@ -844,6 +879,8 @@ begin
     RegisterPropertyHelper(@TCustomShellTreeViewFolders_R,nil,'Folders');
     RegisterPropertyHelper(@TCustomShellTreeViewRootFolder_R,nil,'RootFolder');
     RegisterPropertyHelper(@TCustomShellTreeViewPath_R,@TCustomShellTreeViewPath_W,'Path');
+    RegisterPropertyHelper(@TCustomShellTreeViewItems_R,@TCustomShellTreeViewItems_W,'Items');
+    //RegisterPropertyHelper(@TCustomShellTreeViewCol_R,@TCustomShellTreeViewCol_W,'Columns');
     RegisterPropertyHelper(@TCustomShellTreeViewAutoContextMenus_R,@TCustomShellTreeViewAutoContextMenus_W,'AutoContextMenus');
     RegisterPropertyHelper(@TCustomShellTreeViewObjectTypes_R,@TCustomShellTreeViewObjectTypes_W,'ObjectTypes');
     RegisterPropertyHelper(@TCustomShellTreeViewRoot_R,@TCustomShellTreeViewRoot_W,'Root');

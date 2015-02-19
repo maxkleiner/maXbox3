@@ -3484,7 +3484,7 @@ var idHTTP: TIDHTTP;
      idHTTP:= TIdHTTP.Create(NIL);
    try
      result:= idHTTP.Get(MXVERSIONFILE2);
-     result:= result[1]+result[2]+result[3]+result[4]+result[5];
+     result:= result[1]+result[2]+result[3]+result[4]+result[5]+result[6];
      if result = MBVER2 then //begin
        //output.Font.Style:= [fsbold];
      //Speak(' A new Version '+vstr+' of max box is available! ');

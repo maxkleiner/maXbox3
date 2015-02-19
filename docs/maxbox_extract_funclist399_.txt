@@ -1,7 +1,7 @@
 Extraxt of EXE Functions of maXbox3.exe
-Size of EXE: 23956992
+Size of EXE: 23987200
 *************Now the Funclist************* 
-Funclist Size is: 14164
+Funclist Size is: 14205
 Function  : Int64
 Function  : string
 Function  : string
@@ -78,6 +78,7 @@ Function (Elems: TJclSimpleXMLElems; Index1, Index2 : Integer) : Integer
 Function (Item1, Item2 : TObject): Integer
 Function / Procedure Width 
 Function : TJclSimpleXMLElemCompare)
+Function : TModBusFunction; ExceptionCode : Byte; end
 Function _AddRef : Integer
 Function _CheckAutoResult( ResultCode : HResult) : HResult
 Function _DateTimeToPdfDate( ADate : TDateTime) : TPdfDate
@@ -1322,6 +1323,7 @@ Function BufferRequest( Length : Integer) : TStream
 Function BuffersEqual( Buf1, Buf2 : ___Pointer; Size : Integer) : Boolean
 Function BufferToBytes( Buffer : TObject; Length : LongInt) : TByteDynArray
 Function BufferToDisplayPos( const p : TBufferCoord) : TDisplayCoord
+Function BufferToHex( const Buffer : array of Byte) : String
 Function BufFree : Integer
 Function BufFree : Integer
 Function BufLinearFree : Integer
@@ -1395,7 +1397,9 @@ Function Calculate3DPosition( const P : TPoint3D) : TPoint;
 Function Calculate3DPosition1( P : TPoint; z : Integer) : TPoint;
 Function Calculate3DPosition2( x, y, z : Integer) : TPoint;
 Function CalculateCheckSum : DWORD
+Function CalculateCRC16( const Buffer : array of Byte) : Word
 Function CalculateDFAFingerprint( oStates : TList) : integer
+Function CalculateLRC( const Buffer : array of Byte) : Byte
 Function CalculateMany( SourceSeriesList : TList; ValueIndex : Integer) : Double
 Function CalculateTimeout( aBasis : DWORD) : DWORD
 Function CalcWaveBufferSize( const pWaveFormat : PWaveFormatEx; Duration : DWORD) : DWORD
@@ -1612,6 +1616,7 @@ Function cGetLastPos( const SubStr : string; const S : string) : integer
 Function cGetRealPath( BrokenFileName : String; Directory : String) : String
 Function cGetShortName( FileName : string) : string
 Function cGetVersionString( FileName : string) : string
+function ChangeAlphaTo(input: string; aoffset: byte): string;
 Function ChangeBitmapColor( Bitmap : TBitmap; Color, NewColor : TColor) : TBitmap
 Function ChangeClipboardChain( hWndRemove, hWndNewNext : HWND) : BOOL
 Function ChangeCursor( NewCursor : TCursor) : IUnknown
@@ -1712,6 +1717,7 @@ Function CheckForStart( ASender : TIdMessage; ALine : string) : TIdMessageDecode
 Function CheckForStart( ASender : TIdMessage; ALine : string) : TIdMessageDecoder
 Function CheckForStart( ASender : TIdMessage; const ALine : string) : TIdMessageDecoder
 Function CheckForString( var Index : Byte; C : Char; const S : String; IgnoreCase : Boolean) : Boolean
+function CheckIBAN(iban: string): Boolean;
 Function CheckInstance( const MaxInstances : Word) : Boolean
 function CheckLPT1: string;
 Function CheckMenuDropdown : Boolean
@@ -2405,6 +2411,7 @@ function CreateGUIDString: string;
 Function CreateHexDump( AOwner : TWinControl) : THexDump
 Function CreateIconFromBitmap( Bitmap : TBitmap; TransparentColor : TColor) : TIcon
 Function CreateIconFromClipboard : TIcon
+function CreateIDStack: TIdStack;
 Function CreateIniFileName : string
 Function CreateInstance( const unkOuter : IUnknown; const iid : TGUID; out obj) : HResult
 Function CreateIoCompletionPort( FileHandle, ExistingCompletionPort : THandle; CompletionKey, NumberOfConcurrentThreads : DWORD) : THandle
@@ -7615,6 +7622,7 @@ function IsInternetConnected: Boolean;
 function IsInternetOn: Boolean;
 Function IsIoComplete( var dwBytesDone : DWORD) : Boolean
 Function IsIP( const AIP : string) : boolean
+Function IsIP( const Str : string) : Boolean
 Function IsIpAddr( const Str : string) : Boolean
 Function IsIPAdr( const Value : String) : Boolean
 Function IsISOLongYear( const Year : Word) : Boolean;
@@ -9105,6 +9113,7 @@ Function MoveNode( const key : string; const newpoint : TPoint) : boolean
 Function MoveNode( Source, Destination : TTreeNode; Mode : TNodeAttachMode) : Boolean
 Function MoveNode( Source, Destination : TTreeNode; Mode : TNodeAttachMode) : Boolean
 Function MoveWindow( hWnd : HWND; X, Y, nWidth, nHeight : Integer; bRepaint : BOOL) : BOOL
+function MPing(const AHost: string;const ATimes:integer; out AvgMS:Double):Boolean;
 Function MS( C : Char; N : Integer) : string
 Function MS2Str( Milliseconds : DWORD; Fmt : TMS2StrFormat) : String
 Function MSCharacterSets : TStringList
@@ -10389,6 +10398,8 @@ Function ReadChar : Char
 Function ReadCharsFromStream( Stream : TStream; var Buf : array of PChar; BufSize : Integer) : Integer
 Function ReadClearList( const Section : string; List : TStrings) : TStrings
 Function ReadClient( var Buffer, Count : Integer) : Integer
+Function ReadCoil( const RegNo : Word; out Value : Boolean) : Boolean
+Function ReadCoils( const RegNo : Word; const Blocks : Word; out RegisterData : array of Boolean) : Boolean
 Function ReadColor( const Section, Ident : string; Default : TColor) : TColor
 function ReadComponent(Instance: TComponent): TComponent)
 Function ReadComponentRes( const ResName : string; Instance : TComponent) : TComponent
@@ -10417,6 +10428,8 @@ Function ReadDateTime( const Section, Name : AnsiString; Default : TDateTime; co
 Function ReadDateTime( const Section, Name : string; Default : TDateTime) : TDateTime
 Function ReadDateTime( const ValueName : string; const Default : TDateTime) : TDateTime
 Function ReadDouble : Double
+Function ReadDouble( const RegNo : Word; out Value : Double) : Boolean
+Function ReadDWord( const RegNo : Word; out Value : DWord) : Boolean
 Function ReadExtended : Extended
 Function ReadFile( hFile : THandle; var Buffer, nNumberOfBytesToRead : DWORD; var lpNumberOfBytesRead : DWORD; lpOverlapped : DWord) : BOOL
 Function ReadFile3 : STRING;
@@ -10433,8 +10446,13 @@ Function ReadFolders( const Folder : TFileName; FolderList : TStrings) : Integer
 Function ReadFont( const Section, Ident : string; Font : TFont) : TFont
 Function ReadFromIniFile( const IniFileName, Section : string) : Boolean
 Function ReadFromStack( const ARaiseExceptionIfDisconnected : Boolean; ATimeout : Integer; const ARaiseExceptionOnTimeout : Boolean) : Integer
+Function ReadHoldingRegister( const RegNo : Word; out Value : Word) : Boolean
+Function ReadHoldingRegisters( const RegNo : Word; const Blocks : Word; out RegisterData : array of Word) : Boolean
 Function ReadIdent( cp : PChar; var ident : string) : PChar
+Function ReadInputBits( const RegNo : Word; const Blocks : Word; out RegisterData : array of Boolean) : Boolean
 Function ReadInputData( aStream : TStream) : Boolean
+Function ReadInputRegister( const RegNo : Word; out Value : Word) : Boolean
+Function ReadInputRegisters( const RegNo : Word; const Blocks : Word; var RegisterData : array of Word) : Boolean
 function ReadInt(var Buffer:Integer;Count:LongInt):LongInt
 function ReadInt(var Buffer:Integer;Count:LongInt):LongInt
 Function ReadInt64 : Int64
@@ -10482,6 +10500,7 @@ Function ReadResult : Integer
 Function ReadSeconds : String
 Function ReadShortString : string
 Function ReadSingle : Single
+Function ReadSingle( const RegNo : Word; out Value : Single) : Boolean
 Function ReadSizedString : string
 Function ReadSmallInt( const AConvert : boolean) : SmallInt
 Function ReadSocket( Socket : TSocket; var Buf, BufSize, Flags : Integer) : Integer
@@ -10496,6 +10515,7 @@ Function ReadString( asection, akey, adefault : string) : string
 Function ReadString( const ABytes : Integer) : string
 Function ReadString( const aSection, aKey, aDefault : string) : string
 Function ReadString( const Name : string) : string
+Function ReadString( const RegNo : Word; const ALength : Word) : String
 Function ReadString( const Section, Ident, Default : AnsiString) : AnsiString
 Function ReadString( const Section, Ident, Default : string) : string
 Function ReadString( const Section, Ident, Default : string) : string
@@ -11208,6 +11228,7 @@ Function Seek( dlibMove : Longint; dwOrigin : Longint; out libNewPosition : Larg
 Function Seek( Offset : Longint; Origin : Word) : Longint;
 Function Seek( Offset : Longint; Origin : Word) : Longint
 Function Seek( Offset : Longint; Origin : Word) : longint
+Function Seek( Offset : Longint; Origin : Word) : Longint
 Function Seek( Offset : Longint; Origin : Word) : Longint
 Function Seek( Offset : Longint; Origin : Word) : Longint
 function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;
@@ -12372,6 +12393,7 @@ Function Suspend : Integer
 Function SuspendOS2( Force, DisableWakeEvents : Boolean) : Boolean
 Function SuspendThread( hThread : THandle) : DWORD
 function Swap(i : integer): integer)
+Function Swap16( const DataToSwap : Word) : Word
 Function SwapBytes( Value : integer) : integer
 Function SwapConstrain( const Value : Integer; Constrain1, Constrain2 : Integer) : Integer
 function SwapInt(i : integer): integer)
@@ -13777,11 +13799,15 @@ function WriteByteArray(const Buffer:TByteArray;Count:LongInt):LongInt
 function WriteByteArray(const Buffer:TByteArray;Count:LongInt):LongInt
 Function WriteClient( var ABuffer, ACount : Integer) : Integer
 Function WriteClient( var Buffer, Count : Integer) : Integer
+Function WriteCoil( const RegNo : Word; const Value : Boolean) : Boolean
+Function WriteCoils( const RegNo : Word; const Blocks : Word; const RegisterData : array of Boolean) : Boolean
 Function WRITECOLUMNS : BOOLEAN
 Function WriteData( const Buf : string; const BufSize : LongWord) : LongWord
 Function WriteData( const Data, Size : Integer) : Boolean
 Function WriteData( const Data, Size : Integer) : Boolean
 Function WriteDataString( const Data: string; Size : Integer) : Boolean
+Function WriteDouble( const RegNo : Word; const Value : Double) : Boolean
+Function WriteDWord( const RegNo : Word; const Value : DWord) : Boolean
 Function WriteFile( const AFile : string; const AEnableTransferFile : Boolean) : Cardinal
 Function WriteFile( hFile : THandle; const Buffer, nNumberOfBytesToWrite : DWORD; var lpNumberOfBytesWritten : DWORD; lpOverlapped : DWord) : BOOL
 Function WriteHeaders( StatusCode : Integer; const ReasonString, Headers : string) : Boolean
@@ -13794,10 +13820,14 @@ Function WriteLn( const S : string) : Boolean
 Function WriteLn( const Text : string; const ATextAttribute : IJclScreenTextAttribute) : DWORD;
 Function WriteModuleData( Module : TModuleHandle; SymbolName : string; var Buffer, Size : Cardinal) : Boolean
 Function WriteOutputData( aStream : TStream) : Boolean
+Function WriteRegister( const RegNo : Word; const Value : Word) : Boolean
+Function WriteRegisters( const RegNo : Word; const RegisterData : array of Word) : Boolean
+Function WriteSingle( const RegNo : Word; const Value : Single) : Boolean
 Function WriteSocket( Socket : TSocket; var Buf, BufSize, Flags : Integer) : Integer
 Function WriteStr( Str : string) : Integer
 Function WriteStrAsync( var Str : string; var AsyncPtr : PAsync) : Integer
 Function WriteString( const AString : string) : Boolean
+Function WriteString( const RegNo : Word; const Text : String) : Boolean
 function WriteString(Buffer:string;Count:LongInt):LongInt
 Function WriteStringToStream( Stream : TStream; const Buf : AnsiString; BufSize : Integer) : Integer
 Function WriteUnicodeString( const Str : Unicodestring) : Integer
@@ -14214,8 +14244,11 @@ function: Longint; stdcall)
 function: Result is complex
 function: Result is infinite
 Function; Arg : Integer) : IAsyncCall;
+Function; const RequestBuffer : TModBusRequestBuffer)
 FUNCTION; dwFlags : DWORD) : Boolean
-Function‹À`vM
+Function; ExceptionCode : Byte; end
+Function; MBPData : TModBusDataBuffer; end
+Function‹ÀäM
 Function0Param( const Name : AnsiString; FunctionAddr : TStFunction0Param)
 Function0Param)
 Function0Param
@@ -14240,11 +14273,20 @@ FunctionButtonsÄPD
 FunctionButtons
 FunctionButtons
 FunctionClass
+FunctionCode : Byte; const ErrorCode : Byte; const RequestBuffer : TModBusRequestBuffer)
+FunctionCode : Byte; const ErrorCode : Byte; const ResponseBuffer : TModBusResponseBuffer)
+FunctionCode : Byte; const ResponseBuffer: TModBusResponseBuffer)
+FunctionCode : Byte; const ResponseFunctionCode : Byte; const ResponseBuffer: TModBusResponseBuffer)
+FunctionCode : TModBusFunction; const RequestBuffer : TModBusRequestBuffer)
+FunctionCode : TModBusFunction; MBPData : TModBusDataBuffer; end
+FunctionCodeByte	ErrorCodeByteRequestBufferTModBusRequestBuffer
+FunctionCodeByte	ErrorCodeByteResponseBufferTModBusResponseBuffer
 FunctionCount
 FunctionCount
-Function
 FunctionEditor
 Function
+FunctionEvent
+FunctionEvent
 FunctionFailedError( const FunctionName : String)
 FunctionFailedError
 FUNCTION
@@ -14261,6 +14303,7 @@ FunctionName, Path : string; Options : TJclPeNameSearchOptions)
 FunctionName
 FunctionName
 FunctionName
+Function
 FunctionOnClickFindFunction1Click
 FunctionOne, FunctionTwo : TStringList; UsePascalNumbers : boolean; var FirstOP : TObject; var Error : boolean)
 FunctionOneParam( const AFunctionName : string; const Func : TMathProcedure)
@@ -14268,8 +14311,7 @@ FunctionOneParam
 FunctionPeriodAlign
 FunctionPeriodStyle
 FunctionPeriodStyle
-FunctionRegistry€:·
-FunctionRegistryH:·
+FunctionRegistry„™·
 functions }
 functions built in:- Grid, DB, DBX, RTL, Printer, Canvas, Crypto and more VCLE- SMTP, POP3, HTTP, FTP, sysutils, strutils, fileutils,  SocketServer<- Syntax Check F2 - Java, C Syntax in Context, Syn API, MAPXA- V3.8 new Compiler mX4, bootscript, internet check, unit supportM- CryptoBox AES, FileInfo, Perl RegEx, Serial, Jedi Utils, Systools4, Orpheus
 Functions ListOnClickAllFunctionsList1Click
@@ -14367,10 +14409,9 @@ FUNCTION
 Function
 Function
 Function
-Function
 function
 *************Now the Proclist************* 
-Proclist Size is: 8742
+Proclist Size is: 8755
 procedure %s.ExecImport1(CompExec: TPSScript; const ri: TPSRuntimeClassImporter);
 Procedure ( a, b : Integer)
 Procedure ( ABinding : TIdSocketHandle; var AQuote : String)
@@ -14418,7 +14459,6 @@ Procedure ( ASender : TObject; ACookieCollection : TIdCookies)
 Procedure ( ASender : TObject; const AStatus : TIdLPRStatus; const AStatusText : String)
 Procedure ( ASender : TObject; const AStatus : TIdStatus; const AStatusText : string)
 Procedure ( ASender : TObject; VStream : TStream)
-Procedure ( AStream : TStream)
 Procedure ( AThread : TIdListenerThread; AException : Exception)
 Procedure ( AThread : TIdMappedPortThread)
 Procedure ( AThread : TIdMappedPortThread; AException : Exception)
@@ -14454,10 +14494,12 @@ Procedure ( const directory : String; var skipScan : Boolean)
 Procedure ( const EnvVar : TPJEnvironmentVar; Data : TObject)
 Procedure ( const FileName : string)
 Procedure ( const FileName, UnitName, FormName, DesignClass : string; CoClasses : TStrings)
+Procedure ( const FunctionCode : Byte; const ErrorCode : Byte; const ResponseBuffer : TModBusResponseBuffer)
 Procedure ( const GUID : TGUID)
 Procedure ( const ID : TFileSearchTaskID; const Aborted : Boolean)
 Procedure ( const iStart : integer; const sText : string)
 Procedure ( const MouseMessage, wParam, lParam : Integer; const ScreenPt : TPoint; const MouseWnd : TOvcHWnd)
+Procedure ( const RequestFunctionCode : Byte; const ResponseFunctionCode : Byte; const ResponseBuffer: TModBusResponseBuffer)
 Procedure ( const S : string)
 Procedure ( const S : string)
 Procedure ( const Section : string)
@@ -14468,6 +14510,12 @@ Procedure ( const Sender : THTTPContentDecoder; const LogMsg : String)
 Procedure ( const Sender : THTTPContentReader)
 Procedure ( const Sender : THTTPContentReader; const LogMsg : String; const LogLevel : Integer)
 Procedure ( const Sender : THTTPContentWriter; const LogMsg : AnsiString)
+Procedure ( const Sender : TIdPeerThread; const FunctionCode : Byte; const ErrorCode : Byte; const RequestBuffer : TModBusRequestBuffer)
+Procedure ( const Sender : TIdPeerThread; const FunctionCode : TModBusFunction; const RequestBuffer : TModBusRequestBuffer)
+Procedure ( const Sender : TIdPeerThread; const RegNr, Count : Integer; const Data : TModCoilData; const RequestBuffer : TModBusRequestBuffer; var ErrorCode : Byte)
+Procedure ( const Sender : TIdPeerThread; const RegNr, Count : Integer; const Data : TModRegisterData; const RequestBuffer : TModBusRequestBuffer; var ErrorCode : Byte)
+Procedure ( const Sender : TIdPeerThread; const RegNr, Count : Integer; var Data : TModCoilData; const RequestBuffer : TModBusRequestBuffer; var ErrorCode : Byte)
+Procedure ( const Sender : TIdPeerThread; const RegNr, Count : Integer; var Data : TModRegisterData; const RequestBuffer : TModBusRequestBuffer; var ErrorCode : Byte)
 Procedure ( const Sender : TMimePart)
 Procedure ( const Text : string)
 Procedure ( const VarName : string; Data : TObject)
@@ -14594,7 +14642,6 @@ Procedure ( Sender : TObject; ACol, ARow : Longint; var Value : string)
 Procedure ( Sender : TObject; aErrorCode : TErrorCode)
 Procedure ( Sender : TObject; aExpressionIndex, toExpressionIndex : Integer)
 Procedure ( Sender : TObject; aFileName : AnsiString)
-Procedure ( Sender : TObject; AFolder : TShellFolder; var CanAdd : Boolean)
 Procedure ( Sender : TObject; AKind : TIBParseKind; SQLText : string)
 Procedure ( Sender : TObject; aLine : integer; var aText : string)
 Procedure ( Sender : TObject; aLine : integer; X, Y : integer)
@@ -14615,7 +14662,6 @@ Procedure ( Sender : TObject; BufferSize: Integer)
 Procedure ( Sender : TObject; Button : TGLMouseButton; Shift : TShiftState; X, Y : Integer)
 Procedure ( Sender : TObject; Button : TMouseButton; Shift : TShiftState; X, Y : Integer; HitTest : Integer; var MouseActivate : TMouseActivate)
 Procedure ( Sender : TObject; Button : TMPBtnType)
-Procedure ( Sender : TObject; Button : TMPBtnType; var DoDefault : Boolean)
 Procedure ( Sender : TObject; Button : TOvcCalculatorButton)
 Procedure ( Sender : TObject; Button : TUDBtnType)
 Procedure ( Sender : TObject; CabInfo : TCabInfo)
@@ -14650,7 +14696,6 @@ Procedure ( Sender : TObject; const Button : TButtonItem; Canvas : TCanvas; Rect
 Procedure ( Sender : TObject; const Button : TButtonItem; Canvas : TCanvas; Rect : TRect; State : TButtonDrawState; var TextOffset : Integer)
 Procedure ( Sender : TObject; const Button : TButtonItem; const Category : TButtonCategory; var HintStr : string; var Handled : Boolean)
 Procedure ( Sender : TObject; const Button : TButtonItem; const SourceCategory, TargetCategory : TButtonCategory)
-Procedure ( Sender : TObject; const Button: TButtonItem)
 Procedure ( Sender : TObject; const D1, D2, D3, D4 : DWORD; var LogString : string)
 Procedure ( Sender : TObject; const Data, Size : Integer)
 Procedure ( Sender : TObject; const Directory:string)
@@ -14692,7 +14737,6 @@ Procedure ( Sender : TObject; Control : TControl; var Drag : Boolean)
 Procedure ( Sender : TObject; Control : TControl; var Insets : TRect; var PreferredSize, RowCount : Integer)
 Procedure ( Sender : TObject; CoordX : Integer; var Size : Word)
 Procedure ( Sender : TObject; CoordY : Integer; var Size : Word)
-Procedure ( Sender : TObject; Count : Integer)
 Procedure ( Sender : TObject; CurrentAnimateFrame : Byte; var ImageIndex : Integer)
 Procedure ( Sender : TObject; CurrentFrame: Integer; Frames : TIpAnimationFrameList)
 Procedure ( Sender : TObject; CursorPos : TPoint)
@@ -14715,6 +14759,7 @@ Procedure ( Sender : TObject; ElementIndex, ElementKeywordIndex : Integer; Expre
 Procedure ( Sender : TObject; ElementIndex, ElementKeywordIndex, ExpressionKeywordIndex : Integer; ExpressionList : TStrings)
 Procedure ( Sender : TObject; ElementIndex, ElementKeywordIndex, ExpressionKeywordIndex, ExpressionValueIndex : Integer; var ValidateElementValueResult : TValidateElementValueResult)
 Procedure ( Sender : TObject; ErrMsg : string)
+Procedure ( Sender : TObject; Error : string; SQLText : string; LineIndex : Integer)
 Procedure ( Sender : TObject; Error : string; SQLText : string; LineIndex : Integer; var Ignore : Boolean)
 Procedure ( Sender : TObject; Error : TCocoError)
 Procedure ( Sender : TObject; Error : TJvFormatDriveError)
@@ -14750,7 +14795,6 @@ Procedure ( Sender : TObject; Index : Integer; Canvas : TCanvas; Rect : TRect; S
 Procedure ( Sender : TObject; Index : Integer; Canvas : TCanvas; Rect : TRect; State : TButtonDrawState; var TextOffset : Integer)
 Procedure ( Sender : TObject; Index : Integer; Value : Byte; var AllowChange : Boolean)
 Procedure ( Sender : TObject; Index : Integer; var Abort : Boolean)
-Procedure ( Sender : TObject; Index : Integer; var ImageIndex : Integer)
 Procedure ( Sender : TObject; Index : LongInt)
 Procedure ( Sender : TObject; Index : LongInt; Rect : TRect; const S : string)
 Procedure ( Sender : TObject; Index : LongInt; Selected : Boolean)
@@ -14853,7 +14897,6 @@ Procedure ( Sender : TObject; Thread : TServerClientThread)
 Procedure ( Sender : TObject; TickCount : Cardinal; var Reset : Boolean)
 Procedure ( Sender : TObject; Url : AnsiString)
 Procedure ( Sender : TObject; URL : AnsiString; ErrorMessage : AnsiString; HTTPResponseHeader : TALHTTPResponseHeader; var StopCrawling : Boolean)
-Procedure ( Sender : TObject; Url : AnsiString; HTTPResponseHeader : TALHTTPResponseHeader; HttpResponseContent : TStream; var StopCrawling : Boolean)
 Procedure ( Sender : TObject; Url : AnsiString; RedirectedTo : AnsiString; HTTPResponseHeader : TALHTTPResponseHeader; var StopCrawling : Boolean)
 Procedure ( Sender : TObject; UrltoDownload, UrlDownloaded : Integer; CurrentUrl : AnsiString)
 Procedure ( Sender : TObject; UserData, Position : Integer; TotalSize : Integer; Url : string; var Continue : Boolean)
@@ -14894,6 +14937,7 @@ Procedure ( Sender : TObject; var Username: string)
 Procedure ( Sender : TObject; var Value : AnsiString)
 Procedure ( Sender : TObject; var Value : string)
 Procedure ( Sender : TObject; var Value: string)
+Procedure ( Sender : TObject; VarName : string; var Value : Extended; var Found : Boolean)
 Procedure ( Sender : TObject; Wnd : HWND)
 Procedure ( Sender : TObject; word : string)
 Procedure ( Sender : TObject; Writer : TWriter; Data : ___Pointer)
@@ -14985,6 +15029,7 @@ Procedure (sender : Tobject; Sent : Integer; Total : Integer)
 Procedure (Sender : TObject; Trigger : TTrigger)
 Procedure (Sender : TObject; var aState :Integer)
 procedure (Sender: TObject)
+Procedure (Sender: TObject; AFolder : TShellFolder; var CanAdd : Boolean)
 procedure (Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 Procedure (Sender: TObject; Ch: Char; var Index : LongInt)
 Procedure (Sender: TObject; const Area: TRect; const Info : Cardinal)
@@ -14995,6 +15040,7 @@ Procedure (Sender: TObject; FileName: string; Total, Current : integer)
 procedure (Sender: TObject; Flag: Integer; const Section: string; var Result: Longint) of object)
 Procedure (Sender: TObject; FromIndex,ToIndex: Longint)
 Procedure (Sender: TObject; Handle: Longint)
+Procedure (Sender: TObject; Index: Integer; var ImageIndex: Integer)
 Procedure (Sender: TObject; Point: TPoint)
 Procedure (Sender: TObject; REPosition: TMatchPosition)
 Procedure (Sender: TObject; theComponent : TComponent)
@@ -15090,6 +15136,7 @@ Procedure Abs
 Procedure acAddExecute( Sender : TObject)
 Procedure acBrowseExecute( Sender : TObject)
 Procedure Accept( const pHandle : TIdStackSocketHandle; fSSLContext : TIdSSLContext)
+Procedure Accept( Socket : TSocket)
 Procedure Accept( Socket : TSocket)
 Procedure AcceptCancellation
 Procedure acDeleteExecute( Sender : TObject)
@@ -15316,7 +15363,6 @@ Procedure AddSplit( const Value : string; Position : TOvcMRUAddPosition)
 Procedure AddSrcCookie( const sCookie : string)
 Procedure AddStandardAlias( const Name, Path, DefaultDriver : string)
 Procedure AddState( oState : TniRegularExpressionState)
-Procedure AddStdValues( ASrc : TStrings)
 Procedure AddStr( aString : String)
 Procedure AddStream( Stream : TStream; TarFilename : STRING; FileDateGmt : TDateTime)
 Procedure AddStreamAttachment( AStream : TStream; const AFileName : string)
@@ -15388,7 +15434,6 @@ Procedure aFreePadedMem( var P : TObject);
 Procedure aFreePadedMem1( var P : PChar);
 Procedure AfterAccept
 procedure AfterConstruction;
-Procedure AfterConstruction
 Procedure AfterConstruction
 Procedure AfterConstruction
 Procedure AfterConstruction
@@ -16060,6 +16105,7 @@ Procedure CCos( A : TComplex; var Z : TComplex)
 Procedure CCosh( A : TComplex; var Z : TComplex)
 Procedure CDCopyFile( const FileName, DestName : string)
 Procedure CDDeleteFiles( Sender : TObject; s : string)
+Procedure CDecodeDateTime( const DateTime : TDateTime; out Year, Month, Day, Hour, Minute, Second, Millisecond : Word)
 Procedure CDirectoryCreate( const DirectoryName : String)
 Procedure CDiv( A, B : TComplex; var Z : TComplex)
 Procedure CDMoveFile( const FileName, DestName : string)
@@ -16130,7 +16176,6 @@ Procedure CheckRange( const Index : Word)
 Procedure CheckRegistryEntry( Reg : TRegistry; const Path, Value : String; const Default, Desired : Variant; Size : Byte)
 Procedure CheckRequiredField( Field : TField)
 Procedure CheckRequiredFields( const Fields : array of TField)
-Procedure CheckSignature( Sig : Integer)
 Procedure CheckSingleInstance
 Procedure CheckSqlTimeStamp( const ASQLTimeStamp : TSQLTimeStamp)
 Procedure CheckSynchronousSendResult( AResult : TSendResponse; AMsg : String)
@@ -16254,7 +16299,6 @@ Procedure ClearWriteBuffer
 Procedure Clear
 Procedure Clear
 Procedure CLEAR
-Procedure Clear
 Procedure Clear
 Procedure Clear
 Procedure Clear
@@ -16428,13 +16472,13 @@ Procedure CloseFileHandle( hFile : THandle)
 Procedure CloseIniFile
 Procedure CloseLogFile
 Procedure Closepath
+Procedure CloseSession
 Procedure CloseSocket
 Procedure CloseSocket
 Procedure CloseUp( Action : TCloseUpAction)
 Procedure CloseUp( Action : TCloseUpAction)
 Procedure CloseWaveAudio( mmIO : HMMIO; var ckRIFF, ckData : TMMCKInfo)
 Procedure CloseWriteHandle
-Procedure Close
 Procedure Close
 Procedure Close
 Procedure Close
@@ -16525,13 +16569,13 @@ Procedure Connect( comport : string)
 Procedure Connect( const aHost : AnsiString; const APort : integer)
 Procedure Connect( const ATimeout : Integer)
 Procedure Connect( const ATimeout : Integer)
+Procedure Connect( const ATimeout : Integer)
 Procedure Connect( const pHandle : TIdStackSocketHandle; fSSLContext : TIdSSLContext)
 Procedure Connect( Host : AnsiString; Port : integer; DataBaseName, Login, Password, CharSet : AnsiString; const ClientFlag : Cardinal; const Options : TALMySQLOptions)
 Procedure Connect( Host : string; pPort : word)
 Procedure Connect( IP, Port : string)
 Procedure Connect( IP, Port : string)
 Procedure Connect( IP, Port : string)
-Procedure Connect( Socket : TSocket)
 Procedure Connect( Socket : TSocket)
 Procedure Connect1( DataBaseName, Login, Password, CharSet : AnsiString; Numbuffers : integer);
 Procedure ConnectAll( )
@@ -17006,6 +17050,7 @@ Procedure DisableSocketTransport( const ClassID : string)
 Procedure DisableWebTransport( const ClassID : string)
 Procedure Disassemble
 Procedure DiscardChangeAll
+Procedure Disconnect( Socket : TSocket)
 Procedure Disconnect( Socket : TSocket)
 Procedure DisconnectClient
 Procedure Disconnect
@@ -17987,8 +18032,9 @@ Procedure Free
 Procedure Free
 Procedure Free
 Procedure Free
-procedure Free
 Procedure Free
+Procedure Free
+procedure Free
 Procedure Free
 Procedure Free
 Procedure Free
@@ -18334,60 +18380,65 @@ Procedure Free
 Procedure Free
 Procedure Free
 Procedure Free
+Procedure Free
+procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
+Procedure Free
 procedure Free
 Procedure Free
 Procedure Free
 Procedure Free
 Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-Procedure Free
-procedure Free
 Procedure Free
 Procedure Free
 Procedure Free
@@ -18521,6 +18572,7 @@ procedure GenerateDPB(sl: TStrings; var DPB: string; var DPBLength: Short);
 Procedure GenerateDragImage
 Procedure GenerateDTD( Component : TObject; Stream : TStream)
 Procedure GenerateFinalTLSKeys( const ProtocolVersion : TTLSProtocolVersion; const IsExportable : Boolean; const ExpandedKeyBits : Integer; const ServerRandom, ClientRandom : AnsiString; var TLSKeys : TTLSKeys)
+Procedure GenerateHTML
 Procedure GenerateKnotVector( KnotVector : TSingleList; NumberOfPoints, Order : Integer; Continuity : TBSplineContinuity)
 Procedure GenerateTLSKeys( const ProtocolVersion : TTLSProtocolVersion; const MACKeyBits, CipherKeyBits, IVBits : Integer; const MasterSecret, ServerRandom, ClientRandom : AnsiString; var TLSKeys : TTLSKeys)
 procedure GenerateTPB(sl: TStrings; var TPB: string; var TPBLength: Short);
@@ -20602,6 +20654,7 @@ Procedure RegisterConverter( const ATag, ADesc : string; AClass : TStConverterCl
 Procedure RegisterDDEServer( const filetype, verb, topic, servername, macro : string)
 Procedure RegisterDecoder( const AMessageCoderName : string; AMessageCoderInfo : TIdMessageDecoderInfo)
 Procedure Register
+Procedure Register
 Procedure RegisterEncoder( const AMessageEncoderName : string; AMessageEncoderInfo : TIdMessageEncoderInfo)
 Procedure RegisterFeedback( Proc : TFeedbackProc)
 Procedure RegisterFileFormat( const AExtension, ADescription : string; AGraphicClass : TGraphicClass)
@@ -20609,6 +20662,7 @@ Procedure RegisterFileFormat( Extension, AppID : string; Description : string; E
 Procedure RegisterFiletype( const extension, filetype, description, verb, serverapp, IcoNum : string)
 Procedure RegisterId( const Id : WideString; const Token : Integer)
 Procedure RegisterLink( AComLink : TComLink)
+Procedure RegisterProvider( Prov : TCustomProvider)
 Procedure RegisterProvider( Value : TCustomProvider)
 Procedure Register
 Procedure Register
@@ -21063,8 +21117,8 @@ Procedure SaveToPdfWrite( var W : TPdfWrite)
 Procedure SaveToReg( RegRoot : HKey; RegKey, RegName : String; SaveWidth : Boolean)
 Procedure SaveToStr( Value : TStrings)
 Procedure SaveToStream( aDest : TStream)
-Procedure SaveToStream( aStream : TStream)
 Procedure SaveToStream( AStream : TStream)
+Procedure SaveToStream( aStream : TStream)
 Procedure SaveToStream( aStream : TStream)
 Procedure SaveToStream( AStream : TStream)
 Procedure SaveToStream( AStream : TStream)
@@ -21160,7 +21214,6 @@ Procedure ScrollTabs( Delta : Integer)
 Procedure ScrollToCenter( X, Y : Integer)
 Procedure ScrollToTop( memo : TMemo)
 Procedure Scroll
-Procedure Search( AParent : TMapViewer)
 Procedure Search( const ASearchPath : String; ASearchMask : String; ASearchSubDirs : Boolean; CaseSensitive : Boolean)
 Procedure Search1( const Path : string);
 Procedure Search1Click( Sender : TObject)
@@ -23181,7 +23234,8 @@ procedure; stdcall
 procedure; stdcall
 Procedure@
 ProcedureDeclstringErrorBoolean
-ProcedureNameLÌ
+ProcedureExecute
+ProcedureNamePàÌ
 ProcedureName
 ProcedureNamesLeftiTop&Width}HeightKCaption Stored Procedure TabOrder
 ProcedureNames
@@ -23193,7 +23247,7 @@ Procedures and Functions:Font.CharsetDEFAULT_CHARSET
 Font.ColorclWindowTextFont.Heightð	Font.NameMS Sans Serif
 Font.Style
 Procedure
-ProcedureSourcesCursorÈê•
+ProcedureSourcesCursorðê•
 Procedure
 Procedure
 Procedure
@@ -23489,6 +23543,7 @@ Constructor Create( AOwner : TComponent)
 Constructor Create( AOwner : TComponent)
 Constructor Create( AOwner : TComponent)
 Constructor Create( AOwner : TComponent)
+Constructor Create( AOwner : TComponent)
 Constructor Create( aOwner : TComponent)
 Constructor Create( AOwner : TComponent)
 Constructor Create( AOwner : TComponent)
@@ -23658,6 +23713,7 @@ Constructor Create( APdfDoc : TPdfDocument)
 Constructor Create( APdfDoc : TPdfDocument)
 Constructor Create( ApiVer : TALFBXVersion_Api)
 Constructor Create( ApiVer : TALFBXVersion_API; const lib : AnsiString);
+Constructor Create( AProcessID : DWORD; const AFileName : TFileName; const AProcessName : string)
 Constructor Create( APropertyStorage : IPropertyStorage)
 Constructor Create( AProvider : TBaseProvider)
 Constructor Create( AProvider : TCustomProvider);
@@ -24004,7 +24060,6 @@ Constructor CREATE( QUERY : TIBSQL)
 Constructor Create( Query : TQuery)
 Constructor Create( Rasterizer : TRasterizer; Dst : TBitmap32; DstRect : TRect; Suspended : Boolean)
 Constructor Create( Region : TJclRegion)
-Constructor Create( RegionHandle : HRGN)
 Constructor Create( RegView : TRegView)
 Constructor Create( Report : TGDIPages; doubleline : boolean; const aText : SynUnicode; IsText : boolean)
 Constructor Create( RootName : String; IsIniFile : Boolean)
@@ -24070,6 +24125,7 @@ Constructor Create(AOwner: TComponent);
 Constructor Create(AOwner: TComponent);
 Constructor Create(AOwner: TComponent);
 constructor Create(AOwner: TComponent);
+Constructor Create(AOwner: TComponent);
 Constructor Create(AOwner: TComponent);
 Constructor Create(AOwner: TComponent);
 Constructor Create(AOwner: TComponent);
@@ -24270,8 +24326,8 @@ Constructor CreateRoundRect( const ARect : TRect; CornerWidth, CornerHeight : In
 Constructor CreateRoundRect1( Top, Left, Bottom, Right : Integer; CornerWidth, CornerHeight : Integer);
 Constructor CreateS( const S : AnsiString)
 Constructor Create
-Constructor Create
 Constructor create
+Constructor Create
 Constructor Create
 Constructor Create
 Constructor Create
@@ -24473,7 +24529,6 @@ Constructor Create
 Constructor Create
 Constructor Create
 Constructor Create
-Constructor Create
 constructor CREATE
 constructor CREATE
 Constructor Create
@@ -24593,7 +24648,6 @@ Constructor Create
 Constructor Create
 Constructor Create
 Constructor create
-Constructor Create
 Constructor Create
 Constructor Create
 Constructor Create

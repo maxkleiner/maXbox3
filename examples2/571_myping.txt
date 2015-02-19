@@ -1,0 +1,185 @@
+{***************************************************************
+ * Project  : Ping Control API  PCA
+ * App Name :  571_myping.txt, #locs=156
+ * Purpose  : Starts and Stops Ping in 3 Functions with origin API
+ * Date     : #sign>Administrator: PC08: 18/02/2015 10:26:27 PM 
+ * History  : convert mping unit to maXbox Aug 2014
+ *          : add indy ICMP routines and tickcount to LED
+ ****************************************************************}
+ //TODO: transfer service to a network host func with RPC
+ //ref: maXbox3/source/uPSI_IdIcmpClient.pas;
+   
+ Program myping_thing;
+                        
+{ The following class TServiceManager can be used to manage your NT-Services like ping!.
+  You can do things like start, stop, pause or querying a services status.
+}
+
+  function ReadUntil(const ReadFrom,len: Integer; const C: Char; s: string): Integer;
+  var
+    j: Integer;
+  begin
+    for j := ReadFrom to Len do
+      if (s[j] = C) then begin
+        Result := j;
+        Exit;
+      end;
+    Result := Len+1;
+  end;
+ 
+function StripTags2(const S: string): string;
+var
+  Len: Integer;
+  i, APos: Integer;
+begin
+  Len := Length(S);
+  i := 0;
+  Result := '';
+  while (i <= Len) do begin
+    Inc(i);
+    APos := ReadUntil(i, len, '<', s);
+    Result := Result + Copy(S, i, APos-i);
+    i := ReadUntil(APos+1,len, '>',s);
+  end;
+end;
+
+function MPing2(const AHost: string;const ATimes:integer; out AvgMS:Double):Boolean;
+var R : array of cardinal;
+    i : integer;
+    AQuote: string;
+begin
+  Result:= True;
+  AvgMS := 0;
+  if ATimes > 0 then
+  with TIdIcmpClient.Create(Self) do try
+    Host:= AHost;
+    SetLength(R, ATimes);
+    {Pinguer le client}
+    for i:= 0 to ATimes-1 do begin
+      try
+       Ping(AQuote,1);
+       R[i]:= ReplyStatus.MsRoundTripTime;
+       //writeln(inttostr(r[i]))
+      except
+        Result:= False;
+        Exit;
+      end;
+    end;
+  {Faire une moyenne}
+    for i:= Low(R) to High(R) do
+      AvgMS:= AvgMS + R[i];
+      AvgMS:= AvgMS / i;
+      writeln('ping times: '+itoa(i))
+  finally
+    Free;
+  end;
+end;
+
+
+Const SC_MANAGER_ALL_ACCESS = $F003F;
+
+procedure ServiceManagerDemo;
+var ServiceManager: TServiceManager;
+begin
+  ServiceManager:= TServiceManager.Create('','');
+  try
+    ServiceManager.Connect('','',SC_MANAGER_ALL_ACCESS); 
+    // Connects to the local Service-Manger
+    //ServiceManager.OpenServiceConnection('W3SVC');  // Touch the IIS-Webservice
+    //ServiceManager.OpenServiceConnection('WebClient');  // Touch the IIS-Webservice
+    ServiceManager.OpenServiceConnection('WinDefend');  // Touch the IIS-Webservice
+    // Stoping Service if it is running
+    if ServiceManager.ServiceRunning then begin
+      ServiceManager.StopService();
+    // Restart Service if it is not running
+      writeln('W3Start Stop Success to restart...');
+    end;
+    if ServiceManager.ServiceStopped then begin
+      ServiceManager.StartService();
+      writeln('W3Start Strt Success');
+    end;  
+  finally
+    //FreeAndNil(ServiceManager);
+    ServiceManager.Free;
+  end;
+end;
+
+//http://www.idev.ch/content/how-use-tservicemanager-manage-windows-services
+
+Const FName = 'maxboxlog4.log'; //'firstdemo3.txt';
+      Testtext = 'goodbye! lovely, consecutive world!..?';
+Type
+   TEnum = (Zero, One, Two, Three, Four);
+   var anum: TEnum;
+       RoundTripTime: Double;
+
+Begin               //main
+//OpenDoc(exepath+FName)
+{Memo1.Lines.LoadFromFile(YourFileNameHere);
+AppendValueToStrings(Memo1.Lines, 10); }
+  //maxform1.N3dlab1click(self);
+  writeln(Strip('<br/>','<p>This is text.<br/>This is line 2</p>'))
+  writeln(StripString('<p>This is text.<br/>This is line 2</p>','<br/>'))
+  writeln(StripAny('<br/>','<p>This is text.<br/>This is line 2</p>'))
+  writeln(Strip('!',testtext));
+  writeln(StripAny('!,.?',testtext));
+  sr:= StripTags2('<p>This is text.<br/> This is line 2</p>');
+  writeln(sr);   // will display 'This is text.This is line 2'
+  Writeln(ReplaceRegExpr ('([</pbr>])*',
+                          '<p>This is text.<br/> This is line 2</p>','', True))
+  Writeln(ReplaceRegExpr ('<[^>]*>',
+                          '<p>This is text.<br/> This is line 2</p>','', True))
+   //CL.AddDelphiFunction('Function AnalyzeExpr( const Expr : AnsiString) : Double');
+    writeln(floattostr(AnalyzeExpr('2^10 * ln(8) / 4')))
+    // TbtString //= {$IFDEF DELPHI2009UP}AnsiString{$ELSE}String{$ENDIF};
+   
+     //ServiceManagerDemo;
+     
+ //PutPingTests;
+  writeln('ping test 1: '+inttostr(pinghost('https://duckduckgo.com/')))
+  writeln('ping test 2: '+inttostr(pinghost('www.ibm.com')))
+  writeln('ping test 3: '+inttostr(pinghost('www.google.com')))
+  if MPing('www.google.com', 4, RoundTripTime) then
+    MessageDlg(Format('Ping average ms : %s',[FormatFloat('0.00',RoundTripTime)]),
+     mtInformation, [mbOK], 0)
+  else
+    MessageDlg('Erreur. L''hôte est injoignable.', mtInformation, [mbOK], 0);
+
+    writeln('ping test 4: '+inttostr(pinghost('www.ibm.com')))
+    //ExecuteShell('cmd','/c rundll32.exe url.dll,TelnetProtocolHandler 172.134.77.119')
+    srlist:= TStringlist.create;
+      //ConsoleCapture('C:\', 'cmd.exe', '/c dir *.* /s',srlist);
+      if ConsoleCapture('C:\', 'cmd.exe', '/c ping www.ibm.com',srlist) then
+         writeln(srlist.text);
+    srlist.Free;
+       
+End.  // PING_ServiceStripUtils
+
+Doc:
+
+
+    Program SpammersAreParasites;
+    var
+      l1,l2: Srting;
+    begin
+      l1:='70';
+      l2:='0';
+      Bxo:=l1 + l2;
+      Bxo:=(Bxo)
+    (*
+      l1:=97;
+      l2:=9
+     Bxo:=(l1 + l2);
+    *)
+    //end.
+
+(*? Value of Bxo:    *)
+
+{"There is a theory which states that if ever anybody discovers
+exactly what the Universe is for and why it is here, it will
+instantly disappear and be replaced by something even more
+bizarre and inexplicable. There is another theory which states
+that this has already happened."
+-- Douglas Adams }
+
+

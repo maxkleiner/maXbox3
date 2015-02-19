@@ -123,7 +123,7 @@
          10288      build 120 8 units more, panview, planets, ActiveX 
          10332      build 160 5 units ,hirestimer, unit converter , parser form, upsutils
          10356      build 160_1 1 units ,DOS redirecter, createprocess , servicemanager
-         10370      build 180 3 units ,BigNumbers, Dictionary
+         10380      build 180 8 units ,BigNumbers, Dictionary, ModBus, IBAN
 
                   [the last one before V4 in 2015]
                    V4.0   in  July 2015
@@ -1959,7 +1959,11 @@ uses
   uPSI_ubigFloatV3,
   uPSI_UBigIntsV4,
   uPSI_UP10Build, //3.9.9.180
-
+  uPSI_IdModBusServer,
+  uPSI_IdModBusClient,
+  uPSI_ModbusUtils,
+  ///
+  
   ///
    //MDIFrame,
   uPSI_St2DBarC,
@@ -3073,6 +3077,9 @@ begin
   SIRegister_ubigFloatV3(X);
   SIRegister_UBigIntsV4(X);
   SIRegister_UP10Build(X);
+  SIRegister_IdModBusServer(X);
+  SIRegister_IdModBusClient(X);    //3.9.9.180
+  SIRegister_ModbusUtils(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4468,6 +4475,9 @@ begin
   RIRegister_UBigIntsV4(X);
   RIRegister_UBigIntsV4_Routines(Exec);  //last 180
   RIRegister_UP10Build_Routines(Exec);
+  RIRegister_IdModBusServer(X);
+  RIRegister_IdModBusClient(X);
+  RIRegister_ModbusUtils_Routines(Exec);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -5797,7 +5807,7 @@ begin
     end else begin
     stopw.Stop;
     memo2.Lines.Add(' mX3 executed: '+dateTimetoStr(Now())+
-    '  Runtime: '+stopw.GetValueStr +'  Memoryload: '+inttoStr(GetMemoryLoad) +'% use');
+    '  Runtime: '+stopw.GetValueStr +'  Memload: '+inttoStr(GetMemoryLoad) +'% use');
     end;
     statusBar1.panels.items[1].text:= ' Runtime: '+stopw.GetValueStr+' Threads: '+intToStr(numprocessthreads);
     perftime:= stopw.GetValueStr;

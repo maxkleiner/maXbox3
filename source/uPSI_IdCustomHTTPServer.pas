@@ -58,7 +58,9 @@ uses
   ,IdCookie
   ,IdHTTPHeaderInfo
   ,IdStackConsts
+  ,IdStack
   ,SyncObjs
+  ,IdIcmpclient
   ,IdCustomHTTPServer
   ,IdHTTPServer
   ;
@@ -101,6 +103,45 @@ begin
     Result := result + CharMap[Random(maxChar) + 1];
   end;
 end;
+
+function CreateIDStack: TIdStack;
+begin
+  Result:= GStackClass.Create;
+end;
+
+function MPing(const AHost: string;const ATimes:integer; out AvgMS:Double):Boolean;
+var
+R : array of Cardinal;
+i : integer;
+AQuote: string;
+begin
+  Result := True;
+  AvgMS := 0;
+  if ATimes > 0 then
+  with TIdIcmpClient.Create(NIL) do
+  try
+    Host:= AHost;
+    SetLength(R, ATimes);
+    {Pinguer le client}
+    for i:= 0 to Pred(ATimes) do begin
+      try
+       Ping(AQuote,1);
+       R[i]:= ReplyStatus.MsRoundTripTime;
+      except
+        Result := False;
+        Exit;
+      end;
+    end;
+  {Faire une moyenne}
+    for i:= Low(R) to High(R) do
+      AvgMS := AvgMS + R[i];
+      AvgMS := AvgMS / i;
+  finally
+    Free;
+  end;
+end;
+
+
 
 (* === compile-time registration functions === *)
 (*----------------------------------------------------------------------------*)
@@ -308,6 +349,9 @@ begin
 
  CL.AddDelphiFunction('Function TimeStampInterval( StartStamp, EndStamp : TDateTime) : integer');
  CL.AddDelphiFunction('Function GetRandomString( NumChar : cardinal) : string');
+ CL.AddDelphiFunction('function CreateIDStack: TIdStack;');
+ CL.AddDelphiFunction('function MPing(const AHost: string;const ATimes:integer; out AvgMS:Double):Boolean;');
+
 end;
 
 (* === run-time registration functions === *)
@@ -636,7 +680,9 @@ procedure RIRegister_IdCustomHTTPServer_Routines(S: TPSExec);
 begin
  S.RegisterDelphiFunction(@TimeStampInterval, 'TimeStampInterval', cdRegister);
  S.RegisterDelphiFunction(@GetRandomString, 'GetRandomString', cdRegister);
-end;
+ S.RegisterDelphiFunction(@CreateIDStack, 'CreateIDStack', cdRegister);
+ S.RegisterDelphiFunction(@MPing, 'MPing', cdRegister);
+ end;
 
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TIdHTTPDefaultSessionList(CL: TPSRuntimeClassImporter);
