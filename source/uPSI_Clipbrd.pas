@@ -56,6 +56,8 @@ begin
   //with RegClassS(CL,'TPersistent', 'TClipboard') do
   with CL.AddClassN(CL.FindClass('TPersistent'),'TClipboard') do begin
     RegisterMethod('Procedure Clear');
+    RegisterMethod('Procedure Free');
+    RegisterMethod('procedure Assign(Source: TPersistent)');
     RegisterMethod('Procedure Close');
     RegisterMethod('Function GetComponent( Owner, Parent : TComponent) : TComponent');
     RegisterMethod('Function GetAsHandle( Format : Word) : THandle');
@@ -108,6 +110,8 @@ procedure RIRegister_TClipboard(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TClipboard) do begin
     RegisterVirtualMethod(@TClipboard.Clear, 'Clear');
+    RegisterMethod(@TClipboard.Destroy, 'Free');
+    RegisterVirtualMethod(@TClipboard.Assign, 'Assign');
     RegisterVirtualMethod(@TClipboard.Close, 'Close');
     RegisterMethod(@TClipboard.GetComponent, 'GetComponent');
     RegisterMethod(@TClipboard.GetAsHandle, 'GetAsHandle');

@@ -1,5 +1,5 @@
 unit uPSI_IdCustomHTTPServer;
-{
+{     add 2 publish in httpserver
   also as addon for https server   , direct  RIRegister_TIdHTTPServer(CL);, more free methods and one abstract
 }
 interface
@@ -150,6 +150,10 @@ begin
   //with RegClassS(CL,'TIdCustomHTTPServer', 'TIdHTTPServer') do
   with CL.AddClassN(CL.FindClass('TIdCustomHTTPServer'),'TIdHTTPServer') do begin
       RegisterPublishedProperties;
+    RegisterProperty('OnCreatePostStream', 'TOnCreatePostStream', iptrw);
+    RegisterProperty('OnCommandGet', 'TIdHTTPGetEvent', iptrw);
+   //   property OnCreatePostStream;
+   // property OnCommandGet;
   end;
 end;
 

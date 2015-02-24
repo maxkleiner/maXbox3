@@ -1,6 +1,6 @@
 unit uPSI_GR32_VectorMaps;
 {
-   gPS demo
+   gPS demo , free add
 }
 interface
  
@@ -52,7 +52,8 @@ procedure SIRegister_TVectorMap(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TCustomMap', 'TVectorMap') do
   with CL.AddClassN(CL.FindClass('TCustomMap'),'TVectorMap') do begin
-    RegisterMethod('Procedure Clear');
+       RegisterMethod('Procedure Free');
+      RegisterMethod('Procedure Clear');
     RegisterMethod('Procedure Merge( DstLeft, DstTop : Integer; Src : TVectorMap; SrcRect : TRect)');
     RegisterProperty('Vectors', 'PFixedPointArray', iptr);
     RegisterMethod('Function BoundsRect : TRect');
@@ -86,8 +87,7 @@ begin
   CL.AddTypeS('TArrayOfFloatVector', 'array of TFloatVector');
   //CL.AddTypeS('PArrayOfFloatVector', '^TArrayOfFixedVector // will not work');
   CL.AddTypeS('TVectorCombineMode', '( vcmAdd, vcmReplace, vcmCustom )');
-  CL.AddTypeS('TVectorCombineEvent', 'Procedure ( F, P : TFixedVector; var B : '
-   +'TFixedVector)');
+  CL.AddTypeS('TVectorCombineEvent', 'Procedure ( F, P : TFixedVector; var B : TFixedVector)');
   SIRegister_TVectorMap(CL);
 end;
 
@@ -179,9 +179,9 @@ begin T := Self.Vectors; end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TVectorMap(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TVectorMap) do
-  begin
-    RegisterMethod(@TVectorMap.Clear, 'Clear');
+  with CL.Add(TVectorMap) do begin
+      RegisterMethod(@TVectorMap.Destroy, 'Free');
+     RegisterMethod(@TVectorMap.Clear, 'Clear');
     RegisterMethod(@TVectorMap.Merge, 'Merge');
     RegisterPropertyHelper(@TVectorMapVectors_R,nil,'Vectors');
     RegisterMethod(@TVectorMap.BoundsRect, 'BoundsRect');

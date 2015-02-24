@@ -2,7 +2,7 @@ unit uPSI_Outline;
 {
 procedure TControlParentR(Self: TControl; var T: TWinControl); begin T := Self.Parent; end;
 procedure TControlParentW(Self: TControl; T: TWinControl); begin Self.Parent:= T; end;
-
+      add lines 3.9.9.182
 }
 interface
  
@@ -80,12 +80,14 @@ begin
      RegisterProperty('Visible', 'Boolean', iptrw);
      RegisterProperty('TEXT', 'String', iptrw);
      RegisterProperty('Data', 'String', iptrw);
-
-    // property Data: Pointer read FData write FData;
-
-    RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
+    RegisterProperty('Lines', 'TStrings', iptrw);
+     // property Data: Pointer read FData write FData;
+     RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
     RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
     RegisterProperty('MAXLENGTH', 'Integer', iptrw);
+    RegisterProperty('Outlinestyle', 'TOutlinestyle', iptr);
+    RegisterProperty('style', 'TOutlineType', iptr);
+    //FStyle: TOutlineType;
    end;
 end;
 
@@ -97,7 +99,8 @@ begin
   RegisterPublishedProperties;
     RegisterMethod('Constructor Create( AOwner : TComponent)');
       RegisterMethod('Procedure Free');
-     RegisterMethod('Function Add( Index : LongInt; const Text : string) : LongInt');
+       RegisterMethod('procedure SetBounds(ALeft, ATop, AWidth, AHeight: Integer);');
+      RegisterMethod('Function Add( Index : LongInt; const Text : string) : LongInt');
     RegisterMethod('Function AddChild( Index : LongInt; const Text : string) : LongInt');
     RegisterMethod('Function AddChildObject( Index : LongInt; const Text : string; const Data : Pointer) : LongInt');
     RegisterMethod('Function AddObject( Index : LongInt; const Text : string; const Data : Pointer) : LongInt');
@@ -132,6 +135,17 @@ begin
   //  RegisterProperty('ONKEYDOWN', 'TKeyEvent', iptrw);
   //  RegisterProperty('ONKEYPRESS', 'TKeyPressEvent', iptrw);
   //  RegisterProperty('ONKEYUP', 'TKeyEvent', iptrw);
+     RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
+    RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
+    RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
+     RegisterProperty('ONKEYDOWN', 'TKeyEvent', iptrw);
+    RegisterProperty('ONKEYPRESS', 'TKeyPressEvent', iptrw);
+    RegisterProperty('ONKEYUP', 'TKeyEvent', iptrw);
+    RegisterProperty('ONExpand', 'EOutlineChange', iptrw);
+    RegisterProperty('ONCollapse', 'EOutlineChange', iptrw);
+
+    // property OnExpand: EOutlineChange read FOnExpand write FOnExpand;
+    //property OnCollapse: EOutlineChange read FOnCollapse write FOnCollapse;
 
 
   end;
@@ -305,7 +319,8 @@ begin
     RegisterConstructor(@TCustomOutline.Create, 'Create');
      RegisterMethod(@TCustomOutline.Destroy, 'Free');
       RegisterMethod(@TCustomOutline.Add, 'Add');
-    RegisterMethod(@TCustomOutline.AddChild, 'AddChild');
+      RegisterMethod(@TCustomOutline.SetBounds, 'SetBounds');
+      RegisterMethod(@TCustomOutline.AddChild, 'AddChild');
     RegisterMethod(@TCustomOutline.AddChildObject, 'AddChildObject');
     RegisterMethod(@TCustomOutline.AddObject, 'AddObject');
     RegisterMethod(@TCustomOutline.Insert, 'Insert');

@@ -4,7 +4,7 @@ maXbox
 ****************************************************************
 Release Notes maXbox 3.9.9.180 Feb 2015 CODEsign
 ****************************************************************
-Add 8 Units, 1 Slide,Tutor, Big Numbers (Decimals, TInteger)
+Add 16 Units, 1 Slide,Tutor, Big Numbers (Decimals, TInteger)
 
 1065 unit uPSI_UDict;                          //DFF
 1066 unit uPSI_ubigFloatV3;                    //DFF
@@ -14,9 +14,17 @@ Add 8 Units, 1 Slide,Tutor, Big Numbers (Decimals, TInteger)
 1070 unit uPSI_UParser10;                      //PS
 1071 unit uPSI_IdModBusServer;                 //MB
 1072 unit uPSI_IdModBusClient; +MBUtils        //MB
+1073 unit uPSI_ColorGrd;                       //VCL
+1074 unit uPSI_DirOutln;                       //VCL
+1075 unit uPSI_Gauges;                         //VCL
+1076 unit uPSI_CustomizeDlg;                   //VCL
+1077 unit uPSI_ActnMan;                        //VCL
+1078 unit uPSI_CollPanl;                       //VCL
+1079 unit uPSI_Calendar2;                      //VCL
+1080 unit uPSI_IBCtrls;                        //VCL
 
-SHA1:  maXbox3.exe E84DD2857F77CB84E4B479B9413F3D3E96A94DBE
-CRC32: maXbox3.exe D11EFE4A
+SHA1:  maXbox3.exe 680C38764AABF79B953713CDE1501B77BE27FA49
+CRC32: maXbox3.exe 5878C1C3
 
 ****************************************************************
 Release Notes maXbox 3.9.9.160 January 2015 CODEsign

@@ -57,7 +57,9 @@ begin
    //     procedure SendBuffer(var ABuffer; const AByteCount: integer); overload;
     RegisterProperty('Host', 'string', iptrw);
     RegisterProperty('Port', 'Integer', iptrw);
-  end;
+    RegisterPublishedProperties;
+    RegisterProperty('ReceiveTimeout', 'Integer', iptrw);
+ end;
 end;
 
 (*----------------------------------------------------------------------------*)

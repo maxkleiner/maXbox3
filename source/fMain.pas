@@ -124,6 +124,7 @@
          10332      build 160 5 units ,hirestimer, unit converter , parser form, upsutils
          10356      build 160_1 1 units ,DOS redirecter, createprocess , servicemanager
          10380      build 180 8 units ,BigNumbers, Dictionary, ModBus, IBAN
+         10404     build 180_2 vcl samples, 14 bugfixes, sql helper, modbus res, actman, IBcomp
 
                   [the last one before V4 in 2015]
                    V4.0   in  July 2015
@@ -1962,8 +1963,15 @@ uses
   uPSI_IdModBusServer,
   uPSI_IdModBusClient,
   uPSI_ModbusUtils,
+  uPSI_ColorGrd,
+  uPSI_DirOutln,
+  uPSI_Gauges,
+  uPSI_CustomizeDlg, //3.9.9.182
+  uPSI_ActnMan,
+  uPSI_CollPanl,
+  //uPSI_Calendar,
+  uPSI_IBCtrls,   //3.9.9.182
   ///
-  
   ///
    //MDIFrame,
   uPSI_St2DBarC,
@@ -2330,6 +2338,7 @@ begin
   SIRegister_JclConsole(X);
   SIRegister_JclLANMan(X);
   SIRegister_ActnList(X);
+  SIRegister_ActnMan(X);  //3.9.9.182
   SIRegister_jpeg(X);
   SIRegister_StRandom(X);
   SIRegister_StDict(X);
@@ -3080,6 +3089,12 @@ begin
   SIRegister_IdModBusServer(X);
   SIRegister_IdModBusClient(X);    //3.9.9.180
   SIRegister_ModbusUtils(X);
+  SIRegister_ColorGrd(X);
+  SIRegister_DirOutln(X);
+  SIRegister_Gauges(X);
+  SIRegister_CustomizeDlg(X);    //3.9.9.182
+  SIRegister_CollPanl(X);
+  SIRegister_IBCtrls(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4478,6 +4493,15 @@ begin
   RIRegister_IdModBusServer(X);
   RIRegister_IdModBusClient(X);
   RIRegister_ModbusUtils_Routines(Exec);
+  RIRegister_ColorGrd(X);
+  RIRegister_DirOutln(X);
+  RIRegister_Gauges(X);
+  RIRegister_DirOutln_Routines(Exec);
+  RIRegister_ActnMan(X);
+  RIRegister_ActnMan_Routines(Exec);
+  RIRegister_CustomizeDlg(X);
+  RIRegister_CollPanl(X);
+  RIRegister_IBCtrls(X);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);

@@ -1,6 +1,6 @@
 unit uPSI_ovctcary;
 {
- cell hell
+ cell hell     add free welcome to cellhell
 }
 interface
  
@@ -52,6 +52,7 @@ begin
   //with RegClassS(CL,'TOBJECT', 'TOvcCellArray') do
   with CL.AddClassN(CL.FindClass('TOBJECT'),'TOvcCellArray') do begin
     RegisterMethod('Procedure AddCell( RowNum : TRowNum; ColNum : TColNum)');
+    RegisterMethod('Procedure Free');
     RegisterMethod('Procedure AddUnusedBit');
     RegisterMethod('Procedure Clear');
     RegisterMethod('Function DeleteCell( RowNum : TRowNum; ColNum : TColNum) : boolean');
@@ -89,7 +90,8 @@ procedure RIRegister_TOvcCellArray(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TOvcCellArray) do begin
     RegisterMethod(@TOvcCellArray.AddCell, 'AddCell');
-    RegisterMethod(@TOvcCellArray.AddUnusedBit, 'AddUnusedBit');
+        RegisterMethod(@TOvcCellArray.Destroy, 'Free');
+     RegisterMethod(@TOvcCellArray.AddUnusedBit, 'AddUnusedBit');
     RegisterMethod(@TOvcCellArray.Clear, 'Clear');
     RegisterMethod(@TOvcCellArray.DeleteCell, 'DeleteCell');
     RegisterMethod(@TOvcCellArray.GetCellAddr, 'GetCellAddr');

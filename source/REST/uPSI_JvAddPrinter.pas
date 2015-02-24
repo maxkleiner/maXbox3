@@ -54,8 +54,10 @@ end;
 procedure SIRegister_TJvAddPrinterDialog(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TJvCommonDialogF', 'TJvAddPrinterDialog') do
-  with CL.AddClassN(CL.FindClass('TJvCommonDialogF'),'TJvAddPrinterDialog') do
-  begin
+  with CL.AddClassN(CL.FindClass('TJvCommonDialogF'),'TJvAddPrinterDialog') do begin
+   RegisterMethod('Constructor Create( AOwner : TComponent)');
+      RegisterMethod('Procedure Free');
+      RegisterPublishedProperties;
     RegisterMethod('Function Execute : Boolean');
   end;
 end;
@@ -70,9 +72,10 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TJvAddPrinterDialog(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TJvAddPrinterDialog) do
-  begin
-    RegisterMethod(@TJvAddPrinterDialog.Execute, 'Execute');
+  with CL.Add(TJvAddPrinterDialog) do begin
+     RegisterConstructor(@TJvAddPrinterDialog.Create, 'Create');
+      RegisterMethod(@TJvAddPrinterDialog.Destroy, 'Free');
+     RegisterMethod(@TJvAddPrinterDialog.Execute, 'Execute');
   end;
 end;
 
