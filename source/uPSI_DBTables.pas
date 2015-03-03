@@ -2,6 +2,7 @@ unit uPSI_DBTables;
 {
 code implementing the class wrapper is taken from Carlo Kok's conv utility
   all constructors and destructors by max
+  plus updatemode /object - checkconstraints
 }
 interface
 
@@ -156,7 +157,9 @@ begin
     RegisterProperty('UniDirectional', 'Boolean', iptrw);
     RegisterProperty('UniDirectional', 'Boolean', iptrw);
     RegisterProperty('FilterOptions', 'TFilterOptions', iptrw);
-
+    Registerpublishedproperties;
+    RegisterProperty('UpdateMode', 'TUpdateMode', iptrw);
+    RegisterProperty('Constraints', 'TCheckConstraints', iptrw);
   end;
 end;
 
@@ -267,6 +270,12 @@ begin
     RegisterProperty('TableName', 'TFileName', iptrw);
     RegisterProperty('TableType', 'TTableType', iptrw);
     RegisterProperty('Ranged', 'Boolean', iptr);
+    registerpublishedproperties;
+    RegisterProperty('UpdateMode', 'TUpdateMode', iptrw);
+    RegisterProperty('Constraints', 'TCheckConstraints', iptrw);
+     //property Constraints stored ConstraintsStored;
+    // property UpdateMode: TUpdateMode read FUpdateMode write SetUpdateMode default upWhereAll;
+
   end;
 end;
 
@@ -276,7 +285,11 @@ begin
   //with RegClassS(CL,'TStringList', 'TIndexFiles') do
   with CL.AddClassN(CL.FindClass('TStringList'),'TIndexFiles') do begin
     RegisterMethod('Constructor Create( AOwner : TTable)');
-  end;
+    RegisterMethod('function Add(const S: string): Integer;');
+  RegisterMethod('procedure Clear;');
+  RegisterMethod('procedure Delete(Index: Integer)');
+  RegisterMethod('procedure Insert(Index: Integer; const S: string)');
+ end;
 end;
 
 (*----------------------------------------------------------------------------*)
@@ -305,8 +318,10 @@ end;
 procedure SIRegister_TNestedTable(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TBDEDataSet', 'TNestedTable') do
-  with CL.AddClassN(CL.FindClass('TBDEDataSet'),'TNestedTable') do
-  begin
+  with CL.AddClassN(CL.FindClass('TBDEDataSet'),'TNestedTable') do begin
+   registerpublishedproperties;
+    RegisterProperty('DataSetField', 'TDataSetField', iptrw);
+    RegisterProperty('ObjectView', 'boolean', iptrw);
   end;
 end;
 
@@ -492,20 +507,20 @@ end;
 procedure SIRegister_TBDECallback(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TOBJECT', 'TBDECallback') do
-  with CL.AddClassN(CL.FindClass('TOBJECT'),'TBDECallback') do
-  begin
+  with CL.AddClassN(CL.FindClass('TOBJECT'),'TBDECallback') do begin
     RegisterMethod('Constructor Create( AOwner : TObject; Handle : hDBICur; CBType : CBType; CBBuf : Pointer; CBBufSize : Integer; CallbackEvent : TBDECallbackEvent; Chain : Boolean)');
-  end;
+       RegisterMethod('Procedure Free');
+    end;
 end;
 
 (*----------------------------------------------------------------------------*)
 procedure SIRegister_TDBError(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TOBJECT', 'TDBError') do
-  with CL.AddClassN(CL.FindClass('TOBJECT'),'TDBError') do
-  begin
+  with CL.AddClassN(CL.FindClass('TOBJECT'),'TDBError') do begin
     RegisterMethod('Constructor Create( Owner : EDBEngineError; ErrorCode : DBIResult; NativeError : Longint; Message : PChar)');
-    RegisterProperty('Category', 'Byte', iptr);
+     RegisterMethod('Procedure Free');
+      RegisterProperty('Category', 'Byte', iptr);
     RegisterProperty('ErrorCode', 'DBIResult', iptr);
     RegisterProperty('SubCode', 'Byte', iptr);
     RegisterProperty('Message', 'string', iptr);
@@ -517,10 +532,10 @@ end;
 procedure SIRegister_EDBEngineError(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'EDatabaseError', 'EDBEngineError') do
-  with CL.AddClassN(CL.FindClass('EDatabaseError'),'EDBEngineError') do
-  begin
+  with CL.AddClassN(CL.FindClass('EDatabaseError'),'EDBEngineError') do begin
     RegisterMethod('Constructor Create( ErrorCode : DBIResult)');
-    RegisterProperty('ErrorCount', 'Integer', iptr);
+     RegisterMethod('Procedure Free');
+     RegisterProperty('ErrorCount', 'Integer', iptr);
     RegisterProperty('Errors', 'TDBError Integer', iptr);
   end;
 end;
@@ -549,7 +564,7 @@ begin
   CL.AddClassN(CL.FindClass('TOBJECT'),'ENoResultSet');
   SIRegister_TDBError(CL);
  CL.AddTypeS('THandle', 'LongWord');
- CL.AddTypeS('TFileName', 'string');
+ //CL.AddTypeS('TFileName', 'string'); in strutils
  CL.AddTypeS('HDBIDB', 'longword');
   CL.AddTypeS('TLocale', '___Pointer');
   //CL.AddTypeS('TBDECallbackEvent', 'Function ( CBInfo : Pointer) : CBRType');
@@ -1709,9 +1724,12 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TIndexFiles(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TIndexFiles) do
-  begin
+  with CL.Add(TIndexFiles) do begin
     RegisterConstructor(@TIndexFiles.Create, 'Create');
+    RegisterMethod(@TIndexFiles.Add, 'Add');
+    RegisterMethod(@TIndexFiles.Clear, 'Clear');
+    RegisterMethod(@TIndexFiles.Delete, 'Delete');
+    RegisterMethod(@TIndexFiles.Insert, 'Insert');
   end;
 end;
 
@@ -1914,6 +1932,7 @@ procedure RIRegister_TBDECallback(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TBDECallback) do begin
     RegisterConstructor(@TBDECallback.Create, 'Create');
+    RegisterMethod(@TBDECallback.Destroy, 'Free');
   end;
 end;
 
@@ -1922,7 +1941,8 @@ procedure RIRegister_TDBError(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TDBError) do begin
     RegisterConstructor(@TDBError.Create, 'Create');
-    RegisterPropertyHelper(@TDBErrorCategory_R,nil,'Category');
+     RegisterMethod(@TDBError.Destroy, 'Free');
+      RegisterPropertyHelper(@TDBErrorCategory_R,nil,'Category');
     RegisterPropertyHelper(@TDBErrorErrorCode_R,nil,'ErrorCode');
     RegisterPropertyHelper(@TDBErrorSubCode_R,nil,'SubCode');
     RegisterPropertyHelper(@TDBErrorMessage_R,nil,'Message');
@@ -1935,6 +1955,7 @@ procedure RIRegister_EDBEngineError(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(EDBEngineError) do begin
     RegisterConstructor(@EDBEngineError.Create, 'Create');
+      RegisterMethod(@EDBEngineError.Destroy, 'Free');
     RegisterPropertyHelper(@EDBEngineErrorErrorCount_R,nil,'ErrorCount');
     RegisterPropertyHelper(@EDBEngineErrorErrors_R,nil,'Errors');
   end;

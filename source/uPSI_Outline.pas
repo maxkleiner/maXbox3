@@ -2,7 +2,7 @@ unit uPSI_Outline;
 {
 procedure TControlParentR(Self: TControl; var T: TWinControl); begin T := Self.Parent; end;
 procedure TControlParentW(Self: TControl; T: TWinControl); begin Self.Parent:= T; end;
-      add lines 3.9.9.182
+      add lines 3.9.9.182  - update on drawitem
 }
 interface
  
@@ -81,12 +81,22 @@ begin
      RegisterProperty('TEXT', 'String', iptrw);
      RegisterProperty('Data', 'String', iptrw);
     RegisterProperty('Lines', 'TStrings', iptrw);
-     // property Data: Pointer read FData write FData;
+     RegisterProperty('OnDrawItem', 'TDrawItemEvent', iptrw);
+ //  property OnDrawItem: TDrawItemEvent read FOnDrawItem write FOnDrawItem;
+    // property Data: Pointer read FData write FData;
      RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
     RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
     RegisterProperty('MAXLENGTH', 'Integer', iptrw);
     RegisterProperty('Outlinestyle', 'TOutlinestyle', iptr);
     RegisterProperty('style', 'TOutlineType', iptr);
+
+     RegisterProperty('PicturePlus', 'TBitmap', iptrw);
+     RegisterProperty('PictureMinus', 'TBitmap', iptrw);
+     RegisterProperty('PictureOpen', 'TBitmap', iptrw);
+     RegisterProperty('PictureClosed', 'TBitmap', iptrw);
+     RegisterProperty('PictureLeaf', 'TBitmap', iptrw);
+     RegisterProperty('ItemHeight', 'Integer', iptrw);
+
     //FStyle: TOutlineType;
    end;
 end;
@@ -107,6 +117,8 @@ begin
     RegisterMethod('Function Insert( Index : LongInt; const Text : string) : LongInt');
     RegisterMethod('Function InsertObject( Index : LongInt; const Text : string; const Data : Pointer) : LongInt');
     RegisterMethod('Procedure Delete( Index : LongInt)');
+    RegisterMethod('Procedure Update');
+    RegisterMethod('Procedure Refresh');
     RegisterMethod('Function GetDataItem( Value : Pointer) : Longint');
     RegisterMethod('Function GetItem( X, Y : Integer) : LongInt');
     RegisterMethod('Function GetNodeDisplayWidth( Node : TOutlineNode) : Integer');
@@ -326,7 +338,9 @@ begin
     RegisterMethod(@TCustomOutline.Insert, 'Insert');
     RegisterMethod(@TCustomOutline.InsertObject, 'InsertObject');
     RegisterMethod(@TCustomOutline.Delete, 'Delete');
-    RegisterMethod(@TCustomOutline.GetDataItem, 'GetDataItem');
+    RegisterMethod(@TCustomOutline.update, 'Update');
+    RegisterMethod(@TCustomOutline.refresh, 'Refresh');
+     RegisterMethod(@TCustomOutline.GetDataItem, 'GetDataItem');
     RegisterMethod(@TCustomOutline.GetItem, 'GetItem');
     RegisterMethod(@TCustomOutline.GetNodeDisplayWidth, 'GetNodeDisplayWidth');
     RegisterMethod(@TCustomOutline.GetTextItem, 'GetTextItem');

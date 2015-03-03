@@ -1,0 +1,799 @@
+  PROGRAM Extract_Functions_of_EXE_2;
+
+//depends on the debug, map and symbol options of the co mpiler
+//don't stripe the symbols if you wanna see it!
+//shows functions and procedures and constructors  out of the EXE , #locs=226
+//#head:.txt Administrator: PC08: 03/03/2015 12:49:44 PM E:\maxbox3\mXGit39988\maxbox3\examples\256_findfunctions2_of_EXE_Destruct.txt    
+
+CONST 
+//<Constant declarations> (loc's=42)
+  AEXENAME = 'maxbox3.exe';
+  FUNCTIONLIST = 'maxbox_extract_funclist399_.txt';
+  ONE_SUGAR_MASS = 3;                              
+
+{TYPE 
+<Type declarations> 
+<Variable declarations>}
+//<PROCEDURE> 
+//http://4coder.org/delphi-source-code/?72
+
+var 
+  listbox1, listbox2: TListBox;
+  funclist, proclist, constrlist: integer;
+
+Function EinsteinEnergyCube: extended;
+// one sugar cube of 3 gram(m): E=mc^2 example
+begin
+ //result:= 0.003 * Power(300000000, 2);
+ Result:= ONE_SUGAR_MASS/1000 * Power(MetersPerLightSecond, 2);
+ //writelegend
+end; 
+
+function FileToString(afilename: string): string;
+begin
+ with TFileStream.Create(afilename, fmOpenRead or fmShareCompat) do begin
+   try 
+     SetLength(result, Size);
+     Read(result, Size);
+   finally 
+     Free;
+   end  
+ end
+end;
+
+procedure StringToFile(acontent, afilename:string);
+begin
+ with TFileStream.Create(afilename, fmOpenWrite or fmCreate) do begin
+   try
+     Write(acontent, length(acontent));
+   finally
+     Free;
+   end
+ end  
+end;
+
+function SearchAndGet(aStrList: TStrings; aSearchStr: string): string;
+var i, TT1, TT2: integer;
+    s1, tmps, tmps2: string;
+begin
+  for i:= 0 to aStrList.Count -1 do begin
+    s1:= aStrList[i];
+      TT1:= pos(uppercase(aSearchStr), uppercase(s1));
+      TT2:= pos(';',s1);
+      if (TT1 > 0) and (TT2 > 0) then begin
+        tmps:= Copy(s1, TT1, TT2-TT1+1);
+        tmps2:= tmps2 + tmps +#13#10;
+      end;
+  end; 
+  result:= tmps2;
+end;
+
+
+function SearchAndGet3(s1: string; aSearchStr: string): TStringlist;
+var i, T1, T2, T3, T4: integer;
+    tmps: string;
+begin
+  result:= TStringlist.create;
+  result.Sorted:= true;   //before dup!
+  result.duplicates:= dupIgnore;
+  Delete(s1,0,30)   //skip header
+  for i:= 0 to length(s1) do begin
+    T1:= Pos(uppercase(aSearchStr), uppercase(s1));
+    if (T1 > 0) then begin
+      Delete(s1,1,T1-1)    //delete before
+      T2:= Pos('(',s1);   // with params
+      T3:= Pos(':',s1);   // no params
+      if (T2 > 0) or (T3 > 0) then begin
+        if T3 > 0 then
+          t4:= Pos(')',s1);
+        if t4 > 0 then 
+          tmps:= Copy(s1, 0, t3+ t4+2);
+        result.add(tmps) 
+        if (T3 > 0) and (T4 > 0) then   
+          //Delete(s1,1,T3+ t4+2);
+          Delete(s1,1,T3+ 2);  //delete found after
+      end; 
+    end else Break;
+  end;
+  result.sort; 
+end;
+
+function SelectLine(Memo: TMemo; Zeile,Pos: integer): integer;
+Var j: integer;
+begin
+ Result:= 0;
+ If Zeile > 0 then
+    For j:= 0 To Zeile-1 do Result:= Result + Length(Memo.Lines[j])+ 2;
+ Result:= Result +  Pos;
+end;
+
+procedure MergeStrings(Dest, Source: TStrings);
+var
+  I, DI: Integer;
+  begin
+  for I := 0 to Source.Count - 1 do begin
+    if Pos ('=', Source[I]) > 1 then begin
+      DI := Dest.IndexOfName(Source.Names[I]);
+      if DI > -1 then Dest[DI] := Source[I];
+    end;
+  end;
+end;
+ 
+procedure TForm1_Button1Click(Sender: TObject);
+begin
+  MergeStrings(ListBox1.Items, ListBox2.Items);
+end;
+ 
+procedure TForm1_FormCreate(Sender: TObject);
+begin
+  ListBox1.Items.Add('Plants = 10');
+  ListBox1.Items.Add('Animals = 20');
+  ListBox1.Items.Add('Minerals = 15');
+  ListBox2.Items.Add('Animals = 4');
+  ListBox2.Items.Add('Plants = 3');
+  ListBox2.Items.Add('Minerals = 778');
+end;
+
+var 
+  myfile, listback: TStringList;
+  strback: string; 
+  //mi: IStreamLoader;
+  //mm: TMemoryStream;
+  insize,i: integer;
+
+BEGIN  //Main
+//<Executable statements>
+//************* maXbox compiler series**************************************
+  //maxForm1.ShellStyle1Click(self);
+ { Memo2.SetFocus;
+  Memo2.Selstart:= SelectLine(Memo2,5,2);
+  Memo2.Sellength:= 50;}
+  // myfile.loadFromFile(ExePath+'upsi_allfunctionslist.txt')
+  // mi:= GetDefaultStreamLoader;
+  // mm:= TMemoryStream.Create;
+  // mi.Load(defWSDL, mm);
+  // mi.Load(ExePath+'maxbox3.exe', mm);
+  // mm.Seek(0,0);
+  // SetLength(strback, mm.Size); 
+  // insize:= mm.read(strback, length(strback));
+  // writeln(inttostr(insize))
+   //myfile:= TStringList.create;
+   //myfile.loadFromFile(Exepath+'maxcopy45.txt');
+   //Writeln(SearchAndGet(myfile, 'function'));
+   //strback:= SearchAndGet(myfile, 'function');
+   memo2.clear;
+   strback:= FileToString(Exepath+EXENAME);
+   //strback:= FileToString(Exepath+'maxbox3clx');
+   writeln('Extraxt of EXE Functions of '+EXENAME)
+   writeln('Size of EXE: '+intToStr(Length(strback)))
+   Screen.Cursor:= crHourGlass;
+   writeln('*************Now the Funclist************* ')
+   listback:= SearchAndGet3(strback, 'function');
+   funclist:= listback.count;
+   writeln('Funclist Size is: '+inttostr(listback.count))
+   //listback.Assign(SearchAndGet3(strback, 'procedure'));
+   for i:= 0 to listback.count-1 do begin
+     writeln(listback[i])
+   end;
+   listback.clear;
+   writeln('*************Now the Proclist************* ')
+   listback:= SearchAndGet3(strback, 'procedure');
+   proclist:= listback.count;
+   writeln('Proclist Size is: '+inttostr(listback.count))
+   for i:= 0 to listback.count-1 do begin
+     writeln(listback[i])
+   end;
+   listback.clear;
+   writeln('*************Now Constructors************* ')
+   listback:= SearchAndGet3(strback, '.Destroy,');  //Procedure Free destructor
+   constrlist:= listback.count;
+   writeln('Constructor Size is: '+inttostr(listback.count))
+   for i:= 0 to listback.count-1 do begin
+     writeln(listback[i])
+   end;
+   //All the Output to a file
+   StringToFile(memo2.text, Exepath+FUNCTIONLIST);
+   Screen.Cursor:= crDefault;
+   listback.Free; 
+  //myfile.free;
+  Writeln('Amount of Functions: '+inttoStr(funclist))
+  Writeln('Amount of Procedures: '+inttoStr(proclist))
+  Writeln('Amount of Constructors: '+inttoStr(constrlist))
+  Writeln('Totals of Calls: '+inttostr(funclist+proclist+constrlist));
+  Writeln('SHA1: of '+mbVersion+' '+SHA1(exepath+EXENAME));
+   
+  {Writeln('E=mc^2 example: '+FloatToStr(EinsteinEnergyCube)) 
+  Writeln('One Sugar Cube has Energy in Joule: '+FloatToStr(EinsteinEnergyCube)) 
+  PrintF('One Sugar Cube has Energy in Joule: %0.2E',[EinsteinEnergyCube]) 
+  PrintF('E=mc^2 example: 2 Days Power for Hamburg: %0.2E',[EinsteinEnergyCube]);
+  PrintF('E=mc^2 example: Joule to kWh: %f',[EinsteinEnergyCube/3600000]); 
+  PrintF('E=mc^2 example: Joule to kWh: %0.2E kWh',[EinsteinEnergyCube/3600000]);
+  PrintF('Conclusion: One Sugar has %0.1f Millions kWh Energy!',
+                                       [EinsteinEnergyCube/3600000000000]);} 
+
+  {Writeln('');
+  Writeln('test '+floattostr(pij)) 
+  Writeln('test '+floattostr(pi)) 
+  Writeln(Format('format of PI %0.18f',[PI])) 
+  PrintF('PrintF of PI  %0.18f',[PI]) 
+  Writeln('test '+floattostr(EULER)) 
+  Writeln('test '+floattostr(exp(1)))} 
+  //println
+  //currencybyword
+  //getcommandline
+  //GetEnvironmentVariable( lpName : PChar; lpBuffer : PChar; nSize : DWORD) : DWORD;');
+
+END. 
+
+//code snippet
+
+procedure ListDLLFunctions(DLLName: String; List: TStrings);
+type
+  chararr = array [0..$FFFFFF] of Char;
+  var
+  H: THandle;
+  I,
+  fc: integer;
+  st: string;
+  arr: Pointer;
+  ImageDebugInformation: PImageDebugInformation;
+begin
+  List.Clear;
+  DLLName := ExpandFileName(DLLName);
+  if FileExists(DLLName) then
+  begin
+    H := CreateFile(PChar(DLLName), GENERIC_READ, FILE_SHARE_READ or
+      FILE_SHARE_WRITE, nil, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+    if H<>INVALID_HANDLE_VALUE then
+      try
+        ImageDebugInformation := MapDebugInformation(H, PChar(DLLName), nil, 0);
+        if ImageDebugInformation<>nil then
+          try
+            arr := ImageDebugInformation^.ExportedNames;
+            fc := 0;
+            for I := 0 to ImageDebugInformation^.ExportedNamesSize - 1 do
+              if chararr(arr^)[I]=#0 then
+              begin
+                st := PChar(@chararr(arr^)[fc]);
+                if Length(st)>0 then
+                  List.Add(st);
+                if (I>0) and (chararr(arr^)[I-1]=#0) then
+                  Break;
+                fc := I + 1
+              end
+          finally
+            UnmapDebugInformation(ImageDebugInformation)
+          end
+      finally
+        CloseHandle(H)
+      end
+  end
+end;
+
+// the following is an example how to use the procedure
+var
+  List: TStrings;
+  I: integer;
+  S: String;
+
+begin
+  List := TStringList.Create;
+  ListDLLFunctions('c:\winnt\system32\mfc42.dll', List);
+  S := 'List of functions';
+  for I := 0 to List.Count - 1 do
+    S := S + #13#10 + List[I];
+  ShowMessage(S);
+  List.Free
+  Writeln(SHA1(exepath+'maxbox3.exe'));
+end.
+
+
+
+
+Das Buch oder eher der Bildband besticht durch wirklich exotisches Bildmaterial, in dem Sinne, dass die Aufnahmen und Plakate selten publiziert wurden und deshalb von besonderem Wert sind.
+Der Band zeigt schon in den ersten Seiten ein Parsifal-Plakat, das in seiner dynamischen Kunst-Art einmalig ist. Der Autor verarbeitet ausschliesslich eigenes Bildmaterial mit optimaler Optik und reizvoller Perspektive. Zu erwähnen sind die stimmungsvollen Fernaufnahmen auf S.16 auf der Gotthard-Strecke oder die des Catalan-Talgo auf S.42. Sogar seltene Farbaufnahmen aus den Anfängen der TEE-Ära (S.24) haben Eingang gefunden. Auch die damalige TEEM als übergreifender Güterverkehr kommt zum Zuge und das perspektivische Material wird auch so präzise wie möglich datiert und bezeichnet wie der TEE Capitole du Matin auf S.67. sich eben vom TEE Capitole du Soir unterscheidet.
+ Eine TEE Übersicht auf S.82 runden den Band ab, der auch mit interessanten Details überzeugt, z.B. S.97 zeigt ein imposantes Beispiel von Industriedesign der EuroFima, die einiges an TEE Rollmaterial lieferte.
+Ein profundes Buch zum 2012 Jubiläum der 55 Jahre TEE Geschichte. 
+
+
+
+http://max.kleiner.com/TEE.html
+
+
+
+
+----app_template_loaded----
+
+
+Amount of Functions: 6363
+Amount of Procedures: 3720
+Amount of Constructors: 622
+Totals of Calls: 10705
+B6E9C32EAEC7DE302DD1E008F2ADD364C18C46D1
+
+Amount of Functions: 6363
+Amount of Procedures: 3720
+Amount of Constructors: 622
+Totals of Calls: 10705
+CD9BAB3E6B6E25827AE237CC4F8E4FEF658058A8
+
+Amount of Functions: 8428
+Amount of Procedures: 5210
+Amount of Constructors: 855
+Totals of Calls: 14493
+5CA25A08C2E066BFFFBB1F662B9ADD97D541E1CE
+ mX3 executed: 18.10.2013 15:46:35  Runtime: 0:12:23.187  Memoryload: 51% use
+
+
+Amount of Functions: 8619
+Amount of Procedures: 5329
+Amount of Constructors: 886
+Totals of Calls: 14834
+F30F9AA19D362565786A77E2B1E24F2A4F4118A4
+ mX3 executed: 09.11.2013 13:13:55  Runtime: 0:20:50.734  Memoryload: 71% use
+ 
+ Amount of Functions: 8622
+Amount of Procedures: 5343
+Amount of Constructors: 885
+Totals of Calls: 14850
+ADEB3B3F764F75D98F6CBD51642320BED4C6B7E2
+
+
+
+Amount of Functions: 8996
+Amount of Procedures: 5614
+Amount of Constructors: 949
+Totals of Calls: 15559
+BDC15C26A9B43F11110DCA0D3E1F7A5DC302E3D7
+ mX3 executed: 14.12.2013 12:51:33  Runtime: 0:19:46.234  Memoryload: 43% use
+ 
+ Amount of Functions: 9123
+Amount of Procedures: 5654
+Amount of Constructors: 953
+Totals of Calls: 15730
+SHA1: A8D32978AD68F73EE3B7D688EFD3915E69FBAD77
+
+Amount of Functions: 9446
+Amount of Procedures: 5868
+Amount of Constructors: 996
+Totals of Calls: 16310
+SHA1: FB2031DDE59CF91DD489687647A9F70F2AA640FD
+ mX3 executed: 03.01.2014 00:33:39  Runtime: 0:21:12.360  Memoryload: 43% use
+ Amount of Functions: 9484
+Amount of Procedures: 5882
+Amount of Constructors: 995
+Totals of Calls: 16361
+SHA1: of 3.9.9.84 5AABC925B989B7778F175855373CC4BA9419B422
+ mX3 executed: 04.01.2014 10:07:30  Runtime: 0:15:45.359  Memoryload: 43% use
+ 
+ Amount of Functions: 9562
+Amount of Procedures: 5971
+Amount of Constructors: 1015
+Totals of Calls: 16548
+SHA1: of 3.9.9.84 11201DA30F7A9151AD40F0052E102FC2897E95C5
+ mX3 executed: 04.01.2014 19:59:40  Runtime: 0:22:40.32  Memoryload: 66% use
+
+
+    Amount of Functions: 9908
+Amount of Procedures: 6310
+Amount of Constructors: 1052
+Totals of Calls: 17270
+SHA1: of 3.9.9.85 00095A1C1454FFE78D1BDC76DD943EAADDAA4447
+
+Amount of Functions: 10272
+Amount of Procedures: 6525
+Amount of Constructors: 1080
+Totals of Calls: 17877
+SHA1: of 3.9.9.85 DA5AA145CDBDCE9776DFC6E1D893BC924DB4E2DD
+
+Amount of Functions: 10334
+Amount of Procedures: 6549
+Amount of Constructors: 1083
+Totals of Calls: 17966
+SHA1: of 3.9.9.86 A9ADFBBDFF888FE04D66D4D16BC82BCADA3F5159
+ mX3 executed: 22.01.2014 15:18:33  Runtime: 0:24:16.500  Memoryload: 47% use
+ 
+ Amount of Functions: 10752
+Amount of Procedures: 6785
+Amount of Constructors: 1112
+Totals of Calls: 18649
+SHA1: of 3.9.9.86 A24E9ED51CCD3ED008E8909ACCB8D195CB45DE96
+
+Amount of Functions: 11762
+Amount of Procedures: 7401
+Amount of Constructors: 1215
+Totals of Calls: 20378
+SHA1: of 3.9.9.91 34E7B0874925ECF68BAD00074B14CE40108E12E3
+ mX3 executed: 10/03/2014 07:04:00 PM  Runtime: 0:6:18.669  Memoryload: 45% use
+
+Amount of Functions: 11818
+Amount of Procedures: 7421
+Amount of Constructors: 1219
+Totals of Calls: 20458
+SHA1: of 3.9.9.91 8099E25F2508B262E909B76EDF7BB301AFFA1864
+ mX3 executed: 12/03/2014 09:12:32 AM  Runtime: 0:6:21.96  Memoryload: 42% use
+
+Amount of Functions: 11879
+Amount of Procedures: 7471
+Amount of Constructors: 1232
+Totals of Calls: 20582
+SHA1: of 3.9.9.92 6F4448864F63607F7F211F148FE9FB152B45C0A4
+ mX3 executed: 18/03/2014 11:53:13 PM  Runtime: 0:6:31.763  Memoryload: 50% use
+ 
+Amount of Functions: 11963
+Amount of Procedures: 7474
+Amount of Constructors: 1231
+Totals of Calls: 20668
+SHA1: of 3.9.9.92 61ECB8AF3FA0C72B6AA6DE8DA4A65E1C30F0EE6C
+ mX3 executed: 19/03/2014 12:57:46 PM  Runtime: 0:6:26.976  Memoryload: 44% use
+ 
+ 
+ Amount of Functions: 11992
+Amount of Procedures: 7507
+Amount of Constructors: 1239
+Totals of Calls: 20738
+SHA1: of 3.9.9.94 64A167821033864F9DF3478987B2EE997EF89AC5
+ mX3 executed: 27/03/2014 03:15:35 PM  Runtime: 0:6:38.611  Memoryload: 49% use
+ 
+ Amount of Functions: 11992
+Amount of Procedures: 7507
+Amount of Constructors: 1239
+Totals of Calls: 20738
+SHA1: of 3.9.9.94 64A167821033864F9DF3478987B2EE997EF89AC5
+ mX3 executed: 27/03/2014 04:06:37 PM  Runtime: 0:5:55.106  Memoryload: 54% use
+ 
+ Amount of Functions: 12130
+Amount of Procedures: 7566
+Amount of Constructors: 1240
+Totals of Calls: 20936
+SHA1: of 3.9.9.94 780F1F749EFEFB5C0FAA09C51B6AB048C6A00CC6
+ mX3 executed: 29/03/2014 06:24:47 PM  Runtime: 0:6:29.409  Memoryload: 31% use
+ 
+ Amount of Functions: 12155
+Amount of Procedures: 7599
+Amount of Constructors: 1246
+Totals of Calls: 21000
+SHA1: of 3.9.9.94 80C9E0695B9F8EFAFA7C0E2D2DB62E4487D55337
+ mX3 executed: 09/04/2014 08:16:35 PM  Runtime: 0:6:34.174  Memoryload: 38% use
+ 
+ Amount of Functions: 12250
+Amount of Procedures: 7626
+Amount of Constructors: 1248
+Totals of Calls: 21124
+SHA1: of 3.9.9.94 FE5D5A1C632EEB495503D4377BB42B11FEE2AD8D
+ mX3 executed: 10/04/2014 11:48:14 PM  Runtime: 0:6:23.478  Memoryload: 39% use
+ 
+ Amount of Functions: 12264
+Amount of Procedures: 7632
+Amount of Constructors: 1253
+Totals of Calls: 21149
+SHA1: of 3.9.9.94 746418954E790A1713A93FF786ABCB50097FCB59
+ mX3 executed: 12/04/2014 01:15:05 AM  Runtime: 0:6:35.316  Memoryload: 40% use
+
+Amount of Functions: 12403
+Amount of Procedures: 7656
+Amount of Constructors: 1258
+Totals of Calls: 21317
+SHA1: of 3.9.9.95 10150C934566C42058BFC93FB50A7C53085D8FB5
+ mX3 executed: 23/04/2014 01:08:44 PM  Runtime: 0:6:37.53  Memoryload: 44% use 
+
+Amount of Functions: 12527
+Amount of Procedures: 7767
+Amount of Constructors: 1264
+Totals of Calls: 21558
+SHA1: of 3.9.9.95 A8BE7AD5B70ECAF9797C5C9E42A3CD40E903145F
+ mX3 executed: 26/04/2014 07:16:50 PM  Runtime: 0:7:18.658  Memoryload: 35% use
+ 
+ Amount of Functions: 12527
+Amount of Procedures: 7767
+Amount of Constructors: 1264
+Totals of Calls: 21558
+SHA1: of 3.9.9.95 A8BE7AD5B70ECAF9797C5C9E42A3CD40E903145F
+ mX3 executed: 27/04/2014 10:52:57 AM  Runtime: 0:7:20.598  Memoryload: 34% use
+ 
+ Amount of Functions: 12602
+Amount of Procedures: 7786
+Amount of Constructors: 1267
+Totals of Calls: 21655
+SHA1: of 3.9.9.96 3B59BA753A42DB1E33C677065879951072E6D76C
+ mX3 executed: 14/05/2014 04:01:14 PM  Runtime: 0:7:39.494  Memoryload: 46% use
+Amount of Functions: 12602
+Amount of Procedures: 7786
+Amount of Constructors: 1267
+Totals of Calls: 21655
+SHA1: of 3.9.9.96 3B59BA753A42DB1E33C677065879951072E6D76C
+ mX3 executed: 14/05/2014 04:32:49 PM  Runtime: 0:7:11.513  Memoryload: 48% use //process
+ 
+ Amount of Functions: 12645
+Amount of Procedures: 7815
+Amount of Constructors: 1270
+Totals of Calls: 21730
+SHA1: of 3.9.9.96 5DF4E19D4BE943E9FBEAF3EC005481529863AC63
+ mX3 executed: 14/05/2014 06:23:40 PM  Runtime: 0:8:0.207  Memoryload: 45% use
+
+Amount of Functions: 12655
+Amount of Procedures: 7822
+Amount of Constructors: 1268
+Totals of Calls: 21745
+SHA1: of 3.9.9.96 9A91FEE9024DA10425E9C7B65ADDF93E819B63DB
+ mX3 executed: 15/05/2014 12:25:04 PM  Runtime: 0:7:53.623  Memoryload: 48% use
+ 
+ Amount of Functions: 12664
+Amount of Procedures: 7845
+Amount of Constructors: 1273
+Totals of Calls: 21782
+SHA1: of 3.9.9.96 3CD1213E886ED5ECBBEAD37EC141E09DCE395323
+ mX3 executed: 19/05/2014 07:51:14 PM  Runtime: 0:7:30.582  Memoryload: 48% use
+Amount of Functions: 12662
+Amount of Procedures: 7844
+Amount of Constructors: 1275
+Totals of Calls: 21781
+SHA1: of 3.9.9.96 1DD18FFE0743F44580AED6765820ACA01DD166FB
+ mX3 executed: 19/05/2014 08:30:29 PM  Runtime: 0:7:27.565  Memoryload: 47% use
+
+Amount of Functions: 12662
+Amount of Procedures: 7844
+Amount of Constructors: 1275
+Totals of Calls: 21781
+SHA1: of 3.9.9.96 1DD18FFE0743F44580AED6765820ACA01DD166FB
+ mX3 executed: 19/05/2014 08:43:46 PM  Runtime: 0:6:47.904  Memoryload: 48% use //process
+
+Amount of Functions: 12673
+Amount of Procedures: 7847
+Amount of Constructors: 1274                                   
+Totals of Calls: 21794
+SHA1: of 3.9.9.96 9F978835A5E1525DB8E613FC09A1571D4CBC57DE
+ mX3 executed: 22/05/2014 03:41:19 PM  Runtime: 0:7:23.275  Memoryload: 52% use
+
+Amount of Functions: 12682
+Amount of Procedures: 7858
+Amount of Constructors: 1275
+Totals of Calls: 21815
+SHA1: of 3.9.9.96 EDD7FC051FF703851938AA33B4FBACCBA2552F1C
+ mX3 executed: 22/05/2014 06:54:04 PM  Runtime: 0:7:21.981  Memoryload: 63% use
+
+    Amount of Functions: 12728
+Amount of Procedures: 7881
+Amount of Constructors: 1276
+Totals of Calls: 21885
+SHA1: of 3.9.9.96 6DF0415E1645C98C2298DA0A3F613A016AD72EEE
+ mX3 executed: 13/06/2014 12:25:27 PM  Runtime: 0:8:29.453  Memoryload: 39% use
+
+Amount of Functions: 12787
+Amount of Procedures: 7905
+Amount of Constructors: 1281
+Totals of Calls: 21973
+SHA1: of 3.9.9.98 EF3D49A159B008E5FAD63527ED907EC10790DA0C
+ mX3 executed: 15/07/2014 08:18:07 AM  Runtime: 0:7:58.719  Memoryload: 31% use
+ 
+ Amount of Functions: 12842
+Amount of Procedures: 7938
+Amount of Constructors: 1288
+Totals of Calls: 22068
+SHA1: of 3.9.9.98 FEF0B35C2D63B59D7760E21595F99EF11631A72F
+ mX3 executed: 19/07/2014 04:32:11 PM  Runtime: 0:8:32.762  Memoryload: 39% use
+
+ 
+Amount of Functions: 12875
+Amount of Procedures: 7978
+Amount of Constructors: 1288
+Totals of Calls: 22141
+SHA1: of 3.9.9.98 9764925702B8BAAE9BD3C86E4495E5A29BD58D95
+ mX3 executed: 20/07/2014 02:28:42 PM  Runtime: 0:8:17.967  Memoryload: 44% use
+
+Amount of Functions: 12983
+Amount of Procedures: 7997
+Amount of Constructors: 1292
+Totals of Calls: 22272
+SHA1: of 3.9.9.98 2B7D1EBFB07DB9B0660F857320C44D70CAA1C717
+ mX3 executed: 22/07/2014 11:50:45 PM  Runtime: 0:8:8.188  Memoryload: 45% use
+
+Amount of Functions: 13058
+Amount of Procedures: 8028
+Amount of Constructors: 1296
+Totals of Calls: 22382
+SHA1: of 3.9.9.98 C2733EA7D571A47037375ACB55E287966A9A66C6
+ mX3 executed: 27/07/2014 11:41:00 AM  Runtime: 0:9:55.968  Memoryload: 30% use
+
+
+Amount of Functions: 13078
+Amount of Procedures: 8039
+Amount of Constructors: 1296
+Totals of Calls: 22413
+SHA1: of 3.9.9.98 693C7F691584E518E87CF5BFFC315A5442777781
+ mX3 executed: 28/07/2014 09:09:39 AM  Runtime: 0:8:44.315  Memoryload: 59% use
+
+Amount of Functions: 13121
+Amount of Procedures: 8067
+Amount of Constructors: 1300
+Totals of Calls: 22488
+SHA1: of 3.9.9.98 9B7B029B810DE2E1E28B2D1CEB9443992F93F9D5
+ mX3 executed: 10/08/2014 07:48:11 PM  Runtime: 0:8:26.791  Memoryload: 33% use
+
+Amount of Functions: 13127
+Amount of Procedures: 8073
+Amount of Constructors: 1301
+Totals of Calls: 22501
+SHA1: of 3.9.9.98 C0846AC346B9428D5B40085C5F221086D9F0CA5A
+ mX3 executed: 11/08/2014 01:11:00 PM  Runtime: 0:8:20.339  Memoryload: 34% use
+
+
+
+     http://www.delphibasics.co.uk/
+     http://www.youtube.com/watch?v=av89HAbqAsI
+    
+    POST git-receive-pack (chunked)
+Pushing to https://github.com/maxkleiner/maXbox3.git
+To https://github.com/maxkleiner/maXbox3.git
+   f127d21..c6a98da  masterbox2 -> masterbox2
+updating local tracking ref 'refs/remotes/maXbox3Remote/masterbox2'
+
+
+Amount of Functions: 13173
+Amount of Procedures: 8185
+Amount of Constructors: 1320
+Totals of Calls: 22678
+SHA1: of 3.9.9.98 9332386628C609D8DAE419C5D76F010C89380BD7
+ mX3 executed: 15/08/2014 04:35:52 PM  Runtime: 0:8:19.326  Memoryload: 49% use
+
+    Amount of Functions: 13211
+Amount of Procedures: 8242
+Amount of Constructors: 1329
+Totals of Calls: 22782
+SHA1: of 3.9.9.98 AD5C75B6AC50E71DC6813C3F8550FD6F58F69D6D
+ mX3 executed: 30/08/2014 11:28:58 PM  Runtime: 0:8:23.241  Memoryload: 34% use
+
+
+    Amount of Functions: 13222
+Amount of Procedures: 8254
+Amount of Constructors: 1325
+Totals of Calls: 22801
+SHA1: of 3.9.9.98 F8253DA5C5A0AF8A5C4EB9F0749860B803BA7768
+ mX3 executed: 31/08/2014 06:56:10 PM  Runtime: 0:8:50.361  Memoryload: 44% use
+
+    Amount of Functions: 13235
+Amount of Procedures: 8263
+Amount of Constructors: 1327
+Totals of Calls: 22825
+SHA1: of 3.9.9.98 E27748B6C7483BF48757A11FCCDD606F8B6F4300
+ mX3 executed: 01/09/2014 04:11:14 PM  Runtime: 0:8:39.188  Memoryload: 47% use
+
+Amount of Functions: 13271
+Amount of Procedures: 8274
+Amount of Constructors: 1338
+Totals of Calls: 22883
+SHA1: of 3.9.9.98 D0EC95326FE1ABD9D441F137336D00CF4BC77CAB
+ mX3 executed: 02/09/2014 08:27:13 AM  Runtime: 0:9:16.403  Memoryload: 34% use
+ 
+ Amount of Functions: 13307
+Amount of Procedures: 8291
+Amount of Constructors: 1341
+Totals of Calls: 22939
+SHA1: of 3.9.9.98 FF1FBC4C54343B301A55089CC01630434175632E
+ mX3 executed: 10/09/2014 04:46:50 PM  Runtime: 0:8:54.911  Memoryload: 58% use
+
+    Amount of Functions: 13419
+Amount of Procedures: 8289
+Amount of Constructors: 1337
+Totals of Calls: 23045
+SHA1: of 3.9.9.98 7C600FFC801FFF2AAEC83DD220202DDF5271C64D
+ mX3 executed: 15/09/2014 01:37:26 PM  Runtime: 0:8:39.538  Memoryload: 52% use
+
+Amount of Functions: 13556
+Amount of Procedures: 8327
+Amount of Constructors: 1338
+Totals of Calls: 23221
+SHA1: of 3.9.9.100 B1CFFA2139BEF2D27D17C8212331A1E8C7584BD2
+
+Amount of Functions: 13666
+Amount of Procedures: 8361
+Amount of Constructors: 1367
+Totals of Calls: 23394
+SHA1: of 3.9.9.101 1BDE6C69D582F5BC8E718360092E684554324CBB
+ mX3 executed: 23/10/2014 11:42:33 AM  Runtime: 0:8:49.71  Memoryload: 37% use
+
+    Amount of Functions: 13685
+Amount of Procedures: 8395
+Amount of Constructors: 1372
+Totals of Calls: 23452
+SHA1: of 3.9.9.101 455801555099960FDDEF8C10C7D3F159955617C8
+ mX3 executed: 23/10/2014 05:08:28 PM  Runtime: 0:9:2.471  Memoryload: 45% use
+
+    Amount of Functions: 13685
+Amount of Procedures: 8396
+Amount of Constructors: 1369
+Totals of Calls: 23450
+SHA1: of 3.9.9.101 786FA3035226AC3F62F6F6B9E2E2B94C1D659297
+ mX3 executed: 24/10/2014 02:54:41 PM  Runtime: 0:8:52.898  Memoryload: 54% use
+
+Amount of Functions: 13694
+Amount of Procedures: 8406
+Amount of Constructors: 1368
+Totals of Calls: 23468
+SHA1: of 3.9.9.101 E951E93E67DE0E815D3F7441842994BAEA06F21A
+ mX3 executed: 26/10/2014 11:00:46 PM  Runtime: 0:9:1.315  Memoryload: 55% use
+ 
+ Amount of Functions: 13723
+Amount of Procedures: 8430
+Amount of Constructors: 1370
+Totals of Calls: 23523
+SHA1: of 3.9.9.110 DE5935DF492D3C1DA27D8DB8BD0651583A0E1EE3
+ mX3 executed: 11/11/2014 10:26:09 AM  Runtime: 0:9:2.309  Memoryload: 47% use
+
+Amount of Functions: 13829
+Amount of Procedures: 8444
+Amount of Constructors: 1371
+Totals of Calls: 23644
+SHA1: of 3.9.9.110 C47713EE2CFFD66F569249E63A16D10874B484B1
+ mX3 executed: 17/11/2014 01:01:26 PM  Runtime: 0:8:47.957  Memoryload: 38% use
+
+Amount of Functions: 13931
+Amount of Procedures: 8515
+Amount of Constructors: 1382
+Totals of Calls: 23828
+SHA1: of 3.9.9.120 AB160C4BBD8D662D1E01C9323E7F9D47ABEAF675
+ mX3 executed: 27/11/2014 07:02:28 PM  Runtime: 0:9:33.314  Memoryload: 44% use
+
+Amount of Functions: 13930
+Amount of Procedures: 8516
+Amount of Constructors: 1382
+Totals of Calls: 23828
+SHA1: of 3.9.9.120 3EFB12E5729BDAA745373C2743F9DD1E93C9295D
+ mX3 executed: 28/11/2014 08:25:54 AM  Runtime: 0:9:12.649  Memoryload: 40% use
+ 
+ Amount of Functions: 14034
+Amount of Procedures: 8585
+Amount of Constructors: 1392
+Totals of Calls: 24011
+SHA1: of 3.9.9.160 E4DF3FDE31E9CE26D09ADE494548069187F49E3F
+ mX3 executed: 08/01/2015 11:28:11 AM  Runtime: 0:9:11.560  Memoryload: 45% use
+
+Amount of Functions: 14075
+Amount of Procedures: 8641
+Amount of Constructors: 1401
+Totals of Calls: 24117
+SHA1: of 3.9.9.160 8B4D7070BA40BDE17EEDBE78121BB8B474A1D6CF
+ mX3 executed: 09/01/2015 02:45:23 PM  Runtime: 0:9:7.689  Memoryload: 44% use
+
+    Amount of Functions: 14124
+Amount of Procedures: 8659
+Amount of Constructors: 1404
+Totals of Calls: 24187
+SHA1: of 3.9.9.160 9C80649752AABE948C34180552BEDC2AB295E82A
+ mX3 executed: 22/01/2015 10:25:47 PM  Runtime: 0:9:27.133  Memoryload: 60% use
+
+Amount of Functions: 14164
+Amount of Procedures: 8742
+Amount of Constructors: 1408
+Totals of Calls: 24314
+SHA1: of 3.9.9.180 94032DDA24F18A3D8515CCA6BB256E0633475F2F
+ mX3 executed: 04/02/2015 01:23:37 PM  Runtime: 0:9:23.897  Memoryload: 39% use
+
+Amount of Functions: 14205
+Amount of Procedures: 8755
+Amount of Constructors: 1408
+Totals of Calls: 24368
+SHA1: of 3.9.9.180 E84DD2857F77CB84E4B479B9413F3D3E96A94DBE
+ mX3 executed: 18/02/2015 04:18:40 PM  Runtime: 0:9:49.340  Memload: 58% use
+
+Amount of Functions: 14232
+Amount of Procedures: 8825
+Amount of Constructors: 1414
+Totals of Calls: 24471
+SHA1: of 3.9.9.180 680C38764AABF79B953713CDE1501B77BE27FA49
+ mX3 executed: 23/02/2015 08:36:11 PM  Runtime: 0:9:51.969  Memload: 54% use
+
+Amount of Functions: 14297
+Amount of Procedures: 8863
+Amount of Constructors: 1455
+Totals of Calls: 24615
+
+Amount of Procedure Free: 716
+
+
+Extraxt of EXE Functions of maXbox3.exe
+Size of EXE: 24185856
+
+
+SHA1: of 3.9.9.180 3D7F88BE9687CB834A5E2DAED08B23358484FEC0
+ mX3 executed: 03/03/2015 11:28:43 AM  Runtime: 0:9:55.616  Memload: 45% use

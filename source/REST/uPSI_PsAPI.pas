@@ -44,11 +44,29 @@ procedure Register;
 
 implementation
 
-  uses forms, svcmgr, winsvc, servicemgr, ShlObj, ActiveX;
+  uses forms, svcmgr, winsvc, servicemgr, ShlObj, ActiveX, idHTTP, ComObj, variants;
 //uses
    //Windows
-  //,PsAPI
+  //,PsAPI      Classes,
+  //ComObj,
+  //Variants,
+  //IdHTTP,
   //;
+
+ type
+ TGeoInfo   = record
+  Status        : string;
+  CountryCode   : string;
+  CountryName   : string;
+  RegionCode    : string;
+  City          : string;
+  ZipPostalCode : string;
+  Latitude      : string;
+  Longitude     : string;
+  TimezoneName  : string;
+  Gmtoffset     : string;
+  Isdst         : string;
+ end;
 
 
 procedure Register;
@@ -455,6 +473,58 @@ begin
   RunCaptured('C:\', 'cmd.exe', '/c dir');
 end;*)
 
+const
+ UrlGeoLookupInfo  ='http://ipinfodb.com/ip_query.php?timezone=true&ip=%s';
+ UrlGeoLookupInfo2 ='http://backup.ipinfodb.com/ip_query.php?timezone=true&ip=%s'; //backup
+
+procedure GetGeoInfo(const IpAddress : string;var GeoInfo :TGeoInfo; const UrlGeoLookupInfo: string);
+var
+  lHTTP  : TIdHTTP;
+  lStream: TStringStream;
+  XMLDoc : OleVariant;
+  ANode  : OleVariant;
+begin
+  lHTTP   := TIdHTTP.Create(nil);
+  lStream := TStringStream.Create('');
+  try
+      try
+        lHTTP.Get(Format(UrlGeoLookupInfo,[IpAddress]), lStream); //get the request
+      except
+        lHTTP.Get(Format(UrlGeoLookupInfo2,[IpAddress]), lStream); //if something is wrong try using the backup server.
+      end;
+      lStream.Seek(0,0);
+      XMLDoc := CreateOleObject('Msxml2.DOMDocument.6.0');
+      XMLDoc.async := false;
+      XMLDoc.LoadXML(lStream.ReadString(lStream.Size));
+      XMLDoc.setProperty('SelectionLanguage','XPath');//use XPath to parse the xml result
+      ANode:=XMLDoc.selectSingleNode('/Response/Status');
+      if not VarIsNull(ANode) then GeoInfo.Status:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/CountryCode');
+      if not VarIsNull(ANode) then GeoInfo.CountryCode:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/CountryName');
+      if not VarIsNull(ANode) then GeoInfo.CountryName:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/RegionCode');
+      if not VarIsNull(ANode) then GeoInfo.RegionCode:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/City');
+      if not VarIsNull(ANode) then GeoInfo.City:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/ZipPostalCode');
+      if not VarIsNull(ANode) then GeoInfo.ZipPostalCode:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/Latitude');
+      if not VarIsNull(ANode) then GeoInfo.Latitude:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/Longitude');
+      if not VarIsNull(ANode) then GeoInfo.Longitude:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/TimezoneName');
+      if not VarIsNull(ANode) then GeoInfo.TimezoneName:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/Gmtoffset');
+      if not VarIsNull(ANode) then GeoInfo.Gmtoffset:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/Isdst');
+      if not VarIsNull(ANode) then GeoInfo.Isdst:=ANode.Text;
+  finally
+    lHTTP.Free;
+    lStream.Free;
+  end;
+end;
+
 
 
 (* === compile-time registration functions === *)
@@ -479,6 +549,25 @@ begin
    +': DWORD; QuotaNonPagedPoolUsage : DWORD; PagefileUsage : DWORD; PeakPagefileUsage : DWORD; end');
   CL.AddTypeS('PROCESS_MEMORY_COUNTERS', '_PROCESS_MEMORY_COUNTERS');
   CL.AddTypeS('TProcessMemoryCounters', '_PROCESS_MEMORY_COUNTERS');
+  CL.AddTypeS('HCOLORSPACE', 'LongWord');
+  CL.AddTypeS('TGeoInfo', 'record status: string; countrycode : '
+   +'string; countryname : string; regioncode : string; city : string; zippostalcode : string; latitude '
+   +': string; longitude : string; timezonename : string; gmtoffset: string; isdst: string; end');
+
+ { TGeoInfo   = record
+  Status        : string;
+  CountryCode   : string;
+  CountryName   : string;
+  RegionCode    : string;
+  City          : string;
+  ZipPostalCode : string;
+  Latitude      : string;
+  Longitude     : string;
+  TimezoneName  : string;
+  Gmtoffset     : string;
+  Isdst         : string;
+ end; }
+
 
   CL.AddTypeS('TDLLVersionInfo', 'record cbsize, dwMajorVersion, dwMinorVersion, dwBuildNumber, dwPlatformID: DWord; end');
 
@@ -535,6 +624,8 @@ begin
  CL.AddDelphiFunction('function ConsoleCaptureDOS(const _dirName, _exeName, _cmdLine: string; amemo: TStrings): Boolean;');
  CL.AddDelphiFunction('procedure PerformanceDelayMS(ams: integer);');
  CL.AddDelphiFunction('function ExecuteProcess(FileName:string;Visibility:Integer;BitMask:Integer;Synch:Boolean):Longword;');
+ CL.AddDelphiFunction('function ExecuteMultiProcessor(FileName:string;Visibility:Integer;BitMask:Integer;Synch:Boolean):Longword;');
+
   //http://www.swissdelphicenter.ch/en/showcode.php?id=2179
    CL.AddClassN(CL.FindClass('TOBJECT'),'TService');
   CL.AddDelphiFunction('procedure StartServiceAfterInstall(aserv: TService);');
@@ -542,6 +633,24 @@ begin
   CL.AddDelphiFunction('procedure SendCopyMessage(amess, astation: string);');
   CL.AddDelphiFunction('function BrowseComputer2(DialogTitle: string; var CompName: string; bNewStyle: Boolean): Boolean;');
   CL.AddDelphiFunction('Function FindWindowEx( Parent, Child : HWND; ClassName, WindowName : PChar) : HWND');
+  CL.AddDelphiFunction('Function SetWindowExtEx( DC : HDC; XExt, YExt : Integer; Size : integer) : BOOL');
+  CL.AddDelphiFunction('Function SetWindowOrgEx( DC : HDC; X, Y : Integer; Point : TPoint) : BOOL');
+  CL.AddDelphiFunction('Function GetTextFace( DC : HDC; Count : Integer; Buffer : PChar) : Integer');
+ {CL.AddDelphiFunction('Function GetDCOrgEx( DC : HDC; var Origin : TPoint) : BOOL');
+ CL.AddDelphiFunction('Function UnrealizeObject( hGDIObj : HGDIOBJ) : BOOL');
+ CL.AddDelphiFunction('Function GdiFlush : BOOL');
+ CL.AddDelphiFunction('Function GdiSetBatchLimit( Limit : DWORD) : DWORD');
+ CL.AddDelphiFunction('Function GdiGetBatchLimit : DWORD');}
+  CL.AddDelphiFunction('Function SetICMMode( DC : HDC; Mode : Integer) : Integer');
+ CL.AddDelphiFunction('Function CheckColorsInGamut( DC : HDC; var RGBQuads, Results, Count : DWORD) : BOOL');
+ CL.AddDelphiFunction('Function GetColorSpace( DC : HDC) : THandle');
+CL.AddDelphiFunction('Function SetColorSpace( DC : HDC; ColorSpace : HCOLORSPACE) : BOOL');
+ CL.AddDelphiFunction('Function DeleteColorSpace( ColorSpace : HCOLORSPACE) : BOOL');
+ CL.AddDelphiFunction('Function GetICMProfile( DC : HDC; var Size : DWORD; Name : PChar) : BOOL');
+ CL.AddDelphiFunction('Function SetICMProfile( DC : HDC; Name : PChar) : BOOL');
+ //CL.AddDelphiFunction('Function ColorMatchToTarget( DC : HDC; Target : HDC; Action : DWORD) : BOOL');
+ CL.AddDelphiFunction('procedure GetGeoInfo(const IpAddress : string;var GeoInfo :TGeoInfo; const UrlGeoLookupInfo: string)');
+
 
  end;
 
@@ -596,10 +705,26 @@ begin
  S.RegisterDelphiFunction(@CreateProcess, 'CreateProcess', CdStdCall);
  S.RegisterDelphiFunction(@PerformanceDelayMS, 'PerformanceDelayMS', CdRegister);
  S.RegisterDelphiFunction(@ExecuteProcess, 'ExecuteProcess', CdRegister);
+ S.RegisterDelphiFunction(@ExecuteProcess, 'ExecuteMultiProcessor', CdRegister);  //Alias
+
  S.RegisterDelphiFunction(@StartServiceAfterInstall, 'StartServiceAfterInstall', CdRegister);
  S.RegisterDelphiFunction(@GetDllVersion2, 'GetDllVersion2', CdRegister);
  S.RegisterDelphiFunction(@SendCopyMessage, 'SendCopyMessage', CdRegister);
  S.RegisterDelphiFunction(@BrowseComputer2, 'BrowseComputer2', CdRegister);
+ S.RegisterDelphiFunction(@SetWindowExtEx, 'SetWindowExtEx', CdStdCall);
+ S.RegisterDelphiFunction(@SetWindowOrgEx, 'SetWindowOrgEx', CdStdCall);
+ S.RegisterDelphiFunction(@GetTextFace, 'GetTextFace', CdStdCall);
+
+ S.RegisterDelphiFunction(@SetICMMode, 'SetICMMode', CdStdCall);
+ S.RegisterDelphiFunction(@GetColorSpace, 'GetColorSpace', CdStdCall);
+ S.RegisterDelphiFunction(@GetLogColorSpace, 'GetLogColorSpace', CdStdCall);
+ S.RegisterDelphiFunction(@SetColorSpace, 'SetColorSpace', CdStdCall);
+ S.RegisterDelphiFunction(@DeleteColorSpace, 'DeleteColorSpace', CdStdCall);
+ S.RegisterDelphiFunction(@GetICMProfile, 'GetICMProfile', CdStdCall);
+ S.RegisterDelphiFunction(@SetICMProfile, 'SetICMProfile', CdStdCall);
+ //S.RegisterDelphiFunction(@ColorMatchToTarget, 'ColorMatchToTarget', CdStdCall);
+ S.RegisterDelphiFunction(@GetGeoInfo, 'GetGeoInfo', CdRegister);
+
 
 end;
 

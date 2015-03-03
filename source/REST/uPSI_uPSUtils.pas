@@ -48,7 +48,7 @@ implementation
 
 uses
    Windows
-  ,uPSUtils
+  ,uPSUtils, DBTables
   ;
  
  
@@ -123,6 +123,85 @@ begin
   else
     Result := False;
 end;
+
+
+procedure SQLDropField(dbName,
+                       tblName,   {Database Name}  {Table Name}
+                       fldName         : String);  {Field Name to Drop}
+var
+  sqlDrpFld: TQuery;
+begin
+  sqlDrpFld:= TQuery.Create(NIL);
+  with sqlDrpFld do begin
+    DatabaseName:= dbName;
+    SQL.Add('ALTER TABLE ' + tblName + ' DROP ' + fldName);
+    try
+      try
+        ExecSQL;
+      except
+        Abort; {Just raise silent exception}
+      end;
+    finally
+      Free;
+    end;
+  end;
+end;
+
+
+type TCastType = (ctSmallInt, ctInteger, ctDecimal, ctNumeric, ctFloat,
+               ctChar, ctVarChar, ctDate, ctBoolean, ctBLOB, ctTime,
+               ctTimeStamp, ctMoney, ctAutoInc, ctBytes);
+
+procedure SQLAddField(dbName,
+                      tblName,    {Database Name}  {Table Name}
+                      fldName         : String;    {Field Name to Add}
+                      fldType         : TCastType; {Field Type as described above}
+                      fldLength,                   {Length of Field}
+                      precisOrBlobLen,
+                      scaleOrBlobType : Integer);  {Blob definition type 1 = Memo, 2 = Binary,       3 = Formatted Memo, 4 = OLE Object, 5 = Graphic}
+var
+  sqlAddFld: TQuery;
+  CastType : String;
+
+begin
+  case fldType of
+    ctSmallInt  : CastType := 'SMALLINT';
+    ctInteger   : CastType := 'INTEGER';
+    ctDecimal   : CastType := 'DECIMAL(' + IntToStr(precisOrBlobLen) + ',' +
+                                           IntToStr(scaleOrBlobType) + ')';
+    ctNumeric   : CastType := 'NUMERIC(' + IntToStr(precisOrBlobLen) + ',' +
+                                           IntToStr(scaleOrBlobType) + ')';
+    ctFloat     : CastType := 'FLOAT('   + IntToStr(precisOrBlobLen) + ',' +
+                                           IntToStr(scaleOrBlobType) + ')';
+    ctChar      : CastType := 'CHARACTER(' + IntToStr(fldLength) + ')';
+    ctVarChar   : CastType := 'VARCHAR(' + IntToStr(fldLength) + ')';
+    ctDate      : CastType := 'DATE';
+    ctBoolean   : CastType := 'BOOLEAN';
+    ctBlob      : CastType := 'BLOB('    + IntToStr(precisOrBlobLen) + ',' +
+                                           IntToStr(scaleOrBlobType) + ')';
+    ctTime      : CastType := 'TIME';
+    ctTimeStamp : CastType := 'TIMESTAMP';
+    ctMoney     : CastType := 'MONEY';
+    ctAutoInc   : CastType := 'AUTOINC';
+    ctBytes     : CastType := 'BYTES(' + IntToStr(fldLength) + ')'
+  end;
+
+  sqlAddFld:= TQuery.Create(NIL);
+  with sqlAddFld do begin
+    DatabaseName := dbName;
+    SQL.Add('ALTER TABLE ' + tblName + ' ADD ' + fldName + ' ' + CastType);
+    try
+      try
+        ExecSQL;
+      except
+        Abort; {Just raise a silent exception}
+      end;
+    finally
+      Free;
+    end;
+  end;
+end;
+
 
 
 
@@ -309,6 +388,12 @@ begin
   SIRegister_TPSUnitList(CL);
   CL.AddTypeS('TPSParserErrorKind', '( iNoError, iCommentError, iStringError, iCharError, iSyntaxError )');
   CL.AddTypeS('TPSParserErrorEvent', 'Procedure ( Parser : TObject; Kind : TPSParserErrorKind)');
+  CL.AddTypeS('TCastType', '(ctSmallInt, ctInteger, ctDecimal, ctNumeric, ctFloat,ctChar, ctVarChar, ctDate, ctBoolean, ctBLOB, ctTime, ctTimeStamp, ctMoney, ctAutoInc, ctBytes)');
+
+  {type TCastType = (ctSmallInt, ctInteger, ctDecimal, ctNumeric, ctFloat,
+               ctChar, ctVarChar, ctDate, ctBoolean, ctBLOB, ctTime,
+               ctTimeStamp, ctMoney, ctAutoInc, ctBytes);}
+
   SIRegister_TPSPascalParser(CL);
  CL.AddDelphiFunction('Function PSFloatToStr( E : Extended) : TbtString');
  CL.AddDelphiFunction('Function FastLowerCase( const s : TbtString) : TbtString');
@@ -326,8 +411,10 @@ begin
  CL.AddDelphiFunction('Function PSWideLowerCase( const S : WideString) : WideString');
  CL.AddDelphiFunction('function ChangeAlphaTo(input: string; aoffset: byte): string;');
  CL.AddDelphiFunction('function CheckIBAN(iban: string): Boolean;');
+ CL.AddDelphiFunction('procedure SQLDropField(dbName, tblName,  fldName: String);');
+ CL.AddDelphiFunction('procedure SQLAddField(dbName, tblName, fldName: String; fldType: TCastType; fldLength, precisOrBlobLen, scaleOrBlobType: Integer);');
 
-
+ //procedure SQLAddField(dbName, tblName, fldName: String; fldType: TCastType; fldLength, precisOrBlobLen, scaleOrBlobType: Integer);
 
 
  end;
@@ -523,8 +610,10 @@ begin
  S.RegisterDelphiFunction(@WideLowerCase, 'PSWideLowerCase', cdRegister);
  S.RegisterDelphiFunction(@ChangeAlphaTo, 'ChangeAlphaTo', cdRegister);
  S.RegisterDelphiFunction(@CheckIBAN, 'CheckIBAN', cdRegister);
+ S.RegisterDelphiFunction(@SQLDropField, 'SQLDropField', cdRegister);
+ S.RegisterDelphiFunction(@SQLAddField, 'SQLAddField', cdRegister);
 
-
+ 
  end;
 
 

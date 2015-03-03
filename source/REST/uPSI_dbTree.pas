@@ -1,6 +1,6 @@
 unit uPSI_dbTree;
 {
-   the first and best dbtreeview
+   the first and best dbtreeview  , add free
 }
 interface
  
@@ -140,7 +140,7 @@ begin
   //with RegClassS(CL,'TCustomTreeViewEx', 'TCustomDBTreeView') do
   with CL.AddClassN(CL.FindClass('TCustomTreeViewEx'),'TCustomDBTreeView') do begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
-         RegisterMethod('Procedure Free');
+       RegisterMethod('Procedure Free');
      RegisterMethod('Procedure RebuildTree');
     RegisterMethod('Procedure BuildTreeIfNeeded');
     RegisterMethod('Procedure Insert( AsChild : Boolean)');
@@ -321,10 +321,10 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TCustomDBTreeView(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TCustomDBTreeView) do
-  begin
+  with CL.Add(TCustomDBTreeView) do begin
     RegisterConstructor(@TCustomDBTreeView.Create, 'Create');
-    RegisterMethod(@TCustomDBTreeView.RebuildTree, 'RebuildTree');
+      RegisterMethod(@TCustomDBTreeView.Destroy, 'Free');
+      RegisterMethod(@TCustomDBTreeView.RebuildTree, 'RebuildTree');
     RegisterMethod(@TCustomDBTreeView.BuildTreeIfNeeded, 'BuildTreeIfNeeded');
     RegisterMethod(@TCustomDBTreeView.Insert, 'Insert');
     RegisterMethod(@TCustomDBTreeView.Delete, 'Delete');

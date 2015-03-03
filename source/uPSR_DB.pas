@@ -1,5 +1,6 @@
 {runtime DB support}
 // extended by max TCustomConnection  & TDataSource &routines of 3.9
+// tfield constructors!    - checkconstraints
 
 Unit uPSR_DB;
 {$I PascalScript.inc}
@@ -8,6 +9,9 @@ Uses uPSRuntime, uPSUtils, SysUtils;
 
 procedure RIRegisterTDATASET(Cl: TPSRuntimeClassImporter);
 procedure RIRegister_TDataSource(CL: TPSRuntimeClassImporter);
+procedure RIRegister_TCheckConstraints(CL: TPSRuntimeClassImporter);
+procedure RIRegister_TCheckConstraint(CL: TPSRuntimeClassImporter);
+
 
 procedure RIRegisterTPARAMS(Cl: TPSRuntimeClassImporter);
 procedure RIRegisterTPARAM(Cl: TPSRuntimeClassImporter);
@@ -1411,6 +1415,72 @@ begin
   end;
 end;
 
+(* === run-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure TCheckConstraintsItems_W(Self: TCheckConstraints; const T: TCheckConstraint; const t1: Integer);
+begin Self.Items[t1] := T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TCheckConstraintsItems_R(Self: TCheckConstraints; var T: TCheckConstraint; const t1: Integer);
+begin T := Self.Items[t1]; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TCheckConstraintImportedConstraint_W(Self: TCheckConstraint; const T: string);
+begin Self.ImportedConstraint := T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TCheckConstraintImportedConstraint_R(Self: TCheckConstraint; var T: string);
+begin T := Self.ImportedConstraint; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TCheckConstraintFromDictionary_W(Self: TCheckConstraint; const T: Boolean);
+begin Self.FromDictionary := T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TCheckConstraintFromDictionary_R(Self: TCheckConstraint; var T: Boolean);
+begin T := Self.FromDictionary; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TCheckConstraintErrorMessage_W(Self: TCheckConstraint; const T: string);
+begin Self.ErrorMessage := T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TCheckConstraintErrorMessage_R(Self: TCheckConstraint; var T: string);
+begin T := Self.ErrorMessage; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TCheckConstraintCustomConstraint_W(Self: TCheckConstraint; const T: string);
+begin Self.CustomConstraint := T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TCheckConstraintCustomConstraint_R(Self: TCheckConstraint; var T: string);
+begin T := Self.CustomConstraint; end;
+
+
+(*----------------------------------------------------------------------------*)
+procedure RIRegister_TCheckConstraints(CL: TPSRuntimeClassImporter);
+begin
+  with CL.Add(TCheckConstraints) do begin
+    RegisterConstructor(@TCheckConstraints.Create, 'Create');
+    RegisterMethod(@TCheckConstraints.Add, 'Add');
+    RegisterPropertyHelper(@TCheckConstraintsItems_R,@TCheckConstraintsItems_W,'Items');
+  end;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure RIRegister_TCheckConstraint(CL: TPSRuntimeClassImporter);
+begin
+  with CL.Add(TCheckConstraint) do begin
+    RegisterMethod(@TCheckConstraint.Assign, 'Assign');
+    RegisterMethod(@TCheckConstraint.GetDisplayName, 'GetDisplayName');
+    RegisterPropertyHelper(@TCheckConstraintCustomConstraint_R,@TCheckConstraintCustomConstraint_W,'CustomConstraint');
+    RegisterPropertyHelper(@TCheckConstraintErrorMessage_R,@TCheckConstraintErrorMessage_W,'ErrorMessage');
+    RegisterPropertyHelper(@TCheckConstraintFromDictionary_R,@TCheckConstraintFromDictionary_W,'FromDictionary');
+    RegisterPropertyHelper(@TCheckConstraintImportedConstraint_R,@TCheckConstraintImportedConstraint_W,'ImportedConstraint');
+  end;
+end;
+
+
 
 procedure RIRegisterTDATASET(Cl: TPSRuntimeClassImporter);
 Begin
@@ -1600,22 +1670,22 @@ end;
 {$IFNDEF FPC}
 procedure RIRegisterTGUIDFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TGUIDFIELD) do
-  begin
+with Cl.Add(TGUIDFIELD) do begin
+   RegisterConstructor(@TGUIDFIELD.Create, 'Create');
   end;
 end;
 
 procedure RIRegisterTVARIANTFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TVARIANTFIELD) do
-  begin
+with Cl.Add(TVARIANTFIELD) do begin
+   RegisterConstructor(@TVARIANTFIELD.Create, 'Create');
   end;
 end;
 
 procedure RIRegisterTREFERENCEFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TREFERENCEFIELD) do
-  begin
+with Cl.Add(TREFERENCEFIELD) do begin
+   RegisterConstructor(@TREFERENCEFIELD.Create, 'Create');
   RegisterPropertyHelper(@TREFERENCEFIELDREFERENCETABLENAME_R,@TREFERENCEFIELDREFERENCETABLENAME_W,'REFERENCETABLENAME');
   end;
 end;
@@ -1624,6 +1694,7 @@ end;
 procedure RIRegisterTDATASETFIELD(Cl: TPSRuntimeClassImporter);
 Begin
 with Cl.Add(TDATASETFIELD) do begin
+   RegisterConstructor(@TDATASETFIELD.Create, 'Create');
   RegisterMethod(@TDATASETFIELD.Assign, 'Assign');
   RegisterConstructor(@TDATASETFIELD.Create, 'Create');
   RegisterPropertyHelper(@TDATASETFIELDNESTEDDATASET_R,nil,'NESTEDDATASET');
@@ -1634,24 +1705,24 @@ end;
 
 procedure RIRegisterTARRAYFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TARRAYFIELD) do
-  begin
+with Cl.Add(TARRAYFIELD) do begin
+   RegisterConstructor(@TARRAYFIELD.Create, 'Create');
   end;
 end;
 
 
 procedure RIRegisterTADTFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TADTFIELD) do
-  begin
+with Cl.Add(TADTFIELD) do begin
+   RegisterConstructor(@TADTFIELD.Create, 'Create');
   end;
 end;
 
 
 procedure RIRegisterTOBJECTFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TOBJECTFIELD) do
-  begin
+with Cl.Add(TOBJECTFIELD) do begin
+   RegisterConstructor(@TOBJECTFIELD.Create, 'Create');
   RegisterPropertyHelper(@TOBJECTFIELDFIELDCOUNT_R,nil,'FIELDCOUNT');
   RegisterPropertyHelper(@TOBJECTFIELDFIELDS_R,nil,'FIELDS');
   RegisterPropertyHelper(@TOBJECTFIELDFIELDVALUES_R,@TOBJECTFIELDFIELDVALUES_W,'FIELDVALUES');
@@ -1664,15 +1735,15 @@ end;
 
 procedure RIRegisterTGRAPHICFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TGRAPHICFIELD) do
-  begin
+with Cl.Add(TGRAPHICFIELD) do begin
+   RegisterConstructor(@TGRAPHICFIELD.Create, 'Create');
   end;
 end;
 
 procedure RIRegisterTMEMOFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TMEMOFIELD) do
-  begin
+with Cl.Add(TMEMOFIELD) do begin
+   RegisterConstructor(@TMEMOFIELD.Create, 'Create');
   end;
 end;
 
@@ -1705,8 +1776,8 @@ end;
 
 procedure RIRegisterTFMTBCDFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TFMTBCDFIELD) do
-  begin
+with Cl.Add(TFMTBCDFIELD) do begin
+   RegisterConstructor(@TFMTBCDFIELD.Create, 'Create');
   RegisterPropertyHelper(@TFMTBCDFIELDVALUE_R,@TFMTBCDFIELDVALUE_W,'VALUE');
   RegisterPropertyHelper(@TFMTBCDFIELDCURRENCY_R,@TFMTBCDFIELDCURRENCY_W,'CURRENCY');
   RegisterPropertyHelper(@TFMTBCDFIELDMAXVALUE_R,@TFMTBCDFIELDMAXVALUE_W,'MAXVALUE');
@@ -1717,8 +1788,8 @@ end;
 {$ENDIF}
 procedure RIRegisterTBCDFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TBCDFIELD) do
-  begin
+with Cl.Add(TBCDFIELD) do begin
+   RegisterConstructor(@TBCDFIELD.Create, 'Create');
   RegisterPropertyHelper(@TBCDFIELDVALUE_R,@TBCDFIELDVALUE_W,'VALUE');
   RegisterPropertyHelper(@TBCDFIELDCURRENCY_R,@TBCDFIELDCURRENCY_W,'CURRENCY');
   RegisterPropertyHelper(@TBCDFIELDMAXVALUE_R,@TBCDFIELDMAXVALUE_W,'MAXVALUE');
@@ -1731,36 +1802,42 @@ end;
 procedure RIRegisterTVARBYTESFIELD(Cl: TPSRuntimeClassImporter);
 Begin
 with Cl.Add(TVARBYTESFIELD) do begin
+   RegisterConstructor(@TVARBYTESFIELD.Create, 'Create');
   end;
 end;
 
 procedure RIRegisterTBYTESFIELD(Cl: TPSRuntimeClassImporter);
 Begin
 with Cl.Add(TBYTESFIELD) do begin
+   RegisterConstructor(@TBYTESFIELD.Create, 'Create');
   end;
 end;
 
 procedure RIRegisterTBINARYFIELD(Cl: TPSRuntimeClassImporter);
 Begin
 with Cl.Add(TBINARYFIELD) do begin
+   RegisterConstructor(@TBINARYFIELD.Create, 'Create');
   end;
 end;
 
 procedure RIRegisterTTIMEFIELD(Cl: TPSRuntimeClassImporter);
 Begin
 with Cl.Add(TTIMEFIELD) do begin
+   RegisterConstructor(@TTIMEFIELD.Create, 'Create');
   end;
 end;
 
 procedure RIRegisterTDATEFIELD(Cl: TPSRuntimeClassImporter);
 Begin
 with Cl.Add(TDATEFIELD) do begin
+   RegisterConstructor(@TDATEFIELD.Create, 'Create');
   end;
 end;
 
 procedure RIRegisterTDATETIMEFIELD(Cl: TPSRuntimeClassImporter);
 Begin
 with Cl.Add(TDATETIMEFIELD) do begin
+   RegisterConstructor(@TDATETIMEFIELD.Create, 'Create');
   RegisterPropertyHelper(@TDATETIMEFIELDVALUE_R,@TDATETIMEFIELDVALUE_W,'VALUE');
   RegisterPropertyHelper(@TDATETIMEFIELDDISPLAYFORMAT_R,@TDATETIMEFIELDDISPLAYFORMAT_W,'DISPLAYFORMAT');
   end;
@@ -1768,8 +1845,8 @@ end;
 
 procedure RIRegisterTBOOLEANFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TBOOLEANFIELD) do
-  begin
+with Cl.Add(TBOOLEANFIELD) do begin
+   RegisterConstructor(@TBOOLEANFIELD.Create, 'Create');
   RegisterPropertyHelper(@TBOOLEANFIELDVALUE_R,@TBOOLEANFIELDVALUE_W,'VALUE');
   RegisterPropertyHelper(@TBOOLEANFIELDDISPLAYVALUES_R,@TBOOLEANFIELDDISPLAYVALUES_W,'DISPLAYVALUES');
   end;
@@ -1777,15 +1854,15 @@ end;
 
 procedure RIRegisterTCURRENCYFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TCURRENCYFIELD) do
-  begin
+with Cl.Add(TCURRENCYFIELD) do begin
+   RegisterConstructor(@TCURRENCYFIELD.Create, 'Create');
   end;
 end;
 
 procedure RIRegisterTFLOATFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TFLOATFIELD) do
-  begin
+with Cl.Add(TFLOATFIELD) do begin
+   RegisterConstructor(@TFLOATFIELD.Create, 'Create');
   {$IFNDEF FPC}
   RegisterPropertyHelper(@TFLOATFIELDCURRENCY_R,@TFLOATFIELDCURRENCY_W,'CURRENCY');
   {$ENDIF}
@@ -1798,22 +1875,22 @@ end;
 
 procedure RIRegisterTAUTOINCFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TAUTOINCFIELD) do
-  begin
+with Cl.Add(TAUTOINCFIELD) do begin
+   RegisterConstructor(@TAUTOINCFIELD.Create, 'Create');
   end;
 end;
 
 procedure RIRegisterTWORDFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TWORDFIELD) do
-  begin
-  end;
+with Cl.Add(TWORDFIELD) do begin
+   RegisterConstructor(@TWORDFIELD.Create, 'Create');
+   end;
 end;
 
 procedure RIRegisterTLARGEINTFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TLARGEINTFIELD) do
-  begin
+with Cl.Add(TLARGEINTFIELD) do begin
+    RegisterConstructor(@TLARGEINTFIELD.Create, 'Create');
   RegisterPropertyHelper(@TLARGEINTFIELDASLARGEINT_R,@TLARGEINTFIELDASLARGEINT_W,'ASLARGEINT');
   RegisterPropertyHelper(@TLARGEINTFIELDVALUE_R,@TLARGEINTFIELDVALUE_W,'VALUE');
   RegisterPropertyHelper(@TLARGEINTFIELDMAXVALUE_R,@TLARGEINTFIELDMAXVALUE_W,'MAXVALUE');
@@ -1823,15 +1900,15 @@ end;
 
 procedure RIRegisterTSMALLINTFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TSMALLINTFIELD) do
-  begin
-  end;
+with Cl.Add(TSMALLINTFIELD) do begin
+   RegisterConstructor(@TSMALLINTFIELD.Create, 'Create');
+   end;
 end;
 
 procedure RIRegisterTINTEGERFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TINTEGERFIELD) do
-  begin
+with Cl.Add(TINTEGERFIELD) do begin
+    RegisterConstructor(@TINTEGERFIELD.Create, 'Create');
   RegisterPropertyHelper(@TINTEGERFIELDVALUE_R,@TINTEGERFIELDVALUE_W,'VALUE');
   RegisterPropertyHelper(@TINTEGERFIELDMAXVALUE_R,@TINTEGERFIELDMAXVALUE_W,'MAXVALUE');
   RegisterPropertyHelper(@TINTEGERFIELDMINVALUE_R,@TINTEGERFIELDMINVALUE_W,'MINVALUE');
@@ -1840,9 +1917,9 @@ end;
 
 procedure RIRegisterTNUMERICFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TNUMERICFIELD) do
-  begin
-  RegisterPropertyHelper(@TNUMERICFIELDDISPLAYFORMAT_R,@TNUMERICFIELDDISPLAYFORMAT_W,'DISPLAYFORMAT');
+with Cl.Add(TNUMERICFIELD) do begin
+   RegisterConstructor(@TNUMERICFIELD.Create, 'Create');
+   RegisterPropertyHelper(@TNUMERICFIELDDISPLAYFORMAT_R,@TNUMERICFIELDDISPLAYFORMAT_W,'DISPLAYFORMAT');
   RegisterPropertyHelper(@TNUMERICFIELDEDITFORMAT_R,@TNUMERICFIELDEDITFORMAT_W,'EDITFORMAT');
   end;
 end;
@@ -1850,17 +1927,17 @@ end;
 {$IFNDEF FPC}
 procedure RIRegisterTWIDESTRINGFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TWIDESTRINGFIELD) do
-  begin
-  RegisterPropertyHelper(@TWIDESTRINGFIELDVALUE_R,@TWIDESTRINGFIELDVALUE_W,'VALUE');
+with Cl.Add(TWIDESTRINGFIELD) do begin
+   RegisterConstructor(@TWIDESTRINGFIELD.Create, 'Create');
+   RegisterPropertyHelper(@TWIDESTRINGFIELDVALUE_R,@TWIDESTRINGFIELDVALUE_W,'VALUE');
   end;
 end;
 {$ENDIF}
 
 procedure RIRegisterTSTRINGFIELD(Cl: TPSRuntimeClassImporter);
 Begin
-with Cl.Add(TSTRINGFIELD) do
-  begin
+with Cl.Add(TSTRINGFIELD) do begin
+    RegisterConstructor(@TSTRINGFIELD.Create, 'Create');
   RegisterPropertyHelper(@TSTRINGFIELDVALUE_R,@TSTRINGFIELDVALUE_W,'VALUE');
   {$IFNDEF FPC}
   RegisterPropertyHelper(@TSTRINGFIELDFIXEDCHAR_R,@TSTRINGFIELDFIXEDCHAR_W,'FIXEDCHAR');
@@ -1874,6 +1951,11 @@ Begin
 with Cl.Add(TFIELD) do begin
   RegisterMethod(@TFIELD.ASSIGNVALUE, 'ASSIGNVALUE');
   RegisterConstructor(@TFIELD.Create, 'Create');
+   RegisterMethod(@TFIELD.Destroy, 'Free');
+    RegisterMethod(@TFIELD.GetParentComponent, 'GetParentComponent');
+  RegisterMethod(@TFIELD.HasParent, 'HasParent');
+  RegisterMethod(@TFIELD.SetParentComponent, 'SetParentComponent');
+
   RegisterMethod(@TFIELD.Assign, 'Assign');
   RegisterVirtualMethod(@TFIELD.CLEAR, 'CLEAR');
   RegisterMethod(@TFIELD.FOCUSCONTROL, 'FOCUSCONTROL');
@@ -1974,6 +2056,7 @@ procedure RIRegisterTFIELDS(Cl: TPSRuntimeClassImporter);
 Begin
 with Cl.Add(TFIELDS) do begin
   RegisterConstructor(@TFIELDS.CREATE, 'CREATE');
+    RegisterMethod(@TFIELDS.Destroy, 'Free');
   RegisterMethod(@TFIELDS.ADD, 'ADD');
   RegisterMethod(@TFIELDS.CHECKFIELDNAME, 'CHECKFIELDNAME');
   RegisterMethod(@TFIELDS.CHECKFIELDNAMES, 'CHECKFIELDNAMES');
@@ -2307,6 +2390,9 @@ RIRegisterTBCDFIELD(Cl);
 RIRegisterTFMTBCDFIELD(Cl);
 {$ENDIF}
 {$ENDIF}
+
+ RIRegister_TCheckConstraint(CL);
+ RIRegister_TCheckConstraints(CL);
 
 RIRegisterTBLOBFIELD(Cl);
 RIRegisterTMEMOFIELD(Cl);

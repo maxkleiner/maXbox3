@@ -120,12 +120,13 @@
          10162      build 101 DOM Support, IPUtils, geocode, compass, GPSDemo, 3DDemo
          10208      build 110 external app, mcisendstring, sqlscriptparser
          10217      build 110_1 two units, bugfix stdcall
-         10288      build 120 8 units more, panview, planets, ActiveX 
+         10288      build 120 8 units more, panview, planets, ActiveX
          10332      build 160 5 units ,hirestimer, unit converter , parser form, upsutils
          10356      build 160_1 1 units ,DOS redirecter, createprocess , servicemanager
          10380      build 180 8 units ,BigNumbers, Dictionary, ModBus, IBAN
          10404     build 180_2 vcl samples, 14 bugfixes, sql helper, modbus res, actman, IBcomp
-
+         10415     build 180_3 4 bugfixes, dbtable redesign checkconstrains, modbus consts, testvendor
+                                    dunit testframework vendor dbtests - 3.3.2015
                   [the last one before V4 in 2015]
                    V4.0   in  July 2015
  ************************************************************************** }
@@ -1642,7 +1643,7 @@ uses
   uPSI_ALFcnSQL,
   uPSI_AsyncTimer,
   uPSI_ApplicationFileIO,  //9.85
-  uPSI_PsAPI,      //processmemory , createprocess, exitthread
+  uPSI_PsAPI,      //processmemory , createprocess, exitthread  , addspeed
   uPSI_ovcuser,
   uPSI_ovcurl,
   uPSI_ovcvlb,
@@ -1971,6 +1972,10 @@ uses
   uPSI_CollPanl,
   //uPSI_Calendar,
   uPSI_IBCtrls,   //3.9.9.182
+  uPSI_IdStackWindows,
+  //uPSI_CopyPrsr,
+  uPSI_CTSVendorUtils,
+  uPSI_VendorTestFramework,
   ///
   ///
    //MDIFrame,
@@ -3095,6 +3100,9 @@ begin
   SIRegister_CustomizeDlg(X);    //3.9.9.182
   SIRegister_CollPanl(X);
   SIRegister_IBCtrls(X);
+  SIRegister_IdStackWindows(X);
+  SIRegister_VendorTestFramework(X);
+  SIRegister_CTSVendorUtils(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4502,6 +4510,9 @@ begin
   RIRegister_CustomizeDlg(X);
   RIRegister_CollPanl(X);
   RIRegister_IBCtrls(X);
+  RIRegister_IdStackWindows(X);
+  RIRegister_VendorTestFramework(X);
+  RIRegister_CTSVendorUtils(X);   //last 180_3
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -8326,7 +8337,7 @@ end;
 procedure TMaxForm1.SaveOutput1Click(Sender: TObject);
 begin
   memo2.Lines.SaveToFile(Act_Filename+'Output'+'.txt');
-  memo2.Lines.Add(Act_Filename +' output stored');
+  memo2.Lines.Add(Act_Filename+'Output'+'.txt'+'  as output file stored');
 end;
 
 procedure TMaxForm1.SaveScreenshotClick(Sender: TObject);

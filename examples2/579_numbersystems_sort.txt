@@ -1,0 +1,150 @@
+Program NumberSystems_QuickSortCrt;
+
+//routine to universal number system!
+//uses #sign:8 test: OESTER: 01/03/2015 18:47:40 
+  //WinCrt; see also 138_Swap_Sort, #locs:140
+Const 
+  ArraySize = 9;
+  CharDigits = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  
+type  
+  TMyArray = array[1..ArraySize] of integer;
+  TMyArray2 = array of byte;
+  
+var   
+  MyArray : TMyArray;
+   //MyArray1, MyArray2 : array of byte;
+    i : integer;
+    testnum: double;
+    
+//http://www.delphi-treff.de/tipps-tricks/mathematik/zahlen-und-zahlensysteme/umrechnung-in-verschiedene-zahlensysteme/    
+    
+function XToDec(const ASource: string; ASourceSystem: Byte): Int64;
+var
+  i: Integer;
+  Value: Byte;
+begin
+  Result:= 0;
+  for i:= 1 to Length(ASource) do begin
+    Value := Pos(ASource[i], CharDigits) - 1;
+    if (Value >= ASourceSystem) then begin
+      raise; writeln('EInvalidArgument.Create');
+    end;
+    Result:= Result * ASourceSystem + Value;
+  end;
+end;
+
+function DecToX(ASource: Int64; ATargetSystem: Byte): string;
+var
+  Rest: Int64;
+begin
+  Result:= '';
+  repeat
+    Result:= CharDigits[(ASource mod ATargetSystem)+ 1]+ Result;
+    ASource:= ASource div ATargetSystem;
+  until (ASource = 0)
+end;
+     
+
+Procedure QuickSort(lowerPos, upperPos: integer);
+   var temp, i, middlePos, pivotValue : integer;
+Begin
+   { check that the lower position is less than the upper position }
+   if lowerPos < upperPos then begin
+      { Select a pivot value }
+      pivotValue := MyArray[lowerPos];
+
+      { default to the middle position to the lower position }
+      middlePos := lowerPos;
+      { partition the array about the pivot value }
+      for i := lowerPos+1 to upperPos do begin
+         if MyArray[i] < pivotValue then begin
+            { bump up the middle position }
+            inc(middlePos);
+            { swap this element to the "lower" part of the array }
+            temp := MyArray[middlePos];
+            MyArray[middlePos] := MyArray[i];
+            MyArray[i] := temp;
+         end; { if }
+      end; { for }
+      { place the pivot value in the middle to finish the partitioning }
+      temp := MyArray[lowerPos];
+      MyArray[lowerPos] := MyArray[middlePos];
+      MyArray[middlePos] := temp;
+      { Finally, recursively call QuickSort on the two parititioned halves.}
+      QuickSort(lowerPos, middlePos-1);
+      QuickSort(middlePos+1, upperPos);
+   { else
+       the lower position has reached or exceeded the upper position,
+      so we're done.  This case terminates the tail-end recursion. }
+    end;  { if }
+End;  { Procedure QuickSort }
+
+function IsPrime(ANumber: Cardinal): Boolean;
+var
+  Divisor: Integer;
+begin
+  Result:= (ANumber = 2) or ((ANumber > 1) and (ANumber mod 2= 0));
+  if (not Result) then
+    Exit;
+  Divisor:= 3;
+  while (Divisor < sqrt(ANumber) + 1) do begin
+    if (ANumber mod Divisor = 0) then begin
+      Result:= False;
+      Exit;
+    end;
+    Inc1(Divisor, 2);
+  end;
+end;
+
+function ArithRound(Value: Extended): Int64;
+var TmpSign : integer; //TValueSign;-1,1
+begin
+  TmpSign:= Sign(Value);
+  if TmpSign = 0 then
+    Result:= 0
+  else
+    Result:= Trunc(Abs(Value) + 0.5) * TmpSign;
+end;
+
+
+Begin  { Program QuickSortCrt }
+   Randomize;   { Initialize the random number function. }
+   writeln('Before . . .');
+   for i := 1 to ArraySize do begin
+      MyArray[i] := trunc(random(1000))+1;
+      writeln(IntToStr(i)+ ': '+IntToStr(MyArray[i]));
+   end; { for }
+   QuickSort(1, ArraySize);
+   writeln('After . . .');
+   for i := 1 to ArraySize do begin
+      writeln(IntToStr(i)+ ': '+IntToStr(MyArray[i]));
+   end; { for }
+   
+   writeln('length of chardigits: '+itoa(length(CharDigits)))
+  // IntermidiateSystem := XToDec('10100111', 2);
+  //2 is dual system - 16 is hex
+  writeln(DecToX(XToDec('10100111', 2), 16));
+  writeln(DecToX(XToDec('1001', 2), 16));
+  writeln(DecToX(XToDec('1001', 2), 10));
+  writeln(DecToX(XToDec('9', 10), 2));
+  writeln(itoa(XToDec('1001',2)));
+  
+  testnum:= 123.4;
+  printF('round up %d', [Ceil(testnum)]); //Aufrunden - gerundet = 124
+  printF('round down %d', [Floor(testnum)]); //Abrunden - gerundet = 123
+
+  //format test
+  Writeln(Format('%3.4n',[123456789.123456])); //-->'123.456.789,1235'
+
+End. { Program Numbersystems_QuickSortCrt }
+
+
+Doc:
+Although QuickSort is harder to understand, and therefore harder to program, it works extremely well and it quite efficient.  Where the swap sort would take roughly n x n compares to sort the array, QuickSort requires only roughly n log n.  So where a swap sort on 10,000 elements would require roughly 100,000,000 compares, QuickSort needs only 132,877!  Pretty cool, eh?  Now that 9,000,000 element array is within our sortable reach! Remember that although these examples deal only with arrays, you can use the same methodologies on lists and pointer chains, and many other data types you encounter.
+I hope th8
+is has been helpful in providing more core information upon which we can build in the future.  Feel free, encouraged even, to e-mail me with any comments, questions, or suggestions.  Thank you and goodnight.
+
+Copyright ©1995 - Prime Time Programming
+
+----code_cleared_checked----

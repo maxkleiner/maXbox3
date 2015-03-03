@@ -117,8 +117,7 @@ begin
    RegisterProperty('EnableBCD','boolean',iptrw);
    RegisterProperty('ParamCheck','boolean',iptrw);
    RegisterProperty('Parameters','TParameters',iptrw);
-
-    //RegisterProperty('Params', 'TParams', iptrw);
+      //RegisterProperty('Params', 'TParams', iptrw);
   end;
 end;
 
@@ -151,8 +150,9 @@ begin
     RegisterMethod('Procedure Free;');
     RegisterMethod('Procedure CreateDataSet');
     RegisterMethod('Procedure GetIndexNames( List : TStrings)');
+    RegisterProperty('IndexDefs', 'TIndexDefs', iptrw);
     RegisterProperty('RDSConnection', 'TRDSConnection', iptrw);
-    RegisterProperty('SQL', 'TWideStrings', iptrw);    //twidestrings test
+    //RegisterProperty('SQL', 'TWideStrings', iptrw);    //twidestrings test
   end;
 end;
 
@@ -223,10 +223,9 @@ begin
     RegisterProperty('Parameters', 'TParameters', iptrw);
     RegisterProperty('Prepared', 'Boolean', iptrw);
     RegisterProperty('StoreDefs', 'Boolean', iptrw);
-    RegisterProperty('SQL', 'TWideStrings', iptrw);    //twidestrings test
+  //  RegisterProperty('SQL', 'TWideStrings', iptrw);    //twidestrings test
 
-//------------------from dataset to customADODataSet
-
+//------------------from dataset to customADODataSet  TCustomADODataSet = class(TWideDataSet in DB.pas!)
       RegisterMethod('Function ACTIVEBUFFER : PCHAR');
   RegisterMethod('Procedure APPEND');
   RegisterMethod('Procedure APPENDRECORD( const VALUES : array of const)');
@@ -261,7 +260,7 @@ begin
 //  RegisterMethod('Procedure GETDETAILDATASETS( LIST : TLIST)');
 //  RegisterMethod('Procedure GETFIELDLIST( LIST : TLIST; const FIELDNAMES : STRING)');
 //  RegisterMethod('Procedure GETDETAILLINKFIELDS( MASTERFIELDS, DETAILFIELDS : TLIST)');
-//  RegisterMethod('Function GETBLOBFIELDDATA( FIELDNO : INTEGER; var BUFFER : TBLOBBYTEDATA) : INTEGER');
+  RegisterMethod('Function GETBLOBFIELDDATA( FIELDNO : INTEGER; var BUFFER : TBLOBBYTEDATA) : INTEGER');
   RegisterMethod('Procedure GETFIELDNAMES( LIST : TSTRINGS)');
 //  RegisterMethod('Procedure GOTOBOOKMARK( BOOKMARK : TBOOKMARK)');
   RegisterMethod('Procedure INSERT');
@@ -289,7 +288,7 @@ begin
 //  RegisterProperty('BOOKMARK', 'TBOOKMARKSTR', iptrw);
   RegisterProperty('CANMODIFY', 'BOOLEAN', iptr);
   RegisterProperty('DATASETFIELD', 'TDATASETFIELD', iptrw);
-  RegisterProperty('DATASOURCE', 'TDATASOURCE', iptr);
+  RegisterProperty('DATASOURCE', 'TDATASOURCE', iptrw);
   RegisterProperty('DEFAULTFIELDS', 'BOOLEAN', iptr);
   RegisterProperty('DESIGNER', 'TDATASETDESIGNER', iptr);
   RegisterProperty('EOF', 'BOOLEAN', iptr);
@@ -316,8 +315,33 @@ begin
   RegisterProperty('FILTEROPTIONS', 'TFILTEROPTIONS', iptrw);
   RegisterProperty('ACTIVE', 'BOOLEAN', iptrw);
   RegisterProperty('AUTOCALCFIELDS', 'BOOLEAN', iptrw);
-
-  end;
+  RegisterpublishedProperties;
+  RegisterProperty('OnRecordsetCreate', 'TDataSetNotifyEvent', iptrw);
+  RegisterProperty('BEFOREOPEN', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('AFTEROPEN', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('BEFORECLOSE', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('AFTERCLOSE', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('BEFOREINSERT', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('AFTERINSERT', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('BEFOREEDIT', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('AFTEREDIT', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('BEFOREPOST', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('AFTERPOST', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('BEFORECANCEL', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('AFTERCANCEL', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('BEFOREDELETE', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('AFTERDELETE', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('BEFORESCROLL', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('AFTERSCROLL', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('BEFOREREFRESH', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('AFTERREFRESH', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('ONCALCFIELDS', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('ONDELETEERROR', 'TDATASETERROREVENT', iptrw);
+  RegisterProperty('ONEDITERROR', 'TDATASETERROREVENT', iptrw);
+  RegisterProperty('ONFILTERRECORD', 'TFILTERRECORDEVENT', iptrw);
+  RegisterProperty('ONNEWRECORD', 'TDATASETNOTIFYEVENT', iptrw);
+  RegisterProperty('ONPOSTERROR', 'TDATASETERROREVENT', iptrw);
+   end;
 end;
 
 (*----------------------------------------------------------------------------*)
@@ -490,6 +514,7 @@ begin
    +'timistic, ltBatchOptimistic )');
   CL.AddTypeS('TObjectState', '( stClosed, stOpen, stConnecting, stExecuting, stFetching )');
   CL.AddTypeS('TObjectStates', 'set of TObjectState');
+  CL.AddTypeS('TBlobByteData', 'array of Byte');
   CL.AddTypeS('TSchemaInfo', '( siAsserts, siCatalogs, siCharacterSets, siColla'
    +'tions, siColumns, siCheckConstraints, siConstraintColumnUsage, siConstrain'
    +'tTableUsage, siKeyColumnUsage, siReferentialConstraints, siTableConstraint'
@@ -498,17 +523,15 @@ begin
    +', siTables, siTranslations, siProviderTypes, siViews, siViewColumnUsage, s'
    +'iViewTableUsage, siProcedureParameters, siForeignKeys, siPrimaryKeys, siPr'
    +'ocedureColumns, siDBInfoKeywords, siDBInfoLiterals, siCubes, siDimensions,'
-   +' siHierarchies, siLevels, siMeasures, siProperties, siMembers, siProviderS'
-   +'pecific )');
+   +' siHierarchies, siLevels, siMeasures, siProperties, siMembers, siProviderSpecific )');
   CL.AddTypeS('TXactAttribute', '( xaCommitRetaining, xaAbortRetaining )');
   CL.AddTypeS('TXactAttributes', 'set of TXactAttribute');
-  //CL.AddTypeS('TBeginTransCompleteEvent', 'Procedure ( Connection : TADOConnect'
-  // +'ion; TransactionLevel : Integer; const Error : Error; var EventStatus : TE'
-  // +'ventStatus)');
+  CL.AddTypeS('TBeginTransCompleteEvent', 'Procedure ( Connection : TADOConnect'
+   +'ion; TransactionLevel : Integer; const Error : Byte; var EventStatus : TEventStatus)');
   CL.AddTypeS('TCommandType', '( cmdUnknown, cmdText, cmdTable, cmdStoredProc, '
    +'cmdFile, cmdTableDirect )');
-  //CL.AddTypeS('TConnectErrorEvent', 'Procedure ( Connection : TADOConnection; c'
-   //+'onst Error : Error; var EventStatus : TEventStatus)');
+  CL.AddTypeS('TConnectErrorEvent', 'Procedure ( Connection : TADOConnection; c'
+  +'onst Error : Byte; var EventStatus : TEventStatus)');
   CL.AddTypeS('TDisconnectEvent', 'Procedure ( Connection : TADOConnection; var'
    +' EventStatus : TEventStatus)');
   //CL.AddTypeS('TExecuteCompleteEvent', 'Procedure ( Connection : TADOConnection'
@@ -522,8 +545,8 @@ begin
    +'ADOLockType; var CommandType : TCommandType; var ExecuteOptions : TExecute'
    +'Options; var EventStatus : TEventStatus; const Command : _Command; const R'
    +'ecordset : _Recordset)'); }
-  //CL.AddTypeS('TInfoMessageEvent', 'Procedure ( Connection : TADOConnection; co'
-  // +'nst Error : Error; var EventStatus : TEventStatus)');
+  CL.AddTypeS('TInfoMessageEvent', 'Procedure ( Connection : TADOConnection; co'
+   +'nst Error : Byte; var EventStatus : TEventStatus)');
   SIRegister_TADOConnection(CL);
   SIRegister_TRDSConnection(CL);
   //  _Recordset = ADOInt.Recordset;
@@ -558,32 +581,29 @@ begin
   CL.AddTypeS('TRecordStatusSet', 'set of TRecordStatus');
   CL.AddTypeS('TAffectRecords', '(arCurrent, arFiltered, arAll, arAllChapters)');
   CL.AddTypeS('TPersistFormat', '( pfADTG, pfXML )');
-  CL.AddTypeS('TSeekOption', '( soFirstEQ, soLastEQ, soAfterEQ, soAfter, soBefo'
-   +'reEQ, soBefore )');
+  CL.AddTypeS('TSeekOption', '( soFirstEQ, soLastEQ, soAfterEQ, soAfter, soBeforeEQ, soBefore )');
   //CL.AddTypeS('PVariantList', '^TVariantList // will not work');
-  {CL.AddTypeS('TWillChangeFieldEvent', 'Procedure ( DataSet : TCustomADODataSet'
-   +'; const FieldCount : Integer; const Fields : OleVariant; var EventStatus :'
-   +' TEventStatus)');
-  CL.AddTypeS('TFieldChangeCompleteEvent', 'Procedure ( DataSet : TCustomADODat'
-   +'aSet; const FieldCount : Integer; const Fields : OleVariant; const Error :'
-   +' Error; var EventStatus : TEventStatus)');
+  CL.AddTypeS('TWillChangeFieldEvent', 'Procedure ( DataSet : TCustomADODataSet'
+   +'; const FieldCount : Integer; const Fields : OleVariant; var EventStatus : TEventStatus)');
+  //CL.AddTypeS('TFieldChangeCompleteEvent', 'Procedure ( DataSet : TCustomADODat'
+   //+'aSet; const FieldCount : Integer; const Fields : OleVariant; const Error :'
+   //+' Error; var EventStatus : TEventStatus)');
   CL.AddTypeS('TWillChangeRecordEvent', 'Procedure ( DataSet : TCustomADODataSe'
    +'t; const Reason : TEventReason; const RecordCount : Integer; var EventStat'
    +'us : TEventStatus)');
   CL.AddTypeS('TRecordChangeCompleteEvent', 'Procedure ( DataSet : TCustomADODa'
    +'taSet; const Reason : TEventReason; const RecordCount : Integer; const Err'
-   +'or : Error; var EventStatus : TEventStatus)');
+   +'or : Byte; var EventStatus : TEventStatus)');
   CL.AddTypeS('TEndOfRecordsetEvent', 'Procedure ( DataSet : TCustomADODataSet;'
    +' var MoreData : WordBool; var EventStatus : TEventStatus)');
   CL.AddTypeS('TFetchProgressEvent', 'Procedure ( DataSet : TCustomADODataSet; '
    +'Progress, MaxProgress : Integer; var EventStatus : TEventStatus)');
   CL.AddTypeS('TRecordsetErrorEvent', 'Procedure ( DataSet : TCustomADODataSet;'
-   +' const Reason : TEventReason; const Error : Error; var EventStatus : TEven'
-   +'tStatus)');
+   +' const Reason : TEventReason; const Error : Byte; var EventStatus : TEventStatus)');
   CL.AddTypeS('TRecordsetReasonEvent', 'Procedure ( DataSet : TCustomADODataSet'
    +'; const Reason : TEventReason; var EventStatus : TEventStatus)');
   CL.AddTypeS('TRecordsetEvent', 'Procedure ( DataSet : TCustomADODataSet; cons'
-   +'t Error : Error; var EventStatus : TEventStatus)'); }
+   +'t Error : Byte; var EventStatus : TEventStatus)');
   //CL.AddTypeS('TRecordsetCreate', 'Procedure ( DataSet : TCustomADODataSet; con'
    //+'st Recordset : _Recordset)');
   SIRegister_TCustomADODataSet(CL);
@@ -686,6 +706,13 @@ begin Self.RDSConnection := T; end;
 (*----------------------------------------------------------------------------*)
 procedure TADODataSetRDSConnection_R(Self: TADODataSet; var T: TRDSConnection);
 begin T := Self.RDSConnection; end;
+
+procedure TADODataSetIndexDefs_W(Self: TADODataSet; const T: TIndexDefs);
+begin Self.IndexDefs := T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TADODataSetIndexDefs_R(Self: TADODataSet; var T: TIndexDefs);
+begin T := Self.IndexDefs; end;
 
 (*----------------------------------------------------------------------------*)
 procedure TCustomADODataSetOnRecordsetCreate_W(Self: TCustomADODataSet; const T: TRecordsetCreate);
@@ -1080,6 +1107,8 @@ begin T := Self.DEFAULTFIELDS; end;
 procedure TDATASETDATASOURCE_R(Self: TCustomADODataSet; var T: TDATASOURCE);
 begin T := Self.DATASOURCE; end;
 
+procedure TDATASETDATASOURCE_W(Self: TCustomADODataSet; const T: TDATASOURCE);
+begin Self.DATASOURCE:= T; end;
 
 
 procedure TDATASETCANMODIFY_R(Self: TCustomADODataSet; var T: BOOLEAN);
@@ -1731,6 +1760,7 @@ begin
     RegisterMethod(@TADODataSet.Destroy, 'Free');
     RegisterMethod(@TADODataSet.CreateDataSet, 'CreateDataSet');
     RegisterMethod(@TADODataSet.GetIndexNames, 'GetIndexNames');
+    RegisterPropertyHelper(@TADODataSetIndexDefs_R,@TADODataSetIndexDefs_W,'IndexDefs');
     RegisterPropertyHelper(@TADODataSetRDSConnection_R,@TADODataSetRDSConnection_W,'RDSConnection');
     RegisterPropertyHelper(@TADODataSetSQL_R,@TADODataSetSQL_W,'SQL');
   end;
@@ -1816,7 +1846,7 @@ begin
   RegisterVirtualMethod(@TCustomADODataSet.GETCURRENTRECORD, 'GETCURRENTRECORD');
 //  RegisterVirtualMethod(@TDATASET.GETDETAILDATASETS, 'GETDETAILDATASETS');
 //  RegisterVirtualMethod(@TDATASET.GETDETAILLINKFIELDS, 'GETDETAILLINKFIELDS');
-//  RegisterVirtualMethod(@TDATASET.GETBLOBFIELDDATA, 'GETBLOBFIELDDATA');
+  RegisterMethod(@TCustomADODataSet.GETBLOBFIELDDATA, 'GETBLOBFIELDDATA');
 //  RegisterMethod(@TDATASET.GETFIELDLIST, 'GETFIELDLIST');
   RegisterMethod(@TCustomADODataSet.GETFIELDNAMES, 'GETFIELDNAMES');
 //  RegisterMethod(@TDATASET.GOTOBOOKMARK, 'GOTOBOOKMARK');
@@ -1843,7 +1873,7 @@ begin
   RegisterPropertyHelper(@TDATASETBOF_R,nil,'BOF');
 //  RegisterPropertyHelper(@TDATASETBOOKMARK_R,@TDATASETBOOKMARK_W,'BOOKMARK');
   RegisterPropertyHelper(@TDATASETCANMODIFY_R,nil,'CANMODIFY');
-  RegisterPropertyHelper(@TDATASETDATASOURCE_R,nil,'DATASOURCE');
+  RegisterPropertyHelper(@TDATASETDATASOURCE_R,@TDATASETDATASOURCE_W,'DATASOURCE');
   RegisterPropertyHelper(@TDATASETDEFAULTFIELDS_R,nil,'DEFAULTFIELDS');
   RegisterPropertyHelper(@TDATASETEOF_R,nil,'EOF');
   RegisterPropertyHelper(@TDATASETFIELDCOUNT_R,nil,'FIELDCOUNT');

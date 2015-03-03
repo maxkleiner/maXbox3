@@ -1,7 +1,7 @@
 ****************************************************************
-Release Notes maXbox 3.9.9.180 Feb 2015 CODEsign
+Release Notes maXbox 3.9.9.180 March 2015 CODEsign
 ****************************************************************
-Add 16 Units, 1 Slide,Tutor, Big Numbers (Decimals, TInteger)
+Add 20 Units, 1 Slide,Tutor, BigNumbers, TestFramework, GEOInfo
 
 1065 unit uPSI_UDict;                          //DFF
 1066 unit uPSI_ubigFloatV3;                    //DFF
@@ -19,9 +19,13 @@ Add 16 Units, 1 Slide,Tutor, Big Numbers (Decimals, TInteger)
 1078 unit uPSI_CollPanl;                       //VCL
 1079 unit uPSI_Calendar2;                      //VCL
 1080 unit uPSI_IBCtrls;                        //VCL
+1081 unit uPSI_IdStackWindows;                 //Indy
+1082 unit uPSI_CTSVendorUtils;
+1083 unit uPSI_VendorTestFramework;
+1084 unit uPSI_TInterval; 
 
-SHA1:  maXbox3.exe 680C38764AABF79B953713CDE1501B77BE27FA49
-CRC32: maXbox3.exe 5878C1C3
+SHA1:  maXbox3.exe 3D7F88BE9687CB834A5E2DAED08B23358484FEC0
+CRC32: maXbox3.exe E2ADE828
 
 
 ****************************************************************
