@@ -3,7 +3,7 @@ unit U_BigFloatTest_mX;
  This program may be used or modified for any non-commercial purpose
  so long as this original notice remains in place. #locs:580
  All other rights are reserved , crossconverter and adaption by max
- #sign:Administrator: PC08: 03/03/2015 04:53:37 PM 
+ #sign:Administrator: PC08: 15/03/2015 12:01:40 AM 
  }
 
 interface

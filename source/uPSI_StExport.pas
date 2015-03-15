@@ -59,7 +59,8 @@ begin
   //with RegClassS(CL,'TOBJECT', 'TStDbSchemaGenerator') do
   with CL.AddClassN(CL.FindClass('TOBJECT'),'TStDbSchemaGenerator') do begin
     RegisterMethod('Constructor Create');
-    RegisterMethod('Procedure ExportToStream( AStream : TStream)');
+      RegisterMethod('Procedure Free');
+      RegisterMethod('Procedure ExportToStream( AStream : TStream)');
     RegisterMethod('Procedure ExportToFile( AFile : TFileName)');
     RegisterProperty('DataSet', 'TDataSet', iptrw);
     RegisterProperty('FieldDelimiter', 'AnsiChar', iptrw);
@@ -74,7 +75,8 @@ begin
   //with RegClassS(CL,'TOBJECT', 'TStDBtoCSVExport') do
   with CL.AddClassN(CL.FindClass('TOBJECT'),'TStDBtoCSVExport') do begin
     RegisterMethod('Constructor Create');
-    RegisterMethod('Procedure DoQuote( var Value : AnsiString)');
+    RegisterMethod('Procedure Free');
+      RegisterMethod('Procedure DoQuote( var Value : AnsiString)');
     RegisterMethod('Procedure ExportToStream( AStream : TStream)');
     RegisterMethod('Procedure ExportToFile( AFile : TFileName)');
     RegisterProperty('DataSet', 'TDataSet', iptrw);
@@ -245,10 +247,10 @@ begin T := Self.DataSet; end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStDbSchemaGenerator(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStDbSchemaGenerator) do
-  begin
+  with CL.Add(TStDbSchemaGenerator) do begin
     RegisterConstructor(@TStDbSchemaGenerator.Create, 'Create');
-    RegisterMethod(@TStDbSchemaGenerator.ExportToStream, 'ExportToStream');
+    RegisterMethod(@TStDbSchemaGenerator.Destroy, 'Free');
+   RegisterMethod(@TStDbSchemaGenerator.ExportToStream, 'ExportToStream');
     RegisterMethod(@TStDbSchemaGenerator.ExportToFile, 'ExportToFile');
     RegisterPropertyHelper(@TStDbSchemaGeneratorDataSet_R,@TStDbSchemaGeneratorDataSet_W,'DataSet');
     RegisterPropertyHelper(@TStDbSchemaGeneratorFieldDelimiter_R,@TStDbSchemaGeneratorFieldDelimiter_W,'FieldDelimiter');
@@ -260,9 +262,9 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStDBtoCSVExport(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStDBtoCSVExport) do
-  begin
+  with CL.Add(TStDBtoCSVExport) do begin
     RegisterConstructor(@TStDBtoCSVExport.Create, 'Create');
+     RegisterMethod(@TStDBtoCSVExport.Destroy, 'Free');
     RegisterVirtualMethod(@TStDBtoCSVExport.DoQuote, 'DoQuote');
     RegisterMethod(@TStDBtoCSVExport.ExportToStream, 'ExportToStream');
     RegisterMethod(@TStDBtoCSVExport.ExportToFile, 'ExportToFile');

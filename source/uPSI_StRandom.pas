@@ -1,6 +1,6 @@
 unit uPSI_StRandom;
 {
-   SysToolsç
+   SysToolsç    add as float
 }
 interface
  
@@ -57,9 +57,9 @@ end;
 procedure SIRegister_TStRandomMother(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TStRandomBase', 'TStRandomMother') do
-  with CL.AddClassN(CL.FindClass('TStRandomBase'),'TStRandomMother') do
-  begin
+  with CL.AddClassN(CL.FindClass('TStRandomBase'),'TStRandomMother') do begin
     RegisterMethod('Constructor Create( aSeed : integer)');
+    RegisterMethod('function AsFloat : double;');
     RegisterProperty('Seed', 'integer', iptw);
   end;
 end;
@@ -68,9 +68,9 @@ end;
 procedure SIRegister_TStRandomCombined(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TStRandomBase', 'TStRandomCombined') do
-  with CL.AddClassN(CL.FindClass('TStRandomBase'),'TStRandomCombined') do
-  begin
+  with CL.AddClassN(CL.FindClass('TStRandomBase'),'TStRandomCombined') do begin
     RegisterMethod('Constructor Create( aSeed1, aSeed2 : integer)');
+    RegisterMethod('function AsFloat : double;');
     RegisterProperty('Seed1', 'integer', iptrw);
     RegisterProperty('Seed2', 'integer', iptrw);
   end;
@@ -80,9 +80,9 @@ end;
 procedure SIRegister_TStRandomSystem(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TStRandomBase', 'TStRandomSystem') do
-  with CL.AddClassN(CL.FindClass('TStRandomBase'),'TStRandomSystem') do
-  begin
+  with CL.AddClassN(CL.FindClass('TStRandomBase'),'TStRandomSystem') do begin
     RegisterMethod('Constructor Create( aSeed : integer)');
+    RegisterMethod('function AsFloat : double;');
     RegisterProperty('Seed', 'integer', iptrw);
   end;
 end;
@@ -91,8 +91,7 @@ end;
 procedure SIRegister_TStRandomBase(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TOBJECT', 'TStRandomBase') do
-  with CL.AddClassN(CL.FindClass('TOBJECT'),'TStRandomBase') do
-  begin
+  with CL.AddClassN(CL.FindClass('TOBJECT'),'TStRandomBase') do begin
     RegisterMethod('Function AsFloat : double');
     RegisterMethod('Function AsInt( aUpperLimit : integer) : integer');
     RegisterMethod('Function AsIntInRange( aLowerLimit : integer; aUpperLimit : integer) : integer');
@@ -151,19 +150,19 @@ begin T := Self.Seed; end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStRandomMother(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStRandomMother) do
-  begin
+  with CL.Add(TStRandomMother) do begin
     RegisterConstructor(@TStRandomMother.Create, 'Create');
-    RegisterPropertyHelper(nil,@TStRandomMotherSeed_W,'Seed');
+     RegisterMethod(@TStRandomMother.AsFloat, 'AsFloat');
+     RegisterPropertyHelper(nil,@TStRandomMotherSeed_W,'Seed');
   end;
 end;
 
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStRandomCombined(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStRandomCombined) do
-  begin
+  with CL.Add(TStRandomCombined) do begin
     RegisterConstructor(@TStRandomCombined.Create, 'Create');
+         RegisterMethod(@TStRandomCombined.AsFloat, 'AsFloat');
     RegisterPropertyHelper(@TStRandomCombinedSeed1_R,@TStRandomCombinedSeed1_W,'Seed1');
     RegisterPropertyHelper(@TStRandomCombinedSeed2_R,@TStRandomCombinedSeed2_W,'Seed2');
   end;
@@ -172,9 +171,9 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStRandomSystem(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStRandomSystem) do
-  begin
+  with CL.Add(TStRandomSystem) do begin
     RegisterConstructor(@TStRandomSystem.Create, 'Create');
+    RegisterMethod(@TStRandomSystem.AsFloat, 'AsFloat');
     RegisterPropertyHelper(@TStRandomSystemSeed_R,@TStRandomSystemSeed_W,'Seed');
   end;
 end;

@@ -5838,8 +5838,23 @@ begin
     CL.AddTypeS('HHOOK', 'LongWord');
     CL.AddTypeS('HINST','THandle');
     CL.AddTypeS('TNavPos','(tLat, tLon)');
-
- CL.AddTypeS('TFNHookProc','function (code: Integer; wparam: WPARAM; lparam: LPARAM): LRESULT stdcall;');
+ CL.AddConstantN('WM_NULL','LongWord').SetUInt( $0000);
+ CL.AddConstantN('WM_CREATE','LongWord').SetUInt( $0001);
+ CL.AddConstantN('WM_DESTROY','LongWord').SetUInt( $0002);
+ CL.AddConstantN('WM_MOVE','LongWord').SetUInt( $0003);
+ CL.AddConstantN('WM_SIZE','LongWord').SetUInt( $0005);
+ CL.AddConstantN('WM_ACTIVATE','LongWord').SetUInt( $0006);
+ CL.AddConstantN('WM_SETFOCUS','LongWord').SetUInt( $0007);
+ CL.AddConstantN('WM_KILLFOCUS','LongWord').SetUInt( $0008);
+ CL.AddConstantN('WM_QUERYENDSESSION','LongWord').SetUInt( $0011);
+ CL.AddConstantN('WM_QUIT','LongWord').SetUInt( $0012);
+ CL.AddConstantN('WM_QUERYOPEN','LongWord').SetUInt( $0013);
+ CL.AddConstantN('WM_ERASEBKGND','LongWord').SetUInt( $0014);
+ CL.AddConstantN('WM_SYSCOLORCHANGE','LongWord').SetUInt( $0015);
+ CL.AddConstantN('WM_ENDSESSION','LongWord').SetUInt( $0016);
+ CL.AddConstantN('WM_SYSTEMERROR','LongWord').SetUInt( $0017);
+ CL.AddConstantN('WM_SHOWWINDOW','LongWord').SetUInt( $0018);
+  CL.AddTypeS('TFNHookProc','function (code: Integer; wparam: WPARAM; lparam: LPARAM): LRESULT stdcall;');
   CL.AddConstantN('FILEOPENORD','LongInt').SetInt( 1536);
  CL.AddConstantN('MULTIFILEOPENORD','LongInt').SetInt( 1537);
  CL.AddConstantN('PRINTDLGORD','LongInt').SetInt( 1538);

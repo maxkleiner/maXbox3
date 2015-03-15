@@ -1,6 +1,6 @@
 unit uPSI_BetterADODataSet;
 {
-   ADO and MDAC
+   ADO and MDAC  and connString update BLOB
 }
 interface
  
@@ -42,7 +42,7 @@ uses
   ,ADOInt
   ,ADODB
   ,ADO26_TLB
-  ,DB
+  ,DB, OLEDB, ComObj, ActiveX, Forms, StdCtrls, Controls, Dialogs
   ,BetterADODataSet
   ;
  
@@ -51,6 +51,140 @@ procedure Register;
 begin
   RegisterComponents('Pascal Script', [TPSImport_BetterADODataSet]);
 end;
+
+function ADOConnectionString(ParentHandle: THandle; InitialString: WideString;
+  out NewString: string): Boolean;
+var
+  DataInit: IDataInitialize;
+  DBPrompt: IDBPromptInitialize;
+  DataSource: IUnknown;
+  InitStr: PWideChar;
+begin
+  Result   := False;
+  DataInit := CreateComObject(CLSID_DataLinks) as IDataInitialize;
+  if InitialString <> '' then
+    DataInit.GetDataSource(nil, CLSCTX_INPROC_SERVER, PWideChar(InitialString),
+      IUnknown, DataSource);
+  DBPrompt := CreateComObject(CLSID_DataLinks) as IDBPromptInitialize;
+  if Succeeded(DBPrompt.PromptDataSource(nil, ParentHandle,
+    DBPROMPTOPTIONS_PROPERTYSHEET, 0, nil, nil, IUnknown, DataSource)) then 
+  begin
+    InitStr := nil;
+    DataInit.GetInitializationString(DataSource, True, InitStr);
+    NewString := InitStr;
+    Result    := True;
+  end;
+end;
+
+
+procedure ShowEOleException(AExc: EOleException; Query: String);
+var
+  ErrShowFrm: TForm;
+  Memo: TMemo;
+begin
+  ErrShowFrm := TForm.Create(nil);
+  ErrShowFrm.Position := poScreenCenter;
+  ErrShowFrm.Width := 640;
+  ErrShowFrm.Height := 480;
+  Memo := TMemo.Create(ErrShowFrm);
+  Memo.Parent := ErrShowFrm;
+  Memo.Align := alClient; //ErrShowFrm.Align;
+
+  Memo.Lines.Clear;
+ if assigned(AExc) then begin
+   Memo.Lines.Add('Message: ' + AExc.Message);
+   Memo.Lines.Add('   Source: ' + AExc.Source);
+   Memo.Lines.Add('   ClassName: ' + AExc.ClassName);
+   Memo.Lines.Add('   Error Code: ' + IntToStr(AExc.ErrorCode));
+  end;
+  Memo.Lines.Add('   Query: ' + Query);
+
+  ErrShowFrm.ShowModal;
+  Memo.Free;
+  ErrShowFrm.Free;
+end;
+
+
+function UpdateBlob(Connection: TADOConnection; Spalte: String; Tabelle: String; Where: String; var ms: TMemoryStream): Boolean;
+var
+  BlobField: TBlobField;
+  Table: TADOTable;
+begin
+  result := True;
+  try
+    ms.Seek(0, soFromBeginning);
+    Table := TADOTable.Create(nil);
+    Table.Connection := Connection;
+    Table.TableName := Tabelle;
+    Table.Filtered := False;
+    // Set Filter like SQL-Command '... WHERE id=1'
+    Table.Filter := Where;
+    Table.Filtered := True;
+    Table.Open;
+    Table.First;
+
+    if not Table.FieldByName(Spalte).IsBlob then
+     Raise EOleException.Create('The field ' + Spalte + ' is not a blob-field.', S_FALSE, 'ITSQL.UpdateBlob', '', 0);
+
+    BlobField := TBlobField(Table.FieldByName(Spalte));
+    Table.Edit;
+    BlobField.LoadFromStream(ms);
+    Table.Post;
+    Table.Free;
+  except
+    on E: EOleException do
+    begin
+      ShowEOleException(E, 'UPDATE BLOB FROM: SELECT ' + Spalte + ' FROM ' + Tabelle + ' WHERE ' + Where);
+      result := False;
+    end;
+  end;
+end;
+
+
+function SaveToMHT(const AUrl, AFileName: string; AShowErrorMessage: Boolean = False): Boolean;
+var
+  oMSG, oConfig: OleVariant;
+  sFileName: string;
+  Retvar: Boolean;
+begin
+  sFileName := ChangeFileExt(AFileName, '.mht');
+  DeleteFile(PAnsiChar(sFileName));
+  try
+    oConfig := CreateOleObject('CDO.Configuration');
+    oMSG    := CreateOleObject('CDO.Message');
+    oMSG.Configuration := oConfig;
+    oMSG.CreateMHTMLBody(AUrl);
+    oMSG.GetStream.SaveToFile(sFileName);
+    Retvar := True;
+  except
+    on E: Exception do
+    begin
+      if AShowErrorMessage then MessageDlg(E.Message, mtError, [mbOK], 0);
+      Retvar := False;
+    end;
+  end;
+  oMSG    := VarNull;
+  oConfig := VarNull;
+  Result  := Retvar;
+end;
+
+
+function IsCOMObjectActive(ClassName: string): Boolean;
+var
+  ClassID: TCLSID;
+  Unknown: IUnknown;
+begin
+  try
+    ClassID := ProgIDToClassID(ClassName);
+    Result  := GetActiveObject(ClassID, nil, Unknown) = S_OK;
+  except
+    // raise;
+    Result := False;
+  end;
+end;
+
+
+
 
 (* === compile-time registration functions === *)
 (*----------------------------------------------------------------------------*)
@@ -120,22 +254,27 @@ end;
 procedure SIRegister_BetterADODataSet(CL: TPSPascalCompiler);
 begin
  CL.AddConstantN('BetterADODataSetVersion','String').SetString( '4.04');
-  CL.AddTypeS('TUpdateCriteria', '( adCriteriaKey, adCriteriaAllCols, adCriteri'
-   +'aUpdCols, adCriteriaTimeStamp )');
-  CL.AddTypeS('TUpdateResyncEnum', '( ResyncAutoIncrement, ResyncConflicts, Res'
-   +'yncUpdates, ResyncInserts )');
+  CL.AddTypeS('TUpdateCriteria','(adCriteriaKey, adCriteriaAllCols, adCriteriaUpdCols, adCriteriaTimeStamp )');
+  CL.AddTypeS('TUpdateResyncEnum', '(ResyncAutoIncrement, ResyncConflicts, ResyncUpdates, ResyncInserts )');
   CL.AddTypeS('TUpdateResync', 'set of TUpdateResyncEnum');
-  CL.AddTypeS('TRefreshType', '( rtRequery, rtResyncCurrent, rtResyncGroup, rtR'
-   +'esyncAll, rtResyncChapters )');
+  CL.AddTypeS('TRefreshType', '( rtRequery, rtResyncCurrent, rtResyncGroup, rtResyncAll, rtResyncChapters )');
   CL.AddTypeS('TJoinsResolution', '( jrAuto, jrManual, jrNone )');
   CL.AddTypeS('TJoinTest', '( jtInactive, jtNotJoined, jtJoined )');
   CL.AddTypeS('TStartPos', '( spFirstRecord, spCurrentRecord )');
  // CL.AddTypeS('TRecordBuffer', '(PChar)');
 
   CL.AddClassN(CL.FindClass('TOBJECT'),'TBetterADODataSet');
+
+  CL.AddClassN(CL.FindClass('EOleError'),'EOleException');
+
   SIRegister_TADOVersion(CL);
   SIRegister_TBetterADODataSet(CL);
- CL.AddDelphiFunction('Procedure Register');
+ //CL.AddDelphiFunction('Procedure Register');
+ CL.AddDelphiFunction('function ADOConnectionString(ParentHandle: THandle; InitialString: WideString; out NewString: string): Boolean;');
+ CL.AddDelphiFunction('procedure ShowEOleException(AExc: EOleException; Query: String);');
+ CL.AddDelphiFunction('function UpdateBlob(Connection: TADOConnection; Spalte: String; Tabelle: String; Where: String; var ms: TMemoryStream): Boolean;');
+ CL.AddDelphiFunction('function SaveToMHT(const AUrl, AFileName: string; AShowErrorMessage: Boolean): Boolean;');
+ CL.AddDelphiFunction('function IsCOMObjectActive(ClassName: string): Boolean;');
 end;
 
 (* === run-time registration functions === *)
@@ -367,6 +506,11 @@ begin T := Self.BetterADSVersion; end;
 procedure RIRegister_BetterADODataSet_Routines(S: TPSExec);
 begin
 // S.RegisterDelphiFunction(@Register, 'Register', cdRegister);
+ S.RegisterDelphiFunction(@ADOConnectionString, 'ADOConnectionString', cdRegister);
+ S.RegisterDelphiFunction(@ShowEOleException, 'ShowEOleException', cdRegister);
+ S.RegisterDelphiFunction(@UpdateBlob, 'UpdateBlob', cdRegister);
+ S.RegisterDelphiFunction(@SaveToMHT, 'SaveToMHT', cdRegister);
+ S.RegisterDelphiFunction(@IsCOMObjectActive, 'IsCOMObjectActive', cdRegister);
 end;
 
 (*----------------------------------------------------------------------------*)
@@ -438,8 +582,8 @@ begin
   RIRegister_TBetterADODataSet(CL);
 end;
 
- 
- 
+
+
 { TPSImport_BetterADODataSet }
 (*----------------------------------------------------------------------------*)
 procedure TPSImport_BetterADODataSet.CompileImport1(CompExec: TPSScript);

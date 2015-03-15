@@ -55,9 +55,12 @@ end;
 procedure SIRegister_TStDictionary(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TStContainer', 'TStDictionary') do
-  with CL.AddClassN(CL.FindClass('TStContainer'),'TStDictionary') do
-  begin
+  with CL.AddClassN(CL.FindClass('TStContainer'),'TStDictionary') do begin
     RegisterMethod('Constructor Create( AHashSize : Integer)');
+      RegisterMethod('Procedure Free');
+      RegisterMethod('Procedure Clear');
+      RegisterMethod('procedure LoadFromStream(S : TStream);');
+   RegisterMethod('procedure StoreToStream(S : TStream);');
     RegisterMethod('Function DoEqual( const String1, String2 : string) : Integer');
     RegisterMethod('Function Exists( const Name : string; var Data : Pointer) : Boolean');
     RegisterMethod('Procedure Add( const Name : string; Data : Pointer)');
@@ -80,9 +83,9 @@ end;
 procedure SIRegister_TStDictNode(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TStNode', 'TStDictNode') do
-  with CL.AddClassN(CL.FindClass('TStNode'),'TStDictNode') do
-  begin
-    RegisterMethod('Constructor CreateStr( const Name : string; AData : Pointer)');
+  with CL.AddClassN(CL.FindClass('TStNode'),'TStDictNode') do begin
+     RegisterMethod('Procedure Free');
+      RegisterMethod('Constructor CreateStr( const Name : string; AData : string)');
     RegisterProperty('Name', 'string', iptr);
   end;
 end;
@@ -147,10 +150,13 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStDictionary(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStDictionary) do
-  begin
-    RegisterVirtualConstructor(@TStDictionary.Create, 'Create');
-    RegisterVirtualMethod(@TStDictionary.DoEqual, 'DoEqual');
+  with CL.Add(TStDictionary) do begin
+    RegisterConstructor(@TStDictionary.Create, 'Create');
+    RegisterMethod(@TStDictionary.Destroy, 'Free');
+    RegisterMethod(@TStDictionary.Clear, 'Clear');
+    RegisterMethod(@TStDictionary.LoadFromStream, 'LoadFromStream');
+    RegisterMethod(@TStDictionary.StoreToStream, 'StoreToStream');
+    RegisterMethod(@TStDictionary.DoEqual, 'DoEqual');
     RegisterMethod(@TStDictionary.Exists, 'Exists');
     RegisterMethod(@TStDictionary.Add, 'Add');
     RegisterMethod(@TStDictionary.Delete, 'Delete');

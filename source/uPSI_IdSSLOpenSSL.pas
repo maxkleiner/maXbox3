@@ -209,8 +209,7 @@ begin
   CL.AddClassN(CL.FindClass('TOBJECT'),'TIdX509');
   CL.AddTypeS('TIdSSLVersion', '( sslvSSLv2, sslvSSLv23, sslvSSLv3, sslvTLSv1 )');
   CL.AddTypeS('TIdSSLMode', '( sslmUnassigned, sslmClient, sslmServer, sslmBoth)');
-  CL.AddTypeS('TIdSSLVerifyMode', '( sslvrfPeer, sslvrfFailIfNoPeerCert, sslvrf'
-   +'ClientOnce )');
+  CL.AddTypeS('TIdSSLVerifyMode', '( sslvrfPeer, sslvrfFailIfNoPeerCert, sslvrfClientOnce )');
   CL.AddTypeS('TIdSSLVerifyModeSet', 'set of TIdSSLVerifyMode');
   CL.AddTypeS('TIdSSLCtxMode', '( sslCtxClient, sslCtxServer )');
   CL.AddTypeS('TIdSSLAction', '( sslRead, sslWrite )');
@@ -219,8 +218,9 @@ begin
   CL.AddClassN(CL.FindClass('TOBJECT'),'TIdSSLCipher');
   CL.AddTypeS('TCallbackEvent', 'Procedure ( Msg : String)');
   CL.AddTypeS('TPasswordEvent', 'Procedure ( var Password : String)');
-  CL.AddTypeS('TVerifyPeerEvent', 'Function ( Certificate : TIdX509) : Boolean');
-  CL.AddTypeS('TIOHandlerNotify', 'Procedure ( ASender : TIdSSLIOHandlerSocket)');
+  CL.AddTypeS('TVerifyPeerEvent', 'Function ( Certificate : TIdX509) : Boolean of object');
+ //   TVerifyPeerEvent  = function(Certificate: TIdX509): Boolean of object;
+   CL.AddTypeS('TIOHandlerNotify', 'Procedure ( ASender : TIdSSLIOHandlerSocket)');
   SIRegister_TIdSSLOptions(CL);
   SIRegister_TIdSSLContext(CL);
   SIRegister_TIdSSLSocket(CL);

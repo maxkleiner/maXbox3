@@ -1,0 +1,318 @@
+PROGRAM XSBuiltins_Functions;
+
+//////////////////////////////////////////////////////////////////////
+//  #sign:Administrator: PC08: 13/03/2015 07:33:00 PM 
+//  Purpose: shows utility functions of XSBuiltins                   //
+//  #path>ples\E:\maxbox3\mXGit39991\maxbox3\examples\les\          //
+//  Lines of Code #locs:200
+//////////////////////////////////////////////////////////////////////
+
+//TODO: Combine this XML with SoapFloatToStr
+
+function GetDataFromFile(AFileName: string): string;
+var
+  Stream: TFileStream;
+begin
+  Stream:= TFileStream.Create(AFileName, fmOpenRead);
+  try
+    SetLength(Result, Stream.Size);
+    //Stream.Read(Result[1], Stream.Size);
+    Stream.Read(Result, Stream.Size);
+  finally
+    stream.Free
+    stream:= NIL;
+    //AndNil(Stream);
+  end;
+end;  
+
+const SoapDecimalSeparator1 ='.';
+
+ { Record that holds Duration Data }
+type
+  TDurationData = record
+    Year: Integer;
+    Month: Integer;
+    Day: Integer;
+    Hour: Integer;
+    Minute: Integer;
+    Second: Double;
+    Negative: Boolean;
+  end;
+
+DurationDataFlag = (ddYear, ddMonth, ddDay, ddHour, ddMinute, ddSecond);
+TDurationDataFlags = set of DurationDataFlag;
+
+function GetFormatSettings: TFormatSettings;
+var FormatSettings: TFormatSettings;
+begin
+  if FormatSettings.DecimalSeparator <> SoapDecimalSeparator then begin
+    GetLocaleFormatSettings(LOCALE_SYSTEM_DEFAULT, FormatSettings);
+    FormatSettings.DecimalSeparator:= SoapDecimalSeparator1;
+  end;
+  Result:= FormatSettings;
+end;
+
+function SoapFloatToStr(Value: double): string;
+begin
+  Result:= FloatToStrFS(Value, ffFixed, 8,4, GetFormatSettings);
+end;
+
+function SoapStrToFloat(Value: string): double;
+begin
+  Result:= StrToFloatFS(Value, ffFixed, 8,4,GetFormatSettings);
+end;
+
+var
+  sNegPrefix : array[0..1] of string; // = ('', '-');
+
+
+function EncodeDuration(const Data: TDurationData): WideString;
+begin
+  sNegPrefix[0]:= ''
+  sNegPrefix[1]:= '-'
+  Result := Format('%sP%dY%dM%dD%dH%dM%sS', [sNegPrefix[byte(Data.Negative)],
+                                             Data.Year, Data.Month, Data.Day,
+                                             Data.Hour, Data.Minute,
+                                             SoapFloatToStr(Data.Second)]);
+end;
+
+
+procedure SIRegister_XSBuiltIns;
+begin
+ //SHexMarker','String').SetString( '$');
+ //SoapTimePrefix','String').SetString( 'T');
+ //XMLDateSeparator','String').SetString( '-');
+ {XMLHourOffsetMinusMarker','String').SetString( '-');
+ XMLHourOffsetPlusMarker','String').SetString( '+');
+ XMLTimeSeparator','String').SetString( ':');
+ XMLMonthPos','LongInt').SetInt( 6);
+ XMLDayPos','LongInt').SetInt( 9);
+ XMLYearPos','LongInt').SetInt( 1);
+ XMLMilSecPos','LongInt').SetInt( 10);
+ XMLDefaultYearDigits','LongInt').SetInt( 4);
+ XMLDurationStart','String').SetString( 'P');
+ XMLDurationYear','String').SetString( 'Y');
+ XMLDurationMonth','String').SetString( 'M');
+ XMLDurationDay','String').SetString( 'D');
+ XMLDurationHour','String').SetString( 'H');
+ XMLDurationMinute','String').SetString( 'M');
+ XMLDurationSecond','String').SetString( 'S');}
+ //SNAN','String').SetString( 'NAN');
+ //SSciNotationMarker','Char').SetString( 'E');
+ //SDecimal','Char').SetString( '.');
+ //SNegative','Char').SetString( '-');
+ //SPlus','Char').SetString( '+');
+ //SLocalTimeMarker','String').SetString( 'Z');
+ //MaxMonth','LongInt').SetInt( 12);
+ //MinMonth','LongInt').SetInt( 1);
+ //MaxDay','LongInt').SetInt( 31);
+ //MinDay','LongInt').SetInt( 1);
+ //SoapDecimalSeparator','String').SetString( '.');
+  {CL.AddClassN(CL.FindClass('TOBJECT'),'TXSDuration');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'TXSTime');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'TXSDate');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'TXSDateTime');
+  SIRegister_TXSTime(CL);
+  SIRegister_TXSDate(CL);
+  SIRegister_TXSCustomDateTime(CL);
+  SIRegister_TXSDateTime(CL);
+  SIRegister_TXSDuration(CL);
+  CL.AddClassN(CL.FindClass('TOBJECT'),'EXSDateTimeException');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'EXSDecimalException');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'EXSHexBinaryException');
+  SIRegister_TXSHexBinary(CL);
+  SIRegister_TXSDecimal(CL);
+  SIRegister_TXSString(CL); }
+  //TXSTimeInstant', 'TXSDateTime');
+  {SIRegister_TXSBoolean(CL);
+  SIRegister_TXSInteger(CL);
+  SIRegister_TXSLong(CL);
+  SIRegister_TXMLData(CL); }
+  //DateTimeToXMLTime( Value : TDateTime; ApplyLocalBias : Boolean) : WideString');
+   writeln('DateTimeToXMLTime: '+DateTimeToXMLTime(now,true));
+  
+  //XMLTimeToDateTime(const XMLDateTime: WideString;AsUTCTime:Boolean):TDateTime');
+  //DateTimeToXSDateTime( const Value : TDateTime; ApplyLocalBias : Boolean) : TXSDateTime');
+  //GetDataFromFile( AFileName : string) : string');
+  //SoapFloatToStr( Value : double) : string');
+  //SoapStrToFloat( Value : string) : double');
+ //CL.AddDelphiFunction('Procedure InitXSTypes');
+  //TJvExeType', '( etNone, etMSDos, etWin16, etWin32, etConsole )');
+  //TJvIconModifier', '( imNormal, imOverlay, imSelected, imOpen, im'
+   //+'ShellSize, imSmall )');
+   //TBDEItemType', '( bdDatabases, bdDrivers, bdLangDrivers, bdUsers'
+   //+', bdRepositories )');
+  {SIRegister_TJvCustomBDEItems(CL);
+  SIRegister_TJvBDEItems(CL);
+  SIRegister_TJvDBListDataSet(CL);}
+  //TDBItemType', '( dtTables, dtStoredProcs, dtFiles, dtFunctions )');
+  //SIRegister_TJvCustomDatabaseItems(CL);
+  //SIRegister_TJvDatabaseItems(CL);
+  //TTabItemType','(dtFields, dtIndices,dtValChecks,dtRefInt,dtSecurity,dtFamily);
+    //TJvDatabaseList
+ 
+end;
+
+
+Function IntToBase32(Numb: Longint): String;
+var numlett: string;
+begin
+  numlett:= NUMBERS+LETTERS;
+  Result:= '';
+  for It:= 0 to 4 do begin
+    Insert(numlett[(Numb And 31)+1], Result, 1);
+    Numb:= Numb Shr 5;
+  end;
+end;
+
+function CountPos(const subtxt: string; Text: string): Integer;
+begin
+  if (Length(subtxt)= 0) Or (Length(Text)= 0) Or (Pos(subtxt,Text)= 0) then
+    result:= 0
+  else
+    result:= (Length(Text)- Length(StringReplace(Text,subtxt,'',
+      [rfReplaceAll]))) div Length(subtxt);
+end;
+
+ var mformSets: TFormatSettings; 
+     amimeext: TMimeExtension;
+ 
+Begin  //main
+ writeln('IntToBase32 of 1000: '+IntToBase32(1000))
+ writeln('CountPos: '+itoa(CountPos('max','this is max of maXbox a max numbermax')))
+ PrintF('CountPos: %d',[CountPos('max','this is max of maXbox a max numbermax')])
+ writeln(floatToStr(SoapStrToFloat('3457.458')));
+ writeln(SoapFloatToStr(SoapStrToFloat('3457.458')));
+ SIRegister_XSBuiltIns;
+ 
+ //StrToFloatFS('345.45', ffFixed, 8,4, mformSets);
+ 
+ with TPersistentObject.Create do begin
+      //assign
+      free
+  end;
+  with TJclSimpleXMLElem.Create(NIL) do begin
+     clear;
+     free;
+  end;  
+  
+  writeln('FileType2MimeType: '+FileType2MimeType(exepath+'maXbox3.exe'))
+End. 
+
+
+Ref:
+
+//############################################################################
+// Archimedes Spiral App
+//############################################################################
+
+unit ArchSpiralMain;
+
+interface
+
+uses
+  w3system, w3components, w3ctrls, w3application, w3game, w3gameapp,
+  w3polygons, w3inet, w3graphics;
+
+type
+  TApplication = class(TW3CustomGameApplication)
+  private
+    FValueA: Float;
+    FValueB: Float;
+    FWait: Boolean;
+    procedure HandleClick(Sender:TObject);
+  protected
+    procedure ApplicationStarting; override;
+    procedure ApplicationClosing; override;
+    procedure PaintView(Canvas: TW3Canvas); override;
+  end;
+
+implementation
+
+//############################################################################
+// TApplication
+//############################################################################
+
+procedure TApplication.ApplicationStarting;
+begin
+  inherited;
+
+  FValueA := 3.0;
+  FValueB := 1.4;
+
+  GameView.OnClick := Self.HandleClick;
+
+  // Initialize refresh interval, set this to 1 for optimal speed
+  GameView.Delay := 10;
+ 
+  // Start the redraw-cycle with framecounter active
+  // Note: the framecounter impacts rendering speed. Disable
+  // the framerate for maximum speed (false)
+  GameView.StartSession(true);
+end;
+
+procedure TApplication.ApplicationClosing;
+begin
+  GameView.EndSession;
+  inherited;
+end;
+
+procedure TApplication.HandleClick(Sender: TObject);
+begin
+  FWait := not FWait;
+end;
+
+// Note: In a real live game you would try to cache as much
+// info as you can. Typical tricks are: 
+//   1: Only get the width/height when resized
+//   2: Pre-calculate strings, especially RGB/RGBA values
+//   3: Only redraw what has changed, avoid a full repaint
+// The code below is just to get you started
+
+procedure TApplication.PaintView(Canvas: TW3Canvas);
+var
+  cx, cy: Integer;
+  i: Integer;
+  angle: Float;
+  x, y: Float;
+begin
+  if FWait then
+    exit;
+
+  FValueB := FValueB + 0.001;
+
+  // Clear background
+  Canvas.FillStyle := 'rgba(0,0,99,0.08)';
+  Canvas.FillRectF(0, 0, GameView.Width, GameView.Height);
+
+  // Draw our framerate on the screen
+//  Canvas.font := '10pt verdana';
+//  Canvas.FillStyle := 'rgb(255,255,255)';
+//  Canvas.FillTextF('FPS:' + IntToStr(GameView.FrameRate) + ' / ' + floatToStr(FbValue) ,10,20,MAX_INT);
+
+  cx := GameView.width div 2;
+  cy := GameView.Height div 2;
+  Canvas.BeginPath;
+
+  for i := 42 downto 0 do
+  begin
+    angle := FValueB * i;
+    x := cx + (FValueA + FValueB * angle) * cos(angle);
+    y := cy + (FValueA + FValueB * angle) * sin(angle);
+    if i = 42 then Canvas.MoveToF(x, y) else Canvas.LineToF(x,y);
+  end;
+
+  Canvas.StrokeStyle := '#FFF';
+  Canvas.Stroke;
+end;
+
+end.
+
+
+  RegisterMethod('Constructor Create(AOwner: TComponent)');
+  RegisterConstructor(@TJvMail.Create, 'Create');
+ 
+   RegisterMethod('Procedure Free');
+   RegisterMethod(@TJvMail.Destroy, 'Free');
+   
+----app_template_loaded_code----

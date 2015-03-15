@@ -1,6 +1,6 @@
 unit uPSI_StVArr;
 {
-   matrixx
+   matrixx   add free asign
 }
 interface
  
@@ -56,7 +56,10 @@ begin
   with CL.AddClassN(CL.FindClass('TStContainer'),'TStVMatrix') do begin
     RegisterMethod('Constructor Create( Rows, Cols, ElementSize : Cardinal; CacheRows : Integer; const DataFile : string; OpenMode : Word)');
     RegisterMethod('Procedure FlushCache');
-    RegisterMethod('Function HeaderSize : LongInt');
+      RegisterMethod('Procedure Free');
+    RegisterMethod('Procedure Assign( Source : TPersistent)');
+    RegisterMethod('Procedure Clear');
+      RegisterMethod('Function HeaderSize : LongInt');
     RegisterMethod('Procedure WriteHeader');
     RegisterMethod('Procedure ReadHeader');
     RegisterMethod('Procedure Assign( Source : TPersistent)');
@@ -114,7 +117,10 @@ procedure RIRegister_TStVMatrix(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TStVMatrix) do begin
     RegisterConstructor(@TStVMatrix.Create, 'Create');
-    RegisterMethod(@TStVMatrix.FlushCache, 'FlushCache');
+     RegisterMethod(@TStVMatrix.Destroy, 'Free');
+    RegisterMethod(@TStVMatrix.Assign, 'Assign');
+    RegisterMethod(@TStVMatrix.Clear, 'Clear');
+     RegisterMethod(@TStVMatrix.FlushCache, 'FlushCache');
     RegisterVirtualMethod(@TStVMatrix.HeaderSize, 'HeaderSize');
     RegisterVirtualMethod(@TStVMatrix.WriteHeader, 'WriteHeader');
     RegisterVirtualMethod(@TStVMatrix.ReadHeader, 'ReadHeader');

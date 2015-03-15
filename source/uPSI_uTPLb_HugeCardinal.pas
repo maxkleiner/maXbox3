@@ -1,6 +1,6 @@
 unit uPSI_uTPLb_HugeCardinal;
 {
-   TurboPower Crypto
+   TurboPower Crypto   add free
 }
 interface
  
@@ -51,8 +51,7 @@ end;
 procedure SIRegister_THugeCardinal(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TOBJECT', 'THugeCardinal') do
-  with CL.AddClassN(CL.FindClass('TOBJECT'),'THugeCardinal') do
-  begin
+  with CL.AddClassN(CL.FindClass('TOBJECT'),'THugeCardinal') do begin
     RegisterProperty('FValue', 'TMemoryStream', iptrw);
     RegisterProperty('FPool', 'TMemoryStreamPool', iptrw);
     RegisterMethod('Constructor CreateSimple( Value : uint64)');
@@ -64,6 +63,7 @@ begin
     RegisterMethod('Constructor CreateFromStreamIn( MaxBits1 : integer; ByteOrder : TByteOrder; Stream : TStream; Pool1 : TMemoryStreamPool)');
     RegisterMethod('Function Clone : THugeCardinal');
     RegisterMethod('Function CloneSized( MaxBits1 : integer) : THugeCardinal');
+     RegisterMethod('Procedure Free');
     RegisterMethod('Procedure Resize( NewMaxBit1 : integer)');
     RegisterMethod('Procedure Burn');
     RegisterMethod('Function BitLength : integer');
@@ -143,6 +143,7 @@ begin
     RegisterConstructor(@THugeCardinal.CreateAsClone, 'CreateAsClone');
     RegisterConstructor(@THugeCardinal.CreateAsSizedClone, 'CreateAsSizedClone');
     RegisterConstructor(@THugeCardinal.CreateFromStreamIn, 'CreateFromStreamIn');
+    RegisterMethod(@THugeCardinal.Destroy, 'Free');
     RegisterMethod(@THugeCardinal.Clone, 'Clone');
     RegisterMethod(@THugeCardinal.CloneSized, 'CloneSized');
     RegisterMethod(@THugeCardinal.Resize, 'Resize');

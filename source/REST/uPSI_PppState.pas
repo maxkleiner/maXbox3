@@ -52,11 +52,24 @@ end;
 procedure SIRegister_TSimplePppState(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TPppState', 'TSimplePppState') do
-  with CL.AddClassN(CL.FindClass('TPppState'),'TSimplePppState') do
-  begin
+  with CL.AddClassN(CL.FindClass('TPppState'),'TSimplePppState') do begin
     RegisterMethod('Constructor Create( AHashSize : Cardinal)');
-    RegisterProperty('Options', 'TPppOptions', iptrw);
+        RegisterMethod('Procedure Free');
+      RegisterProperty('Options', 'TPppOptions', iptrw);
     RegisterProperty('SearchPath', 'TStringList', iptr);
+      RegisterMethod('Procedure PushState');
+    RegisterMethod('Procedure PopState');
+      RegisterMethod('Function IsDefined( const ASymbol : string) : Boolean');
+    RegisterMethod('Procedure Define( const ASymbol : string)');
+    RegisterMethod('Procedure Undef( const ASymbol : string)');
+    RegisterMethod('Function IsPassThrough( const ASymbol : string) : Boolean');
+    RegisterMethod('Procedure PassThrough( const ASymbol : string)');
+    RegisterMethod('Function IsBypassInclude( const ASymbol : string) : Boolean');
+    RegisterMethod('Procedure BypassInclude( const ASymbol : string)');
+    RegisterMethod('Function IsSkipSomeDirectives( const ASymbol : string) : Boolean');
+    RegisterMethod('Procedure SkipSomeDirectives( const ASymbol : string)');
+    RegisterMethod('Function FindFile( const AName : string) : TStream');
+
   end;
 end;
 
@@ -86,8 +99,7 @@ procedure SIRegister_PppState(CL: TPSPascalCompiler);
 begin
   CL.AddClassN(CL.FindClass('TOBJECT'),'EPppState');
   CL.AddTypeS('TPppOption', '( poProcessIncludes, poProcessDefines, poStripComm'
-   +'ents, poInvDefines, poInvPassthrough, poInvIncludes, poCountUsage, poRenam'
-   +'e, poTimestamps )');
+   +'ents, poInvDefines, poInvPassthrough, poInvIncludes, poCountUsage, poRename, poTimestamps )');
   CL.AddTypeS('TPppOptions', 'set of TPppOption');
   SIRegister_TPppState(CL);
   SIRegister_TSimplePppState(CL);
@@ -114,11 +126,24 @@ begin T := Self.Options; end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TSimplePppState(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TSimplePppState) do
-  begin
+  with CL.Add(TSimplePppState) do begin
     RegisterConstructor(@TSimplePppState.Create, 'Create');
+     RegisterMethod(@TSimplePppState.Destroy, 'Free');
     RegisterPropertyHelper(@TSimplePppStateOptions_R,@TSimplePppStateOptions_W,'Options');
     RegisterPropertyHelper(@TSimplePppStateSearchPath_R,nil,'SearchPath');
+   RegisterMethod(@TSimplePppState.PushState, 'PushState');
+    RegisterMethod(@TSimplePppState.PopState, 'PopState');
+    RegisterMethod(@TSimplePppState.IsDefined, 'IsDefined');
+    RegisterMethod(@TSimplePppState.Define, 'Define');
+    RegisterMethod(@TSimplePppState.Undef, 'Undef');
+    RegisterMethod(@TSimplePppState.IsPassThrough, 'IsPassThrough');
+    RegisterMethod(@TSimplePppState.PassThrough, 'PassThrough');
+    RegisterMethod(@TSimplePppState.IsBypassInclude, 'IsBypassInclude');
+    RegisterMethod(@TSimplePppState.BypassInclude, 'BypassInclude');
+    RegisterMethod(@TSimplePppState.IsSkipSomeDirectives, 'IsSkipSomeDirectives');
+    RegisterMethod(@TSimplePppState.SkipSomeDirectives, 'SkipSomeDirectives');
+    RegisterMethod(@TSimplePppState.FindFile, 'FindFile');
+
   end;
 end;
 

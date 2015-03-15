@@ -1,6 +1,6 @@
 unit uPSI_GR32_Containers;
 {
-   pointers
+   pointers   add free
 }
 interface
 
@@ -106,11 +106,11 @@ end;*)
 procedure SIRegister_TRectList(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TOBJECT', 'TRectList') do
-  with CL.AddClassN(CL.FindClass('TOBJECT'),'TRectList') do
-  begin
+  with CL.AddClassN(CL.FindClass('TOBJECT'),'TRectList') do begin
     RegisterMethod('Function Add( const Rect : TRect) : Integer');
     RegisterMethod('Procedure Clear');
-    RegisterMethod('Procedure Delete( Index : Integer)');
+      RegisterMethod('Procedure Free');
+     RegisterMethod('Procedure Delete( Index : Integer)');
     RegisterMethod('Procedure Exchange( Index1, Index2 : Integer)');
     RegisterMethod('Function IndexOf( const Rect : TRect) : Integer');
     RegisterMethod('Procedure Insert( Index : Integer; const Rect : TRect)');
@@ -142,15 +142,15 @@ end;
 procedure SIRegister_TPointerMap(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TOBJECT', 'TPointerMap') do
-  with CL.AddClassN(CL.FindClass('TOBJECT'),'TPointerMap') do
-  begin
+  with CL.AddClassN(CL.FindClass('TOBJECT'),'TPointerMap') do begin
     RegisterMethod('Function Add( NewItem : PItem) : PPData;');
     RegisterMethod('Function Add1( NewItem : PItem; out IsNew : Boolean) : PPData;');
     RegisterMethod('Function Add2( NewItem : PItem; NewData : PData) : PPData;');
     RegisterMethod('Function Add3( NewItem : PItem; NewData : PData; out IsNew : Boolean) : PPData;');
     RegisterMethod('Function Remove( Item : PItem) : PData');
     RegisterMethod('Procedure Clear');
-    RegisterMethod('Function Contains( Item : PItem) : Boolean');
+      RegisterMethod('Procedure Free');
+     RegisterMethod('Function Contains( Item : PItem) : Boolean');
     RegisterMethod('Function Find( Item : PItem; out Data : PPData) : Boolean');
     RegisterProperty('Data', 'PData PItem', iptrw);
     SetDefaultPropery('Data');
@@ -344,11 +344,11 @@ end;*)
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TRectList(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TRectList) do
-  begin
+  with CL.Add(TRectList) do begin
     RegisterMethod(@TRectList.Add, 'Add');
     RegisterVirtualMethod(@TRectList.Clear, 'Clear');
-    RegisterMethod(@TRectList.Delete, 'Delete');
+      RegisterMethod(@TRectList.Destroy, 'Free');
+     RegisterMethod(@TRectList.Delete, 'Delete');
     RegisterMethod(@TRectList.Exchange, 'Exchange');
     RegisterMethod(@TRectList.IndexOf, 'IndexOf');
     RegisterMethod(@TRectList.Insert, 'Insert');
@@ -377,9 +377,9 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TPointerMap(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TPointerMap) do
-  begin
-    RegisterMethod(@TPointerMapAdd_P, 'Add');
+  with CL.Add(TPointerMap) do begin
+    RegisterMethod(@TPointerMap.Destroy, 'Free');
+     RegisterMethod(@TPointerMapAdd_P, 'Add');
     RegisterMethod(@TPointerMapAdd1_P, 'Add1');
     RegisterMethod(@TPointerMapAdd2_P, 'Add2');
     RegisterMethod(@TPointerMapAdd3_P, 'Add3');

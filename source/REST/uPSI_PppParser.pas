@@ -57,10 +57,10 @@ end;
 procedure SIRegister_TPppParser(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TOBJECT', 'TPppParser') do
-  with CL.AddClassN(CL.FindClass('TOBJECT'),'TPppParser') do
-  begin
+  with CL.AddClassN(CL.FindClass('TOBJECT'),'TPppParser') do begin
     RegisterMethod('Constructor Create( AStream : TStream; APppState : TPppState)');
-    RegisterMethod('Function Parse : string');
+        RegisterMethod('Procedure Free');
+      RegisterMethod('Function Parse : string');
     RegisterProperty('Statistics', 'TStringList', iptr);
   end;
 end;
@@ -80,9 +80,9 @@ begin T := Self.Statistics; end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TPppParser(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TPppParser) do
-  begin
+  with CL.Add(TPppParser) do begin
     RegisterConstructor(@TPppParser.Create, 'Create');
+        RegisterMethod(@TPppParser.Destroy, 'Free');
     RegisterMethod(@TPppParser.Parse, 'Parse');
     RegisterPropertyHelper(@TPppParserStatistics_R,nil,'Statistics');
   end;

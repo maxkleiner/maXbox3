@@ -1,0 +1,399 @@
+program IndyStack_ZukoFileSearch_DB;
+
+// complex filefunctions in directories and subdirectories
+// has findfirst with a TSearchRec structure, _58, #locs=348
+
+{Start NotePad and load a file (the system "knows" the location of NotePad.exe, therefore we don't have to specify full path):
+ShellExecute(Handle, 'open', PChar('notepad'), PChar('c:\test\readme.txt'), nil, SW_SHOW);}
+
+const ext = 'txt';
+      sw = 'SW_SHOW';
+      //faDirectory = $00000010;
+      //faAnyFile   = $0000003F;
+      
+  var cnt: integer;
+  
+  (*ScriptCompiler.AddTypeS('TFindRec',
+    'record' +
+    '  Name: String;' +
+    '  Attributes: LongWord;' +
+    '  SizeHigh: LongWord;' +
+    '  SizeLow: LongWord;' +
+    '  CreationTime: TFileTime;' +
+    '  LastAccessTime: TFileTime;' +
+    '  LastWriteTime: TFileTime;' +
+    '  AlternateName: String;' +
+    '  FindHandle: THandle;' +
+    'end');   *)
+
+    procedure inc2(var a: integer; b: integer);
+    begin
+      a:= a+b
+    end;  
+      
+procedure FindAllFiles2(FilesList: TStringList; StartDir, FileMask: string);
+var
+  SR: TSearchRec;
+  DirList: TStringList;
+  IsFound: Boolean;
+  i, cnt: integer;
+begin
+  if StartDir[length(StartDir)] <> '\' then
+                       StartDir:= StartDir + '\';
+  { Build a list of the files in directory StartDir (not the directories!)}
+  IsFound:= FindFirst2(StartDir+FileMask, faAnyFile-faDirectory,SR) = 0;
+  while IsFound do begin
+   //writeln(inttostr(inc(i,cnt)))
+      FilesList.Add(inttostr(cnt)+ ' '+StartDir + SR.name);
+    IsFound:= FindNext2(SR) = 0;
+  end;
+  FindClose2(SR);
+  //Build a list of subdirectories
+  DirList:= TStringList.Create;
+    IsFound:= FindFirst2(StartDir+'*.*', faAnyFile,SR) = 0;
+    while IsFound do begin
+      //inc(cnt)
+      if ((SR.Attr and faDirectory) <> 0) and
+         (SR.Name[1] <> '.') then
+           //DirList.Add(inttostr(cnt)+ ' '+StartDir + searchrecName);
+           DirList.Add(StartDir + SR.Name);
+       IsFound:= FindNext2(SR) = 0;
+    end;
+    //inc
+    FindClose2(SR);
+  //Scan the list of subdirectories recursive!
+  for i:= 0 to DirList.Count - 1 do
+    FindAllFiles2(FilesList, DirList[i], FileMask);
+  DirList.Free;
+end;
+
+  
+procedure FindAllFiles(FilesList: TStringList; StartDir, FileMask: string);
+var
+  //SR: TSearchRec;
+  DirList: TStringList;
+  IsFound: Boolean;
+  i: integer;
+begin
+  if StartDir[length(StartDir)] <> '\' then
+                       StartDir:= StartDir + '\';
+  { Build a list of the files in directory StartDir (not the directories!)}
+  IsFound:= FindFirst(StartDir+FileMask, faAnyFile-faDirectory) = 0;
+  while IsFound do begin
+   inc2(cnt,1)
+   //writeln(inttostr(inc(i,cnt)))
+    FilesList.Add(inttostr(cnt)+ ' '+StartDir + searchrecName);
+    IsFound:= FindNext = 0;
+  end;
+  FindClose;
+  //Build a list of subdirectories
+  DirList:= TStringList.Create;
+    IsFound:= FindFirst(StartDir+'*.*', faAnyFile) = 0;
+    while IsFound do begin
+      //inc(cnt)
+      if ((searchrecAttr and faDirectory) <> 0) and
+         (searchrecName[1] <> '.') then
+           //DirList.Add(inttostr(cnt)+ ' '+StartDir + searchrecName);
+           DirList.Add(StartDir + searchrecName);
+       IsFound:= FindNext = 0;
+    end;
+    FindClose;
+  //Scan the list of subdirectories recursive!
+  for i:= 0 to DirList.Count - 1 do
+    FindAllFiles(FilesList, DirList[i], FileMask);
+  DirList.Free;
+end;
+
+function GetAliasPath(alias: string): string;
+var MyStringList: TStringList;
+  asession: TSession;
+begin
+  result:='';
+  // Auslesen der Aliasparameter
+  MyStringList:= TStringList.Create;
+  ASession:= TSession.Create(NIL);  
+  try
+    aSession.GetAliasParams(alias, MyStringList);
+    result:= Copy(MyStringList[0], 6, Length(MyStringList[0])-5);
+  finally
+    MyStringList.Free;
+    ASession.Free;  
+  end;
+end;
+
+procedure TForm1_Button1ClickAnimate(Sender: TObject);
+var animate1: TAnimate;
+   frm: TForm;
+begin
+  frm:= TForm.create(self)
+  frm.Setbounds(0,0,400,200)
+  frm.show;
+  animate1:= TAnimate.create(self)
+  Animate1.ResHandle:= LoadLibrary('shdocvw.dll');
+  try {da Reshandel}
+    animate1.parent:= frm;
+    Animate1.ResID:= 256;
+  except
+    writeln('debugln(''resid not found'','')''');
+  end;
+  Animate1.Active:= True;
+end;
+
+procedure testIDCreateStack;
+var idstack: TIDStack;
+    //idstackw: TIdStackWindows;
+begin
+  idstack:= CreateIDStack;
+  writeln('isDottedIP: '+botostr(idstack.isDottedIP('192.168.11.1')))
+  writeln('IsNumericIP: '+botostr(idstack.IsNumericIP('192.168.11.1')))
+  writeln('ResolveHost: '+idstack.ResolveHost('192.168.11.1'))
+  //writeln('WSGetHostByName: '+idstack.WSGetHostName)
+  idstack.Free;
+end;
+
+function TIdStackWindows_WSGetHostName: string;
+begin
+  {SetLength(result, 250);
+  wsGetHostName(PChar(result), Length(result));
+  Result := String(PChar(result));}
+end;
+
+procedure TTableCreateTest;
+var Table1: TTable;
+begin
+with Table1 do begin
+  active:=false;  // Table-access has to be closed
+  DatabaseName:='verzeichnis';  // Verzeichnis, as Table is created
+  TableName:='Artikel';  // Name of file to create
+  TableType:=ttParadox; 
+  //Table1.Locate 
+  //Active Fields Modified
+   //AutoCalcFields Handle Name
+   {BOF IndexDefs Owner
+   CanModify IndexFieldCount ReadOnly
+   Database IndexFieldNames RecordCount
+   DatabaseName IndexName State
+   DBHandle IndexFields TableName}
+   {DBLocale KeyExclusive TableType
+   EOF KeyFieldCount Tag
+   Exclusive Locale UpdateMode}
+   //FieldCount MasterFields
+   //FieldDefs MasterSource
+   //Active Fields Modified
+   //AutoCalcFields Handle Name
+   {BOF IndexDefs Owner
+   CanModify IndexFieldCount ReadOnly
+   Database IndexFieldNames RecordCount
+   DatabaseName IndexName State
+   DBHandle IndexFields TableName}
+   {DBLocale KeyExclusive TableType
+   EOF KeyFieldCount Tag
+   Exclusive Locale UpdateMode
+   FieldCount MasterFields
+   FieldDefs MasterSource }
+   UpdateRecord
+   //AddIndex
+    EditKey GotoNearest
+    ApplyRange EditRangeEnd Insert
+   //Append EditRangeStart InsertRecord
+   //AppendRecord EmptyTable Last
+   //BatchMove EnableControls MoveBy
+   //Cancel FieldByName Next
+   //CancelRange FindField Open
+   //CheckBrowseMode FindKey Post
+   //ClearFields FindNearest Prior
+   //Close First Refresh
+   //CreateTable FreeBookmark SetFields
+   //CursorPosChanged GetBookmark SetKey
+   //Delete GetFieldNames SetRange
+   //DeleteIndex GetIndexNames SetRangeEnd
+   //DeleteTable GotoBookmark SetRangeStart
+   //DisableControls GotoCurrent
+   UpdateRecord
+   Edit GotoKey
+  with FieldDefs do begin
+    clear;
+    Add('ID', ftAutoInc, 0, false);
+    Add('Bezeichnung', ftString, 50, false);
+  end;
+  CreateTable;
+  end;
+  with TQuery.create(self) do begin
+   //Active FieldDefs RecordCount
+   //AutoCalcFields Fields RequestLive
+   //BOF Handle SQL
+   {CanModify Local SQLBinary
+   Database Locale State
+   DatabaseName Modified StmtHandle}
+   {DataSource Name Tag
+   DBHandle Owner Text
+   DBLocale ParamCount UniDirectional
+   EOF Params UpdateMode}
+   FieldCount Prepared
+   //UnPrepare
+   //DisableControls InsertRecord 
+   UpdateCursorPos
+   Edit() Last UpdateRecord
+   //Append FieldByName Open
+   //AppendRecord FindField ParamByName
+   Cancel First Post
+   CheckBrowseMode {FreeBookmark} Prepare
+   //ClearFields GetBookmark Prior
+   //Close GetFieldNames Refresh
+   //CursorPosChanged GotoBookmark
+   // SetFields
+  end; 
+end;
+
+procedure DatabaseSearch(DatabaseFilename, TablePart, SearchString: string);
+var
+  DataSource: TDataSource;
+  DSTable: TTable;
+begin
+  DataSource:= TDataSource.Create(NIL);
+  DSTable:= TTable.Create(NIL);
+  try
+    DataSource.DataSet:= DSTable;
+    DSTable.TableName:= DatabaseFilename;
+    DSTable.Active:= true;
+    if DSTable.FindFirst then begin
+      repeat
+        if AnsiLowerCase(DSTable.FieldByName(TablePart).AsString) =
+          AnsiLowerCase(SearchString) then begin
+          // über z. B. DSTable.FieldByName('ID').AsInteger usw.
+        end;
+      until DSTable.FindNext = false;
+    end;
+  finally
+    DataSource.free;
+    DSTable.free;
+  end;
+end;
+  
+
+procedure StartFileFinder;
+var FilesList: TStringList;
+begin
+  FilesList:= TStringList.Create;
+  try
+    //FindAllFiles(FilesList, ExePath+'examples', '*.*');
+    FindAllFiles(FilesList, ExePath, '*.*');
+    fileslist.saveToFile(ExePath+'examples\rec_files3.txt');
+  finally 
+    FilesList.Free;
+  end;
+end;
+
+function FindInFile(const AFileName: string; ASearchWord: string; AMatchCase: Boolean): Integer;
+var
+  fileStream: TFileStream;
+  //buffer: array[1..1024 * 1024] of Char;
+  //buffer: array of char;
+  
+  buffer: string;
+  abufferSize: Integer;
+  c: Char;
+  matchPosition, i, lengthOfSearchWord: Integer;
+  currentPosition, fileStreamSize: Integer;
+begin
+  //setlength2(buffer,1024*1024)
+  setlength(buffer,1024*1024)
+  
+  Result := -1;
+  lengthOfSearchWord := Length(ASearchWord);
+  if lengthOfSearchWord = 0 then
+    Exit;
+  if not AMatchCase then
+    ASearchWord := AnsiUpperCase(ASearchWord);
+  matchPosition := 1;
+  fileStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
+  try
+    fileStreamSize := fileStream.Size;
+    currentPosition := 0;
+    writeln('filesize '+inttostr(filestreamsize))
+    while currentPosition < fileStreamSize do begin
+      abufferSize := Min(high(buffer), (fileStreamSize - currentPosition));
+      //fileStream.ReadBufferACD(buffer, abufferSize);
+      fileStream.ReadBuffer(buffer, abufferSize);
+      writeln('buffwe '+inttostr(abuffersize)+': '+itoa(currentposition))
+      currentPosition:= fileStream.Position;
+      i := 1;
+      i:= pos(asearchword,buffer)
+      //writeln(buffer)
+      while i > 1 do begin
+          i := i - matchPosition + 1;
+          matchPosition := 1;
+        end;
+        Inc(i);
+    end;
+  finally
+    fileStream.Free;
+  end;
+end;
+
+
+//main script
+begin
+  //mysearch;
+  beep;
+  cnt:= 0;
+  StartFileFinder;
+  SearchAndOpenDoc(ExePath+'examples\rec_files3.txt')
+  //shellexecute(0, 'open', 'notepad', 'rec_files.txt', '', 2)
+  //orthogonal and idempotent
+  testIDCreateStack;
+  PrintF('%3.4n',[123456789.123456]); //-->'123.456.789,1235'
+  //TForm1_Button1ClickAnimate(self)
+  writeln('find res '+itoa(FindInFile(exepath+'firstdemo.txt','__SW_SHOW',false)))
+End.
+
+
+Ref:
+
+function FindInFile(const AFileName: string; ASearchWord: string; AMatchCase: Boolean): Integer;
+var
+  fileStream: TFileStream;
+  //buffer: array[1..1024 * 1024] of Char;
+  buffer: array of char;
+  
+  //buffer: string;
+  abufferSize: Integer;
+  c: Char;
+  matchPosition, i, lengthOfSearchWord: Integer;
+  currentPosition, fileStreamSize: Integer;
+begin
+  //setlength2(buffer,1024*1024)
+  setlength(buffer,1024*1024)
+  
+  Result := -1;
+  lengthOfSearchWord := Length(ASearchWord);
+  if lengthOfSearchWord = 0 then
+    Exit;
+  if not AMatchCase then
+    ASearchWord := AnsiUpperCase(ASearchWord);
+  matchPosition := 1;
+  fileStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
+  try
+    fileStreamSize := fileStream.Size;
+    currentPosition := 0;
+    writeln('filesize '+inttostr(filestreamsize))
+    while currentPosition < fileStreamSize do begin
+      abufferSize := Min(high(buffer), (fileStreamSize - currentPosition));
+      fileStream.ReadBufferACD(buffer, abufferSize);
+      //fileStream.ReadBuffer(buffer, abufferSize);
+      writeln('buffwe '+inttostr(abuffersize)+': '+itoa(currentposition))
+      currentPosition:= fileStream.Position;
+      i := 1;
+      //i:= pos(currentPosition,asearchword)
+      while i > 1 do begin
+          i := i - matchPosition + 1;
+          matchPosition := 1;
+        end;
+        Inc(i);
+    end;
+  finally
+    fileStream.Free;
+  end;
+end;
+
+

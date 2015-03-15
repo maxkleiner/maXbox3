@@ -76,9 +76,9 @@ end;
 procedure SIRegister_TJclMeteredSection(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TObject', 'TJclMeteredSection') do
-  with CL.AddClassN(CL.FindClass('TObject'),'TJclMeteredSection') do
-  begin
-    RegisterMethod('Constructor Create( InitialCount, MaxCount : Longint; const Name : string);');
+  with CL.AddClassN(CL.FindClass('TObject'),'TJclMeteredSection') do begin
+     RegisterMethod('Procedure Free');
+     RegisterMethod('Constructor Create( InitialCount, MaxCount : Longint; const Name : string);');
     RegisterMethod('Constructor Open( const Name : string)');
     RegisterMethod('Function Enter( TimeOut : Longword) : TJclWaitResult');
     RegisterMethod('Function Leave( ReleaseCount : Longint) : Boolean;');
@@ -90,10 +90,10 @@ end;
 procedure SIRegister_TJclMultiReadExclusiveWrite(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TObject', 'TJclMultiReadExclusiveWrite') do
-  with CL.AddClassN(CL.FindClass('TObject'),'TJclMultiReadExclusiveWrite') do
-  begin
+  with CL.AddClassN(CL.FindClass('TObject'),'TJclMultiReadExclusiveWrite') do begin
     RegisterMethod('Constructor Create( Preferred : TMrewPreferred)');
-    RegisterMethod('Procedure BeginRead');
+       RegisterMethod('Procedure Free');
+     RegisterMethod('Procedure BeginRead');
     RegisterMethod('Procedure BeginWrite');
     RegisterMethod('Procedure EndRead');
     RegisterMethod('Procedure EndWrite');
@@ -104,10 +104,10 @@ end;
 procedure SIRegister_TJclOptex(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TObject', 'TJclOptex') do
-  with CL.AddClassN(CL.FindClass('TObject'),'TJclOptex') do
-  begin
+  with CL.AddClassN(CL.FindClass('TObject'),'TJclOptex') do begin
     RegisterMethod('Constructor Create( const Name : string; SpinCount : Integer)');
-    RegisterMethod('Procedure Enter');
+   RegisterMethod('Procedure Free');
+     RegisterMethod('Procedure Enter');
     RegisterMethod('Procedure Leave');
     RegisterMethod('Function TryEnter : Boolean');
     RegisterProperty('Existed', 'Boolean', iptr);
@@ -202,6 +202,7 @@ begin
   //with RegClassS(CL,'TObject', 'TJclDispatcherObject') do
   with CL.AddClassN(CL.FindClass('TObject'),'TJclDispatcherObject') do begin
     RegisterMethod('Constructor Attach( Handle : THandle)');
+       RegisterMethod('Procedure Free');
     RegisterMethod('Function SignalAndWait( const Obj : TJclDispatcherObject; TimeOut : Cardinal; Alertable : Boolean) : TJclWaitResult');
     RegisterMethod('Function WaitAlertable( const TimeOut : Cardinal) : TJclWaitResult');
     RegisterMethod('Function WaitFor( const TimeOut : Cardinal) : TJclWaitResult');
@@ -336,7 +337,8 @@ procedure RIRegister_TJclMeteredSection(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TJclMeteredSection) do begin
     RegisterConstructor(@TJclMeteredSectionCreate_P, 'Create');
-    RegisterConstructor(@TJclMeteredSection.Open, 'Open');
+    RegisterMethod(@TJclMeteredSection.Destroy, 'Free');
+     RegisterConstructor(@TJclMeteredSection.Open, 'Open');
     RegisterMethod(@TJclMeteredSection.Enter, 'Enter');
     RegisterMethod(@TJclMeteredSectionLeave_P, 'Leave');
     RegisterMethod(@TJclMeteredSectionLeave1_P, 'Leave1');
@@ -346,9 +348,9 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TJclMultiReadExclusiveWrite(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TJclMultiReadExclusiveWrite) do
-  begin
-    RegisterVirtualConstructor(@TJclMultiReadExclusiveWrite.Create, 'Create');
+  with CL.Add(TJclMultiReadExclusiveWrite) do  begin
+     RegisterMethod(@TJclMultiReadExclusiveWrite.Destroy, 'Free');
+     RegisterVirtualConstructor(@TJclMultiReadExclusiveWrite.Create, 'Create');
     RegisterMethod(@TJclMultiReadExclusiveWrite.BeginRead, 'BeginRead');
     RegisterMethod(@TJclMultiReadExclusiveWrite.BeginWrite, 'BeginWrite');
     RegisterMethod(@TJclMultiReadExclusiveWrite.EndRead, 'EndRead');
@@ -361,7 +363,8 @@ procedure RIRegister_TJclOptex(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TJclOptex) do begin
     RegisterConstructor(@TJclOptex.Create, 'Create');
-    RegisterMethod(@TJclOptex.Enter, 'Enter');
+   RegisterMethod(@TJclOptex.Destroy, 'Free');
+     RegisterMethod(@TJclOptex.Enter, 'Enter');
     RegisterMethod(@TJclOptex.Leave, 'Leave');
     RegisterMethod(@TJclOptex.TryEnter, 'TryEnter');
     RegisterPropertyHelper(@TJclOptexExisted_R,nil,'Existed');
@@ -421,10 +424,10 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TJclCriticalSectionEx(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TJclCriticalSectionEx) do
-  begin
+  with CL.Add(TJclCriticalSectionEx) do begin
     RegisterConstructor(@TJclCriticalSectionEx.Create, 'Create');
-    RegisterVirtualConstructor(@TJclCriticalSectionEx.CreateEx, 'CreateEx');
+       RegisterMethod(@TJclCriticalSectionEx.Destroy, 'Free');
+     RegisterVirtualConstructor(@TJclCriticalSectionEx.CreateEx, 'CreateEx');
     RegisterMethod(@TJclCriticalSectionEx.GetSpinTimeOut, 'GetSpinTimeOut');
     RegisterMethod(@TJclCriticalSectionEx.SetSpinTimeOut, 'SetSpinTimeOut');
     RegisterMethod(@TJclCriticalSectionEx.TryEnter, 'TryEnter');
@@ -435,10 +438,10 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TJclCriticalSection(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TJclCriticalSection) do
-  begin
+  with CL.Add(TJclCriticalSection) do begin
     RegisterVirtualConstructor(@TJclCriticalSection.Create, 'Create');
-    RegisterMethod(@TJclCriticalSection.CreateAndEnter, 'CreateAndEnter');
+    RegisterMethod(@TJclCriticalSection.Destroy, 'Free');
+     RegisterMethod(@TJclCriticalSection.CreateAndEnter, 'CreateAndEnter');
     RegisterMethod(@TJclCriticalSection.Enter, 'Enter');
     RegisterMethod(@TJclCriticalSection.Leave, 'Leave');
   end;

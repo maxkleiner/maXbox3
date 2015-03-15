@@ -127,6 +127,7 @@
          10404     build 180_2 vcl samples, 14 bugfixes, sql helper, modbus res, actman, IBcomp
          10415     build 180_3 4 bugfixes, dbtable redesign checkconstrains, modbus consts, testvendor
                                     dunit testframework vendor dbtests - 3.3.2015
+         10465     build 190 override bugfixing, virtual constructor - 7 units, soap conn
                   [the last one before V4 in 2015]
                    V4.0   in  July 2015
  ************************************************************************** }
@@ -175,9 +176,9 @@ const
    ALLUNITLIST = 'docs\maxbox3_9.xml'; //'in /docs;
    INCLUDEBOX = 'pas_includebox.inc';
    BOOTSCRIPT = 'maxbootscript.txt';
-   MBVERSION = '3.9.9.180';
+   MBVERSION = '3.9.9.190';
    MBVER = '399';              //for checking!
-   MBVER2 = '399180';              //for checking!
+   MBVER2 = '399190';              //for checking!
    EXENAME ='maXbox3.exe';
    MXSITE = 'http://www.softwareschule.ch/maxbox.htm';
    MXVERSIONFILE = 'http://www.softwareschule.ch/maxvfile.txt';
@@ -939,7 +940,7 @@ implementation
 
 uses
   uPSR_std,
-  uPSC_std,
+  uPSC_std,          //TObject!
   uPSR_stdctrls,
   uPSC_stdctrls,    //listbox   , memo , button
   uPSC_classes,   //memory stream
@@ -1386,7 +1387,7 @@ uses
   uPSI_lazMasks,
   //uPSI_SynEditMiscProcs,
   uPSI_BlockSocket,
-  //uPSI_IdExtHTTPServer,
+  //uPSI_IdExtHTTPServer,   filetypetomimetype
   uPSI_JclMath,
   ScktMain, //SocketServer
   //SvcMgr,
@@ -1614,7 +1615,7 @@ uses
   uPSI_ovcmisc,
   uPSI_ovcfiler,
   uPSI_ovcstate,
-  uPSI_ovccoco,
+  uPSI_ovccoco,      //scanner grammar!
   uPSI_ovcrvexp,
   uPSI_OvcFormatSettings,
   uPSI_ovcstore,
@@ -1953,7 +1954,7 @@ uses
   uconvMain,
   uPSI_uconvMain,
   uPSI_ParserUtils,
-  uPSI_uPSUtils,   //3.9.9.160
+  uPSI_uPSUtils,   //3.9.9.160    - add func CalculateDigits
   uPSI_ParserU,
   uPSI_TypInfo,
   uPSI_ServiceMgr,
@@ -1976,6 +1977,22 @@ uses
   //uPSI_CopyPrsr,
   uPSI_CTSVendorUtils,
   uPSI_VendorTestFramework,
+  uPSI_JvAnimate,
+  uPSI_DBXCharDecoder,
+  uPSI_JvDBLists,
+  uPSI_JvFileInfo,
+  uPSI_SOAPConn,
+  uPSI_SOAPLinked,
+  uPSI_XSBuiltIns, //3.9.9.190
+  uPSI_JvgDigits,
+  uPSI_JvDesignUtils,
+  uPSI_JvgCrossTable,
+  uPSI_JvgReport,
+  uPSI_JvDBRichEdit, //3.9.9.190
+  uPSI_JvWinHelp,
+  uPSI_WaveConverter,
+  uPSI_ACMConvertor,
+
   ///
   ///
    //MDIFrame,
@@ -2193,7 +2210,7 @@ begin
   //SIRegister_Types(X);       //3.5
   //SIRegister_Graphics(x, true);
   SIRegister_StrUtils(X);
-  SIRegister_SysUtils(X);   //3.2    also unit down  , TBytes
+  SIRegister_SysUtils(X);   //3.2   --> sysutils_max also unit down  , TBytes
   SIRegister_EInvalidArgument(x);
   SIRegister_MathMax(x);
   SIRegister_WideStrUtils(X);
@@ -2450,7 +2467,7 @@ begin
   SIRegister_MyBigInt(X);
   SIRegister_StdConvs(X);
   SIRegister_ConvUtils(X);
-  SIRegister_SOAPHTTPClient(X);
+  SIRegister_SOAPHTTPClient(X);  //HTTPRIO
   SIRegister_VCLScannerIntf(X);
   SIRegister_VCLScannerImpl(X);
   SIRegister_FMTBcd(X);
@@ -3103,6 +3120,21 @@ begin
   SIRegister_IdStackWindows(X);
   SIRegister_VendorTestFramework(X);
   SIRegister_CTSVendorUtils(X);
+  SIRegister_JvAnimate(X);
+  SIRegister_DBXCharDecoder(X);
+  SIRegister_JvDBLists(X);
+  SIRegister_JvFileInfo(X);
+  SIRegister_SOAPConn(X);
+  SIRegister_SOAPLinked(X);
+  SIRegister_XSBuiltIns(X);  //3.9.9.190
+  SIRegister_JvgDigits(X);
+  SIRegister_JvDesignUtils(X);
+  SIRegister_JvgCrossTable(X);
+  SIRegister_JvgReport(X);
+  SIRegister_JvDBRichEdit(X); //3.9.9.190
+  SIRegister_JvWinHelp(X);
+  SIRegister_WaveConverter(X);
+  SIRegister_ACMConvertor(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -3126,7 +3158,7 @@ begin
   SIRegister_xrtl_util_VariantUtils(X);
   SIRegister_xrtl_util_FileUtils(X);
    SIRegister_xrtl_util_Compat(X);
-  SIRegister_OleAuto(X);
+  SIRegister_OleAuto(X);            //OlESysError
   SIRegister_xrtl_util_COMUtils(X);
   SIRegister_CmAdmCtl(X);
   SIRegister_GR32(X);
@@ -4362,7 +4394,7 @@ begin
   RIRegister_pipes(X);
   RIRegister_ProcessUnit(X);
   RIRegister_adgsm_Routines(Exec);
-  //RIRegister_BetterADODataSet_Routines(Exec);
+  RIRegister_BetterADODataSet_Routines(Exec);
   RIRegister_BetterADODataSet(X);
   RIRegister_AdSelCom_Routines(Exec);
   RIRegister_AdSelCom(X);
@@ -4513,6 +4545,22 @@ begin
   RIRegister_IdStackWindows(X);
   RIRegister_VendorTestFramework(X);
   RIRegister_CTSVendorUtils(X);   //last 180_3
+  RIRegister_JvAnimate(X);
+  RIRegister_DBXCharDecoder(X);
+  RIRegister_JvDBLists(X);
+  RIRegister_JvFileInfo(X);
+  RIRegister_SOAPConn(X);
+  RIRegister_SOAPLinked(X);
+  RIRegister_XSBuiltIns(X);
+  RIRegister_XSBuiltIns_Routines(Exec);  //last 190
+  RIRegister_JvgDigits(X);
+  RIRegister_JvDesignUtils_Routines(eXec);
+  RIRegister_JvgCrossTable(X);
+  RIRegister_JvgReport(X);
+  RIRegister_JvDBRichEdit(X); //3.9.9.190
+  RIRegister_JvWinHelp(X);
+  RIRegister_WaveConverter(X);
+  RIRegister_ACMConvertor(X);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -7771,6 +7819,7 @@ begin
       end;
     end;
   finally
+    //mymemo.align:= alClient;
     //mymemo.CaretY:= 8;  //test
     aStrList.Free;
   end;
@@ -10410,6 +10459,7 @@ end;
    { RegisterMethod('Constructor Create(AOwner: TComponent)');
     RegisterConstructor(@TJvMail.Create, 'Create');
      RegisterMethod('Procedure Free');
-    RegisterMethod(@TJvMail.Destroy, 'Free');}
+    RegisterMethod(@TJvMail.Destroy, 'Free');
+      RegisterPublishedProperties;}
 
 End.

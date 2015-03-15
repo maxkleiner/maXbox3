@@ -688,7 +688,7 @@ begin
     RegisterProperty('Palette', 'HPALETTE', iptrw);
     RegisterProperty('IgnorePalette', 'Boolean', iptrw);
 {$ENDIF}
-    RegisterProperty('TransparentColor', 'TColor', iptr);
+    RegisterProperty('TransparentColor', 'TColor', iptrw);    //fix
     RegisterProperty('TransparentMode', 'TTransparentMode', iptrw);  //3.6
     RegisterProperty('HandleType', 'TBitmapHandleType', iptrw);
     RegisterProperty('MaskHandle', 'HBITMAP', iptrw);

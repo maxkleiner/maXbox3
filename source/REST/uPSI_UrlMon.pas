@@ -65,14 +65,50 @@ implementation
 uses
    Windows
   ,ActiveX
-  ,UrlMon
+  ,UrlMon, ShellApi, WinInet
   ;
- 
- 
+
+
 procedure Register;
 begin
   RegisterComponents('Pascal Script', [TPSImport_UrlMon]);
 end;
+
+function DownloadURL_NOCache(const aUrl: string; var s: String): Boolean;
+var
+  hSession: HINTERNET;
+  hService: HINTERNET;
+  lpBuffer: array[0..1024 + 1] of Char;
+  dwBytesRead: DWORD;
+begin
+  Result := False;
+  s := '';
+  // hSession := InternetOpen( 'MyApp', INTERNET_OPEN_TYPE_DIRECT, nil, nil, 0);
+  hSession := InternetOpen('MyApp', INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
+  try
+    if Assigned(hSession) then
+    begin
+      hService := InternetOpenUrl(hSession, PChar(aUrl), nil, 0, INTERNET_FLAG_RELOAD, 0);
+      if Assigned(hService) then
+        try
+          while True do begin
+            dwBytesRead := 1024;
+            InternetReadFile(hService, @lpBuffer, 1024, dwBytesRead);
+            if dwBytesRead = 0 then break;
+            lpBuffer[dwBytesRead] := #0;
+            s := s + lpBuffer;
+          end;
+          Result := True;
+        finally
+          InternetCloseHandle(hService);
+        end;
+    end;
+  finally
+    InternetCloseHandle(hSession);
+  end;
+end;
+
+
 
 (* === compile-time registration functions === *)
 (*----------------------------------------------------------------------------*)
@@ -1074,7 +1110,8 @@ begin
   CL.AddTypeS('THitLoggingInfo', '_tagHIT_LOGGING_INFO');
   CL.AddTypeS('HIT_LOGGING_INFO', '_tagHIT_LOGGING_INFO');
  CL.AddDelphiFunction('Function WriteHitLogging( const Logginginfo : THitLoggingInfo) : BOOL');
-end;
+ CL.AddDelphiFunction('function DownloadURL_NOCache(const aUrl: string; var s: String): Boolean;');
+ end;
 
 (* === run-time registration functions === *)
 (*----------------------------------------------------------------------------*)
@@ -1151,6 +1188,9 @@ begin
  //S.RegisterDelphiFunction(@IsLoggingEnabledA, 'IsLoggingEnabledA', CdStdCall);
  //S.RegisterDelphiFunction(@IsLoggingEnabledW, 'IsLoggingEnabledW', CdStdCall);
  S.RegisterDelphiFunction(@WriteHitLogging, 'WriteHitLogging', CdStdCall);
+  S.RegisterDelphiFunction(@DownloadURL_NOCache, 'DownloadURL_NOCache', cdRegister);
+
+
 end;
 
 

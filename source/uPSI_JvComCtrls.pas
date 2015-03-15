@@ -76,6 +76,7 @@ begin
   //with RegClassS(CL,'TTreeView', 'TJvTreeView') do
   with CL.AddClassN(CL.FindClass('TTreeView'),'TJvTreeView') do begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
+    RegisterMethod('Procedure Free');
     RegisterMethod('Procedure ClearSelection');
     RegisterMethod('Function IsNodeSelected( Node : TTreeNode) : Boolean');
     RegisterMethod('Procedure InvalidateNodeIcon( Node : TTreeNode)');
@@ -218,8 +219,7 @@ begin
   SIRegister_TJvIpAddressRange(CL);
   CL.AddTypeS('TJvIpAddrFieldChangeEvent', 'Procedure ( Sender : TJvIpAddress; '
    +'FieldIndex : Integer; FieldRange : TJvIpAddressMinMax; var Value : Integer)');
-  CL.AddTypeS('TJvIPAddressChanging', 'Procedure ( Sender : TObject; Index : In'
-   +'teger; Value : Byte; var AllowChange : Boolean)');
+  CL.AddTypeS('TJvIPAddressChanging', 'Procedure ( Sender : TObject; Index : Integer; Value : Byte; var AllowChange : Boolean)');
   SIRegister_TJvIpAddressValues(CL);
   SIRegister_TJvIpAddress(CL);
   SIRegister_TJvPageControl(CL);
@@ -726,7 +726,8 @@ procedure RIRegister_TJvTreeView(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TJvTreeView) do begin
     RegisterConstructor(@TJvTreeView.Create, 'Create');
-    RegisterMethod(@TJvTreeView.ClearSelection, 'ClearSelection');
+     RegisterMethod(@TJvTreeView.Destroy, 'Free');
+     RegisterMethod(@TJvTreeView.ClearSelection, 'ClearSelection');
     RegisterMethod(@TJvTreeView.IsNodeSelected, 'IsNodeSelected');
     RegisterMethod(@TJvTreeView.InvalidateNodeIcon, 'InvalidateNodeIcon');
     RegisterMethod(@TJvTreeView.InvalidateSelectedItems, 'InvalidateSelectedItems');

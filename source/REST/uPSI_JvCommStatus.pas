@@ -57,7 +57,8 @@ begin
   //with RegClassS(CL,'TJvComponent', 'TJvCommStatus') do
   with CL.AddClassN(CL.FindClass('TJvComponent'),'TJvCommStatus') do begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
-    RegisterProperty('ClearToSend', 'Boolean', iptrw);
+      RegisterMethod('Procedure Free');
+      RegisterProperty('ClearToSend', 'Boolean', iptrw);
     RegisterProperty('DataSetReady', 'Boolean', iptrw);
     RegisterProperty('Ring', 'Boolean', iptrw);
     RegisterProperty('ReceiveLine', 'Boolean', iptrw);
@@ -135,9 +136,9 @@ begin T := Self.ClearToSend; end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TJvCommStatus(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TJvCommStatus) do
-  begin
+  with CL.Add(TJvCommStatus) do begin
     RegisterConstructor(@TJvCommStatus.Create, 'Create');
+    RegisterMethod(@TJvCommStatus.Destroy, 'Free');
     RegisterPropertyHelper(@TJvCommStatusClearToSend_R,@TJvCommStatusClearToSend_W,'ClearToSend');
     RegisterPropertyHelper(@TJvCommStatusDataSetReady_R,@TJvCommStatusDataSetReady_W,'DataSetReady');
     RegisterPropertyHelper(@TJvCommStatusRing_R,@TJvCommStatusRing_W,'Ring');

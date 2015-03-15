@@ -1,6 +1,6 @@
 unit uPSI_StToHTML;
 {
-  SysTools4
+  SysTools4  add free
 }
 interface
  
@@ -61,6 +61,7 @@ begin
   //with RegClassS(CL,'TStComponent', 'TStFileToHTML') do
   with CL.AddClassN(CL.FindClass('TStComponent'),'TStFileToHTML') do begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
+        RegisterMethod('Procedure Free');
     RegisterMethod('Procedure Execute');
     RegisterProperty('CaseSensitive', 'Boolean', iptrw);
     RegisterProperty('CommentMarkers', 'TStringList', iptrw);
@@ -339,10 +340,10 @@ begin T := Self.CaseSensitive; end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStFileToHTML(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStFileToHTML) do
-  begin
+  with CL.Add(TStFileToHTML) do begin
     RegisterConstructor(@TStFileToHTML.Create, 'Create');
-    RegisterMethod(@TStFileToHTML.Execute, 'Execute');
+      RegisterMethod(@TStFileToHTML.Destroy, 'Free');
+      RegisterMethod(@TStFileToHTML.Execute, 'Execute');
     RegisterPropertyHelper(@TStFileToHTMLCaseSensitive_R,@TStFileToHTMLCaseSensitive_W,'CaseSensitive');
     RegisterPropertyHelper(@TStFileToHTMLCommentMarkers_R,@TStFileToHTMLCommentMarkers_W,'CommentMarkers');
     RegisterPropertyHelper(@TStFileToHTMLEmbeddedHTML_R,@TStFileToHTMLEmbeddedHTML_W,'EmbeddedHTML');

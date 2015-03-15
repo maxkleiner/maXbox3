@@ -1,6 +1,6 @@
 unit uPSI_StTxtDat;
 {
-TStTextDataRecordSet
+TStTextDataRecordSet      add free
 }
 interface
  
@@ -65,7 +65,8 @@ begin
   //with RegClassS(CL,'TOBJECT', 'TStTextDataRecordSet') do
   with CL.AddClassN(CL.FindClass('TOBJECT'),'TStTextDataRecordSet') do begin
     RegisterMethod('Constructor Create');
-    RegisterMethod('Procedure Append');
+      RegisterMethod('Procedure Free');
+      RegisterMethod('Procedure Append');
     RegisterMethod('Procedure AppendArray( Values : array of const)');
     RegisterMethod('Procedure AppendList( Items : TStrings)');
     RegisterMethod('Procedure AppendValues( Values : TStrings)');
@@ -101,7 +102,8 @@ begin
   //with RegClassS(CL,'TOBJECT', 'TStTextDataRecord') do
   with CL.AddClassN(CL.FindClass('TOBJECT'),'TStTextDataRecord') do begin
     RegisterMethod('Constructor Create');
-    RegisterMethod('Procedure BuildRecord( Values : TStrings; var NewRecord : AnsiString)');
+      RegisterMethod('Procedure Free');
+      RegisterMethod('Procedure BuildRecord( Values : TStrings; var NewRecord : AnsiString)');
     RegisterMethod('Function GetRecord : AnsiString');
     RegisterMethod('Procedure DoQuote( var Value : AnsiString)');
     RegisterMethod('Procedure FillRecordFromArray( Values : array of const)');
@@ -127,7 +129,8 @@ begin
   //with RegClassS(CL,'TOBJECT', 'TStTextDataSchema') do
   with CL.AddClassN(CL.FindClass('TOBJECT'),'TStTextDataSchema') do begin
     RegisterMethod('Constructor Create');
-    RegisterMethod('Procedure Assign( ASchema : TStTextDataSchema)');
+      RegisterMethod('Procedure Free');
+      RegisterMethod('Procedure Assign( ASchema : TStTextDataSchema)');
     RegisterMethod('Procedure AddField( const FieldName : AnsiString; FieldType : TStSchemaFieldType; FieldLen, FieldDecimals : Integer)');
     RegisterMethod('Function IndexOf( const FieldName : AnsiString) : Integer');
     RegisterMethod('Procedure RemoveField( const FieldName : AnsiString)');
@@ -159,10 +162,10 @@ end;
 procedure SIRegister_TStDataFieldList(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TOBJECT', 'TStDataFieldList') do
-  with CL.AddClassN(CL.FindClass('TOBJECT'),'TStDataFieldList') do
-  begin
+  with CL.AddClassN(CL.FindClass('TOBJECT'),'TStDataFieldList') do begin
     RegisterMethod('Constructor Create');
-    RegisterMethod('Procedure AddField( const FieldName : AnsiString; FieldType : TStSchemaFieldType; FieldLen, FieldDecimals, FieldOffset : Integer)');
+      RegisterMethod('Procedure Free');
+      RegisterMethod('Procedure AddField( const FieldName : AnsiString; FieldType : TStSchemaFieldType; FieldLen, FieldDecimals, FieldOffset : Integer)');
     RegisterMethod('Procedure AddFieldStr( const FieldDef : AnsiString)');
     RegisterMethod('Procedure Clear');
     RegisterMethod('Procedure RemoveField( const FieldName : AnsiString)');
@@ -199,8 +202,7 @@ begin
   CL.AddTypeS('TStSchemaLayoutType', '( ltUnknown, ltFixed, ltVarying )');
   CL.AddTypeS('TStSchemaFieldType', '( sftUnknown, sftChar, sftFloat, sftNumber'
    +', sftBool, sftLongInt, sftDate, sftTime, sftTimeStamp )');
-  CL.AddTypeS('TStOnQuoteFieldEvent', 'Procedure ( Sender : TObject; var Field '
-   +': AnsiString)');
+  CL.AddTypeS('TStOnQuoteFieldEvent', 'Procedure ( Sender : TObject; var Field : AnsiString)');
   SIRegister_TStDataField(CL);
   SIRegister_TStDataFieldList(CL);
   SIRegister_TStTextDataSchema(CL);
@@ -501,10 +503,10 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStTextDataRecordSet(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStTextDataRecordSet) do
-  begin
+  with CL.Add(TStTextDataRecordSet) do begin
     RegisterConstructor(@TStTextDataRecordSet.Create, 'Create');
-    RegisterMethod(@TStTextDataRecordSet.Append, 'Append');
+     RegisterMethod(@TStTextDataRecordSet.Destroy, 'Free');
+       RegisterMethod(@TStTextDataRecordSet.Append, 'Append');
     RegisterMethod(@TStTextDataRecordSet.AppendArray, 'AppendArray');
     RegisterMethod(@TStTextDataRecordSet.AppendList, 'AppendList');
     RegisterMethod(@TStTextDataRecordSet.AppendValues, 'AppendValues');
@@ -537,10 +539,10 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStTextDataRecord(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStTextDataRecord) do
-  begin
+  with CL.Add(TStTextDataRecord) do begin
     RegisterConstructor(@TStTextDataRecord.Create, 'Create');
-    RegisterVirtualMethod(@TStTextDataRecord.BuildRecord, 'BuildRecord');
+     RegisterMethod(@TStTextDataRecord.Destroy, 'Free');
+       RegisterVirtualMethod(@TStTextDataRecord.BuildRecord, 'BuildRecord');
     RegisterMethod(@TStTextDataRecord.GetRecord, 'GetRecord');
     RegisterVirtualMethod(@TStTextDataRecord.DoQuote, 'DoQuote');
     RegisterMethod(@TStTextDataRecord.FillRecordFromArray, 'FillRecordFromArray');
@@ -563,10 +565,10 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStTextDataSchema(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStTextDataSchema) do
-  begin
+  with CL.Add(TStTextDataSchema) do begin
     RegisterConstructor(@TStTextDataSchema.Create, 'Create');
-    RegisterMethod(@TStTextDataSchema.Assign, 'Assign');
+     RegisterMethod(@TStTextDataSchema.Destroy, 'Free');
+       RegisterMethod(@TStTextDataSchema.Assign, 'Assign');
     RegisterMethod(@TStTextDataSchema.AddField, 'AddField');
     RegisterMethod(@TStTextDataSchema.IndexOf, 'IndexOf');
     RegisterMethod(@TStTextDataSchema.RemoveField, 'RemoveField');
@@ -596,10 +598,10 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStDataFieldList(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStDataFieldList) do
-  begin
+  with CL.Add(TStDataFieldList) do begin
     RegisterConstructor(@TStDataFieldList.Create, 'Create');
-    RegisterMethod(@TStDataFieldList.AddField, 'AddField');
+     RegisterMethod(@TStDataFieldList.Destroy, 'Free');
+       RegisterMethod(@TStDataFieldList.AddField, 'AddField');
     RegisterMethod(@TStDataFieldList.AddFieldStr, 'AddFieldStr');
     RegisterMethod(@TStDataFieldList.Clear, 'Clear');
     RegisterMethod(@TStDataFieldList.RemoveField, 'RemoveField');

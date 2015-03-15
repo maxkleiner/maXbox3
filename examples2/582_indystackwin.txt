@@ -1,0 +1,344 @@
+program IndyStack_Win;
+
+// complex WSfunctions in directories and networks
+// has Indy with a TIDStack structure, _58, #locs=260
+//http://www.ipinfodb.com/register.php
+//https://theroadtodelphi.wordpress.com/2010/11/13/getting-ip-address-geolocation-info-with-delphi/
+
+//http://unicornix.spb.ru/docs/prog/delphi/delphi_faq/del_tis/TI2988.html
+
+function TDBXCharDecoder_DecodeChars(const Buf: TBytes; BufOff: Integer; MaxOff: Integer): Boolean;
+var
+  Ch: WideChar;
+  FHasHalfChar: Boolean;
+    FHalfChar: Byte;
+    FDecodeLength: Integer;
+    FNullTerminated: Boolean;
+    FDecodeOff: Integer;
+    //FDecodeBuf: TDBXWideChars;
+    FAddQuotes: Boolean;
+begin
+  ;
+  //DecrAfter(BufOff);
+  //LocalToUTC
+  //StrToSQLTimeStamp
+  MaxOff := MaxOff - 2;
+  if FHasHalfChar then begin
+    //Ch := WideChar(((Integer((FHalfChar)) shl 8) or ((Buf[Inc(BufOff)] and 255))));
+    //if Incr(FDecodeOff) >= FDecodeLength then
+      //if not GrowDecodeBufTo(FDecodeLength * 2) then begin
+        Result := False;
+        exit;
+      //end;
+    //FDecodeBuf[FDecodeOff] := Ch;
+    FHasHalfChar := False;
+  end;
+  while BufOff < MaxOff do begin
+    //Ch := WideChar((((Integer((Buf[Incr(BufOff)] and 255))) shl 8) or (Integer(Buf[Incr(BufOff)]) and 255)));
+    if (Ch = #$0) and FNullTerminated then
+    begin
+      Result := True;
+      exit;
+    end;
+    //if Incr(FDecodeOff) >= FDecodeLength then
+      //if not GrowDecodeBufTo(FDecodeLength * 2) then
+      begin
+        Result := False;
+        exit;
+      end;
+    //FDecodeBuf[FDecodeOff] := Ch;
+  end;
+  if BufOff = MaxOff then
+  begin
+    //FHalfChar := Buf[Incr(BufOff)];
+    FHasHalfChar := True;
+  end;
+  Result := True;
+end;
+
+
+//TIDWebRequest
+procedure TestSoap;
+  var
+SoapClient: THTTPRIO;
+SSLRequired: Boolean;
+IOHandler: TIdSSLIOHandlerSocket;
+begin
+SoapClient:= THTTPRIO.Create(Self); 
+//How to implement Web Services for Indy
+//with SoapClient.HTTPWebNode.HttpClient do begin
+with SoapClient do begin
+(*refcount
+AllowCookies:= True;
+HandleRedirects:= False;
+ProtocolVersion:= pv1_1;
+{$IFNDEF INDY10}
+MaxLineLength:= 16384;
+RecvBufferSize:= 32768;
+{$ENDIF}
+if not SSLRequired then
+begin // HTTP
+{$IFDEF INDY10}
+CreateIOHandler(nil);
+{$ELSE}
+IOHandler.Free;
+IOHandler:= nil;
+{$ENDIF}
+end
+else  *)
+begin // HTTPS
+{$IFDEF INDY10}
+IOHandler:= TIdSSLIOHandlerSocketOpenSSL.Create(
+SoapClient.HTTPWebNode.HttpClient);
+{$ELSE}
+//IOHandler:= TIdSSLIOHandlerSocket.Create(SoapClient.HTTPWebNode.HttpClient);
+IOHandler:= TIdSSLIOHandlerSocket.Create(NIL);
+
+{$ENDIF}
+//with {$IFDEF INDY10}
+//TIdSSLIOHandlerSocketOpenSSL
+//{$ELSE}
+//TIdSSLIOHandlerSocket
+//{$ENDIF}(IOHandler), {SSLOptions} do begin
+
+with IOHandler.SSLOptions do begin
+   Method:= sslvSSLv2; // select SSL method
+   CertFile:= 'my.crt'; // assign certificate
+   KeyFile:= 'my.key'; // assign private key
+   RootCertFile:= 'root.crt';
+   // select verification method for server certificate
+   VerifyMode:= [sslvrfPeer, sslvrfFailIfNoPeerCert, sslvrfClientOnce];
+   VerifyDepth:= 1;
+   //OnVerifyPeer:= DoOnVerifyPeer;
+//end;
+end;
+end;
+end;
+//SoapClient.HTTPWebNode.OnLog:= SoapClientOnLog;
+// custom logging
+// set correct ReadTimeout
+//TIdTCPClient(SoapClient.HTTPWebNode.HttpClient).OnConnected:=
+//HttpClientOnConnected;
+end;  
+
+procedure testIDCreateStack;
+var idstack: TIDStack;
+  Pars : TStringList;
+  Res  : TStringStream;
+  URL: string;
+  //reqresp: THTTPReqResp;
+begin
+  idstack:= CreateIDStack;
+  writeln('isDottedIP: '+botostr(idstack.isDottedIP('192.168.11.1')))
+  writeln('IsNumericIP: '+botostr(idstack.IsNumericIP('192.168.11.1')))
+  writeln('ResolveHost: '+idstack.ResolveHost('192.168.11.1'))
+  //writeln('WSGetHostByName: '+idstack.WSGetHostName)
+  idstack.Free;
+  
+  with TIdHTTP.create(self) do begin
+    Request.ContentType := 'application/x-www-form-urlencoded';
+    Request.ContentType := 'application/x-www-form-urlencoded';
+    Request.UserAgent := 'My agent name';
+    Pars := TStringList.Create;
+    Pars.Add('txtTarget=abc');
+    Pars.Add('&txtArea=area');
+    Pars.Add('&txtTitle=Robot');
+    Pars.Add('&txtPageNr=1');
+    Pars.Add('&txtItemsPage=10');
+    Res:= TStringStream.Create('');
+    //Socket.Post(URL, Pars, Res);
+    //Post4(URL, Pars, Res);
+    Pars.Free
+    Res.Free
+    Free;
+   end;
+end;
+
+procedure testIDCreateStackWindows;
+var //idstack: TIDStack;
+    idstackw: TIdStackWindows;
+begin
+  idstackw:= TIdStackWindows.create;
+  writeln('isDottedIP: '+botostr(idstackw.isDottedIP('192.168.11.1')))
+  writeln('IsNumericIP: '+botostr(idstackw.IsNumericIP('192.168.11.1')))
+  writeln('ResolveHost: '+idstackw.ResolveHost('192.168.11.1'))
+  writeln('WSGetHostByName: '+idstackw.WSGetHostName)
+  //writeln('WSGetHostByAddr: '+idstackw.WSGetHostByAddr('192.168.11.1'));
+  writeln('WSGetHostByAddr: '+idstackw.WSGetHostByAddr(GetHostIP));
+  writeln('WSGetServByPort: '+TStrings(idstackw.WSGetServByPort(443)).Text);
+  writeln('WSGetServByName: '+itoa(idstackw.WSGetServByName('https')));
+  //writeln('WSGetServByName: '+itoa(idstackw.WSGetServByName('ssl')));
+  
+//    function WSGetServByName(const AServiceName: string): Integer; override;
+  //  function WSGetServByPort(const APortNumber: Integer): TStrings; override;
+   //function WSGetHostByAddr(const AAddress: string): string; override;
+ 
+  idstackw.Free;
+end;
+
+procedure ParseURIX(AURI: string; var VProtocol, VHost, VPath, VDocument,
+                       VPort, VBookmark : string);
+var
+  URI: TIdURI;
+begin
+  URI:= TIdURI.Create(AURI);
+  try
+    VProtocol:= URI.Protocol;
+    VHost:= URI.Host;
+    VPath:= URI.Path;
+    VDocument:= URI.Document;
+    VPort:= URI.Port;
+    VBookmark:= URI.Bookmark;
+  finally
+    URI.Free;
+  end;
+end;
+
+var FProxy: string;
+    FContentType: string;
+    FUserName: string;
+    FPassword: string;
+    FURLHost: string;
+    FURLSite: string;
+    FURLPort: Integer;
+    FURLScheme: Integer;
+
+procedure LoadFromURL_X(URL: string; Stream: TStream);
+  var
+    IndyHTTP: TIDHttp;
+    Protocol, Host, Path, Document, Port, Bookmark: string;
+  begin
+    IndyHTTP := TIDHttp.Create(Nil);
+    try
+      IndyHttp.Request.Accept := '*/*';
+      IndyHttp.Request.UserAgent := 'Self.FAgent';
+      IndyHttp.Request.ContentType := 'sTextXml';
+      if FProxy <> '' then begin
+        ParseURIX(FProxy, Protocol, Host, Path, Document, Port, Bookmark);
+        IndyHttp.ProxyParams.ProxyServer:= Host;
+        IndyHttp.ProxyParams.ProxyPort:= StrToInt(Port);
+        IndyHttp.ProxyParams.ProxyUsername:= FUserName;
+        IndyHttp.ProxyParams.ProxyPassword:= FPassword;
+      end else
+      begin
+        { no proxy with Username/Password implies basic authentication }
+        IndyHttp.Request.Username := FUserName;
+        IndyHttp.Request.Password := FPassword;
+      end;
+      { IndyHttp.Intercept := FIntercept; }
+      IndyHttp.Get1(URL, Stream);
+    finally
+      IndyHTTP.Free;
+    end;
+  end;
+
+  vaR  asqlt: TSQLTimeStamp;
+     //aconb: TSoapConnection;
+     idh: TIdHeaderList;
+    ascon: THTTPRIO; // TCustomRemoteServer; // TSoapConnection;
+//main script
+begin
+  //mysearch;
+  testIDCreateStack;
+  testIDCreateStackWindows;
+  PrintF('%3.4n',[123456789.123456]); //-->'123.456.789,1235'
+
+//    procedure GetGeoInfo(const IpAddress : string;var GeoInfo :TGeoInfo; const UrlGeoLookupInfo: string);
+  //GetGeoInfo('91.236.78.59',mygeoinfo, UrlGeoLookupInfo2);
+  //GetGeoInfo('74.125.45.100',mygeoinfo, UrlGeoLookupInfo2);
+  //GetGeoInfo('178.196.193.131',mygeoinfo, UrlGeoLookupInfo2);
+  
+  asqlt:= DateTimeToSQLTimeStamp(now)
+  writeln(itoa(asqlt.hour))
+ 
+  writeln(itoa(DateTimeToSQLTimeStamp(now).hour))
+  
+  //writeln(itoa(TSQLTimeStamp(DateTimeToSQLTimeStamp(now)).Year);
+  CheckSqlTimeStamp(DateTimeToSQLTimeStamp(now))
+  
+  writeln(floattoStr(StrToFloatEx('5768.478')))
+End.
+
+doc:
+ To err is human, but to really foul things up you need a computer." (Paul Ehrlich)
+
+Ref:
+
+  TIdStackWindows = class(TIdStack)
+  protected
+    procedure PopulateLocalAddresses; override;
+    function WSGetLocalAddress: string; override;
+    function WSGetLocalAddresses: TStrings; override;
+  public
+    constructor Create; override;
+    destructor Destroy; override;
+    function TInAddrToString(var AInAddr): string; override;
+    procedure TranslateStringToTInAddr(AIP: string; var AInAddr); override;
+    //
+    function WSAccept(ASocket: TIdStackSocketHandle; var VIP: string; var VPort: Integer)
+     : TIdStackSocketHandle; override;
+    function WSBind(ASocket: TIdStackSocketHandle; const AFamily: Integer;
+     const AIP: string; const APort: Integer): Integer; override;
+    function WSCloseSocket(ASocket: TIdStackSocketHandle): Integer; override;
+    function WSConnect(const ASocket: TIdStackSocketHandle; const AFamily: Integer;
+     const AIP: string; const APort: Integer): Integer; override;
+    function WSGetHostByAddr(const AAddress: string): string; override;
+    function WSGetHostByName(const AHostName: string): string; override;
+    function WSGetHostName: string; override;
+    function WSGetServByName(const AServiceName: string): Integer; override;
+    function WSGetServByPort(const APortNumber: Integer): TStrings; override;
+    procedure WSGetPeerName(ASocket: TIdStackSocketHandle; var VFamily: Integer;
+     var VIP: string; var VPort: Integer); override;
+    procedure WSGetSockName(ASocket: TIdStackSocketHandle; var VFamily: Integer;
+     var VIP: string; var VPort: Integer); override;
+    function WSHToNs(AHostShort: Word): Word; override;
+    function WSListen(ASocket:TIdStackSocketHandle; ABackLog:Integer):Integer; override;
+    function WSNToHs(ANetShort: Word): Word; override;
+    function WSHToNL(AHostLong: LongWord): LongWord; override;
+    function WSNToHL(ANetLong: LongWord): LongWord; override;
+    function WSRecv(ASocket: TIdStackSocketHandle; var ABuffer; const ABufferLength, AFlags: Integer)
+     : integer; override;
+    function WSRecvFrom(const ASocket: TIdStackSocketHandle; var ABuffer;
+     const ALength, AFlags: Integer; var VIP: string; var VPort: Integer): Integer; override;
+    function WSSelect(ARead,AWrite,AErrors: TList; ATimeout:Integer): Integer; override;
+    function WSSend(ASocket: TIdStackSocketHandle; var ABuffer;
+     const ABufferLength, AFlags: Integer): Integer; override;
+    function WSSendTo(ASocket: TIdStackSocketHandle; var ABuffer;
+     const ABufferLength, AFlags: Integer; const AIP: string; const APort: integer): Integer;  override;
+    function WSSetSockOpt(ASocket: TIdStackSocketHandle; ALevel, AOptName: Integer; AOptVal: PChar;
+     AOptLen: Integer): Integer; override;
+    function WSSocket(AFamily, AStruct, AProtocol: Integer): TIdStackSocketHandle; override;
+    function WSShutdown(ASocket: TIdStackSocketHandle; AHow: Integer): Integer; override;
+    function WSTranslateSocketErrorMsg(const AErr: integer): string; override;
+    function WSGetLastError: Integer; override;
+    function WSGetSockOpt(ASocket: TIdStackSocketHandle; Alevel, AOptname: Integer; AOptval: PChar; var AOptlen: Integer): Integer; override;
+  end;
+
+  TLinger = record
+	  l_onoff: Word;
+	  l_linger: Word;
+  end;
+
+
+http://whatismyipaddress.com/ip/178.196.193.131
+
+François, check this link http://ipinfodb.com/ip_database.php
+
+    Data accuracy
+    Over 99.5% on a country level and around 80% on a city level for the US within a 25 mile radius. The database used for this API is compiled from the free Maxmind CSV database (Geolite City) and rearranged with many scripts.
+
+
+type
+ TGeoInfo   = record
+  Status        : string;
+  CountryCode   : string;
+  CountryName   : string;
+  RegionCode    : string;
+  City          : string;
+  ZipPostalCode : string;
+  Latitude      : string;
+  Longitude     : string;
+  TimezoneName  : string;
+  Gmtoffset     : string;
+  Isdst         : string;
+ end;

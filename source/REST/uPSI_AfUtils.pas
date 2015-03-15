@@ -355,6 +355,59 @@ begin
   end;
 end;
 
+procedure UpdateExeResource(Const Source,Dest:string);
+var
+  Stream     : TFileStream;
+  hDestRes   : THANDLE;
+  lpData     : Pointer;
+  cbData     : DWORD;
+begin
+  Stream := TFileStream.Create(Source,fmOpenRead or fmShareDenyNone);
+  try
+    Stream.Seek(0, soFromBeginning);
+    cbData:=Stream.Size;
+    if cbData>0 then
+    begin
+      GetMem(lpData,cbData);
+      try
+        Stream.Read(lpData^, cbData);
+        hDestRes:= BeginUpdateResource(PChar(Dest), False);
+        if hDestRes <> 0 then
+          if UpdateResource(hDestRes, RT_RCDATA,'DATA',0,lpData,cbData) then
+          begin
+            if not EndUpdateResource(hDestRes,FALSE) then RaiseLastOSError
+          end
+          else
+          RaiseLastOSError
+        else
+        RaiseLastOSError;
+      finally
+        FreeMem(lpData);
+      end;
+    end;
+  finally
+    Stream.Free;
+  end;
+end;
+
+(*{procedure AddRes(exeName, resName: string);
+  var
+    exeModule: TNTModule;
+    resFile  : TResModule;
+  begin
+    if ExtractFileExt(exeName) = '' then
+      exeName := ChangeFileExt(exeName, '.exe');
+    exeModule := TNTModule.Create;
+    try
+      exeModule.LoadFromFile(exeName);
+      resFile := TResModule.Create;
+      resFile.LoadFromFile(resName);
+      exeModule.AddResource(resFile.ResourceDetails[0]);
+      exeModule.SaveToFile(exeName);
+    finally FreeAndNil(exeModule); end;
+  end; //{ AddRes }
+ }*)
+
 
 
 
@@ -847,6 +900,10 @@ begin
    // Now my stuff is copied.
 end;
 
+ procedure VarClear2(var V: variant);
+ begin
+    varclear(V)
+ end;
 
      //UrlDownloadToFile
 
@@ -1841,12 +1898,16 @@ CL.AddConstantN('NOPARITY','LongInt').SetInt( 0);
  CL.AddDelphiFunction('function GetBaseAddress(PID:DWORD):DWORD;');
  CL.AddDelphiFunction('Function GetSystemDefaultLangID : LANGID');
  CL.AddDelphiFunction('Function GetUserDefaultLangID : LANGID');
+ CL.AddDelphiFunction('procedure UpdateExeResource(Const Source,Dest:string);');
+ CL.AddDelphiFunction('procedure VarClear(var V: Variant);');
+
+// varclear
 
  //function GetBaseAddress(PID:DWORD):DWORD;
 
  //function FullTimeToStr(SUMTime: TDateTime): string;
 
-
+  //  hinternet
 
  end;
 
@@ -2333,6 +2394,8 @@ begin
  S.RegisterDelphiFunction(@GetCurrentObject, 'GetCurrentObject', CdStdCall);
  S.RegisterDelphiFunction(@GetSystemDefaultLangID, 'GetSystemDefaultLangID', CdStdCall);
  S.RegisterDelphiFunction(@GetUserDefaultLangID, 'GetUserDefaultLangID', CdStdCall);
+ S.RegisterDelphiFunction(@UpdateExeResource, 'UpdateExeResource', cdRegister);
+ S.RegisterDelphiFunction(@VarClear2, 'VarClear', cdRegister);
 
  end;
 

@@ -99,6 +99,7 @@ begin
     RegisterProperty('Encoding', 'AnsiString', iptrw);
     RegisterProperty('Node', 'TALXMLNode', iptr);
     RegisterProperty('StandAlone', 'AnsiString', iptrw);
+    RegisterProperty('Filename', 'AnsiString', iptrw);
     RegisterProperty('Version', 'AnsiString', iptrw);
     RegisterProperty('Active', 'Boolean', iptrw);
     RegisterProperty('NodeIndentStr', 'AnsiString', iptrw);
@@ -166,9 +167,10 @@ end;
 procedure SIRegister_TALXmlCDataNode(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TALXMLNode', 'TALXmlCDataNode') do
-  with CL.AddClassN(CL.FindClass('TALXMLNode'),'TALXmlCDataNode') do
-  begin
+  with CL.AddClassN(CL.FindClass('TALXMLNode'),'TALXmlCDataNode') do begin
     RegisterMethod('Constructor Create( const NameOrData : AnsiString)');
+      RegisterMethod('Procedure Free');
+
   end;
 end;
 
@@ -176,60 +178,60 @@ end;
 procedure SIRegister_TALXmlProcessingInstrNode(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TALXMLNode', 'TALXmlProcessingInstrNode') do
-  with CL.AddClassN(CL.FindClass('TALXMLNode'),'TALXmlProcessingInstrNode') do
-  begin
+  with CL.AddClassN(CL.FindClass('TALXMLNode'),'TALXmlProcessingInstrNode') do begin
     RegisterMethod('Constructor Create( const NameOrData : AnsiString; const AddlData : AnsiString)');
-  end;
+    RegisterMethod('Procedure Free');
+    end;
 end;
 
 (*----------------------------------------------------------------------------*)
 procedure SIRegister_TALXmlCommentNode(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TALXMLNode', 'TALXmlCommentNode') do
-  with CL.AddClassN(CL.FindClass('TALXMLNode'),'TALXmlCommentNode') do
-  begin
+  with CL.AddClassN(CL.FindClass('TALXMLNode'),'TALXmlCommentNode') do begin
     RegisterMethod('Constructor Create( const NameOrData : AnsiString)');
-  end;
+      RegisterMethod('Procedure Free');
+    end;
 end;
 
 (*----------------------------------------------------------------------------*)
 procedure SIRegister_TALXmlDocumentNode(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TALXmlNode', 'TALXmlDocumentNode') do
-  with CL.AddClassN(CL.FindClass('TALXmlNode'),'TALXmlDocumentNode') do
-  begin
+  with CL.AddClassN(CL.FindClass('TALXmlNode'),'TALXmlDocumentNode') do begin
     RegisterMethod('Constructor Create( const OwnerDoc : TALXMLDocument)');
-  end;
+      RegisterMethod('Procedure Free');
+   end;
 end;
 
 (*----------------------------------------------------------------------------*)
 procedure SIRegister_TALXmlTextNode(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TALXMLNode', 'TALXmlTextNode') do
-  with CL.AddClassN(CL.FindClass('TALXMLNode'),'TALXmlTextNode') do
-  begin
+  with CL.AddClassN(CL.FindClass('TALXMLNode'),'TALXmlTextNode') do begin
     RegisterMethod('Constructor Create( const NameOrData : AnsiString)');
-  end;
+      RegisterMethod('Procedure Free');
+   end;
 end;
 
 (*----------------------------------------------------------------------------*)
 procedure SIRegister_TALXmlAttributeNode(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TALXMLNode', 'TALXmlAttributeNode') do
-  with CL.AddClassN(CL.FindClass('TALXMLNode'),'TALXmlAttributeNode') do
-  begin
+  with CL.AddClassN(CL.FindClass('TALXMLNode'),'TALXmlAttributeNode') do begin
     RegisterMethod('Constructor Create( const NameOrData : AnsiString)');
-  end;
+      RegisterMethod('Procedure Free');
+   end;
 end;
 
 (*----------------------------------------------------------------------------*)
 procedure SIRegister_TALXmlElementNode(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TALXMLNode', 'TALXmlElementNode') do
-  with CL.AddClassN(CL.FindClass('TALXMLNode'),'TALXmlElementNode') do
-  begin
+  with CL.AddClassN(CL.FindClass('TALXMLNode'),'TALXmlElementNode') do begin
     RegisterMethod('Constructor Create( const NameOrData : AnsiString)');
-  end;
+      RegisterMethod('Procedure Free');
+   end;
 end;
 
 (*----------------------------------------------------------------------------*)
@@ -238,6 +240,7 @@ begin
   //with RegClassS(CL,'TObject', 'TALXMLNode') do
   with CL.AddClassN(CL.FindClass('TObject'),'TALXMLNode') do begin
     RegisterMethod('Constructor Create( const NameOrData : AnsiString; const AddlData : AnsiString)');
+       RegisterMethod('Procedure Free');
     RegisterMethod('Function CloneNode( Deep : Boolean) : TALXMLNode');
     RegisterMethod('Function AddChild( const TagName : AnsiString; Index : Integer) : TALXMLNode;');
     RegisterMethod('Function HasAttribute( const Name : AnsiString) : Boolean;');
@@ -270,7 +273,8 @@ begin
   //with RegClassS(CL,'Tobject', 'TALXMLNodeList') do
   with CL.AddClassN(CL.FindClass('Tobject'),'TALXMLNodeList') do begin
     RegisterMethod('Constructor Create( Owner : TALXMLNode)');
-    RegisterMethod('Procedure CustomSort( Compare : TALXMLNodeListSortCompare)');
+       RegisterMethod('Procedure Free');
+     RegisterMethod('Procedure CustomSort( Compare : TALXMLNodeListSortCompare)');
     RegisterMethod('Function Add( const Node : TALXMLNode) : Integer');
     RegisterMethod('Function Delete( const Index : Integer) : Integer;');
     RegisterMethod('Function Delete1( const Name : AnsiString) : Integer;');
@@ -323,12 +327,10 @@ begin
   CL.AddClassN(CL.FindClass('TOBJECT'),'TALXMLDocument');
   CL.AddTypeS('TAlXMLParseProcessingInstructionEvent', 'Procedure ( Sender : TObject; const Target, Data : AnsiString)');
   CL.AddTypeS('TAlXMLParseTextEvent', 'Procedure ( Sender : TObject; const str: AnsiString)');
-  CL.AddTypeS('TAlXMLParseStartElementEvent', 'Procedure ( Sender : TObject; co'
-   +'nst Name : AnsiString; const Attributes : TALStrings)');
+  CL.AddTypeS('TAlXMLParseStartElementEvent', 'Procedure ( Sender : TObject; const Name : AnsiString; const Attributes : TALStrings)');
   CL.AddTypeS('TAlXMLParseEndElementEvent', 'Procedure ( Sender : TObject; const Name : AnsiString)');
   CL.AddTypeS('TALXmlNodeType', '( ntReserved, ntElement, ntAttribute, ntText, '
-   +'ntCData, ntEntityRef, ntEntity, ntProcessingInstr, ntComment, ntDocument, '
-   +'ntDocType, ntDocFragment, ntNotation )');
+   +'ntCData, ntEntityRef, ntEntity, ntProcessingInstr, ntComment, ntDocument, ntDocType, ntDocFragment, ntNotation )');
   CL.AddTypeS('TALXMLDocOption', '( doNodeAutoCreate, doNodeAutoIndent )');
   CL.AddTypeS('TALXMLDocOptions', 'set of TALXMLDocOption');
   CL.AddTypeS('TALXMLParseOption', '( poPreserveWhiteSpace, poIgnoreXMLReferences )');
@@ -501,6 +503,14 @@ begin Self.StandAlone := T; end;
 (*----------------------------------------------------------------------------*)
 procedure TALXMLDocumentStandAlone_R(Self: TALXMLDocument; var T: AnsiString);
 begin T := Self.StandAlone; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TALXMLDocumentfname_W(Self: TALXMLDocument; const T: AnsiString);
+begin Self.Filename:= T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TALXMLDocumentfname_R(Self: TALXMLDocument; var T: AnsiString);
+begin T := Self.Filename; end;
 
 (*----------------------------------------------------------------------------*)
 procedure TALXMLDocumentNode_R(Self: TALXMLDocument; var T: TALXMLNode);
@@ -682,7 +692,7 @@ end;
 procedure RIRegister_TALXMLDocument(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TALXMLDocument) do begin
-    RegisterVirtualConstructor(@TALXMLDocument.Create, 'Create');
+    RegisterConstructor(@TALXMLDocument.Create, 'Create');
        RegisterMethod(@TALXMLDocument.Destroy, 'Free');
        RegisterMethod(@TALXMLDocument.AddChild, 'AddChild');
     RegisterMethod(@TALXMLDocument.CreateElement, 'CreateElement');
@@ -699,6 +709,8 @@ begin
     RegisterPropertyHelper(@TALXMLDocumentEncoding_R,@TALXMLDocumentEncoding_W,'Encoding');
     RegisterPropertyHelper(@TALXMLDocumentNode_R,nil,'Node');
     RegisterPropertyHelper(@TALXMLDocumentStandAlone_R,@TALXMLDocumentStandAlone_W,'StandAlone');
+    RegisterPropertyHelper(@TALXMLDocumentfname_R,@TALXMLDocumentfname_W,'Filename');
+
     RegisterPropertyHelper(@TALXMLDocumentVersion_R,@TALXMLDocumentVersion_W,'Version');
     RegisterPropertyHelper(@TALXMLDocumentActive_R,@TALXMLDocumentActive_W,'Active');
     RegisterPropertyHelper(@TALXMLDocumentNodeIndentStr_R,@TALXMLDocumentNodeIndentStr_W,'NodeIndentStr');
@@ -760,63 +772,63 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TALXmlCDataNode(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TALXmlCDataNode) do
-  begin
+  with CL.Add(TALXmlCDataNode) do begin
     RegisterConstructor(@TALXmlCDataNode.Create, 'Create');
-  end;
+         RegisterMethod(@TALXMLCDataNode.Destroy, 'Free');
+    end;
 end;
 
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TALXmlProcessingInstrNode(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TALXmlProcessingInstrNode) do
-  begin
+  with CL.Add(TALXmlProcessingInstrNode) do begin
     RegisterConstructor(@TALXmlProcessingInstrNode.Create, 'Create');
+         RegisterMethod(@TALXmlProcessingInstrNode.Destroy, 'Free');
   end;
 end;
 
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TALXmlCommentNode(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TALXmlCommentNode) do
-  begin
+  with CL.Add(TALXmlCommentNode) do begin
     RegisterConstructor(@TALXmlCommentNode.Create, 'Create');
-  end;
+        RegisterMethod(@TALXmlCommentNode.Destroy, 'Free');
+   end;
 end;
 
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TALXmlDocumentNode(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TALXmlDocumentNode) do
-  begin
+  with CL.Add(TALXmlDocumentNode) do begin
     RegisterConstructor(@TALXmlDocumentNode.Create, 'Create');
+    RegisterMethod(@TALXmlDocumentNode.Destroy, 'Free');
   end;
 end;
 
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TALXmlTextNode(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TALXmlTextNode) do
-  begin
+  with CL.Add(TALXmlTextNode) do begin
     RegisterConstructor(@TALXmlTextNode.Create, 'Create');
+         RegisterMethod(@TALXmlTextNode.Destroy, 'Free');
   end;
 end;
 
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TALXmlAttributeNode(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TALXmlAttributeNode) do
-  begin
+  with CL.Add(TALXmlAttributeNode) do begin
     RegisterConstructor(@TALXmlAttributeNode.Create, 'Create');
+         RegisterMethod(@TALXmlAttributeNode.Destroy, 'Free');
   end;
 end;
 
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TALXmlElementNode(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TALXmlElementNode) do
-  begin
+  with CL.Add(TALXmlElementNode) do begin
     RegisterConstructor(@TALXmlElementNode.Create, 'Create');
+         RegisterMethod(@TALXmlElementNode.Destroy, 'Free');
   end;
 end;
 
@@ -824,7 +836,8 @@ end;
 procedure RIRegister_TALXMLNode(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TALXMLNode) do begin
-    RegisterVirtualConstructor(@TALXMLNode.Create, 'Create');
+    RegisterConstructor(@TALXMLNode.Create, 'Create');
+    RegisterMethod(@TALXMLNode.Destroy, 'Free');
     RegisterMethod(@TALXMLNode.CloneNode, 'CloneNode');
     RegisterMethod(@TALXMLNodeAddChild_P, 'AddChild');
     RegisterMethod(@TALXMLNodeHasAttribute_P, 'HasAttribute');
@@ -857,7 +870,8 @@ begin
   with CL.Add(TALXMLNodeList) do begin
     RegisterConstructor(@TALXMLNodeList.Create, 'Create');
     RegisterMethod(@TALXMLNodeList.CustomSort, 'CustomSort');
-    RegisterMethod(@TALXMLNodeList.Add, 'Add');
+     RegisterMethod(@TALXMLNodeList.Destroy, 'Free');
+      RegisterMethod(@TALXMLNodeList.Add, 'Add');
     RegisterMethod(@TALXMLNodeListDelete_P, 'Delete');
     RegisterMethod(@TALXMLNodeListDelete1_P, 'Delete1');
     RegisterMethod(@TALXMLNodeListExtract_P, 'Extract');

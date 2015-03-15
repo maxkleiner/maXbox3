@@ -54,7 +54,8 @@ begin
   //with RegClassS(CL,'TStComponent', 'TStGeneralLog') do
   with CL.AddClassN(CL.FindClass('TStComponent'),'TStGeneralLog') do begin
     RegisterMethod('Constructor Create( Owner : TComponent)');
-    RegisterMethod('Procedure AddLogEntry( const D1, D2, D3, D4 : DWORD)');
+        RegisterMethod('Procedure Free');
+      RegisterMethod('Procedure AddLogEntry( const D1, D2, D3, D4 : DWORD)');
     RegisterMethod('Procedure ClearBuffer');
     RegisterMethod('Procedure DumpLog');
     RegisterMethod('Procedure WriteLogString( const LogString : string)');
@@ -195,10 +196,10 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStGeneralLog(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStGeneralLog) do
-  begin
+  with CL.Add(TStGeneralLog) do begin
     RegisterConstructor(@TStGeneralLog.Create, 'Create');
-    RegisterMethod(@TStGeneralLog.AddLogEntry, 'AddLogEntry');
+      RegisterMethod(@TStGeneralLog.Destroy, 'Free');
+      RegisterMethod(@TStGeneralLog.AddLogEntry, 'AddLogEntry');
     RegisterMethod(@TStGeneralLog.ClearBuffer, 'ClearBuffer');
     RegisterVirtualMethod(@TStGeneralLog.DumpLog, 'DumpLog');
     RegisterMethod(@TStGeneralLog.WriteLogString, 'WriteLogString');

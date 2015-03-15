@@ -1292,14 +1292,6 @@ begin
  CL.AddConstantN('vmtInstanceSize','LongInt').SetInt( - 40);
  CL.AddConstantN('vmtParent','LongInt').SetInt( - 36);
 
- CL.AddConstantN('WM_NULL','LongWord').SetUInt( $0000);
- CL.AddConstantN('WM_CREATE','LongWord').SetUInt( $0001);
- CL.AddConstantN('WM_DESTROY','LongWord').SetUInt( $0002);
- CL.AddConstantN('WM_MOVE','LongWord').SetUInt( $0003);
- CL.AddConstantN('WM_SIZE','LongWord').SetUInt( $0005);
- CL.AddConstantN('WM_ACTIVATE','LongWord').SetUInt( $0006);
- CL.AddConstantN('WM_SETFOCUS','LongWord').SetUInt( $0007);
- CL.AddConstantN('WM_KILLFOCUS','LongWord').SetUInt( $0008);
  //CL.AddConstantN('varDispatch','LongWord').SetUInt( $0009);
  CL.AddConstantN('WM_ENABLE','LongWord').SetUInt( $000A);
  CL.AddConstantN('WM_SETREDRAW','LongWord').SetUInt( $000B);
@@ -1308,15 +1300,6 @@ begin
  CL.AddConstantN('WM_GETTEXTLENGTH','LongWord').SetUInt( $000E);
  CL.AddConstantN('WM_PAINT','LongWord').SetUInt( $000F);
  CL.AddConstantN('WM_CLOSE','LongWord').SetUInt( $0010);
- CL.AddConstantN('WM_QUERYENDSESSION','LongWord').SetUInt( $0011);
- CL.AddConstantN('WM_QUIT','LongWord').SetUInt( $0012);
- CL.AddConstantN('WM_QUERYOPEN','LongWord').SetUInt( $0013);
- CL.AddConstantN('WM_ERASEBKGND','LongWord').SetUInt( $0014);
- CL.AddConstantN('WM_SYSCOLORCHANGE','LongWord').SetUInt( $0015);
- CL.AddConstantN('WM_ENDSESSION','LongWord').SetUInt( $0016);
- CL.AddConstantN('WM_SYSTEMERROR','LongWord').SetUInt( $0017);
- CL.AddConstantN('WM_SHOWWINDOW','LongWord').SetUInt( $0018);
-
  (*
   {$EXTERNALSYM WM_SYSCOLORCHANGE}
   WM_SYSCOLORCHANGE   = $0015;
@@ -1384,7 +1367,6 @@ begin
   //CL.AddTypeS('ULONG','Longint');
   //CL.AddTypeS('UINT','Integer');
   CL.AddTypeS('UINT', 'LongWord');
-  //CL.AddTypeS('PUINT', '^UINT // will not work');
   CL.AddTypeS('ULONG', 'Cardinal');
   CL.AddTypeS('HRGN', 'LongWord');
   CL.AddTypeS('HSTR', 'LongWord');
@@ -1417,7 +1399,6 @@ begin
   CL.AddTypeS('TFNFiberStartRoutine', 'TFarProc');
   CL.AddTypeS('TThreadFunction2','procedure; stdcall');
 
-
  // record DebugInfo : PRTLCriticalSectionDebug;
  CL.AddTypeS('_RTL_CRITICAL_SECTION','record DebugInfo: TFARPROC; LockCount: Longint;'+
  'RecursionCount: Longint; OwningThread: THandle; LockSemaphore : THandle; Reserved : DWORD; end');
@@ -1427,6 +1408,7 @@ begin
   CL.AddTypeS('LANGID','Word');  //A language identifier
   //CL.AddTypeS('RT_RCDATA','Types.RT_RCDATA'); //MakeIntResource(10);
   CL.AddTypeS('RT_RCDATA','PChar(10)'); //MakeIntResource(10);
+  CL.AddTypeS('RT_RCDATA1','PChar'); //MakeIntResource(10);
   CL.AddTypeS('RT_CURSOR','PChar(1)'); //MakeIntResource(10);
   CL.AddTypeS('RT_BITMAP','PChar(2)'); //MakeIntResource(10);
   CL.AddTypeS('RT_ICON','PChar(3)'); //MakeIntResource(10);
@@ -1449,8 +1431,7 @@ begin
   CL.AddTypeS('ULONG_PTR', 'Cardinal');
   CL.AddTypeS('DWORD_PTR', 'ULONG_PTR');
   CL.AddTypeS('LONGLONG', 'Int64');
-
-  // LONGLONG = Int64;
+   // LONGLONG = Int64;
   CL.AddTypeS('TFloatingSaveArea', '___Pointer');
   //CL.AddTypeS('FLOATING_SAVE_AREA', '_FLOATING_SAVE_AREA');
  CL.AddTypeS('_CONTEXT', 'record ContextFlags: DWORD; Dr0 : DWORD; Dr1 : DWORD; Dr2 : DWORD; Dr3 : DWORD; Dr6 : DWORD; Dr7 : DWORD; FloatSave : TFloati'
@@ -1517,8 +1498,7 @@ begin
   //LPARAM      Longint;    A 32-bit message parameter
   //LRESULT     Longint;    A 32-bit function return value
   //CL.AddTypeS('MakeIntResource','PANSIChar');
-
-  //CL.AddTypeS('THexArray', 'array[0..15] of char;');
+   //CL.AddTypeS('THexArray', 'array[0..15] of char;');
   //CL.AddTypeS('TIntegerSet', 'set of Integer');
   //CL.AddTypeS('PByteArray', '^TByteArray // will not work');
   //CL.AddTypeS('PWordArray', '^TWordArray // will not work');
@@ -1791,6 +1771,8 @@ CL.AddDelphiFunction('Function CompareFileTime( const lpFileTime1, lpFileTime2 :
                               'const FormatSettings: TFormatSettings): string');
  CL.AddDelphiFunction('Function StrToFloat( S : string) : Extended;');
  CL.AddDelphiFunction('Function StrToFloat2( S : string; FormatSettings : TFormatSettings) : Extended;');
+ CL.AddDelphiFunction('Function StrToFloatF( S : string; FormatSettings : TFormatSettings) : Extended;');
+ CL.AddDelphiFunction('Function StrToFloatFS(S: string; Format : TFloatFormat; Precision, Digits : Integer; FormatSettings : TFormatSettings): extended;');
  CL.AddDelphiFunction('Function StrToFloatDef( S : string; Default : Extended) : Extended;');
  CL.AddDelphiFunction('Function StrToFloatDef2( S : string; Default : Extended; FormatSettings : TFormatSettings) : Extended;');
  CL.AddDelphiFunction('Function StrToCurr( S : string) : Currency;');
@@ -1903,8 +1885,7 @@ CL.AddDelphiFunction('Function CompareFileTime( const lpFileTime1, lpFileTime2 :
  CL.AddDelphiFunction('function MakeWord(A, B: Byte): Word)');
  CL.AddDelphiFunction('function MakeLong(A, B: Word): Longint)');
  CL.AddDelphiFunction('Function LogicalAnd( A, B : Integer) : Boolean');
-
- CL.AddDelphiFunction('function getLongDayNames: string)');
+  CL.AddDelphiFunction('function getLongDayNames: string)');
  CL.AddDelphiFunction('function getShortDayNames: string)');
  CL.AddDelphiFunction('function getLongMonthNames: string)');
  CL.AddDelphiFunction('function getShortMonthNames: string)');
@@ -1968,8 +1949,7 @@ CL.AddDelphiFunction('Function CompareFileTime( const lpFileTime1, lpFileTime2 :
  CL.AddConstantN('ISMEX_REPLIED','LongInt').SetInt( 8);}
  CL.AddDelphiFunction('Function GetDoubleClickTime : UINT');
  CL.AddDelphiFunction('Function SetDoubleClickTime( Interval : UINT) : BOOL');
-
-  //CL.AddDelphiFunction('Function CmdLine( Switch : string; IgnoreCase : Boolean) : Boolean;');
+   //CL.AddDelphiFunction('Function CmdLine( Switch : string; IgnoreCase : Boolean) : Boolean;');
  CL.AddDelphiFunction('Procedure RaiseLastOSError');
  //from unit filectrl
  {procedure ProcessPath (const EditText: string; var Drive: Char;
@@ -1998,11 +1978,9 @@ CL.AddDelphiFunction('Function CompareFileTime( const lpFileTime1, lpFileTime2 :
  //CL.AddDelphiFunction('function ListSeparator: Char'); in fmain
  CL.AddDelphiFunction('function SysLocale: TSysLocale');
  //CL.AddDelphiFunction('function AddDelphiFunction(const Decl: tbtString): TPSRegProc;');
-
-  CL.AddDelphiFunction('procedure raise');
+   CL.AddDelphiFunction('procedure raise');
   // SysLocale: TSysLocale;
-
- CL.AddDelphiFunction('function MainThreadID: longword');
+  CL.AddDelphiFunction('function MainThreadID: longword');
  CL.AddDelphiFunction('function TrueBoolStrs: array of string');
  CL.AddDelphiFunction('function FalseBoolStrs: array of string');
  CL.AddDelphiFunction('function LeadBytes: set of char');  //TForLeadBytes
@@ -2072,8 +2050,7 @@ CL.AddDelphiFunction('function IntToIdent(Int: Longint; var Ident: string; const
   between two related classes.  Returns -1 if Descendent is not a descendent of
   Ancestor. }
 CL.AddDelphiFunction('function CountGenerations(Ancestor,Descendent: TClass): Integer');
-
-{  Call CheckSynchronize periodically within the main thread in order for
+ {  Call CheckSynchronize periodically within the main thread in order for
    background threads to synchronize execution with the main thread.  This
    is mainly for applications that have an event driven UI such as Windows
    or XWindows (Qt/CLX).  The best place this can be called is during Idle
@@ -2386,8 +2363,7 @@ CL.AddDelphiFunction('Function GetSystemMetrics( nIndex : Integer) : Integer');
    +'; Ebp : DWORD; Eip : DWORD; SegCs : DWORD; EFlags : DWORD; Esp : DWORD; SegSs : DWORD; end');
   CL.AddTypeS('TContext', '_CONTEXT');
   CL.AddTypeS('CONTEXT', '_CONTEXT');
-
- CL.AddDelphiFunction('Function CreateThread(lpThreadAttributes: ___Pointer; dwStackSize: DWORD; lpStartAddress : TFNThreadStartRoutine;'+
+  CL.AddDelphiFunction('Function CreateThread(lpThreadAttributes: ___Pointer; dwStackSize: DWORD; lpStartAddress : TFNThreadStartRoutine;'+
    'lpParameter:___Pointer; dwCreationFlags: DWORD; var lpThreadId: DWORD) : THandle');
 CL.AddDelphiFunction('function CreateThread1(ThreadAttrib: dword; stack: dword;'+
         'ThreadFunc: TFarProc; parameter: integer; flags: dword; thrid: DWord):THandle');
@@ -2508,7 +2484,6 @@ CL.AddDelphiFunction('function CreateThread1(ThreadAttrib: dword; stack: dword;'
  CL.AddDelphiFunction('Function GetMessagePos : DWORD');
  CL.AddDelphiFunction('Function GetMessageTime : Longint');
  CL.AddDelphiFunction('Function GetMessageExtraInfo : Longint');
-
  CL.AddDelphiFunction('Function ExitWindows( dwReserved : DWORD; Code : Word) : BOOLEAN');
  CL.AddDelphiFunction('Function ExitWindowsEx( uFlags : UINT; dwReserved : DWORD) : BOOLEAN');
  CL.AddDelphiFunction('Function SwapMouseButton( fSwap : BOOLEAN) : BOOLEAN');
@@ -2526,7 +2501,6 @@ CL.AddDelphiFunction('function CreateThread1(ThreadAttrib: dword; stack: dword;'
  CL.AddDelphiFunction('Function GetYValue( cmyk : COLORREF) : Byte');
  CL.AddDelphiFunction('Function GetKValue( cmyk : COLORREF) : Byte');
  CL.AddDelphiFunction('Function CMYK( c, m, y, k : Byte) : COLORREF');
-
  CL.AddDelphiFunction('Function MessageBeep( uType : UINT) : BOOLEAN');
  CL.AddDelphiFunction('Function ShowCursor( bShow : BOOLEAN) : Integer');
  CL.AddDelphiFunction('Function SetCursorPos( X, Y : Integer) : BOOLEAN');
@@ -2574,7 +2548,7 @@ CL.AddDelphiFunction('function CreateThread1(ThreadAttrib: dword; stack: dword;'
  //CL.AddDelphiFunction('Procedure DBIError(errorCode: Integer)');
  //CL.AddDelphiFunction('Procedure DBIError(errorCode: Integer)');
    //maxintvalue
- end;
+   end;
 
 (* === run-time registration functions === *)
 
@@ -2952,6 +2926,7 @@ function StrToFloat2(const S: string; const FormatSettings: TFormatSettings): Ex
 begin
   result:= StrToFloat(S, FormatSettings);
 end;
+
 
 function StrToCurr2(const S: string; const FormatSettings: TFormatSettings): Currency;
 begin
@@ -3411,6 +3386,8 @@ begin
 
  S.RegisterDelphiFunction(@StrToFloat, 'StrToFloat', cdRegister);
  S.RegisterDelphiFunction(@StrToFloat2, 'StrToFloat2', cdRegister);
+ S.RegisterDelphiFunction(@StrToFloat2, 'StrToFloatF', cdRegister);
+ S.RegisterDelphiFunction(@StrToFloat, 'StrToFloatFS', cdRegister);
  S.RegisterDelphiFunction(@StrToFloatDef, 'StrToFloatDef', cdRegister);
  S.RegisterDelphiFunction(@StrToFloatDef2, 'StrToFloatDef2', cdRegister);
  S.RegisterDelphiFunction(@StrToCurr1, 'StrToCurr', cdRegister);

@@ -54,6 +54,7 @@ begin
   //with RegClassS(CL,'TObject', 'TStIniStream') do
   with CL.AddClassN(CL.FindClass('TObject'),'TStIniStream') do begin
     RegisterMethod('Constructor Create( aStream : TStream)');
+    RegisterMethod('Procedure Free');
     RegisterMethod('Function SectionExists( const Section : AnsiString) : Boolean');
     RegisterMethod('Function ReadString( const Section, Ident, Default : AnsiString) : AnsiString');
     RegisterMethod('Procedure WriteString( const Section, Ident, Value : AnsiString)');
@@ -86,6 +87,7 @@ procedure RIRegister_TStIniStream(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TStIniStream) do begin
     RegisterConstructor(@TStIniStream.Create, 'Create');
+    RegisterMethod(@TStIniStream.Destroy, 'Free');
     RegisterMethod(@TStIniStream.SectionExists, 'SectionExists');
     RegisterMethod(@TStIniStream.ReadString, 'ReadString');
     RegisterMethod(@TStIniStream.WriteString, 'WriteString');

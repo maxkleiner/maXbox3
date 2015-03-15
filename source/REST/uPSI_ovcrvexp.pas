@@ -1,6 +1,6 @@
 unit uPSI_ovcrvexp;
 {
-    cond logic
+    cond logic  add free
 }
 interface
  
@@ -55,6 +55,9 @@ begin
   //with RegClassS(CL,'TCocoRGrammar', 'TOvcRvExp') do
   with CL.AddClassN(CL.FindClass('TCocoRGrammar'),'TOvcRvExp') do begin
     RegisterMethod('Procedure Execute');
+    RegisterMethod('Constructor Create');
+    RegisterMethod('function ErrorStr(const ErrorCode : integer; const Data : string) : string;');
+    RegisterMethod('Procedure Free');
     RegisterMethod('Function GetScanner : TOvcRvExpScanner');
     RegisterMethod('Procedure Parse');
     RegisterProperty('MajorVersion', 'integer', iptr);
@@ -64,6 +67,13 @@ begin
     RegisterProperty('BuildDate', 'TDateTime', iptr);
     RegisterProperty('RootNode', 'TOvcRvExpression', iptrw);
     RegisterProperty('Version', 'string', iptrw);
+   RegisterPublishedProperties;
+    RegisterProperty('FOnFailure', 'TFailureEvent', iptrw);
+    RegisterProperty('FOnStatusUpdate', 'TStatusUpdateProc', iptrw);
+   RegisterProperty('FOnSuccess', 'TFailureEvent', iptrw);
+  RegisterProperty('FScanner', 'TCocoRScanner', iptrw);
+    RegisterProperty('SourceFileName', 'string', iptrw);
+    RegisterProperty('ClearSourceStream', 'boolean', iptrw);
   end;
 end;
 
@@ -74,6 +84,12 @@ begin
   with CL.AddClassN(CL.FindClass('TCocoRScanner'),'TOvcRvExpScanner') do begin
     RegisterMethod('Constructor Create');
     RegisterProperty('Owner', 'TOvcRvExp', iptrw);
+    RegisterMethod('Procedure Free');
+    RegisterMethod('procedure Get(var sym : integer);');
+
+
+    //procedure Get(var sym : integer); override; // Gets next symbol from source file
+
   end;
 end;
 
@@ -136,9 +152,12 @@ begin T := Self.Owner; end;
 procedure RIRegister_TOvcRvExp(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TOvcRvExp) do begin
+    RegisterConstructor(@TOvcRvExp.Create, 'Create');
     RegisterMethod(@TOvcRvExp.Execute, 'Execute');
     RegisterMethod(@TOvcRvExp.GetScanner, 'GetScanner');
     RegisterMethod(@TOvcRvExp.Parse, 'Parse');
+    RegisterMethod(@TOvcRvExp.ErrorStr, 'ErrorStr');
+    RegisterMethod(@TOvcRvExp.Destroy, 'Free');
     RegisterPropertyHelper(@TOvcRvExpMajorVersion_R,nil,'MajorVersion');
     RegisterPropertyHelper(@TOvcRvExpMinorVersion_R,nil,'MinorVersion');
     RegisterPropertyHelper(@TOvcRvExpRelease_R,nil,'Release');
@@ -152,10 +171,11 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TOvcRvExpScanner(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TOvcRvExpScanner) do
-  begin
+  with CL.Add(TOvcRvExpScanner) do begin
     RegisterConstructor(@TOvcRvExpScanner.Create, 'Create');
-    RegisterPropertyHelper(@TOvcRvExpScannerOwner_R,@TOvcRvExpScannerOwner_W,'Owner');
+       RegisterMethod(@TOvcRvExpScanner.Destroy, 'Free');
+       RegisterMethod(@TOvcRvExpScanner.Get, 'Get');
+      RegisterPropertyHelper(@TOvcRvExpScannerOwner_R,@TOvcRvExpScannerOwner_W,'Owner');
   end;
 end;
 

@@ -656,17 +656,112 @@ begin
  CL.AddConstantN('SBM_ENABLE_ARROWS','LongInt').SetInt( 228);
  CL.AddConstantN('SBM_SETSCROLLINFO','LongInt').SetInt( 233);
  CL.AddConstantN('SBM_GETSCROLLINFO','LongInt').SetInt( 234);
-
-
-
-
+  CL.AddConstantN('PRF_CHECKVISIBLE','LongInt').SetInt( 1);
+ CL.AddConstantN('PRF_NONCLIENT','LongInt').SetInt( 2);
+ CL.AddConstantN('PRF_CLIENT','LongInt').SetInt( 4);
+ CL.AddConstantN('PRF_ERASEBKGND','LongInt').SetInt( 8);
+ CL.AddConstantN('PRF_CHILDREN','LongWord').SetUInt( $10);
+ CL.AddConstantN('PRF_OWNED','LongWord').SetUInt( $20);
+ CL.AddConstantN('BDR_RAISEDOUTER','LongInt').SetInt( 1);
+ CL.AddConstantN('BDR_SUNKENOUTER','LongInt').SetInt( 2);
+ CL.AddConstantN('BDR_RAISEDINNER','LongInt').SetInt( 4);
+ CL.AddConstantN('BDR_SUNKENINNER','LongInt').SetInt( 8);
+ CL.AddConstantN('BDR_OUTER','LongInt').SetInt( 3);
+ CL.AddConstantN('BDR_INNER','LongInt').SetInt( 12);
+ CL.AddConstantN('BDR_RAISED','LongInt').SetInt( 5);
+ CL.AddConstantN('BDR_SUNKEN','LongInt').SetInt( 10);
+ //CL.AddConstantN('OLE_E_FIRST','LongWord').SetUInt( HRESULT ( $80040000 ));
+ //CL.AddConstantN('OLE_E_LAST','LongWord').SetUInt( HRESULT ( $800400FF ));
+ CL.AddConstantN('OLE_S_FIRST','LongWord').SetUInt( $40000);
+ CL.AddConstantN('OLE_S_LAST','LongWord').SetUInt( $400FF);
+ CL.AddConstantN('OLE_E_OLEVERB','LongWord').SetUInt(( $80040000 ));
+ CL.AddConstantN('OLE_E_ADVF','LongWord').SetUInt(( $80040001 ));
+ CL.AddConstantN('OLE_E_ENUM_NOMORE','LongWord').SetUInt(  ( $80040002 ));
+ CL.AddConstantN('OLE_E_ADVISENOTSUPPORTED','LongWord').SetUInt(  ( $80040003 ));
+ CL.AddConstantN('OLE_E_NOCONNECTION','LongWord').SetUInt(  ( $80040004 ));
+ CL.AddConstantN('OLE_E_NOTRUNNING','LongWord').SetUInt(  ( $80040005 ));
+ CL.AddConstantN('OLE_E_NOCACHE','LongWord').SetUInt(  ( $80040006 ));
+ CL.AddConstantN('OLE_E_BLANK','LongWord').SetUInt( ( $80040007 ));
+ CL.AddConstantN('OLE_E_CLASSDIFF','LongWord').SetUInt(( $80040008 ));
+ CL.AddConstantN('OLE_E_CANT_GETMONIKER','LongWord').SetUInt(( $80040009 ));
+ CL.AddConstantN('OLE_E_CANT_BINDTOSOURCE','LongWord').SetUInt(( $8004000A ));
+ CL.AddConstantN('OLE_E_STATIC','LongWord').SetUInt( ( $8004000B ));
+ CL.AddConstantN('OLE_E_PROMPTSAVECANCELLED','LongWord').SetUInt( ( $8004000C ));
+ CL.AddConstantN('OLE_E_INVALIDRECT','LongWord').SetUInt( ( $8004000D ));
+ CL.AddConstantN('OLE_E_WRONGCOMPOBJ','LongWord').SetUInt(( $8004000E ));
+ CL.AddConstantN('OLE_E_INVALIDHWND','LongWord').SetUInt( ( $8004000F ));
+ CL.AddConstantN('OLE_E_NOT_INPLACEACTIVE','LongWord').SetUInt( ( $80040010 ));
+ CL.AddConstantN('OLE_E_CANTCONVERT','LongWord').SetUInt(  ( $80040011 ));
+ CL.AddConstantN('OLE_E_NOSTORAGE','LongWord').SetUInt( ( $80040012 ));
+ CL.AddConstantN('E_UNEXPECTED','LongWord').SetUInt(  ( $8000FFFF ));
+ CL.AddConstantN('E_NOTIMPL','LongWord').SetUInt(  ( $80004001 ));
+ CL.AddConstantN('E_OUTOFMEMORY','LongWord').SetUInt(( $8007000E ));
+ CL.AddConstantN('E_INVALIDARG','LongWord').SetUInt( ( $80070057 ));
+ CL.AddConstantN('E_NOINTERFACE','LongWord').SetUInt( ( $80004002 ));
+ CL.AddConstantN('E_POINTER','LongWord').SetUInt( ( $80004003 ));
+ CL.AddConstantN('E_HANDLE','LongWord').SetUInt( ( $80070006 ));
+ CL.AddConstantN('E_ABORT','LongWord').SetUInt( ( $80004004 ));
+ CL.AddConstantN('E_FAIL','LongWord').SetUInt( ( $80004005 ));
+ CL.AddConstantN('E_ACCESSDENIED','LongWord').SetUInt(( $80070005 ));
+ CL.AddConstantN('E_PENDING','LongWord').SetUInt( ( $8000000A ));
+ CL.AddConstantN('MARSHAL_S_FIRST','LongWord').SetUInt( $40120);
+ CL.AddConstantN('MARSHAL_S_LAST','LongWord').SetUInt( $4012F);
+ CL.AddConstantN('NULLREGION','LongInt').SetInt( 1);
+ CL.AddConstantN('SIMPLEREGION','LongInt').SetInt( 2);
+ CL.AddConstantN('COMPLEXREGION','LongInt').SetInt( 3);
 
  // {$EXTERNALSYM EM_GETIMESTATUS}
   //EM_GETIMESTATUS        = 217;
 
+  CL.AddTypeS('tagFONTSIGNATURE',' record fsUsb: array[0..3] of DWORD; fsCsb: array[0..1] of DWORD; end');
+  CL.AddTypeS('TFontSignature', 'tagFONTSIGNATURE');
+  CL.AddTypeS('FONTSIGNATURE', 'tagFONTSIGNATURE');
+
+ CL.AddTypeS('tagBITMAPCOREHEADER', 'record bcSize : DWORD; bcWidth : Word; bc'
+   +'Height : Word; bcPlanes : Word; bcBitCount : Word; end');
+  CL.AddTypeS('TBitmapCoreHeader', 'tagBITMAPCOREHEADER');
+  CL.AddTypeS('BITMAPCOREHEADER', 'tagBITMAPCOREHEADER');
+
+  CL.AddTypeS('tagCHARSETINFO', 'record ciCharset : UINT; ciACP : UINT; fs : TFontSignature; end');
+  CL.AddTypeS('TCharsetInfo', 'tagCHARSETINFO');
+  CL.AddTypeS('CHARSETINFO', 'tagCHARSETINFO');
+
+  CL.AddTypeS('tagMETAHEADER', 'record mtType : Word; mtHeaderSize : Word; mtVe'
+   +'rsion : Word; mtSize : DWORD; mtNoObjects : Word; mtMaxRecord : DWORD; mtN'
+   +'oParameters : Word; end');
+  CL.AddTypeS('TMetaHeader', 'tagMETAHEADER');
+  CL.AddTypeS('METAHEADER', 'tagMETAHEADER');
+   CL.AddTypeS('tagENHMETAHEADER', 'record iType : DWORD; nSize : DWORD; rclBoun'
+   +'ds : TRect; rclFrame : TRect; dSignature : DWORD; nVersion : DWORD; nBytes'
+   +' : DWORD; nRecords : DWORD; nHandles : Word; sReserved : Word; nDescriptio'
+   +'n : DWORD; offDescription : DWORD; nPalEntries : DWORD; szlDevice : TSize;'
+   +' szlMillimeters : TSize; cbPixelFormat : DWORD; offPixelFormat : DWORD; bO'
+   +'penGL : DWORD; end');
+  CL.AddTypeS('TEnhMetaHeader', 'tagENHMETAHEADER');
+  CL.AddTypeS('ENHMETAHEADER', 'tagENHMETAHEADER');
+ CL.AddConstantN('TMPF_FIXED_PITCH','LongInt').SetInt( 1);
+ CL.AddConstantN('TMPF_VECTOR','LongInt').SetInt( 2);
+ CL.AddConstantN('TMPF_DEVICE','LongInt').SetInt( 8);
+ CL.AddConstantN('TMPF_TRUETYPE','LongInt').SetInt( 4);
+
+   CL.AddTypeS('tagPANOSE', 'record bFamilyType : Byte; bSerifStyle : Byte; bWei'
+   +'ght : Byte; bProportion : Byte; bContrast : Byte; bStrokeVariation : Byte;'
+   +' bArmStyle : Byte; bLetterform : Byte; bMidline : Byte; bXHeight : Byte; end');
+  CL.AddTypeS('TPanose', 'tagPANOSE');
+  CL.AddTypeS('PANOSE', 'tagPANOSE');
+    CL.AddTypeS('_RASTERIZER_STATUS', 'record nSize : SHORT; wFlags : SHORT; nLanguageID : SHORT; end');
+  CL.AddTypeS('TRasterizerStatus', '_RASTERIZER_STATUS');
+  CL.AddTypeS('RASTERIZER_STATUS', '_RASTERIZER_STATUS');
+
+  CL.AddDelphiFunction('Function GetCharWidth( DC : HDC; FirstChar, LastChar : UINT; const Widths: UInt) : BOOL');
+  CL.AddDelphiFunction('Function GetCharWidth32( DC : HDC; FirstChar, LastChar : UINT; const Widths: UInt) : BOOL');
+ CL.AddDelphiFunction('Function GetClipBox( DC : HDC; var Rect : TRect) : Integer');
+ CL.AddDelphiFunction('Function GetClipRgn( DC : HDC; rgn : HRGN) : Integer');
+ CL.AddDelphiFunction('Function GetMetaRgn( DC : HDC; rgn : HRGN) : Integer');
+  CL.AddDelphiFunction('Function LineTo( DC : HDC; X, Y : Integer) : BOOL');
 
 
-    CL.AddTypeS('tagLOGFONTA', 'record lfHeight: longint; lfWidth : longint;'
+     CL.AddTypeS('tagLOGFONTA', 'record lfHeight: longint; lfWidth : longint;'
    +'lfEscapement : longint; lfOrientation : longint; lfWeight : longInt;'
    +'lfItalic: byte; lfUnderline : byte; lfStrikeOut: byte; lfCharSet'
    +' : byte; lfOutPrecision : byte; lfClipPrecision : byte; lfQuality'
@@ -852,6 +947,13 @@ begin
  S.RegisterDelphiFunction(@HResultFromNT, 'HResultFromNT', cdRegister);
  S.RegisterDelphiFunction(@GetSystemPowerStatus, 'GetSystemPowerStatus', CdStdCall);
  S.RegisterDelphiFunction(@SetSystemPowerState, 'SetSystemPowerState', CdStdCall);
+  S.RegisterDelphiFunction(@GetCharWidth, 'GetCharWidth', CdStdCall);
+  S.RegisterDelphiFunction(@GetCharWidth32, 'GetCharWidth32', CdStdCall);
+  S.RegisterDelphiFunction(@GetClipBox, 'GetClipBox', CdStdCall);
+ S.RegisterDelphiFunction(@GetClipRgn, 'GetClipRgn', CdStdCall);
+ S.RegisterDelphiFunction(@GetMetaRgn, 'GetMetaRgn', CdStdCall);
+  S.RegisterDelphiFunction(@LineTo, 'LineTo', CdStdCall);
+
 
 end;
 
@@ -871,5 +973,5 @@ begin
 end;
 (*----------------------------------------------------------------------------*)
  
- 
+
 end.

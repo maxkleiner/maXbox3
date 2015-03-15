@@ -3,7 +3,7 @@ unit IdExtHTTPServer;
 interface
 
 uses
-  Classes, IdCustomHTTPServer, IdHTTPServer, ExtPascalUtils;
+  Classes, IdCustomHTTPServer, IdHTTPServer, IdTCPServer, ExtPascalUtils;
 
 type
   TIdExtHTTPServer = class;
@@ -91,8 +91,8 @@ type
   private
     FExtSessionClass: TIdExtSessionClass;
   protected
-    procedure InitComponent; override;
-    procedure CommandGet(AContext: TIdContext; ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
+    //procedure InitComponent; override;
+    procedure CommandGet(AThread: TIdPeerThread; ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
   public
     constructor Create(const AExtSessionClass: TIdExtSessionClass); reintroduce;
   published
@@ -305,7 +305,7 @@ threadvar
 implementation
 
 uses
-  {$IFDEF MSWINDOWS}Windows, Messages,{$ENDIF} StrUtils, SysUtils, IdGlobal, IdGlobalProtocols, ExtPascal;
+  {$IFDEF MSWINDOWS}Windows, Messages,{$ENDIF} StrUtils, SysUtils, IdGlobal;
 
 function FileType2MimeType(const AFileName: string): string;
 var

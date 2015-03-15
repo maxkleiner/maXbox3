@@ -1,6 +1,6 @@
 unit uPSI_StOStr;
 {
-  SysTools4
+  SysTools4    add free
 }
 interface
  
@@ -59,7 +59,8 @@ begin
   //with RegClassS(CL,'TPersistent', 'TStString') do
   with CL.AddClassN(CL.FindClass('TPersistent'),'TStString') do begin
     RegisterMethod('Constructor Create');
-    RegisterMethod('Constructor CreateAlloc( Size : Cardinal)');
+     RegisterMethod('Procedure Free');
+       RegisterMethod('Constructor CreateAlloc( Size : Cardinal)');
     RegisterMethod('Constructor CreateS( const S : AnsiString)');
     RegisterMethod('Constructor CreateZ( const S : PAnsiChar)');
     RegisterMethod('Constructor CreateV( const S : Variant)');
@@ -321,7 +322,8 @@ procedure RIRegister_TStString(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TStString) do begin
     RegisterConstructor(@TStString.Create, 'Create');
-    RegisterVirtualConstructor(@TStString.CreateAlloc, 'CreateAlloc');
+     RegisterMethod(@TStString.Destroy, 'Free');
+      RegisterVirtualConstructor(@TStString.CreateAlloc, 'CreateAlloc');
     RegisterVirtualConstructor(@TStString.CreateS, 'CreateS');
     RegisterVirtualConstructor(@TStString.CreateZ, 'CreateZ');
     RegisterVirtualConstructor(@TStString.CreateV, 'CreateV');

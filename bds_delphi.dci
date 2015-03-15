@@ -1,5 +1,5 @@
 [code | completion file for maXbox and arduino]
-code of version mX3.9.9 from http://www.softwareschule.ch/maxbox.htm #locs=2858
+code of version mX3.9.9 from http://www.softwareschule.ch/maxbox.htm #locs=2900
 
 [arrayd | array declaration (var) | Borland.EditOptions.Pascal]
 array[0..|] of ;
@@ -618,7 +618,7 @@ function DMathFact(N: Integer):Float; external 'Fact@dmath.dll';
 
 [myFastForm | class declaration  | Borland.EditOptions.Pascal]
   
-procedure CreateMyFastForm;
+procedure |CreateMyFastForm;
  //diaform:= CreateMessageDialog('my fast form perform',mtconfirmation, []);
 var 
     dbform: TForm;
@@ -666,7 +666,7 @@ var
   statBar1: TStatusBar;
 
 //**************************Event Handlers*******************************
-procedure TFrm1_trackSpeedChange(Sender: TObject);
+procedure |TFrm1_trackSpeedChange(Sender: TObject);
 begin
   //mt.Interval:= 1000 div tB.Position;
   writeln(intToStr(1000 div tB.Position));
@@ -761,6 +761,37 @@ begin
       panels.items[1].text:= '150';
   end;
 end;  
+
+
+[aForm | class declaration  | Borland.EditOptions.Pascal]
+
+procedure |ShowEOleException(AExc: EOleException; aQuery: String);
+var
+  ErrShowFrm: TForm;
+  Memo: TMemo;
+begin
+  ErrShowFrm:= TForm.Create(NIL);
+  ErrShowFrm.Position:= poScreenCenter;
+  ErrShowFrm.Width:= 640;
+  ErrShowFrm.Height:= 480;
+  Memo:= TMemo.Create(ErrShowFrm);
+  Memo.Parent:= ErrShowFrm;
+  Memo.Align:= alClient; //ErrShowFrm.Align;
+
+  Memo.Lines.Clear;
+  if assigned(AExc) then begin 
+    Memo.Lines.Add('Message: '+ AExc.Message);
+     Memo.Lines.Add('   Source: '+ AExc.Source);
+     Memo.Lines.Add('   Source: '+ AExc.helpFile);
+     //Memo.Lines.Add('   ClassName: ' + AExc.ClassName);
+     Memo.Lines.Add('   Error Code: '+ IntToStr(AExc.ErrorCode));
+  end;
+  Memo.Lines.Add('   Query: ' + aQuery);
+  ErrShowFrm.ShowModal;
+  Memo.Free;
+  ErrShowFrm.Free;
+end;
+
 
 
 [TMemo | class declaration  | Borland.EditOptions.Pascal]
@@ -2308,6 +2339,15 @@ begin
   else result:= S;
 end;
 
+[countpos | example | maXbox.EditOptions.Pascal]
+function CountPos(const subtxt: string; Text: string): Integer;
+begin
+  if (Length(subtxt)= 0) Or (Length(Text)= 0) Or (Pos(subtxt,Text)= 0) then
+    result:= 0
+  else
+    result:= (Length(Text)- Length(StringReplace(Text,subtxt,'',
+      [rfReplaceAll]))) div Length(subtxt);
+end;
 
 [set | settings.inc]
 {$I settings.inc}
@@ -2850,8 +2890,12 @@ For Form Building out of the Script, eg. 399_form_templates.txt
 1059 unit uPSI_uconvMain;                      TfconvMain //PS
 1076 unit uPSI_CustomizeDlg;                   TCustomizeDlg / TJvAddPrinterDialog;
 
+myFastForm  class declaration  | Borland.EditOptions.Pascal  //Dialog Form
+myForm  class declaration  | Borland.EditOptions.Pascal   //with Events
+aForm  class declaration  | Borland.EditOptions.Pascal   //single Form
+
 
 ////////////////////////////////////////////////////////////////////////////
-//End of bds_delphi.dci  3.9.9.180
+//End of bds_delphi.dci  3.9.9.190
 ////////////////////////////////////////////////////////////////////////////
 

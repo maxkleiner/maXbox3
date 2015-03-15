@@ -1,6 +1,6 @@
 unit uPSI_StRegEx;
 {
-  regex of Systools4
+  regex of Systools4     add TStNodeHeap = class
 }
 interface
  
@@ -138,7 +138,8 @@ begin
   //with RegClassS(CL,'TOBJECT', 'TStNodeHeap') do
   with CL.AddClassN(CL.FindClass('TOBJECT'),'TStNodeHeap') do begin
     RegisterMethod('Constructor Create');
-    RegisterMethod('Function AllocNode : PStPatRecord');
+     RegisterMethod('Procedure Free');
+     RegisterMethod('Function AllocNode : PStPatRecord');
     RegisterMethod('Procedure FreeNode( aNode : PStPatRecord)');
     RegisterMethod('Function CloneNode( aNode : PStPatRecord) : PStPatRecord');
   end;
@@ -569,10 +570,10 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStNodeHeap(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStNodeHeap) do
-  begin
+  with CL.Add(TStNodeHeap) do begin
     RegisterConstructor(@TStNodeHeap.Create, 'Create');
-    RegisterMethod(@TStNodeHeap.AllocNode, 'AllocNode');
+      RegisterMethod(@TStNodeHeap.Destroy, 'Free');
+      RegisterMethod(@TStNodeHeap.AllocNode, 'AllocNode');
     RegisterMethod(@TStNodeHeap.FreeNode, 'FreeNode');
     RegisterMethod(@TStNodeHeap.CloneNode, 'CloneNode');
   end;

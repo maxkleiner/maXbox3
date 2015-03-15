@@ -1,6 +1,7 @@
 unit uPSI_StTree;
 {
-  just tree
+  just tree     add LoadFromStream(S : TStream); override;
+        {-Create a list and its 
 }
 interface
  
@@ -57,12 +58,16 @@ begin
   with CL.AddClassN(CL.FindClass('TStContainer'),'TStTree') do begin
     RegisterMethod('Constructor Create( NodeClass : TStNodeClass)');
     RegisterMethod('Procedure Free');
-    RegisterMethod('Function Insert( Data : Pointer) : TStTreeNode');
-    RegisterMethod('Procedure Delete( Data : Pointer)');
-    RegisterMethod('Function Find( Data : ___Pointer) : TStTreeNode');
+    RegisterMethod('Procedure LoadFromStream( S : TStream)');
+    RegisterMethod('Procedure StoreToStream( S : TStream)');
+    RegisterMethod('Procedure Assign( Source : TPersistent)');
+    RegisterMethod('Procedure Clear');
+    RegisterMethod('Function Insert( Data : string) : TStTreeNode');
+    RegisterMethod('Procedure Delete( Data : string)');
+    RegisterMethod('Function Find( Data : string) : TStTreeNode');
     RegisterMethod('Procedure Join( T : TStTree; IgnoreDups : Boolean)');
-    RegisterMethod('Function Split( Data : ___Pointer) : TStTree');
-    RegisterMethod('Function Iterate( Action : TIterateFunc; Up : Boolean; OtherData : Pointer) : TStTreeNode');
+    RegisterMethod('Function Split( Data : string) : TStTree');
+    RegisterMethod('Function Iterate( Action : TIterateFunc; Up : Boolean; OtherData : string) : TStTreeNode');
     RegisterMethod('Function First : TStTreeNode');
     RegisterMethod('Function Last : TStTreeNode');
     RegisterMethod('Function Next( N : TStTreeNode) : TStTreeNode');
@@ -74,8 +79,9 @@ end;
 procedure SIRegister_TStTreeNode(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TStNode', 'TStTreeNode') do
-  with CL.AddClassN(CL.FindClass('TStNode'),'TStTreeNode') do
-  begin
+  with CL.AddClassN(CL.FindClass('TStNode'),'TStTreeNode') do begin
+    RegisterMethod('Constructor Create(AData : string)');    //AData : Pointer
+
   end;
 end;
 
@@ -94,6 +100,11 @@ begin
   with CL.Add(TStTree) do begin
     RegisterConstructor(@TStTree.Create, 'Create');
     RegisterMethod(@TStTree.Destroy, 'Free');
+    RegisterMethod(@TStTree.LoadFromStream, 'LoadFromStream');
+    RegisterMethod(@TStTree.StoreToStream, 'StoreToStream');
+    RegisterMethod(@TStTree.Assign, 'Assign');
+    RegisterMethod(@TStTree.Clear, 'Clear');
+
     RegisterMethod(@TStTree.Insert, 'Insert');
     RegisterMethod(@TStTree.Delete, 'Delete');
     RegisterMethod(@TStTree.Find, 'Find');
@@ -110,8 +121,9 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStTreeNode(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStTreeNode) do
-  begin
+  with CL.Add(TStTreeNode) do begin
+   RegisterConstructor(@TStTreeNode.Create, 'Create');
+
   end;
 end;
 

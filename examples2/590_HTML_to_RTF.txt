@@ -1,0 +1,505 @@
+PROGRAM HTMLToRTF_Function;
+
+//////////////////////////////////////////////////////////////////////
+//  #sign:Administrator: PC08: 14/03/2015 09:40:07 PM 
+//  Purpose: shows 2 very senseful functions                        //
+//  #path>ples\E:\maxbox3\mXGit39991\maxbox3\examples\les\          //
+//  Lines of Code #locs:387
+//////////////////////////////////////////////////////////////////////
+
+Const TEXTOUT = 'Hi world of code coverage with cover age';
+
+//############################################################################
+// Archimedes Spiral Function Fun codeSIGN
+//############################################################################
+//TODO: Combine this two functions in one call
+
+
+function GetCookieDirectory: string;
+var
+  reg : TRegistry;
+begin
+  reg:= TRegistry.Create;
+  try
+    reg.RootKey:= HKEY_LOCAL_MACHINE;
+    reg.OpenKey('SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings\Cache\Special Paths\Cookies',
+      False);
+    Result:= reg.ReadString('Directory');
+  finally
+    reg.Free;
+  end;
+end;
+
+procedure RegisterProtocol(const Name, Describtion, ExecuteStr: string);
+var
+  reg: TRegistry;
+begin
+  reg := TRegistry.Create;
+  try
+    reg.RootKey := HKEY_CLASSES_ROOT;
+    reg.OpenKey(Name, True);
+    try
+      reg.Writestring('', 'URL:' + Name +' (' + Describtion + ')');
+      reg.WriteInteger('EditFlags', 2);
+      reg.WriteString('Source Filter', '');
+      reg.WriteString('URL Protocol', '');
+      reg.OpenKey('shell', True);
+      reg.OpenKey('open', True);
+      reg.OpenKey('command', True);
+      reg.Writestring('', ExecuteStr);
+    finally
+      reg.CloseKey;
+    end;
+  finally
+    reg.Free;
+  end;
+end;
+
+// Here's to put colorfull border
+procedure MakeBorder(const bdr: TBitmap; BorderWidth: Integer; BorderColor: TColor);
+begin
+  with bdr.Canvas do begin
+    Brush.Style := bsClear;
+    pen.Width := BorderWidth;
+    pen.Color := BorderColor;
+    rectangle(BorderWidth - 1, BorderWidth - 1, bdr.Width, bdr.Height);
+  end;
+end;
+
+function GetOCXDirectory: string;
+//var ComServer: TCOMServer;
+// This function returns the directory where the DLL (or ocx) is installed.
+// Also works in webservices
+// With DLL's you cannot use "Paramstr(0)" because this will give a false value
+begin
+  //Result := IncludeTrailingBackslash(ExtractFileDir(ComServer.ServerFileName));
+end;
+
+ //Const PRF_CLIENT =4;
+
+
+function RTFtoBitmap(myRTF: TRichEdit; GiveSpaceForBorder: Integer): TBitmap;
+
+  // using myRTF parameter with your TRichEdit control name,
+  // default name "RichEdit1".
+  // For GiveSpaceForBorder parameter, sometimes you need to draw
+  // the RichEdit control with rectangle colorfull border, so you need
+  // to give space for it.
+var
+  myRect: TRect;
+  temp: TBitmap;
+begin
+  temp := TBitmap.Create;
+
+  myRect := myRTF.ClientRect;
+  // if you are using PRF_NONCLIENT parameter in myRTF.perform command
+  // using this statement
+  // myRect := Rect(0,0,MyRTF.Width,MyRTF.Height);
+
+  temp.Width  := myRect.Right;
+  temp.Height := myRect.Bottom;
+  with temp.Canvas do
+  begin
+    Lock;
+    try
+      myRTF.Perform(WM_PRINT, Handle, PRF_CLIENT);
+      //you can trying to change PRF_CLIENT with
+      //PRF_CHILDREN or PRF_CLIENT or PRF_NONCLIENT or PRF_ERASEBKGND
+      //or combine them. See what happen...
+    finally
+      Unlock
+    end;
+  end;
+  Result := TBitmap.Create;
+  {Result := CreateEmptyBmp(clWhite,
+    temp.Width + GiveSpaceForBorder * 2,
+    temp.Height + GiveSpaceForBorder * 2);}
+  Result.Canvas.Lock;
+  Result.Canvas.Draw(GiveSpaceForBorder, GiveSpaceForBorder, temp);
+  Result.Canvas.Unlock;
+  temp.Free;
+end;
+
+
+procedure CreatePNG_X;
+var
+  Bmp, Mask: TBitmap;
+  PNG: TLinearGraphic; //TPNGLoader; //TLinearBitmap; //TPNGObject;
+begin
+  Bmp := TBitmap.Create;
+  Bmp.PixelFormat := pf24bit;
+  Bmp.SetSize(64, 64);
+
+  Bmp.Canvas.Brush.Color := clBtnFace;
+  Bmp.Canvas.Font.Color := clRed;
+  Bmp.Canvas.Font.Size := 24;
+  Bmp.Canvas.TextOut(4, 10, 'text');
+
+  Mask := TBitmap.Create;
+  Mask.PixelFormat := pf24bit;
+  Mask.Canvas.Brush.Color := clBlack;
+  Mask.SetSize(64, 64);
+  Mask.Canvas.Font.Color := clWhite;
+  Mask.Canvas.Font.Size := 24;
+  Mask.Canvas.TextOut(4, 10, 'text');
+
+  PNG := TLinearGraphic.create; //TPngLoader.Create;
+  //CreatePNG(Bmp, Mask, PNG, False);
+  PNG.Draw(mask.Canvas, Rect(10, 10, 74, 74));
+  bmp.Free;
+  mask.free;
+  png.free;
+//test  
+  BMP.Width:= 100;
+   BMP.Height:= 100;
+   BMP.Transparent:= True;
+   BMP.TransparentColor:= clWhite;
+   BMP.Canvas.Brush.Style:= bsSolid;
+   BMP.Canvas.Brush.Color:= clWhite;
+   BMP.Canvas.FillRect(BMP.Canvas.ClipRect);
+   BMP.Canvas.Brush.Color:= clBlue;
+   BMP.Canvas.Ellipse(10, 10, 90, 90);
+   PNG.Assign(BMP);
+end;
+
+
+procedure newAccessDB(Sender: TObject);
+var
+  AccessApp: Variant;
+begin
+  AccessApp:= CreateOleObject('Access.Application');
+  AccessApp.NewCurrentDatabase(exepath+'examples\max111testdb.mdb');
+  AccessApp:= Unassigned;
+end;
+
+procedure AdduserintodatabaseSqlServer(Sender: TObject);
+var ADOCommand1: TADOCommand;
+begin
+  ADOCommand1.CommandText := 'Use DataBaseName';
+  //7ADOCommand1.Execute;
+  ADOCommand1.CommandText := 'Exec SP_AddUser ' + QuotedStr('Username');
+  //ADOCommand1.Execute;
+  with TObject.create do begin
+          //classnameis
+           //writeln('classname '+classname)
+           instancesize
+           cleanupinstance
+           //getinterface
+         end;
+        
+end;
+
+function ConnectToADODB(var Query: TADOQuery; ConnectStr: String): Boolean;
+begin
+  Query.Connection:= TADOConnection.Create(nil);
+  Query.Connection.LoginPrompt := True;
+  Query.Connection.ConnectionString := ConnectStr;
+  Query.Connection.Open('',''); //UserID : WideString; const Password
+  result:= Query.Connection.Connected;
+end;
+
+procedure ShowEOleException(AExc: EOleException; aQuery: String);
+var
+  ErrShowFrm: TForm;
+  Memo: TMemo;
+begin
+  ErrShowFrm:= TForm.Create(NIL);
+  ErrShowFrm.Position:= poScreenCenter;
+  ErrShowFrm.Width:= 640;
+  ErrShowFrm.Height:= 480;
+  Memo:= TMemo.Create(ErrShowFrm);
+  Memo.Parent:= ErrShowFrm;
+  Memo.Align:= alClient; //ErrShowFrm.Align;
+
+  Memo.Lines.Clear;
+  if assigned(AExc) then begin 
+    Memo.Lines.Add('Message: '+ AExc.Message);
+     Memo.Lines.Add('   Source: '+ AExc.Source);
+     Memo.Lines.Add('   Source: '+ AExc.helpFile);
+     //Memo.Lines.Add('   ClassName: ' + AExc.ClassName);
+     Memo.Lines.Add('   Error Code: '+ IntToStr(AExc.ErrorCode));
+  end;
+  Memo.Lines.Add('   Query: ' + aQuery);
+  ErrShowFrm.ShowModal;
+  Memo.Free;
+  ErrShowFrm.Free;
+end;
+
+procedure ShowHTML_in_Richedit(afrm: TForm; aMemo: TRichedit);
+begin
+  aFrm:= TForm.Create(NIL);
+  aFrm.Position:= poScreenCenter;
+  aFrm.Width:= 640;
+  aFrm.Height:= 480;
+  aMemo:= TRichedit.Create(aFrm);
+  aMemo.Parent:= aFrm;
+  aMemo.Align:= alClient; //ErrShowFrm.Align;
+
+  aMemo.Lines.Clear;
+  aMemo.Lines.Add('   590_HTML_to_RTF.txt');
+  afrm.Show;
+  //aMemo.Free;
+  //ErrShowFrm.Free;
+end;
+
+procedure UpdateBlobProcess(Sender: TObject);
+var
+  Query: TADOQuery;
+  ms: TMemoryStream;
+  ConnectStr: String;
+begin
+  ms := TMemoryStream.Create;
+  ms.LoadFromFile('d:\a.txt');
+  Query := TADOQuery.Create(nil);
+
+  // You must connect to AccessDB first.
+  // See: Query.Connection, TADOConection or Query.ConnectionString
+
+  //my function to connect to DB
+  ConnectStr := 'Provider=Microsoft.Jet.OLEDB.4.0;' + // provider for Access2000
+                'Data Source=C:\db1.mdb;' + // databasefile
+                'Mode=ReadWrite|Share Deny None;' + // set to ReadWrite
+                'Persist Security Info=False';
+  if not ConnectToADODB(Query, ConnectStr) then
+   ShowMessage('Connecting to DB failed.');
+
+  // data is my row and email the table
+  UpdateBlob(Query.Connection, 'blobfieldname', 'Tabelle1', 'id=1', ms);
+  ms.Free;
+
+  // disconnect from DB
+  Query.Connection.Close;
+
+  Query.Free;
+end;
+
+procedure ObjTest;
+begin
+ with TObject.create do begin
+          //classnameis
+           //writeln('classname '+classname)
+           writeln('instancesize '+itoa(instancesize))
+           cleanupinstance
+           Free;
+           //getinterface
+         end;
+ end;
+ 
+
+function SaveToMHT(const AUrl, AFileName: string;
+  AShowErrorMessage: Boolean): Boolean;
+var
+  oMSG, oConfig: OleVariant;
+  sFileName: string;
+  Retvar: Boolean; 
+begin
+  sFileName := ChangeFileExt(AFileName, '.mht');
+  //DeleteFile(AnsiChar(sFileName));   
+  try
+    oConfig := CreateOleObject('CDO.Configuration');
+    oMSG    := CreateOleObject('CDO.Message');
+    oMSG.Configuration := oConfig;
+    oMSG.CreateMHTMLBody(AUrl);
+    oMSG.GetStream.SaveToFile(sFileName);
+    Retvar := True;
+  except
+    //on E: Exception do 
+    begin
+      if AShowErrorMessage then MessageDlg('E.Message', mtError, [mbOK], 0);
+      Retvar := False;
+    end;
+  end;   
+  oMSG    := VarNull;
+  oConfig := VarNull;   
+  Result  := Retvar;
+end;
+
+
+
+
+
+Function IntToBase32(Numb: Longint): String;
+var numlett: string;
+begin
+  numlett:= NUMBERS+LETTERS;
+  Result:= '';
+  for It:= 0 to 4 do begin
+    Insert(numlett[(Numb And 31)+1], Result, 1);
+    Numb:= Numb Shr 5;
+  end;
+end;
+
+Function IntToBase32X(Numb: Longint): String;
+begin
+  Result:= '';
+  for It:= 0 to 4 do begin
+    Insert(NUMBLETTS[(Numb And 31)+1], Result, 1);
+    Numb:= Numb Shr 5;
+  end;
+end;
+
+function CountPos(const subtxt: string; Text: string): Integer;
+begin
+  if (Length(subtxt)= 0) Or (Length(Text)= 0) Or (Pos(subtxt,Text)= 0) then
+    result:= 0
+  else
+    result:= (Length(Text)- Length(StringReplace(Text,subtxt,'',
+      [rfReplaceAll]))) div Length(subtxt);
+end;
+
+ var
+  aFrm: TForm;
+  aMemo: TRichEdit;
+
+
+Begin  //main
+ writeln('IntToBase32 of 1000: '+IntToBase32(1000))
+ writeln('IntToBase32 of 1000: '+IntToBase32X(1000))
+ writeln('CountPos: '+itoa(CountPos('max','this is max of maXbox a max numbermax')))
+ PrintF('CountPos: %d',[CountPos('max','this is max of maXbox a max numbermax')])
+ Reverseplay(exepath+'examples\maxbox.wav')
+ //newAccessDB(self);
+ //ADOConnectionString(0,'',sr)
+ ShowEOleException(nil,'this test string')
+ ObjTest;
+ 
+ //procedure HTMLtoRTF(html: string; var rtf: TRichedit);
+ 
+  //ShowHTML_in_Richedit(afrm, amemo);
+  sr:= LoadFileAsString(Exepath+'Examples\maxboxnews.htm')
+  //writeln(sr)
+  //HTMLtoRTF(LoadFileAsString(Exepath+'Examples\maxboxnews.htm'), aMemo);
+  
+  aFrm:= TForm.Create(NIL);
+  afrm.SetBounds(10,10,600,800)
+  afrm.Caption:= 'mX EReader 3'
+  amemo:= TRichedit.create(self);
+  amemo.parent:= afrm;
+  aMemo.Align:= alClient; //ErrShowFrm.Align;
+
+  HTMLtoRTF(sr, aMemo);
+  afrm.show;
+  
+  //aMemo.Free;
+  //aFrm.Release;
+
+ 
+End. 
+     
+
+Doc: 
+Ref:
+
+//############################################################################
+// Archimedes Spiral App
+//############################################################################
+
+unit ArchSpiralMain;
+
+interface
+
+uses
+  w3system, w3components, w3ctrls, w3application, w3game, w3gameapp,
+  w3polygons, w3inet, w3graphics;
+
+type
+  TApplication = class(TW3CustomGameApplication)
+  private
+    FValueA: Float;
+    FValueB: Float;
+    FWait: Boolean;
+    procedure HandleClick(Sender:TObject);
+  protected
+    procedure ApplicationStarting; override;
+    procedure ApplicationClosing; override;
+    procedure PaintView(Canvas: TW3Canvas); override;
+  end;
+
+implementation
+
+//############################################################################
+// TApplication
+//############################################################################
+
+procedure TApplication.ApplicationStarting;
+begin
+  inherited;
+
+  FValueA := 3.0;
+  FValueB := 1.4;
+
+  GameView.OnClick := Self.HandleClick;
+
+  // Initialize refresh interval, set this to 1 for optimal speed
+  GameView.Delay := 10;
+ 
+  // Start the redraw-cycle with framecounter active
+  // Note: the framecounter impacts rendering speed. Disable
+  // the framerate for maximum speed (false)
+  GameView.StartSession(true);
+end;
+
+procedure TApplication.ApplicationClosing;
+begin
+  GameView.EndSession;
+  inherited;
+end;
+
+procedure TApplication.HandleClick(Sender: TObject);
+begin
+  FWait := not FWait;
+end;
+
+// Note: In a real live game you would try to cache as much
+// info as you can. Typical tricks are: 
+//   1: Only get the width/height when resized
+//   2: Pre-calculate strings, especially RGB/RGBA values
+//   3: Only redraw what has changed, avoid a full repaint
+// The code below is just to get you started
+
+procedure TApplication.PaintView(Canvas: TW3Canvas);
+var
+  cx, cy: Integer;
+  i: Integer;
+  angle: Float;
+  x, y: Float;
+begin
+  if FWait then
+    exit;
+
+  FValueB := FValueB + 0.001;
+
+  // Clear background
+  Canvas.FillStyle := 'rgba(0,0,99,0.08)';
+  Canvas.FillRectF(0, 0, GameView.Width, GameView.Height);
+
+  // Draw our framerate on the screen
+//  Canvas.font := '10pt verdana';
+//  Canvas.FillStyle := 'rgb(255,255,255)';
+//  Canvas.FillTextF('FPS:' + IntToStr(GameView.FrameRate) + ' / ' + floatToStr(FbValue) ,10,20,MAX_INT);
+
+  cx := GameView.width div 2;
+  cy := GameView.Height div 2;
+  Canvas.BeginPath;
+
+  for i := 42 downto 0 do
+  begin
+    angle := FValueB * i;
+    x := cx + (FValueA + FValueB * angle) * cos(angle);
+    y := cy + (FValueA + FValueB * angle) * sin(angle);
+    if i = 42 then Canvas.MoveToF(x, y) else Canvas.LineToF(x,y);
+  end;
+
+  Canvas.StrokeStyle := '#FFF';
+  Canvas.Stroke;
+end;
+
+end.
+
+  RegisterMethod('Constructor Create(AOwner: TComponent)');
+  RegisterConstructor(@TJvMail.Create, 'Create');
+ 
+   RegisterMethod('Procedure Free');
+   RegisterMethod(@TJvMail.Destroy, 'Free');
+   
+----app_template_loaded_code----

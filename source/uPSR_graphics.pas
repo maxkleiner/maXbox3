@@ -403,6 +403,8 @@ begin
 end;
 
 procedure TBitmapTransparentColor_R(Self: TBitmap; var T: TColor); begin T := Self.TransparentColor; end;
+procedure TBitmapTransparentColor_W(Self: TBitmap; const T:TColor); begin Self.TransparentColor:= T; end;
+
 {$IFNDEF CLX}
 {$IFNDEF FPC}
 procedure TBitmapIgnorePalette_W(Self: TBitmap; const T: Boolean); begin Self.IgnorePalette := T; end;
@@ -495,7 +497,7 @@ begin
     RegisterPropertyHelper(@TBitmapIgnorePalette_R,@TBitmapIgnorePalette_W,'IgnorePalette');
 {$ENDIF}
 {$ENDIF}
-    RegisterPropertyHelper(@TBitmapTransparentColor_R,nil,'TransparentColor');
+    RegisterPropertyHelper(@TBitmapTransparentColor_R,@TBitmapTransparentColor_W,'TransparentColor');
     RegisterPropertyHelper(@TBitmapTransparentMode_R,@TBitmapTransparentMode_W,'TransparentMode');
     RegisterPropertyHelper(@TBitmapMaskHandle_R,@TBitmapMaskHandle_W,'MaskHandle');
     RegisterPropertyHelper(@TBitmapHandleType_R,@TBitmapHandleType_W,'HandleType');

@@ -5,6 +5,8 @@ and updated by NP. v/d Spek and George Birbilis.
 Source Code from Carlo Kok has been used to implement various sections of
 UnitParser. Components of ROPS are used in the construction of UnitParser,
 code implementing the class wrapper is taken from Carlo Kok's conv utility
+  function  Read( var Buffer; Count: Longint): Longint; override;
+
 
 }
 interface
@@ -55,10 +57,12 @@ end;
 procedure SIRegister_TDesalinationWriteStream(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TStream', 'TDesalinationWriteStream') do
-  with CL.AddClassN(CL.FindClass('TStream'),'TDesalinationWriteStream') do
-  begin
+  with CL.AddClassN(CL.FindClass('TStream'),'TDesalinationWriteStream') do begin
     RegisterProperty('FreshwaterStream', 'TStream', iptrw);
     RegisterProperty('SaltVolume', 'integer', iptrw);
+     RegisterMethod('function Read(var Buffer: string; Count : longint) : longint;');
+    RegisterMethod('function Seek(Offset : int64; Origin : TSeekOrigin) : longint;');
+    RegisterMethod('function Write(const Buffer: string; Count : longint) : longint;');
   end;
 end;
 
@@ -214,9 +218,11 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TDesalinationWriteStream(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TDesalinationWriteStream) do
-  begin
-    RegisterPropertyHelper(@TDesalinationWriteStreamFreshwaterStream_R,@TDesalinationWriteStreamFreshwaterStream_W,'FreshwaterStream');
+  with CL.Add(TDesalinationWriteStream) do begin
+   RegisterMethod(@TDesalinationWriteStream.Read, 'Read');
+    RegisterMethod(@TDesalinationWriteStream.Seek, 'Seek');
+     RegisterMethod(@TDesalinationWriteStream.Write, 'Write');
+        RegisterPropertyHelper(@TDesalinationWriteStreamFreshwaterStream_R,@TDesalinationWriteStreamFreshwaterStream_W,'FreshwaterStream');
     RegisterPropertyHelper(@TDesalinationWriteStreamSaltVolume_R,@TDesalinationWriteStreamSaltVolume_W,'SaltVolume');
   end;
 end;

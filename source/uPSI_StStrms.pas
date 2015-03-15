@@ -1,6 +1,6 @@
 unit uPSI_StStrms;
 {
-  SysTools4  , add free methods  , streamreader
+  SysTools4  , add free methods  , streamreader  , seek+write
 }
 interface
  
@@ -59,6 +59,13 @@ begin
   with CL.AddClassN(CL.FindClass('TStream'),'TStMemoryMappedFile') do begin
     RegisterMethod('Constructor Create( const FileName : string; MaxSize : Cardinal; ReadOnly : Boolean; SharedData : Boolean)');
     RegisterMethod('Procedure Free');
+    RegisterMethod('function Read(var Buffer: string; Count : longint) : longint;');
+    RegisterMethod('function Seek(Offset : longint; Origin : word) : longint;');
+    RegisterMethod('function Write(const Buffer: string; Count : longint) : longint;');
+    { function Read(var Buffer; Count : longint) : longint; override;
+      function Seek(Offset : longint; Origin : word) : longint; override;
+      function Write(const Buffer; Count : longint) : longint; override;
+     }
     RegisterProperty('DataSize', 'Cardinal', iptr);
     RegisterProperty('MaxSize', 'Cardinal', iptr);
     RegisterProperty('Position', 'Cardinal', iptr);
@@ -97,6 +104,9 @@ begin
   with CL.AddClassN(CL.FindClass('TStream'),'TStBufferedStream') do begin
     RegisterMethod('Constructor Create( aStream : TStream)');
     RegisterMethod('Procedure Free');
+   RegisterMethod('function Read(var Buffer: string; Count : longint) : longint;');
+    RegisterMethod('function Seek(Offset : longint; Origin : word) : longint;');
+    RegisterMethod('function Write(const Buffer: string; Count : longint) : longint;');
     RegisterMethod('Constructor CreateEmpty');
     RegisterMethod('Procedure SetSize( NewSize : longint)');
     RegisterProperty('FastSize', 'longint', iptr);
@@ -194,7 +204,10 @@ begin
   with CL.Add(TStMemoryMappedFile) do begin
     RegisterConstructor(@TStMemoryMappedFile.Create, 'Create');
     RegisterMethod(@TStMemoryMappedFile.Destroy, 'Free');
-    RegisterPropertyHelper(@TStMemoryMappedFileDataSize_R,nil,'DataSize');
+     RegisterMethod(@TStMemoryMappedFile.Read, 'Read');
+    RegisterMethod(@TStMemoryMappedFile.Seek, 'Seek');
+     RegisterMethod(@TStMemoryMappedFile.Write, 'Write');
+      RegisterPropertyHelper(@TStMemoryMappedFileDataSize_R,nil,'DataSize');
     RegisterPropertyHelper(@TStMemoryMappedFileMaxSize_R,nil,'MaxSize');
     RegisterPropertyHelper(@TStMemoryMappedFilePosition_R,nil,'Position');
     RegisterPropertyHelper(@TStMemoryMappedFileReadOnly_R,nil,'ReadOnly');
@@ -231,7 +244,10 @@ begin
     RegisterConstructor(@TStBufferedStream.Create, 'Create');
     RegisterConstructor(@TStBufferedStream.CreateEmpty, 'CreateEmpty');
     RegisterMethod(@TStBufferedStream.Destroy, 'Free');
-    //RegisterMethod(@TStBufferedStream.SetSize, 'SetSize');
+     RegisterMethod(@TStBufferedStream.Read, 'Read');
+    RegisterMethod(@TStBufferedStream.Seek, 'Seek');
+     RegisterMethod(@TStBufferedStream.Write, 'Write');
+      //RegisterMethod(@TStBufferedStream.SetSize, 'SetSize');
     RegisterPropertyHelper(@TStBufferedStreamFastSize_R,nil,'FastSize');
     RegisterPropertyHelper(@TStBufferedStreamStream_R,@TStBufferedStreamStream_W,'Stream');
     RegisterPropertyHelper(@TStBufferedStreamOnSetStreamSize_R,@TStBufferedStreamOnSetStreamSize_W,'OnSetStreamSize');

@@ -64,6 +64,7 @@ begin
      RegisterProperty('SORTED', 'Boolean', iptrw);
      RegisterProperty('Visible', 'Boolean', iptrw);
      RegisterProperty('TEXT', 'String', iptrw);
+   RegisterPublishedProperties;
      RegisterProperty('FileAttributes', 'TcyFileAttributes', iptrw);
      RegisterProperty('FromPath', 'string', iptrw);
      RegisterProperty('MaskInclude', 'tstrings', iptrw);

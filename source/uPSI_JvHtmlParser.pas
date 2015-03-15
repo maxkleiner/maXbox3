@@ -81,9 +81,9 @@ end;
 procedure SIRegister_TTagInfoList(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TList', 'TTagInfoList') do
-  with CL.AddClassN(CL.FindClass('TList'),'TTagInfoList') do
-  begin
+  with CL.AddClassN(CL.FindClass('TList'),'TTagInfoList') do begin
     RegisterMethod('Procedure AddValue( const Value : TTagInfo)');
+    RegisterMethod('procedure Clear;');
   end;
 end;
 
@@ -221,9 +221,9 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TTagInfoList(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TTagInfoList) do
-  begin
+  with CL.Add(TTagInfoList) do begin
     RegisterMethod(@TTagInfoList.AddValue, 'AddValue');
+    RegisterMethod(@TTagInfoList.Clear, 'Clear');
   end;
 end;
 

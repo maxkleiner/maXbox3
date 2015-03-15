@@ -6,6 +6,7 @@ uses
   uPSRuntime, uPSUtils;
 
   //add  RIRegister_TComponentEnumerator
+  //add classname
 
 
 procedure RIRegisterTObject(CL: TPSRuntimeClassImporter);
@@ -43,7 +44,8 @@ begin
     RegisterConstructor(@TObject.Create, 'CREATE');
     RegisterMethod(@TObject.Free, 'FREE');
     RegisterMethod(@TObject.cleanupInstance, 'CleanUpInstance');
-    //RegisterVirtualAbstractMethod(TObject,@TObject.ClassName, 'ClassName');
+    RegisterMethod(@TObject.GetInterface, 'GetInterface');
+     //RegisterVirtualAbstractMethod(TObject,@TObject.ClassName, 'ClassName');
     RegisterMethod(@TObject.ClassName, 'ClassName');
     RegisterMethod(@TObject.ClassNameIs, 'ClassNameIs');
     RegisterMethod(@TObject.InstanceSize, 'InstanceSize');

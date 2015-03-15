@@ -12,6 +12,7 @@ uses
     add ClassName & ClassType by max
     TRect has 2 type defs  , TObject as 3 class functions 3.9.3
     Tpersistent with Free  add TComponentEnumerator ,
+    tobject classname shortstring!
 
 }
 
@@ -40,13 +41,17 @@ end;
 
 procedure SIRegisterTObject(CL: TPSPascalCompiler);
 begin
-  with Cl.AddClassN(nil, 'TObject') do begin
+  with Cl.AddClassN(NIL, 'TObject') do begin
     RegisterMethod('constructor Create');
     RegisterMethod('procedure Free');
     RegisterMethod('procedure CleanupInstance');
-    RegisterMethod('class function ClassName: ShortString');
-    RegisterMethod('class function ClassNameIs(const Name: string): Boolean');
-    RegisterMethod('class function InstanceSize: Longint');
+    RegisterMethod('function GetInterface(const IID: TGUID; out Obj): Boolean;');
+    //RegisterMethod('class function ClassName: ShortString');
+    //RegisterMethod('class function ClassNameIs(const Name: string): Boolean');
+    //RegisterMethod('class function InstanceSize: Longint');
+    RegisterMethod('function ClassName: ShortString');
+    RegisterMethod('function ClassNameIs(const Name: string): Boolean');
+    RegisterMethod('function InstanceSize: Longint');
   end;
 end;
 

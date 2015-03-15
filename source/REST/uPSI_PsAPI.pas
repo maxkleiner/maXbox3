@@ -525,6 +525,140 @@ begin
   end;
 end;
 
+function getFormRes(classname: string): string;
+var
+  rs: TResourceStream;
+  ms: TMemoryStream;
+begin
+  rs := TResourceStream.Create(HInstance, ClassName, RT_RCDATA);
+  try
+    ms := TMemoryStream.Create;
+    try
+      ObjectBinaryToText(rs, ms);
+      ms.Seek(0, 0);
+       if ms.Size > 0 then begin
+        SetLength(result, ms.Size);
+      Move(mS.Memory^, result[1], mS.Size);
+    end;
+    finally
+      ms.Free;
+    end;
+    //QS_ALLINPUT
+  finally
+    rs.Free;
+  end;
+end;
+
+function RoundTime(ADate: string; Rounding: Integer; bRound: Boolean): string;
+var
+  Year, Month, Day, Hour, Min, Sec, MSec: Word;
+  tmpDate: TDateTime;
+  Res, Diff: string;
+  M: integer;
+begin
+  tmpDate:= StrToDateTime(ADate);
+  DecodeTime(tmpDate, Hour, Min, Sec, MSec);
+  if (Rounding > 0) and (bRound = True) then
+  begin
+    if Min mod Rounding = 0 then
+      Res:= IntToStr(Min)
+    else
+      Res:= IntToStr(Round(Min / Rounding) * Rounding);
+    M:= StrToInt(Copy(ADate, Length(ADate) - 1, 2));
+    Diff := IntToStr(StrToInt(Res) - M);
+    if Copy(Diff, 1, 1) = '-' then  begin
+      Diff:= Copy(Diff, 2, Length(Diff) - 1);
+      Result:= FormatDateTime('dd.mm.yy hh:mm',(tmpDate-StrToTime('00:00'+ Diff)));
+    end
+    else
+      Result:= FormatDateTime('dd.mm.yy hh:mm',(tmpDate+StrToTime('00:00'+ Diff)));
+  end
+  else
+    Result:= ADate;
+end;
+
+type
+  PNetResourceArray = ^TNetResourceArray;
+  TNetResourceArray = array[0..100] of TNetResource;
+
+
+function CreateNetResourceList(ResourceType: DWord;
+                              NetResource: PNetResource;
+                              out Entries: DWord;
+                              out List: PNetResourceArray): Boolean;
+var
+  EnumHandle: THandle;
+  BufSize: DWord;
+  Res: DWord;
+begin
+  Result := False;
+  List := Nil;
+  Entries := 0;
+  if WNetOpenEnum(RESOURCE_GLOBALNET,
+                  ResourceType,
+                  0,
+                  NetResource,
+                  EnumHandle) = NO_ERROR then begin
+    try
+      BufSize := $4000;  // 16 kByte
+      GetMem(List, BufSize);
+      try
+        repeat
+          Entries := DWord(-1);
+          FillChar(List^, BufSize, 0);
+          Res := WNetEnumResource(EnumHandle, Entries, List, BufSize);
+          if Res = ERROR_MORE_DATA then
+          begin
+            ReAllocMem(List, BufSize);
+          end;
+        until Res <> ERROR_MORE_DATA;
+
+        Result := Res = NO_ERROR;
+        if not Result then
+        begin
+          FreeMem(List);
+          List := Nil;
+          Entries := 0;
+        end;
+      except
+        FreeMem(List);
+        raise;
+      end;
+    finally
+      WNetCloseEnum(EnumHandle);
+    end;
+  end;
+end;
+
+procedure ScanNetworkResources(ResourceType, DisplayType: DWord; List: TStrings);
+
+procedure ScanLevel(NetResource: PNetResource);
+var
+  Entries: DWord;
+  NetResourceList: PNetResourceArray;
+  i: Integer;
+begin
+  if CreateNetResourceList(ResourceType, NetResource, Entries, NetResourceList) then try
+    for i := 0 to Integer(Entries) - 1 do
+    begin
+      if (DisplayType = RESOURCEDISPLAYTYPE_GENERIC) or
+        (NetResourceList[i].dwDisplayType = DisplayType) then begin
+        List.AddObject(NetResourceList[i].lpRemoteName,
+                      Pointer(NetResourceList[i].dwDisplayType));
+      end;
+      if (NetResourceList[i].dwUsage and RESOURCEUSAGE_CONTAINER) <> 0 then
+        ScanLevel(@NetResourceList[i]);
+    end;
+  finally
+    FreeMem(NetResourceList);
+  end;
+end;
+
+begin
+  ScanLevel(Nil);
+end;
+
+
 
 
 (* === compile-time registration functions === *)
@@ -567,6 +701,88 @@ begin
   Gmtoffset     : string;
   Isdst         : string;
  end; }
+
+  CL.AddTypeS('MakeIntResourceA', 'PChar');
+  //CL.AddTypeS('MakeIntResourceW', 'PWideChar');
+  CL.AddTypeS('MakeIntResource', 'MakeIntResourceA');
+
+
+  CL.AddConstantN('RT_CURSOR','LongInt').SetInt(( 1 ));
+ CL.AddConstantN('RT_BITMAP','LongInt').SetInt(  ( 2 ));
+ CL.AddConstantN('RT_ICON','LongInt').SetInt(  ( 3 ));
+ CL.AddConstantN('RT_MENU','LongInt').SetInt(  ( 4 ));
+ CL.AddConstantN('RT_DIALOG','LongInt').SetInt(  ( 5 ));
+ CL.AddConstantN('RT_STRING','LongInt').SetInt(  ( 6 ));
+ CL.AddConstantN('RT_FONTDIR','LongInt').SetInt(  ( 7 ));
+ CL.AddConstantN('RT_FONT','LongInt').SetInt(  ( 8 ));
+ CL.AddConstantN('RT_ACCELERATOR','LongInt').SetInt(  ( 9 ));
+ CL.AddConstantN('RT_ACCELERATOR','LongInt').SetInt(  ( 9 ));
+ CL.AddConstantN('RT_RCDATA','LongInt').SetInt(  ( 10 ));
+// CL.AddConstantN('RT_MESSAGETABLE','LongInt').SetInt( MakeIntResource ( 11 ));
+
+ CL.AddConstantN('RT_MESSAGETABLE','LongInt').SetInt(  ( 11 ));
+ CL.AddConstantN('DIFFERENCE','LongInt').SetInt( 11);
+ CL.AddConstantN('RT_VERSION','LongInt').SetInt(  ( 16 ));
+ CL.AddConstantN('RT_DLGINCLUDE','LongInt').SetInt(  ( 17 ));
+ CL.AddConstantN('RT_PLUGPLAY','LongInt').SetInt(  ( 19 ));
+ CL.AddConstantN('RT_VXD','LongInt').SetInt(  ( 20 ));
+ CL.AddConstantN('RT_ANICURSOR','LongInt').SetInt(  ( 21 ));
+ CL.AddConstantN('RT_ANIICON','LongInt').SetInt(  ( 22 ));
+  CL.AddConstantN('QS_KEY','LongWord').SetUInt( $0001);
+ CL.AddConstantN('QS_MOUSEMOVE','LongWord').SetUInt( $0002);
+ CL.AddConstantN('QS_MOUSEBUTTON','LongWord').SetUInt( $0004);
+ CL.AddConstantN('QS_POSTMESSAGE','LongWord').SetUInt( $0008);
+ CL.AddConstantN('QS_TIMER','LongWord').SetUInt( $0010);
+ CL.AddConstantN('QS_PAINT','LongWord').SetUInt( $0020);
+ CL.AddConstantN('QS_SENDMESSAGE','LongWord').SetUInt( $0040);
+ CL.AddConstantN('QS_HOTKEY','LongWord').SetUInt( $0080);
+ CL.AddConstantN('QS_ALLPOSTMESSAGE','LongWord').SetUInt( $0100);
+
+ CL.AddConstantN('RESOURCE_CONNECTED','LongInt').SetInt( 1);
+ CL.AddConstantN('RESOURCE_GLOBALNET','LongInt').SetInt( 2);
+ CL.AddConstantN('RESOURCE_REMEMBERED','LongInt').SetInt( 3);
+ CL.AddConstantN('RESOURCE_RECENT','LongInt').SetInt( 4);
+ CL.AddConstantN('RESOURCE_CONTEXT','LongInt').SetInt( 5);
+ CL.AddConstantN('RESOURCETYPE_ANY','LongInt').SetInt( 0);
+ CL.AddConstantN('RESOURCETYPE_DISK','LongInt').SetInt( 1);
+ CL.AddConstantN('RESOURCETYPE_PRINT','LongInt').SetInt( 2);
+ CL.AddConstantN('RESOURCETYPE_RESERVED','LongInt').SetInt( 8);
+ CL.AddConstantN('RESOURCETYPE_UNKNOWN','LongWord').SetUInt( DWORD ( $FFFFFFFF ));
+ CL.AddConstantN('RESOURCEUSAGE_CONNECTABLE','LongInt').SetInt( 1);
+ CL.AddConstantN('RESOURCEUSAGE_CONTAINER','LongInt').SetInt( 2);
+ CL.AddConstantN('RESOURCEUSAGE_NOLOCALDEVICE','LongInt').SetInt( 4);
+ CL.AddConstantN('RESOURCEUSAGE_SIBLING','LongInt').SetInt( 8);
+ CL.AddConstantN('RESOURCEUSAGE_ATTACHED','LongWord').SetUInt( $00000010);
+ CL.AddConstantN('RESOURCEUSAGE_RESERVED','LongWord').SetUInt( DWORD ( $80000000 ));
+ CL.AddConstantN('RESOURCEDISPLAYTYPE_GENERIC','LongWord').SetUInt( $00000000);
+ CL.AddConstantN('RESOURCEDISPLAYTYPE_DOMAIN','LongWord').SetUInt( $00000001);
+ CL.AddConstantN('RESOURCEDISPLAYTYPE_SERVER','LongWord').SetUInt( $00000002);
+ CL.AddConstantN('RESOURCEDISPLAYTYPE_SHARE','LongWord').SetUInt( $00000003);
+ CL.AddConstantN('RESOURCEDISPLAYTYPE_FILE','LongWord').SetUInt( $00000004);
+ CL.AddConstantN('RESOURCEDISPLAYTYPE_GROUP','LongWord').SetUInt( $00000005);
+ CL.AddConstantN('RESOURCEDISPLAYTYPE_NETWORK','LongWord').SetUInt( $00000006);
+ CL.AddConstantN('RESOURCEDISPLAYTYPE_ROOT','LongWord').SetUInt( $00000007);
+ CL.AddConstantN('RESOURCEDISPLAYTYPE_SHAREADMIN','LongWord').SetUInt( $00000008);
+ CL.AddConstantN('RESOURCEDISPLAYTYPE_DIRECTORY','LongWord').SetUInt( $00000009);
+ CL.AddConstantN('RESOURCEDISPLAYTYPE_TREE','LongWord').SetUInt( $0000000A);
+ CL.AddConstantN('RESOURCEDISPLAYTYPE_NDSCONTAINER','LongWord').SetUInt( $0000000B);
+ CL.AddConstantN('WAVE_FORMAT_PCM','LongInt').SetUInt(1);
+
+ (*const
+  {$EXTERNALSYM WAVE_FORMAT_PCM}
+  WAVE_FORMAT_PCM     = 1;
+   *)
+
+  //QS_MOUSE = (QS_MOUSEMOVE or QS_MOUSEBUTTON);
+  //{$EXTERNALSYM QS_INPUT}
+  //QS_INPUT = (QS_MOUSE or QS_KEY);
+  CL.AddConstantN('QS_MOUSE','LongWord').SetUInt(QS_MOUSEMOVE or QS_MOUSEBUTTON);
+  CL.AddConstantN('QS_INPUT','LongWord').SetUInt(QS_MOUSE or QS_KEY);
+  CL.AddConstantN('QS_ALLINPUT','LongWord').SetUInt(QS_INPUT or QS_POSTMESSAGE or QS_TIMER or QS_PAINT or QS_HOTKEY or QS_SENDMESSAGE);
+
+  // QS_ALLINPUT = (QS_INPUT or QS_POSTMESSAGE or QS_TIMER or QS_PAINT
+  //  or QS_HOTKEY or QS_SENDMESSAGE);
+
 
 
   CL.AddTypeS('TDLLVersionInfo', 'record cbsize, dwMajorVersion, dwMinorVersion, dwBuildNumber, dwPlatformID: DWord; end');
@@ -650,8 +866,24 @@ CL.AddDelphiFunction('Function SetColorSpace( DC : HDC; ColorSpace : HCOLORSPACE
  CL.AddDelphiFunction('Function SetICMProfile( DC : HDC; Name : PChar) : BOOL');
  //CL.AddDelphiFunction('Function ColorMatchToTarget( DC : HDC; Target : HDC; Action : DWORD) : BOOL');
  CL.AddDelphiFunction('procedure GetGeoInfo(const IpAddress : string;var GeoInfo :TGeoInfo; const UrlGeoLookupInfo: string)');
+  CL.AddDelphiFunction('Function VkKeyScan( ch : Char) : SHORT');
+ CL.AddDelphiFunction('Function VkKeyScanEx( ch : Char; dwhkl : HKL) : SHORT');
+CL.AddDelphiFunction('Function GetKeyboardType( nTypeFlag : Integer) : Integer');
+ CL.AddDelphiFunction('Function ToAscii( uVirtKey, uScanCode : UINT; const KeyState : TKeyboardState; lpChar : PChar; uFlags : UINT) : Integer');
+ CL.AddDelphiFunction('Function ToAsciiEx( uVirtKey : UINT; uScanCode : UINT; const KeyState : TKeyboardState; lpChar : PChar; uFlags : UINT; dwhkl : HKL) : Integer');
+ CL.AddDelphiFunction('Function ToUnicode( wVirtKey, wScanCode : UINT; const KeyState : TKeyboardState; var pwszBuff, cchBuff : Integer; wFlags : UINT) : Integer');
+  CL.AddDelphiFunction('Function GetKeyNameText( lParam : Longint; lpString : PChar; nSize : Integer) : Integer');
+  CL.AddDelphiFunction('function getFormRes(classname: string): string;');
+  CL.AddDelphiFunction('function RoundTime(ADate: string; Rounding: Integer; bRound: Boolean): string;');
+  CL.AddDelphiFunction('procedure ScanNetworkResources(ResourceType, DisplayType: DWord; List: TStrings);');
 
+ CL.AddDelphiFunction('Function IsDialogMessage( hDlg : HWND; var lpMsg : TMsg) : BOOL');
+ CL.AddDelphiFunction('Function MapDialogRect( hDlg : HWND; var lpRect : TRect) : BOOL');
+ CL.AddDelphiFunction('Function DlgDirList( hDlg : HWND; lpPathSpec : PChar; nIDListBox, nIDStaticPath : Integer; uFileType : UINT) : Integer');
+ CL.AddDelphiFunction('Function WinHelp( hWndMain : HWND; lpszHelp : PChar; uCommand : UINT; dwData : DWORD) : BOOL');
+ //CL.AddDelphiFunction('function RoundTime(ADate: string; Rounding: Integer; bRound: Boolean): string;');
 
+      //makeintresource
  end;
 
 (* === run-time registration functions === *)
@@ -724,7 +956,22 @@ begin
  S.RegisterDelphiFunction(@SetICMProfile, 'SetICMProfile', CdStdCall);
  //S.RegisterDelphiFunction(@ColorMatchToTarget, 'ColorMatchToTarget', CdStdCall);
  S.RegisterDelphiFunction(@GetGeoInfo, 'GetGeoInfo', CdRegister);
+  S.RegisterDelphiFunction(@GetKeyNameText, 'GetKeyNameText', CdStdCall);
+ S.RegisterDelphiFunction(@GetKeyboardType, 'GetKeyboardType', CdStdCall);
+ S.RegisterDelphiFunction(@ToAscii, 'ToAscii', CdStdCall);
+ S.RegisterDelphiFunction(@ToAsciiEx, 'ToAsciiEx', CdStdCall);
+ S.RegisterDelphiFunction(@ToUnicode, 'ToUnicode', CdStdCall);
+ S.RegisterDelphiFunction(@OemKeyScan, 'OemKeyScan', CdStdCall);
+ S.RegisterDelphiFunction(@VkKeyScan, 'VkKeyScan', CdStdCall);
+ S.RegisterDelphiFunction(@VkKeyScanEx, 'VkKeyScanEx', CdStdCall);
+ S.RegisterDelphiFunction(@getFormRes, 'getFormRes', CdRegister);
+ S.RegisterDelphiFunction(@RoundTime, 'RoundTime', CdRegister);
+ S.RegisterDelphiFunction(@ScanNetworkResources, 'ScanNetworkResources', CdRegister);
 
+  S.RegisterDelphiFunction(@IsDialogMessage, 'IsDialogMessage', CdStdCall);
+ S.RegisterDelphiFunction(@MapDialogRect, 'MapDialogRect', CdStdCall);
+ S.RegisterDelphiFunction(@DlgDirList, 'DlgDirList', CdStdCall);
+ S.RegisterDelphiFunction(@WinHelp, 'WinHelp', CdStdCall);
 
 end;
 

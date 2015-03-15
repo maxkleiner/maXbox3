@@ -831,8 +831,8 @@ CL.AddDelphiFunction('Function CreateWindowEx( dwExStyle : DWORD; lpClassName : 
  CL.AddDelphiFunction('Function GetCapture : HWND');
  CL.AddDelphiFunction('Function SetCapture( hWnd : HWND) : HWND');
  CL.AddDelphiFunction('Function ReleaseCapture : BOOL');
-  CL.AddDelphiFunction('Function MsgWaitForMultipleObjects( nCount : DWORD; var pHandles, fWaitAll : BOOL; dwMilliseconds, dwWakeMask : DWORD) : DWORD');
- CL.AddDelphiFunction('Function MsgWaitForMultipleObjectsEx( nCount : DWORD; var pHandles, dwMilliseconds, dwWakeMask, dwFlags : DWORD) : DWORD');
+ CL.AddDelphiFunction('Function MsgWaitForMultipleObjects( nCount : DWORD; var pHandles: integer; fWaitAll : BOOL; dwMilliseconds, dwWakeMask : DWORD) : DWORD');
+ CL.AddDelphiFunction('Function MsgWaitForMultipleObjectsEx( nCount : DWORD; var pHandles: integer; dwMilliseconds, dwWakeMask, dwFlags : DWORD) : DWORD');
 
   CL.AddDelphiFunction('Function RedrawWindow( hWnd : HWND; lprcUpdate : TRect; hrgnUpdate : HRGN; flags : UINT) : BOOL');
 CL.AddDelphiFunction('Function LockWindowUpdate( hWndLock : HWND) : BOOL');

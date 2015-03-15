@@ -53,6 +53,7 @@ begin
   //with RegClassS(CL,'TStComponent', 'TStExceptionLog') do
   with CL.AddClassN(CL.FindClass('TStComponent'),'TStExceptionLog') do begin
     RegisterMethod('Constructor Create( Owner : TComponent)');
+    RegisterMethod('Procedure Free');
     RegisterMethod('Procedure DoExceptionFilter( E : Exception; var PutInLog : Boolean)');
     RegisterProperty('Enabled', 'Boolean', iptrw);
     RegisterProperty('FileName', 'TFileName', iptrw);
@@ -106,10 +107,10 @@ begin T := Self.Enabled; end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStExceptionLog(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStExceptionLog) do
-  begin
+  with CL.Add(TStExceptionLog) do begin
     RegisterConstructor(@TStExceptionLog.Create, 'Create');
-    RegisterVirtualMethod(@TStExceptionLog.DoExceptionFilter, 'DoExceptionFilter');
+      RegisterMethod(@TStExceptionLog.Destroy, 'Free');
+      RegisterVirtualMethod(@TStExceptionLog.DoExceptionFilter, 'DoExceptionFilter');
     RegisterPropertyHelper(@TStExceptionLogEnabled_R,@TStExceptionLogEnabled_W,'Enabled');
     RegisterPropertyHelper(@TStExceptionLogFileName_R,@TStExceptionLogFileName_W,'FileName');
     RegisterPropertyHelper(@TStExceptionLogRipInfo_R,@TStExceptionLogRipInfo_W,'RipInfo');

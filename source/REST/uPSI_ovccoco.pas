@@ -1,6 +1,6 @@
 unit uPSI_ovccoco;
 {
-  coco mac max parser
+  coco mac max parser  add free
 }
 interface
  
@@ -65,7 +65,8 @@ begin
     RegisterProperty('ErrorList', 'TList', iptrw);
     RegisterProperty('SourceStream', 'TMemoryStream', iptrw);
     RegisterMethod('Constructor Create( AOwner : TComponent)');
-    RegisterMethod('Procedure GetLine( var pos : Integer; var line : string; var eof : boolean)');
+      RegisterMethod('Procedure Free');
+      RegisterMethod('Procedure GetLine( var pos : Integer; var line : string; var eof : boolean)');
     RegisterMethod('Function LexName : string');
     RegisterMethod('Function LexString : string');
     RegisterMethod('Function LookAheadName : string');
@@ -87,7 +88,8 @@ begin
   //with RegClassS(CL,'TObject', 'TCocoRScanner') do
   with CL.AddClassN(CL.FindClass('TObject'),'TCocoRScanner') do begin
     RegisterMethod('Constructor Create');
-    RegisterMethod('Function CharAt( pos : longint) : char');
+      RegisterMethod('Procedure Free');
+      RegisterMethod('Function CharAt( pos : longint) : char');
     RegisterMethod('Function GetName( Symbol : TSymbolPosition) : string');
     RegisterMethod('Function GetString( Symbol : TSymbolPosition) : string');
     RegisterMethod('Procedure _Reset');
@@ -114,6 +116,7 @@ begin
   with CL.AddClassN(CL.FindClass('TObject'),'TCommentList') do begin
     RegisterMethod('Constructor Create');
     RegisterMethod('Procedure Clear');
+    RegisterMethod('Procedure Free');
     RegisterMethod('Procedure Add( const S : string; const aLine : integer; const aColumn : integer)');
     RegisterProperty('Comments', 'string integer', iptrw);
     SetDefaultPropery('Comments');
@@ -128,8 +131,7 @@ end;
 procedure SIRegister_TCommentItem(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TObject', 'TCommentItem') do
-  with CL.AddClassN(CL.FindClass('TObject'),'TCommentItem') do
-  begin
+  with CL.AddClassN(CL.FindClass('TObject'),'TCommentItem') do begin
     RegisterProperty('Comment', 'string', iptrw);
     RegisterProperty('Line', 'integer', iptrw);
     RegisterProperty('Column', 'integer', iptrw);
@@ -372,7 +374,8 @@ begin
     RegisterPropertyHelper(@TCocoRGrammarErrorList_R,@TCocoRGrammarErrorList_W,'ErrorList');
     RegisterPropertyHelper(@TCocoRGrammarSourceStream_R,@TCocoRGrammarSourceStream_W,'SourceStream');
     RegisterConstructor(@TCocoRGrammar.Create, 'Create');
-    RegisterMethod(@TCocoRGrammar.GetLine, 'GetLine');
+      RegisterMethod(@TCocoRGrammar.Destroy, 'Free');
+      RegisterMethod(@TCocoRGrammar.GetLine, 'GetLine');
     RegisterMethod(@TCocoRGrammar.LexName, 'LexName');
     RegisterMethod(@TCocoRGrammar.LexString, 'LexString');
     RegisterMethod(@TCocoRGrammar.LookAheadName, 'LookAheadName');
@@ -393,7 +396,8 @@ procedure RIRegister_TCocoRScanner(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TCocoRScanner) do begin
     RegisterConstructor(@TCocoRScanner.Create, 'Create');
-    RegisterMethod(@TCocoRScanner.CharAt, 'CharAt');
+      RegisterMethod(@TCocoRScanner.Destroy, 'Free');
+      RegisterMethod(@TCocoRScanner.CharAt, 'CharAt');
     RegisterMethod(@TCocoRScanner.GetName, 'GetName');
     RegisterMethod(@TCocoRScanner.GetString, 'GetString');
     RegisterMethod(@TCocoRScanner._Reset, '_Reset');
@@ -417,7 +421,8 @@ procedure RIRegister_TCommentList(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TCommentList) do begin
     RegisterConstructor(@TCommentList.Create, 'Create');
-    RegisterMethod(@TCommentList.Clear, 'Clear');
+      RegisterMethod(@TCommentList.Destroy, 'Free');
+      RegisterMethod(@TCommentList.Clear, 'Clear');
     RegisterMethod(@TCommentList.Add, 'Add');
     RegisterPropertyHelper(@TCommentListComments_R,@TCommentListComments_W,'Comments');
     RegisterPropertyHelper(@TCommentListLine_R,@TCommentListLine_W,'Line');

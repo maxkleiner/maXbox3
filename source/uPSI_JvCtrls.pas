@@ -66,6 +66,7 @@ begin
   with CL.AddClassN(CL.FindClass('TButton'),'TJvImgBtn') do begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
     RegisterMethod('Procedure Free');
+    RegisterMethod('Procedure Click');
     RegisterMethod('Procedure DrawButtonImage( ImageBounds : TRect)');
     RegisterMethod('Procedure DrawButtonFocusRect( const RectContent : TRect)');
     RegisterMethod('Procedure DrawButtonFrame( const DrawItemStruct : TDrawItemStruct; var RectContent : TRect)');
@@ -106,9 +107,42 @@ end;
 procedure SIRegister_TJvListBox(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TJvCustomListBox', 'TJvListBox') do
-  with CL.AddClassN(CL.FindClass('TJvCustomListBox'),'TJvListBox') do
-  begin
+  with CL.AddClassN(CL.FindClass('TJvCustomListBox'),'TJvListBox') do begin
     registerpublishedproperties;
+     RegisterProperty('Parent', 'TWinControl', iptrw);
+  RegisterProperty('HoverTime', 'Integer', iptrw);
+  RegisterProperty('LargeImages', 'TCustomImageList', iptrw);
+  RegisterProperty('Items', 'TStrings', iptrw);
+  RegisterProperty('Visible', 'boolean', iptrw);
+  RegisterProperty('ReadOnly', 'boolean', iptrw);
+  RegisterProperty('GridLines', 'boolean', iptrw);
+  RegisterProperty('Color', 'TColor', iptrw);
+  RegisterProperty('Checkboxes', 'boolean', iptrw);
+  RegisterProperty('Columns', 'Integer', iptrw);
+  RegisterProperty('ColumnClick', 'boolean', iptrw);
+  RegisterProperty('OnDblClick', 'TNotifyEvent', iptrw);
+  RegisterProperty('OnEnter', 'TNotifyEvent', iptrw);
+  RegisterProperty('OnExit', 'TNotifyEvent', iptrw);
+  RegisterProperty('PopupMenu', 'TPopupMenu', iptrw);
+  RegisterProperty('ONKEYDOWN', 'TKeyEvent', iptrw);
+  RegisterProperty('ONKEYPRESS', 'TKeyPressEvent', iptrw);
+  RegisterProperty('ONKEYUP', 'TKeyEvent', iptrw);
+  RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
+  RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
+   RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
+   RegisterProperty('ONCHANGE', 'TLVChangeEvent', iptrw);
+    RegisterProperty('MultiSelect', 'boolean', iptrw);
+  RegisterProperty('Enabled', 'boolean', iptrw);
+  RegisterProperty('FlatScrollBars', 'boolean', iptrw);
+  RegisterProperty('SmallImages', 'TCustomImageList', iptrw);
+  RegisterProperty('StateImages', 'TCustomImageList', iptrw);
+  RegisterProperty('ShowHint', 'boolean', iptrw);
+  RegisterProperty('Font', 'TFont', iptrw);
+  RegisterProperty('ItemIndex', 'integer', iptrw);
+  RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
+  RegisterProperty('BORDERWidth', 'integer', iptrw);
+  RegisterProperty('SortType', 'TSortType', iptrw);
+  RegisterProperty('IconOptions', 'TIconOptions', iptrw);
   end;
 end;
 
@@ -284,6 +318,7 @@ begin
   begin
     RegisterConstructor(@TJvImgBtn.Create, 'Create');
     RegisterMethod(@TJvImgBtn.Destroy, 'Free');
+    RegisterMethod(@TJvImgBtn.click, 'Click');
     RegisterMethod(@TJvImgBtn.DrawButtonImage, 'DrawButtonImage');
     RegisterMethod(@TJvImgBtn.DrawButtonFocusRect, 'DrawButtonFocusRect');
     RegisterMethod(@TJvImgBtn.DrawButtonFrame, 'DrawButtonFrame');

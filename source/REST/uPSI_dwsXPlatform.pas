@@ -96,10 +96,10 @@ end;
 procedure SIRegister_TMultiReadSingleWrite(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TOBJECT', 'TMultiReadSingleWrite') do
-  with CL.AddClassN(CL.FindClass('TOBJECT'),'TMultiReadSingleWrite') do
-  begin
+  with CL.AddClassN(CL.FindClass('TOBJECT'),'TMultiReadSingleWrite') do begin
     RegisterMethod('Constructor Create( forceFallBack : Boolean)');
-    RegisterMethod('Procedure BeginRead');
+      RegisterMethod('Procedure Free');
+      RegisterMethod('Procedure BeginRead');
     RegisterMethod('Procedure EndRead');
     RegisterMethod('Procedure BeginWrite');
     RegisterMethod('Procedure EndWrite');
@@ -282,10 +282,10 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TMultiReadSingleWrite(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TMultiReadSingleWrite) do
-  begin
+  with CL.Add(TMultiReadSingleWrite) do begin
     RegisterConstructor(@TMultiReadSingleWrite.Create, 'Create');
-    RegisterMethod(@TMultiReadSingleWrite.BeginRead, 'BeginRead');
+      RegisterMethod(@TMultiReadSingleWrite.Destroy, 'Free');
+      RegisterMethod(@TMultiReadSingleWrite.BeginRead, 'BeginRead');
     RegisterMethod(@TMultiReadSingleWrite.EndRead, 'EndRead');
     RegisterMethod(@TMultiReadSingleWrite.BeginWrite, 'BeginWrite');
     RegisterMethod(@TMultiReadSingleWrite.EndWrite, 'EndWrite');

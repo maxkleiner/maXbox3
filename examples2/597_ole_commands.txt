@@ -1,0 +1,511 @@
+PROGRAM OLE_Commands;
+
+//////////////////////////////////////////////////////////////////////
+//  #sign:Administrator: PC08: 14/03/2015 10:21:46 AM 
+//  Purpose: calls several time delays                              //
+//  #path>ples\E:\maxbox3\mXGit39991\maxbox3\examples\les\          //
+//  Lines of Code #locs:365
+//////////////////////////////////////////////////////////////////////
+
+{uses ComObj;}
+
+Const TEXTOUT = 'Hi world of OLE TEE';
+      FNAME =   'max111_90testdb.mdb';
+      
+      function  MyGetTickCount: Longint;
+         external 'GetTickCount@kernel32.dll stdcall';
+     
+     function SQLConfigDataSource(hwndParent: HWND;
+              fRequest: Word;
+              lpszDriver: LPCSTR;
+            //  lpszAttributes: LPCSTR): BOOL; stdcall; external 'ODBCCP32.DLL';
+             lpszAttributes: LPCSTR): BOOL; 
+                 external 'SQLConfigDataSource@ODBCCP32.DLL';
+    
+   type
+     TDebugStringProc = procedure(aCaption, aText: string);
+
+
+//############################################################################
+// Archimedes Spiral Function Fun CODEsign
+//############################################################################
+//TODO: Combine this two functions in one call
+
+//http://www.swissdelphicenter.ch/en/showcode.php?id=55
+
+Function IntToBase32X(Numb: Longint): String;
+begin
+  Result:= '';
+  for It:= 0 to 4 do begin
+    Insert(NUMBLETTS[(Numb And 31)+1], Result, 1);
+    Numb:= Numb Shr 5;
+  end;
+end;
+
+function CountPos(const subtxt: string; Text: string): Integer;
+begin
+  if (Length(subtxt)= 0) Or (Length(Text)= 0) Or (Pos(subtxt,Text)= 0) then
+    result:= 0
+  else
+    result:= (Length(Text)- Length(StringReplace(Text,subtxt,'',
+      [rfReplaceAll]))) div Length(subtxt);
+end;
+
+procedure newAccessDB(Sender: TObject);
+var
+  AccessApp: Variant;
+begin
+  AccessApp:= CreateOleObject('Access.Application');
+  AccessApp.NewCurrentDatabase(exepath+'examples\max111_90testdb.mdb');
+  AccessApp:= Unassigned;
+  //function VarIsEmptyParam(const V: Variant): Boolean;
+  //VarIsEmptyParam(Variant);
+end;
+
+(*var
+  EmptyParam: OleVariant;    // "Empty parameter" standard constant which can be
+  {$EXTERNALSYM EmptyParam}  // passed as an optional parameter on a dual
+                             // interface.
+  *)
+
+function SaveToMHT(const AUrl, AFileName: string;
+  AShowErrorMessage: Boolean): Boolean;
+var
+  oMSG, oConfig: OleVariant;
+  sFileName: string;
+  Retvar: Boolean; 
+begin
+  sFileName := ChangeFileExt(AFileName, '.mht');
+  //DeleteFile(AnsiChar(sFileName));   
+  try
+    oConfig := CreateOleObject('CDO.Configuration');
+    oMSG    := CreateOleObject('CDO.Message');
+    oMSG.Configuration := oConfig;
+    oMSG.CreateMHTMLBody(AUrl);
+    oMSG.GetStream.SaveToFile(sFileName);
+    Retvar := True;
+  except
+    //on E: Exception do 
+    begin
+      if AShowErrorMessage then MessageDlg('E.Message', mtError, [mbOK], 0);
+      Retvar := False;
+    end;
+  end;   
+  oMSG    := VarNull;
+  oConfig := VarNull;   
+  Result  := Retvar;
+  //Exception: Access violation at address 5E4C3DB4 in module 'cdosys.dll'. Read of address 00000000.
+end;
+
+//http://www.swissdelphicenter.ch/en/showcode.php?id=1695
+
+function CreateAccessDatabase(FileName: string): string;
+var 
+  cat: OLEVariant;
+begin
+  Result := '';
+  try
+    cat:= CreateOleObject('ADOX.Catalog');
+    cat.Create('Provider=Microsoft.Jet.OLEDB.4.0;Data Source=' + FileName + ';');
+    cat:= NULL;
+  except
+    //on e: Exception do Result := e.message;
+  end;
+end;
+
+var EmptyParam: OleVariant;
+
+procedure Print_Access_ReportClick(Sender: TObject);
+var
+  aAccess: Variant;
+begin
+  {open the Access application}
+  try
+    aAccess:= GetActiveOleObject('Access.Application');
+  except
+    aAccess:= CreateOleObject('Access.Application');
+  end;
+  aAccess.Visible:= True;
+  { open the database 
+   The second parameter specifies whether you want to open the
+   database in Exclusive mode}
+  aAccess.OpenCurrentDatabase('C:\test.mdb', True);
+
+  { open the report 
+   The value for the second parameter should be one of
+   acViewDesign, acViewNormal, or acViewPreview. acViewNormal, which is the
+   default, prints the report immediately. If you are not using the type
+   library, you can define these values like this: 
+
+  const 
+    acViewNormal = $00000000; 
+    acViewDesign = $00000001;
+    acViewPreview = $00000002; 
+
+  The third parameter is for the name of a query in the current 
+  database. The fourth parameter is for a SQL WHERE clause - the string must
+  be valid SQL, minus the WHERE.}
+  aAccess.DoCmd.OpenReport('A Report name', 2, EmptyParam, EmptyParam);
+
+  {close the database}
+  aAccess.CloseCurrentDatabase;
+
+  {close the Access application}
+  {const
+    acQuitPrompt = $00000000; 
+    acQuitSaveAll = $00000001;
+    acQuitSaveNone = $00000002;}
+  aAccess.Quit(1);
+end;
+
+
+
+procedure Print_Excel(Sender: TObject);
+var
+  ExcelApp: OLEVariant;
+begin
+  // Create an Excel instance
+  // Excel Instanz erzeugen
+  ExcelApp:= CreateOleObject('Excel.Application');
+  try
+    ExcelApp.Workbooks.Open('C:\test\xyz.xls');
+    // you can also modify some settings from PageSetup
+    ExcelApp.ActiveSheet.PageSetup.Orientation:= xlLandscape;
+    // Print it out
+    ExcelApp.Worksheets.PrintOut;
+  finally
+    // Close Excel
+    if not VarIsEmpty(ExcelApp) then begin
+      ExcelApp.Quit;
+      ExcelApp:= Unassigned;
+    end;
+  end;
+end;
+
+procedure TForm1_Button1Click(Sender: TObject);
+var
+  mail: TStringList;
+begin
+  mail := TStringList.Create;
+  try
+    mail.values['to'] := 'Receiver-Email@test.xyz';
+    mail.values['subject'] := 'Hello';
+    mail.values['body'] := 'blah';
+    mail.values['body'] := 'blah';
+    mail.values['attachment0'] := 'C:\Test.txt';
+    // mail.values['attachment1']:='C:\Test2.txt';
+    //sendEMail(Application.Handle, mail);
+  finally
+    mail.Free;
+  end;
+end;
+
+var IEApp: OLEVariant;
+
+procedure ControlIE(Sender: TObject);
+begin
+  IEApp         := CreateOLEObject('InternetExplorer.Application');
+  IEApp.Visible := True;
+  IEApp.Top     := 0;
+  IEApp.Left    := 0;
+  IEApp.Width   := Screen.Width;
+  IEApp.Height  := Screen.Height;
+  IEApp.Navigate('http://www.swissdelphicenter.ch');
+end;
+
+
+
+procedure LoadfromResName(Sender: TObject);
+var
+ BitMap1 : TBitMap;
+ aform: TForm;
+begin
+  aform:= TForm.create(self);
+  BitMap1 := TBitMap.Create;
+  aform.SetBounds(0,0,300,250)
+  try
+    aform.Show;
+    BitMap1.LoadFromResourceName(HInstance,'Live');
+    aform.Canvas.Draw(12,12,BitMap1);
+    BitMap1.LoadFromResourceName(HInstance,'Dead');
+    aform.Canvas.Draw(12,102,BitMap1);
+    //aform.Show;
+  finally
+    BitMap1.Free;
+  end;
+end;
+
+
+// 1. Delay
+
+procedure Delay5(Milliseconds: Integer);
+  {by Hagen Reddmann}
+var
+  Tick: DWORD;
+  Event: THandle;
+  event1: bool;
+begin
+   // QS_ALLINPUT = (QS_INPUT or QS_POSTMESSAGE or QS_TIMER or QS_PAINT
+  //  or QS_HOTKEY or QS_SENDMESSAGE);
+  //Event := CreateEvent(0, False, False, 'nil');
+  try
+    Tick:= GetTickCount + DWORD(Milliseconds);
+    while (Milliseconds > 0) and
+      (MsgWaitForMultipleObjects(1, event, true, Milliseconds,
+      QS_ALLINPUT) <> WAIT_TIMEOUT) do 
+    begin
+      Application.ProcessMessages;
+      Milliseconds:= Tick - GetTickCount;
+    end;
+  finally
+    CloseHandle(Event);
+  end;
+end;
+
+ // GetFormatDT - Output = formated DateTime String
+function GetFormatDT(aDateTime: TDateTime): string;
+begin
+  Result:= FormatDateTime('dd.mm.yy hh:nn:ss zzz', aDateTime);
+end;
+
+// GetFormatT - Output = formated Time String
+function GetFormatT(aDateTime: TDateTime): string;
+begin
+  Result:= FormatDateTime('hh:nn:ss zzz', aDateTime)
+end;
+
+var
+  StartDT: TDateTime;
+  StopDT: TDateTime;
+// _DebugStringStart - internal: Debug string at start time
+procedure _DebugStringStart(aCaption, aText: string);
+begin
+  StartDT := Now;
+  OutputDebugString(PChar(Format('[%s][%s] %s',
+    [aCaption, GetFormatDT(StartDT), aText])));
+end;
+
+var  StartDTPrec: Int64;
+  StopDTPrec: Int64;
+  PerfFrequency: Int64;
+  DSStart: TDebugStringProc;
+  DSStop: TDebugStringProc;
+  DSStr: TDebugStringProc;
+
+// _DebugStringStart - internal: Debug string at start time (high definition)
+procedure _DebugStringStartPrecision(aCaption, aText: string);
+begin
+  QueryPerformanceCounter(StartDTPrec);
+  OutputDebugString(PChar(Format('[%s][%s] %s',
+    [aCaption, GetFormatDT(Now()), aText])));
+end;
+
+// _DebugStringStop - internal: Debug string at stop time (high definition) in ms
+procedure _DebugStringStopPrecision(aCaption, aText: string);
+begin
+  QueryPerformanceCounter(StopDTPrec);
+  OutputDebugString(PChar(Format('[%s][%s][%.2n ms] %s',
+    [aCaption, GetFormatDT(Now()),
+    (1000 * (StopDTPrec - StartDTPrec) / PerfFrequency), aText])));
+end;
+
+//http://www.swissdelphicenter.ch/en/showcode.php?id=2280
+
+
+const
+  ODBC_ADD_DSN1 = 1; 
+
+function CreateDB(const Database: string): Boolean;
+begin
+  Result:= SQLConfigDataSource(0, ODBC_ADD_DSN1,
+    //'Microsoft Access Driver (*.mdb)', PChar('CREATE_DB=' + Database + ' General'#0));
+    'Microsoft Access Driver (*.mdb)', PChar('CREATE_DB=' + Database + ' General'#0));
+end;
+
+
+Begin  //main
+ writeln('IntToBase32 of 1000: '+IntToBase32X(1000))
+ PrintF('CountPos: %d',[CountPos('max','this is max of maXbox a max numbermax')])
+  {case CheckCreditCard('2405485000721119') of
+    0: writeln('Card is invalid or unknown');
+    1: writeln('Card is a valid AmEx');
+    2: writeln('Card is a valid Visa');
+    3: writeln('Card is a valid MasterCard');
+  end;}
+  
+  //get_form_resource(self)
+  //writeln(getFormRes('TMaxForm1'))
+  
+  if not fileExists(ExePath+'examples/'+FNAME) then begin
+    newAccessDB(self);
+    OpenDoc(exepath+'examples\max111_90testdb.mdb');
+  end;
+  
+  CreateAccessDatabase(exepath+'examples\max112_90testdb.mdb')
+
+  //CreateDB(exepath+'examples\max112_90testdb_DLL.mdb')
+  
+  //SaveToMHT('http://www.softwareschule.ch',Exepath+'mhtsofturl2',true);
+    
+    //procedure ControlIE(Sender: TObject);
+    //ControlIE(Self);
+
+    with TInterval.create do begin
+      start
+        Delay5(500)
+      stop
+      writeln(toString)
+      free
+    end;  
+   
+  //LoadfromResName(self)
+  //Delay5(100)
+ 
+  // Example: RoundTime('07.08.02 10:41', '15', True) -- > 07.08.02 10:45
+End. 
+
+Doc:
+
+The ShellWindows COM object has the Item method, which takes an optional Index parameter. Delphi implements the optional parameter by declaring two overloaded methods. The implementation of one method passes EmptyParam as the index value:
+
+// The following is an excerpt from shdocvw.pas
+function  TShellWindows.Item: IDispatch;
+begin
+  Result := DefaultInterface.Item(EmptyParam);
+end;
+
+Ref: http://www.swissdelphicenter.ch/en/showcode.php?id=1365
+
+const
+  ODBC_ADD_DSN = 1; // Add data source
+  ODBC_CONFIG_DSN = 2; // Configure (edit) data source
+  ODBC_REMOVE_DSN = 3; // Remove data source
+  ODBC_ADD_SYS_DSN = 4; // add a system DSN
+  ODBC_CONFIG_SYS_DSN = 5; // Configure a system DSN
+  ODBC_REMOVE_SYS_DSN = 6; // remove a system DSN
+  ODBC_REMOVE_DEFAULT_DSN = 7; // remove the default DSN
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  case CheckCC(Edit1.Text) of
+    0: Label1.Caption := 'Card is invalid or unknown';
+    1: Label1.Caption := 'Card is a valid AmEx';
+    2: Label1.Caption := 'Card is a valid Visa';
+    3: Label1.Caption := 'Card is a valid MasterCard';
+  end;
+end;
+
+http://www.swissdelphicenter.ch/en/showcode.php?id=1089
+
+//############################################################################
+// Archimedes Spiral App
+//############################################################################
+
+unit ArchSpiralMain;
+
+interface
+
+uses
+  w3system, w3components, w3ctrls, w3application, w3game, w3gameapp,
+  w3polygons, w3inet, w3graphics;
+
+type
+  TApplication = class(TW3CustomGameApplication)
+  private
+    FValueA: Float;
+    FValueB: Float;
+    FWait: Boolean;
+    procedure HandleClick(Sender:TObject);
+  protected
+    procedure ApplicationStarting; override;
+    procedure ApplicationClosing; override;
+    procedure PaintView(Canvas: TW3Canvas); override;
+  end;
+
+implementation
+
+//############################################################################
+// TApplication
+//############################################################################
+
+procedure TApplication.ApplicationStarting;
+begin
+  inherited;
+
+  FValueA := 3.0;
+  FValueB := 1.4;
+
+  GameView.OnClick := Self.HandleClick;
+
+  // Initialize refresh interval, set this to 1 for optimal speed
+  GameView.Delay := 10;
+ 
+  // Start the redraw-cycle with framecounter active
+  // Note: the framecounter impacts rendering speed. Disable
+  // the framerate for maximum speed (false)
+  GameView.StartSession(true);
+end;
+
+procedure TApplication.ApplicationClosing;
+begin
+  GameView.EndSession;
+  inherited;
+end;
+
+procedure TApplication.HandleClick(Sender: TObject);
+begin
+  FWait := not FWait;
+end;
+
+// Note: In a real live game you would try to cache as much
+// info as you can. Typical tricks are: 
+//   1: Only get the width/height when resized
+//   2: Pre-calculate strings, especially RGB/RGBA values
+//   3: Only redraw what has changed, avoid a full repaint
+// The code below is just to get you started
+
+procedure TApplication.PaintView(Canvas: TW3Canvas);
+var
+  cx, cy: Integer;
+  i: Integer;
+  angle: Float;
+  x, y: Float;
+begin
+  if FWait then
+    exit;
+
+  FValueB := FValueB + 0.001;
+
+  // Clear background
+  Canvas.FillStyle := 'rgba(0,0,99,0.08)';
+  Canvas.FillRectF(0, 0, GameView.Width, GameView.Height);
+
+  // Draw our framerate on the screen
+//  Canvas.font := '10pt verdana';
+//  Canvas.FillStyle := 'rgb(255,255,255)';
+//  Canvas.FillTextF('FPS:' + IntToStr(GameView.FrameRate) + ' / ' + floatToStr(FbValue) ,10,20,MAX_INT);
+
+  cx := GameView.width div 2;
+  cy := GameView.Height div 2;
+  Canvas.BeginPath;
+
+  for i := 42 downto 0 do
+  begin
+    angle := FValueB * i;
+    x := cx + (FValueA + FValueB * angle) * cos(angle);
+    y := cy + (FValueA + FValueB * angle) * sin(angle);
+    if i = 42 then Canvas.MoveToF(x, y) else Canvas.LineToF(x,y);
+  end;
+
+  Canvas.StrokeStyle := '#FFF';
+  Canvas.Stroke;
+end;
+
+end.
+
+  RegisterMethod('Constructor Create(AOwner: TComponent)');
+  RegisterConstructor(@TJvMail.Create, 'Create');
+   RegisterMethod('Procedure Free');
+   RegisterMethod(@TJvMail.Destroy, 'Free');
+   
+----app_template_loaded_code----

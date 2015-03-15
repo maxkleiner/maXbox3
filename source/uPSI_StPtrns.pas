@@ -61,10 +61,10 @@ end;
 procedure SIRegister_TStChain(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TOBJECT', 'TStChain') do
-  with CL.AddClassN(CL.FindClass('TOBJECT'),'TStChain') do
-  begin
+  with CL.AddClassN(CL.FindClass('TOBJECT'),'TStChain') do begin
     RegisterMethod('Constructor Create');
-    RegisterMethod('Procedure Add( aHandler : TStChainAction)');
+     RegisterMethod('Procedure Free');
+       RegisterMethod('Procedure Add( aHandler : TStChainAction)');
     RegisterMethod('Procedure Remove( aIndex : Integer)');
     RegisterMethod('Procedure Handle( aInputData, aResultData : TObject)');
     RegisterMethod('Procedure Insert( aIndex : Integer; aHandler : TStChainAction)');
@@ -77,10 +77,10 @@ end;
 procedure SIRegister_TStObserver(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TOBJECT', 'TStObserver') do
-  with CL.AddClassN(CL.FindClass('TOBJECT'),'TStObserver') do
-  begin
+  with CL.AddClassN(CL.FindClass('TOBJECT'),'TStObserver') do begin
     RegisterMethod('Constructor Create');
-    RegisterMethod('Procedure Add( aHandler : TStObserverAction)');
+     RegisterMethod('Procedure Free');
+       RegisterMethod('Procedure Add( aHandler : TStObserverAction)');
     RegisterMethod('Procedure Remove( aIndex : Integer)');
     RegisterMethod('Procedure Notify( aInputData : TObject)');
     RegisterProperty('Handler', 'TStObserverAction Integer', iptrw);
@@ -92,10 +92,10 @@ end;
 procedure SIRegister_TStMediator(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TOBJECT', 'TStMediator') do
-  with CL.AddClassN(CL.FindClass('TOBJECT'),'TStMediator') do
-  begin
+  with CL.AddClassN(CL.FindClass('TOBJECT'),'TStMediator') do begin
     RegisterMethod('Constructor Create');
-    RegisterMethod('Procedure Add( const aEventName : string; aHandler : TStMediatorAction)');
+     RegisterMethod('Procedure Free');
+       RegisterMethod('Procedure Add( const aEventName : string; aHandler : TStMediatorAction)');
     RegisterMethod('Procedure Remove( const aEventName : string)');
     RegisterMethod('Procedure Handle( const aEventName : string; aInputData, aResultData : TObject)');
     RegisterMethod('Function IsHandled( const aEventName : string) : boolean');
@@ -109,6 +109,7 @@ begin
   //with RegClassS(CL,'TObject', 'TStSingleton') do
   with CL.AddClassN(CL.FindClass('TObject'),'TStSingleton') do begin
     RegisterMethod('Function NewInstance : TObject');
+    RegisterMethod('procedure FreeInstance');
     RegisterMethod('Procedure AllocResources');
     RegisterMethod('Procedure FreeResources');
   end;
@@ -118,13 +119,11 @@ end;
 procedure SIRegister_StPtrns(CL: TPSPascalCompiler);
 begin
   SIRegister_TStSingleton(CL);
-  CL.AddTypeS('TStMediatorAction', 'Procedure ( aInputData, aResultData : TObje'
-   +'ct)');
+  CL.AddTypeS('TStMediatorAction', 'Procedure ( aInputData, aResultData : TObject)');
   SIRegister_TStMediator(CL);
   CL.AddTypeS('TStObserverAction', 'Procedure ( aInputData : TObject)');
   SIRegister_TStObserver(CL);
-  CL.AddTypeS('TStChainAction', 'Procedure ( aInputData, aResultData : TObject;'
-   +' var aStopNow : boolean)');
+  CL.AddTypeS('TStChainAction', 'Procedure ( aInputData, aResultData : TObject; var aStopNow : boolean)');
   SIRegister_TStChain(CL);
 end;
 
@@ -160,10 +159,10 @@ begin T := Self.Count; end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStChain(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStChain) do
-  begin
+  with CL.Add(TStChain) do begin
     RegisterConstructor(@TStChain.Create, 'Create');
-    RegisterMethod(@TStChain.Add, 'Add');
+      RegisterMethod(@TStChain.Destroy, 'Free');
+      RegisterMethod(@TStChain.Add, 'Add');
     RegisterMethod(@TStChain.Remove, 'Remove');
     RegisterMethod(@TStChain.Handle, 'Handle');
     RegisterMethod(@TStChain.Insert, 'Insert');
@@ -175,10 +174,10 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStObserver(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStObserver) do
-  begin
+  with CL.Add(TStObserver) do begin
     RegisterConstructor(@TStObserver.Create, 'Create');
-    RegisterMethod(@TStObserver.Add, 'Add');
+      RegisterMethod(@TStObserver.Destroy, 'Free');
+      RegisterMethod(@TStObserver.Add, 'Add');
     RegisterMethod(@TStObserver.Remove, 'Remove');
     RegisterMethod(@TStObserver.Notify, 'Notify');
     RegisterPropertyHelper(@TStObserverHandler_R,@TStObserverHandler_W,'Handler');
@@ -189,10 +188,10 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStMediator(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStMediator) do
-  begin
+  with CL.Add(TStMediator) do begin
     RegisterConstructor(@TStMediator.Create, 'Create');
-    RegisterMethod(@TStMediator.Add, 'Add');
+      RegisterMethod(@TStMediator.Destroy, 'Free');
+      RegisterMethod(@TStMediator.Add, 'Add');
     RegisterMethod(@TStMediator.Remove, 'Remove');
     RegisterMethod(@TStMediator.Handle, 'Handle');
     RegisterMethod(@TStMediator.IsHandled, 'IsHandled');
@@ -203,10 +202,11 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStSingleton(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStSingleton) do
-  begin
+  with CL.Add(TStSingleton) do begin
     RegisterMethod(@TStSingleton.NewInstance, 'NewInstance');
-    RegisterVirtualMethod(@TStSingleton.AllocResources, 'AllocResources');
+    RegisterMethod(@TStSingleton.FreeInstance, 'FreeInstance');
+     RegisterMethod(@TStSingleton.Destroy, 'Free');
+      RegisterVirtualMethod(@TStSingleton.AllocResources, 'AllocResources');
     RegisterVirtualMethod(@TStSingleton.FreeResources, 'FreeResources');
   end;
 end;

@@ -56,10 +56,10 @@ end;
 procedure SIRegister_TPppLexer(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TOBJECT', 'TPppLexer') do
-  with CL.AddClassN(CL.FindClass('TOBJECT'),'TPppLexer') do
-  begin
+  with CL.AddClassN(CL.FindClass('TOBJECT'),'TPppLexer') do begin
     RegisterMethod('Constructor Create( AStream : TStream)');
-    RegisterMethod('Procedure Error( const AMsg : string)');
+      RegisterMethod('Procedure Free');
+      RegisterMethod('Procedure Error( const AMsg : string)');
     RegisterMethod('Procedure NextTok');
     RegisterMethod('Procedure Reset');
     RegisterProperty('CurrTok', 'TPppToken', iptr);
@@ -103,9 +103,9 @@ begin T := Self.CurrTok; end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TPppLexer(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TPppLexer) do
-  begin
+  with CL.Add(TPppLexer) do begin
     RegisterConstructor(@TPppLexer.Create, 'Create');
+    RegisterMethod(@TPppLexer.Destroy, 'Free');
     RegisterMethod(@TPppLexer.Error, 'Error');
     RegisterMethod(@TPppLexer.NextTok, 'NextTok');
     RegisterMethod(@TPppLexer.Reset, 'Reset');

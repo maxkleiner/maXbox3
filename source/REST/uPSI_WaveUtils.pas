@@ -67,6 +67,19 @@ begin
    CL.AddTypeS('tWaveFormatEx', 'PWaveFormatEx');
    CL.AddTypeS('HMMIO', 'Integer');
 
+ CL.AddTypeS('TWaveFormat', 'record wFormatTag : word; nChannels: word; nSamplesPerSec: DWORD; '
+   +'nAvgBytesPerSec: DWORD; nBlockAlign: Word; end');
+
+(*    waveformat_tag = packed record
+    wFormatTag: Word;         { format type }
+    nChannels: Word;          { number of channels (i.e. mono, stereo, etc.) }
+    nSamplesPerSec: DWORD;  { sample rate }
+    nAvgBytesPerSec: DWORD; { for buffer estimation }
+    nBlockAlign: Word;      { block size of data }
+  end;
+  TWaveFormat = waveformat_tag;
+  *)
+
    //  HMMIO = Integer;      { a handle to an open file }
 
 

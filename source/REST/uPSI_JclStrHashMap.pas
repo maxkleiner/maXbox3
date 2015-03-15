@@ -1,6 +1,6 @@
 unit uPSI_JclStrHashMap;
 {
-  for TFileIterate Interface
+  for TFileIterate Interface   add free   overrides
 }
 interface
  
@@ -48,7 +48,7 @@ uses
   ,JclStrHashMap
   ;
  
- 
+
 procedure Register;
 begin
   RegisterComponents('Pascal Script', [TPSImport_JclStrHashMap]);
@@ -59,8 +59,9 @@ end;
 procedure SIRegister_TCaseInsensitiveTraits(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TStringHashMapTraits', 'TCaseInsensitiveTraits') do
-  with CL.AddClassN(CL.FindClass('TStringHashMapTraits'),'TCaseInsensitiveTraits') do
-  begin
+  with CL.AddClassN(CL.FindClass('TStringHashMapTraits'),'TCaseInsensitiveTraits') do begin
+    RegisterMethod('function Hash(const s: string): Cardinal;');
+    RegisterMethod('function Compare(const l, r: string): Integer;');
   end;
 end;
 
@@ -68,8 +69,9 @@ end;
 procedure SIRegister_TCaseSensitiveTraits(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TStringHashMapTraits', 'TCaseSensitiveTraits') do
-  with CL.AddClassN(CL.FindClass('TStringHashMapTraits'),'TCaseSensitiveTraits') do
-  begin
+  with CL.AddClassN(CL.FindClass('TStringHashMapTraits'),'TCaseSensitiveTraits') do begin
+    RegisterMethod('function Hash(const s: string): Cardinal;');
+    RegisterMethod('function Compare(const l, r: string): Integer;');
   end;
 end;
 
@@ -160,16 +162,18 @@ begin T := Self.Count; end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TCaseInsensitiveTraits(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TCaseInsensitiveTraits) do
-  begin
+  with CL.Add(TCaseInsensitiveTraits) do begin
+    RegisterMethod(@TCaseInsensitiveTraits.Hash, 'Hash');
+    RegisterMethod(@TCaseInsensitiveTraits.Compare, 'Compare');
   end;
 end;
 
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TCaseSensitiveTraits(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TCaseSensitiveTraits) do
-  begin
+  with CL.Add(TCaseSensitiveTraits) do begin
+   RegisterMethod(@TCaseSensitiveTraits.Hash, 'Hash');
+    RegisterMethod(@TCaseSensitiveTraits.Compare, 'Compare');
   end;
 end;
 
