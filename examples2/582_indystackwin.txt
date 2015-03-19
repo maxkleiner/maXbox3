@@ -1,7 +1,7 @@
 program IndyStack_Win;
 
 // complex WSfunctions in directories and networks
-// has Indy with a TIDStack structure, _58, #locs=260
+// has Indy with a TIDStack structure, _58, #locs=303
 //http://www.ipinfodb.com/register.php
 //https://theroadtodelphi.wordpress.com/2010/11/13/getting-ip-address-geolocation-info-with-delphi/
 
@@ -54,6 +54,49 @@ begin
     FHasHalfChar := True;
   end;
   Result := True;
+end;
+
+function IsObjectActive(ClassName: string): Boolean;
+var
+  ClassID: TCLSID;
+  Unknown: IUnknown;
+begin
+  try
+    ClassID := ProgIDToClassID(ClassName);
+    //Result  := GetActiveObject(ClassID, nil, Unknown) = S_OK;
+  except
+    // raise;
+    Result := False;
+  end;
+end;
+
+var
+  Form1: TForm;
+  csend: string;
+  edit1, edit2, edit3: TEdit;
+  clientsocket1: TClientSocket;
+
+procedure TForm1_Button1Click(Sender: TObject);
+begin
+  cSend := 'POST http://wwp.icq.com/scripts/WWPMsg.dll HTTP/2.0' + chr(13) + chr(10);
+  cSend := cSend + 'Referer: http://wwp.mirabilis.com' + chr(13) + chr(10);
+  cSend := cSend + 'User-Agent: Mozilla/4.06 (Win95; I)' + chr(13) + chr(10);
+  cSend := cSend + 'Connection: Keep-Alive' + chr(13) + chr(10);
+  cSend := cSend + 'Host: wwp.mirabilis.com:80' + chr(13) + chr(10);
+  cSend := cSend + 'Content-type: application/x-www-form-urlencoded' + chr(13) + chr(10);
+  cSend := cSend + 'Content-length:8000' + chr(13) + chr(10);
+  cSend := cSend + 'Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*' +
+    chr(13) + chr(10) + chr(13) + chr(10);
+  cSend := cSend + 'from=' + edit1.Text + ' &fromemail=' + edit2.Text +
+    ' &fromicq:110206786' + ' &body=' + memo1.Text + ' &to=' + edit3.Text + '&Send=';
+  clientsocket1.Active := True;
+end;
+
+procedure TForm1_ClientSocket1Connect(Sender: TObject;
+  Socket: TCustomWinSocket);
+begin
+  clientsocket1.Socket.SendText(csend);
+  clientsocket1.Active := False;
 end;
 
 

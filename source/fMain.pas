@@ -128,6 +128,7 @@
          10415     build 180_3 4 bugfixes, dbtable redesign checkconstrains, modbus consts, testvendor
                                     dunit testframework vendor dbtests - 3.3.2015
          10465     build 190 override bugfixing, virtual constructor - 7 units, soap conn
+         10470     build 191 ADOCOMUtils_set  - recordset2
                   [the last one before V4 in 2015]
                    V4.0   in  July 2015
  ************************************************************************** }
@@ -1992,6 +1993,7 @@ uses
   uPSI_JvWinHelp,
   uPSI_WaveConverter,
   uPSI_ACMConvertor,
+  uPSI_ComObjOleDB_utils, //3.9.9.191
 
   ///
   ///
@@ -3135,6 +3137,7 @@ begin
   SIRegister_JvWinHelp(X);
   SIRegister_WaveConverter(X);
   SIRegister_ACMConvertor(X);
+  SIRegister_ComObj2(X);    //3.9.9.191
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4561,6 +4564,8 @@ begin
   RIRegister_JvWinHelp(X);
   RIRegister_WaveConverter(X);
   RIRegister_ACMConvertor(X);
+  RIRegister_ComObj2(X);
+  RIRegister_ComObj2_Routines(Exec);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);

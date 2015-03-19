@@ -1,4 +1,31 @@
 ****************************************************************
+Release Notes maXbox 3.9.9.190 March 2015 CODEsign
+****************************************************************
+Add 16 Units, 1 Tutor, SOAPConn, AVI-Res, OLEUtils, ACM
+
+1085 unit uPSI_JvAnimate                       //JCL
+1086 unit uPSI_DBXCharDecoder;                 //DBX
+1087 unit uPSI_JvDBLists;                      //JCL
+1088 unit uPSI_JvFileInfo;                     //JCL
+1089 unit uPSI_SOAPConn;                       //VCL
+1090 unit uPSI_SOAPLinked;                     //VCL
+1091 unit uPSI_XSBuiltIns;                     //VCL
+1092 unit uPSI_JvgDigits;                      //JCL
+1093 unit uPSI_JvDesignUtils;
+1094 unit uPSI_JvgCrossTable;
+1095 unit uPSI_JvgReport;
+1096 unit uPSI_JvDBRichEdit;
+1097 unit uPSI_JvWinHelp;
+1098 unit uPSI_WaveConverter;
+1099 unit uPSI_ACMConvertor;
+1100 unit XSBuiltIns_Routines
+1101 unit uPSI_ComObjOleDB_utils.pas
+
+SHA1:  maXbox3.exe DEFC2444E3DA7BE541F89A5045CCC91FF6BDF933
+CRC32: maXbox3.exe DCAB3447
+
+
+****************************************************************
 Release Notes maXbox 3.9.9.180 Feb 2015 CODEsign
 ****************************************************************
 Add 8 Units, 1 Slide,Tutor, Big Numbers (Decimals, TInteger)

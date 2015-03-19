@@ -1025,6 +1025,35 @@ function PromptDataLinkFile(ParentHandle: THandle; InitialFile: WideString): Wid
 function GetDataLinkFiles(FileNames: TWideStrings; Directory: string = ''): Integer; overload;
 function GetDataLinkFiles(FileNames: TStrings; Directory: string = ''): Integer; overload;
 
+{global utilities}
+function CreateADOObject(const ClassID: TGUID): IUnknown;
+
+function ADOTypeToFieldType(const ADOType: DataTypeEnum; EnableBCD: Boolean = True): TFieldType;
+
+function FieldTypeToADOType(const FieldType: TFieldType): DataTypeEnum;
+
+function StringToVarArray(const Value: string): OleVariant;
+
+function VarDataSize(const Value: OleVariant): Integer;
+
+function OleEnumToOrd(OleEnumArray: array of TOleEnum; Value: TOleEnum): Integer;
+
+function GetStates(State: Integer): TObjectStates;
+
+function ExecuteOptionsToOrd(ExecuteOptions: TExecuteOptions): Integer;
+
+function OrdToExecuteOptions(Options: Integer): TExecuteOptions;
+
+function ExtractFieldName(const Fields: WideString; var Pos: Integer): WideString;
+
+function GetFilterStr(Field: TField; Value: Variant; Partial: Boolean = False): WideString;
+
+function PropertyExists(const PropList: ADOInt.Properties; const PropName: WideString): Boolean;
+
+function FieldListCheckSum(DataSet: TDataset): Integer;
+
+
+
 implementation
 
 uses DBCommon, Mtx, DBConsts, ComObj, ADOConst, WideStrUtils;

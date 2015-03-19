@@ -1,7 +1,34 @@
 ****************************************************************
-Release Notes maXbox 3.9.9.180 Feb 2015 CODEsign
+Release Notes maXbox 3.9.9.190 March 2015 CODEsign
 ****************************************************************
-Add 8 Units, 1 Slide,Tutor, Big Numbers (Decimals, TInteger)
+Add 16 Units, 1 Tutor, SOAPConn, AVI-Res, OLEUtils, ACM
+
+1085 unit uPSI_JvAnimate                       //JCL
+1086 unit uPSI_DBXCharDecoder;                 //DBX
+1087 unit uPSI_JvDBLists;                      //JCL
+1088 unit uPSI_JvFileInfo;                     //JCL
+1089 unit uPSI_SOAPConn;                       //VCL
+1090 unit uPSI_SOAPLinked;                     //VCL
+1091 unit uPSI_XSBuiltIns;                     //VCL
+1092 unit uPSI_JvgDigits;                      //JCL
+1093 unit uPSI_JvDesignUtils;
+1094 unit uPSI_JvgCrossTable;
+1095 unit uPSI_JvgReport;
+1096 unit uPSI_JvDBRichEdit;
+1097 unit uPSI_JvWinHelp;
+1098 unit uPSI_WaveConverter;
+1099 unit uPSI_ACMConvertor;
+1100 unit XSBuiltIns_Routines
+1101 unit uPSI_ComObjOleDB_utils.pas
+
+SHA1:  maXbox3.exe DEFC2444E3DA7BE541F89A5045CCC91FF6BDF933
+CRC32: maXbox3.exe DCAB3447
+
+
+****************************************************************
+Release Notes maXbox 3.9.9.180 March 2015 CODEsign
+****************************************************************
+Add 20 Units, 1 Slide,Tutor, BigNumbers, TestFramework, GEOInfo
 
 1065 unit uPSI_UDict;                          //DFF
 1066 unit uPSI_ubigFloatV3;                    //DFF
@@ -9,11 +36,23 @@ Add 8 Units, 1 Slide,Tutor, Big Numbers (Decimals, TInteger)
 1068 unit uPSI_ServiceMgr2;                    //mX
 1069 unit uPSI_UP10Build;                      //PS
 1070 unit uPSI_UParser10;                      //PS
-1071 unit uPSI_IdModBusServer;
-1072 unit uPSI_IdModBusClient; +MBUtils
+1071 unit uPSI_IdModBusServer;                 //MB
+1072 unit uPSI_IdModBusClient; +MBUtils        //MB
+1073 unit uPSI_ColorGrd;                       //VCL
+1074 unit uPSI_DirOutln;                       //VCL
+1075 unit uPSI_Gauges;                         //VCL
+1076 unit uPSI_CustomizeDlg;                   //VCL
+1077 unit uPSI_ActnMan;                        //VCL
+1078 unit uPSI_CollPanl;                       //VCL
+1079 unit uPSI_Calendar2;                      //VCL
+1080 unit uPSI_IBCtrls;                        //VCL
+1081 unit uPSI_IdStackWindows;                 //Indy
+1082 unit uPSI_CTSVendorUtils;
+1083 unit uPSI_VendorTestFramework;
+1084 unit uPSI_TInterval; 
 
-SHA1:  maXbox3.exe E84DD2857F77CB84E4B479B9413F3D3E96A94DBE
-CRC32: maXbox3.exe D11EFE4A
+SHA1:  maXbox3.exe 3D7F88BE9687CB834A5E2DAED08B23358484FEC0
+CRC32: maXbox3.exe E2ADE828
 
 
 ****************************************************************

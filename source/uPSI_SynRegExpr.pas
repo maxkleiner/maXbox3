@@ -68,7 +68,8 @@ begin
   //with RegClassS(CL,'TOBJECT', 'TRegExpr') do
   with CL.AddClassN(CL.FindClass('TOBJECT'),'TRegExpr') do begin
     RegisterMethod('Constructor Create');
-    RegisterMethod('Function VersionMajor : integer');
+     RegisterMethod('Procedure Free');
+      RegisterMethod('Function VersionMajor : integer');
     RegisterMethod('Function VersionMinor : integer');
     RegisterProperty('Expression', 'RegExprString', iptrw);
     RegisterProperty('ModifierStr', 'RegExprString', iptrw);
@@ -347,7 +348,8 @@ procedure RIRegister_TRegExpr(CL: TPSRuntimeClassImporter);
 begin
   with CL.Add(TRegExpr) do begin
     RegisterConstructor(@TRegExpr.Create, 'Create');
-    RegisterMethod(@TRegExpr.VersionMajor, 'VersionMajor');
+     RegisterMethod(@TRegExpr.Destroy, 'Free');
+      RegisterMethod(@TRegExpr.VersionMajor, 'VersionMajor');
     RegisterMethod(@TRegExpr.VersionMinor, 'VersionMinor');
     RegisterPropertyHelper(@TRegExprExpression_R,@TRegExprExpression_W,'Expression');
     RegisterPropertyHelper(@TRegExprModifierStr_R,@TRegExprModifierStr_W,'ModifierStr');

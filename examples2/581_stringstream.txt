@@ -1,0 +1,426 @@
+program StringStreamDemo;
+
+// has StringStream with a GEOLocation structure, _58, #locs=286
+//178.196.193.131
+//http://www.ipinfodb.com/register.php
+//https://theroadtodelphi.wordpress.com/2010/11/13/getting-ip-address-geolocation-info-with-delphi/
+
+{Start NotePad and load a file (the system "knows" the location of NotePad.exe, therefore we don't have to specify full path):
+ShellExecute(Handle, 'open', PChar('notepad'), PChar('c:\test\readme.txt'), nil, SW_SHOW);}
+
+//http://www.win7dll.info/
+//www.randomnoun.com/wp/2013/10/27/windows-shell32-animations/
+
+var 
+  Form1: TForm;
+  memo4: TMemo;
+  ScrollBar1: TScrollbar; //MyScrollBar;
+  MyScrollBar: TScrollbar;
+
+procedure TForm1_Button1ClickAnimate(Sender: TObject);
+var animate1: TAnimate;
+   frm: TForm;
+begin
+  frm:= TForm.create(self)
+  frm.Setbounds(0,0,500,300)
+  //frm.show;
+  animate1:= TAnimate.create(self)
+  //Animate1.ResHandle:= LoadLibrary('shdocvw.dll');
+  Animate1.ResHandle:= LoadLibrary('shell32.dll'); //HINSTANCE; 
+    try {da Reshandel}
+    animate1.parent:= frm;
+    Animate1.ResID:= 151; //161 256;
+    //Animate1.CommonAVI:= aviCopyFile; //aviFindFile;
+  except
+    writeln('debugln(''resid not found'','')''');
+  end;
+  Animate1.Active:= True;
+  Animate1.show;
+  frm.show;
+end;
+
+procedure TForm1AnimateClick(Sender: TObject);
+var
+  TempForm: TForm;
+  I: Integer;
+begin
+  TempForm := TForm.Create(Self);
+  with TAnimate.Create(TempForm) do
+  try
+    Parent := TempForm;
+    CommonAVI := aviFindFile;
+    Active := True;
+    TempForm.Show;
+    // Simulate a lengthy process. Alter this value
+    // to accommodate your machine speed.
+    for I := 0 to 90000000 do Application.ProcessMessages;
+  finally
+    TempForm.Release;
+  end;
+end;
+
+
+//http://unicornix.spb.ru/docs/prog/delphi/delphi_faq/del_tis/TI2988.html
+
+procedure testIDCreateStackWindows;
+var //idstack: TIDStack;
+    idstackw: TIdStackWindows;
+begin
+  idstackw:= TIdStackWindows.create;
+  writeln('isDottedIP: '+botostr(idstackw.isDottedIP('192.168.11.1')))
+  writeln('IsNumericIP: '+botostr(idstackw.IsNumericIP('192.168.11.1')))
+  writeln('ResolveHost: '+idstackw.ResolveHost('192.168.11.1'))
+  writeln('WSGetHostByName: '+idstackw.WSGetHostName)
+  idstackw.Free;
+end;
+
+function ComponentToStringProcX(Component: TComponent): string;
+var
+  BinStream:TMemoryStream;
+  StrStream: TStringStream;
+  s: string;
+begin
+  BinStream:= TMemoryStream.Create;
+  try
+    StrStream:= TStringStream.Create(s);
+    try
+      BinStream.WriteComponent(Component);
+      BinStream.Seek(0, soFromBeginning);
+      ObjectBinaryToText(BinStream, StrStream);
+      StrStream.Seek(0, soFromBeginning);
+      Result:= StrStream.DataString;
+    finally
+      StrStream.Free;
+    end;
+  finally
+    BinStream.Free
+  end;
+end;
+
+function StringToComponentProcX(Value: string): TComponent;
+var
+  StrStream:TStringStream;
+  BinStream: TMemoryStream;
+begin
+  StrStream:= TStringStream.Create(Value);
+  try
+    BinStream:= TMemoryStream.Create;
+    try
+      ObjectTextToBinary(StrStream, BinStream);
+      BinStream.Seek(0, soFromBeginning);
+      Result:= BinStream.ReadComponent(nil);
+    finally
+      BinStream.Free;
+    end;
+  finally
+    StrStream.Free;
+  end;
+end;
+
+procedure TForm1_Btn1Click(Sender: TObject);
+begin
+  Memo4.Text:= ComponentToStringProcX(ScrollBar1);
+end;
+
+// Edit the scrollbar parameters in the memo, click this
+// button and see the scrollbar change.
+procedure TForm1_Btn2Click(Sender: TObject);
+begin
+  ScrollBar1.Free;
+  //StringToComponentProcX(Memo4.Text);
+  try
+    ScrollBar1:= (StringToComponentProcX(Memo4.Text) as TScrollBar);
+  except
+    ScrollBar1:= TScrollBar.Create(Form1);
+  end
+  ScrollBar1.Parent:= Form1;
+  ScrollBar1.setbounds(20,48,400,50)
+  ScrollBar1.Visible:= TRUE;
+end;
+
+{
+This example shows how to use the built-in component
+streaming support to convert any component into a string and
+convert that string back into a component.   Sorry: RegisterClass won't work!
+}
+
+procedure TForm1_FormCreate(Sender: TObject);
+begin
+   form1:= TForm.create(self)
+   with form1 do begin
+     setbounds(35,84,500,600);
+     show;
+   end;  
+  ScrollBar1:= TScrollBar.Create(Form1);
+  ScrollBar1.Parent:= Form1;
+  ScrollBar1.Visible:= TRUE;
+  ScrollBar1.setbounds(20,48,400,30)
+  ScrollBar1.Name:= 'maxRicksbar';
+  memo4:= TMemo.Create(Form1);
+    memo4.setbounds(20,120,300,300);
+    memo4.parent:= form1;
+   with TBitBtn.create(self) do begin
+     parent:= form1;
+    Setbounds(20,500,180,40);
+    Caption:= '&Convert'
+    OnClick:= @TForm1_Btn1Click;
+    NumGlyphs:= 2;
+  end;
+   with TBitBtn.create(self) do begin
+     parent:= form1;
+    Setbounds(220,500,180,40);
+    Caption:= '&Convert Back'
+    OnClick:= @TForm1_Btn2Click;
+    NumGlyphs:= 2;
+  end;
+  
+  //RegisterClass(myscrollbar)  
+end;
+
+
+procedure DatabaseSearch(DatabaseFilename, TablePart, SearchString: string);
+var
+  DataSource: TDataSource;
+  DSTable: TTable;
+begin
+  DataSource:= TDataSource.Create(NIL);
+  DSTable:= TTable.Create(NIL);
+  try
+    DataSource.DataSet:= DSTable;
+    DSTable.TableName:= DatabaseFilename;
+    DSTable.Active:= true;
+    if DSTable.FindFirst then begin
+      repeat
+        if AnsiLowerCase(DSTable.FieldByName(TablePart).AsString) =
+          AnsiLowerCase(SearchString) then begin
+          // über z. B. DSTable.FieldByName('ID').AsInteger usw.
+        end;
+      until DSTable.FindNext = false;
+    end;
+  finally
+    DataSource.free;
+    DSTable.free;
+  end;
+end;
+  
+
+ var mygeoInfo: TGEOInfo;
+ 
+ //$fetch = fetch_url("http://www.ipinfodb.com/ip_query_country.php?ip=".$_SERVER['REMOTE_ADDR']."&output=xml");
+ const
+ //UrlGeoLookupInfo2  ='http://ipinfodb.com/ip_query.php?timezone=true&ip=%s';
+ 
+ //UrlGeoLookupInfo2  ='http://ipinfodb.com/ip_query_country.php?&ip=%s';
+ 
+ UrlGeoLookupInfo2  ='http://api.hostip.info/country.php?ip=%s';
+
+ procedure GetGeoInfo2(const IpAddress : string;var GeoInfo :TGeoInfo; const UrlGeoLookupInfo: string);
+var
+  lHTTP  : TIdHTTP;
+  lStream: TStringStream;
+  XMLDoc : OleVariant;
+  ANode  : OleVariant;
+  anote: string;
+begin
+  lHTTP   := TIdHTTP.Create(nil);
+  lStream := TStringStream.Create('');
+  try
+      try
+        lHTTP.Get1(Format(UrlGeoLookupInfo,[IpAddress]), lStream); 
+        //get the request
+      except
+        lHTTP.Get1(Format(UrlGeoLookupInfo2,[IpAddress]), lStream); //if something is wrong try using the backup server.
+      end;
+      lStream.Seek(0,0);
+      writeln('GEO Res: '+lStream.DataString);
+      XMLDoc := CreateOleObject('Msxml2.DOMDocument.6.0');
+      XMLDoc.async := false;
+      XMLDoc.LoadXML(lStream.ReadString(lStream.Size));
+      XMLDoc.setProperty('SelectionLanguage','XPath');//use XPath to parse the xml result
+      ANode:=XMLDoc.selectSingleNode('/Response/Status');
+      if not VarIsNull(ANode) then GeoInfo.Status:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/CountryCode');
+      if not VarIsNull(ANode) then GeoInfo.CountryCode:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/CountryName');
+      if not VarIsNull(ANode) then GeoInfo.CountryName:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/RegionCode');
+      if not VarIsNull(ANode) then GeoInfo.RegionCode:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/City');
+      if not VarIsNull(ANode) then GeoInfo.City:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/ZipPostalCode');
+      if not VarIsNull(ANode) then GeoInfo.ZipPostalCode:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/Latitude');
+      if not VarIsNull(ANode) then GeoInfo.Latitude:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/Longitude');
+      if not VarIsNull(ANode) then GeoInfo.Longitude:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/TimezoneName');
+      if not VarIsNull(ANode) then GeoInfo.TimezoneName:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/Gmtoffset');
+      if not VarIsNull(ANode) then GeoInfo.Gmtoffset:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/Isdst');
+      if not VarIsNull(ANode) then GeoInfo.Isdst:=ANode.Text;
+  finally
+    lHTTP.Free;
+    lStream.Free;
+  end;
+end;
+
+
+//main script
+begin
+  //mysearch;
+  //shellexecute(0, 'open', 'notepad', 'rec_files.txt', '', 2)
+  //orthogonal and idempotent
+  testIDCreateStackWindows;
+  PrintF('%3.4n',[123456789.123456]); //-->'123.456.789,1235'
+  //TForm1_Button1ClickAnimate(self)
+  //TForm1AnimateClick(self)
+  
+//    procedure GetGeoInfo(const IpAddress : string;var GeoInfo :TGeoInfo; const UrlGeoLookupInfo: string);
+  //GetGeoInfo2('91.236.78.59',mygeoinfo, UrlGeoLookupInfo2);
+  //GetGeoInfo2('74.125.45.100',mygeoinfo, UrlGeoLookupInfo2);
+  //GetGeoInfo2('178.196.193.131',mygeoinfo, UrlGeoLookupInfo2);
+   
+   TForm1_FormCreate(self)  
+  
+End.
+
+Doc 
+
+Debug Runtime Error: Variant is null, cannot invoke.
+  function errorCallback(error) {
+  alert('ERROR(' + error.code + '): ' + error.message);
+};
+
+Ref:
+
+http://docs.embarcadero.com/products/rad_studio/delphiAndcpp2009/HelpUpdate2/EN/html/delphivclwin32/Classes_TStringStream.html
+
+http://kbeezie.com/geolocation-methods-for-free/
+
+http://whatismyipaddress.com/ip/178.196.193.131
+
+François, check this link http://ipinfodb.com/ip_database.php
+
+    Data accuracy
+    Over 99.5% on a country level and around 80% on a city level for the US within a 25 mile radius. The database used for this API is compiled from the free Maxmind CSV database (Geolite City) and rearranged with many scripts.
+
+function FindInFile(const AFileName: string; ASearchWord: string; AMatchCase: Boolean): Integer;
+var
+  fileStream: TFileStream;
+  //buffer: array[1..1024 * 1024] of Char;
+  buffer: array of char;
+  
+  //buffer: string;
+  abufferSize: Integer;
+  c: Char;
+  matchPosition, i, lengthOfSearchWord: Integer;
+  currentPosition, fileStreamSize: Integer;
+begin
+  //setlength2(buffer,1024*1024)
+  setlength(buffer,1024*1024)
+  
+  Result := -1;
+  lengthOfSearchWord := Length(ASearchWord);
+  if lengthOfSearchWord = 0 then
+    Exit;
+  if not AMatchCase then
+    ASearchWord := AnsiUpperCase(ASearchWord);
+  matchPosition := 1;
+  fileStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
+  try
+    fileStreamSize := fileStream.Size;
+    currentPosition := 0;
+    writeln('filesize '+inttostr(filestreamsize))
+    while currentPosition < fileStreamSize do begin
+      abufferSize := Min(high(buffer), (fileStreamSize - currentPosition));
+      fileStream.ReadBufferACD(buffer, abufferSize);
+      //fileStream.ReadBuffer(buffer, abufferSize);
+      writeln('buffwe '+inttostr(abuffersize)+': '+itoa(currentposition))
+      currentPosition:= fileStream.Position;
+      i := 1;
+      //i:= pos(currentPosition,asearchword)
+      while i > 1 do begin
+          i := i - matchPosition + 1;
+          matchPosition := 1;
+        end;
+        Inc(i);
+    end;
+  finally
+    fileStream.Free;
+  end;
+end;
+
+
+BOOL CALLBACK MainDlgProc(HWND hDlg, UINT message, 
+                          WPARAM wParam, LPARAM lParam)
+{
+
+    if(message==WM_QUIT||message==WM_CLOSE)
+        PostQuitMessage(0);
+
+
+    if(message==WM_INITDIALOG)
+    {
+
+        //Creates the animation control
+        if((avi=LoadLibrary("Shell32.dll"))==NULL)
+        {
+            MessageBox(hDlg,"Unable to load library.","ANI",0);
+        }
+        else
+        {
+            //Library loaded now create the animation control
+            AnimationCtrl=CreateWindowEx(0,  //Style   
+                        ANIMATE_CLASS,             //Class Name   
+                        NULL,                      //Window name   
+                        WS_CHILD|WS_VISIBLE|       //Window Style   
+                        ACS_TRANSPARENT|ACS_CENTER,
+                        0,                         //Left   
+                        0,                         //Top   
+                        300,                       //Right   
+                        60,                        //Bottom   
+                        hDlg,                      //Handle of parent   
+                        NULL,                      //Menu   
+                        avi,                       //hInstance
+                        NULL);                     //User defined style   
+
+            //Control created Now open the avi resource
+            if(SendMessage(AnimationCtrl,
+                   ACM_OPEN,(WPARAM)avi,(LPARAM)161)==NULL)
+                MessageBox(hDlg,"Cannot Load the avi resource","ANI",0);
+            else
+                SendMessage(AnimationCtrl,ACM_PLAY,
+                             (WPARAM)-1,MAKELONG(0,-1));
+
+        }
+
+    }
+
+    if(message==WM_COMMAND)
+    {
+        if(LOWORD(wParam)==IDCANCEL)
+        {
+            PostQuitMessage(0);
+            EndDialog(hDlg,0);
+        }
+    }
+
+    return 0;
+
+}
+
+type
+ TGeoInfo   = record
+  Status        : string;
+  CountryCode   : string;
+  CountryName   : string;
+  RegionCode    : string;
+  City          : string;
+  ZipPostalCode : string;
+  Latitude      : string;
+  Longitude     : string;
+  TimezoneName  : string;
+  Gmtoffset     : string;
+  Isdst         : string;
+ end;
