@@ -1,7 +1,7 @@
 ****************************************************************
-Release Notes maXbox 3.9.9.190 March 2015 CODEsign
+Release Notes maXbox 3.9.9.190 Mai 2015 CODEsign
 ****************************************************************
-Add 16 Units, 1 Tutor, SOAPConn, AVI-Res, OLEUtils, ACM
+Add 21 Units, 1 Tutor, SOAPConn, AVI-Res, OLEUtils, ACM, CDS
 
 1085 unit uPSI_JvAnimate                       //JCL
 1086 unit uPSI_DBXCharDecoder;                 //DBX
@@ -20,9 +20,14 @@ Add 16 Units, 1 Tutor, SOAPConn, AVI-Res, OLEUtils, ACM
 1099 unit uPSI_ACMConvertor;
 1100 unit XSBuiltIns_Routines
 1101 unit uPSI_ComObjOleDB_utils.pas
+1102 unit uPSI_SMScript;
+1103 unit uPSI_CompFileIo;
+1104 unit uPSI_SynHighlighterGeneral;
+1105 unit uPSI_geometry2;
 
-SHA1:  maXbox3.exe DEFC2444E3DA7BE541F89A5045CCC91FF6BDF933
-CRC32: maXbox3.exe DCAB3447
+
+SHA1:  maXbox3.exe A0C41415781603681F63A447182E63DFA06C609B
+CRC32: maXbox3.exe CCC42FF0
 
 
 ****************************************************************

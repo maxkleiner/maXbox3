@@ -369,6 +369,7 @@ begin
  CL.AddDelphiFunction('Procedure GetDir(d: byte; var s: string)');
  CL.AddDelphiFunction('procedure RmDir(const S: string)');
  CL.AddDelphiFunction('Function makeFile(const FileName: string): integer)');
+ CL.AddDelphiFunction('Function mkFile(const FileName: string): integer)');
 
  CL.AddDelphiFunction('Function FileCreate(const FileName: string): integer)');
  CL.AddDelphiFunction('Function FileOpen(const FileName: string; mode:integer): integer)');
@@ -743,6 +744,8 @@ begin
  S.RegisterDelphiFunction(@System_GetDir,'GetDir', cdRegister);
  S.RegisterDelphiFunction(@FileCreate,'FileCreate', cdRegister);
  S.RegisterDelphiFunction(@FileCreate,'MakeFile', cdRegister);
+ S.RegisterDelphiFunction(@FileCreate,'MkFile', cdRegister);
+
  S.RegisterDelphiFunction(@FileClose,'FileClose', cdRegister);
  S.RegisterDelphiFunction(@FileAge, 'FileAge', cdRegister);
  S.RegisterDelphiFunction(@FileGetDate, 'FileGetDate', cdRegister);

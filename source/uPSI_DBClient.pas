@@ -89,6 +89,26 @@ begin
   //with RegClassS(CL,'TCustomClientDataSet', 'TClientDataSet') do
   with CL.AddClassN(CL.FindClass('TCustomClientDataSet'),'TClientDataSet') do begin
     RegisterPublishedProperties;
+    //property IndexName: Widestring read GetIndexName write SetIndexName;
+    RegisterProperty('IndexName', 'WideString', iptrw);
+    RegisterProperty('CommandText', 'WideString', iptrw);
+   //RegisterProperty('ProviderName', 'string', iptrw);
+    RegisterProperty('Active', 'boolean', iptrw);
+    RegisterProperty('Ranged', 'boolean', iptrw);
+    RegisterProperty('Params', 'TParams',iptrw);
+    RegisterProperty('ObjectView', 'boolean',iptrw);
+    RegisterProperty('MasterSource', 'TDataSource',iptrw);
+    RegisterProperty('IndexDefs', 'TIndexDefs',iptrw);
+    RegisterProperty('FetchOnDemand', 'boolean',iptrw);
+    RegisterProperty('IsClone', 'boolean',iptrw);
+    RegisterProperty('AutoCalcFields', 'boolean',iptrw);
+    RegisterProperty('ProviderEOF', 'boolean',iptrw);
+    RegisterProperty('ReadOnly', 'boolean',iptrw);
+    RegisterProperty('StoreDefs', 'boolean',iptrw);
+
+   // property Constraints stored ConstraintsStored;
+
+
   end;
 end;
 
@@ -108,7 +128,8 @@ begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
     RegisterMethod('Procedure Open');   //active
     RegisterMethod('Procedure Close');
-    RegisterMethod('Function FIELDBYNAME( const FIELDNAME : STRING) : TFIELD');
+         RegisterMethod('Procedure Free');
+     RegisterMethod('Function FIELDBYNAME( const FIELDNAME : STRING) : TFIELD');
     RegisterMethod('Function FINDFIELD( const FIELDNAME : STRING) : TFIELD');
     //RegisterMethod('Function FINDFIELD( const FIELDNAME : WideString) : TFIELD');
      RegisterMethod('Procedure EDIT');
@@ -784,6 +805,7 @@ begin
     RegisterPropertyHelper(@TCustomClientDataSetPacketRecords_R,@TCustomClientDataSetPacketRecords_W,'PacketRecords');
     RegisterPropertyHelper(@TCustomClientDataSetRemoteServer_R,@TCustomClientDataSetRemoteServer_W,'RemoteServer');
     RegisterConstructor(@TCustomClientDataSet.Create, 'Create');
+      RegisterMethod(@TCustomClientDataSet.Destroy, 'Free');
 
     RegisterMethod(@TCustomClientDataSet.Open, 'Open');
     RegisterMethod(@TCustomClientDataSet.Close, 'Close');

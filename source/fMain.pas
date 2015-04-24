@@ -129,6 +129,8 @@
                                     dunit testframework vendor dbtests - 3.3.2015
          10465     build 190 override bugfixing, virtual constructor - 7 units, soap conn
          10470     build 191 ADOCOMUtils_set  - recordset2
+         10490     build 192 TClientDataSet2  - recordset3, script executor, vbscript, DLLRun
+
                   [the last one before V4 in 2015]
                    V4.0   in  July 2015
  ************************************************************************** }
@@ -155,7 +157,8 @@ uses
   SynHighlighterUNIXShellScript, SynEditPrintPreview, SynEditPrintTypes,
   SynHighlighterURI, SynURIOpener, SynHighlighterMulti, SynExportRTF, SynHighlighterCSS,
   SynHighlighterEiffel, SynHighlighterAsm, SynHighlighterDfm, SynHighlighterVB,
-  SynHighlighterIni, SynHighlighterBat, SynHighlighterIDL
+  SynHighlighterIni, SynHighlighterBat, SynHighlighterIDL,
+  SynHighlighterVBScript
   {,IWBaseControl,IWBaseHTMLControl}; //, jpeg;
 
 const
@@ -549,6 +552,7 @@ type
     PANView1: TMenuItem;
     Tutorial39GEOMaps1: TMenuItem;
     UnitConverter1: TMenuItem;
+    SynVBScriptSyn1: TSynVBScriptSyn;
     procedure IFPS3ClassesPlugin1CompImport(Sender: TObject; x: TPSPascalCompiler);
     procedure IFPS3ClassesPlugin1ExecImport(Sender: TObject; Exec: TPSExec; x: TPSRuntimeClassImporter);
     procedure PSScriptCompile(Sender: TPSScript);
@@ -1994,6 +1998,10 @@ uses
   uPSI_WaveConverter,
   uPSI_ACMConvertor,
   uPSI_ComObjOleDB_utils, //3.9.9.191
+  uPSI_SMScript,
+  uPSI_CompFileIo,
+  uPSI_SynHighlighterGeneral,  //3.9.9.192
+  uPSI_geometry2,
 
   ///
   ///
@@ -3138,6 +3146,10 @@ begin
   SIRegister_WaveConverter(X);
   SIRegister_ACMConvertor(X);
   SIRegister_ComObj2(X);    //3.9.9.191
+  SIRegister_SMScript(X);
+  SIRegister_CompFileIo(X);
+  SIRegister_SynHighlighterGeneral(X); //3.9.9.192
+  SIRegister_geometry2(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4566,6 +4578,10 @@ begin
   RIRegister_ACMConvertor(X);
   RIRegister_ComObj2(X);
   RIRegister_ComObj2_Routines(Exec);
+  RIRegister_SMScript(X);
+  RIRegister_CompFileIo_Routines(Exec);
+  RIRegister_SynHighlighterGeneral(X);
+  RIRegister_geometry_Routines2(Exec);  //!
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -5694,6 +5710,10 @@ begin
   Sender.AddFunction(@GetMapX, 'function GetMapX(C_form,apath: string; const Data: string): boolean;');
   Sender.AddFunction(@GetGEOMap, 'procedure GetGEOMap(C_form,apath: string; const Data: string);');
   Sender.AddFunction(@GetMapXGeoReverse, 'function GetMapXGeoReverse(C_form: string; const lat,long: string): string;');
+  Sender.AddFunction(@GetGeoCodeCoord, 'function GetGeocodeCoord(C_form: string; const data:string; atxt: boolean): string;');
+  Sender.AddFunction(@GetGeoCodeCoord, 'function GetGeoCoord(C_form: string; const data:string; atxt: boolean): string;');
+  Sender.AddFunction(@GetGeoCodeCoord, 'function GetGeoCode(C_form: string; const data:string; atxt: boolean): string;');
+
   Sender.AddFunction(@OpenMap, 'function OpenMap(const Data: string): boolean;');
   Sender.AddFunction(@OpenMap, 'function OpenMapX(const Data: string): boolean;');
   Sender.AddFunction(@OpenMap, 'function OpenStreetMap(const Data: string): boolean;');

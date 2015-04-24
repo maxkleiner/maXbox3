@@ -1,0 +1,255 @@
+{****************************************************************
+ * Project  : DBX Demo - DataBaseSeries maXbase
+ * App Name : 195_SQL_DBExpress2.txt, loc's = 103
+ * Purpose  : Demonstrates 2 ways Queries in Datasets
+ * History  : TSQLConnection, TSQLDataSet, TSQLQuery
+ ****************************************************************}
+
+program SQL_DataBaseDemo;
+
+var E: Exception;
+
+const  
+   //ADBNAME = 'D:\Program Files\Common Files\Borland Shared\Data\MASTSQL.GDB';
+  // ADBNAME = 'D:\Program Files\Common Files\CodeGear Shared\Data\MASTSQL.GDB';
+  //ADBNAME = 'C:\maXbook\kleiner2005\download\employee.gdb';
+  ADBNAME = 'C:\Program Files\Firebird\Firebird_2_5\examples\empbuild\employee.fdb';
+  
+   //SQLQUERY = 'SELECT * FROM Customer WHERE Company like "%SCUBA%"''';       
+   //SQLQUERY = 'SELECT Count(*)';       
+   SQLQUERY = 'SELECT * FROM Customer';          
+ 
+   //SQLQUERY = 'SELECT * FROM Customer';       
+
+{For this demo you need some provider libraries, DemoDB MASTSQL and InterBase
+ which is part of an installation, here's some example code:
+ }
+
+function DataSetQuery(aconnect: TSQLConnection): TSQLDataSet;
+var dataset: TSQLDataSet;
+    i: integer;
+begin
+  DataSet:= TSQLDataSet.Create(self);
+  with DataSet do begin
+    SQLConnection:= aconnect;
+    //find all names with SCUBA in it!
+    CommandText:= SQLQUERY;
+    Open; 
+    Writeln(intToStr(Recordcount)+' records found')
+    for i:= 0 to Recordcount - 1 do begin
+      Writeln('Record: '+intToStr(i)+' '+Fields[1].asString)
+      Next;
+    end;
+  end;
+  result:= DataSet;     
+end;      
+  
+
+function SQLReturn(aconnect: TSQLConnection): TSQLQuery;
+var
+  qry: TSQLQuery;
+  i, z: integer;
+begin
+  qry:= TSQLQuery.Create(self);
+  qry.SQLConnection:= aconnect; //maybe before qry.active:= false;
+  qry.SQL.Add(SQLQuery)
+  qry.Open;
+  Writeln(intToStr(qry.Recordcount)+' records found')
+  for i:= 0 to qry.Recordcount - 1 do begin
+    for z:= 0 to qry.Fieldcount - 1 do 
+      Write((qry.Fields[z].asString)+' ');
+    Writeln(#13#10)
+    qry.Next;
+  end;
+ result:= qry;
+end;
+
+
+procedure ConnectInterBase(const aDBname: string);
+var
+  connection : TSQLConnection;
+  DataSet    : TSQLDataSet;
+  dataQuery  : TSQLQuery;
+  dQuery: TQuery; //DataSet; //Query;
+begin
+  Connection:= TSQLConnection.Create(NIL);
+  try
+    with Connection do begin
+      ConnectionName:= 'VCLScanner';
+      DriverName:= 'firebird'; //'INTERBASE';
+      LibraryName:= 'dbxint30.dll';
+      VendorLib:= 'GDS32.DLL';
+      //GetDriverFunc:= 'getSQLDriverINTERBASE';
+      Params.Add('User_Name=SYSDBA');
+      Params.Add('Password=masterkey');
+      Params.Add('Database='+ADBNAME);
+      LoginPrompt:= false; //True;
+      Open;
+    end;
+    dataQuery:= SQLReturn(Connection)
+    //dQuery.updatemode:= upWhereAll;
+    //dataQuery.updatemode:= upWhereAll;
+   
+    //dquery.requestlive; // dquery.state
+    //upwhereall
+    dataSet:= DataSetQuery(Connection) 
+  except
+    E:= Exception.Create('SQL Connect Exception: ');
+    Showmessage(E.message+'SQL or connect missing')
+  end;
+  //finalize objects 
+  if connection.Connected then begin
+    DataSet.Close;
+    DataSet.Free;
+    dataQuery.Close;
+    dataQuery.Free;
+    connection.Close;
+    connection.Free;
+  end;  
+end;
+
+begin
+  Writeln('ShowTime for SQL '+datetostr(Today))
+  //DBX3 InterBaseConnect with Queries and Resultset
+  ConnectInterbase(ADBNAME);
+  //maxform1.DelphiSite1Click(self)
+  //maxform1.ShellStyle1Click(self)
+end.
+
+
+
+//In this example we use dbdemos database with Country table  
+
+object ADODataSet1: TADODataSet
+    ConnectionString =
+      'Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Program Files\Co' +
+      'mmon Files\Borland Shared\Data\dbdemos.mdb;Persist Security Info' +
+      '=False'
+    CommandText = 'select Name  from country'
+  end
+  
+  
+
+Method 	Description
+Append 	Creates an empty record and adds it to the end of the dataset.
+AppendRecord 	Appends a record to the end of the dataset with the given field data and posts the edit.
+ApplyUpdates 	Instructs the database to apply any pending cached updates. Updates are not actually written until the CommitUpdates method is called.
+Cancel 	Cancels any edits to the current record if the edits have not yet been posted.
+CancelUpdates 	Cancels any pending cached updates.
+ClearFields 	Clears the contents of all fields in the current record.
+CommitUpdates 	Instructs the database to apply updates and clear the cached updates buffer.
+Close 	Closes the dataset.
+Delete 	Deletes the current record.
+DisableControls 	Disables input for all data controls associated with the dataset.
+FieldByName 	Returns the TField pointer for a field name.
+
+FindFirst
+
+Example:
+
+  {set up database component}
+  ABSDatabase1.DatabaseName := 'emp_db';
+  ABSDatabase1.DatabaseFileName := 'c:\data\employee_db.abs';
+
+  {set up query component}
+  ABSQuery1.DatabaseName := 'emp_db';
+  ABSQuery1.SQL.Text := 'select * from employee';
+  ABSQuery1.RequestLive := True;
+   
+  if (not ABSDatabase1.Exists) then
+    raise Exception.Create('Database file does not exist');
+
+  {execute and open query}
+  ABSQuery1.Open;
+
+
+   ...
+   for i := MaiList.Count - 1 downto do begin
+       MaiQuery1.close;
+       MaiQuery1.SQL.clear;
+       MaiQuery1.SQL.text := 'Select * from MaiTable.db where (MaiFeld like ''' + MaiList[i] + ')''';
+       MaiQuery1.open;
+       if MaiQuery1.recordcount > 0 then
+          MaiList.delete(i)
+   end:
+   ...
+
+begin
+for i := MaiList.Count - 1 downto 0 do
+begin
+MaiQuery1.close;
+//MaiQuery1.SQL.clear; nicht notwendig
+MaiQuery1.SQL.text := 'Select * from MaiTable.db where MaiFeld like "%' + MaiList[i] + '%"';
+MaiQuery1.open;
+if (i > 1537) and (i < 1541) then
+ShowMessage(MaiQuery1.SQL.text);
+if MaiQuery1.recordcount > 0 then
+MaiList.delete(i)
+end;
+end;
+[/delphi:1:da2a96482f]
+
+
+
+TSQLDataSet is a forward only read only dataset. As you move the cursor
+through the dataset by calling TSQLDataSet.Next it fetches the rows one
+at a time. It does not buffer multiple rows on the client. That is the
+function of TClientDataSet.
+
+Many thanks for that. So I take it that SQLDataset.Open causes the SQL
+
+
+thi is a Sample of insert, in a table with 4 fields, with the SQLQuery.
+
+
+    //CommandText:= Format('INSERT INTO CUSTOMER VALUES("%d","%s","%s","%s","%s")',
+                             //[34,Email,FirstName,LastName,datetoStr(date)]);
+
+begin
+
+TableSQL.Active := False;
+TableSQL.SQL.Clear;
+TableSQL.SQL.Add('INSERT INTO EXAMPLE_TABLE(FIELD1, FIELD2, FIELD3,
+FIELD4) VALUES (:PFIELD1, :PFIELD2, :PFIELD3,:PFIELD4);
+TableSQL.ParamByName('PFIELD1').AsString := 'TEST';
+TableSQL.ParamByName('PFIELD2').AsInteger := 10;
+TableSQL.ParamByName('PFIELD3').AsFloat := 10.34;
+TableSQL.ParamByName('PFIELD4').AsDateTime := Now;
+TableSQL.ExecSQL;
+
+end;
+
+In the table, the FIELD1 is a string, the 2 is an integer, the 3 is a
+flating and the last is a timestamp.
+
+ label1.Caption := tempSQL.FieldByName('CustomerName ').value;
+ Function dStringPad(InputStr, FillChar: String; StrLen: Integer;
+   StrJustify: Boolean): String;
+Var
+   TempFill: String;
+   Counter : Integer;
+Begin
+   If Not (Length(InputStr) = StrLen) Then Begin
+     If Length(InputStr) > StrLen Then Begin
+       InputStr := Copy(InputStr,1,StrLen) ;
+     End
+     Else Begin
+       TempFill := '';
+       For Counter := 1 To StrLen-Length(InputStr) Do Begin
+         TempFill := TempFill + FillChar;
+       End;
+       If StrJustify Then Begin
+         {Left Justified}
+         InputStr := InputStr + TempFill;
+       End
+       Else Begin
+         {Right Justified}
+         InputStr := TempFill + InputStr ;
+       End;
+     End;
+   End;
+   Result:= InputStr;
+End;
+
+
+ttimer

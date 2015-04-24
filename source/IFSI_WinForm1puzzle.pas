@@ -400,6 +400,7 @@ function IsCOMConnected: Boolean;
  function GetMapX(C_form,apath: string; const Data: string): boolean;
   procedure GetGEOMap(C_form,apath: string; const Data: string);
   function GetMapXGeoReverse(C_form: string; const lat,long: string): string;
+ function GetGeocodeCoord(C_form: string; const data:string; atxt: boolean): string;
 
   //function RoundTo(const AValue: Extended;
     //             const ADigit: TRoundToEXRangeExtended): Extended;
@@ -730,6 +731,49 @@ begin
     encURL:= '';
   end;
 end;
+
+function GetGeocodeCoord(C_form: string; const data:string; atxt: boolean): string;
+ var encodURL, alat, alon: string;
+    mapStream: TStringStream;
+    xmlDoc: TXmlVerySimple; //TALXMLDocument;
+    Nodes: TXmlNodeList;
+    Node: TXmlNode;
+    i: integer;
+ begin
+   encodURL:= Format(UrlMapQuestAPICode2,[c_form,HTTPEncode(Data)]);
+   mapStream:= TStringStream.create('');
+   xmldoc:= TXmlVerySimple.create;
+   try
+     Wininet_HttpGet(EncodURL, mapStream);  {WinInet}
+     //local tester
+     //mapstream.writestring(loadstringfromfile(apath));
+     mapStream.Position:= 0;
+     //writeln('string stream size: '+inttostr(mapstream.size));
+     //writeln('string stream cont: '+mapstream.datastring);
+     {SaveStringtoFile(apath, mapStream.datastring) OpenDoc(apath); }
+     xmlDoc.loadfromStream(mapstream);
+     //writeln('childcounts: '+inttostr(xmlDoc.root.childnodes.count))
+     if xmlDoc.root.childnodes.count > 0 then begin
+       Nodes:= XmlDoc.Root.FindNodes('place');    //or result
+       for i:= 0 to TXMLNodeList(nodes).count-1 do begin
+         //for Node in Nodes do
+         Node:= TXMLNode(nodes.items[i]);
+         alon:= node.attribute['lon'];
+         alat:= node.attribute['lat'];
+       end;
+       if atxt then
+         result:= 'GEOMapX Coordinates Topics found: '+(mapstream.datastring)+#13#10;
+       result:= result+(#13#10+'latitude: '+alat+'  longitude: '
+                   +alon+' of place: '+data+#13#10);
+       Nodes.Free;
+     end;
+   finally
+     encodURL:= '';
+     mapStream.Free;
+     xmlDoc.Free;
+   end;
+ end;
+
 
 
 function  StreamtoString2( Source: TStream): string;

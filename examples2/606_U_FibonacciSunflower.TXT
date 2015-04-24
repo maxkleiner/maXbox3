@@ -1,0 +1,314 @@
+
+unit U_FibonacciSunflower_mX;
+{Copyright 2001, Gary Darby, Intellitech Systems Inc., www.DelphiForFun.org
+
+ This program may be used or modified for any non-commercial purpose
+ so long as this original notice remains in place.
+ All other rights are reserved }
+{Just fooling around with Fibonacci sunflowers}
+
+//http://www.delphiforfun.org/Programs/FiboSunflower.htm
+
+interface
+
+{uses
+Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  StdCtrls, ExtCtrls;
+ }
+
+//type
+//TForm1 = class(TForm)
+  var
+    Image1: TImage;
+    DrawBtn: TButton;
+    aMemo1: TMemo;
+    RotateRBox: TRadioGroup;
+    StyleBox: TRadioGroup;
+    StatusBar1: TStatusBar;
+    aRed,aGreen, aBlue, x,y: integer;
+
+procedure DrawBtnClick(Sender: TObject);
+//private
+{ Private declarations }
+//public
+{ Public declarations }
+
+  var midx, midy:integer;
+
+procedure Circle(centerRadius,CenterAngle:real; r:integer);
+  
+  var Form1: TForm;
+
+implementation
+//{$R *.DFM}
+
+{
+This example converts a specified icon to a bitmap. To run 
+this example, add an image, a button, and an Open dialog to 
+a form. Name the button ConvertIcon2Bitmap, and add the 
+following code as its OnClick event handler.
+} 
+procedure TForm1_ConvertIcon2BitmapClick(Sender: TObject);
+var 
+  s : string;
+  Icon: TIcon;
+  OpenDialog1: TOpenDialog;
+begin
+  OpenDialog1.DefaultExt := '.ICO';
+  OpenDialog1.Filter := 'icons (*.ico)|*.ICO';
+  OpenDialog1.Options := [ofOverwritePrompt, ofFileMustExist, ofHideReadOnly ];
+  if OpenDialog1.Execute then
+  begin
+    Icon := TIcon.Create;
+    try
+      Icon.Loadfromfile(OpenDialog1.FileName);
+      s:= ChangeFileExt(OpenDialog1.FileName,'.BMP');
+      Image1.Width := Icon.Width;
+      Image1.Height := Icon.Height;
+      Image1.Canvas.Draw(0,0,Icon);
+      Image1.Picture.SaveToFile(s);
+      ShowMessage(OpenDialog1.FileName + ' Saved to ' + s);
+    finally
+      Icon.Free;
+    end;
+  end;
+end; 
+
+procedure TForm1_ChangeColor(Sender: TObject);
+	Var
+	    CRed, CGreen, CBlue : TColor;
+	    Shape1: TShape;
+	begin
+	    { Display mixture of colors }
+    Shape1.Brush.Color:=StrToInt64Def('$'+
+	    IntToHex(ColorToRGB(aBlue),2)+
+	    IntToHex(ColorToRGB(aGreen),2)+
+	    IntToHex(ColorToRGB(aRed),2),0);
+	 
+	 //ColorToRGB(ared);
+       { Convert integer to color value }
+	    CRed:=StrToInt64Def('$0000'+IntToHex(ColorToRGB(aRed),2),0);   
+	    CGreen:=StrToInt64Def('$00'+IntToHex(ColorToRGB(aGreen),2)+'00',0);
+	    CBlue:=StrToInt64Def('$'+IntToHex(ColorToRGB(aBlue),2)+'0000',0);
+	    { display circles for each color }
+	    Image1.Canvas.Brush.Color:=CRed;
+	    Image1.Canvas.Pen.Color:=CRed;
+	    Image1.Canvas.Ellipse(X-25, Y-40, X+25, Y+10);
+	    Image1.Canvas.Brush.Color:=CGreen;
+	    Image1.Canvas.Pen.Color:=CGreen;
+	    Image1.Canvas.Ellipse(X-40, Y-15, X+10, Y+35);
+	    Image1.Canvas.Brush.Color:=CBlue;
+	    Image1.Canvas.Pen.Color:=CBlue;
+	    Image1.Canvas.Ellipse(X-10, Y-15, X+40, Y+35);
+  end;
+
+procedure Circle(centerRadius,CenterAngle:real; r:integer);
+{Draw a circle centered at CenterRadius, CenterAngle from image center,
+ radius of cirdle drawn is r}
+var
+x,y:integer;
+begin
+with image1, form1.canvas do begin
+   x:=trunc(midx+CenterRadius*cos(CenterAngle));
+    y:=trunc(midy+CenterRadius*sin(CenterAngle));
+    ellipse(x-r,y-r,x+r,y+r);
+    form1.canvas.brush.color:=clyellow;
+ 
+end;
+end;
+
+procedure DrawBtnClick(Sender: TObject);
+{Draw a sunflower}
+var
+i,j,k,r:integer;
+  phi,IncA:real;
+begin
+r:=5;
+  phi:=(1+sqrt(5.0))/2;
+case rotateRbox.itemindex of {set angle increment for center of seed}
+0: IncA:=2*Pi*Phi;
+    1: IncA:=2*pi*(21/34);
+    2: IncA:=2*pi*(31/55);
+end;
+  midx:=image1.width div 2 + 256;
+  midy:=image1.height div 2 + 9;
+  image1.canvas.brush.color:=clwhite; {clear the image area}
+  with image1 do 
+   canvas.rectangle(0, 0, form1.Width, form1.Height);
+  //image1.canvas.brush.color:=clyellow;
+  //Image1.Canvas.pen.color:=clred;
+  //Image1.Invalidate;
+for i:= 0 to 900 do  {Arbitrary big number of seeds to create}
+begin
+case stylebox.itemindex of
+ 0: circle(sqrt(i)*r,i*IncA,r); {fixed seed size moving outward by sqrt(i)}
+ 1: circle(i*r/22,IncA*i,trunc(r*(i/500))); {increasing seed size - just trial and error numbers}
+end;
+ if i mod 16 = 0 then application.processmessages; {redraw once in a while}
+end;
+end;
+
+
+procedure loadForm;
+begin
+ Form1:= TForm.create(self)
+ with form1 do begin
+  setbounds(4,12,720,520)
+  Caption:= 'Fibonacci Sunflowers by maXbox'
+  Color:= clBtnFace
+  Font.Charset:= DEFAULT_CHARSET
+  Font.Color:= clWindowText
+  Font.Height:= -11
+  Font.Name:= 'MS Sans Serif'
+  Font.Style:= []
+  OldCreateOrder:= False
+  Position:=poScreenCenter
+  //OnActivate = FormActivate
+  //OnPaint:= @FormPaint
+  PixelsPerInch:= 96
+  //TextHeight:= 13
+   Show;
+  end;
+  //FormActivate(self)
+  
+  image1:= TImage.create(form1)
+  with image1 do begin
+    parent:= form1;
+    setbounds(256,8,425,426)
+    //color:= clyellow;
+    canvas.brush.color:=clyellow;
+    //Shape:= stCircle
+    //show;
+  end;
+  {with TLabel.creATE(form1) do begin
+    parent:= form1;
+    setbounds(392,16,43,13)
+    Caption:= 'Solutions'
+  end;}
+  drawbtn:= TButton.create(form1)
+  with drawbtn do begin
+    parent:= form1;
+    setbounds(8,432,99,25)
+   Caption:= 'Draw Sunflower'
+    TabOrder:= 0
+    OnClick:= @DrawBtnClick
+  end;
+ 
+  RotateRBox:= TRadioGroup.create(form1)
+  with RotateRBox do begin
+    parent:= form1;
+    setbounds(8,344,145,81)
+      Caption:= 'Rotate for each seed'
+    Items.add('360*Phi degrees')
+    Items.add('360*(21/34) degress ')
+    Items.add('360*(34/55) degrees')
+    ItemIndex:= 0
+    TabOrder:= 2
+    //OnClick:= @ListBox1Click
+  end;
+ 
+  StyleBox:= TRadioGroup.create(form1)
+  with StyleBox do begin
+    parent:= form1;
+    setbounds(160, 344,89,81)
+    Caption:= 'Style'
+    Items.add('Fixed seed ')
+    Items.add('Increasing ')
+    ItemIndex:= 1
+      TabOrder:= 3
+    //OnClick:= @ListBox1Click
+  end;
+ 
+  with TMemo.create(self) do begin
+    parent:= form1;
+    setbounds(8,8,240,329)
+    Color:= clYellow
+    Lines.add('A Fibonacci series of integers starts with 0,1 and '
+      +'each member thereafter is the sum of the '
+      +'previous two.  Thus 0,1,1,2,3,5,8,13,21.. etc.'
+      +''+#13#10#13#10
+      +'The ratio of any two consectutive Fibonacci '
+      +'numbers approaches the "Golden Ratio",  '
+      +'(1+sqrt(5))/2 = 1.618033... , commonly denoted '
+      +'by the Greek letter Phi (pronounced "fee").'
+      +''+#13#10#13#10
+      +'The Golden Ratio has the unique property that  '
+      +'Phi-1=1/Phi   and appears often in art and '
+      +'nature.'
+      +''+#13#10#13#10
+      +'In particular, sunflowers seeds tend to be '
+      +'displaced from each other by Phi (or identically, '
+      +'Phi-1, or 1/Phi) fraction of a circle, '
+      +'approximately 222.5 degrees.  For common '
+      +'sized sunflower heads, the approximations of phi '
+      +'represented by 21/34 and 34/55 are close '
+      +'enough to phi, (21/34  < phi and 34/55 >phi), '
+      +'that we see the optical illlusion of spirals '
+      +'overlapping and moving in opposite directions.'
+      +''+#13#10+#13#10
+      +'Definitely worth further investigation.'
+      +''
+      +'')
+    TabOrder:= 2
+  end;
+  StatusBar1:= TStatusBar.create(self)
+    with statusbar1 do begin
+    parent:= form1;
+    //setbounds(0,427,688,19)
+    //alignment:= albottom;
+    panels.add;
+    Panels[0].text:='by maXbox rocks,  www.DelphiForFun.org';
+    panels[0].Alignment:= taCenter
+    panels[0].Width:= 50
+    SimplePanel:= False
+  end;
+end;
+
+
+begin
+
+ loadForm;
+ writeln(floattoStr(permutation(9,5)))
+ writeln(floattoStr(permutationJ(9,5)))
+ maxCalcF('(1+sqrt(5))/2');
+
+end.
+
+
+(*Type
+ bytearray=array[1..maxentries] of byte;
+ TCombotype=(Combinations,Permutations);
+ TComboSet=class(TObject)
+  private
+   N:           word;
+   R:           word;
+   NumberOfSubsets:int64;
+   Ctype: TComboType; {Generate Combinations or permutations}
+   loops:    bytearray;  {for efficiency, truncate search at loops for
+                             each position, eg if n=10, then leftmost
+                             has 10 of 10, for each of these,next position
+                             has 9, next 8, etc. }
+   public
+   Selected:    bytearray;
+
+   {Setup to retrieve R of N objects}
+   Procedure Setup(newR, newN:word; NewCtype:TComboType);
+   Function Getnext:boolean;
+   Function GetNextCombo:Boolean;
+   Function GetNextPermute:boolean;
+   Function GetCount:int64;
+   function GetR:integer;
+  End;
+
+  var
+    combos:TComboSet;  {created at initialization time}
+    
+    https://basta.net/2015/speakers
+    
+    In case you have never done it, the conversion from Polar coordinates (R, Theta) to Cartesian coordinates (X, Y) is pretty simple.  X=R*Cos(Theta) and Y:=R*Sin(Theta).
+
+  *)
+
+
+
+//----code_cleared_checked_clean----

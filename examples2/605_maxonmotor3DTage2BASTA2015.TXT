@@ -1,0 +1,509 @@
+//maXbox is a scripter tool with an inbuild delphi engine in one exe!
+//Demo shows the functions of maXbook in images, sound and text,
+//based on picture atomimage2 I added a move animation roseAtom, loc's =366
+//*************************************************************************
+
+Program maXbook_atomimage_3DCipher_DelphiTageBASTA2015;
+
+Const LOGO = 'Welcome to maXbook Art maXon motor, mouseDown to move!';
+      myPIC1 = 'http://www.softwareschule.ch/images/atomimage2.png';
+      
+      myPIC2 = 'http://www.softwareschule.ch/images/maxworld.png';
+      //myPIC1loc = 'examples\atomimage2.png';
+      myPIC1loc = 'examples\delphilogo7.jpg';
+      
+      myPIC2loc = 'examples\earthplay\maxworld.png';
+      myMusic = 'http://www.softwareschule.ch/download/airmaxloop3.mp3';
+      mySong = 'airmaxloop3.mp3';
+      myText = ' atomimage2';
+      MILLISECONDS = 50;
+      Xline= 45; Yline= 45;
+      Zline= 15+60;
+      //OUTH= 'MAXONMOTOR';//'HELLOMAXON';
+        //OUTH= 'DELPHITAGE';//'HELLOMAXON';
+        //outh= 'BASTA!2015';
+        outh= 'BASTA!5102';
+
+var
+  inFrm: TForm;
+  image1, image2: TImage;
+  mT: TTimer;
+  E: Exception;
+  CurStep: Double;
+
+procedure loadImageLocal(vimage: TImage; picpath: shortstring); forward;
+
+procedure drawText(vFrm: TForm; vcolor: TColor);
+var
+  theRect: TRect;
+begin
+  with vFrm.canvas do begin
+    //brush.Color:= clred;
+      Brush.Style:= bsClear;
+    //.left/.top/.right/.bottom
+    theRect:= Rect(350,350,600,400);
+    font.color:= vColor;
+    font.size:= 45;
+    TextOut(460,395,myText);
+  end;
+end;  
+
+//********************************* Cube ***********************************//
+type
+  TCube = array[1..10] of record             {date}
+     x,y,z: Integer;
+  end;       
+  TStep = array[1..20] of Byte;             {point sequence}
+
+var  H: TCube;
+     step: TStep;
+     H3D: array[1..10] of TPoint;
+     Alpha, Beta, Mx, My: Integer;    { turnpoint init}
+     size, a: single;
+
+procedure loadHouseArray;
+ begin
+ H[1].x:= -xline;  H[1].y:= -yline;  H[1].z:= -zline;
+ H[2].x:= -xline;  H[2].y:= -yline;  H[2].z:= 0;
+ H[3].x:= 0;       H[3].y:= -yline;  H[3].z:= zline;
+ H[4].x:= xline;   H[4].y:= -yline;  H[4].z:= 0;
+ H[5].x:= xline;   H[5].y:= -yline;  H[5].z:= -zline;
+ H[6].x:= xline;   H[6].y:= yline;   H[6].z:= -zline;
+ H[7].x:= xline;   H[7].y:= yline;   H[7].z:= 0;
+ H[8].x:= 0;       H[8].y:= yline;   H[8].z:= zline;
+ H[9].x:= -xline;  H[9].y:= yline;   H[9].z:= 0;
+ H[10].x:= -xline; H[10].y:= yline;  H[10].z:= -zline;
+
+ step[1]:= 5; step[2]:= 1; step[3]:= 2; step[4]:= 3;  
+ step[5]:= 4; step[6]:= 5; step[7]:= 6; step[8]:= 7;  
+ step[9]:= 8; step[10]:= 9; step[11]:= 10; step[12]:= 6;  
+ step[13]:= 7; step[14]:= 4; step[15]:= 3; step[16]:= 8;  
+ step[17]:= 9; step[18]:= 2; step[19]:= 1; step[20]:= 10;  
+end; 
+
+procedure Projektion(Alpha, Beta,       { turnpoint (drehwinkel)}
+                     Mx, My: Integer;   { middlepoint }
+                     size: single; acanvas: TCanvas);    
+var  SinA, SinB, CosA, CosB : single;     
+     run: Integer;
+
+begin { Projection }
+  SinA:= Sin(Alpha/180*Pi);          { calculation of projection before }
+  SinB:= Sin(Beta/180*Pi);                 { loop to save time}
+  CosA:= Cos(Alpha/180*Pi);            
+  CosB:= Cos(Beta/180*Pi);
+  acanvas.font.size:= 45;
+  acanvas.font.color:=clyellow;
+  //acanvas.font.name:='georgia'
+  acanvas.font.name:='Verdana'
+  acanvas.font.style:= [fsbold]
+
+   acanvas.MoveTo(H3D[step[1]].x, H3D[step[1]].y);
+   acanvas.pen.color:= clnavy; //$FE8BAA; //$AFFF00; //$FF6A5A; //cltrRed32; //clSlateBlue32; //clViolet32; //cltrRed32; //random(clNavy);
+   acanvas.pen.width:= 16;
+  for run:= 2 to 20 do                 
+    acanvas.LineTo(H3D[step[run]].x,H3D[step[run]].y);
+  acanvas.MoveTo(H3D[step[10]].x, H3D[step[10]].y);
+  acanvas.LineTo(H3D[step[13]].x, H3D[step[13]].y);
+  acanvas.MoveTo(H3D[step[3]].x, H3D[step[3]].y);
+  acanvas.LineTo(H3D[step[5]].x, H3D[step[5]].y);
+  for run:= 1 to 10 do                        
+    with H[run] do begin 
+      H3D[run].x:= Round((CosA * H[run].x-H[run].y * SinA) * size) + Mx ;
+      H3D[run].y:= Round(((H[run].x*SinA + H[run].y*CosA)*CosB
+                                + H[run].z*SinB)*size) + My;
+      //inFrm.canvas.Textout(H3D[run].x,H3D[run].y, inttoStr(step[run+1])) 
+      acanvas.Textout(H3D[run].x,H3D[run].y, OUTH[run])   //Sign 
+    end; { with }
+  
+    sleep(6)    
+end; { Projection }
+//************************************ Cube finish ***************************
+
+procedure getMP3File;
+var 
+  fStream: TFileStream;
+begin
+  fStream:= TFileStream.create(mySong, fmCreate)
+  with TIdHTTP.create(NIL) do begin
+    try
+      Get1(myMusic, fStream)
+    finally
+      Free
+      fStream.Free;
+    end;
+  end;    
+end;
+
+procedure getHTTP_PNG(vimage: TImage; vURL: string); 
+var
+  idHTTP: TIDHTTP;
+  pngStream: TMemoryStream;
+begin
+  with TLinearBitmap.Create do
+  try
+    idHTTP:= TIdHTTP.Create(NIL)
+    pngStream:= TMemoryStream.Create;
+    try
+      idHTTP.Get1(vURL, pngStream)
+    except
+      showmessage(E.message)
+    end  
+    pngStream.Position:= 0;
+    LoadFromStream2(pngstream,'PNG');
+    vimage.Picture:= NIL;
+    AssignTo(vimage.picture);
+    //SaveToFile(ExePath+'mX3_open.png');
+  finally
+    Dispose;
+    Free;
+    idHTTP.Free
+    pngStream.Free;
+  end; 
+end; 
+
+function TForm1_RotatePoint(APoint,ACenter: TPoint; AAngle: Double): TPoint;
+var dx,dy: Double;
+begin
+  dx:= (ACenter.Y * Sin(AAngle)) - (ACenter.X * Cos(AAngle)) + ACenter.X;
+  dy:= -(ACenter.X * Sin(AAngle)) - (ACenter.Y * Cos(AAngle)) + ACenter.Y;
+  Result.X:= Round((APoint.X * Cos(AAngle)) - (APoint.Y * Sin(AAngle)) + dx);
+  Result.Y:= Round((APoint.X * Sin(AAngle)) + (APoint.Y * Cos(AAngle)) + dy);
+end;
+  
+procedure TForm1_RotatePolygon(var APoints: array of TPoint; AAngle: Double);
+var
+  aCentr: TPoint;
+  i: Integer;
+begin
+  aCentr:= Point(10, 10);
+  for i:= 0 to Length(APoints)-1 do begin
+    aCentr.X:= aCentr.X + APoints[i].X;
+    aCentr.Y:= aCentr.Y + APoints[i].Y;
+  end;
+  aCentr.X:= aCentr.X div Length(APoints);
+  aCentr.Y:= aCentr.Y div Length(APoints);
+  for i:= 0 to Length(APoints)-1 do
+    APoints[i]:= TForm1_RotatePoint(APoints[i], aCentr, AAngle);
+end;
+
+procedure TFrm1_FormPaint(Sender: TObject; vimage: TImage);
+var //lPoints: array[0..5] of TPoint;
+  lPoints: array of TPoint;
+begin
+  SetLength(lpoints,5); //composition of roseAtom
+  lPoints[0].X:= 50;
+  lPoints[0].Y:= 125;
+  lPoints[1].X:= 100;
+  lPoints[1].Y:= 10;
+  lPoints[2].X:= 100;
+  lPoints[2].Y:= 100;
+  lPoints[3].X:= 125;
+  lPoints[3].Y:= 125;
+  lPoints[4].X:= 150;
+  lPoints[4].Y:= 150;
+  TForm1_RotatePolygon(lpoints, CurStep);
+  //infrm.Canvas.Pen.Width:= 5;
+  //infrm.Canvas.Polygon(lPoints);
+   with vimage.canvas do begin
+      Pen.color:= random(clblue);
+      Pen.Width:= 1;
+      brush.Color:= clblack;
+      Polygon(lPoints);        //does a redraw !
+      Brush.Style:= bsClear;
+   end;  
+     Projektion(Alpha,Beta,Mx,My,size, infrm.canvas);  { draw house }
+     //Inc(Beta);
+     Inc(Alpha);
+  //application.processMessages;
+end;
+
+ 
+//------------------------------event handler----------------------------------
+procedure closeForm(Sender: TObject; var Action: TCloseAction);
+begin
+  ///afrm.Free;
+   if mt <> NIL then begin
+    mT.enabled:= false;
+    mT.Free;
+    mT:= NIL;
+  end;
+  Screen.Cursor:= crDefault;
+  image1.Free;
+  //image2.Free;  
+  action:= caFree;
+  infrm:= NIL;
+end;
+
+procedure TFrm1_timerRedrawTimer(Sender: TObject);
+begin
+  CurStep:= CurStep + 0.1;
+  if CurStep > 360 then CurStep:= 0;
+   //infrm.Invalidate;  //redraw
+   TFrm1_FormPaint(Self, image1);
+end;
+
+procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+begin
+  Mx:= X-20;  //on image
+  My:= Y-20;
+  if sender = infrm then begin
+    Mx:= X;  //on form
+    My:= Y;
+  end;
+end;  
+
+procedure FormMouseDown(Sender: TObject; Button: TMouseButton;Shift: TShiftState; X, Y: Integer);
+begin
+  image1.onMouseMove:= @FormMouseMove;
+end;  
+
+procedure FormMouseUp(Sender: TObject; Button: TMouseButton;Shift: TShiftState; X, Y: Integer);
+begin
+  image1.onMouseMove:= NIL;
+end;  
+
+procedure loadForm;
+begin
+  Alpha:= 45;    { Drehwinkel mit Startwerten }
+  Beta:= -105;
+  size:= 1.5;
+  a:= 1.05;
+  inFrm:= TForm.create(self)
+  image1:= TImage.create(inFrm);
+  Screen.Cursor:= crHandPoint;
+  with inFrm do begin
+    position:= poScreenCenter;
+    color:= clblack;
+    setBounds(5,5, 900, 570);
+    caption:= LOGO;
+    onClose:= @closeForm;   
+    doublebuffered:= true
+    //onPaint:= @TFrm1_FormPaint;
+    Show;
+    Mx:= width div 2-50;        {cube position}
+    My:= height div 2-80;  
+    onMouseMove:= @FormMouseMove;
+  end; 
+  with image1 do begin
+    parent:= infrm;
+    setBounds(0,0, 900,550);
+    //onPaint
+    //onMousedown:= @Image1MouseDown;
+    stretch:= true;
+    onMouseMove:= NIL; //@FormMouseMove;
+    onMouseDown:= @FormMouseDown;
+    onMouseUp:= @FormMouseUp;
+  end;
+  mT:= TTimer.Create(self);
+  mt.onTimer:= @TFrm1_timerRedrawTimer;
+  mt.interval:= MILLISECONDS;
+  (*image2:= TImage.create(inFrm);
+  with image2 do begin
+    parent:= infrm;
+    setBounds(0,0, inFrm.width, inFrm.height);
+    show;
+  end; *)
+end; 
+
+procedure loadImageLocal(vimage: TImage; picpath: shortstring);
+//var jpeg, jpeg2: tjpegimage;
+begin
+  //jpeg2:= TJpegImage.create();
+ with TLinearBitmap.Create do
+  try
+    LoadFromFile(picpath);
+    vimage.Picture:= NIL;
+    AssignTo(vimage.picture);
+    //SaveToFile(ExePath+'mX3_open.png');
+  finally
+    Dispose;
+    Free;
+  end; 
+  {@to save from bmp to jpg }
+  //Image1.Picture.BitMap.LoadFromFile(ExePath+'examples\citymax.bmp');
+  //jpeg2.loadfromfile(ExePath+'examples\maxbox_logo2.jpg');
+  //image1.picture.assign(jpeg);
+  //Image1.Picture.LoadFromFile(ExePath+'examples\citymax.bmp');
+  //jpeg.Free;
+  //jpeg2.Free;
+end; 
+
+procedure loadImageLocalCanvas(vimage: TCanvas; picpath: shortstring);
+begin
+ with TLinearBitmap.Create do
+  try
+    LoadFromFile(picpath);
+    vimage.brush.bitmap:= NIL;
+    AssignTo(vimage.brush.bitmap);
+    //SaveToFile(ExePath+'mX3_open.png');
+  finally
+    Dispose;
+    Free;
+  end; 
+end; 
+
+procedure SaveComposition(vCanvas: TCanvas; FileName: string);
+var
+  Bmp: TBitmap;
+  MyRect: TRect;
+begin
+  Bmp:= TBitmap.Create;
+  try
+    MyRect:= vCanvas.ClipRect;
+    Bmp.Width:= MyRect.Right;
+    Bmp.Height:= MyRect.Bottom;
+    Bmp.Canvas.CopyRect(MyRect, vCanvas, MyRect);
+    Bmp.SaveToFile(FileName);
+  finally
+    Bmp.Free;
+  end;
+end;
+
+var at, ct: integer;
+
+//------------------MAIN APP--------------------------------------------
+begin
+  ProcessMessagesON;
+   E:= Exception.create('Any internet connect problem'); 
+   loadForm;
+   loadHouseArray;
+  if fileExists(mySong) = false then 
+    getMP3File;
+  closeMP3;
+  //playMP3(mySong); 
+  if isInternet then  
+     getHTTP_PNG(image1, myPIC1)
+  else 
+     loadImagelocal(image1, ExePath+myPIC1loc);
+  drawText(inFrm, clPurple);   //hidden signature
+  //TFrm1_FormPaint(Self, image1);
+  //SaveComposition(inFrm.canvas, 'myatomcard2.bmp')
+    //memo2.setFocus;
+     at:= 500;//random(600)
+     ct:= 300;//random(500)
+ 
+    {repeat 
+     at:= at + random(10)-random(10)
+     ct:= ct + random(10)-random(10)
+     FormMouseMove(self,[],at,ct);
+     sleep(5)
+    until isKeypressed;}
+    
+End.
+
+
+
+Pictures from:
+
+http://www.softwareschule.ch/images/atomimage1.png
+http://www.softwareschule.ch/images/atomimage2.png
+http://www.softwareschule.ch/images/maxboxlogo.bmp
+http://www.softwareschule.ch/images/maxlindau2.png
+http://www.softwareschule.ch/images/citymax.bmp
+http://www.softwareschule.ch/images/oposlogo.gif
+
+---------------------------------------------------------------------
+code of version mX3.9 from http://www.softwareschule.ch/maxbox.htm
+//Load examples pas_*.txt from directory examples and press F9!
+//please read the readmefirst...
+//or start with the tutorial in /help
+//memo1 is script editor
+//memo2 is output space
+  new version and examples from
+     http://www.softwareschule.ch/maxbox.htm }
+
+
+just inside maXbox
+
+         ____    ___   _      ____    _   _   _
+        |  _ \  |  _| | |    |  _ \  | | | | | |
+        | | . | | |_  | |    | |_| | | |_| | | |
+        | | | | |  _| | |    |  __/  |  _  | | |          
+        | |_. | | |_  | |__  | |     | | | | | |                      
+        |____/  |___| |____| |_|     |_| |_| |_|  
+        
+
+Latest News of Free Pascal
+
+                                         
+
+----code_cleared_checked----
+
+
+
+
+ OnPaint:= @TForm1_PBoxPaint;
+ 
+
+
+
+
+
+
+
+
+Permalink
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+14.01918, 38.03074
+
+Data CC-By-SA by OpenStreetMap
+
+90015
+
+
+Name: 
+90015 (ref)
+
+Type: place:postcode
+
+Last Updated: 2014-06-17 18:18
+
+Admin Level: 
+
+Rank: Postcode Area
+
+Importance: 0.225 (estimated)
+
+Coverage: Point
+
+Centre Point: 38.0299882,14.0183690666667
+
+Extra Tags: 
+
+Address
+
+
+Cefalù (Type: place:town, relation 39444, 8, 0.0304678959828012 GOTO)
+
+Gibilmanna (Type: place:village, node 843624346, 15, 0.0404632510542306 GOTO)
+
+PA (Type: boundary:administrative, relation 39295, 6, 0.460638737241903 GOTO)
+
+Sicily (Type: place:state, relation 39152, 4, 0.459715391497263 GOTO)
+
+Sicily (Type: place:state, node 1781917332, 15, 0.999462835652614159 GOTO)
+
+90015 (Type: place:postcode, 0 GOTO)
+                                                                    9
+90015 (Type: place:postcode, 0 GOTO)
+
+Italy (Type: place:country, relation 365331, 2, 4.25773819700733 GOTO)
+
+it (Type: place:country_code, 0 GOTO)
