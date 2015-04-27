@@ -1,4 +1,4 @@
-unit uPSI_WinAPI;
+  unit uPSI_WinAPI;
 {
    first Spring
 }
@@ -759,6 +759,8 @@ begin
  CL.AddDelphiFunction('Function GetClipRgn( DC : HDC; rgn : HRGN) : Integer');
  CL.AddDelphiFunction('Function GetMetaRgn( DC : HDC; rgn : HRGN) : Integer');
   CL.AddDelphiFunction('Function LineTo( DC : HDC; X, Y : Integer) : BOOL');
+ CL.AddDelphiFunction('Function ImpersonateSelf( ImpersonationLevel : TSecurityImpersonationLevel) : BOOL');
+
 
 
      CL.AddTypeS('tagLOGFONTA', 'record lfHeight: longint; lfWidth : longint;'
@@ -810,9 +812,7 @@ begin
 
   //TPrivilegeSet = _PRIVILEGE_SET;
 
-
-
-  CL.AddTypeS('tagNONCLIENTMETRICSA', 'record cbSize : UINT; iBorderWidth : Int'
+   CL.AddTypeS('tagNONCLIENTMETRICSA', 'record cbSize : UINT; iBorderWidth : Int'
    +'eger; iScrollWidth : Integer; iScrollHeight : Integer; iCaptionWidth : Int'
    +'eger; iCaptionHeight : Integer; lfCaptionFont : TLogFontA; iSmCaptionWidth'
    +' : Integer; iSmCaptionHeight : Integer; lfSmCaptionFont : TLogFontA; iMenu'
@@ -893,6 +893,67 @@ begin
  CL.AddDelphiFunction('Function HResultFromNT( x : Integer) : HRESULT');
  CL.AddDelphiFunction('Function GetSystemPowerStatus( var lpSystemPowerStatus : TSystemPowerStatus) : BOOL');
  CL.AddDelphiFunction('Function SetSystemPowerState( fSuspend, fForce : BOOL) : BOOL');
+ CL.AddDelphiFunction('Function CloseEventLog( hEventLog : THandle) : BOOL');
+ CL.AddDelphiFunction('Function DeregisterEventSource( hEventLog : THandle) : BOOL');
+ CL.AddDelphiFunction('Function NotifyChangeEventLog( hEventLog, hEvent : THandle) : BOOL');
+ CL.AddDelphiFunction('Function GetNumberOfEventLogRecords( hEventLog : THandle; var NumberOfRecords : DWORD) : BOOL');
+ CL.AddDelphiFunction('Function GetOldestEventLogRecord( hEventLog : THandle; var OldestRecord : DWORD) : BOOL');
+  CL.AddTypeS('_DEBUG_EVENT', 'record dwDebugEventCode : DWORD; dwProcessId : DWORD; dwThreadId : DWORD; end');
+  CL.AddTypeS('TDebugEvent', '_DEBUG_EVENT');
+  CL.AddTypeS('DEBUG_EVENT', '_DEBUG_EVENT');
+
+    CL.AddDelphiFunction('Function ContinueDebugEvent( dwProcessId, dwThreadId, dwContinueStatus : DWORD) : BOOL');
+ CL.AddDelphiFunction('Function DebugActiveProcess( dwProcessId : DWORD) : BOOL');
+ CL.AddDelphiFunction('Function WaitForDebugEvent( var lpDebugEvent : TDebugEvent; dwMilliseconds : DWORD) : BOOL');
+  CL.AddDelphiFunction('Procedure FatalAppExit( uAction : UINT; lpMessageText : PChar)');
+
+   CL.AddTypeS('_LDT_ENTRY', 'record LimitLow : DWORD; BaseLow : DWORD; Flags : Longint; end');
+
+  CL.AddTypeS('TLDTEntry', '_LDT_ENTRY');
+  CL.AddTypeS('LDT_ENTRY', '_LDT_ENTRY');
+   CL.AddConstantN('SLE_ERROR','LongInt').SetInt( 1);
+ CL.AddConstantN('SLE_MINORERROR','LongInt').SetInt( 2);
+ CL.AddConstantN('SLE_WARNING','LongInt').SetInt( 3);
+
+  CL.AddDelphiFunction('Function GetThreadSelectorEntry( hThread : THandle; dwSelector : DWORD; var lpSelectorEntry : TLDTEntry) : BOOL');
+  CL.AddDelphiFunction('Procedure SetDebugErrorLevel( dwLevel : DWORD)');
+ CL.AddDelphiFunction('Function CreateFileMapping( hFile : THandle; lpFileMappingAttributes : PSecurityAttributes; flProtect, dwMaximumSizeHigh, dwMaximumSizeLow : DWORD; lpName : PChar) : THandle');
+ CL.AddDelphiFunction('Function OpenFileMapping( dwDesiredAccess : DWORD; bInheritHandle : BOOL; lpName : PChar) : THandle');
+   CL.AddDelphiFunction('Function GetProcessHeap : THandle');
+ CL.AddDelphiFunction('Function GetProcessHeaps( NumberOfHeaps : DWORD; var ProcessHeaps : THandle) : DWORD');
+  CL.AddDelphiFunction('Function GlobalAlloc( uFlags : UINT; dwBytes : DWORD) : HGLOBAL');
+ CL.AddDelphiFunction('Function GlobalReAlloc( hMem : HGLOBAL; dwBytes : DWORD; uFlags : UINT) : HGLOBAL');
+ CL.AddDelphiFunction('Function GlobalSize( hMem : HGLOBAL) : DWORD');
+ CL.AddDelphiFunction('Function GlobalFlags( hMem : HGLOBAL) : UINT');
+ //CL.AddDelphiFunction('Function GlobalLock( hMem : HGLOBAL) : Pointer');
+ CL.AddDelphiFunction('Function GlobalUnlock( hMem : HGLOBAL) : BOOL');
+ CL.AddDelphiFunction('Function GlobalFree( hMem : HGLOBAL) : HGLOBAL');
+ CL.AddDelphiFunction('Function GlobalCompact( dwMinFree : DWORD) : UINT');
+ CL.AddDelphiFunction('Procedure GlobalFix( hMem : HGLOBAL)');
+ CL.AddDelphiFunction('Procedure GlobalUnfix( hMem : HGLOBAL)');
+ CL.AddDelphiFunction('Function GlobalUnWire( hMem : HGLOBAL) : BOOL');
+ CL.AddDelphiFunction('Procedure GlobalMemoryStatus( var lpBuffer : TMemoryStatus)');
+ CL.AddDelphiFunction('Function LocalAlloc( uFlags, uBytes : UINT) : HLOCAL');
+CL.AddDelphiFunction('Function HeapCreate( flOptions, dwInitialSize, dwMaximumSize : DWORD) : THandle');
+ CL.AddDelphiFunction('Function HeapDestroy( hHeap : THandle) : BOOL');
+ CL.AddDelphiFunction('Function HeapCompact( hHeap : THandle; dwFlags : DWORD) : UINT');
+CL.AddDelphiFunction('Function HeapLock( hHeap : THandle) : BOOL');
+ CL.AddDelphiFunction('Function HeapUnlock( hHeap : THandle) : BOOL');
+CL.AddDelphiFunction('Function IsBadStringPtr( lpsz : PChar; ucchMax : UINT) : BOOL');
+ CL.AddDelphiFunction('Function GetEnvironmentStrings : PChar');
+ CL.AddDelphiFunction('Function FreeEnvironmentStrings( EnvBlock : PChar) : BOOL');
+ CL.AddDelphiFunction('Function TlsAlloc : DWORD');
+ CL.AddConstantN('TLS_OUT_OF_INDEXES','LongWord').SetUInt( DWORD ( $FFFFFFFF ));
+ CL.AddDelphiFunction('Function TlsFree( dwTlsIndex : DWORD) : BOOL');
+ //CL.AddDelphiFunction('Procedure GetStartupInfo( var lpStartupInfo : TStartupInfo)');
+ CL.AddDelphiFunction('Function SetWindowText( hWnd : HWND; lpString : PChar) : BOOL');
+ CL.AddDelphiFunction('Function GetWindowText( hWnd : HWND; lpString : PChar; nMaxCount : Integer) : Integer');
+ CL.AddDelphiFunction('Function GetWindowTextLength( hWnd : HWND) : Integer');
+ CL.AddDelphiFunction('Function GetClientRect( hWnd : HWND; var lpRect : TRect) : BOOL');
+ CL.AddDelphiFunction('Function GetWindowRect( hWnd : HWND; var lpRect : TRect) : BOOL');
+ CL.AddDelphiFunction('Function AdjustWindowRect( var lpRect : TRect; dwStyle : DWORD; bMenu : BOOL) : BOOL');
+ CL.AddDelphiFunction('Function AdjustWindowRectEx( var lpRect : TRect; dwStyle : DWORD; bMenu : BOOL; dwExStyle : DWORD) : BOOL');
+ CL.AddDelphiFunction('Function EnumThreadWindows( dwThreadId : DWORD; lpfn : Tobject; lParam : LPARAM) : BOOL');
 
 
  //TPrivilegeSet
@@ -953,11 +1014,59 @@ begin
  S.RegisterDelphiFunction(@GetClipRgn, 'GetClipRgn', CdStdCall);
  S.RegisterDelphiFunction(@GetMetaRgn, 'GetMetaRgn', CdStdCall);
   S.RegisterDelphiFunction(@LineTo, 'LineTo', CdStdCall);
+   S.RegisterDelphiFunction(@ImpersonateSelf, 'ImpersonateSelf', CdStdCall);
+ S.RegisterDelphiFunction(@CloseEventLog, 'CloseEventLog', CdStdCall);
+ S.RegisterDelphiFunction(@DeregisterEventSource, 'DeregisterEventSource', CdStdCall);
+ S.RegisterDelphiFunction(@NotifyChangeEventLog, 'NotifyChangeEventLog', CdStdCall);
+ S.RegisterDelphiFunction(@GetNumberOfEventLogRecords, 'GetNumberOfEventLogRecords', CdStdCall);
+ S.RegisterDelphiFunction(@GetOldestEventLogRecord, 'GetOldestEventLogRecord', CdStdCall);
+  S.RegisterDelphiFunction(@WaitForDebugEvent, 'WaitForDebugEvent', CdStdCall);
+ S.RegisterDelphiFunction(@ContinueDebugEvent, 'ContinueDebugEvent', CdStdCall);
+ S.RegisterDelphiFunction(@DebugActiveProcess, 'DebugActiveProcess', CdStdCall);
+ S.RegisterDelphiFunction(@FatalAppExit, 'FatalAppExit', CdStdCall);
+ S.RegisterDelphiFunction(@GetThreadSelectorEntry, 'GetThreadSelectorEntry', CdStdCall);
+   S.RegisterDelphiFunction(@SetDebugErrorLevel, 'SetDebugErrorLevel', CdStdCall);
+  S.RegisterDelphiFunction(@CreateFileMapping, 'CreateFileMapping', CdStdCall);
+  S.RegisterDelphiFunction(@OpenFileMapping, 'OpenFileMapping', CdStdCall);
+ S.RegisterDelphiFunction(@GetProcessHeap, 'GetProcessHeap', CdStdCall);
+ S.RegisterDelphiFunction(@GetProcessHeaps, 'GetProcessHeaps', CdStdCall);
+  S.RegisterDelphiFunction(@GlobalAlloc, 'GlobalAlloc', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalReAlloc, 'GlobalReAlloc', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalSize, 'GlobalSize', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalFlags, 'GlobalFlags', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalLock, 'GlobalLock', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalUnlock, 'GlobalUnlock', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalFree, 'GlobalFree', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalCompact, 'GlobalCompact', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalFix, 'GlobalFix', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalUnfix, 'GlobalUnfix', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalUnWire, 'GlobalUnWire', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalMemoryStatus, 'GlobalMemoryStatus', CdStdCall);
+ S.RegisterDelphiFunction(@HeapCreate, 'HeapCreate', CdStdCall);
+ S.RegisterDelphiFunction(@HeapDestroy, 'HeapDestroy', CdStdCall);
+ S.RegisterDelphiFunction(@HeapCompact, 'HeapCompact', CdStdCall);
+ S.RegisterDelphiFunction(@HeapLock, 'HeapLock', CdStdCall);
+ S.RegisterDelphiFunction(@HeapUnlock, 'HeapUnlock', CdStdCall);
+  S.RegisterDelphiFunction(@IsBadStringPtr, 'IsBadStringPtr', CdStdCall);
+ S.RegisterDelphiFunction(@GetEnvironmentStrings, 'GetEnvironmentStrings', CdStdCall);
+ S.RegisterDelphiFunction(@FreeEnvironmentStrings, 'FreeEnvironmentStrings', CdStdCall);
+  //S.RegisterDelphiFunction(@GetStartupInfo, 'GetStartupInfo', CdStdCall);
+S.RegisterDelphiFunction(@TlsAlloc, 'TlsAlloc', CdStdCall);
+ S.RegisterDelphiFunction(@TlsFree, 'TlsFree', CdStdCall);
+ S.RegisterDelphiFunction(@SetWindowText, 'SetWindowText', CdStdCall);
+ S.RegisterDelphiFunction(@GetWindowText, 'GetWindowText', CdStdCall);
+ S.RegisterDelphiFunction(@GetWindowTextLength, 'GetWindowTextLength', CdStdCall);
+ S.RegisterDelphiFunction(@GetClientRect, 'GetClientRect', CdStdCall);
+ S.RegisterDelphiFunction(@GetWindowRect, 'GetWindowRect', CdStdCall);
+ S.RegisterDelphiFunction(@AdjustWindowRect, 'AdjustWindowRect', CdStdCall);
+ S.RegisterDelphiFunction(@AdjustWindowRectEx, 'AdjustWindowRectEx', CdStdCall);
+ S.RegisterDelphiFunction(@EnumThreadWindows, 'EnumThreadWindows', CdStdCall);
+
 
 
 end;
 
- 
+
  
 { TPSImport_WinAPI }
 (*----------------------------------------------------------------------------*)

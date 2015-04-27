@@ -964,8 +964,7 @@ cl.AddConstantN('FKCALCULATED','LONGINT').Value.tu32 := 2;
 cl.AddConstantN('FKLOOKUP','LONGINT').Value.tu32 := 4;
 cl.AddConstantN('FKINTERNALCALC','LONGINT').Value.tu32 := 8;
 cl.AddConstantN('FKAGGREGATE','LONGINT').Value.tu32 := 16;
- CL.AddTypeS('TFieldKind', '( fkData, fkCalculated, fkLookup, fkInternalCalc, '
-   +'fkAggregate )');
+ CL.AddTypeS('TFieldKind', '( fkData, fkCalculated, fkLookup, fkInternalCalc, fkAggregate )');
   CL.AddTypeS('TFieldKinds', 'set of TFieldKind');
 //cl.addTypeS('TFIELDKINDS', 'BYTE');
 SIRegisterTFIELDS(Cl);
@@ -979,8 +978,7 @@ cl.AddConstantN('PFHIDDEN','LONGINT').Value.tu32 :=8;
 cl.addTypeS('TFIELDNOTIFYEVENT', 'Procedure ( SENDER : TFIELD)');
 cl.addTypeS('TFIELDGETTEXTEVENT', 'Procedure ( SENDER : TFIELD; var TEXT : S'
    +'TRING; DISPLAYTEXT : BOOLEAN)');
-cl.addTypeS('TFIELDSETTEXTEVENT', 'Procedure ( SENDER : TFIELD; const TEXT :'
-   +' String)');
+cl.addTypeS('TFIELDSETTEXTEVENT', 'Procedure ( SENDER : TFIELD; const TEXT : String)');
 cl.addTypeS('TAUTOREFRESHFLAG', '( ARNONE, ARAUTOINC, ARDEFAULT )');
 CL.AddConstantN('ftADT','LongInt').Value.ts32:= 1;
 CL.AddConstantN('ftArray','LongInt').Value.ts32:= 2;

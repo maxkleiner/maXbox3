@@ -1,0 +1,385 @@
+{*********************************************}
+{ digitalcoding.com - Delphi Tutorial         }
+{ This example provide by - digitalcoding.com }
+{ By : Thaminda Wijeratne , Max               }
+{      Max for maXbox #locs:380
+{     for more details contact :              }
+{          thaminda@digitalcoding.com         }
+{*********************************************}
+unit maXuino_pro26_pas_colormixer3_arduino;
+
+interface
+
+{uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ComCtrls, ExtCtrls, StdCtrls;
+ }
+//type
+  //TForm1 = class(TForm)
+  Const
+    COMPORT = 4;
+  
+    
+  var  
+    Image1: TImage;
+    Shape1: TShape;
+    RedTrackBar: TTrackBar;
+    GreenTrackBar: TTrackBar;
+    BlueTrackBar: TTrackBar;
+    Label1: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
+    Button1: TButton;
+    Bevel1: TBevel;
+    stabar: TStatusBar;
+    //adf: TComponentStream;
+    //sBar: TStatusBar;
+    //comFrm: TForm;
+    cPort: TComPort;
+  
+       procedure FormCreate(Sender: TObject);
+       procedure RedTrackBarChange(Sender: TObject);
+       procedure ChangeColor(Sender: TObject);
+       procedure GreenTrackBarChange(Sender: TObject);
+       procedure BlueTrackBarChange(Sender: TObject);
+       procedure Button1Click(Sender: TObject);
+  //private
+    { Private declarations }
+   var X, Y, aRed, aGreen, aBlue : Integer;
+  //public
+    { Public declarations }
+  //end;
+
+var
+  Form1: TForm;
+
+implementation
+
+//{$R *.dfm}
+
+procedure ChangeColor(Sender: TObject);
+Var
+  CRed, CGreen, CBlue : TColor;
+begin
+   { Display mixture of colors }
+   Shape1.Brush.Color:=StrToInt64Def('$'+
+   IntToHex(ColorToRGB(aBlue),2)+
+   IntToHex(ColorToRGB(aGreen),2)+
+   IntToHex(ColorToRGB(aRed),2),0);
+   writeln('color value log: '+inttostr64(Shape1.Brush.Color))
+   { Convert integer to color value }
+   CRed:=StrToInt64Def('$0000'+IntToHex(ColorToRGB(aRed),2),0);
+   CGreen:=StrToInt64Def('$00'+IntToHex(ColorToRGB(aGreen),2)+'00',0);
+   CBlue:=StrToInt64Def('$'+IntToHex(ColorToRGB(aBlue),2)+'0000',0);
+   { display circles for each color }
+   with Image1.Canvas do begin
+     Brush.Color:=CRed;
+     Pen.Color:=CRed;
+     Ellipse(X-25, Y-40, X+25, Y+10);
+     Brush.Color:=CGreen;
+     Pen.Color:=CGreen;
+     Ellipse(X-40, Y-15, X+10, Y+35);
+     Brush.Color:=CBlue;
+     Pen.Color:=CBlue;
+     Ellipse(X-10, Y-15, X+40, Y+35);
+   end  
+end;
+
+procedure FormCreate(Sender: TObject);
+begin
+   aRed:=255; aGreen:=255; aBlue:=255;
+   X:=Image1.Width Div 2;
+   Y:=Image1.Height Div 2;
+   with Image1.Canvas do begin
+     Brush.Color:=clRed;
+     Pen.Color:=clRed;
+     Ellipse(X-35, Y-50, X+35, Y+20);
+     Brush.Color:=cllime;
+     Pen.Color:=cllime;
+     Ellipse(X-50, Y-25, X+20, Y+45);
+     Brush.Color:=clBlue;
+     Pen.Color:=clBlue;
+     Ellipse(X-20, Y-25, X+50, Y+45);
+   end  
+end;
+
+procedure RedTrackBarChange(Sender: TObject);
+var aout2: char;
+begin
+   aRed:=RedTrackBar.Position;
+   ChangeColor(Self);
+   if cPort.Connected then begin
+     cPort.WriteStr('1R')
+     aout2:= chr(ared);
+     writeln(itoa(ared))
+    //cPort.WriteStr(inttostr(tb.Position div 10));
+    cPort.WriteStr(aout2);
+   end; 
+end;
+
+procedure GreenTrackBarChange(Sender: TObject);
+begin
+   aGreen:=GreenTrackBar.Position;
+   if cPort.Connected then begin
+     cPort.WriteStr('2G')
+     cPort.WriteStr(chr(aGreen));
+   end;
+   ChangeColor(Self);
+end;
+
+procedure BlueTrackBarChange(Sender: TObject);
+begin
+  aBlue:=BlueTrackBar.Position;
+  if cPort.Connected then begin
+   cPort.WriteStr('3B')
+   cPort.WriteStr(chr(aBlue));
+  end;
+  ChangeColor(Self);
+end;
+
+procedure Button1Click(Sender: TObject);
+begin
+  form1.Close;
+end;
+
+procedure TFrmCreateCom(Send: TObject);
+begin
+  cPort:= TComPort.Create(self);
+  with cPort do begin
+    BaudRate:= br9600;
+    Port:= 'COM'+InttoStr(COMPORT);
+    Parity.Bits:= prNone;
+    StopBits:= sbOneStopBit;
+    DataBits:= dbEight;
+   {FlowControl.OutCTSFlow:= False; FlowControl.OutDSRFlow:= False;
+    FlowControl.ControlDTR:= dtrDisable; FlowControl.XonXoffIn:= False;}
+  end;
+  //stabar.Panels[0].Text:='Port in use '+cPort.Port;
+  if cPort.Connected=true then
+    stabar.Panels[1].Text:= 'Connected'    
+  else
+    stabar.Panels[1].Text:= 'Disconnected';
+  cPort.ShowSetupDialog; 
+  //cPort.Port:= 'COM'+InttoStr(COMPORT);
+  cPort.Connected:=true;
+  if cPort.connected then begin
+    stabar.Panels[1].Text:= 'Connected: '+ cPort.Port    
+     stabar.Panels[0].Text:='Port in use '+cPort.Port end else
+     stabar.Panels[0].Text:='Port close ';
+end;
+
+procedure TFrm_Close(Send: TObject; var Action: TCloseAction);
+begin
+  if cPort.Connected then begin
+    cPort.WriteStr('A');     // If application is closed
+    cPort.WriteStr('B');     
+    cPort.WriteStr('C');     // we reset all leds to OFF
+    cPort.WriteStr('D');
+    cPort.WriteStr('E');
+    cPort.Close;
+    writeln('reset set');
+  end;
+  cPort.Free;
+  form1.Release;
+  writeln('RGB LEDs reset & port closed & Form released');
+end;
+
+function CheckComPort: boolean;
+var ComPorts: TStringlist;
+begin
+  result:= false;
+  ComPorts:= TStringlist.Create;
+  try
+    EnumComPorts(ComPorts);
+    PrintF('COM Port Check of Arduino %d COM: ',[ComPorts[0]]);  
+    result:= true;
+  except
+    PrintF('No COM Ports',[]);
+  end;    
+  ComPorts.Free;
+  writeln('after comcheck except');
+end;  
+
+procedure connectRS(Sender: TObject);
+begin
+  if cPort.Connected then begin
+      writeln('COMPort already connected')
+    end else begin
+      if CheckComPort then begin
+        cPort.Open;                      // COM Port is finally opened
+        stabar.Panels[1].Text:= 'Connected: '+ cPort.Port;    
+     end;
+  end
+end;
+
+
+procedure loadMixerForm;
+begin
+ Form1:= TForm.create(self)
+ with form1 do begin
+  setbounds(166,480,300,450)
+  Caption:= 'Colors Arduino maXbox'
+  Color:= clBtnFace
+  Font.Charset:= DEFAULT_CHARSET
+  Font.Color:= clWindowText
+  Font.Height:= -16
+  Font.Name:= 'MS Sans Serif'
+  Font.Style:= []
+  OldCreateOrder:= False
+  Position:=poScreenCenter
+  //OnActivate = FormActivate
+  //OnPaint:= @FormPaint
+  PixelsPerInch:= 96
+   onClose:= @TFrm_Close;
+  //TextHeight:= 13
+   Show;
+ end;
+ 
+ image1:= TImage.create(form1)
+  with image1 do begin
+    parent:= form1;
+    setbounds(8,8,169,137)
+    //color:= clyellow;
+    //canvas.brush.color:=clyellow;
+  end;
+  FormCreate(self)
+
+  {with TLabel.creATE(form1) do begin
+    parent:= form1;
+    setbounds(392,16,43,13)
+    Caption:= 'Solutions'
+  end;}
+  button1:= TButton.create(form1)
+  with button1 do begin
+    parent:= form1;
+    setbounds(140,340,130,40)
+    Caption:= 'E&xit'
+    TabOrder:= 3
+    OnClick:= @Button1Click
+  end;
+  
+  with TBitBtn.create(form1) do begin
+    Parent:= form1;
+    setbounds(30,340,120, 40);
+    caption:= 'Connect';
+    font.size:= 12;
+    glyph.LoadFromResourceName(getHINSTANCE,'TVPLEDLABEL');//'TVPCLOCK'); //'OPENFOLDER');
+    mXButton(0,0,width, height,12,12,handle); 
+    //event handler
+    onclick:= @ConnectRS;
+  end;
+ 
+ shape1:= TShape.create(form1)
+  with shape1 do begin
+    parent:= form1;
+    setbounds(192,8,89,137)
+   end;
+  with TLabel.create(form1) do begin
+    parent:= form1;
+    setbounds(8,160,25,19)
+    font.color:= clred;
+    Caption:= '&Red'
+    FocusControl:= RedTrackBar
+  end;
+  with TLabel.create(form1) do begin
+    parent:= form1;
+    setbounds(8,208,37,19)
+    font.color:= clgreen;
+    Caption:= '&Green'
+    FocusControl:= GreenTrackBar
+  end;
+  with TLabel.create(form1) do begin
+    parent:= form1;
+    setbounds(8,256,27,19)
+    font.color:= clblue;
+    Caption:= '&Blue'
+    FocusControl:= BlueTrackBar
+  end;
+ 
+  RedTrackBar:= TTrackBar.create(form1)
+  with RedTrackBar do begin
+    parent:= form1;
+    setbounds(64, 160,217,45)
+    Max:= 255
+    Orientation:= trHorizontal
+    Frequency:= 1
+    Position:= 255
+    SelEnd:= 0 SelStart:= 0
+    TabOrder:= 0
+    TickMarks:= tmBottomRight
+    TickStyle:= tsAuto
+    OnChange:= @RedTrackBarChange
+  end;
+  GreenTrackBar:= TTrackBar.create(form1)
+  with GreenTrackBar do begin
+    parent:= form1;
+    //parentcolor:= false;
+    brush.color:= clgreen;
+    SendMessage (GreenTrackBar.handle, CM_RecreateWnd, 0, 0);
+    setbounds(64,208,217,45)
+    Max:= 255
+    Orientation:= trHorizontal
+    Frequency:= 1
+    Position:= 255
+    SelEnd:= 0 SelStart:= 0
+    TabOrder:= 1
+    TickMarks:= tmBottomRight
+    TickStyle:= tsAuto
+    OnChange:= @GreenTrackBarChange
+  end;
+  blueTrackBar:= TTrackBar.create(form1)
+  with blueTrackBar do begin
+    parent:= form1;
+    setbounds(64,256,217,45)
+    Max:= 255
+    Orientation:= trHorizontal
+    Frequency:= 1
+    Position:= 255
+    SelEnd:= 0 SelStart:= 0
+    TabOrder:= 2
+    TickMarks:= tmBottomRight
+    TickStyle:= tsAuto
+    OnChange:= @blueTrackBarChange
+  end;
+ 
+  stabar:= TStatusBar.create(self)
+    with stabar do begin
+    parent:= form1;
+    parentcolor:= false;
+    //alignment:= albottom;
+    panels.add;
+    Panels[0].text:='by maXbox rocks,  maXuino';
+    panels[0].Alignment:= taCenter
+    panels[0].Width:= 150
+    Panels.add;
+    panels.items[1].width:= 10;
+    SimplePanel:= False
+  end;
+end;
+
+
+begin
+
+ loadMixerForm;
+ TFrmCreateCom(self)
+
+ writeln(floattoStr(permutation(9,5)))
+ writeln(floattoStr(permutationJ(9,5)))
+ maxCalcF('(1+sqrt(5))/2');
+ //GetCommModemStatus
+  //EscapeCommfunction
+  //FatalExit  //GetProcessHeap
+   // GetHandleInformation
+   // SystemTimeToFileTime //  LocalFlags
+   //SetProcessShutdownParameters
+   GetForegroundWindow;
+   
+ //  function FindExecutable (lpFile : PChar; lpDirectory : PChar; LpResult: PChar) : DWORD; 
+   //if FindExecutable('maXbox3.exe',pchar(exepath), pchar(sr)) > 0 then
+    //writeln(sr)
+end.
+
+ {ref:
+ 
+ http://www.rosseeld.be/DRO/Delphi/Delphi%20WinAPI.htm
+ }

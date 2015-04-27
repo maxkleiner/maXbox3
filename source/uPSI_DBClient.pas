@@ -106,6 +106,16 @@ begin
     RegisterProperty('ReadOnly', 'boolean',iptrw);
     RegisterProperty('StoreDefs', 'boolean',iptrw);
 
+    RegisterProperty('Filter', 'string',iptrw);
+    RegisterProperty('Filtered', 'boolean',iptrw);
+    RegisterProperty('FilterOptions', 'TFilterOptions',iptrw);
+    RegisterProperty('Constraints', 'TCheckConstraints',iptrw);
+
+   //  property Filter;
+    //property Filtered;
+    //property FilterOptions;
+
+
    // property Constraints stored ConstraintsStored;
 
 
@@ -205,6 +215,24 @@ begin
     RegisterMethod('Procedure SetRange( const StartValues, EndValues : array of const)');
     RegisterMethod('Procedure SetRangeEnd');
     RegisterMethod('Procedure SetRangeStart');
+    RegisterMethod('procedure ActivateFilters;');
+
+
+    {procedure AddDataPacket(const Data: OleVariant; HitEOF: Boolean); virtual;
+    procedure AddFieldDesc(FieldDescs: TFieldDescList; var DescNo: Integer;
+      var FieldID: Integer; FieldDefs: TFieldDefs);
+    procedure AllocKeyBuffers;
+    function AllocRecordBuffer: PChar; override;
+    procedure Check(Status: DBResult);
+    procedure CheckDetailRecords; virtual;
+    procedure CheckProviderEOF; virtual;
+    procedure CheckSetKeyMode;
+    procedure ClearCalcFields(Buffer: PChar); override;
+    procedure CloseCursor; override;
+    procedure DataConvert(Field: TField; Source, Dest: Pointer; ToNative: Boolean); override;
+    procedure DataEvent(Event: TDataEvent; Info: Longint); override;
+    procedure DeactivateFilters;}
+
     RegisterMethod('Function UndoLastChange( FollowChange : Boolean) : Boolean');
     RegisterProperty('ActiveAggs', 'TList Integer', iptr);
     RegisterProperty('ChangeCount', 'Integer', iptr);
@@ -850,6 +878,8 @@ begin
    RegisterMethod(@TCustomClientDataSet.FINDFIELD, 'FINDFIELD');
    RegisterMethod(@TCustomClientDataSet.Locate, 'LOCATE');
    RegisterMethod(@TCustomClientDataSet.AppendRecord, 'AppendRecord');
+
+   // RegisterMethod(@TCustomClientDataSet.ActivateFilters, 'activatefilters');
 
    //RegisterMethod(@TCustomClientDataSet.Command, 'Command');
 

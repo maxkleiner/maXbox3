@@ -277,8 +277,8 @@ end;
 
 
 
- //const adEmpty =  $00000000;
-   //     adTinyInt = $00000010;
+// const adEmpty =  $00000000;
+  //      adTinyInt = $00000010;
  {CL.AddConstantN('adSmallInt','LongWord').SetUInt( $00000002);
  CL.AddConstantN('adInteger','LongWord').SetUInt( $00000003);
  CL.AddConstantN('adBigInt','LongWord').SetUInt( $00000014);
@@ -305,7 +305,6 @@ end;
  CL.AddConstantN('adBSTR','LongWord').SetUInt( $00000008);}
  //adVarChar = $000000C8;
   //adGUID = $00000048; 
- //const
   //SNoMatchingADOType = 'No matching ADO data type for %s';
   //SSkip
   
@@ -346,12 +345,11 @@ end;
 
  
 
-function FieldTypeToADOType(const FieldType: TFieldType): DataTypeEnum2;
+function FieldTypeToADOType2(const FieldType: TFieldType): DataTypeEnum;
 var ft: TFieldType;
   //fieldtypename: 
 
 begin
-
 //  DatabaseErrorFmt
   // VarTypeToDataType
   //GetFieldProperty
@@ -360,7 +358,7 @@ begin
   case FieldType of
     ftUnknown: Result := adEmpty;
     ftString: Result := adVarChar;
-    {ftWideString: Result := adVarWChar;
+    ftWideString: Result := adVarWChar;
     ftSmallint: Result := adSmallint;
     ftInteger, ftAutoInc: Result := adInteger;
     ftWord: Result := adUnsignedSmallInt;
@@ -380,7 +378,7 @@ begin
     ftLargeint: Result := adBigInt;
     ftVariant: Result := adVariant;
     ftInterface: Result := adIUnknown;
-    ftIDispatch: Result := adIDispatch;}
+    ftIDispatch: Result := adIDispatch; //}
     ftGuid: Result := adGUID;
     //FieldTypeNames[ord(FieldType)]
   else begin
@@ -434,6 +432,76 @@ begin
 end;
 
 
+function ADOConnectionStringX(ParentHandle: THandle; InitialString: WideString;
+  out NewString: string): Boolean;
+var
+  DataInit: IDispatch; //IDataInitialize;
+  //DBPrompt: IDBPromptInitialize;
+  DataSource: IUnknown;
+  //InitStr: PWideChar;
+begin
+  Result   := False;
+  {DataInit := CreateComObject(CLSID_DataLinks) as IDataInitialize;
+  if InitialString <> '' then
+    DataInit.GetDataSource(nil, CLSCTX_INPROC_SERVER, PWideChar(InitialString),
+      IUnknown, DataSource);
+  DBPrompt := CreateComObject(CLSID_DataLinks) as IDBPromptInitialize;
+  if Succeeded(DBPrompt.PromptDataSource(nil, ParentHandle,
+    DBPROMPTOPTIONS_PROPERTYSHEET, 0, nil, nil, IUnknown, DataSource)) then 
+  begin
+    InitStr := nil;
+    DataInit.GetInitializationString(DataSource, True, InitStr);
+    NewString := InitStr;
+    Result    := True;
+  end;}
+end;
+
+procedure load_a_jpeg_fileintoblobusingSQL_Click(Sender: TObject);
+var
+  ms: TMemoryStream;
+  OpenPictureDialog1: TOpenPictureDialog;
+  query1: TQuery;
+begin
+   if OpenPictureDialog1.Execute(self) then begin
+   ms := TMemoryStream.Create;
+   try
+   ms.LoadFromFile(OpenPictureDialog1.FileName);
+   with Query1 do begin
+     with SQL do begin
+          Clear;
+          Add('INSERT INTO "ImageTbl.db" (ImageFld)');
+          Add('VALUES (:param0 )');
+          end;
+      //Query1.ParamByName('param0').SetBlobData(ms.Memory, ms.Size);
+       ExecSQL;
+   end;
+   finally
+   ms.Free;
+   end;
+ end;
+end;
+
+function CompactAndRepair(DB: string): Boolean; {DB = Path to Access Database}
+var 
+  v: OLEvariant;
+begin
+  Result := True;
+  try
+    v:= CreateOLEObject('JRO.JetEngine');
+    try
+      V.CompactDatabase('Provider=Microsoft.Jet.OLEDB.4.0;Data Source='+DB,
+          'Provider=Microsoft.Jet.OLEDB.4.0;Data Source='+DB+'x;Jet OLEDB:Engine Type=5');
+      DeleteFile(DB);
+      RenameFile(DB+'x',DB);
+    finally
+      V:= Unassigned;
+    end;
+  except
+    Result:= False;
+  end;
+end;
+
+
   {RegisterMethod('Constructor Create(AOwner: TComponent)');
   RegisterConstructor(@TJvMail.Create, 'Create');
  
@@ -451,42 +519,23 @@ var atp: TParameterAttributes;
    
 begin
 
-{ Raise EOleSysError exception if result code indicates an error }
-
-{procedure OleCheck(Result: HResult);
-begin
-  if Failed(Result) then OleError(Result);
-end;
-procedure OleCheck(Result: HResult);
-begin
-  if not Succeeded(Result) then OleError(Result);
-end;}
-
-
-
  
-//     RegisterMethod('Constructor Create( const Message : string; ErrorCode : HRESULT; const Source, HelpFile : string; HelpContext : Integer)');
+//  RegisterMethod('Constructor Create( const Message : string; ErrorCode : HRESULT; const Source, HelpFile : string; HelpContext : Integer)');
 
-  with EOleException.create('mess',345,'','',3) do begin    // from oleauto
+  {with EOleException.create(345) do begin    // from oleauto
     source
     Free
   end;  
-   
+   }
   
   //TCallingConvention
   //CreateClassID
   //TComClassManager
-  with EOleSysError.create('mess',23,4) do begin    //from oleauto !
+  {with EOleSysError.create(23) do begin    //from oleauto !
     Free
-  end; 
-  
-  with TAutoObject.create do begin
-   //initialize
-   free
-  end; 
+  end; }
 
-  
-
+ 
 //procedure CreateUDLFile(const FileName, ProviderName, DataSourceName: WideString);
  //CreateUDLFile(const FileName, ProviderName, DataSourceName: WideString);
 
@@ -504,7 +553,7 @@ end;}
 //function PromptDataLinkFile(ParentHandle:THandle; InitialFile: WideString): WideString;
  //PromptDataLinkFile(ParentHandle:THandle; InitialFile: WideString): WideString;
 
-//   function GetDataLinkFiles(FileNames: TWideStrings; Directory: string = ''): Integer; overload;
+// function GetDataLinkFiles(FileNames: TWideStrings; Directory: string = ''): Integer; overload;
    //GetDataLinkFiles(FileNames: TStrings; Directory: string = ''): Integer; overload;
    
   
@@ -525,31 +574,31 @@ end;}
    
    // ExecuteOptionsToOrd(ExecuteOptions: TExecuteOptions): Integer;
    
-   // OrdToExecuteOptions(Options: Integer): TExecuteOptions;
-   
-   writeln('ExecuteOptionsToOrd: '+itoa(ExecuteOptionsToOrd(OrdToExecuteOptions(2))))
+    //OrdToExecuteOptions(Options: Integer): TExecuteOptions;
                               
    //rename because a seconsd is there
    //ExtractFieldNameWide(const Fields: WideString; var Pos: Integer): WideString;
-   
-   it:= 5
-   writeln('ExtractFieldName' +ExtractFieldName('this is box rock',it))
-   writeln('ExtractFieldNameW' +ExtractFieldNameWide('this is box rock',it))
    
    //GetFilterStr(Field: TField; Value: Variant; Partial:Boolean): WideString;
    
    //PropertyExists(const PropList: ADOInt.Properties; const PropName: WideString): Boolean;
    //FieldListCheckSum(DataSet: TDataset): Integer;
 
+    writeln('FieldTypeToADOType:  '+itoa(ord(FieldTypeToADOType(ftdate))));
+
+   writeln('FieldTypeToADOType:  '+itoa(ord(FieldTypeToADOType(fttime))));
+
+ writeln('FieldTypeToADOType:  '+itoa(ord(ADOTypeToFieldType(FieldTypeToADOType(ftbytes),true))));
+ writeln('FieldTypeToADOType:  '+itoa(ord(ADOTypeToFieldType(adbinary,true))));
 
 (*   CL.AddDelphiFunction('Function CreateADOObject( const ClassID : TGUID) : IUnknown');
  CL.AddDelphiFunction('Function ADOTypeToFieldType( const ADOType : DataTypeEnum; EnableBCD : Boolean) : TFieldType');
- CL.AddDelphiFunction('Function FieldTypeToADOType( const FieldType : TFieldType) : DataTypeEnum');
+ CL.AddDelphiFunction('Function FieldTypeToADOType(const FieldType: TFieldType) : DataTypeEnum');
  CL.AddDelphiFunction('Function StringToVarArray( const Value : string) : OleVariant');
  CL.AddDelphiFunction('Function VarDataSize( const Value : OleVariant) : Integer');
  CL.AddDelphiFunction('Function OleEnumToOrd( OleEnumArray : array of TOleEnum; Value : TOleEnum) : Integer');
  CL.AddDelphiFunction('Function GetStates( State : Integer) : TObjectStates');
- CL.AddDelphiFunction('Function ExecuteOptionsToOrd( ExecuteOptions : TExecuteOptions) : Integer');
+ CL.AddDelphiFunction('Function ExecuteOptionsToOrd(ExecuteOptions:TExecuteOptions):Integer');
  CL.AddDelphiFunction('Function OrdToExecuteOptions( Options : Integer) : TExecuteOptions');
  CL.AddDelphiFunction('Function ExtractFieldName( const Fields : WideString; var Pos : Integer) : WideString');
  CL.AddDelphiFunction('Function GetFilterStr( Field : TField; Value : Variant; Partial : Boolean) : WideString');
@@ -642,9 +691,6 @@ end;}
  CL.AddDelphiFunction('Procedure SetDispatchPropValue3( Disp : IDispatch; Name : WideString; const Value : OleVariant);');
 
    *)
-   
-   writeln('CreateClassID2 '+CreateClassID2)
-   writeln('CreateClassID1 '+CreateClassID)
 
 
 end;
@@ -661,12 +707,12 @@ var
 
 begin
   count:= 0;
-  Apploop_tester;
+ { Apploop_tester;
   complist:= TStringList.create;
   dumpComponents(application, complist) 
   for count:= 0 to complist.count -1 do
      writeln(complist.strings[count]);
-  complist.Free;
+  complist.Free;      }
   //writeln('machine name is: '+getHostName)
   writeln('user name is: '+getUserName)
   //writeln('proc id is: '+inttostr(currentprocessid))
@@ -700,10 +746,17 @@ begin
     
     //DataLinkDir
 //    PromptDataSource
+    ADOCOMutils_test;
+    
+    {
+  Here is a function I have made to compact and repair an access database.
+  Exclusive access to the DB is required!!
+}
+   if CompactAndRepair('C:\maXbook\maxbox3\mX3999\maxbox3\examples\detailtest.mdb') then
+     writeln('ACCESS compact SUCCESS');
+    
   
-    ADOCOMUtils_test;
-  
-  
+ 
 end.   
 
 

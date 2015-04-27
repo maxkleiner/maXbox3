@@ -1,0 +1,301 @@
+PROGRAM A_3D_DLL;
+
+//////////////////////////////////////////////////////////////////////
+//  #sign:Administrator: PC08: 27/04/2015 12:06:36 PM 
+//  Purpose: set a DLL Call in 3 ways                               //
+//  #path>ples\E:\maxbox3\mXGit39991\maxbox3\examples\les\          //
+//  Lines of Code #locs:195
+//////////////////////////////////////////////////////////////////////
+
+Const TEXTOUT = 'Hi PE Checksum';
+
+//############################################################################
+// Archimedes CODEsign
+//############################################################################
+//TODO: modify the second EXE to compare and get the number
+//http://www.swissdelphicenter.ch/en/showcode.php?id=2434
+
+  function  myLockWorkStation: Longint;
+     external 'LockWorkStation@user32.dll stdcall';
+     
+
+Function IntToBase32X(Numb: Longint): String;
+begin
+  Result:= '';
+  for It:= 0 to 4 do begin
+    Insert(NUMBLETTS[(Numb And 31)+1], Result, 1);
+    Numb:= Numb Shr 5;
+  end;
+end;
+
+function CountPos(const subtxt: string; Text: string): Integer;
+begin
+  if (Length(subtxt)= 0) Or (Length(Text)= 0) Or (Pos(subtxt,Text)= 0) then
+    result:= 0
+  else
+    result:= (Length(Text)- Length(StringReplace(Text,subtxt,'',
+      [rfReplaceAll]))) div Length(subtxt);
+end;
+
+Procedure GetSongAndPlay;
+var 
+  mp3Stream: TFileStream;
+  idHTTP: TIDHTTP;
+  myURL, mp3song: string;
+begin
+  mp3song:= 'heart.mp3';
+  myURL:= 'http://max.kleiner.com/download/heart.mp3';
+  if not FileExists(ExePath+mp3song) then begin
+    mp3Stream:= TFileStream.create(ExePath+mp3song, fmCreate)
+    idHTTP:= TIdHTTP.create(NIL)
+    try
+      idhttp.get1(myURL, mp3Stream)
+    finally
+      idHTTP.Free
+      mp3Stream.Free;
+      maxform1.color:= clnavy;
+    end;
+  end;      
+  closeMP3;
+  //showmessage(mSecToTime(lengthMP3(mXpath+mp3song)));
+  playMP3(ExePath+mp3song);
+end;
+
+
+procedure PlaySurpriseMedia;
+var wmp: Variant; 
+ //Maybe you'll be more comfortable with automation.
+ //I believe it would provide most of the functionality as the interfaces provide.
+begin
+   wmp:= CreateOleObject('WMPlayer.OCX');
+   //wmp.OpenPlayer(Exepath+'examples\maxbox.wav');
+   if ISInternet then begin
+     wmp.URL:= 'http://max.kleiner.com/download/heart.mp3';
+     wmp.OpenPlayer(wmp.URL);
+   end else
+     wmp.OpenPlayer(Exepath+'examples\maxbox.wav');
+  //wmp.controls.play;
+end; 
+
+
+procedure LoadBug_fromResName(Sender: TObject);
+var BitMap1: TBitMap;
+    aform: TForm;
+begin
+  //aform:= TForm.create(self);
+  BitMap1:= TBitMap.Create;
+  bitmap1.transparent:= true;
+  //aform.SetBounds(0,0,300,250)
+  //aform.borderstyle:= bsNone; //bsDialog;
+  try
+    //aform.Show;
+    memo1.hide;
+    BitMap1.LoadFromResourceName(HInstance,'Live');
+    maxform1.Canvas.Draw(160,160,BitMap1);
+    BitMap1.LoadFromResourceName(HInstance,'Dead');
+    maxform1.Canvas.Draw(260,260,BitMap1);
+    BitMap1.LoadFromResourceName(HInstance,'Fishes1');
+    maxform1.Canvas.Draw(400,150,BitMap1);
+    maxform1.canvas.textout(10,100,getBigPI)
+    //aform.Show;
+    sleep(3300)
+    memo1.show;
+  finally
+    BitMap1.Free;
+  end;
+end;
+
+procedure TestRefCount;
+var
+  S1, S2: string;
+  begin
+  memo2.lines.Add(Format('Refcount at start: %d',
+    [GetAnsistringRefcount(S1)]));
+  S1 := StringOfChar('A', 10);
+  memo2.lines.Add(Format('Refcount after assignment: %d',
+    [GetAnsistringRefcount(S1)]));
+  S2 := S1;
+  memo2.lines.Add(Format('Refcount after S2:=S1: %d',
+    [GetAnsistringRefcount(S1)]));
+  S2 := S1 + S2;
+  memo2.lines.Add(Format('Refcount after S2:=S1+S2: %d',
+    [GetAnsistringRefcount(S1)]));
+end;
+
+
+
+var
+  x1, x2, recs: DWORD;
+  parameters: array of integer;
+  returned: Cardinal;
+  VAR EventLog : Thandle;
+  adir: string;
+
+
+Begin  //main
+ writeln('IntToBase32 of 1000: '+IntToBase32X(1000))
+ PrintF('CountPos: %d',[CountPos('max','this is max of maXbox a max numbermax')])
+ 
+  //writeln(getFormRes('TMaxForm1'))
+  //Reverseplay(exepath+'examples\maxbox.wav')
+  //GetSongAndPlay;
+  //PlaySurpriseMedia;
+  //LoadBug_fromResName(self)
+  //Function PeVerifyCheckSum( const FileName : TFileName) : Boolean
+
+  if IsValidPeFile(exepath+'maxbox3.exe') then begin
+    x1:= ComputePEChecksum(exepath+'maxbox3.exe'); // original filename
+    x2:= ComputePEChecksum('E:\maxbox3\maxbox39.exe');
+    writeln(inttohex(x1,8))
+    writeln(inttohex(x2,8))
+     
+  end;
+  WriteLn('Checksum 1: '+ itoa(x1)+ #13#10+'Checksum 2: '+ itoa(x2));
+  writeln(stringToHEX('ABCD'));
+  
+  TestRefCount;
+  
+  //1. dyn call
+ if not DynamicDllCallName(user32, 'LockWorkStation', true,returned,parameters) then begin
+    ShowMessage('Function could not be found!');
+  end else begin
+    if not BOOL(returned) then begin
+      ShowMessage('LockWorkStation() failed!');
+    end;
+  end;
+  
+  //2. internal API Call
+
+  //LockWorkStation
+
+  
+  //3. external DLL Call
+   
+   myLockWorkStation
+  
+  if isBDE then writeln('BDE Installed');
+  
+  //EventLog:= RegisterEventSource('0',('maxbox3.exe'));
+  {EventLog:= RegisterEventSource('0',('maxbox'));
+  if GetNumberOfEventLogRecords(eventlog, recs) then
+    writeln('recs of elog: '+itoa(recs));}
+  // Procedure WriteToOSEventLog(const logName,logCaption,logDetails:UnicodeString;const logRawData:Str);
+ 
+   WriteToOSEventLog('maXbox','maxboxlog','3D_DLL_Test2','logRawData of Script610');
+   //WriteToOSEventLog('mX3','maXbox','Details3',TESTTEXT);
+   //ExecuteCommand('cmd','/c %windir%\system32\eventvwr.msc /s ')
+   
+{   parameters:= [];
+   if not DynamicDllCallName(kernel32,'GetSystemDirectoryA',true,returned,parameters) then begin
+    ShowMessage('Function could not be found!');
+  end else begin
+    SetLength(aDir, returned); // Cut String
+    ShowMessage('GetSystemDirectoryA:'#13#10'Path: '+ aDir + #13#10'Length: '+IntToStr(returned));
+  end;}
+End. 
+
+
+Ref:
+
+http://www.swissdelphicenter.ch/en/showcode.php?id=1745
+
+(*
+--- english -------------------------------------------------------------------
+These two functions allow to dynamically call DLL functions with dynamically
+customizable parameters.
+Also allow a programm to call a function with at design time unknown parameters
+(you'll have to implement the dynamicall filling of the array of pointer).
+
+
+Orig PEChk Sum 0176718C
+
+http://www.codeproject.com/Articles/19326/An-Analysis-of-the-Windows-PE-Checksum-Algorithm
+
+http://portforward.com/networking/static-win7.htm
+
+...fetch the portable executable's checksum using ImageHelp?
+Autor: Elias Bachaalany
+[ Print tip ]	 	 
+
+Tip Rating (10): 	 
+
+program exeChecksum;
+
+uses Windows, ImageHlp;
+
+
+//{$APPTYPE CONSOLE}
+
+function ComputePEChecksum(FileName: string): DWORD;
+var
+  h, hMap: Cardinal;
+  pMem: Pointer;
+  headersum, checksum, fsizehigh, fsizelow: DWORD;
+  nth: PImageNtHeaders;
+Label
+  cleanup;
+begin
+  pMem := nil;
+
+  Result := 0;
+
+  headersum := 0;
+  checksum  := 0;
+
+  h := Windows.CreateFile(PChar(FileName), GENERIC_READ, FILE_SHARE_READ,
+    nil, OPEN_EXISTING, 0, 0);
+  if (h = INVALID_HANDLE_VALUE) then
+    Exit;
+
+  fsizelow := Windows.GetFileSize(h, Pointer(@fsizehigh));
+
+  hMap := Windows.CreateFileMapping(h, nil, PAGE_READONLY, fsizeHigh, fsizeLow, nil);
+  if (hMap = 0) then
+    goto cleanup;
+
+  pMem := Windows.MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0);
+  if (pMem = nil) then
+    goto cleanup;
+
+  nth := CheckSumMappedFile(pMem, fsizeLow, @headersum, @checksum);
+
+  if (nth = nil) then
+    checksum := 0;
+
+  cleanup:
+  if (pMem <> nil) then
+    Windows.UnmapViewOfFile(pMem);
+  if (hMap <> 0) then
+    Windows.CloseHandle(hMap);
+  if (h <> 0) then
+    Windows.CloseHandle(h);
+
+  Result := checksum;
+end;
+
+var
+  x1, x2: DWORD;
+begin
+  x1 := ComputePEChecksum('c:\1.exe'); // original filename
+  x2 := ComputePEChecksum('c:\2.exe');
+  // original filename but has a string in it lightly modified
+
+  WriteLn('Checksum 1: ', x1, #13#10'Checksum 2: ', x2);
+end.
+
+Doc:
+
+The CheckSumMappedFile function computes a new checksum for the file and returns it in the CheckSum parameter. This function is used by any application that creates or modifies an executable image. Checksums are required for kernel-mode drivers and some system DLLs. The linker computes the original checksum at link time. It is recommended that all images have valid checksums which is why this unit was created.
+
+Ref:
+  RegisterMethod('Constructor Create(AOwner: TComponent)');
+  RegisterConstructor(@TJvMail.Create, 'Create');
+  RegisterMethod('Procedure Free');
+  RegisterMethod(@TJvMail.Destroy, 'Free');
+
+Doc:   
+   Der Microsoft-Fehlerberichterstattungsdienst unterstützt Microsoft und deren Partner beim Diagnostizieren von Problemen in der von Ihnen verwendeten Software und beim Bereitstellen von Lösungen. Nicht für alle Probleme können Lösungen bereitgestellt werden. Falls jedoch Lösungen verfügbar sind, werden sie in Form von schrittweisen Anleitungen zur Lösung des gemeldeten Problems oder in Form von zu installierenden Updates bereitgestellt. Um Probleme zu verhindern und die Zuverlässigkeit der Software zu erhöhen, sind einige Lösungen auch in Service Packs und zukünftigen Versionen der Software enthalten.
+
+ Der Microsoft-Fehlerberichtbestattungsdienst unterstützt Microsoft und deren Partner beim   
+
+----app_template_loaded_code----

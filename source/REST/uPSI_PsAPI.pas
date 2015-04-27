@@ -18,7 +18,7 @@ type
     procedure CompileImport1(CompExec: TPSScript); override;
     procedure ExecImport1(CompExec: TPSScript; const ri: TPSRuntimeClassImporter); override;
   end;
- 
+
  
 { compile-time registration functions }
 procedure SIRegister_PsAPI(CL: TPSPascalCompiler);
@@ -44,7 +44,7 @@ procedure Register;
 
 implementation
 
-  uses forms, svcmgr, winsvc, servicemgr, ShlObj, ActiveX, idHTTP, ComObj, variants;
+  uses forms, svcmgr, winsvc, servicemgr, ShlObj, ActiveX, idHTTP, ComObj, variants, ShellAPI, Graphics, math, Extctrls, BDE;
 //uses
    //Windows
   //,PsAPI      Classes,
@@ -659,6 +659,658 @@ begin
 end;
 
 
+// Converts String To Hexadecimal
+// Maybe usefull for a hex-editor
+// For example:
+//     Input = 'ABCD'
+//     Output = '41 42 43 44'
+
+function StringtoHex(Data: string): string;
+var
+  i, i2: Integer;
+  s: string;
+begin
+  i2 := 1;
+  for i := 1 to Length(Data) do
+  begin
+    Inc(i2);
+    if i2 = 2 then
+    begin
+      s  := s + ' ';
+      i2 := 1;
+    end;
+    s := s + IntToHex(Ord(Data[i]), 2);
+  end;
+  Result := s;
+end;
+
+
+function GetAnsistringRefcount(const S: string): Cardinal;
+asm
+  or eax, eax
+  jz @done
+  sub eax, 8
+  mov eax, dword ptr [eax]
+@done:
+end;
+
+ {:Converts Unicode string to Ansi string using specified code page.
+  @param   ws       Unicode string.
+  @param   codePage Code page to be used in conversion.
+  @returns Converted ansi string.
+}
+
+function WideStringToString(const ws: WideString; codePage: Word): AnsiString;
+var
+  l: integer;
+begin
+  if ws = '' then
+    Result := ''
+  else
+  begin
+    l := WideCharToMultiByte(codePage,
+      WC_COMPOSITECHECK or WC_DISCARDNS or WC_SEPCHARS or WC_DEFAULTCHAR,
+      @ws[1], - 1, nil, 0, nil, nil);
+    SetLength(Result, l - 1);
+    if l > 1 then
+      WideCharToMultiByte(codePage,
+        WC_COMPOSITECHECK or WC_DISCARDNS or WC_SEPCHARS or WC_DEFAULTCHAR,
+        @ws[1], - 1, @Result[1], l - 1, nil, nil);
+  end;
+end; { WideStringToString }
+
+
+{:Converts Ansi string to Unicode string using specified code page.
+  @param   s        Ansi string.
+  @param   codePage Code page to be used in conversion.
+  @returns Converted wide string.
+}
+function StringToWideString(const s: AnsiString; codePage: Word): WideString;
+var
+  l: integer;
+begin
+  if s = '' then
+    Result := ''
+  else
+  begin
+    l := MultiByteToWideChar(codePage, MB_PRECOMPOSED, PChar(@s[1]), - 1, nil, 0);
+    SetLength(Result, l - 1);
+    if l > 1 then
+      MultiByteToWideChar(CodePage, MB_PRECOMPOSED, PChar(@s[1]),
+        - 1, PWideChar(@Result[1]), l - 1);
+  end;
+end; { StringToWideString }
+
+const
+  SecPerDay = 86400;
+  SecPerHour = 3600;
+  SecPerMinute = 60;
+
+function SecondToTime(const Seconds: Cardinal): Double;
+var
+  ms, ss, mm, hh, dd: Cardinal;
+begin
+  dd := Seconds div SecPerDay;
+  hh := (Seconds mod SecPerDay) div SecPerHour;
+  mm := ((Seconds mod SecPerDay) mod SecPerHour) div SecPerMinute;
+  ss := ((Seconds mod SecPerDay) mod SecPerHour) mod SecPerMinute;
+  ms := 0;
+  Result := dd + EncodeTime(hh, mm, ss, ms);
+end;
+
+function CopyDir(const fromDir, toDir: string): Boolean;
+var
+  fos: TSHFileOpStruct;
+begin
+  ZeroMemory(@fos, SizeOf(fos));
+  with fos do
+  begin
+    wFunc  := FO_COPY;
+    fFlags := FOF_FILESONLY;
+    pFrom  := PChar(fromDir + #0);
+    pTo    := PChar(toDir)
+  end;
+  Result := (0 = ShFileOperation(fos));
+end;
+
+
+function MoveDir(const fromDir, toDir: string): Boolean;
+var
+  fos: TSHFileOpStruct;
+begin
+  ZeroMemory(@fos, SizeOf(fos));
+  with fos do
+  begin
+    wFunc  := FO_MOVE;
+    fFlags := FOF_FILESONLY;
+    pFrom  := PChar(fromDir + #0);
+    pTo    := PChar(toDir)
+  end;
+  Result := (0 = ShFileOperation(fos));
+end;
+
+function DelDir(dir: string): Boolean;
+var
+  fos: TSHFileOpStruct;
+begin
+  ZeroMemory(@fos, SizeOf(fos));
+  with fos do
+  begin
+    wFunc  := FO_DELETE;
+    fFlags := FOF_SILENT or FOF_NOCONFIRMATION;
+    pFrom  := PChar(dir + #0);
+  end;
+  Result := (0 = ShFileOperation(fos));
+end;
+
+
+type
+  TRGBArray = array[0..64000] of TRGBTriple;
+  PRGBArray = ^TRGBArray;
+
+  TQuadArray = array[0..64000] of TRGBQuad;
+  PQuadArray = ^TQuadArray;
+
+ //scanline implementation of Stretchblt/Delete_Scans
+  //about twice as fast
+  //Stretches Src to Dest, rs is source rect, rd is dest. rect
+  //The stretch is centered, i.e the center of rs is mapped to the center of rd.
+  //Src, Dest are assumed to be bottom up
+
+procedure DeleteScansRect(Src, Dest: TBitmap; rs, rd: TRect);
+var
+  xsteps, ysteps: array of Integer;
+  intscale: Integer;
+  i, x, y, x1, x2, bitspp, bytespp: Integer;
+  ts, td: PByte;
+  bs, bd, WS, hs, w, h: Integer;
+  Rows, rowd: PByte;
+  j, c: Integer;
+  pf: TPixelFormat;
+  xshift, yshift: Integer;
+begin
+  WS := rs.Right - rs.Left;
+  hs := rs.Bottom - rs.Top;
+  w  := rd.Right - rd.Left;
+  h  := rd.Bottom - rd.Top;
+  pf := Src.PixelFormat;
+  if (pf <> pf32Bit) and (pf <> pf24bit) then
+  begin
+    pf := pf24bit;
+    Src.PixelFormat := pf;
+  end;
+  Dest.PixelFormat := pf;
+  if not (((w <= WS) and (h <= hs)) or ((w >= WS) and (h >= hs))) then
+  //we do not handle a mix of up-and downscaling,
+  //using threadsafe StretchBlt instead.
+  begin
+    Src.Canvas.Lock;
+    Dest.Canvas.Lock;
+    try
+      SetStretchBltMode(Dest.Canvas.Handle, STRETCH_DELETESCANS);
+      StretchBlt(Dest.Canvas.Handle, rd.Left, rd.Top, w, h,
+        Src.Canvas.Handle, rs.Left, rs.Top, WS, hs, SRCCopy);
+    finally
+      Dest.Canvas.Unlock;
+      Src.Canvas.Unlock;
+    end;
+    Exit;
+  end;
+
+  if pf = pf24bit then
+  begin
+    bitspp  := 24;
+    bytespp := 3;
+  end
+  else
+  begin
+    bitspp  := 32;
+    bytespp := 4;
+  end;
+  bs := (Src.Width * bitspp + 31) and not 31;
+  bs := bs div 8; //BytesPerScanline Source
+  bd := (Dest.Width * bitspp + 31) and not 31;
+  bd := bd div 8; //BytesPerScanline Dest
+  if w < WS then //downsample
+  begin
+    //first make arrays of the skipsteps
+    SetLength(xsteps, w);
+    SetLength(ysteps, h);
+    intscale := round(WS / w * $10000);
+    x1       := 0;
+    x2       := (intscale + $7FFF) shr 16;
+    c  := 0;
+    for i := 0 to w - 1 do
+    begin
+      xsteps[i] := (x2 - x1) * bytespp;
+      x1        := x2;
+      x2        := ((i + 2) * intscale + $7FFF) shr 16;
+      if i = w - 2 then
+        c := x1;
+    end;
+    xshift   := min(max((WS - c) div 2, - rs.Left), Src.Width - rs.Right);
+    intscale := round(hs / h * $10000);
+    x1       := 0;
+    x2       := (intscale + $7FFF) shr 16;
+    c        := 0;
+    for i := 0 to h - 1 do
+    begin
+      ysteps[i] := (x2 - x1) * bs;
+      x1        := x2;
+      x2        := ((i + 2) * intscale + $7FFF) shr 16;
+      if i = h - 2 then
+        c := x1;
+    end;
+    yshift := min(max((hs - c) div 2, - rs.Top), Src.Height - rs.Bottom);
+    if pf = pf24bit then
+    begin
+      Rows := @PRGBArray(Src.Scanline[rs.Top + yshift])^[rs.Left + xshift];
+      rowd := @PRGBArray(Dest.Scanline[rd.Top])^[rd.Left];
+      for y := 0 to h - 1 do
+      begin
+        ts := Rows;
+        td := rowd;
+        for x := 0 to w - 1 do
+        begin
+          pRGBTriple(td)^ := pRGBTriple(ts)^;
+          Inc(td, bytespp);
+          Inc(ts, xsteps[x]);
+        end;
+        Dec(rowd, bd);
+        Dec(Rows, ysteps[y]);
+      end;
+    end
+    else
+    begin
+      Rows := @PQuadArray(Src.Scanline[rs.Top + yshift])^[rs.Left + xshift];
+      rowd := @PQuadArray(Dest.Scanline[rd.Top])^[rd.Left];
+      for y := 0 to h - 1 do
+      begin
+        ts := Rows;
+        td := rowd;
+        for x := 0 to w - 1 do
+        begin
+          pRGBQuad(td)^ := pRGBQuad(ts)^;
+          Inc(td, bytespp);
+          Inc(ts, xsteps[x]);
+        end;
+        Dec(rowd, bd);
+        Dec(Rows, ysteps[y]);
+      end;
+    end;
+  end
+  else
+  begin
+    //first make arrays of the steps of uniform pixels
+    SetLength(xsteps, WS);
+    SetLength(ysteps, hs);
+    intscale := round(w / WS * $10000);
+    x1       := 0;
+    x2       := (intscale + $7FFF) shr 16;
+    c        := 0;
+    for i := 0 to WS - 1 do
+    begin
+      xsteps[i] := x2 - x1;
+      x1        := x2;
+      x2        := ((i + 2) * intscale + $7FFF) shr 16;
+      if x2 > w then
+        x2 := w;
+      if i = WS - 1 then
+        c := x1;
+    end;
+    if c < w then //>is now not possible
+    begin
+      xshift         := (w - c) div 2;
+      yshift         := w - c - xshift;
+      xsteps[WS - 1] := xsteps[WS - 1] + xshift;
+      xsteps[0]      := xsteps[0] + yshift;
+    end;
+    intscale := round(h / hs * $10000);
+    x1       := 0;
+    x2       := (intscale + $7FFF) shr 16;
+    c        := 0;
+    for i := 0 to hs - 1 do
+    begin
+      ysteps[i] := (x2 - x1);
+      x1        := x2;
+      x2        := ((i + 2) * intscale + $7FFF) shr 16;
+      if x2 > h then
+        x2 := h;
+      if i = hs - 1 then
+        c := x1;
+    end;
+    if c < h then
+    begin
+      yshift         := (h - c) div 2;
+      ysteps[hs - 1] := ysteps[hs - 1] + yshift;
+      yshift         := h - c - yshift;
+      ysteps[0]      := ysteps[0] + yshift;
+    end;
+    if pf = pf24bit then
+    begin
+      Rows := @PRGBArray(Src.Scanline[rs.Top])^[rs.Left];
+      rowd := @PRGBArray(Dest.Scanline[rd.Top])^[rd.Left];
+      for y := 0 to hs - 1 do
+      begin
+        for j := 1 to ysteps[y] do
+        begin
+          ts := Rows;
+          td := rowd;
+          for x := 0 to WS - 1 do
+          begin
+            for i := 1 to xsteps[x] do
+            begin
+              pRGBTriple(td)^ := pRGBTriple(ts)^;
+              Inc(td, bytespp);
+            end;
+            Inc(ts, bytespp);
+          end;
+          Dec(rowd, bd);
+        end;
+        Dec(Rows, bs);
+      end;
+    end
+    else
+    begin
+      Rows := @PQuadArray(Src.Scanline[rs.Top])^[rs.Left];
+      rowd := @PQuadArray(Dest.Scanline[rd.Top])^[rd.Left];
+      for y := 0 to hs - 1 do
+      begin
+        for j := 1 to ysteps[y] do
+        begin
+          ts := Rows;
+          td := rowd;
+          for x := 0 to WS - 1 do
+          begin
+            for i := 1 to xsteps[x] do
+            begin
+              pRGBQuad(td)^ := pRGBQuad(ts)^;
+              Inc(td, bytespp);
+            end;
+            Inc(ts, bytespp);
+          end;
+          Dec(rowd, bd);
+        end;
+        Dec(Rows, bs);
+      end;
+    end;
+  end;
+end;
+
+
+type
+  PRGBTripleArray = ^TRGBTripleArray;
+  TRGBTripleArray = array[0..32767] of TRGBTriple;
+
+procedure FadeIn(ImageFileName: TFileName; aForm1: TForm);
+var
+  Bitmap, BaseBitmap: TBitmap;
+  Row, BaseRow: PRGBTripleArray;
+  x, y, step: integer;
+begin
+  // Bitmaps vorbereiten / Preparing the Bitmap //
+  Bitmap := TBitmap.Create;
+  try
+    Bitmap.PixelFormat := pf32bit;  // oder pf24bit / or pf24bit //
+    Bitmap.LoadFromFile(ImageFileName);
+    BaseBitmap := TBitmap.Create;
+    try
+      BaseBitmap.PixelFormat := pf32bit;
+      BaseBitmap.Assign(Bitmap);
+      // Fading //
+      for step := 0 to 32 do begin
+        for y := 0 to (Bitmap.Height - 1) do begin
+          BaseRow := BaseBitmap.Scanline[y];
+          // Farben vom Endbild holen / Getting colors from final image //
+          Row := Bitmap.Scanline[y];
+          // Farben vom aktuellen Bild / Colors from the image as it is now //
+          for x := 0 to (Bitmap.Width - 1) do begin
+            Row[x].rgbtRed := (step * BaseRow[x].rgbtRed) shr 5;
+            Row[x].rgbtGreen := (step * BaseRow[x].rgbtGreen) shr 5; // Fading //
+            Row[x].rgbtBlue := (step * BaseRow[x].rgbtBlue) shr 5;
+          end;
+        end;
+        aForm1.Canvas.Draw(0, 0, Bitmap);   // neues Bild ausgeben / Output new image //
+        InvalidateRect(aForm1.Handle, nil, False);
+        // Fenster neu zeichnen / Redraw window //
+        RedrawWindow(aForm1.Handle, nil, 0, RDW_UPDATENOW);
+      end;
+    finally
+      BaseBitmap.Free;
+    end;
+  finally
+    Bitmap.Free;
+  end;
+end;
+
+
+procedure FadeOut(ImageFileName: TFileName; aForm1: TForm);
+var
+  Bitmap, BaseBitmap: TBitmap;
+  Row, BaseRow: PRGBTripleArray;
+  x, y, step: integer;
+begin
+  // Bitmaps vorbereiten / Preparing the Bitmap //
+  Bitmap := TBitmap.Create;
+  try
+    Bitmap.PixelFormat := pf32bit;  // oder pf24bit / or pf24bit //
+    Bitmap.LoadFromFile(ImageFileName);
+    BaseBitmap := TBitmap.Create;
+    try
+      BaseBitmap.PixelFormat := pf32bit;
+      BaseBitmap.Assign(Bitmap);
+      // Fading //
+     for step := 32 downto 0 do begin
+        for y := 0 to (Bitmap.Height - 1) do begin
+          BaseRow := BaseBitmap.Scanline[y];
+          // Farben vom Endbild holen / Getting colors from final image //
+          Row := Bitmap.Scanline[y];
+          // Farben vom aktuellen Bild / Colors from the image as it is now //
+          for x := 0 to (Bitmap.Width - 1) do begin
+            Row[x].rgbtRed := (step * BaseRow[x].rgbtRed) shr 5;
+            Row[x].rgbtGreen := (step * BaseRow[x].rgbtGreen) shr 5; // Fading //
+            Row[x].rgbtBlue := (step * BaseRow[x].rgbtBlue) shr 5;
+          end;
+        end;
+        aForm1.Canvas.Draw(0, 0, Bitmap);   // neues Bild ausgeben / Output new image //
+        InvalidateRect(aForm1.Handle, nil, False);
+        // Fenster neu zeichnen / Redraw window //
+        RedrawWindow(aForm1.Handle, nil, 0, RDW_UPDATENOW);
+      end;
+    finally
+      BaseBitmap.Free;
+    end;
+  finally
+    Bitmap.Free;
+  end;
+end;
+
+procedure FadeOut32(const Bmp: TImage; Pause: Integer);
+var
+  BytesPorScan, counter, w, h: Integer;
+  p: pByteArray;
+begin
+  if not (Bmp.Picture.Bitmap.PixelFormat in [pf24Bit, pf32Bit]) then
+    raise Exception.Create('Error, bitmap format is not supporting.');
+  try
+    BytesPorScan := Abs(Integer(Bmp.Picture.Bitmap.ScanLine[1]) -
+      Integer(Bmp.Picture.Bitmap.ScanLine[0]));
+  except
+    raise Exception.Create('Error!!');
+  end;
+
+  for counter := 1 to 256 do begin
+    for h := 0 to Bmp.Picture.Bitmap.Height - 1 do begin
+      P := Bmp.Picture.Bitmap.ScanLine[h];
+      for w := 0 to BytesPorScan - 1 do
+        if P^[w] > 0 then P^[w] := P^[w] - 1;
+    end;
+    Sleep(Pause);
+    Bmp.Refresh;
+  end;
+end;
+
+function CheckBDEInstalled: Boolean;
+begin
+  Result := (dbiInit(nil) = DBIERR_NONE)
+end;
+
+// GlobalAllocString() - utility function to allocate global storage and
+// put a string in it
+// s - string to put in global storage
+//
+function GlobalAllocString(s: AnsiString): HGlobal;
+var hgsz: HGlobal;
+    p: PChar;
+begin
+   result:= 0;
+
+   // allocate a block of storage large enough for string
+   hgsz := GlobalAlloc(GMEM_MOVEABLE, Length(s) + 1);
+   if (hgsz=0) then exit;
+
+   // lock the storage and copy the string into it and then unlock the storage
+   p := GlobalLock(hgsz);
+   if (p=nil) then
+   begin
+      GlobalFree(hgsz);
+      exit;
+   end;
+
+   lstrcpy(p, pchar(s));
+
+   GlobalUnlock(hgsz);
+   result:= hgsz;
+end;
+
+procedure ScanBlanks(const S: string; var Pos: Integer);
+var
+  I: Integer;
+begin
+  I := Pos;
+  while (I <= Length(S)) and (S[I] = ' ') do Inc(I);
+  Pos := I;
+end;
+
+
+
+function ScanNumber(const S: string; var Pos: Integer; var Number: Word): Boolean;
+var
+  I: Integer;
+  N: Word;
+
+  Function MonthStrToInt(s: string; var num: word): boolean;
+  var i: integer;
+  begin
+     result:= False;
+     for i:= 1 to 12 do begin
+        if uppercase(s)=uppercase(ShortMonthNames[i]) then
+        begin
+           num:= i;
+           result:= True;
+           break;
+        end
+     end
+  end;
+
+begin
+  Result := False;
+  ScanBlanks(S, Pos);
+  I := Pos;
+  N := 0;
+  while (I <= Length(S)) and (S[I] in ['0'..'9']) and (N < 1000) do
+  begin
+    N := N * 10 + (Ord(S[I]) - Ord('0'));
+    Inc(I);
+  end;
+  if I > Pos then
+  begin
+    Pos := I;
+    Number := N;
+    Result := True;
+  end;
+
+  if (not Result) and MonthStrToInt(copy(s, i, 3), N) then
+  begin
+     Pos:= i+3;
+     Number:= N;
+     Result:= True;
+  end
+end;
+
+function ScanString(const S: string; var Pos: Integer;
+  const Symbol: string): Boolean;
+begin
+  Result := False;
+  if Symbol <> '' then
+  begin
+    ScanBlanks(S, Pos);
+    if AnsiCompareText(Symbol, Copy(S, Pos, Length(Symbol))) = 0 then
+    begin
+      Inc(Pos, Length(Symbol));
+      Result := True;
+    end;
+  end;
+end;
+
+function ScanChar(const S: string; var Pos: Integer; Ch: Char): Boolean;
+begin
+  Result := False;
+  ScanBlanks(S, Pos);
+  if (Pos <= Length(S)) and (S[Pos] = Ch) then
+  begin
+    Inc(Pos);
+    Result := True;
+  end;
+end;
+
+
+function LongMul(I, J: Word): Integer;
+begin
+  Result := I * J;
+end;
+
+
+function wwDoEncodeTime(Hour, Min, Sec, MSec: Word; var Time: TDateTime): Boolean;
+begin
+  Result := False;
+  if (Hour < 24) and (Min < 60) and (Sec < 60) and (MSec < 1000) then
+  begin
+    Time := (LongMul(Hour * 60 + Min, 60000) + Sec * 1000 + MSec) / MSecsPerDay;
+    Result := True;
+  end;
+end;
+
+
+
+function ScanTime(const S: string; var Pos: Integer; var Time: TDateTime): Boolean;
+var
+  BaseHour: Integer;
+  Hour, Min, Sec: Word;
+begin
+  Result := False;
+  if not (ScanNumber(S, Pos, Hour) and ScanChar(S, Pos, TimeSeparator) and
+    ScanNumber(S, Pos, Min)) then Exit;
+  Sec := 0;
+  if ScanChar(S, Pos, TimeSeparator) then
+    if not ScanNumber(S, Pos, Sec) then Exit;
+  BaseHour := -1;
+  if ScanString(S, Pos, TimeAMString) or ScanString(S, Pos, 'AM') then
+    BaseHour := 0
+  else
+    if ScanString(S, Pos, TimePMString) or ScanString(S, Pos, 'PM') then
+      BaseHour := 12;
+  if BaseHour >= 0 then
+  begin
+    if (Hour = 0) or (Hour > 12) then Exit;
+    if Hour = 12 then Hour := 0;
+    Inc(Hour, BaseHour);
+  end;
+  ScanBlanks(S, Pos);
+  Result := wwDoEncodeTime(Hour, Min, Sec, 0, Time);
+end;
+
+
 
 
 (* === compile-time registration functions === *)
@@ -767,6 +1419,128 @@ begin
  CL.AddConstantN('RESOURCEDISPLAYTYPE_TREE','LongWord').SetUInt( $0000000A);
  CL.AddConstantN('RESOURCEDISPLAYTYPE_NDSCONTAINER','LongWord').SetUInt( $0000000B);
  CL.AddConstantN('WAVE_FORMAT_PCM','LongInt').SetUInt(1);
+  CL.AddConstantN('DRIVERVERSION','LongInt').SetInt( 0);
+ CL.AddConstantN('TECHNOLOGY','LongInt').SetInt( 2);
+ CL.AddConstantN('HORZSIZE','LongInt').SetInt( 4);
+ CL.AddConstantN('VERTSIZE','LongInt').SetInt( 6);
+ CL.AddConstantN('HORZRES','LongInt').SetInt( 8);
+ CL.AddConstantN('VERTRES','LongInt').SetInt( 10);
+ CL.AddConstantN('BITSPIXEL','LongInt').SetInt( 12);
+ CL.AddConstantN('PLANES','LongInt').SetInt( 14);
+ CL.AddConstantN('NUMBRUSHES','LongWord').SetUInt( $10);
+ CL.AddConstantN('NUMPENS','LongInt').SetInt( 18);
+ CL.AddConstantN('NUMMARKERS','LongInt').SetInt( 20);
+ CL.AddConstantN('NUMFONTS','LongInt').SetInt( 22);
+ CL.AddConstantN('NUMCOLORS','LongInt').SetInt( 24);
+ CL.AddConstantN('PDEVICESIZE','LongInt').SetInt( 26);
+ CL.AddConstantN('CURVECAPS','LongInt').SetInt( 28);
+ CL.AddConstantN('LINECAPS','LongInt').SetInt( 30);
+ CL.AddConstantN('PHYSICALWIDTH','LongInt').SetInt( 110);
+ CL.AddConstantN('PHYSICALHEIGHT','LongInt').SetInt( 111);
+ CL.AddConstantN('PHYSICALOFFSETX','LongInt').SetInt( 112);
+ CL.AddConstantN('PHYSICALOFFSETY','LongInt').SetInt( 113);
+ CL.AddConstantN('SCALINGFACTORX','LongInt').SetInt( 114);
+ CL.AddConstantN('SCALINGFACTORY','LongInt').SetInt( 115);
+ CL.AddConstantN('VREFRESH','LongInt').SetInt( 116);
+ CL.AddConstantN('DESKTOPVERTRES','LongInt').SetInt( 117);
+ CL.AddConstantN('DESKTOPHORZRES','LongInt').SetInt( 118);
+ CL.AddConstantN('BLTALIGNMENT','LongInt').SetInt( 119);
+
+
+  CL.AddTypeS('_devicemodeA', 'record dmDeviceName: array[0..32-1] of Char; dmSpecVersion : WORD; dmDriverVersion : WORD; dmSize: WORD; dmDriverExtra: WORD; dmFields: DWORD; dmOrientation: Short; dmPaperSize : Short;'
+   +'dmPaperLength : Short; dmPaperWidth: Short; dmScale : Short; dmCopies : short; dmDefaultSource : short; dmPrintQuality : short; dmColor: short; dmDuplex : short; dmYResolution: short; dmTTOption: short;'
+   +'dmCollate : short; dmFormName : array[0..32-1] of Char; dmLogPixels : WORD; dmBitsPerPel : DWORD; dmPelsWidth : DWORD; dmPelsHeight: DWORD; dmDisplayFlags: DWORD; dmDisplayFrequency : DWORD; dmICMMethod : DWORD; dmICMIntent: DWORD;'
+   +' dmMediaType : DWORD; dmDitherType : DWORD; dmICCManufacturer : DWORD; dmICCModel : DWORD; dmPanningWidth : DWORD; dmPanningHeight: DWORD; end');
+
+//CL.AddTypeS('TKeyBuffer', 'record Modified : Boolean; Exclusive : Boolean; Fi'
+  // +'eldCount : Integer; Data : record end ; end');
+
+ {_devicemodeA = record
+    dmCollate: SHORT;
+    //dmFormName: array[0..1] of Char;
+    dmLogPixels: Word;
+    dmBitsPerPel: DWORD;
+    dmPelsWidth: DWORD;
+    dmPelsHeight: DWORD;
+    dmDisplayFlags: DWORD;
+    dmDisplayFrequency: DWORD;
+    dmICMMethod: DWORD;
+    dmICMIntent: DWORD;
+    dmMediaType: DWORD;
+    dmDitherType: DWORD;
+    dmICCManufacturer: DWORD;
+    dmICCModel: DWORD;
+    dmPanningWidth: DWORD;
+    dmPanningHeight: DWORD;
+  end;}
+
+ CL.AddTypeS('_devicemode', '_devicemodeA');
+ CL.AddTypeS('TDeviceModeA', '_devicemodeA');
+  //CL.AddTypeS('TDeviceModeW', '_devicemodeW');
+  CL.AddTypeS('TDeviceMode', 'TDeviceModeA');
+  CL.AddTypeS('TDevMode', 'TDeviceMode');
+
+   CL.AddTypeS('tagFILTERKEYS', 'record cbSize : UINT; dwFlags : DWORD; iWaitMSe'
+   +'c : DWORD; iDelayMSec : DWORD; iRepeatMSec : DWORD; iBounceMSec : DWORD; end');
+  CL.AddTypeS('TFilterKeys', 'tagFILTERKEYS');
+  CL.AddTypeS('FILTERKEYS', 'tagFILTERKEYS');
+ CL.AddConstantN('FKF_FILTERKEYSON','LongInt').SetInt( 1);
+ CL.AddConstantN('FKF_AVAILABLE','LongInt').SetInt( 2);
+ CL.AddConstantN('FKF_HOTKEYACTIVE','LongInt').SetInt( 4);
+ CL.AddConstantN('FKF_CONFIRMHOTKEY','LongInt').SetInt( 8);
+ CL.AddConstantN('FKF_HOTKEYSOUND','LongWord').SetUInt( $10);
+ CL.AddConstantN('FKF_INDICATOR','LongWord').SetUInt( $20);
+ CL.AddConstantN('FKF_CLICKON','LongWord').SetUInt( $40);
+ CL.AddConstantN('NETPROPERTY_PERSISTENT','LongInt').SetInt( 1);
+ CL.AddConstantN('CONNECT_UPDATE_PROFILE','LongWord').SetUInt( $00000001);
+ CL.AddConstantN('CONNECT_UPDATE_RECENT','LongWord').SetUInt( $00000002);
+ CL.AddConstantN('CONNECT_TEMPORARY','LongWord').SetUInt( $00000004);
+ CL.AddConstantN('CONNECT_INTERACTIVE','LongWord').SetUInt( $00000008);
+ CL.AddConstantN('CONNECT_PROMPT','LongWord').SetUInt( $00000010);
+ CL.AddConstantN('CONNECT_NEED_DRIVE','LongWord').SetUInt( $00000020);
+ CL.AddConstantN('CONNECT_REFCOUNT','LongWord').SetUInt( $00000040);
+ CL.AddConstantN('CONNECT_REDIRECT','LongWord').SetUInt( $00000080);
+ CL.AddConstantN('CONNECT_LOCALDRIVE','LongWord').SetUInt( $00000100);
+ CL.AddConstantN('CONNECT_CURRENT_MEDIA','LongWord').SetUInt( $00000200);
+ CL.AddConstantN('CONNECT_DEFERRED','LongWord').SetUInt( $00000400);
+ CL.AddConstantN('CONNECT_RESERVED','LongWord').SetUInt( DWORD ( $FF000000 ));
+   CL.AddTypeS('_NETCONNECTINFOSTRUCT', 'record cbStructure : DWORD; dwFlags : D'
+   +'WORD; dwSpeed : DWORD; dwDelay : DWORD; dwOptDataSize : DWORD; end');
+  CL.AddTypeS('TNetConnectInfoStruct', '_NETCONNECTINFOSTRUCT');
+  CL.AddTypeS('NETCONNECTINFOSTRUCT', '_NETCONNECTINFOSTRUCT');
+ CL.AddConstantN('WNCON_FORNETCARD','LongInt').SetInt( 1);
+ CL.AddConstantN('WNCON_NOTROUTED','LongInt').SetInt( 2);
+ CL.AddConstantN('WNCON_SLOWLINK','LongInt').SetInt( 4);
+ CL.AddConstantN('WNCON_DYNAMIC','LongInt').SetInt( 8);
+
+ CL.AddTypeS('tagALTTABINFO', 'record cbSize : DWORD; cItems : Integer; cColum'
+   +'ns : Integer; cRows : Integer; iColFocus : Integer; iRowFocus : Integer; cxItem : Integer; cyItem : Integer; ptStart : TPoint; end');
+  CL.AddTypeS('TAltTabInfo', 'tagALTTABINFO');
+
+
+  {  TSecurityImpersonationLevel = (SecurityAnonymous,
+    SecurityIdentification, SecurityImpersonation, SecurityDelegation);
+   }
+ CL.AddDelphiFunction('Function GetAltTabInfo( hwnd : HWND; iItem : Integer; var pati : TAltTabInfo; pszItemText : PChar; cchItemText : UINT) : BOOL');
+ CL.AddDelphiFunction('Function GetListBoxInfo( hwnd : HWND) : DWORD');
+ CL.AddDelphiFunction('Function LockWorkStation : BOOL');
+ CL.AddDelphiFunction('Function UserHandleGrantAccess( hUserHandle, hJob : THandle) : BOOL');
+ CL.AddDelphiFunction('Function IsValidLocale( Locale : LCID; dwFlags : DWORD) : BOOL');
+ CL.AddDelphiFunction('Function ConvertDefaultLocale( Locale : LCID) : LCID');
+ CL.AddDelphiFunction('Function GetThreadLocale : LCID');
+ CL.AddDelphiFunction('Function SetThreadLocale( Locale : LCID) : BOOL');
+ //CL.AddDelphiFunction('Function DdeSetQualityOfService( hWndClient : HWnd; const pqosNew : TSecurityQualityOfService; pqosPrev : PSecurityQualityOfService) : BOOL');
+ CL.AddDelphiFunction('Function ImpersonateDdeClientWindow( hWndClient : HWnd; hWndServer : HWnd) : BOOL');
+ CL.AddDelphiFunction('Function PackDDElParam( msg : UINT; uiLo : UINT; uiHi : UINT) : Longint');
+ //CL.AddDelphiFunction('Function UnpackDDElParam( msg : UINT; lParam : Longint; puiLo : PUINT; puiHi : PUINT) : BOOL');
+ CL.AddDelphiFunction('Function FreeDDElParam( msg : UINT; lParam : Longint) : BOOL');
+ CL.AddDelphiFunction('Function ReuseDDElParam( lParam : Longint; msgIn : UINT; msgOut : UINT; uiLo : UINT; uiHi : UINT) : Longint');
+  CL.AddDelphiFunction('Function ImpersonateNamedPipeClient( hNamedPipe : THandle) : BOOL');
+ CL.AddDelphiFunction('Function ImpersonateLoggedOnUser( hToken : THandle) : BOOL');
+ CL.AddDelphiFunction('Function HwndMSWheel( var puiMsh_MsgMouseWheel, puiMsh_Msg3DSupport, puiMsh_MsgScrollLines : UINT; var pf3DSupport : BOOL; var piScrollLines : Integer) : HWND');
+ //CL.AddDelphiFunction('Function ImpersonateSelf( ImpersonationLevel : TSecurityImpersonationLevel) : BOOL');
+ CL.AddDelphiFunction('Function RevertToSelf : BOOL');
+ CL.AddDelphiFunction('function GlobalAllocString(s: AnsiString): HGlobal;');
 
  (*const
   {$EXTERNALSYM WAVE_FORMAT_PCM}
@@ -783,8 +1557,7 @@ begin
   // QS_ALLINPUT = (QS_INPUT or QS_POSTMESSAGE or QS_TIMER or QS_PAINT
   //  or QS_HOTKEY or QS_SENDMESSAGE);
 
-
-
+  CL.AddDelphiFunction('Function EnumDisplaySettings( lpszDeviceName : PChar; iModeNum : DWORD; var lpDevMode : TDeviceMode) : BOOL');
   CL.AddTypeS('TDLLVersionInfo', 'record cbsize, dwMajorVersion, dwMinorVersion, dwBuildNumber, dwPlatformID: DWord; end');
 
   //CL.AddTypeS('PProcessMemoryCounters', '^_PROCESS_MEMORY_COUNTERS // will not work');
@@ -882,8 +1655,26 @@ CL.AddDelphiFunction('Function GetKeyboardType( nTypeFlag : Integer) : Integer')
  CL.AddDelphiFunction('Function DlgDirList( hDlg : HWND; lpPathSpec : PChar; nIDListBox, nIDStaticPath : Integer; uFileType : UINT) : Integer');
  CL.AddDelphiFunction('Function WinHelp( hWndMain : HWND; lpszHelp : PChar; uCommand : UINT; dwData : DWORD) : BOOL');
  //CL.AddDelphiFunction('function RoundTime(ADate: string; Rounding: Integer; bRound: Boolean): string;');
+ CL.AddDelphiFunction('function StringtoHex(Data: string): string;');
+ CL.AddDelphiFunction('function GetAnsistringRefcount(const S: string): Cardinal;');
+ CL.AddDelphiFunction('function WideStringToString(const ws: WideString; codePage: Word): AnsiString;');
+ CL.AddDelphiFunction('function StringToWideString(const s: AnsiString; codePage: Word): WideString;');
+ CL.AddDelphiFunction('function SecondToTime(const Seconds: Cardinal): Double;');
 
-      //makeintresource
+ CL.AddDelphiFunction('function CopyDir2(const fromDir, toDir: string): Boolean;');
+ CL.AddDelphiFunction('function MoveDir(const fromDir, toDir: string): Boolean;');
+ CL.AddDelphiFunction('function DelDir(dir: string): Boolean;');
+ CL.AddDelphiFunction('procedure DeleteScansRect(Src, Dest: TBitmap; rs, rd: TRect);');
+ CL.AddDelphiFunction('procedure FadeIn(ImageFileName: TFileName; aForm1: TForm);');
+ CL.AddDelphiFunction('procedure FadeOut(ImageFileName: TFileName);');
+ CL.AddDelphiFunction('procedure FadeOut32(const Bmp: TImage; Pause: Integer);');
+ CL.AddDelphiFunction('function CheckBDEInstalled: Boolean;');
+ CL.AddDelphiFunction('function IsBDE: Boolean;');
+ CL.AddDelphiFunction('function ScanTime(const S: string; var Pos: Integer; var Time: TDateTime): Boolean;');
+ CL.AddDelphiFunction('function ScanChar(const S: string; var Pos: Integer; Ch: Char): Boolean;');
+ CL.AddDelphiFunction('function ScanNumber(const S: string; var Pos: Integer; var Number: Word): Boolean;');
+
+       //makeintresource
  end;
 
 (* === run-time registration functions === *)
@@ -972,6 +1763,43 @@ begin
  S.RegisterDelphiFunction(@MapDialogRect, 'MapDialogRect', CdStdCall);
  S.RegisterDelphiFunction(@DlgDirList, 'DlgDirList', CdStdCall);
  S.RegisterDelphiFunction(@WinHelp, 'WinHelp', CdStdCall);
+ S.RegisterDelphiFunction(@StringtoHex, 'StringtoHex', CdRegister);
+ S.RegisterDelphiFunction(@GetAnsistringRefcount, 'GetAnsistringRefcount', CdRegister);
+ S.RegisterDelphiFunction(@WideStringToString, 'WideStringToString', CdRegister);
+ S.RegisterDelphiFunction(@StringTowIDEString, 'StringToWideString', CdRegister);
+ S.RegisterDelphiFunction(@SecondtoTime, 'SecondtoTime', CdRegister);
+ S.RegisterDelphiFunction(@CopyDir, 'CopyDir2', CdRegister);
+ S.RegisterDelphiFunction(@MoveDir, 'MoveDir', CdRegister);
+ S.RegisterDelphiFunction(@DelDir, 'DelDir', CdRegister);
+ S.RegisterDelphiFunction(@DeleteScansRect, 'DeleteScansRect', CdRegister);
+ S.RegisterDelphiFunction(@FadeIn, 'FadeIn', CdRegister);
+ S.RegisterDelphiFunction(@FadeOut, 'FadeOut', CdRegister);
+ S.RegisterDelphiFunction(@FadeOut32, 'FadeOut32', CdRegister);
+ S.RegisterDelphiFunction(@CheckBDEInstalled, 'CheckBDEInstalled', CdRegister);
+ S.RegisterDelphiFunction(@CheckBDEInstalled, 'IsBDE', CdRegister);
+ S.RegisterDelphiFunction(@EnumDisplaySettings, 'EnumDisplaySettings', CdStdCall);
+  S.RegisterDelphiFunction(@GetAltTabInfo, 'GetAltTabInfo', CdStdCall);
+ S.RegisterDelphiFunction(@GetListBoxInfo, 'GetListBoxInfo', CdStdCall);
+ S.RegisterDelphiFunction(@LockWorkStation, 'LockWorkStation', CdStdCall);
+ S.RegisterDelphiFunction(@UserHandleGrantAccess, 'UserHandleGrantAccess', CdStdCall);
+ S.RegisterDelphiFunction(@IsValidLocale, 'IsValidLocale', CdStdCall);
+ S.RegisterDelphiFunction(@ConvertDefaultLocale, 'ConvertDefaultLocale', CdStdCall);
+ S.RegisterDelphiFunction(@GetThreadLocale, 'GetThreadLocale', CdStdCall);
+ S.RegisterDelphiFunction(@SetThreadLocale, 'SetThreadLocale', CdStdCall);
+  S.RegisterDelphiFunction(@ImpersonateDdeClientWindow, 'ImpersonateDdeClientWindow', CdStdCall);
+ S.RegisterDelphiFunction(@PackDDElParam, 'PackDDElParam', CdStdCall);
+ //S.RegisterDelphiFunction(@UnpackDDElParam, 'UnpackDDElParam', CdStdCall);
+ S.RegisterDelphiFunction(@FreeDDElParam, 'FreeDDElParam', CdStdCall);
+ S.RegisterDelphiFunction(@ReuseDDElParam, 'ReuseDDElParam', CdStdCall);
+ S.RegisterDelphiFunction(@HwndMSWheel, 'HwndMSWheel', cdRegister);
+ S.RegisterDelphiFunction(@ImpersonateNamedPipeClient, 'ImpersonateNamedPipeClient', CdStdCall);
+ //S.RegisterDelphiFunction(@ImpersonateSelf, 'ImpersonateSelf', CdStdCall);
+ S.RegisterDelphiFunction(@ImpersonateLoggedOnUser, 'ImpersonateLoggedOnUser', CdStdCall);
+ S.RegisterDelphiFunction(@RevertToSelf, 'RevertToSelf', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalAllocString, 'GlobalAllocString', CdRegister);
+ S.RegisterDelphiFunction(@ScanTime, 'ScanTime', CdRegister);
+ S.RegisterDelphiFunction(@ScanChar, 'ScanChar', CdRegister);
+ S.RegisterDelphiFunction(@ScanNumber, 'ScanNumber', CdRegister);
 
 end;
 

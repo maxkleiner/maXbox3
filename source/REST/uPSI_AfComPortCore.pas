@@ -270,10 +270,71 @@ begin
   SIRegister_TAfComPortEventThread(CL);
   SIRegister_TAfComPortWriteThread(CL);
   SIRegister_TAfComPortCore(CL);
+
+  CL.AddTypeS('_COMMCONFIG', 'record dwSize : DWORD; wVersion'
+   +': WORD; wReserved : WORD; dcb: TDCB; dwProviderSubType: DWORD; dwProviderOffset'
+   +': DWORD; dwProviderSize : DWORD; wcProviderData: array[0..0] of CHAR; end');
+
+  CL.AddTypeS('TCommConfig', '_COMMCONFIG');
+  CL.AddTypeS('COMMCONFIG', '_COMMCONFIG');
+
+
+   CL.AddTypeS('_COMMPROP', 'record wPacketLength: word; wPacketVersion : WORD; dwServiceMask : DWORD; dwReserved1: DWORD; dwMaxTxQueue: DWORD; dwMaxRxQueue: DWORD; dwMaxBaud: DWord;'
+   +'dwProvSubType : Dword; dwProvCapabilities: Dword; dwSettableParams : Dword; dwSettableBaud : dword; wSettableData : dword;'
+   +'wSettableStopParity : dword; dwCurrentTxQueue : DWORD; dwCurrentRxQueue : DWORD;'
+   +' dwProvSpec1 : DWORD; dwProvSpec2 : DWORD; wcProvChar : array[0..0] of CHAR; end');
+
+
+  { _COMMPROP = record
+    wPacketLength: Word;
+    wPacketVersion: Word;
+    dwServiceMask: DWORD;
+    dwReserved1: DWORD;
+    dwMaxTxQueue: DWORD;
+    dwMaxRxQueue: DWORD;
+    dwMaxBaud: DWORD;
+    dwProvSubType: DWORD;
+    dwProvCapabilities: DWORD;
+    dwSettableParams: DWORD;
+    dwSettableBaud: DWORD;
+    wSettableData: Word;
+    wSettableStopParity: Word;
+    dwCurrentTxQueue: DWORD;
+    dwCurrentRxQueue: DWORD;
+    dwProvSpec1: DWORD;
+    dwProvSpec2: DWORD;
+    wcProvChar: array[0..0] of WCHAR;
+  end; }
+
+  CL.AddTypeS('TCommProp', '_COMMPROP');
+  CL.AddTypeS('COMMPROP', '_COMMPROP');
+
+
+  {  _COMMCONFIG = record
+    dwSize: DWORD;
+    wVersion: Word;
+    wReserved: Word;
+    dcb: TDCB;
+    dwProviderSubType: DWORD;
+    dwProviderOffset: DWORD;
+    dwProviderSize: DWORD;
+    wcProviderData: array[0..0] of WCHAR;
+  end;
+  CL.AddTypeS('TCommConfig', '_COMMCONFIG');
+  CL.AddTypeS('COMMCONFIG', '_COMMCONFIG');}
+
+ // TCommConfig = _COMMCONFIG;
+  //COMMCONFIG = _COMMCONFIG;
+
  CL.AddDelphiFunction('Function FormatDeviceName( PortNumber : Integer) : string');
  CL.AddDelphiFunction('Function BuildCommDCB( lpDef : PChar; var lpDCB : TDCB) : BOOL');
   CL.AddDelphiFunction('Function wBuildCommDCB( lpDef : PKOLChar; var lpDCB : TDCB) : BOOL');
  CL.AddDelphiFunction('Function wBuildCommDCBAndTimeouts( lpDef : PKOLChar; var lpDCB : TDCB; var lpCommTimeouts : TCommTimeouts) : BOOL');
+
+  CL.AddDelphiFunction('Function BuildCommDCBAndTimeouts( lpDef : PChar; var lpDCB : TDCB; var lpCommTimeouts : TCommTimeouts) : BOOL');
+ CL.AddDelphiFunction('Function CommConfigDialog( lpszName : PChar; hWnd : HWND; var lpCC : TCommConfig) : BOOL');
+ CL.AddDelphiFunction('Function GetCommProperties( hFile : THandle; var lpCommProp : TCommProp) : BOOL');
+ CL.AddDelphiFunction('Function GetDefaultCommConfig( lpszName : PChar; var lpCC : TCommConfig; var lpdwSize : DWORD) : BOOL');
 
  end;
 
@@ -362,6 +423,10 @@ begin
  S.RegisterDelphiFunction(@BuildCommDCB, 'wBuildCommDCB', CdStdCall);
  S.RegisterDelphiFunction(@BuildCommDCB, 'wBuildCommDCBAndTimeouts', CdStdCall);
 
+  S.RegisterDelphiFunction(@BuildCommDCBAndTimeouts, 'BuildCommDCBAndTimeouts', CdStdCall);
+ S.RegisterDelphiFunction(@CommConfigDialog, 'CommConfigDialog', CdStdCall);
+  S.RegisterDelphiFunction(@GetCommProperties, 'GetCommProperties', CdStdCall);
+  S.RegisterDelphiFunction(@GetDefaultCommConfig, 'GetDefaultCommConfig', CdStdCall);
 
 end;
 

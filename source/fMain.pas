@@ -130,9 +130,10 @@
          10465     build 190 override bugfixing, virtual constructor - 7 units, soap conn
          10470     build 191 ADOCOMUtils_set  - recordset2
          10490     build 192 TClientDataSet2  - recordset3, script executor, vbscript, DLLRun
+         10500     build 193 TClientDataSet2  - filter, objbroker
 
                   [the last one before V4 in 2015]
-                   V4.0   in  July 2015
+                   V4.0   in  November 2015
  ************************************************************************** }
 
 unit fMain;
@@ -2002,7 +2003,9 @@ uses
   uPSI_CompFileIo,
   uPSI_SynHighlighterGeneral,  //3.9.9.192
   uPSI_geometry2,
-
+  uPSI_MConnect,
+  uPSI_ObjBrkr, //3.9.9.193
+  uPSI_uMultiStr,
   ///
   ///
    //MDIFrame,
@@ -3150,6 +3153,9 @@ begin
   SIRegister_CompFileIo(X);
   SIRegister_SynHighlighterGeneral(X); //3.9.9.192
   SIRegister_geometry2(X);
+  SIRegister_MConnect(X);
+  SIRegister_ObjBrkr(X);
+  SIRegister_uMultiStr(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4582,6 +4588,10 @@ begin
   RIRegister_CompFileIo_Routines(Exec);
   RIRegister_SynHighlighterGeneral(X);
   RIRegister_geometry_Routines2(Exec);  //!
+  RIRegister_MConnect(X);
+  RIRegister_ObjBrkr(X);
+  RIRegister_MConnect_Routines(Exec);
+  RIRegister_uMultiStr(X);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);

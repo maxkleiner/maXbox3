@@ -1,0 +1,898 @@
+program IndyStack_ZukoFileSearch_DB_GEO;
+
+// complex filefunctions in directories and subdirectories
+// has findfirst with a TSearchRec structure, _58, #locs=1721
+//178.196.193.131
+//http://www.ipinfodb.com/register.php
+//https://theroadtodelphi.wordpress.com/2010/11/13/getting-ip-address-geolocation-info-with-delphi/
+
+{Start NotePad and load a file (the system "knows" the location of NotePad.exe, therefore we don't have to specify full path):
+ShellExecute(Handle, 'open', PChar('notepad'), PChar('c:\test\readme.txt'), nil, SW_SHOW);}
+
+const ext = 'txt';
+      sw = 'SW_SHOW';
+      //faDirectory = $00000010;
+      //faAnyFile   = $0000003F;
+      
+  var cnt: integer;
+  
+  (*ScriptCompiler.AddTypeS('TFindRec',
+    'record' +
+    '  Name: String;' +
+    '  Attributes: LongWord;' +
+    '  SizeHigh: LongWord;' +
+    '  SizeLow: LongWord;' +
+    '  CreationTime: TFileTime;' +
+    '  LastAccessTime: TFileTime;' +
+    '  LastWriteTime: TFileTime;' +
+    '  AlternateName: String;' +
+    '  FindHandle: THandle;' +
+    'end');   *)
+
+    procedure inc2(var a: integer; b: integer);
+    begin
+      a:= a+b
+    end;  
+      
+procedure FindAllFiles2(FilesList: TStringList; StartDir, FileMask: string);
+var
+  SR: TSearchRec;
+  DirList: TStringList;
+  IsFound: Boolean;
+  i, cnt: integer;
+begin
+  if StartDir[length(StartDir)] <> '\' then
+                       StartDir:= StartDir + '\';
+  { Build a list of the files in directory StartDir (not the directories!)}
+  IsFound:= FindFirst2(StartDir+FileMask, faAnyFile-faDirectory,SR) = 0;
+  while IsFound do begin
+   //writeln(inttostr(inc(i,cnt)))
+      FilesList.Add(inttostr(cnt)+ ' '+StartDir + SR.name);
+    IsFound:= FindNext2(SR) = 0;
+  end;
+  FindClose2(SR);
+  //Build a list of subdirectories
+  DirList:= TStringList.Create;
+    IsFound:= FindFirst2(StartDir+'*.*', faAnyFile,SR) = 0;
+    while IsFound do begin
+      //inc(cnt)
+      if ((SR.Attr and faDirectory) <> 0) and
+         (SR.Name[1] <> '.') then
+           //DirList.Add(inttostr(cnt)+ ' '+StartDir + searchrecName);
+           DirList.Add(StartDir + SR.Name);
+       IsFound:= FindNext2(SR) = 0;
+    end;
+    //inc
+    FindClose2(SR);
+  //Scan the list of subdirectories recursive!
+  for i:= 0 to DirList.Count - 1 do
+    FindAllFiles2(FilesList, DirList[i], FileMask);
+  DirList.Free;
+end;
+
+  
+procedure FindAllFiles(FilesList: TStringList; StartDir, FileMask: string);
+var
+  //SR: TSearchRec;
+  DirList: TStringList;
+  IsFound: Boolean;
+  i: integer;
+begin
+  if StartDir[length(StartDir)] <> '\' then
+                       StartDir:= StartDir + '\';
+  { Build a list of the files in directory StartDir (not the directories!)}
+  IsFound:= FindFirst(StartDir+FileMask, faAnyFile-faDirectory) = 0;
+  while IsFound do begin
+   inc2(cnt,1)
+   //writeln(inttostr(inc(i,cnt)))
+    FilesList.Add(inttostr(cnt)+ ' '+StartDir + searchrecName);
+    IsFound:= FindNext = 0;
+  end;
+  FindClose;
+  //Build a list of subdirectories
+  DirList:= TStringList.Create;
+    IsFound:= FindFirst(StartDir+'*.*', faAnyFile) = 0;
+    while IsFound do begin
+      //inc(cnt)
+      if ((searchrecAttr and faDirectory) <> 0) and
+         (searchrecName[1] <> '.') then
+           //DirList.Add(inttostr(cnt)+ ' '+StartDir + searchrecName);
+           DirList.Add(StartDir + searchrecName);
+       IsFound:= FindNext = 0;
+    end;
+    FindClose;
+  //Scan the list of subdirectories recursive!
+  for i:= 0 to DirList.Count - 1 do
+    FindAllFiles(FilesList, DirList[i], FileMask);
+  DirList.Free;
+end;
+
+function GetAliasPath(alias: string): string;
+var MyStringList: TStringList;
+  asession: TSession;
+begin
+  result:='';
+  // Auslesen der Aliasparameter
+  MyStringList:= TStringList.Create;
+  ASession:= TSession.Create(NIL);  
+  try
+    aSession.GetAliasParams(alias, MyStringList);
+    result:= Copy(MyStringList[0], 6, Length(MyStringList[0])-5);
+  finally
+    MyStringList.Free;
+    ASession.Free;  
+  end;
+end;
+
+//http://www.win7dll.info/
+//www.randomnoun.com/wp/2013/10/27/windows-shell32-animations/
+
+procedure TForm1_Button1ClickAnimate(Sender: TObject);
+var animate1: TAnimate;
+   frm: TForm;
+begin
+  frm:= TForm.create(self)
+  frm.Setbounds(0,0,500,300)
+  //frm.show;
+  animate1:= TAnimate.create(self)
+  //Animate1.ResHandle:= LoadLibrary('shdocvw.dll');
+  Animate1.ResHandle:= LoadLibrary('shell32.dll'); //HINSTANCE; //LoadLibrary('shell32.dll');
+  try {da Reshandel}
+    animate1.parent:= frm;
+    Animate1.ResID:= 151; //161 256;
+    //Animate1.CommonAVI:= aviCopyFile; //aviFindFile;
+  except
+    writeln('debugln(''resid not found'','')''');
+  end;
+  Animate1.Active:= True;
+  Animate1.show;
+  frm.show;
+end;
+
+procedure TForm1AnimateClick(Sender: TObject);
+var
+  TempForm: TForm;
+  I: Integer;
+begin
+  TempForm := TForm.Create(Self);
+  with TAnimate.Create(TempForm) do
+  try
+    Parent := TempForm;
+    CommonAVI := aviFindFile;
+    Active := True;
+    TempForm.Show;
+    // Simulate a lengthy process. Alter this value
+    // to accommodate your machine speed.
+    for I := 0 to 90000000 do Application.ProcessMessages;
+  finally
+    TempForm.Release;
+  end;
+end;
+
+function IsISBN3(ISBN: String): Boolean;
+var
+  Number, CheckDigit: String;
+  CheckValue, CheckSum, Err: Integer;
+  i, Cnt: Word;
+begin
+  {Get check digit}
+  CheckDigit := Copy(ISBN, Length(ISBN), 1);
+  {Get rest of ISBN, minus check digit and its hyphen}
+  Number := Copy(ISBN, 1, Length(ISBN) - 2);
+  {Length of ISBN remainder must be 11 and check digit between 9 and 9 or
+   X}
+  if (Length(Number) = 11) and (Pos(CheckDigit, '0123456789X') > 0) then begin
+    {Get numeric value for check digit}
+    if (CheckDigit = 'X') then
+      CheckSum := 10
+    else
+      Val(CheckDigit, CheckSum, Err);
+    {Iterate through ISBN remainder, applying decode algorithm}
+    Cnt := 1;
+    for i := 1 to 12 do begin
+      {Act only if current character is between "0" and "9" to exclude
+       hyphens}
+      if (Pos(Number[i], '0123456789') > 0) then begin
+        Val(Number[i], CheckValue, Err);
+        {Algorithm for each character in ISBN remainder, Cnt is the nth
+        character so processed}
+        CheckSum := CheckSum + CheckValue * (11 - Cnt);
+        Inc(Cnt);
+      end;
+    end;
+    {Verify final value is evenly divisible by 11}
+    if (CheckSum MOD 11 = 0) then
+      result:= True
+    else
+      result:= False;
+  end
+  else
+    result:= False;
+end;
+
+//http://unicornix.spb.ru/docs/prog/delphi/delphi_faq/del_tis/TI2988.html
+
+
+procedure testIDCreateStack;
+var idstack: TIDStack;
+    //idstackw: TIdStackWindows;
+begin
+  idstack:= CreateIDStack;
+  writeln('isDottedIP: '+botostr(idstack.isDottedIP('192.168.11.1')))
+  writeln('IsNumericIP: '+botostr(idstack.IsNumericIP('192.168.11.1')))
+  writeln('ResolveHost: '+idstack.ResolveHost('192.168.11.1'))
+  //writeln('WSGetHostByName: '+idstack.WSGetHostName)
+  idstack.Free;
+end;
+
+procedure testIDCreateStackWindows;
+var //idstack: TIDStack;
+    idstackw: TIdStackWindows;
+begin
+  idstackw:= TIdStackWindows.create;
+  writeln('isDottedIP: '+botostr(idstackw.isDottedIP('192.168.11.1')))
+  writeln('IsNumericIP: '+botostr(idstackw.IsNumericIP('192.168.11.1')))
+  writeln('ResolveHost: '+idstackw.ResolveHost('192.168.11.1'))
+  writeln('WSGetHostByName: '+idstackw.WSGetHostName)
+  idstackw.Free;
+end;
+
+
+
+procedure DatabaseSearch(DatabaseFilename, TablePart, SearchString: string);
+var
+  DataSource: TDataSource;
+  DSTable: TTable;
+begin
+  DataSource:= TDataSource.Create(NIL);
+  DSTable:= TTable.Create(NIL);
+  try
+    DataSource.DataSet:= DSTable;
+    DSTable.TableName:= DatabaseFilename;
+    DSTable.Active:= true;
+    if DSTable.FindFirst then begin
+      repeat
+        if AnsiLowerCase(DSTable.FieldByName(TablePart).AsString) =
+          AnsiLowerCase(SearchString) then begin
+          // über z. B. DSTable.FieldByName('ID').AsInteger usw.
+        end;
+      until DSTable.FindNext = false;
+    end;
+  finally
+    DataSource.free;
+    DSTable.free;
+  end;
+end;
+  
+
+procedure StartFileFinder;
+var FilesList: TStringList;
+begin
+  FilesList:= TStringList.Create;
+  try
+    //FindAllFiles(FilesList, ExePath+'examples', '*.*');
+    FindAllFiles(FilesList, ExePath, '*.*');
+    fileslist.saveToFile(ExePath+'examples\rec_files3.txt');
+  finally 
+    fileslist.getnamepath;
+    FilesList.Free;
+  end;
+end;
+
+ var mygeoInfo: TGEOInfo;
+ const
+ UrlGeoLookupInfo2  ='http://ipinfodb.com/ip_query.php?timezone=true&ip=%s';
+
+ UrlGeoLookupInfo3 = 'http://api.hostip.info/get_html.php?ip=%s&position=true';
+
+ procedure GetGeoInfo2(const IpAddress : string;var GeoInfo :TGeoInfo; const UrlGeoLookupInfo: string);
+var
+  lHTTP  : TIdHTTP;
+  lStream: TStringStream;
+  XMLDoc : OleVariant;
+  ANode  : OleVariant;
+begin
+  lHTTP   := TIdHTTP.Create(nil);
+  lStream := TStringStream.Create('');
+  try
+      try
+        lHTTP.Get1(Format(UrlGeoLookupInfo,[IpAddress]), lStream); //get the request
+      except
+        lHTTP.Get1(Format(UrlGeoLookupInfo2,[IpAddress]), lStream); //if something is wrong try using the backup server.
+      end;
+      lStream.Seek(0,0);
+      writeln('lstream: '+lStream.ReadString(lStream.Size));
+      XMLDoc.setProperty('SelectionLanguage','XPath');//use XPath to parse the xml result
+      ANode:=XMLDoc.selectSingleNode('/Response/Status');
+      if not VarIsNull(ANode) then GeoInfo.Status:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/CountryCode');
+      if not VarIsNull(ANode) then GeoInfo.CountryCode:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/CountryName');
+      if not VarIsNull(ANode) then GeoInfo.CountryName:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/RegionCode');
+      if not VarIsNull(ANode) then GeoInfo.RegionCode:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/City');
+      if not VarIsNull(ANode) then GeoInfo.City:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/ZipPostalCode');
+      if not VarIsNull(ANode) then GeoInfo.ZipPostalCode:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/Latitude');
+      if not VarIsNull(ANode) then GeoInfo.Latitude:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/Longitude');
+      if not VarIsNull(ANode) then GeoInfo.Longitude:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/TimezoneName');
+      if not VarIsNull(ANode) then GeoInfo.TimezoneName:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/Gmtoffset');
+      if not VarIsNull(ANode) then GeoInfo.Gmtoffset:=ANode.Text;
+      ANode:=XMLDoc.selectSingleNode('/Response/Isdst');
+      if not VarIsNull(ANode) then GeoInfo.Isdst:=ANode.Text;
+  finally
+    lHTTP.Free;
+    lStream.Free;
+  end;
+end;
+
+
+procedure GetGeoInfo3(const IpAddress: string; const UrlGeoLookupInfo: string);
+var
+  lHTTP: TIdHTTP;
+  lStream: TStringStream;
+begin
+  lHTTP:= TIdHTTP.Create(NIL);
+  lStream:= TStringStream.Create('');
+  try
+      try
+        lHTTP.Get1(Format(UrlGeoLookupInfo,[IpAddress]), lStream);
+         //get the request
+      except
+        lHTTP.Get1(Format(UrlGeoLookupInfo2,[IpAddress]), lStream);
+         //if something is wrong try using the backup server.
+      end;
+      lStream.Seek(0,0);
+      //lstream.getnamepath
+      writeln('lstream output: '+lStream.ReadString(lStream.Size));
+  finally
+    lHTTP.Free;
+    lStream.Free;
+  end;
+end;
+
+function GetGeoInfo4(const IpAddress: string;
+                       const UrlGeoLookupInfo: string): string;
+var
+  lHTTP: TIdHTTP;
+  lStream: TStringStream;
+begin
+  lHTTP:= TIdHTTP.Create(NIL);
+  lStream:= TStringStream.Create('');
+  try
+     try
+       lHTTP.Get1(Format(UrlGeoLookupInfo,[IpAddress]), lStream);
+        //get the request
+     except
+       lHTTP.Get1(Format(UrlGeoLookupInfo2,[IpAddress]), lStream);
+        //if something wrong try using a backup server.
+     end;
+     lStream.Seek(0,0);
+     result:= 'GEO_IP Out: '+lStream.ReadString(lStream.Size);
+  finally
+    lHTTP.Free;
+    lStream.Free;
+  end;
+end;
+
+procedure LetHTTPConnect(vcontentURL: string);
+var idHTTP: TIdHTTP;
+ icon: TMemoryStream;
+begin
+  idHTTP:= TIdHTTP.Create(self)
+  icon:= TMemoryStream.Create;
+  try
+  //IdHttp.Request.CustomHeaders.AddValue('Authorization', HeaderStr);
+   idhttp.Request.CustomHeaders.Clear;
+   IdHTTP.Request.RawHeaders.Add('X-AjaxPro-Method: ButtonEvent'); 
+   IdHTTP.Request.CustomHeaders.Values['X-AjaxPro-Method']:= 'ButtonEvent';
+   IdHTTP.Request.UserAgent:= 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; SLCC1'; 
+    writeln(idhttp.get2(vcontenturl))
+    writeln(idhttp.response.responseText);
+    writeln(itoa(ord(idhttp.response.responseVersion)));
+     
+    try
+      //idhttp.head
+      IdHTTP.Get1('http://perforce.eigenbase.org:8080/favicon.ico', icon);
+      //ShowMessage(IntToStr(icon.Size));
+      writeln(IntToStr(icon.Size));
+
+    except
+      writeln('{$IFDEF DEBUG}ShowMessage(''get error:''+E.Message){$ENDIF}');
+    //contentLst.text:= 
+      //  idhttp.get2(vcontentURL);
+    end;  
+  finally
+    idHTTP.Free
+    icon.Free;
+    //maxform1.color:= clred; 
+  end;    
+end;
+
+//main script
+begin
+  //mysearch;
+  beep;
+  cnt:= 0;
+  //StartFileFinder;
+  //SearchAndOpenDoc(ExePath+'examples\rec_files3.txt')
+  //shellexecute(0, 'open', 'notepad', 'rec_files.txt', '', 2)
+  //orthogonal and idempotent
+  testIDCreateStack;
+  testIDCreateStackWindows;
+  PrintF('%3.4n',[123456789.123456]); //-->'123.456.789,1235'
+  //TForm1_Button1ClickAnimate(self)
+  
+  //TForm1AnimateClick(self)
+  
+    writeln(itoa(mb_port))
+    
+//    procedure GetGeoInfo(const IpAddress : string;var GeoInfo :TGeoInfo; const UrlGeoLookupInfo: string);
+  //GetGeoInfo2('91.236.78.59',mygeoinfo, UrlGeoLookupInfo2);
+  //GetGeoInfo2('74.125.45.100',mygeoinfo, UrlGeoLookupInfo2);
+  //GetGeoInfo2('178.196.193.131',mygeoinfo, UrlGeoLookupInfo2);
+  //178.196.193.131
+  //178.196.192.130
+  
+  GetGeoInfo3('178.196.192.131', UrlGeoLookupInfo3);
+  writeln(GetGeoInfo4('178.196.192.131', UrlGeoLookupInfo3));
+  
+  //writeln(ALHTTPDecode('http://www.ibm.com'));
+  
+  LetHTTPConnect('http://www.ibm.com/ch/de/')
+  
+  {with TFileStream.create('filename',fmopenread) do begin
+   readcomponentres(hinstance) 
+   free
+  end; }
+  
+  
+
+//Commonly used Delphi WinAPI routines
+    //TDebugEvent
+   // SetLastErrorEx
+  // NotifyWinEvent
+
+    //Communications functions
+
+//seaerch ofBuildCommDCB (lpDef: PChar; var lpDCB: _DCB): BOOL
+{Fills a specified DCB structure with values specified in a device-control string. The device-control string uses the syntax of the mode command.
+ }
+   //    InitializeCriticalSection
+   //ContinueDebugEvent
+ //BuildCommDCBAndTimeouts (lpDef: PChar; var lpDCB: _DCB; var lpCommTimeouts: _COMMTIMEOUTS):BOOL
+ 
+ {CL.AddDelphiFunction('Function BuildCommDCBAndTimeouts( lpDef : PChar; var lpDCB : TDCB; var lpCommTimeouts : TCommTimeouts) : BOOL');
+ S.RegisterDelphiFunction(@BuildCommDCBAndTimeouts, 'BuildCommDCBAndTimeouts', CdStdCall);
+  }
+
+
+  //CommConfigDialog (lpszName: PChar; hWnd: HWND; lpCC: _COMMCONFIG): BOOL
+ 
+(*CL.AddDelphiFunction('Function CommConfigDialog( lpszName : PChar; hWnd : HWND; var lpCC : TCommConfig) : BOOL');
+
+S.RegisterDelphiFunction(@CommConfigDialog, 'CommConfigDialog', CdStdCall);
+
+ //GetCommProperties (hFile: THandle; var lpCommProp: _COMMPROP) : BOOL
+ 
+ CL.AddDelphiFunction('Function GetCommProperties( hFile : THandle; var lpCommProp : TCommProp) : BOOL');
+  S.RegisterDelphiFunction(@GetCommProperties, 'GetCommProperties', CdStdCall);
+ 
+
+
+ //GetDefaultCommConfig (lpszName: PChar; var lpCC: _COMMCONFIG; var lpdwSize: DWORD): BOOL
+ 
+ CL.AddDelphiFunction('Function GetDefaultCommConfig( lpszName : PChar; var lpCC : TCommConfig; var lpdwSize : DWORD) : BOOL');
+ 
+  S.RegisterDelphiFunction(@GetDefaultCommConfig, 'GetDefaultCommConfig', CdStdCall);
+
+
+{ Search for
+SetCommConfig (hCommDev: THandle; const lpCC: _COMMCONFIG; dwSize: DWORD): BOOL
+	 }
+
+ 
+ //ContinueDebugEvent (dwProcessId: DWORD; dwThreadId: DWORD; dwContinueStatus: DWORD): BOOL
+
+ //DebugActiveProcess (dwProcessId: DWORD): BOOL
+
+ CL.AddTypeS('_DEBUG_EVENT', 'record dwDebugEventCode : DWORD; dwProcessId : D'
+   +'WORD; dwThreadId : DWORD; end');
+  CL.AddTypeS('TDebugEvent', '_DEBUG_EVENT');
+  CL.AddTypeS('DEBUG_EVENT', '_DEBUG_EVENT');
+ 
+    CL.AddDelphiFunction('Function ContinueDebugEvent( dwProcessId, dwThreadId, dwContinueStatus : DWORD) : BOOL');
+ CL.AddDelphiFunction('Function DebugActiveProcess( dwProcessId : DWORD) : BOOL');
+ CL.AddDelphiFunction('Function WaitForDebugEvent( var lpDebugEvent : TDebugEvent; dwMilliseconds : DWORD) : BOOL');
+ 
+  S.RegisterDelphiFunction(@WaitForDebugEvent, 'WaitForDebugEvent', CdStdCall);
+ S.RegisterDelphiFunction(@ContinueDebugEvent, 'ContinueDebugEvent', CdStdCall);
+ S.RegisterDelphiFunction(@DebugActiveProcess, 'DebugActiveProcess', CdStdCall);
+
+  
+{Causes a breakpoint exception to occur in the current process so that the calling thread can signal the debugger and force it to take some action. If the process is not being debugged, the search logic of a standard exception handler is used. In most cases, this causes the calling process to terminate because of an unhandled breakpoint exception.}
+
+ //FatalAppExit (uAction: Cardinal; lpMessageText: PChar);
+ 
+  CL.AddDelphiFunction('Procedure FatalAppExit( uAction : UINT; lpMessageText : PChar)');
+ S.RegisterDelphiFunction(@FatalAppExit, 'FatalAppExit', CdStdCall);
+
+
+ //GetThreadSelectorEntry (hThread: THandle; dwSelector: DWORD; var lpSelectorEntry: _LDT_ENTRY): BOOL
+ 
+  CL.AddTypeS('TLDTEntry', '_LDT_ENTRY');
+  CL.AddTypeS('LDT_ENTRY', '_LDT_ENTRY');
+ 
+ 
+  CL.AddDelphiFunction('Function GetThreadSelectorEntry( hThread : THandle; dwSelector : DWORD; var lpSelectorEntry : TLDTEntry) : BOOL');
+
+S.RegisterDelphiFunction(@GetThreadSelectorEntry, 'GetThreadSelectorEntry', CdStdCall);
+ 
+
+ //SetDebugErrorLevel (dwLevel: DWORD);
+ 
+  CL.AddDelphiFunction('Procedure SetDebugErrorLevel( dwLevel : DWORD)');
+  
+   S.RegisterDelphiFunction(@SetDebugErrorLevel, 'SetDebugErrorLevel', CdStdCall);
+
+ CL.AddConstantN('SLE_ERROR','LongInt').SetInt( 1);
+ CL.AddConstantN('SLE_MINORERROR','LongInt').SetInt( 2);
+ CL.AddConstantN('SLE_WARNING','LongInt').SetInt( 3);
+
+
+
+// CreateFileMapping (hFile: THandle; lpFileMappingAttributes: PSECURITY_ATTRIBUTES; flProtect: DWORD; dwMaximumSizeHigh: DWORD; dwMaximumSizeLow: DWORD; lpName: PChar): THandle;
+CL.AddDelphiFunction('Function CreateFileMapping( hFile : THandle; lpFileMappingAttributes : PSecurityAttributes; flProtect, dwMaximumSizeHigh, dwMaximumSizeLow : DWORD; lpName : PChar) : THandle');
+ 
+
+ S.RegisterDelphiFunction(@CreateFileMapping, 'CreateFileMapping', CdStdCall);
+
+
+ //OpenFileMapping (dwDesiredAccess: DWORD; bInheritHandle: BOOL; lpName: PChar): THandle;
+
+  CL.AddDelphiFunction('Function OpenFileMapping( dwDesiredAccess : DWORD; bInheritHandle : BOOL; lpName : PChar) : THandle');
+ S.RegisterDelphiFunction(@OpenFileMapping, 'OpenFileMapping', CdStdCall);
+
+{Closes a handle and the object associated with that handle. After being closed, the handle is of course no longer valid. This  closes handles associated with access tokens, communications devices, console inputs, console screen buffers, events, files, file mappings, jobs, mailslots, mutexes, named pipes, processes, semaphores, sockets, and threads. }
+
+
+
+ //GetProcessHeap: THandle;
+
+ //GetProcessHeaps (NumberOfHeaps: DWORD; var ProcessHeaps: Cardinal): DWORD
+ 
+  CL.AddDelphiFunction('Function GetProcessHeap : THandle');
+ CL.AddDelphiFunction('Function GetProcessHeaps( NumberOfHeaps : DWORD; var ProcessHeaps : THandle) : DWORD');
+  S.RegisterDelphiFunction(@GetProcessHeap, 'GetProcessHeap', CdStdCall);
+ S.RegisterDelphiFunction(@GetProcessHeaps, 'GetProcessHeaps', CdStdCall);
+
+
+ //GlobalAlloc (uFlags: Cardinal; dwBytes’: DWORD): THandle
+
+ //GlobalFlags (hMem: THandle): DWORD;
+
+ //GlobalReAlloc (hMem: THandle; dwBytes: DWORD; uFlags: Cardinal): THandle
+
+ //GlobalSize (hMem: THandle): DWORD
+ 
+  CL.AddDelphiFunction('Function GlobalAlloc( uFlags : UINT; dwBytes : DWORD) : HGLOBAL');
+ CL.AddDelphiFunction('Function GlobalReAlloc( hMem : HGLOBAL; dwBytes : DWORD; uFlags : UINT) : HGLOBAL');
+ CL.AddDelphiFunction('Function GlobalSize( hMem : HGLOBAL) : DWORD');
+ CL.AddDelphiFunction('Function GlobalFlags( hMem : HGLOBAL) : UINT');
+ CL.AddDelphiFunction('Function GlobalLock( hMem : HGLOBAL) : Pointer');
+ CL.AddDelphiFunction('Function GlobalUnlock( hMem : HGLOBAL) : BOOL');
+ CL.AddDelphiFunction('Function GlobalFree( hMem : HGLOBAL) : HGLOBAL');
+ CL.AddDelphiFunction('Function GlobalCompact( dwMinFree : DWORD) : UINT');
+ CL.AddDelphiFunction('Procedure GlobalFix( hMem : HGLOBAL)');
+ CL.AddDelphiFunction('Procedure GlobalUnfix( hMem : HGLOBAL)');
+ CL.AddDelphiFunction('Function GlobalUnWire( hMem : HGLOBAL) : BOOL');
+ CL.AddDelphiFunction('Procedure GlobalMemoryStatus( var lpBuffer : TMemoryStatus)');
+ CL.AddDelphiFunction('Function LocalAlloc( uFlags, uBytes : UINT) : HLOCAL');
+ S.RegisterDelphiFunction(@GlobalAlloc, 'GlobalAlloc', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalReAlloc, 'GlobalReAlloc', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalSize, 'GlobalSize', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalFlags, 'GlobalFlags', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalLock, 'GlobalLock', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalUnlock, 'GlobalUnlock', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalFree, 'GlobalFree', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalCompact, 'GlobalCompact', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalFix, 'GlobalFix', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalUnfix, 'GlobalUnfix', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalUnWire, 'GlobalUnWire', CdStdCall);
+ S.RegisterDelphiFunction(@GlobalMemoryStatus, 'GlobalMemoryStatus', CdStdCall);
+
+
+ //GlobalUnlock (hMem: THandle): BOOL
+ //HeapCompact (hHeap: THandle, dwFlags: DWORD): Cardinal
+
+ //HeapCreate (flOptions, dwInitialSize, dwMaximumSize: DWORD): THandle
+
+ //HeapDestroy (hHeap: THandle): BOOL
+ //HeapLock (hHeap: THandle): BOOL
+
+
+ //HeapUnlock (hHeap: THandle): BOOL
+ 
+ S.RegisterDelphiFunction(@HeapCreate, 'HeapCreate', CdStdCall);
+ S.RegisterDelphiFunction(@HeapDestroy, 'HeapDestroy', CdStdCall);
+ S.RegisterDelphiFunction(@HeapCompact, 'HeapCompact', CdStdCall);
+ S.RegisterDelphiFunction(@HeapLock, 'HeapLock', CdStdCall);
+ S.RegisterDelphiFunction(@HeapUnlock, 'HeapUnlock', CdStdCall);
+ 
+ CL.AddDelphiFunction('Function HeapCreate( flOptions, dwInitialSize, dwMaximumSize : DWORD) : THandle');
+ CL.AddDelphiFunction('Function HeapDestroy( hHeap : THandle) : BOOL');
+ CL.AddDelphiFunction('Function HeapCompact( hHeap : THandle; dwFlags : DWORD) : UINT');
+CL.AddDelphiFunction('Function HeapLock( hHeap : THandle) : BOOL');
+ CL.AddDelphiFunction('Function HeapUnlock( hHeap : THandle) : BOOL');
+  
+
+ //IsBadStringPtr (lpsz: PChar; ucchMax: Cardinal): BOOL
+ 
+ CL.AddDelphiFunction('Function IsBadStringPtr( lpsz : PChar; ucchMax : UINT) : BOOL');
+  S.RegisterDelphiFunction(@IsBadStringPtr, 'IsBadStringPtr', CdStdCall);
+
+
+
+ //VirtualUnlock
+ CL.AddDelphiFunction('Function VirtualUnlock( lpAddress : Pointer; dwSize : DWORD) : BOOL');
+ S.RegisterDelphiFunction(@VirtualUnlock, 'VirtualUnlock', CdStdCall);
+
+ //FreeEnvironmentStrings (lpszEnvironmentBlock: PChar): BOOL
+
+
+ //GetEnvironmentStrings: PChar;
+
+CL.AddDelphiFunction('Function GetEnvironmentStrings : PChar');
+ CL.AddDelphiFunction('Function FreeEnvironmentStrings( EnvBlock : PChar) : BOOL');
+S.RegisterDelphiFunction(@GetEnvironmentStrings, 'GetEnvironmentStrings', CdStdCall);
+ S.RegisterDelphiFunction(@FreeEnvironmentStrings, 'FreeEnvironmentStrings', CdStdCall);
+  
+ //GetStartupInfo (var lpStartupInfo: _STARTUPINFOA)
+ 
+ CL.AddDelphiFunction('Procedure GetStartupInfo( var lpStartupInfo : TStartupInfo)');
+    S.RegisterDelphiFunction(@GetStartupInfo, 'GetStartupInfo', CdStdCall);
+
+
+ //TlsAlloc: DWORD
+
+ //TlsFree (dwTlsIndex: DWORD): BOOL
+ 
+CL.AddDelphiFunction('Function TlsAlloc : DWORD');
+ CL.AddConstantN('TLS_OUT_OF_INDEXES','LongWord').SetUInt( DWORD ( $FFFFFFFF ));
+ CL.AddDelphiFunction('Function TlsFree( dwTlsIndex : DWORD) : BOOL');
+S.RegisterDelphiFunction(@TlsAlloc, 'TlsAlloc', CdStdCall);
+ S.RegisterDelphiFunction(@TlsFree, 'TlsFree', CdStdCall);
+  
+
+ //AdjustWindowRect (var lpRect: TRECT; dwStyle: DWORD; bMenu: BOOL): BOOL
+
+ //AdjustWindowRectEx (var lpRect: TRECT; dwStyle: DWORD; bMenu: BOOL; dwExStyle: DWORD): BOOL
+ 
+ CL.AddDelphiFunction('Function SetWindowText( hWnd : HWND; lpString : PChar) : BOOL');
+ CL.AddDelphiFunction('Function GetWindowText( hWnd : HWND; lpString : PChar; nMaxCount : Integer) : Integer');
+ CL.AddDelphiFunction('Function GetWindowTextLength( hWnd : HWND) : Integer');
+ CL.AddDelphiFunction('Function GetClientRect( hWnd : HWND; var lpRect : TRect) : BOOL');
+ CL.AddDelphiFunction('Function GetWindowRect( hWnd : HWND; var lpRect : TRect) : BOOL');
+ CL.AddDelphiFunction('Function AdjustWindowRect( var lpRect : TRect; dwStyle : DWORD; bMenu : BOOL) : BOOL');
+ CL.AddDelphiFunction('Function AdjustWindowRectEx( var lpRect : TRect; dwStyle : DWORD; bMenu : BOOL; dwExStyle : DWORD) : BOOL');
+ 
+ 
+ S.RegisterDelphiFunction(@SetWindowText, 'SetWindowText', CdStdCall);
+ S.RegisterDelphiFunction(@GetWindowText, 'GetWindowText', CdStdCall);
+ S.RegisterDelphiFunction(@GetWindowTextLength, 'GetWindowTextLength', CdStdCall);
+ S.RegisterDelphiFunction(@GetClientRect, 'GetClientRect', CdStdCall);
+ S.RegisterDelphiFunction(@GetWindowRect, 'GetWindowRect', CdStdCall);
+ S.RegisterDelphiFunction(@AdjustWindowRect, 'AdjustWindowRect', CdStdCall);
+ S.RegisterDelphiFunction(@AdjustWindowRectEx, 'AdjustWindowRectEx', CdStdCall);
+ *)
+
+ //EnumThreadWindows (: DWORD; lpfn: DWORD; lParam : DWORD): BOOL
+ //CL.AddDelphiFunction('Function EnumThreadWindows( dwThreadId : DWORD; lpfn : TFNWndEnumProc; lParam : LPARAM) : BOOL');
+ //S.RegisterDelphiFunction(@EnumThreadWindows, 'EnumThreadWindows', CdStdCall);
+
+
+ //GetClientRect (hWnd: HWND; var lpRect: TRect): BOOL
+
+
+ //GetWindowTextLength (hWnd : THandle) : DWORD;
+
+ //SetWindowText (hWnd : THandle; lpString : PChar) : BOOL
+
+
+{
+Determines the handle of the window located at a specific point on the screen. Note that the active window could be a text box, list box, button, or some other object sitting inside a program window. In this case, the handle returned will be to this control and not the program window. If successful, the  returns the handle to the window at that point. If there is no window at that point, or if an error occured, the  instead returns 0.
+ }
+
+
+
+
+// SHFileOperation (var lpFileOp: SHFILEOPSTRUCT) : BOOL
+
+ //SHGetFileInfo (pszPath ; dwFileAttributes : DWORD; var psfi : SHFILEINFO; cbFileInfo : DWORD; uFlags : DWORD) : DWORD
+
+
+  
+  
+End.
+
+
+Ref:
+
+http://whatismyipaddress.com/ip/178.196.193.131
+
+http://www.hostip.info/use.html
+
+François, check this link http://ipinfodb.com/ip_database.php
+
+   
+0 votes
+ 
+Best answer
+
+The reason TIdHTTP is failing is because of this key piece of information that wget is reporting:
+
+    No headers, assuming HTTP/0.9
+
+In an HTTP 0.9 response, the HTTP status line and headers are not present at all, only the raw file data by itself, terminated by a disconnect. wget supports that, but TIdHTTP does not (even though the official HTTP 1.0 and HTTP 1.1 specs require support for recognizing HTTP 0.9 responses) . TIdHTTP supports only HTTP 1.0 and 1.1 formatted messages, which require the use of an HTTP status line and headers. For whatever reason, this particular server is choosing to send an HTTP 0.9 response for Indy's UserAgent, but is choosing to send an HTTP 1.0 response for Internet Explorer UserAgents instead. Odd.
+
+The short-term solution is to do what @TLama said. Setting the TIdHTTP.Request.UserAgent property to mimic Internet Explorer allows TIdHTTP.Get() to work properly:
+
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  icon: TMemoryStream;
+begin
+  icon := TMemoryStream.Create;
+  try
+    try
+
+
+    Data accuracy
+    Over 99.5% on a country level and around 80% on a city level for the US within a 25 mile radius. The database used for this API is compiled from the free Maxmind CSV database (Geolite City) and rearranged with many scripts.
+
+ function FindInFile(const AFileName: string; ASearchWord: string; AMatchCase: Boolean): Integer;
+var
+  fileStream: TFileStream;
+  //buffer: array[1..1024 * 1024] of Char;
+  buffer: array of char;
+  
+  //buffer: string;
+  abufferSize: Integer;
+  c: Char;
+  matchPosition, i, lengthOfSearchWord: Integer;
+  currentPosition, fileStreamSize: Integer;
+begin
+  //setlength2(buffer,1024*1024)
+  setlength(buffer,1024*1024)
+  
+  Result := -1;
+  lengthOfSearchWord := Length(ASearchWord);
+  if lengthOfSearchWord = 0 then
+    Exit;
+  if not AMatchCase then
+    ASearchWord := AnsiUpperCase(ASearchWord);
+  matchPosition := 1;
+  fileStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
+  try
+    fileStreamSize := fileStream.Size;
+    currentPosition := 0;
+    writeln('filesize '+inttostr(filestreamsize))
+    while currentPosition < fileStreamSize do begin
+      abufferSize := Min(high(buffer), (fileStreamSize - currentPosition));
+      fileStream.ReadBufferACD(buffer, abufferSize);
+      //fileStream.ReadBuffer(buffer, abufferSize);
+      writeln('buffwe '+inttostr(abuffersize)+': '+itoa(currentposition))
+      currentPosition:= fileStream.Position;
+      i := 1;
+      //i:= pos(currentPosition,asearchword)
+      while i > 1 do begin
+          i := i - matchPosition + 1;
+          matchPosition := 1;
+        end;
+        Inc(i);
+    end;
+  finally
+    fileStream.Free;
+  end;
+end;
+
+
+BOOL CALLBACK MainDlgProc(HWND hDlg, UINT message, 
+                          WPARAM wParam, LPARAM lParam)
+{
+
+    if(message==WM_QUIT||message==WM_CLOSE)
+        PostQuitMessage(0);
+
+
+    if(message==WM_INITDIALOG)
+    {
+
+        //Creates the animation control
+        if((avi=LoadLibrary("Shell32.dll"))==NULL)
+        {
+            MessageBox(hDlg,"Unable to load library.","ANI",0);
+        }
+        else
+        {
+            //Library loaded now create the animation control
+            AnimationCtrl=CreateWindowEx(0,  //Style   
+                        ANIMATE_CLASS,             //Class Name   
+                        NULL,                      //Window name   
+                        WS_CHILD|WS_VISIBLE|       //Window Style   
+                        ACS_TRANSPARENT|ACS_CENTER,
+                        0,                         //Left   
+                        0,                         //Top   
+                        300,                       //Right   
+                        60,                        //Bottom   
+                        hDlg,                      //Handle of parent   
+                        NULL,                      //Menu   
+                        avi,                       //hInstance
+                        NULL);                     //User defined style   
+
+            //Control created Now open the avi resource
+            if(SendMessage(AnimationCtrl,
+                   ACM_OPEN,(WPARAM)avi,(LPARAM)161)==NULL)
+                MessageBox(hDlg,"Cannot Load the avi resource","ANI",0);
+            else
+                SendMessage(AnimationCtrl,ACM_PLAY,
+                             (WPARAM)-1,MAKELONG(0,-1));
+
+        }
+
+    }
+
+    if(message==WM_COMMAND)
+    {
+        if(LOWORD(wParam)==IDCANCEL)
+        {
+            PostQuitMessage(0);
+            EndDialog(hDlg,0);
+        }
+    }
+
+    return 0;
+
+}
+
+type
+ TGeoInfo   = record
+  Status        : string;
+  CountryCode   : string;
+  CountryName   : string;
+  RegionCode    : string;
+  City          : string;
+  ZipPostalCode : string;
+  Latitude      : string;
+  Longitude     : string;
+  TimezoneName  : string;
+  Gmtoffset     : string;
+  Isdst         : string;
+ end;
+ 
+ 
+ </BODY></HTML>
+
+But if you submit a valid HEAD request you get:
+
+HTTP/1.1 200 OK
+Date: Tue, 18 Dec 2001 19:59:52 GMT
+Server: Apache/1.3.9 (Win32) mod_ssl/2.4.9 OpenSSL/0.9.4 mod_perl/1.21
+Last-Modified: Tue, 11 Dec 2001 09:16:36 GMT
+ETag: "0-1e48-3c15cef4"
+Accept-Ranges: bytes
+Content-Length: 7752
+Connection: close
+Content-Type: text/html
+
+HTTP always falls back to a telnet based communication when it does not know
+what to do with the information provided as a request. In tests against many
+web server softwares, I have found that many are very restrictive and others
+adhere to the specifications and assume many of the defaults. Apache is one
+that is more restrictive.
+
+Ozz 

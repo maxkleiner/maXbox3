@@ -1,0 +1,490 @@
+{****************************************************************
+ *
+ * Project  : ClientDataset maXbase System Information Series
+ * App Name : 230_DataProvider.txt, #locs=424
+ * Purpose  : DB Access via XML BDE Alias Access and ADO DataSet
+ * History  : system mX3.9 ,need: BDE Alias or Database3.mdb in /examples
+            : with CDataSet and DataSetProvider convert to XML
+ ****************************************************************}
+program DB_DataProvider_ADO;
+
+function MyGetTickCount: Longint;
+  external 'GetTickCount@kernel32.dll stdcall';
+  
+const KEYPATH = 'crypt\';  
+  
+var
+  ws: TWideStrings;
+  i: integer;
+  
+  procedure TForm1_FormPaint(Sender: TObject);
+  //const
+  var S: array[0..3] of string;
+  Colors: array[0..1] of TColor; // = (clMoneyGreen, clSkyBlue);
+  //Aligns: array[boolean] of integer = (DT_RIGHT, DT_LEFT);
+//var
+  i, y, MaxWidth, RectWidth: integer;
+  r, r2: TRect;
+begin
+   S[0]:= 'Hi! How are you?';
+   S[1]:= 'I am fine, thanks. How are you? How are your kids?';
+   S[2]:= 'Fine!';
+   S[3]:= 'Glad to hear that!';
+   Colors[0]:= clmoneygreen;
+   Colors[1]:= clskyblue;
+   
+  y := 10;
+  MaxWidth := 200; //ClientWidth div 2;
+  for i := low(S) to high(S) do begin
+    TForm(sender).Canvas.Brush.Color:= Colors[byte(odd(i))];
+    r := Rect(10, y, MaxWidth, 16);
+    DrawText(TForm(sender).Canvas.Handle,
+      S[i],
+      Length(S[i]),
+      r,
+      DT_RIGHT{Aligns[Odd(i)]} or DT_WORDBREAK or DT_CALCRECT);
+
+    if not Odd(i) then begin
+      RectWidth := r.Right - r.Left;
+      r.Right := TForm(sender).ClientWidth - 10;
+      r.Left := r.Right - RectWidth;
+    end;
+    r2 := Rect(r.Left - 4, r.Top - 4, r.Right + 4, r.Bottom + 4);
+    //TForm(sender).Canvas.RoundRect(r2, 5, 5);
+    DrawText(Tform(sender).Canvas.Handle,
+      S[i],
+      Length(S[i]),
+      r,
+      DT_RIGHT{Aligns[Odd(i)]} or DT_WORDBREAK);
+    y := r.Bottom - 100;
+  end;
+end;
+
+procedure TForm1_FormPaintX(Sender: TObject);
+begin
+  
+  with TForm(sender).canvas do begin
+     MoveTo(20, 100);
+     Font.Name := 'Segoe UI';
+     font.Color := clyellow; //Silver; //Maroon;
+     font.Style := [];
+     Font.Height := 64;
+     TextOut(PenPos.X, PenPos.Y, 'This ');
+     Font.Color := clNavy;
+     Font.Style := [fsBold];
+     Font.Height := 64;
+     TextOut(PenPos.X, PenPos.Y, 'is ');
+     font.Name := 'Bookman Old Style';
+     Font.Color := clBlack;
+     font.Style := [fsItalic];
+     Font.Height := 64;
+     TextOut(penPos.X, PenPos.Y, 'a ');
+     Font.Name := 'Courier New';
+     Font.Color := clSilver;
+     Font.Style := [];
+     Font.Height := 64;
+     TextOut(PenPos.X, PenPos.Y, 'Xtest!');
+  end;
+end;
+
+
+procedure CreateDBGridForm(dblist: TStringList; ares: string);
+ //diaform:= CreateMessageDialog('my fast form perform',mtconfirmation, []);
+var 
+    DlgType1: TMsgDlgType;  
+    dbform: TForm;
+     r: TRect;
+begin
+   dbform:= CreateMessageDialog('My Fast Form XML Converter - FFP',mtwarning,
+                                        [mball, mbyes, mbhelp, mbok]);
+   dbform.caption:= 'FFP XML Demo';
+   dbform.setBounds(50,50,800,600)
+   dbform.Formstyle:= fsStayontop;
+   dbform.Color:= 123;
+   //dbform.settextbuf(234);
+   dbform.vertscrollbar.visible:= true;
+   dbform.horzscrollbar.visible:= true;
+  // dbform.onpaint:= @TForm1_FormPaintX;
+  // dbform.onpaint:= @TForm1_FormPaint;
+   
+   
+   with TLabel.Create(self) do begin
+     parent:= dbform;
+     SetBounds(400,50,500,600)
+     font.size:= 14;
+     dblist.Add('converted to...XML')
+     caption:= dblist.text;
+   end; 
+   //dbform.canvas.textout(100,00,ares) 
+   r.Left := 50; r.right:= 200;
+   r.Top := 50;  r.bottom:= 400;
+   DrawText(dbform.Canvas.Handle, ares, 
+      Length(ares), r, DT_NOPREFIX or DT_WORDBREAK);
+
+   dbform.show; 
+   //dbform.textheight
+   dbform.canvas.textheight('20');
+   dbform.canvas.textout(50,300,ares) 
+   r.Left := 50; r.right:= 200;
+   r.Top := 50;  r.bottom:= 400;
+   sr:= StringReplace('a#b','#',#13#10,[rfReplaceAll]);
+   DrawText(dbform.Canvas.handle, ares, 
+      Length(ares), r, {DT_NOPREFIX or} DT_WORDBREAK or DT_CALCRECT);
+   //7DrawText(dbform.Canvas.handle, ares, 
+     // Length(ares), Trect(23),23), DT_NOPREFIX or DT_WORDBREAK or DT_CALCRECT);
+   TForm1_FormPaintX(dbform);
+   TForm1_FormPaint(dbform)
+   { DrawText(dbform.Canvas.handle, ares, 
+      Length(ares), rect(10,10,200,200), DT_NOPREFIX or DT_WORDBREAK or DT_CALCRECT);  }
+  
+end;   
+   
+
+Procedure SetADO_SETAccess2;
+var 
+  adoquery: TAdoDataSet;
+  i, z: integer;
+begin  
+  adoquery:= TAdoDataSet.Create(self);
+  with adoquery do begin
+    cachesize:= 500;
+    //commandtext:= 'select count(*)'
+    //commandtext:= 'INSERT INTO Table1 (FirstName, LastName, Phone)'+
+                        //'VALUES (''Max77'', ''Box545'', ''031-333 77 88'')';
+    commandText:= 'SELECT * FROM Table1';
+    connectionString:= 'Provider=MSDASQL;DSN=mx3base;Uid=sa;Pwd=admin';
+    Open;
+  for i:= 0 to Recordcount - 1 do begin
+    for z:= 0 to Fieldcount - 1 do 
+      Write((Fields[z].asString)+'  ');
+    Writeln(#13#10)
+    Next;
+  end;
+    Close;
+    Free;        
+  end;
+end;
+
+
+procedure DB_XML_AliasConverter;
+//uses
+    //Classes, SysUtils, DB, DBTables, Provider, DBClient;
+var
+   i: Integer;
+   BDEAlias: string;
+   abase, abasepath: string;
+   aParams, TableNames: TStringList;
+   aDataSetProvider: TDataSetProvider;
+   CDataSet: TClientDataSet;
+   Table: TTable;
+begin
+  //BDEAlias:= 'DBDEMOS';
+  BDEAlias:= 'SAS';
+  //BDEAlias:= 'firebird';
+  TableNames:= TStringList.Create;
+  AParams:= TStringList.Create; 
+  with TSession.Create(NIL) do try
+    //AutoSessionName := True;
+    SessionName:= 'MainSession3'; 
+    GetAliasParams(BDEAlias, AParams); 
+    OpenDatabase(BDEAlias); 
+    abasepath:= aParams[0];
+    Delete(abasepath,1,7)
+    GetTableNames(abasepath,'', True, False, TableNames);
+  finally
+    Close;
+    Free;
+  end {TSession};
+  Table:= TTable.Create(NIL);
+  aDataSetProvider:= TDataSetProvider.Create(NIL);
+  CDataSet:= TClientDataSet.Create(NIL);
+  try
+    Table.DatabaseName:=  BDEAlias; //tablenames[2];
+    //Table.Params.Assign(AParams); 
+    Writeln('base name '+Table.DatabaseName);
+    for i:= 0 to Pred(TableNames.Count) do begin
+      Table.TableName:= TableNames[i];
+      writeln('table to XML '+Table.Tablename)
+      Table.Open;
+      aDataSetProvider.DataSet:= Table;
+      CDataSet.SetProvider(TComponent(aDataSetProvider));
+      CDataSet.Open;
+      if DirectoryExists(ExePath+KEYPATH) = false then
+               CreateDir(ExePath + KEYPATH);
+      CDataSet.SaveToFile(ExePath+KEYPATH+
+                           ChangeFileExt(Table.TableName,'.xml'),dfXMLUTF8);
+      CDataSet.Close;
+      Table.Close
+    end;
+    CreateDBGridForm(tableNames,'');
+  finally
+    Table.Free;
+    CdataSet.Free;
+    aDataSetProvider.Free; 
+    //ASession.Free;  
+    AParams.Free;
+    tableNames.Free;
+  end;
+end;
+
+var ClientDataSet1: TClientDataSet;
+
+procedure TForm1_btnFindKeyClick(Sender: TObject);
+begin
+  { Set the "IndexName" required by the "FindKey" method. }
+  ClientDataSet1.IndexName := 'field1index';
+  { Perform the search and inform the User through a message. }
+  if ClientDataSet1.FindKey(['SearchFor.Text']) then
+    ShowMessage(Format('"%s" was found. Cursor moved to the record.',
+     ['SearchFor.Text'])) else
+    ShowMessage(Format('"%s" was not found.', ['SearchFor.Text']));
+end;
+ 
+procedure TForm1_btnFindNearestClick(Sender: TObject);
+begin
+  { Set the "IndexName" required by the "FindKey" method. }
+  ClientDataSet1.IndexName := 'field2index';
+  { Perform the search and inform the User through a message. }
+  ClientDataSet1.FindNearest(['SearchFor.Text']);
+  ShowMessage(Format('Nearest match for "%s" was found at record: %d',
+    ['SearchFor.Text', IntToStr(ClientDataSet1.RecNo)]));
+end;
+
+procedure TfrmMain_FormCreate(Sender: TObject);
+var FCDS: TClientDataSet;
+  DataSource1: TDataSource;
+begin
+ FCDS:= TClientDataSet.Create(Self);
+ FCDS.FieldDefs.Add('ID', ftInteger, 0, True);
+ FCDS.FieldDefs.Add('Name', ftString, 20, True);
+ FCDS.FieldDefs.Add('Birthday', ftDateTime, 0, True);
+ FCDS.FieldDefs.Add('Salary', ftCurrency, 0, True);
+ FCDS.CreateDataSet;
+ DataSource1.DataSet:= TDataSet(FCDS);
+end;
+
+procedure DB_XML_AliasConverter_ADO;
+//uses Classes, SysUtils, DB, DBTables, Provider, DBClient;
+var
+   TabNames: TStringList;
+   aDataSetProvider: TDataSetProvider;
+   CDataSet: TClientDataSet;
+   adoQuery: TAdoDataSet; //TADOQuery;
+   //RemoteServer1: TRemoteServer;
+   RemoteServer1: TCustomConnection;
+   arm: TRemoteDataModule;
+   atm: TMarshalOption;
+   //abroker: //TServerItem TSimpleObjectBroker:
+begin
+  //BDEAlias:= 'DBDEMOS';
+  TabNames:= TStringList.Create;
+  adoquery:= TAdoDataSet.Create(self);
+  //GetMIDASAppServerList
+  //arm.Providers
+  with adoquery do begin
+    cachesize:= 500;
+    //commandtext:= 'select count(*)'
+    //commandtext:= 'INSERT INTO Table1 (FirstName, LastName, Phone)'+
+                        //'VALUES (''Max77'',''Box545'',''031-333 77 88'')';
+    commandText:= 'SELECT * FROM Table1';
+    connectionString:= 'Provider=MSDASQL;DSN=mx3base;Uid=sa;Pwd=admin';
+    tabnames.add(commandText)
+    //Open;
+  end;
+  aDataSetProvider:= TDataSetProvider.Create(NIL);
+  CDataSet:= TClientDataSet.Create(NIL);
+  try
+    //Table.Params.Assign(AParams); 
+      Writeln('base name '+adoquery.commandText);
+      aDataSetProvider.DataSet:= TDataSet(adoQuery);
+      //ClientDataSet.Refresh;
+      RemoteServer1:= TCustomConnection.create(self);
+      with RemoteServer1 do begin
+        for It:= 0 to DataSetCount - 1 do
+        DataSets[It].EnableControls;
+        close;
+        Free;
+      end;
+      CDataSet.SetProvider(TComponent(aDataSetProvider));
+      //CDataSet.Filename
+      //CDataSet.providername
+      //CdataSet.data
+      aDataSetProvider.options:= aDataSetProvider.options +[poallowcommandText]
+      //CDataSet.Open;
+      //CdataSet.params[0].asFloat:= strtofloat('');
+      if DirectoryExists(ExePath+KEYPATH) = false then
+               CreateDir(ExePath + KEYPATH);
+      CdataSet.CommandText:= 
+         'select * from Table1 where FirstName like ''%max%''';
+         //'select * from Table1 where FirstName= ''Ann''';
+      
+      CDataSet.Open;
+      //CdataSet.filtered
+      //CdataSet.filteroptions
+      //CDataSet.SetRange(['1/1/1960'], ['12/31/1970']);
+      CDataSet.Filter:= 'FirstName LIKE ' + QuotedStr('%ax%');
+      CDataSet.Filtered:= True;
+      writeln('recs after query: '+itoa(cdataset.recordcount))
+      cdataset.datasetfield;
+      cdataset.fielddefs;
+      //CDataSet.ApplyUpdates(0); 
+      CDataSet.Refresh;  
+      CDataSet.SaveToFile(ExePath+KEYPATH+ 'ADOTable21.xml',dfXMLUTF8);
+      //cdataset.loadfromfile(ExePath+KEYPATH+ 'ADOTable1.xml')
+   
+      sr:= filetostring(ExePath+KEYPATH+ 'ADOTable21.xml')
+      writeln(sr)
+      CDataSet.Close;
+      adoQuery.Close
+    CreateDBGridForm(tabnames,sr);
+      //cdataset.loadfromfile(ExePath+KEYPATH+ 'ADOTable1.xml')
+      //cdataset.ApplyUpdates(-1); 
+  finally
+    adoQuery.Free;
+    CdataSet.Free;
+    aDataSetProvider.Free; 
+    tabNames.Free;
+  end;
+end;
+
+
+procedure ADO2CDS_Convert;
+  //{$APPTYPE CONSOLE}
+  //uses
+    //SysUtils, ActiveX, ADOdb, Provider, DBClient;
+  var
+    ADOTable: TADOTable;
+    DataSetProvider: TDataSetProvider;
+    ClientDataSet: TClientDataSet;
+    Flags: String;
+  begin
+    if ParamCount < 1 then begin
+      writeln('Usage: ADO2CDS ado.xml [-x]');
+      writeln('');
+      writeln('Converts ADO.XML to ClientDataSet format')
+    end
+    else
+    try
+      //CoInitialize(nil);
+      try
+        ADOTable:= TADOTable.Create(nil);
+        try
+          ADOTable.LoadFromFile(ParamStr(1));
+          DataSetProvider:= TDataSetProvider.Create(nil);
+          try
+            DataSetProvider.DataSet:= TDataSet(ADOTable);
+            ClientDataSet:= TClientDataSet.Create(nil);
+            try
+              ClientDataSet.SetProvider(TComponent(DataSetProvider));
+              ClientDataSet.Open;
+              Flags := UpperCase(ParamStr(2));
+              if Pos('X',Flags) > 0 then
+         ClientDataSet.SaveToFile(ChangeFileExt(ParamStr(1),'.xml'),dfXMLUTF8)
+              else
+         ClientDataSet.SaveToFile(ChangeFileExt(ParamStr(1),'.cds'),dfBinary);
+            finally
+              ClientDataSet.Free
+            end
+          finally
+            DataSetProvider.Free
+          end
+        finally
+          ADOTable.Free
+        end
+      finally
+        //CoUninitialize(nil)
+      end
+    except
+      writeln('Something went wrong...')
+    end
+  end;
+
+
+begin
+  //SetAdoQuery;
+  //SetAdoSet;
+  //SetADOSETAccess;
+  //DB_XML_AliasConverter;
+  DB_XML_AliasConverter_ADO;
+  //SetADO_SETAccess2;
+  Writeln('Data Link Dir is: '+ DataLinkDir);
+  writeln('machine name is: '+getHostName)
+  writeln('user name is: '+getUserName)
+  writeln('tick count from func ' +IntToStr(GetTickCount));
+  //Writeln('Host is: '+getHostbyName('www.softwareschule.ch'))
+  //CreateFileFromString(ExePath+'mycopy.txt',memo2.text);
+  //WriteLog(ExePath+'mylog.txt',memo2.text)
+  ws:= TWideStringList.create;
+  getProviderNames(ws)
+  for i:= 1 to ws.count -1 do 
+    writeln(inttostr(i) +' '+ws.strings[i]);
+  ws.free;  
+ { for i := 1 to 9 do
+    if Odd(i) then ShowMessageFmt('%d is odd',[i]);}
+End.  
+
+Doc:
+http://www.informit.com/articles/article.aspx?p=24094&seqNum=8 
+
+
+*******************************************************
+There is no place like 127.0.0.1 
+
+Exception: Access violation at address 4DE2F83C in module 'msado15.dll'. Read of address 78742E67 at 0.1057
+
+
+[Microsoft][ODBC Driver Manager] Data source name not found and no default driver specified at 35.440
+
+[Microsoft][ODBC Microsoft Access Driver] Query is too complex at 35.607
+
+[Microsoft][ODBC Microsoft Access Driver] The Microsoft Jet database engine cannot find the input table or query 'Table1d'.  Make sure it exists and that its name is spelled correctly at 35.556
+
+[Microsoft][ODBC Microsoft Access Driver] Syntax error (missing operator) in query expression '031-333 77 88' at 41.356
+
+[Microsoft][ODBC Microsoft Access Driver] Too few parameters. Expected 2 at 41.354
+
+
+The syntax for the INSERT statement is:
+
+    INSERT INTO table
+    (column-1, column-2, ... column-n)
+    VALUES
+    (value-1, value-2, ... value-n);
+    
+dbs.Execute " INSERT INTO Employees " _
+        & "(FirstName,LastName, Title) VALUES " _
+        & "('Harry', 'Washington', 'Trainee');"
+        
+        
+ADOConnection1.Open;
+ADOQuery1.Close;
+ADOQuery1.SQL.Text := 'SELECT * FROM database1 WHERE
+value1=1 AND value2= ' + inttostr(array[3]);
+        
+QuotedStr rather than ''''    
+CommandText does not return a result set at 41.360
+
+ADOQuery1.SQL.Clear;
+ADOQuery1.SQL.Add('Insert into Score ([Score],[Round],[FighterID],[FightID])
+Values('+quotedstr(cbrf1.text)+','+QuotedStr(inttostr(countround))+', )');
+ADOQuery1. ExecSQL;
+ADOQuery1.SQL.Clear;
+
+In my program, I instansiate a TDataModule at RunTime and put it in a
+variable named FData.
+I then want to assign one of the TDataSources found in FData to a DBGrid's
+DataSource property. So I do this :
+MyGrid.DataSource := FData.DataSource1;
+Of cource, the DataSource is linked to a DataSet (actualy, a Memory table).
+Each time I call FData.DataSet1.Append() I receive a List out of bound
+(0).
+I traced the program and found out that the error is raised in
+TDataSet.DataEvent(Event: TDataEvent; Info: Longint);
+the code is
+for I := 0 to FDataSources.Count - 1 do
+TDataSource(FDataSources[I]).DataEvent(Event, Info);
+I don't know why it raises this error.
+Anyone have any idea ?
+Thanks in advance.
+
+

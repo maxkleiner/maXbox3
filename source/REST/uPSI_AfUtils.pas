@@ -905,6 +905,135 @@ end;
     varclear(V)
  end;
 
+ function DynamicDllCallName(Dll: String; const Name: String; HasResult: Boolean; var Returned: Cardinal; const Parameters: array of integer): Boolean;
+var
+  prc: Pointer;
+  x, n: Integer;
+  p: Pointer;
+  dllh: THandle;
+begin
+  dllh := GetModuleHandle(PChar(Dll));
+  if dllh = 0 then begin
+    dllh := LoadLibrary(PChar(Dll));
+  end;
+  if dllh <> 0 then begin
+    prc := GetProcAddress(dllh, PChar(Name));
+    if Assigned(prc) then begin
+      n := High(Parameters);
+      if n > -1 then begin
+        x := n;
+        repeat
+          p := Pointer(Parameters[x]);
+          asm
+            PUSH p
+          end;
+          Dec(x);
+        until x = -1;
+      end;
+      asm
+        CALL prc
+      end;
+      if HasResult then begin
+        asm
+          MOV p, EAX
+        end;
+        Returned := Cardinal(p);
+      end else begin
+        Returned := 0;
+      end;
+    end else begin
+      Returned := 0;
+    end;
+    Result := Assigned(prc);
+  end else begin
+    Result := false;
+  end;
+end;
+
+ function DynamicDllCallNameS(Dll: String; const Name: String; HasResult: Boolean; var Returned: Cardinal; const Parameters: array of string): Boolean;
+var
+  prc: Pointer;
+  x, n: Integer;
+  p: Pointer;
+  dllh: THandle;
+begin
+  dllh := GetModuleHandle(PChar(Dll));
+  if dllh = 0 then begin
+    dllh := LoadLibrary(PChar(Dll));
+  end;
+  if dllh <> 0 then begin
+    prc := GetProcAddress(dllh, PChar(Name));
+    if Assigned(prc) then begin
+      n := High(Parameters);
+      if n > -1 then begin
+        x := n;
+        repeat
+          p := Pointer(Parameters[x]);
+          asm
+            PUSH p
+          end;
+          Dec(x);
+        until x = -1;
+      end;
+      asm
+        CALL prc
+      end;
+      if HasResult then begin
+        asm
+          MOV p, EAX
+        end;
+        Returned := Cardinal(p);
+      end else begin
+        Returned := 0;
+      end;
+    end else begin
+      Returned := 0;
+    end;
+    Result := Assigned(prc);
+  end else begin
+    Result := false;
+  end;
+end;
+
+// Calls a function from a loaded library
+function DynamicDllCall(hDll: THandle; const Name: String; HasResult: Boolean; var Returned: Cardinal; const Parameters: array of integer): Boolean;
+var
+  prc: Pointer;
+  x, n: Integer;
+  p: Pointer;
+begin
+  prc := GetProcAddress(hDll, PChar(Name));
+  if Assigned(prc) then begin
+    n := High(Parameters);
+    if n > -1 then begin
+      x := n;
+      repeat
+        p := Pointer(Parameters[x]);
+        asm
+          PUSH p
+        end;
+        Dec(x);
+      until x = -1;
+    end;
+    asm
+      CALL prc
+    end;
+    if HasResult then begin
+      asm
+        MOV p, EAX
+      end;
+      Returned := Cardinal(p);
+    end else begin
+      Returned := 0;
+    end;
+  end else begin
+    Returned := 0;
+  end;
+  Result := Assigned(prc);
+end;
+
+
+
      //UrlDownloadToFile
 
 (* === compile-time registration functions === *)
@@ -1900,6 +2029,10 @@ CL.AddConstantN('NOPARITY','LongInt').SetInt( 0);
  CL.AddDelphiFunction('Function GetUserDefaultLangID : LANGID');
  CL.AddDelphiFunction('procedure UpdateExeResource(Const Source,Dest:string);');
  CL.AddDelphiFunction('procedure VarClear(var V: Variant);');
+ CL.AddDelphiFunction('function DynamicDllCallName(Dll: String; const Name: String; HasResult: Boolean; var Returned: Cardinal; const Parameters: array of integer): Boolean;');
+ CL.AddDelphiFunction('function DynamicDllCall(hDll: THandle; const Name: String; HasResult: Boolean; var Returned: Cardinal; const Parameters: array of integer): Boolean;');
+ CL.AddDelphiFunction('function DynamicDllCallNames(Dll: String; const Name: String; HasResult: Boolean; var Returned: Cardinal; const Parameters: array of string): Boolean;');
+
 
 // varclear
 
@@ -2396,6 +2529,10 @@ begin
  S.RegisterDelphiFunction(@GetUserDefaultLangID, 'GetUserDefaultLangID', CdStdCall);
  S.RegisterDelphiFunction(@UpdateExeResource, 'UpdateExeResource', cdRegister);
  S.RegisterDelphiFunction(@VarClear2, 'VarClear', cdRegister);
+ S.RegisterDelphiFunction(@DynamicDllCallName, 'DynamicDllCallName', cdRegister);
+ S.RegisterDelphiFunction(@DynamicDllCall, 'DynamicDllCall', cdRegister);
+ S.RegisterDelphiFunction(@DynamicDllCallNameS, 'DynamicDllCallNames', cdRegister);
+
 
  end;
 

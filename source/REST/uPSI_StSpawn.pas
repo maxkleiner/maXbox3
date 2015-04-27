@@ -59,7 +59,8 @@ begin
   //with RegClassS(CL,'TStComponent', 'TStSpawnApplication') do
   with CL.AddClassN(CL.FindClass('TStComponent'),'TStSpawnApplication') do begin
     RegisterMethod('Constructor Create( AOwner : TComponent)');
-    RegisterMethod('Procedure CancelWait');
+     RegisterMethod('Procedure Free');
+     RegisterMethod('Procedure CancelWait');
     RegisterMethod('Function Execute : THandle');
     RegisterProperty('DefaultDir', 'AnsiString', iptrw);
     RegisterProperty('FileName', 'AnsiString', iptrw);
@@ -216,9 +217,9 @@ Begin T := Self.CancelWaitEvent; end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TStSpawnApplication(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TStSpawnApplication) do
-  begin
+  with CL.Add(TStSpawnApplication) do begin
     RegisterConstructor(@TStSpawnApplication.Create, 'Create');
+         RegisterMethod(@TStSpawnApplication.Destroy, 'Free');
     RegisterMethod(@TStSpawnApplication.CancelWait, 'CancelWait');
     RegisterMethod(@TStSpawnApplication.Execute, 'Execute');
     RegisterPropertyHelper(@TStSpawnApplicationDefaultDir_R,@TStSpawnApplicationDefaultDir_W,'DefaultDir');
