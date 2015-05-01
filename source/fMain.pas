@@ -131,6 +131,7 @@
          10470     build 191 ADOCOMUtils_set  - recordset2
          10490     build 192 TClientDataSet2  - recordset3, script executor, vbscript, DLLRun
          10500     build 193 TClientDataSet2  - filter, objbroker
+         10538     build 194 myscript TClientDataSet3  - connect dlgs
 
                   [the last one before V4 in 2015]
                    V4.0   in  November 2015
@@ -554,6 +555,7 @@ type
     Tutorial39GEOMaps1: TMenuItem;
     UnitConverter1: TMenuItem;
     SynVBScriptSyn1: TSynVBScriptSyn;
+    MyScript1: TMenuItem;
     procedure IFPS3ClassesPlugin1CompImport(Sender: TObject; x: TPSPascalCompiler);
     procedure IFPS3ClassesPlugin1ExecImport(Sender: TObject; Exec: TPSExec; x: TPSRuntimeClassImporter);
     procedure PSScriptCompile(Sender: TPSScript);
@@ -820,6 +822,7 @@ type
     procedure PANView1Click(Sender: TObject);
     procedure Tutorial39GEOMaps1Click(Sender: TObject);
     procedure UnitConverter1Click(Sender: TObject);
+    procedure MyScript1Click(Sender: TObject);
     //procedure Memo1DropFiles(Sender: TObject; X,Y: Integer; AFiles: TStrings);
   private
     STATSavebefore: boolean;
@@ -2006,6 +2009,10 @@ uses
   uPSI_MConnect,
   uPSI_ObjBrkr, //3.9.9.193
   uPSI_uMultiStr,
+  uPSI_JvAVICapture,
+  uPSI_JvExceptionForm,
+  uPSI_JvConnectNetwork, //3.9.9.194
+
   ///
   ///
    //MDIFrame,
@@ -3156,6 +3163,9 @@ begin
   SIRegister_MConnect(X);
   SIRegister_ObjBrkr(X);
   SIRegister_uMultiStr(X);
+  SIRegister_JvAVICapture(X);
+  SIRegister_JvExceptionForm(X);
+  SIRegister_JvConnectNetwork(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4592,6 +4602,10 @@ begin
   RIRegister_ObjBrkr(X);
   RIRegister_MConnect_Routines(Exec);
   RIRegister_uMultiStr(X);
+  RIRegister_JvAVICapture(X);
+  RIRegister_JvExceptionForm(X);
+  RIRegister_JvConnectNetwork(X);
+  RIRegister_JvExceptionForm_Routines(Exec);
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -6805,6 +6819,7 @@ filepath:= ExtractFilePath(Application.ExeName);
       deflist.Values['IPPORT']:= '8080';
       deflist.Values['VERSIONCHECK']:= 'Y';
       deflist.Values['APP']:= 'C:\WINDOWS\System32\Calc.exe';
+      deflist.Values['MYSCRIPT']:= 'E:\maxbox3\mXGit39991\maxbox3\examples\330_myclock.txt';
 
       deflist.SaveToFile(fN);
     end;
@@ -7900,6 +7915,29 @@ procedure TMaxForm1.MP3Player1Click(Sender: TObject);
 begin
   //call mp3player
   FormSetMP3FormCreate;
+end;
+
+procedure TMaxForm1.MyScript1Click(Sender: TObject);
+var deflist: TStringlist;
+  filepath, fn, myscript: string;
+begin
+//this is myscript opener
+deflist:= TStringlist.create;
+filepath:= ExtractFilePath(Application.ExeName);
+  try
+    fN:= filepath+ DEFINIFILE;
+    if fileexists(fN) then begin
+      deflist.LoadFromFile(fN);
+      myscript:= (deflist.Values['MYSCRIPT']);
+      if fileexists(myscript) then
+      S_ShellExecute(ExtractFilePath(ParamStr(0))+'maxbox3.exe',
+        myscript,seCmdOpen) else
+      MessageDlg('Could not open myscript: '+myscript+' please verify script path', mtWarning, [mbOK], 0);
+   end else
+     MessageDlg('Could not open inifile: maxboxdef.ini, please verify file', mtWarning, [mbOK], 0);
+   finally
+    deflist.Free;
+  end;
 end;
 
 procedure TMaxForm1.N3DLab1Click(Sender: TObject);

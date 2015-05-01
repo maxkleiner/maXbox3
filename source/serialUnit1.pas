@@ -55,6 +55,7 @@ type
     Image1: TImage;
     Button4: TButton;
     BitBtn1: TBitBtn;
+    BitBtn2: TBitBtn;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -72,6 +73,7 @@ type
     procedure FormActivate(Sender: TObject);
     procedure edtfreetextChange(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
+    procedure BitBtn2Click(Sender: TObject);
 
   private
     { Private-Deklarationen }
@@ -427,6 +429,14 @@ begin
     S_ShellExecute(ExtractFilePath(ParamStr(0))+'maxbox3.exe',
         ExtractFilePath(ParamStr(0))+'examples\488_AsyncTerminal2.txt',seCmdOpen) else
    MessageDlg('Could not open monitor script: 488_AsyncTerminal2.txt, please verify script', mtWarning, [mbOK], 0);
+end;
+
+procedure TForm1.BitBtn2Click(Sender: TObject);
+begin
+  if fileexists(ExtractFilePath(ParamStr(0))+'examples\442_arduino.txt') then
+    S_ShellExecute(ExtractFilePath(ParamStr(0))+'maxbox3.exe',
+        ExtractFilePath(ParamStr(0))+'examples\442_arduino.txt',seCmdOpen) else
+   MessageDlg('Could not open monitor script: 442_arduino.txt, please verify script', mtWarning, [mbOK], 0);
 end;
 
 procedure TForm1.Button1OpenClick(Sender: TObject);

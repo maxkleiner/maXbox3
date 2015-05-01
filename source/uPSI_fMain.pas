@@ -6,7 +6,7 @@ as an OpenToolsAPI to modify the maXbox GUI - V3.5 -V3.8.6 , version check
    actual 3.9.8 , new ipport, comport, iphost, appname, open examples, intflist
    locs=   1624   , last is gotoline, intfnavlist, configfileclick
   DoEditorExecuteCommand(EditorCommand: word);
-  Updated to 3.9.9.85 /80/82/91/94/95/96/98/100/101/110/120/160/190 , locs=3744, MBVERIALL, ResetKeyPressed;
+  Updated to 3.9.9.85 /80/82/91/94/95/96/98/100/101/110/120/160/190 , locs=3745, MBVERIALL, ResetKeyPressed;
 }
 
 interface
@@ -679,8 +679,9 @@ begin
     RegisterMethod('procedure ExternalApp1Click(Sender: TObject);');
     RegisterMethod('procedure PANView1Click(Sender: TObject);');
     RegisterMethod('procedure UnitConverter1Click(Sender: TObject);');
+    RegisterMethod('procedure MyScript1Click(Sender: TObject);');
 
-   //RegisterMethod('procedure defFilereadUpdate;');
+    //RegisterMethod('procedure defFilereadUpdate;');
       //  procedure defFilereadUpdate;
     //DEFINIFILE
     //RegisterMethod('procedure Console1Click(Sender: TObject);');
@@ -3717,7 +3718,7 @@ begin
     RegisterMethod(@TMaxForm1.ExternalApp1Click, 'ExternalApp1Click');
     RegisterMethod(@TMaxForm1.PANView1Click, 'PANView1Click');
     RegisterMethod(@TMaxForm1.UnitConverter1Click, 'UnitConverter1Click');
-
+    RegisterMethod(@TMaxForm1.MyScript1Click, 'MyScript1Click');
             //  GetWebScript1Click
    end;
 end;

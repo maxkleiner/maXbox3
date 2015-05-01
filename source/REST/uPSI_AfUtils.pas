@@ -34,8 +34,8 @@ implementation
 
 
 uses
-   Windows
-  ,AfUtils, wiwin32, REGiSTRY, PsAPI, messages, WinSpool, graphics, forms;
+   Windows, controls, shellapi
+  ,AfUtils, wiwin32, REGiSTRY, PsAPI, messages, WinSpool, graphics, forms, comctrls;
 
 
 procedure Register;
@@ -1033,6 +1033,54 @@ begin
 end;
 
 
+procedure LV_InsertFiles(strPath: string; ListView: TListView; ImageList: TImageList);
+var
+  i: Integer;
+  Icon: TIcon;
+  SearchRec: TSearchRec;
+  ListItem: TListItem;
+  FileInfo: SHFILEINFO;
+begin
+  // Create a temporary TIcon
+  Icon := TIcon.Create;
+  ListView.Items.BeginUpdate;
+  try
+    // search for the first file
+    i := FindFirst(strPath + '*.*', faAnyFile, SearchRec);
+    while i = 0 do begin
+      with ListView do begin
+        // On directories and volumes
+        if ((SearchRec.Attr and FaDirectory <> FaDirectory) and
+          (SearchRec.Attr and FaVolumeId <> FaVolumeID)) then begin
+          ListItem := ListView.Items.Add;
+          //Get The DisplayName
+          SHGetFileInfo(PChar(strPath + SearchRec.Name), 0, FileInfo,
+            SizeOf(FileInfo), SHGFI_DISPLAYNAME);
+          Listitem.Caption := FileInfo.szDisplayName;
+          // Get The TypeName
+          SHGetFileInfo(PChar(strPath + SearchRec.Name), 0, FileInfo,
+            SizeOf(FileInfo), SHGFI_TYPENAME);
+          ListItem.SubItems.Add(FileInfo.szTypeName);
+          //Get The Icon That Represents The File
+          SHGetFileInfo(PChar(strPath + SearchRec.Name), 0, FileInfo,
+            SizeOf(FileInfo), SHGFI_ICON or SHGFI_SMALLICON);
+          icon.Handle := FileInfo.hIcon;
+          ListItem.ImageIndex := ImageList.AddIcon(Icon);
+          // Destroy the Icon
+          DestroyIcon(FileInfo.hIcon);
+        end;
+      end;
+      i := FindNext(SearchRec);
+    end;
+  finally
+    Icon.Free;
+    ListView.Items.EndUpdate;
+  end;
+end;
+
+
+
+
 
      //UrlDownloadToFile
 
@@ -1351,7 +1399,64 @@ CL.AddConstantN('NOPARITY','LongInt').SetInt( 0);
  CL.AddConstantN('HWND_MESSAGE','LongInt').SetInt( HWND ( - 3 ));
  CL.AddConstantN('DEVICE_NOTIFY_WINDOW_HANDLE','LongInt').SetInt( 0);
 
+ CL.AddDelphiFunction('Function SetSystemCursor( hcur : HICON; id : DWORD) : BOOL');
+  CL.AddTypeS('_ICONINFO', 'record fIcon : BOOL; xHotspot : DWORD; yHotspot : DWORD; hbmMask : HBITMAP; hbmColor : HBITMAP; end');
+  CL.AddTypeS('TIconInfo', '_ICONINFO');
+  CL.AddTypeS('ICONINFO', '_ICONINFO');
+ CL.AddDelphiFunction('Function LoadIcon( hInstance : HINST; lpIconName : PChar) : HICON');
+ CL.AddDelphiFunction('Function DestroyIcon( hIcon : HICON) : BOOL');
+  CL.AddTypeS('tagCURSORSHAPE', 'record xHotSpot : Integer; yHotSpot : Integer;'
+   +' cx : Integer; cy : Integer; cbWidth : Integer; Planes : Byte; BitsPixel : Byte; end');
+  CL.AddTypeS('TCursorShape', 'tagCURSORSHAPE');
+  CL.AddTypeS('CURSORSHAPE', 'tagCURSORSHAPE');
 
+ CL.AddDelphiFunction('Function WNetConnectionDialog( hwnd : HWND; dwType : DWORD) : DWORD');
+ CL.AddDelphiFunction('Function WNetDisconnectDialog( hwnd : HWND; dwType : DWORD) : DWORD');
+ CL.AddDelphiFunction('Function WNetGetProviderName( dwNetType : DWORD; lpProviderName : PChar; var lpBufferSize : DWORD) : DWORD');
+  CL.AddDelphiFunction('Function WNetGetUser( lpName : PChar; lpUserName : PChar; var lpnLength : DWORD) : DWORD');
+
+  //CL.AddTypeS('PConnectDlgStruct', '^TConnectDlgStruct // will not work');
+  CL.AddTypeS('_CONNECTDLGSTRUCTA', 'record cbStructure : DWORD; hwndOwner : HW'
+   +'ND; lpConnRes : TObject; dwFlags : DWORD; dwDevNum : DWORD; end');
+  CL.AddTypeS('TConnectDlgStruct', '_CONNECTDLGSTRUCTA');
+  CL.AddTypeS('CONNECTDLGSTRUCT', '_CONNECTDLGSTRUCTA');
+    CL.AddTypeS('_UNIVERSAL_NAME_INFOA', 'record lpUniversalName : PChar; end');
+  CL.AddTypeS('_UNIVERSAL_NAME_INFO', '_UNIVERSAL_NAME_INFOA');
+  CL.AddTypeS('TUniversalNameInfoA', '_UNIVERSAL_NAME_INFOA');
+  CL.AddTypeS('TUniversalNameInfo', 'TUniversalNameInfoA');
+  CL.AddTypeS('UNIVERSAL_NAME_INFOA', '_UNIVERSAL_NAME_INFOA');
+  CL.AddTypeS('UNIVERSAL_NAME_INFO', 'UNIVERSAL_NAME_INFOA');
+CL.AddTypeS('_REMOTE_NAME_INFOA', 'record lpUniversalName : PChar; lpConn'
+   +'ectionName : PChar; lpRemainingPath : PChar; end');
+  CL.AddTypeS('_REMOTE_NAME_INFO', '_REMOTE_NAME_INFOA');
+  CL.AddTypeS('TRemoteNameInfoA', '_REMOTE_NAME_INFOA');
+  CL.AddTypeS('TRemoteNameInfo', 'TRemoteNameInfoA');
+  CL.AddTypeS('REMOTE_NAME_INFOA', '_REMOTE_NAME_INFOA');
+  CL.AddTypeS('REMOTE_NAME_INFO', 'REMOTE_NAME_INFOA');
+    CL.AddTypeS('_NETINFOSTRUCT', 'record cbStructure : DWORD; dwProviderVersion '
+   +': DWORD; dwStatus : DWORD; dwCharacteristics : DWORD; dwHandle : DWORD; wN'
+   +'etType : Word; dwPrinters : DWORD; dwDrives : DWORD; end');
+  CL.AddTypeS('TNetInfoStruct', '_NETINFOSTRUCT');
+  CL.AddTypeS('NETINFOSTRUCT', '_NETINFOSTRUCT');
+ CL.AddConstantN('NETINFO_DLL16','LongInt').SetInt( 1);
+ CL.AddConstantN('NETINFO_DISKRED','LongInt').SetInt( 4);
+ CL.AddConstantN('NETINFO_PRINTERRED','LongInt').SetInt( 8);
+ CL.AddDelphiFunction('Function WNetGetNetworkInformation( lpProvider : PChar; var lpNetInfoStruct : TNetInfoStruct) : DWORD');
+ CL.AddDelphiFunction('Function WNetCancelConnection( lpName : PChar; fForce : BOOL) : DWORD');
+ CL.AddDelphiFunction('Function WNetCancelConnection2( lpName : PChar; dwFlags : DWORD; fForce : BOOL) : DWORD');
+ CL.AddDelphiFunction('Function WNetGetUniversalName( lpLocalPath : PChar; dwInfoLevel : DWORD; lpBuffer : string; var lpBufferSize : DWORD) : DWORD');
+ CL.AddDelphiFunction('Function WNetGetLastError( var lpError : DWORD; lpErrorBuf : PChar; nErrorBufSize : DWORD; lpNameBuf : PChar; nNameBufSize : DWORD) : DWORD');
+ CL.AddDelphiFunction('Function WNetCloseEnum( hEnum : THandle) : DWORD');
+
+   CL.AddTypeS('_DISCDLGSTRUCTA', 'record cbStructure : DWORD; hwndOwner : HWND;'
+   +' lpLocalName : PChar; lpRemoteName : PChar; dwFlags : DWORD; end');
+  CL.AddTypeS('_DISCDLGSTRUCT', '_DISCDLGSTRUCTA');
+   CL.AddTypeS('TDiscDlgStructA', '_DISCDLGSTRUCTA');
+   CL.AddTypeS('TDiscDlgStruct', 'TDiscDlgStructA');
+    CL.AddTypeS('DISCDLGSTRUCTA', '_DISCDLGSTRUCTA');
+   CL.AddTypeS('DISCDLGSTRUCT', 'DISCDLGSTRUCTA');
+ CL.AddConstantN('DISC_UPDATE_PROFILE','LongInt').SetInt( 1);
+ CL.AddConstantN('DISC_NO_FORCE','LongWord').SetUInt( $40);
   CL.AddTypeS('_COORD', 'record X : SHORT; Y : SHORT; end');
   CL.AddTypeS('TCoord', '_COORD');
   CL.AddTypeS('COORD', '_COORD');
@@ -2032,6 +2137,9 @@ CL.AddConstantN('NOPARITY','LongInt').SetInt( 0);
  CL.AddDelphiFunction('function DynamicDllCallName(Dll: String; const Name: String; HasResult: Boolean; var Returned: Cardinal; const Parameters: array of integer): Boolean;');
  CL.AddDelphiFunction('function DynamicDllCall(hDll: THandle; const Name: String; HasResult: Boolean; var Returned: Cardinal; const Parameters: array of integer): Boolean;');
  CL.AddDelphiFunction('function DynamicDllCallNames(Dll: String; const Name: String; HasResult: Boolean; var Returned: Cardinal; const Parameters: array of string): Boolean;');
+ CL.AddDelphiFunction('procedure LV_InsertFiles(strPath: string; ListView: TListView; ImageList: TImageList);');
+
+
 
 
 // varclear
@@ -2532,7 +2640,21 @@ begin
  S.RegisterDelphiFunction(@DynamicDllCallName, 'DynamicDllCallName', cdRegister);
  S.RegisterDelphiFunction(@DynamicDllCall, 'DynamicDllCall', cdRegister);
  S.RegisterDelphiFunction(@DynamicDllCallNameS, 'DynamicDllCallNames', cdRegister);
+ S.RegisterDelphiFunction(@LV_InsertFiles, 'LV_InsertFiles', cdRegister);
 
+ S.RegisterDelphiFunction(@WNetConnectionDialog, 'WNetConnectionDialog', CdStdCall);
+ S.RegisterDelphiFunction(@WNetDisconnectDialog, 'WNetDisconnectDialog', CdStdCall);
+ S.RegisterDelphiFunction(@WNetGetUser, 'WNetGetUser', CdStdCall);
+ S.RegisterDelphiFunction(@WNetGetProviderName, 'WNetGetProviderName', CdStdCall);
+  S.RegisterDelphiFunction(@WNetGetNetworkInformation, 'WNetGetNetworkInformation', CdStdCall);
+ S.RegisterDelphiFunction(@WNetGetLastError, 'WNetGetLastError', CdStdCall);
+S.RegisterDelphiFunction(@WNetGetUniversalName, 'WNetGetUniversalName', CdStdCall);
+  S.RegisterDelphiFunction(@WNetCancelConnection, 'WNetCancelConnection', CdStdCall);
+ S.RegisterDelphiFunction(@WNetCancelConnection2, 'WNetCancelConnection2', CdStdCall);
+   S.RegisterDelphiFunction(@SetSystemCursor, 'SetSystemCursor', CdStdCall);
+ S.RegisterDelphiFunction(@LoadIcon, 'LoadIcon', CdStdCall);
+ S.RegisterDelphiFunction(@DestroyIcon, 'DestroyIcon', CdStdCall);
+ S.RegisterDelphiFunction(@WNetCloseEnum, 'WNetCloseEnum', CdStdCall);
 
  end;
 

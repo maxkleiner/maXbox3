@@ -1238,8 +1238,7 @@ begin
   end
 end;
 
-function ScanString(const S: string; var Pos: Integer;
-  const Symbol: string): Boolean;
+function ScanString(const S: string; var Pos: Integer; const Symbol: string): Boolean;
 begin
   Result := False;
   if Symbol <> '' then
@@ -1517,6 +1516,50 @@ begin
    +'ns : Integer; cRows : Integer; iColFocus : Integer; iRowFocus : Integer; cxItem : Integer; cyItem : Integer; ptStart : TPoint; end');
   CL.AddTypeS('TAltTabInfo', 'tagALTTABINFO');
 
+    CL.AddTypeS('TAclInformationClass', '( AclInfoPad, AclRevisionInformation, AclSizeInformation )');
+  CL.AddTypeS('_ACL', 'record AclRevision : Byte; Sbz1 : Byte; AclSize : Word; '
+   +'AceCount : Word; Sbz2 : Word; end');
+  CL.AddTypeS('TACL', '_ACL');
+  CL.AddTypeS('ACL', '_ACL');
+   CL.AddTypeS('ACCESS_MASK', 'DWORD'); //second def
+   CL.AddTypeS('_GENERIC_MAPPING', 'record GenericRead : ACCESS_MASK; GenericWri'
+   +'te : ACCESS_MASK; GenericExecute : ACCESS_MASK; GenericAll : ACCESS_MASK; end');
+  CL.AddTypeS('TGenericMapping', '_GENERIC_MAPPING');
+  CL.AddTypeS('GENERIC_MAPPING', '_GENERIC_MAPPING');
+    CL.AddTypeS('_IMAGE_FILE_HEADER', 'record Machine : Word; NumberOfSections : '
+   +'Word; TimeDateStamp : DWORD; PointerToSymbolTable : DWORD; NumberOfSymbols'
+   +' : DWORD; SizeOfOptionalHeader : Word; Characteristics : Word; end');
+  CL.AddTypeS('TImageFileHeader', '_IMAGE_FILE_HEADER');
+  CL.AddTypeS('IMAGE_FILE_HEADER', '_IMAGE_FILE_HEADER');
+
+   CL.AddTypeS('_FIXED', 'record fract : Word; value : SHORT; end');
+  CL.AddTypeS('TFixedWin', '_FIXED');
+  CL.AddTypeS('FIXEDWin', '_FIXED');
+  //CL.AddTypeS('PMat2', '^TMat2 // will not work');
+  CL.AddTypeS('_MAT2', 'record eM11 : TFixedwin; eM12 : TFixedwin; eM21 : TFixedwin; eM22: TFixedwin; end');
+  CL.AddTypeS('TMat2', '_MAT2');
+  CL.AddTypeS('MAT2', '_MAT2');
+
+   CL.AddTypeS('tagPOINTFX', 'record x : TFixedwin; y : TFixedwin; end');
+  CL.AddTypeS('TPointfx', 'tagPOINTFX');
+  CL.AddTypeS('POINTFX', 'tagPOINTFX');
+
+   // CL.AddTypeS('PTTPolygonHeader', '^TTTPolygonHeader // will not work');
+  CL.AddTypeS('tagTTPOLYGONHEADER', 'record cb : DWORD; dwType : DWORD; pfxStart : TPointFX; end');
+  CL.AddTypeS('TTTPolygonHeader', 'tagTTPOLYGONHEADER');
+  CL.AddTypeS('TTPOLYGONHEADER', 'tagTTPOLYGONHEADER');
+
+  CL.AddDelphiFunction('Function GetKerningPairs( DC : HDC; Count : DWORD; var KerningPairs: dword) : DWORD');
+
+  CL.AddTypeS('tagMSGBOXPARAMSA', 'record cbSize : UINT; hwndOwner : HWND; hIns'
+   +'tance : HINST; lpszText : PChar; lpszCaption : PChar; dwStyle : DW'
+   +'ORD; lpszIcon : PChar; dwContextHelpId : DWORD; lpfnMsgBoxCallback : TObject; dwLanguageId : DWORD; end');
+  CL.AddTypeS('tagMSGBOXPARAMS', 'tagMSGBOXPARAMSA');
+  CL.AddTypeS('TMsgBoxParamsA', 'tagMSGBOXPARAMSA');
+  CL.AddTypeS('TMsgBoxParams', 'TMsgBoxParamsA');
+  CL.AddTypeS('MSGBOXPARAMSA', 'tagMSGBOXPARAMSA');
+  CL.AddTypeS('MSGBOXPARAMS', 'MSGBOXPARAMSA');
+ CL.AddDelphiFunction('Function MessageBoxIndirect( const MsgBoxParams : TMsgBoxParams) : BOOL');
 
   {  TSecurityImpersonationLevel = (SecurityAnonymous,
     SecurityIdentification, SecurityImpersonation, SecurityDelegation);
@@ -1673,8 +1716,9 @@ CL.AddDelphiFunction('Function GetKeyboardType( nTypeFlag : Integer) : Integer')
  CL.AddDelphiFunction('function ScanTime(const S: string; var Pos: Integer; var Time: TDateTime): Boolean;');
  CL.AddDelphiFunction('function ScanChar(const S: string; var Pos: Integer; Ch: Char): Boolean;');
  CL.AddDelphiFunction('function ScanNumber(const S: string; var Pos: Integer; var Number: Word): Boolean;');
+ CL.AddDelphiFunction('function ScanString(const S: string; var Pos: Integer; const Symbol: string): Boolean;');
 
-       //makeintresource
+        //makeintresource
  end;
 
 (* === run-time registration functions === *)
@@ -1800,6 +1844,10 @@ begin
  S.RegisterDelphiFunction(@ScanTime, 'ScanTime', CdRegister);
  S.RegisterDelphiFunction(@ScanChar, 'ScanChar', CdRegister);
  S.RegisterDelphiFunction(@ScanNumber, 'ScanNumber', CdRegister);
+ S.RegisterDelphiFunction(@ScansTRING, 'ScanString', CdRegister);
+ S.RegisterDelphiFunction(@GetKerningPairs, 'GetKerningPairs', CdStdCall);
+  S.RegisterDelphiFunction(@MessageBoxIndirect, 'MessageBoxIndirect', CdStdCall);
+
 
 end;
 
