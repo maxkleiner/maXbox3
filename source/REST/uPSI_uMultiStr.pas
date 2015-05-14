@@ -51,9 +51,9 @@ end;
 procedure SIRegister_TMultiStrings(CL: TPSPascalCompiler);
 begin
   //with RegClassS(CL,'TPersistent', 'TMultiStrings') do
-  with CL.AddClassN(CL.FindClass('TPersistent'),'TMultiStrings') do
-  begin
+  with CL.AddClassN(CL.FindClass('TPersistent'),'TMultiStrings') do begin
     RegisterMethod('Constructor Create');
+    RegisterMethod('Procedure Free');
     RegisterMethod('Procedure Assign( Source : TPersistent)');
     RegisterMethod('Procedure Clear');
     RegisterProperty('RowCount', 'integer', iptrw);
@@ -116,10 +116,10 @@ begin T := Self.RowCount; end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TMultiStrings(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TMultiStrings) do
-  begin
+  with CL.Add(TMultiStrings) do begin
     RegisterConstructor(@TMultiStrings.Create, 'Create');
-    RegisterMethod(@TMultiStrings.Assign, 'Assign');
+    RegisterMethod(@TMultiStrings.Destroy, 'Free');
+   RegisterMethod(@TMultiStrings.Assign, 'Assign');
     RegisterMethod(@TMultiStrings.Clear, 'Clear');
     RegisterPropertyHelper(@TMultiStringsRowCount_R,@TMultiStringsRowCount_W,'RowCount');
     RegisterPropertyHelper(@TMultiStringsColCount_R,@TMultiStringsColCount_W,'ColCount');

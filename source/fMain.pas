@@ -132,6 +132,7 @@
          10490     build 192 TClientDataSet2  - recordset3, script executor, vbscript, DLLRun
          10500     build 193 TClientDataSet2  - filter, objbroker
          10538     build 194 myscript TClientDataSet3  - connect dlgs
+         10592     build 195 tcom, vterminal, utilspac
 
                   [the last one before V4 in 2015]
                    V4.0   in  November 2015
@@ -160,7 +161,7 @@ uses
   SynHighlighterURI, SynURIOpener, SynHighlighterMulti, SynExportRTF, SynHighlighterCSS,
   SynHighlighterEiffel, SynHighlighterAsm, SynHighlighterDfm, SynHighlighterVB,
   SynHighlighterIni, SynHighlighterBat, SynHighlighterIDL,
-  SynHighlighterVBScript
+  SynHighlighterVBScript, SynHighlighterMsg
   {,IWBaseControl,IWBaseHTMLControl}; //, jpeg;
 
 const
@@ -182,9 +183,9 @@ const
    ALLUNITLIST = 'docs\maxbox3_9.xml'; //'in /docs;
    INCLUDEBOX = 'pas_includebox.inc';
    BOOTSCRIPT = 'maxbootscript.txt';
-   MBVERSION = '3.9.9.190';
+   MBVERSION = '3.9.9.195';
    MBVER = '399';              //for checking!
-   MBVER2 = '399190';              //for checking!
+   MBVER2 = '399195';              //for checking!
    EXENAME ='maXbox3.exe';
    MXSITE = 'http://www.softwareschule.ch/maxbox.htm';
    MXVERSIONFILE = 'http://www.softwareschule.ch/maxvfile.txt';
@@ -501,7 +502,7 @@ type
     FormDemo1: TMenuItem;
     Richedit1: TMenuItem;
     SimpleBrowser1: TMenuItem;
-    ools1: TMenuItem;
+    Tools1: TMenuItem;
     Richedit2: TMenuItem;
     Browser1: TMenuItem;
     UnitAnalyzer1: TMenuItem;
@@ -556,6 +557,11 @@ type
     UnitConverter1: TMenuItem;
     SynVBScriptSyn1: TSynVBScriptSyn;
     MyScript1: TMenuItem;
+    Terminal1: TMenuItem;
+    SynMsgSyn1: TSynMsgSyn;
+    Tutorial361: TMenuItem;
+    ArduinoIOT1: TMenuItem;
+    TrainingArduino1: TMenuItem;
     procedure IFPS3ClassesPlugin1CompImport(Sender: TObject; x: TPSPascalCompiler);
     procedure IFPS3ClassesPlugin1ExecImport(Sender: TObject; Exec: TPSExec; x: TPSRuntimeClassImporter);
     procedure PSScriptCompile(Sender: TPSScript);
@@ -823,6 +829,9 @@ type
     procedure Tutorial39GEOMaps1Click(Sender: TObject);
     procedure UnitConverter1Click(Sender: TObject);
     procedure MyScript1Click(Sender: TObject);
+    procedure Terminal1Click(Sender: TObject);
+    procedure Tutorial361Click(Sender: TObject);
+    procedure TrainingArduino1Click(Sender: TObject);
     //procedure Memo1DropFiles(Sender: TObject; X,Y: Integer; AFiles: TStrings);
   private
     STATSavebefore: boolean;
@@ -2012,8 +2021,16 @@ uses
   uPSI_JvAVICapture,
   uPSI_JvExceptionForm,
   uPSI_JvConnectNetwork, //3.9.9.194
-
-  ///
+  MTMainForm,
+  uPSI_MTMainForm,
+  uPSI_DdeMan,
+  uPSI_DIUtils,   //3.9.9.195
+  uPSI_gnugettext,
+  uPSI_Xmlxform,
+  uPSI_SvrHTTPIndy,
+  uPSI_CPortTrmSet, //3.9.9.195
+  //XMLDoc3,  to V4
+  //////
   ///
    //MDIFrame,
   uPSI_St2DBarC,
@@ -3166,6 +3183,13 @@ begin
   SIRegister_JvAVICapture(X);
   SIRegister_JvExceptionForm(X);
   SIRegister_JvConnectNetwork(X);
+  SIRegister_MTMainForm(X);
+  SIRegister_DdeMan(X);
+  SIRegister_DIUtils(X);  //3.9.9.195
+  SIRegister_gnugettext(X);
+  SIRegister_Xmlxform(X);
+  SIRegister_SvrHTTPIndy(X);
+  SIRegister_CPortTrmSet(X);
 
     SIRegister_dbTvRecordList(X);
     SIRegister_TreeVwEx(X);
@@ -4606,6 +4630,19 @@ begin
   RIRegister_JvExceptionForm(X);
   RIRegister_JvConnectNetwork(X);
   RIRegister_JvExceptionForm_Routines(Exec);
+  RIRegister_MTMainForm(X);
+  RIRegister_DdeMan(X);
+  RIRegister_DdeMan_Routines(Exec);
+  RIRegister_DIUtils(X);
+  RIRegister_DIUtils_Routines(Exec);
+  RIRegister_gnugettext_Routines(Exec);
+  RIRegister_TGnuGettextInstance(X);   //3.9.9.195
+  RIRegister_Xmlxform(X);
+  RIRegister_Xmlxform_Routines(Exec);
+  RIRegister_SvrHTTPIndy(X);
+  RIRegister_SvrHTTPIndy_Routines(Exec);
+  RIRegister_CPortTrmSet(X);
+  RIRegister_CPortTrmSet_Routines(Exec); //3.9.9.195
 
   RIRegister_DebugBox(X);
   RIRegister_HotLog(X);
@@ -7572,6 +7609,13 @@ begin
   end;
 end;
 
+procedure TMaxForm1.Terminal1Click(Sender: TObject);
+begin
+  Application.CreateForm(TvtMainForm, vtMainForm);
+  vtmainForm.Show;
+  //
+end;
+
 procedure TMaxForm1.TCPSockets1Click(Sender: TObject);
 begin
   //this is 26
@@ -8428,6 +8472,11 @@ begin
    searchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter12.pdf');
 end;
 
+procedure TMaxForm1.TrainingArduino1Click(Sender: TObject);
+begin
+  searchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\arduino_training.pdf');
+end;
+
 procedure TMaxForm1.Tutorial0Function1Click(Sender: TObject);
 begin
   searchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter0.pdf');
@@ -8611,6 +8660,11 @@ end;
 procedure TMaxForm1.Tutorial31Closure1Click(Sender: TObject);
 begin
   searchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter31.pdf');
+end;
+
+procedure TMaxForm1.Tutorial361Click(Sender: TObject);
+begin
+  searchAndOpenDoc(ExtractFilePath(ParamStr(0))+'docs\maxbox_starter36.pdf');
 end;
 
 procedure TMaxForm1.Tutorial39GEOMaps1Click(Sender: TObject);

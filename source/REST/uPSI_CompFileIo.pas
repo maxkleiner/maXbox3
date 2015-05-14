@@ -57,6 +57,30 @@ begin
   RegisterComponents('Pascal Script', [TPSImport_CompFileIo]);
 end;
 
+function getallEvents(aform: TForm): TStringlist;
+var
+  x, y, z: Word;
+  pl: PPropList;
+begin
+  result:= TStringlist.Create;
+  y := GetPropList(aform, pl);
+  for x := 0 to y - 1 do begin
+    if Copy(pl[x].Name, 1, 2) <> 'On' then Continue;
+    if GetMethodProp(aform, pl[x].Name).Code <> nil then
+      result.Add(aform.Name + ' - ' + pl[x].Name);
+  end;
+  for z := 0 to aform.ComponentCount - 1 do begin
+    y := GetPropList(aform.Components[z], pl);
+    for x := 0 to y - 1 do begin
+      if Copy(pl[x].Name, 1, 2) <> 'On' then Continue;
+      if GetMethodProp(aform.Components[z], pl[x].Name).Code <> nil then
+        result.Add(aform.Components[z].Name + ' - ' + pl[x].Name);
+    end;
+  end;
+  //result.Free;
+end;
+
+
 (* === compile-time registration functions === *)
 (*----------------------------------------------------------------------------*)
 procedure SIRegister_TComponentStream(CL: TPSPascalCompiler);
@@ -119,7 +143,9 @@ begin
  CL.AddDelphiFunction('Function DeleteComponentFromResourceFile8( Component : TComponent; FileName : string; NamingMethod : TResourceNaming) : Boolean;');
  //CL.AddDelphiFunction('Function CreateFormFromResFile( AOwner : TComponent; NewClassType : TFormClass; FileName : string) : Pointer');
  //CL.AddDelphiFunction('Function CreateComponentFromResFile( AOwner : TComponent; NewClassType : TComponentClass; FileName : string) : Pointer');
-end;
+  CL.AddDelphiFunction('function getallEvents(aform: TForm): TStringlist;');
+
+ end;
 
 (* === run-time registration functions === *)
 (*----------------------------------------------------------------------------*)
@@ -198,6 +224,8 @@ begin
  S.RegisterDelphiFunction(@DeleteComponentFromResourceFile8_P, 'DeleteComponentFromResourceFile8', cdRegister);
  S.RegisterDelphiFunction(@CreateFormFromResFile, 'CreateFormFromResFile', cdRegister);
  S.RegisterDelphiFunction(@CreateComponentFromResFile, 'CreateComponentFromResFile', cdRegister);
+  S.RegisterDelphiFunction(@getallEvents, 'getallEvents', cdRegister);
+
 end;
 
 (*----------------------------------------------------------------------------*)

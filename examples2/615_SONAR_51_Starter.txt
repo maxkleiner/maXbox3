@@ -1,0 +1,737 @@
+PROGRAM SONAR_XSBuiltins_Functions_Tester;
+
+//////////////////////////////////////////////////////////////////////
+//  #sign:0 AM max: MAXBOX8: 5/12/2015 10:31:52 AM PM 
+//  Purpose: shows utility functions of XSBuiltins                   //
+//  #path>ples\C:\maXbook\maxbox3\mX3999\maxbox3\maxbox3\examples\  //
+//  Lines of Code #locs:412
+//////////////////////////////////////////////////////////////////////
+
+
+
+//TODO: Combine this XML with SoapFloatToStr
+
+function GetDataFromFile(AFileName: string): string;
+var
+  Stream: TFileStream;
+begin
+  Stream:= TFileStream.Create(AFileName, fmOpenRead);
+  try
+    SetLength(Result, Stream.Size);
+    //Stream.Read(Result[1], Stream.Size);
+    Stream.Read(Result, Stream.Size);
+  finally
+    stream.Free
+    stream:= NIL;
+    //AndNil(Stream);
+  end;
+end;  
+
+const SoapDecimalSeparator1 ='.';
+
+ { Record that holds Duration Data }
+type
+  TDurationData = record
+    Year: Integer;
+    Month: Integer;
+    Day: Integer;
+    Hour: Integer;
+    Minute: Integer;
+    Second: Double;
+    Negative: Boolean;
+  end;
+
+DurationDataFlag = (ddYear, ddMonth, ddDay, ddHour, ddMinute, ddSecond);
+TDurationDataFlags = set of DurationDataFlag;
+
+function GetFormatSettings: TFormatSettings;
+var FormatSettings: TFormatSettings;
+begin
+  if FormatSettings.DecimalSeparator <> SoapDecimalSeparator then begin
+    GetLocaleFormatSettings(LOCALE_SYSTEM_DEFAULT, FormatSettings);
+    FormatSettings.DecimalSeparator:= SoapDecimalSeparator1;
+  end;
+  Result:= FormatSettings;
+end;
+
+function SoapFloatToStr(Value: double): string;
+begin
+  Result:= FloatToStrFS(Value, ffFixed, 8,4, GetFormatSettings);
+end;
+
+function SoapStrToFloat(Value: string): double;
+begin
+  Result:= StrToFloatFS(Value, ffFixed, 8,4,GetFormatSettings);
+end;
+
+var
+  sNegPrefix : array[0..1] of string; // = ('', '-');
+
+
+function EncodeDuration(const Data: TDurationData): WideString;
+begin
+  sNegPrefix[0]:= ''
+  sNegPrefix[1]:= '-'
+  Result := Format('%sP%dY%dM%dD%dH%dM%sS', [sNegPrefix[byte(Data.Negative)],
+                                             Data.Year, Data.Month, Data.Day,
+                                             Data.Hour, Data.Minute,
+                                             SoapFloatToStr(Data.Second)]);
+end;
+
+
+procedure GetScreenShotX(var ABitmap : TBitmap);
+var                    
+  DC : THandle;
+begin
+  if Assigned(ABitmap) then begin// Check Bitmap<>NIL
+    DC := GetDC(0); // Get Desktop DC
+    try
+      ABitmap.Width := Screen.Width; // Adjust Bitmapsize..
+      ABitmap.Height := Screen.Height; // ..to screen size
+      BitBlt(ABitmap.Canvas.Handle, // Copy
+             0,0,Screen.Width,Screen.Height, // Desktop
+             DC, // into
+             0,0, // the
+             SrcCopy // Bitmap
+        );
+    finally
+      ReleaseDC(0, DC); // Relase DC
+    end;
+  end;
+end;
+
+
+procedure SIRegister_XSBuiltIns;
+begin
+ //SHexMarker','String').SetString( '$');
+ //SoapTimePrefix','String').SetString( 'T');
+ //XMLDateSeparator','String').SetString( '-');
+ {XMLHourOffsetMinusMarker','String').SetString( '-');
+ XMLHourOffsetPlusMarker','String').SetString( '+');
+ XMLTimeSeparator','String').SetString( ':');
+ XMLMonthPos','LongInt').SetInt( 6);
+ XMLDayPos','LongInt').SetInt( 9);
+ XMLYearPos','LongInt').SetInt( 1);
+ XMLMilSecPos','LongInt').SetInt( 10);
+ XMLDefaultYearDigits','LongInt').SetInt( 4);
+ XMLDurationStart','String').SetString( 'P');
+ XMLDurationYear','String').SetString( 'Y');
+ XMLDurationMonth','String').SetString( 'M');
+ XMLDurationDay','String').SetString( 'D');
+ XMLDurationHour','String').SetString( 'H');
+ XMLDurationMinute','String').SetString( 'M');
+ XMLDurationSecond','String').SetString( 'S');}
+ //SNAN','String').SetString( 'NAN');
+ //SSciNotationMarker','Char').SetString( 'E');
+ //SDecimal','Char').SetString( '.');
+ //SNegative','Char').SetString( '-');
+ //SPlus','Char').SetString( '+');
+ //SLocalTimeMarker','String').SetString( 'Z');
+ //MaxMonth','LongInt').SetInt( 12);
+ //MinMonth','LongInt').SetInt( 1);
+ //MaxDay','LongInt').SetInt( 31);
+ //MinDay','LongInt').SetInt( 1);
+ //SoapDecimalSeparator','String').SetString( '.');
+  {CL.AddClassN(CL.FindClass('TOBJECT'),'TXSDuration');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'TXSTime');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'TXSDate');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'TXSDateTime');
+  SIRegister_TXSTime(CL);
+  SIRegister_TXSDate(CL);
+  SIRegister_TXSCustomDateTime(CL);
+  SIRegister_TXSDateTime(CL);
+  SIRegister_TXSDuration(CL);
+  CL.AddClassN(CL.FindClass('TOBJECT'),'EXSDateTimeException');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'EXSDecimalException');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'EXSHexBinaryException');
+  SIRegister_TXSHexBinary(CL);
+  SIRegister_TXSDecimal(CL);
+  SIRegister_TXSString(CL); }
+  //TXSTimeInstant', 'TXSDateTime');
+  {SIRegister_TXSBoolean(CL);
+  SIRegister_TXSInteger(CL);
+  SIRegister_TXSLong(CL);
+  SIRegister_TXMLData(CL); }
+  //DateTimeToXMLTime( Value : TDateTime; ApplyLocalBias : Boolean) : WideString');
+   writeln('DateTimeToXMLTime: '+DateTimeToXMLTime(now,true));
+  
+  //XMLTimeToDateTime(const XMLDateTime: WideString;AsUTCTime:Boolean):TDateTime');
+  //DateTimeToXSDateTime( const Value : TDateTime; ApplyLocalBias : Boolean) : TXSDateTime');
+  //GetDataFromFile( AFileName : string) : string');
+  //SoapFloatToStr( Value : double) : string');
+  //SoapStrToFloat( Value : string) : double');
+ //CL.AddDelphiFunction('Procedure InitXSTypes');
+  //TJvExeType', '( etNone, etMSDos, etWin16, etWin32, etConsole )');
+  //TJvIconModifier', '( imNormal, imOverlay, imSelected, imOpen, im'
+   //+'ShellSize, imSmall )');
+   //TBDEItemType', '( bdDatabases, bdDrivers, bdLangDrivers, bdUsers'
+   //+', bdRepositories )');
+  {SIRegister_TJvCustomBDEItems(CL);
+  SIRegister_TJvBDEItems(CL);
+  SIRegister_TJvDBListDataSet(CL);}
+  //TDBItemType', '( dtTables, dtStoredProcs, dtFiles, dtFunctions )');
+  //SIRegister_TJvCustomDatabaseItems(CL);
+  //SIRegister_TJvDatabaseItems(CL);
+  //TTabItemType','(dtFields, dtIndices,dtValChecks,dtRefInt,dtSecurity,dtFamily);
+    //TJvDatabaseList
+ 
+end;
+
+
+Function IntToBase32(Numb: Longint): String;
+var numlett: string;
+begin
+  numlett:= NUMBERS+LETTERS;
+  Result:= '';
+  for It:= 0 to 4 do begin
+    Insert(numlett[(Numb And 31)+1], Result, 1);
+    Numb:= Numb Shr 5;
+  end;
+end;
+
+function CountPos(const subtxt: string; Text: string): Integer;
+begin
+  if (Length(subtxt)= 0) Or (Length(Text)= 0) Or (Pos(subtxt,Text)= 0) then
+    result:= 0
+  else
+    result:= (Length(Text)- Length(StringReplace(Text,subtxt,'',
+      [rfReplaceAll]))) div Length(subtxt);
+end;
+
+function ExtComName(ComNr: DWORD): string;
+begin
+  if ComNr > 9 then
+    Result := Format('\\\\.\\COM%d', [ComNr])
+  else
+    Result := Format('COM%d', [ComNr]);
+end;
+
+procedure ScanBlanks(const S: string; var Pos: Integer);
+var
+  I: Integer;
+begin
+  I := Pos+1;
+  while (I <= Length(S)) and (S[I] = ' ') do Inc(I);
+  Pos := I;
+end;
+
+
+procedure ScanBlanksX(const S: string; var Pos: Integer);
+var
+  I: Integer;
+begin
+  I := Pos+1;
+  writeln(S[I+1])
+  writeln(itoa(pos))
+  writeln(s)
+  writeln(inttostr(Length(S)))
+  writeln(itoa(i))
+  if S[I]= ' ' then writeln('space found ');
+  while (I < Length(S)) and (S[I]= ' ') do begin
+  writeln(S[I])
+      writeln('check')
+     Inc(I);
+  if S[I]= ' ' then writeln('space found ');
+  end;
+  
+  writeln(itoa(i))
+  Pos := I;
+end;
+
+Function MonthStrToInt(s: string; var num: word): boolean;
+  var i: integer;
+  begin
+     result:= False;
+     for i:= 1 to 12 do begin
+        if uppercase(s)=uppercase(getShortMonthNames[i]) then
+        begin
+           num:= i;
+           result:= True;
+           break;
+        end
+     end
+  end;
+  
+  function ScanStringX(const S: string; var Pos: Integer; const Symbol: string): Boolean;
+begin
+  Result := False;
+  if Symbol <> '' then begin
+    ScanBlanks(S, Pos);
+    if AnsiCompareText(Symbol, Copy(S, Pos, Length(Symbol))) = 0 then begin
+      Inc1(Pos, Length(Symbol));
+      Result := True;
+    end;
+  end;
+end;
+
+function ScanChar(const S: string; var Pos: Integer; Ch: Char): Boolean;
+begin
+  Result := False;
+  ScanBlanks(S, Pos);
+  if (Pos <= Length(S)) and (S[Pos] = Ch) then begin
+    Inc(Pos);
+    Result := True;
+  end;
+end;
+
+procedure StartSonarRunnerBatch;
+begin
+ //4 Async Start Sonar Runner************************** with sonar.forceAnalysis=true
+    //S_ShellExecute(SONARRUNNER,'',seCMDOpen);
+end; 
+
+
+procedure testdecimal;
+// collection-list-vector-stack (list, map, set)
+var tf: extended;
+begin                       
+  tf:= 0.99999999999999999;
+  tf:= 10.0 * tf;
+  printF('more prec %.18f ',[tf]);
+  writeln(floattoStr(tf))
+  writeln('total qual: '+floatToStr(maxCalc('100 - (225/6790*100)')));
+end;  
+  
+
+ var mformSets: TFormatSettings; 
+     amimeext: TMimeExtension;
+     abit: TBitmap;
+     fit: integer;
+     abb: boolean;
+    // SONARBAT: string;
+    S_SonarRunning: boolean;
+    
+    //\\172.31.40.110\general\SONARQube51\sonarqube-5.1\sonarqube-5.1\bin
+      //testdrive
+   //  Const SONARBAT = 'C:\maXbox\mX399100\mX399193\sonarqube-5.1\sonarqube-5.1\bin\windows-x86-64\StartSonar.bat';
+      //Const SONARBAT = '\\172.31.40.110\general\SONARQube51\sonarqube-5.1\sonarqube-5.1\bin\windows-x86-64\StartSonar.bat';
+     
+   // Const SONARBAT = 'D:\Software\sonar-3.4.1\bin\windows-x86-32\StartSonar.bat';
+
+  Const SONARBAT = 'D:\Software\SONARQube51\sonarqube-5.1\sonarqube-5.1\bin\windows-x86-32\StartSonar.bat';
+     
+      //SONARRUNNER = 'D:sOFTWARE\sonar-3.4.1\sonar_runner_home\bin\sonar-runner.bat';
+    SONARRUNNER = 'D:\Software\SONARQube51\sonar-runner-dist-2.4\sonar-runner-2.4\bin\\sonar-runner.bat';
+    
+    BATCHWAIT = 45000;
+ 
+ 
+Begin  //main
+ writeln('IntToBase32 of 1000: '+IntToBase32(1000))
+ writeln('CountPos: '+itoa(CountPos('max','this is max of maXbox a max numbermax')))
+ PrintF('CountPos: %d',[CountPos('max','this is max of maXbox a max numbermax')])
+ writeln(floatToStr(SoapStrToFloat('3457.458')));
+ writeln(SoapFloatToStr(SoapStrToFloat('3457.458')));
+ SIRegister_XSBuiltIns;
+ 
+ //StrToFloatFS('345.45', ffFixed, 8,4, mformSets);
+ 
+ with TPersistentObject.Create do begin
+      //assign
+      free
+  end;
+  with TJclSimpleXMLElem.Create(NIL) do begin
+     clear;
+     free;
+  end;  
+  
+  writeln('FileType2MimeType: '+FileType2MimeType(exepath+'maXbox3.exe'))
+  
+  {abit:= TBitmAP.create;
+  GetScreenShotX(abit)
+  abit.savetofile(exepath+'myscreenscream.bmp')
+  openfile(exepath+'myscreenscream.bmp')
+  abit.Free;
+   }
+  
+  //TODO: check runner and qube together in consolecapture
+   //function ScanString(const S: string; var Pos: Integer;
+     //it:= 1;
+     fit:=0;
+     scanstringX('  this is max in the box', fit, 'max')
+     writeln('pos found: '+inttostr(fit))
+     sr:= strscan('this is maxbox','x');
+     writeln(strscan('this is maxbox','x'));
+     
+     //curl -u admin:admin http://localhost:9000/api/server/system
+     
+       if iswin64  then writeln(' is win64 machine: '+ gethostname);
+   //if DirectoryExists(AWORKPATH) then writeln(AWORKPATH+ ' existst');
+
+        if IsTCPPortOpen(9000,getIP(getHostName)) then begin
+            writeln('Sonar Port Open!');
+         end;
+
+     //ExecuteCommand('cmd','/c %windir%\system32\eventvwr.msc /s ')
+   
+ writeln(ShellExecute3('C:\Program Files (x86)\Java\jre7\bin\javacpl.exe','',seCMDOpen));
+
+   writeln(getEnvironmentString);
+      
+  //SONARRUN = 'C:\maXbox\sonar-3.4.1\sonar-3.7.1\sonar-runner-dist-2.3\sonar-runner-2.3\bin\sonar-runner.bat';  
+
+   if FileExists(SONARBAT) then
+      ShellExecute3(SONARBat,'',seCMDOpen);
+     sleep(BATCHWAIT)
+     if IsTCPPortOpen(9000,getIP(getHostName)) then begin
+            writeln('Sonar TCP Port Open!');
+ 
+     //StartSonarRunnerBat;
+        //opendoc('http://localhost:9000/api/server/system');
+     //ShellExecute3('http://127.0.0.1:9000/dashboard','',seCMDOPen)
+        ShellExecute3('http://127.0.0.1:9000/system','',seCMDOPen)
+     end else 
+       writeln('sonar tcp port not open?');
+     
+ 
+   //if ShellExecute3(SONARRUNNER,'',seCMDOpen) = '' then 
+     //S_SonarRunning:= true;
+    srlist:= TStringlist.create;
+    ConsoleCapture(Extractfilepath(SONARRUNNER), 
+                       'cmd.exe','/c sonar-runner.bat',srlist);
+     writeln(srlist.text)
+    srlist.Free;
+      
+     { srlist:= TStringlist.create;
+      //ConsoleCapture('C:\', 'cmd.exe', '/c dir *.* /s',srlist);
+      //ConsoleCapture('D:\Software\SONARQube51\sonarqube-5.1\', 'cmd.exe','/c dir *.* /s',srlist);
+      writeln(srlist.text)
+      srlist.Free;
+      }
+  
+   if IsApplicationRunning('ConsoleWindowClass','') AND IsApplicationRunning('Shell_TrayWnd','')
+       AND S_SonarRunning then	
+       writeln('SONAR & Runner all is up!');
+       //openSonarStart;   
+       
+     maxform1.compile1.caption:= 'SONAR Start';
+        TToolButton(findcomponent('tbtnFind')).caption:= 'Qubefind2';
+     maxform1.myscript1.caption:= 'SONAR Start';
+     //TMenuItem(findcomponent('myscript1')).caption:= 'SONAR Batch';
+  
+End. 
+
+ref : path
+set to wrapper.conf
+wrapper.java.command=C:\Program Files (x86)\Java\jre7\bin\java
+
+doc:
+D:\Software\SONARQube51\sonar-runner-dist-2.4\sonar-runner-2.4\bin\sonar-runner.bat
+set ERROR_CODE=0
+set JAVA_HOME=C:\Program Files (x86)\Java\jre7\
+set SONAR_RUNNER_HOME=D:\Software\SONARQube51\sonar-runner-dist-2.4\sonar-runner-2.4\
+
+ > HEXHeapDumponOutofMemoryError ---> H2DO3ME HDome
+
+old:
+C:\tools\java\jdk1.6.0_26
+
+//C:\tools\java\jdk-7u40-windows-i586
+
+JAVA_HOME _> C:\Program Files (x86)\Java
+
+C:\Program Files (x86)\Java\jre7\bin
+
+
+Ref:
+
+
+http://172.31.34.114:9000/system
+
+http://127.0.0.1:9000/settings?category=licenses
+
+
+
+//############################################################################
+// Archimedes Spiral App
+//############################################################################
+
+    
+    Plugins
+Plugin 	Version 	Description
+Java [java] 	3.0 	SonarQube rule engine.
+Git [scmgit] 	1.0 	Git SCM Provider.
+SVN [scmsvn] 	1.0 	SVN SCM Provider. 
+
+
+
+system of sonar 5.1
+
+
+Embrace Quality
+
+    Dashboards 
+    Issues
+    Measures
+    Rules
+    Quality Profiles
+    Quality Gates
+    Settings
+    More 
+
+    Administrator 
+     
+
+    Settings
+
+    Configuration 
+    Security 
+    System 
+
+System Info
+Download
+SonarQube
+Server ID 	1d3ea4072ea6e93
+Version 	5.1
+External User Authentication 	
+Automatic User Creation 	true
+Allow Users to Sign Up 	false
+Force authentication 	false
+Home Dir 	D:\Software\SONARQube51\sonarqube-5.1\sonarqube-5.1
+Data Dir 	D:\Software\SONARQube51\sonarqube-5.1\sonarqube-5.1\data
+Logs Dir 	D:\Software\SONARQube51\sonarqube-5.1\sonarqube-5.1\logs
+Temp Dir 	D:\Software\SONARQube51\sonarqube-5.1\sonarqube-5.1\temp
+
+Database
+Database 	H2
+Database Version 	1.3.176 (2014-04-05)
+Username 	SONAR
+URL 	jdbc:h2:tcp://localhost:9092/sonar
+Driver 	H2 JDBC Driver
+Driver Version 	1.3.176 (2014-04-05)
+Version Status 	UP_TO_DATE
+Pool Active Connections 	2
+Pool Max Connections 	50
+Pool Initial Size 	0
+Pool Idle Connections 	2
+Pool Min Idle Connections 	2
+Pool Max Idle Connections 	5
+Pool Max Wait (ms) 	5000
+Pool Remove Abandoned 	false
+Pool Remove Abandoned Timeout (seconds) 	300
+
+System
+System Date 	2015-05-05T16:22:18+0200
+Start Time 	2015-05-05T16:07:36+0200
+JVM Vendor 	Oracle Corporation
+JVM Name 	Java HotSpot(TM) Client VM
+JVM Version 	24.0-b56
+Processors 	2
+Total Memory 	128 MB
+Free Memory 	45 MB
+Max Memory 	778 MB
+Heap 	init = 16777216(16384K) used = 83226512(81275K) committed = 128593920(125580K) max = 778502144(760256K)
+Non Heap 	init = 12746752(12448K) used = 64869512(63349K) committed = 65142784(63616K) max = 201326592(196608K)
+System Load Average 	-100.0% (last minute)
+Loaded Classes 	16250
+Total Loaded Classes 	16254
+Unloaded Classes 	4
+Threads 	38
+Threads Peak 	43
+Daemon Thread 	29
+
+ElasticSearch
+State 	GREEN
+Indices - sourcelines 	
+Docs	0
+Shards	1
+Store Size	115 bytes
+Indices - users 	
+Docs	1
+Shards	1
+Store Size	3 KB
+Indices - views 	
+Docs	0
+Shards	1
+Store Size	115 bytes
+Indices - issues 	
+Docs	0
+Shards	1
+Store Size	115 bytes
+Indices - activities 	
+Docs	384
+Shards	1
+Store Size	45 KB
+Indices - rules 	
+Docs	523
+Shards	1
+Store Size	973 KB
+Number of Nodes 	1
+Nodes - 7_hkYr9SSeuSRMCAnDqCDA 	
+Address	inet[/172.31.34.114:9001]
+Type	Master
+Disk Available	44 GB
+Store Size	1023 KB
+Open Files	-1
+JVM Heap Usage	4.0%
+JVM Heap Used	46 MB
+JVM Heap Max	1011 MB
+JVM Non Heap Used	27 MB
+JVM Threads	44
+Field Cache Memory	0 bytes
+Filter Cache Memory	0 bytes
+ID Cache Memory	9 KB
+Query Cache Memory	0 bytes
+
+JvmProperties
+awt.toolkit 	sun.awt.windows.WToolkit
+catalina.base 	D:\Software\SONARQube51\sonarqube-5.1\sonarqube-5.1\temp\tc
+catalina.home 	D:\Software\SONARQube51\sonarqube-5.1\sonarqube-5.1\temp\tc
+catalina.useNaming 	false
+file.encoding 	UTF-8
+file.encoding.pkg 	sun.io
+file.separator 	\
+http.agent 	SonarQube 5.1
+java.awt.graphicsenv 	sun.awt.Win32GraphicsEnvironment
+java.awt.headless 	true
+java.awt.printerjob 	sun.awt.windows.WPrinterJob
+java.net.preferIPv4Stack 	true
+java.runtime.name 	Java(TM) SE Runtime Environment
+java.runtime.version 	1.7.0_40-b43
+java.specification.name 	Java Platform API Specification
+java.specification.vendor 	Oracle Corporation
+java.specification.version 	1.7
+java.vendor 	Oracle Corporation
+java.vendor.url 	http://java.oracle.com/
+java.vendor.url.bug 	http://bugreport.sun.com/bugreport/
+java.version 	1.7.0_40
+java.vm.info 	mixed mode
+java.vm.name 	Java HotSpot(TM) Client VM
+java.vm.specification.name 	Java Virtual Machine Specification
+java.vm.specification.vendor 	Oracle Corporation
+java.vm.specification.version 	1.7
+java.vm.vendor 	Oracle Corporation
+java.vm.version 	24.0-b56
+jruby.compile.invokedynamic 	false
+jruby.management.enabled 	false
+line.separator 	
+org.apache.catalina.startup.EXIT_ON_INIT_FAILURE 	true
+org.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH 	true
+os.arch 	x86
+os.name 	Windows 7
+os.version 	6.1
+path.separator 	;
+sun.arch.data.model 	32
+sun.boot.class.path 	C:\Program Files (x86)\Java\jre7\lib\resources.jar;C:\Program Files (x86)\Java\jre7\lib\rt.jar;C:\Program Files (x86)\Java\jre7\lib\sunrsasign.jar;C:\Program Files (x86)\Java\jre7\lib\jsse.jar;C:\Program Files (x86)\Java\jre7\lib\jce.jar;C:\Program Files (x86)\Java\jre7\lib\charsets.jar;C:\Program Files (x86)\Java\jre7\lib\jfr.jar;C:\Program Files (x86)\Java\jre7\classes
+sun.boot.library.path 	C:\Program Files (x86)\Java\jre7\bin
+sun.cpu.endian 	little
+sun.cpu.isalist 	pentium_pro+mmx pentium_pro pentium+mmx pentium i486 i386 i86
+sun.desktop 	windows
+sun.io.unicode.encoding 	UnicodeLittle
+sun.java.command 	org.sonar.server.app.WebServer C:\Users\review\AppData\Local\Temp\sq-process5098065159304782619properties
+sun.java.launcher 	SUN_STANDARD
+sun.jnu.encoding 	Cp1252
+sun.management.compiler 	HotSpot Client Compiler
+sun.nio.ch.bugLevel 	
+sun.os.patch.level 	Service Pack 1
+user.country 	US
+user.country.format 	CH
+user.dir 	D:\Software\SONARQube51\sonarqube-5.1\sonarqube-5.1
+user.home 	C:\Users\review
+user.language 	en
+user.language.format 	de
+user.name 	Review
+user.script 	
+user.timezone 	Europe/Berlin
+user.variant 	
+
+SonarQube™ technology is powered by SonarSource SA
+Version 5.1 - LGPL v3 - Community - Documentation - Get Support - Plugins - Web Service API
+
+Sonar Port Open!
+D:\Software\SONARQube51\sonar-runner-dist-2.4\sonar-runner-2.4
+SonarQube Runner 2.4
+Java 1.7.0_40 Oracle Corporation (32-bit)
+Windows 7 6.1 x86
+INFO: Runner configuration file: D:\Software\SONARQube51\sonar-runner-dist-2.4\sonar-runner-2.4\conf\sonar-runner.properties
+INFO: Project configuration file: NONE
+INFO: Default locale: "en_US", source code encoding: "UTF-8"
+INFO: Work directory: D:\Software\SONARQube51\sonar-runner-dist-2.4\sonar-runner-2.4\bin\.\.sonar
+INFO: SonarQube Server 5.1
+14:55:29.960 INFO  - Load global repositories
+14:55:30.147 INFO  - Load global repositories (done) | time=187ms
+14:55:30.147 INFO  - Server id: 20150511134802
+14:55:30.147 INFO  - User cache: C:\Users\review\.sonar\cache
+14:55:30.163 INFO  - Install plugins
+14:55:30.506 INFO  - Install JDBC driver
+14:55:30.506 INFO  - Create JDBC datasource for jdbc:h2:tcp://localhost/sonar
+14:55:31.676 INFO  - Initializing Hibernate
+14:55:33.688 INFO  - Load project repositories
+14:55:33.891 INFO  - Load project repositories (done) | time=203ms
+14:55:33.891 INFO  - Load project settings
+14:55:34.437 INFO  - Load technical debt model
+14:55:34.484 INFO  - Apply project exclusions
+14:55:34.733 WARN  - SCM provider autodetection failed. No SCM provider claims to support this project. Please use sonar.scm.provider to define SCM of your project.
+14:55:34.733 INFO  - -------------  Scan Simple Java project analyzed with the Sonar Runner
+14:55:34.733 INFO  - Load module settings
+14:55:34.889 INFO  - Language is forced to java
+14:55:34.905 INFO  - Load rules
+14:55:35.357 INFO  - Base dir: D:\Software\SONARQube51\sonar-runner-dist-2.4\sonar-runner-2.4\bin
+14:55:35.357 INFO  - Working dir: D:\Software\SONARQube51\sonar-runner-dist-2.4\sonar-runner-2.4\bin\.sonar
+14:55:35.357 INFO  - Source paths: srcjava
+14:55:35.357 INFO  - Source encoding: UTF-8, default locale: en_US
+14:55:35.357 INFO  - Index files
+14:55:35.373 INFO  - 1 files indexed
+14:55:35.404 INFO  - Quality profile for java: Sonar way
+14:55:35.623 INFO  - Sensor JavaSquidSensor
+14:55:36.169 INFO  - Java Main Files AST scan...
+14:55:36.169 INFO  - 1 source files to be analyzed
+14:55:36.512 INFO  - Java Main Files AST scan done: 343 ms
+14:55:36.512 INFO  - 1/1 source files analyzed
+14:55:36.512 WARN  - Java bytecode has not been made available to the analyzer. The org.sonar.java.bytecode.visitor.DependenciesVisitor@1ffd278, org.sonar.java.checks.UnusedPrivateMethodCheck@1203c6e, org.sonar.java.checks.RedundantThrowsDeclarationCheck@15f6497 are disabled.
+14:55:36.512 INFO  - Java Test Files AST scan...
+14:55:36.512 INFO  - 0 source files to be analyzed
+14:55:36.512 INFO  - Java Test Files AST scan done: 0 ms
+14:55:36.512 INFO  - 0/0 source files analyzed
+14:55:36.527 INFO  - Sensor JavaSquidSensor (done) | time=904ms
+14:55:36.527 INFO  - Sensor Lines Sensor
+14:55:36.527 INFO  - Sensor Lines Sensor (done) | time=0ms
+14:55:36.527 INFO  - Sensor QProfileSensor
+14:55:36.543 INFO  - Sensor QProfileSensor (done) | time=16ms
+14:55:36.543 INFO  - Sensor InitialOpenIssuesSensor
+14:55:36.543 INFO  - Sensor InitialOpenIssuesSensor (done) | time=0ms
+14:55:36.543 INFO  - Sensor ProjectLinksSensor
+14:55:36.559 INFO  - Sensor ProjectLinksSensor (done) | time=16ms
+14:55:36.559 INFO  - Sensor VersionEventsSensor
+14:55:36.574 INFO  - Sensor VersionEventsSensor (done) | time=15ms
+14:55:36.574 INFO  - Sensor SurefireSensor
+14:55:36.574 INFO  - parsing D:\Software\SONARQube51\sonar-runner-dist-2.4\sonar-runner-2.4\bin\.sonar\build\surefire-reports
+14:55:36.574 WARN  - Reports path not found: D:\Software\SONARQube51\sonar-runner-dist-2.4\sonar-runner-2.4\bin\.sonar\build\surefire-reports
+14:55:36.574 INFO  - Sensor SurefireSensor (done) | time=0ms
+14:55:36.574 INFO  - Sensor SCM Sensor
+14:55:36.574 INFO  - No SCM system was detected. You can use the 'sonar.scm.provider' property to explicitly specify it.
+14:55:36.574 INFO  - Sensor SCM Sensor (done) | time=0ms
+14:55:36.574 INFO  - Sensor CPD Sensor
+14:55:36.590 INFO  - JavaCpdEngine is used for java
+14:55:36.590 INFO  - Cross-project analysis disabled
+14:55:36.605 INFO  - Sensor CPD Sensor (done) | time=31ms
+14:55:36.605 INFO  - No quality gate is configured.
+14:55:36.637 INFO  - Compare to previous analysis (2015-05-11)
+14:55:36.637 INFO  - Compare over 30 days (2015-04-11, analysis of Mon May 11 14:18:05 CEST 2015)
+14:55:37.073 INFO  - Execute decorators...
+14:55:37.448 INFO  - Store results in database
+14:55:37.604 INFO  - Analysis reports generated in 31ms, dir size=891 bytes
+14:55:37.619 INFO  - Analysis reports compressed in 15ms, zip size=1 KB
+14:55:37.651 INFO  - Analysis reports sent to server in 32ms
+14:55:37.651 INFO  - ANALYSIS SUCCESSFUL, you can browse http://localhost:9000/dashboard/index/achat_java-sonar-runner-simple
+14:55:37.651 INFO  - Note that you will be able to access the updated dashboard once the server has processed the submitted analysis report.
+INFO: ------------------------------------------------------------------------
+INFO: EXECUTION SUCCESS
+INFO: ------------------------------------------------------------------------
+Total time: 8.487s
+Final Memory: 14M/130M
+INFO: ------------------------------------------------------------------------
+
+
+Plugins and Adapters
+Plugin 	Version 	Description
+C# [csharp] 	4.0 	Enable analysis and reporting on C# projects.
+Java [java] 	3.1 	SonarQube rule engine.
+PL/SQL [plsql] 	2.7 	Enable analysis and reporting on PL/SQL projects.
+Git [scmgit] 	1.0 	Git SCM Provider.
+SVN [scmsvn] 	1.0 	SVN SCM Provider.
+Web [web] 	2.3 	Analyze HTML (also within PHP/Ruby/etc. templates) and JSP/JSF code.
+XML [xml] 	1.2 	Enable analysis and reporting on XML files. 
+
+
+ 

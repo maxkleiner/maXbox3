@@ -7,6 +7,7 @@ uses
   uPSRuntime, uPSUtils;
 
   //more handlers and constructors
+  //color2 hack
 
 
 
@@ -96,6 +97,21 @@ procedure TControlBoundsRectW(Self: TControl; T: TRect); begin Self.BoundsRect:=
 
 //procedure TControlColorW(Self: TControl; T: TRect); begin Self.BoundsRect:= T; end;
 
+type THackWinControl = class(TWinControl);
+
+ //  property ParentBackground: Boolean read GetParentBackground write SetParentBackground;
+
+procedure TWinControlparentbackgroundW(Self: TWinControl; T: boolean);
+//type tmycontrol: TControl
+begin THackWinControl(Self).ParentBackground:= T;
+end;
+
+procedure TWinControlparentbackgroundR(Self: TControl; var T: boolean);
+begin T := THackWinControl(Self).ParentBackground;
+end;
+
+
+
 type THackControl = class(TControl);
 
 procedure TControlColorW(Self: TControl; T: TColor);
@@ -117,6 +133,22 @@ begin Self.Constraints := T; end;
 (*----------------------------------------------------------------------------*)
 procedure TControlConstraints_R(Self: TControl; var T: TSizeConstraints);
 begin T := Self.Constraints; end;
+
+
+procedure TControlHostDockSite_W(Self: TControl; const T: TWinControl);
+begin Self.HostDockSite:= T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TControlHostDockSite_R(Self: TControl; var T: TWinControl);
+begin T := Self.HostDockSite; end;
+
+
+procedure TControlLRDockWidth_W(Self: TControl; const T: Integer);
+begin Self.LRDockWidth := T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TControlLRDockWidth_R(Self: TControl; var T: Integer);
+begin T := Self.LRDockWidth; end;
 
 (*----------------------------------------------------------------------------*)
 procedure TControlClientWidth_W(Self: TControl; const T: Integer);
@@ -330,9 +362,9 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TCustomControl(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TCustomControl) do
-  begin
+  with CL.Add(TCustomControl) do begin
     RegisterConstructor(@TCustomControl.Create, 'Create');
+    RegisterMethod(@TCustomControl.Destroy, 'Free');
   end;
 end;
 
@@ -406,6 +438,10 @@ begin
     RegisterPropertyHelper(@TControlBoundsRectR, @TControlBoundsRectW, 'BoundsRect');
     RegisterPropertyHelper(@TControlColorR, @TControlColorW, 'Color');    //hack
     RegisterPropertyHelper(@TControlCaptionR, @TControlCaptionW, 'Caption');    //hack
+    RegisterPropertyHelper(@TControlHostDockSite_R, @TControlHostDockSite_W, 'HostDockSite');    //hack
+    RegisterPropertyHelper(@TControlLRDockWidth_R, @TControlLRDockWidth_W, 'LRDockWidth');    //hack
+
+
 
     {$IFNDEF PS_MINIVCL}
     RegisterMethod(@TControl.Dragging, 'DRAGGING');
@@ -576,6 +612,9 @@ begin
     RegisterPropertyHelper(@TWINCONTROLDB_R, @TWINCONTROLDB_W, 'DoubleBuffered');
     //RegisterPropertyHelper(@TWINCONTROLBW_R, @TWINCONTROLBW_W, 'BORDERWIDTH');
     RegisterPropertyHelper(@TWINCONTROLUDM_R, @TWINCONTROLUDM_W, 'UseDockManager');
+
+    RegisterPropertyHelper(@TWinControlparentbackgroundR, @TWinControlparentbackgroundW, 'parentbackground');
+    // TWinControlparentbackgroundW
 
     {$ENDIF}
   end;

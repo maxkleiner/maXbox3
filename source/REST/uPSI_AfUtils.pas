@@ -1,7 +1,7 @@
 unit uPSI_AfUtils;
 {
   afcom     char is pchar!
-  more of winapi funct with w_   morse code inside
+  more of winapi funct with w_   morse code inside , webonform
 }
 interface
  
@@ -21,7 +21,7 @@ type
     procedure ExecImport1(CompExec: TPSScript; const ri: TPSRuntimeClassImporter); override;
   end;
  
- 
+
 { compile-time registration functions }
 procedure SIRegister_AfUtils(CL: TPSPascalCompiler);
 
@@ -34,8 +34,8 @@ implementation
 
 
 uses
-   Windows, controls, shellapi
-  ,AfUtils, wiwin32, REGiSTRY, PsAPI, messages, WinSpool, graphics, forms, comctrls;
+   Windows, controls, shellapi, TlHelp32,
+  AfUtils, wiwin32, REGiSTRY, PsAPI, messages, WinSpool, graphics, forms, comctrls, urlmon, mshtml, SHDocVw;
 
 
 procedure Register;
@@ -1078,8 +1078,272 @@ begin
   end;
 end;
 
+procedure CreateBrowserOnForm(aform: TForm; aurl: string);
+var
+ wb: TWebBrowser;
+begin
+  wb := TWebBrowser.Create(aform);
+  TWinControl(wb).Name := 'mXWebBrowser';
+  TWinControl(wb).Parent := aform;
+  wb.Align := alClient;
+  // TWinControl(wb).Parent := TabSheet1; ( To put it on a TabSheet )
+  //wb.Navigate('http://www.swissdelphicenter.ch');
+  wb.Navigate(aurl);
+end;
+
+procedure SearchAndHighlightWebText(aform: TForm; aurl: string; aText: string);
+var
+  tr: IHTMLTxtRange; //TextRange Object
+ wb: TWebBrowser;
+begin
+  wb := TWebBrowser.Create(aform);
+  TWinControl(wb).Name := 'mXWebBrowser';
+  TWinControl(wb).Parent := aform;
+  wb.Align := alClient;
+  wb.Navigate(aurl);
+  if not WB.Busy then begin
+    tr := ((WB.Document as IHTMLDocument2).body as IHTMLBodyElement).createTextRange;
+    //Get a body with IHTMLDocument2 Interface and then a TextRang obj. with IHTMLBodyElement Intf.
+
+    while tr.findText(aText, 1, 0) do //while we have result
+    begin
+      tr.pasteHTML('<span style="background-color: Lime; font-weight: bolder;">' +
+        tr.htmlText + '</span>');
+      //Set the highlight, now background color will be Lime
+      tr.scrollIntoView(True);
+      //When IE find a match, we ask to scroll the window... you dont need this...
+    end;
+  end;
+end;
+
+function DownloadFile(SourceFile, DestFile: string): Boolean;
+begin
+  try
+    Result := UrlDownloadToFile(nil, PChar(SourceFile), PChar(DestFile), 0,
+      nil) = 0;
+  except
+    Result := False;
+  end;
+end;
+
+procedure SaveImagesOnWeb(aurl, apath: string);
+var
+  k, p: Integer;
+  Source, dest, ext: string;
+   wb: TWebBrowser;
+begin
+  wb := TWebBrowser.Create(nil);
+  wb.Navigate(aurl);
+  for k := 0 to WB.OleObject.Document.Images.Length - 1 do begin
+    Source := WB.OleObject.Document.Images.Item(k).Src;
+    p := LastDelimiter('.', Source);
+    ext := UpperCase(Copy(Source, p + 1, Length(Source)));
+    if (ext = 'GIF') or (ext = 'JPG') then
+    begin
+      p  := LastDelimiter('/', Source);
+      dest := ExtractFilePath(apath) + Copy(Source, p + 1,
+        Length(Source));
+      DownloadFile(Source, dest);
+    end;
+  end;
+end;
+
+ const
+  RsSystemIdleProcess = 'System Idle Process';
+  RsSystemProcess = 'System Process';
+
+function IsWinXP: Boolean;
+begin
+  Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and
+    (Win32MajorVersion = 5) and (Win32MinorVersion = 1);
+end;
+
+function IsWin2k: Boolean;
+begin
+  Result := (Win32MajorVersion >= 5) and
+    (Win32Platform = VER_PLATFORM_WIN32_NT);
+end;
+
+function IsWinNT4: Boolean;
+begin
+  Result := Win32Platform = VER_PLATFORM_WIN32_NT;
+  Result := Result and (Win32MajorVersion = 4);
+end;
+
+function IsWin3X: Boolean;
+begin
+  Result := Win32Platform = VER_PLATFORM_WIN32_NT;
+  Result := Result and (Win32MajorVersion = 3) and
+    ((Win32MinorVersion = 1) or (Win32MinorVersion = 5) or
+    (Win32MinorVersion = 51));
+end;
+
+function RunningProcessesList(const List: TStrings; FullPath: Boolean): Boolean;
+
+  function ProcessFileName(PID: DWORD): string;
+  var
+    Handle: THandle;
+  begin
+    Result := '';
+    Handle := OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ, False, PID);
+    if Handle <> 0 then
+      try
+        SetLength(Result, MAX_PATH);
+        if FullPath then
+        begin
+          if GetModuleFileNameEx(Handle, 0, PChar(Result), MAX_PATH) > 0 then
+            SetLength(Result, StrLen(PChar(Result)))
+          else
+            Result := '';
+        end
+        else
+        begin
+          if GetModuleBaseNameA(Handle, 0, PChar(Result), MAX_PATH) > 0 then
+            SetLength(Result, StrLen(PChar(Result)))
+          else
+            Result := '';
+        end;
+      finally
+        CloseHandle(Handle);
+      end;
+  end;
+
+  function BuildListTH: Boolean;
+  var
+    SnapProcHandle: THandle;
+    ProcEntry: TProcessEntry32;
+    NextProc: Boolean;
+    FileName: string;
+  begin
+    SnapProcHandle := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    Result := (SnapProcHandle <> INVALID_HANDLE_VALUE);
+    if Result then
+      try
+        ProcEntry.dwSize := SizeOf(ProcEntry);
+        NextProc := Process32First(SnapProcHandle, ProcEntry);
+        while NextProc do
+        begin
+          if ProcEntry.th32ProcessID = 0 then
+          begin
+            // PID 0 is always the "System Idle Process" but this name cannot be
+            // retrieved from the system and has to be fabricated.
+            FileName := RsSystemIdleProcess;
+          end
+          else
+          begin
+            if IsWin2k or IsWinXP then
+            begin
+              FileName := ProcessFileName(ProcEntry.th32ProcessID);
+              if FileName = '' then
+                FileName := ProcEntry.szExeFile;
+            end
+            else
+            begin
+              FileName := ProcEntry.szExeFile;
+              if not FullPath then
+                FileName := ExtractFileName(FileName);
+            end;
+          end;
+          List.AddObject(FileName, Pointer(ProcEntry.th32ProcessID));
+          NextProc := Process32Next(SnapProcHandle, ProcEntry);
+        end;
+      finally
+        CloseHandle(SnapProcHandle);
+      end;
+  end;
+
+  function BuildListPS: Boolean;
+  var
+    PIDs: array [0..1024] of DWORD;
+    Needed: DWORD;
+    I: Integer;
+    FileName: string;
+  begin
+    Result := EnumProcesses(@PIDs, SizeOf(PIDs), Needed);
+    if Result then
+    begin
+      for I := 0 to (Needed div SizeOf(DWORD)) - 1 do
+      begin
+        case PIDs[I] of
+          0:
+            // PID 0 is always the "System Idle Process" but this name cannot be
+            // retrieved from the system and has to be fabricated.
+            FileName := RsSystemIdleProcess;
+          2:
+            // On NT 4 PID 2 is the "System Process" but this name cannot be
+            // retrieved from the system and has to be fabricated.
+            if IsWinNT4 then
+              FileName := RsSystemProcess
+            else
+              FileName := ProcessFileName(PIDs[I]);
+            8:
+            // On Win2K PID 8 is the "System Process" but this name cannot be
+            // retrieved from the system and has to be fabricated.
+            if IsWin2k or IsWinXP then
+              FileName := RsSystemProcess
+            else
+              FileName := ProcessFileName(PIDs[I]);
+            else
+              FileName := ProcessFileName(PIDs[I]);
+        end;
+        if FileName <> '' then
+          List.AddObject(FileName, Pointer(PIDs[I]));
+      end;
+    end;
+  end;
+begin
+  if IsWin3X or IsWinNT4 then
+    Result := BuildListPS
+  else
+    Result := BuildListTH;
+end;
+
+function GetProcessNameFromWnd(Wnd: HWND): string;
+var
+  List: TStringList;
+  PID: DWORD;
+  I: Integer;
+begin
+  Result := '';
+  if IsWindow(Wnd) then
+  begin
+    PID := INVALID_HANDLE_VALUE;
+    GetWindowThreadProcessId(Wnd, @PID);
+    List := TStringList.Create;
+    try
+      if RunningProcessesList(List, True) then
+      begin
+        I := List.IndexOfObject(Pointer(PID));
+        if I > -1 then
+          Result := List[I];
+      end;
+    finally
+      List.Free;
+    end;
+  end;
+end;
 
 
+{function getallEvents(aform: TForm): TStringlist;
+var
+  x, y, z: Word;
+  pl: PPropList;
+begin
+  y := GetPropList(aform, pl);
+  for x := 0 to y - 1 do begin
+    if Copy(pl[x].Name, 1, 2) <> 'On' then Continue;
+    if GetMethodProp(aform, pl[x].Name).Code <> nil then
+      result.Add(aform.Name + ' - ' + pl[x].Name);
+  end;
+  for z := 0 to aform.ComponentCount - 1 do begin
+    y := GetPropList(aform.Components[z], pl);
+    for x := 0 to y - 1 do begin
+      if Copy(pl[x].Name, 1, 2) <> 'On' then Continue;
+      if GetMethodProp(aform.Components[z], pl[x].Name).Code <> nil then
+        result.Add(aform.Components[z].Name + ' - ' + pl[x].Name);
+    end;
+  end;
+end;}
 
 
      //UrlDownloadToFile
@@ -2138,9 +2402,13 @@ CL.AddTypeS('_REMOTE_NAME_INFOA', 'record lpUniversalName : PChar; lpConn'
  CL.AddDelphiFunction('function DynamicDllCall(hDll: THandle; const Name: String; HasResult: Boolean; var Returned: Cardinal; const Parameters: array of integer): Boolean;');
  CL.AddDelphiFunction('function DynamicDllCallNames(Dll: String; const Name: String; HasResult: Boolean; var Returned: Cardinal; const Parameters: array of string): Boolean;');
  CL.AddDelphiFunction('procedure LV_InsertFiles(strPath: string; ListView: TListView; ImageList: TImageList);');
-
-
-
+ CL.AddDelphiFunction('procedure CreateBrowserOnForm(aform: TForm; aurl: string);');
+ CL.AddDelphiFunction('procedure WebOnForm(aform: TForm; aurl: string);');
+ CL.AddDelphiFunction('procedure WebToForm(aform: TForm; aurl: string);');
+ CL.AddDelphiFunction('procedure SearchAndHighlightWebText(aform: TForm; aurl: string; aText: string);');
+ CL.AddDelphiFunction('procedure SaveImagesOnWeb(aurl, apath: string);');
+ CL.AddDelphiFunction('function GetProcessNameFromWnd(Wnd: HWND): string;');
+ //CL.AddDelphiFunction('function getallEvents(aform: TForm): TStringlist;');
 
 // varclear
 
@@ -2641,8 +2909,16 @@ begin
  S.RegisterDelphiFunction(@DynamicDllCall, 'DynamicDllCall', cdRegister);
  S.RegisterDelphiFunction(@DynamicDllCallNameS, 'DynamicDllCallNames', cdRegister);
  S.RegisterDelphiFunction(@LV_InsertFiles, 'LV_InsertFiles', cdRegister);
+ S.RegisterDelphiFunction(@CreateBrowserOnForm, 'CreateBrowserOnForm', cdRegister);
+ S.RegisterDelphiFunction(@CreateBrowserOnForm, 'WebOnForm', cdRegister);
+ S.RegisterDelphiFunction(@CreateBrowserOnForm, 'WebtoForm', cdRegister);
 
- S.RegisterDelphiFunction(@WNetConnectionDialog, 'WNetConnectionDialog', CdStdCall);
+ S.RegisterDelphiFunction(@SearchAndHighlightWebText, 'SearchAndHighlightWebText', cdRegister);
+ S.RegisterDelphiFunction(@SaveImagesOnWeb, 'SaveImagesOnWeb', cdRegister);
+ S.RegisterDelphiFunction(@GetProcessNameFromWnd, 'GetProcessNameFromWnd', cdRegister);
+ //S.RegisterDelphiFunction(@getallEvents, 'getallEvents', cdRegister);
+
+  S.RegisterDelphiFunction(@WNetConnectionDialog, 'WNetConnectionDialog', CdStdCall);
  S.RegisterDelphiFunction(@WNetDisconnectDialog, 'WNetDisconnectDialog', CdStdCall);
  S.RegisterDelphiFunction(@WNetGetUser, 'WNetGetUser', CdStdCall);
  S.RegisterDelphiFunction(@WNetGetProviderName, 'WNetGetProviderName', CdStdCall);

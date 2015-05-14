@@ -188,6 +188,28 @@ begin
    +'age : UINT; uEdge : UINT; rc : TRect; lParam : LPARAM; end');
   CL.AddTypeS('TAppBarData', '_AppBarData');
   CL.AddTypeS('APPBARDATA', '_AppBarData');
+
+  CL.AddTypeS('_SHFILEINFOA', 'record hIcon : HICON; iIcon : integer; dwAttributes'
+   +' : DWORD; szDisplayName: array [0..260-1] of char; szTypeName: array [0..79] of Char; end');
+
+  (* _SHFILEINFOA = record
+    hIcon: HICON;                      { out: icon }
+    iIcon: Integer;                    { out: icon index }
+    dwAttributes: DWORD;               { out: SFGAO_ flags }
+    szDisplayName: array [0..260-1] of  AnsiChar; { out: display name (or path) }
+    szTypeName: array [0..79] of AnsiChar;             { out: type name }
+  end;*)
+
+
+   //TSHFileInfo = TSHFileInfoA;
+   //TSHFileInfoA = _SHFILEINFOA;
+   CL.AddTypeS('TSHFileInfoA','_SHFILEINFOA');
+
+   CL.AddTypeS('TSHFileInfo','TSHFileInfoA');
+   //SHFILEINFOA = _SHFILEINFOA;
+  CL.AddTypeS('SHFILEINFOA','_SHFILEINFOA');
+  CL.AddTypeS('SHFILEINFO','SHFILEINFOA');
+
  CL.AddDelphiFunction('Function SHAppBarMessage( dwMessage : DWORD; var pData : TAppBarData) : UINT');
  CL.AddDelphiFunction('Function DoEnvironmentSubst( szString : PChar; cbString : UINT) : DWORD');
  //CL.AddDelphiFunction('Function DoEnvironmentSubstA( szString : PAnsiChar; cbString : UINT) : DWORD');
@@ -360,7 +382,7 @@ begin
 
  //CL.AddConstantN('CSIDL_COMMON_DOCUMENTS','LongWord').SetUInt($002e);
 
- //CL.AddDelphiFunction('Function SHGetFileInfo( pszPath : PAnsiChar; dwFileAttributes : DWORD; var psfi : TSHFileInfo; cbFileInfo, uFlags : UINT) : DWORD');
+ CL.AddDelphiFunction('Function SHGetFileInfo( pszPath : PChar; dwFileAttributes : DWORD; var psfi : TSHFileInfo; cbFileInfo, uFlags : UINT) : DWORD');
  //CL.AddDelphiFunction('Function SHGetFileInfoA( pszPath : PAnsiChar; dwFileAttributes : DWORD; var psfi : TSHFileInfoA; cbFileInfo, uFlags : UINT) : DWORD');
  //CL.AddDelphiFunction('Function SHGetFileInfoW( pszPath : PAnsiChar; dwFileAttributes : DWORD; var psfi : TSHFileInfoW; cbFileInfo, uFlags : UINT) : DWORD');
  CL.AddConstantN('SHGNLI_PIDL','LongWord').SetUInt( $000000001);
@@ -418,7 +440,9 @@ begin
  S.RegisterDelphiFunction(@GetSystemPath, 'GetSystemPathSH', CdStdCall);
  S.RegisterDelphiFunction(@GetSystemPath2, 'GetSystemPath', CdStdCall);
 
- //S.RegisterDelphiFunction(@SHGetFileInfoA, 'SHGetFileInfoA', CdStdCall);
+ S.RegisterDelphiFunction(@SHGetFileInfoA, 'SHGetFileInfoA', CdStdCall);
+ S.RegisterDelphiFunction(@SHGetFileInfoA, 'SHGetFileInfo', CdStdCall);
+
  //S.RegisterDelphiFunction(@SHGetFileInfoW, 'SHGetFileInfoW', CdStdCall);
 end;
 

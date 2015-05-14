@@ -3167,6 +3167,7 @@ begin
    try
      // FExeFile:= TExeImage.CreateImage(rcFrm, ExePath+'maxbox3.exe');
     //  DisplayResources;
+    //INVALID_FILE_ATTRIBUTES;
       maxForm1.statusBar1.SimpleText:= ' mX SerialForm opened!';
       showModal;
     finally

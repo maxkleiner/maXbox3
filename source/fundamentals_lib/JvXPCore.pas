@@ -355,6 +355,85 @@ uses
   {$R TeeTools.res}
   {$R IWWizardNET.res}
   {$R PascalScript_Core_Glyphs.RES}
+  {$R JvTIMELINEBITMAPS.RES}
+  //{$R JvDBGrid.res}
+  {$R JvTipofDay.res}
+  {$R JvXPBar.res}
+  //{$R JvDice.res}
+  //{$R JvCSVBase.res}
+  {$R JvTimeline.res}
+  {$R JvOutlookBar.res}
+  {$R AfRegister.dcr}
+  {$R pakicons.res}
+  //{$R NetTimeSVC.res}
+  //{$R NetTimeCPL.res}
+  //{$R SMExportD7.res}
+  {$R BrwsFldr.dcr}
+  {$R Info32.res}
+  {$R WptoRES.res}
+  //{$R scktsrvr.res}
+  //{$R BetterADO.res}
+  //{$R VCLZipD7.res}
+  {$R VpBase.res}
+  //{$R JclUnicodeZLib.res}
+  //{$R ovcbase.res}
+  {$R WPTBRES.res}           //520 res objects
+  //{$R NetTimeSVC.res}           //520 res objects
+  //{$R Oscilloscope4.res}
+  //{$R ByteMaps_Ex.res}
+  //{$R Visualization_Ex.res}
+   {$R RaDb.dcr}
+   {$R RaCtl.dcr}          //551 objects
+   {$R cyPalette.dcr}
+   {$R cycustomdbadvgrid.res}
+   {$R sounds.res}
+   //{$R logos.res}
+   {$R extp_glyphs.res}
+   {$R ovcregdb.res}
+   //{$R Iscc.res}
+   {$R Ledbitmaps.res}
+  // {$R LEDsample.res}
+   //{$R checkersboard.res}
+   //{$R dpkCindySystemD2009.res}
+   {$R HTML.res}
+   {$R dcapp.res}
+   //{$R TestGPS.res}
+    //{$R CPortImg.res}
+    //{$R Installer.res}
+    //{$R JvRuntimeDesign.res}
+    {$R wwdbnav.res}
+    //{$R GPSIcons.res}
+    {$R GPS.dcr}
+    //{$R miniTerm.res}
+    {$R ZComponent.dcr}
+    {$R JVP3reg.dcr}
+    //{$R TheBall.res}
+    {$R CMDimp3.res}
+    {$R ModbusSplash.res}
+    //{$R DUnitW32.res}
+    {$R extrares.res}
+     //{$R CPortLibDXE.res}
+     //{$R SpringBase.res}
+     //{$R jvcldemo.res}
+     {$R Throbber.res}
+     {$R MSDesign.res}
+     {$R OpDesign.dcr}
+      {$R vpreg.res}    //TVPLED!
+      {$R dcregbmp.dcr}    //TVPLED!
+
+      {$R DIRegEx_Reg.dcr}
+
+      //{$R arddelicon.rc}
+
+  //Visualization_Ex.res
+
+  //ByteMaps_Ex.res
+
+
+  //{$R simsniffer.res}
+
+  //{$R DevCpp.res}
+
 
 
 

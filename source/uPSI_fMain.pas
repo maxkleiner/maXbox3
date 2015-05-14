@@ -6,7 +6,8 @@ as an OpenToolsAPI to modify the maXbox GUI - V3.5 -V3.8.6 , version check
    actual 3.9.8 , new ipport, comport, iphost, appname, open examples, intflist
    locs=   1624   , last is gotoline, intfnavlist, configfileclick
   DoEditorExecuteCommand(EditorCommand: word);
-  Updated to 3.9.9.85 /80/82/91/94/95/96/98/100/101/110/120/160/190 , locs=3745, MBVERIALL, ResetKeyPressed;
+  Updated to 3.9.9.85 /80/82/91/94/95/96/98/100/101/110/120/160/190/195 , locs=3777,
+  MBVERIALL, ResetKeyPressed, arduino items, terminal;
 }
 
 interface
@@ -437,6 +438,8 @@ begin
     RegisterProperty('Bookmark31', 'TMenuItem', iptrw);
     RegisterProperty('Bookmark41', 'TMenuItem', iptrw);
     RegisterProperty('SynMultiSyn1', 'TSynMultiSyn', iptrw);
+    RegisterProperty('MyScript1', 'TMenuItem', iptrw);
+    RegisterProperty('ExternalApp1', 'TMenuItem', iptrw);
 
     RegisterMethod('Procedure IFPS3ClassesPlugin1CompImport( Sender : TObject; x : TPSPascalCompiler)');
     RegisterMethod('Procedure IFPS3ClassesPlugin1ExecImport( Sender : TObject; Exec : TPSExec; x : TPSRuntimeClassImporter)');
@@ -680,8 +683,10 @@ begin
     RegisterMethod('procedure PANView1Click(Sender: TObject);');
     RegisterMethod('procedure UnitConverter1Click(Sender: TObject);');
     RegisterMethod('procedure MyScript1Click(Sender: TObject);');
+    RegisterMethod('procedure Terminal1Click(Sender: TObject);');
+    RegisterMethod('procedure TrainingArduino1Click(Sender: TObject);');
 
-    //RegisterMethod('procedure defFilereadUpdate;');
+      //RegisterMethod('procedure defFilereadUpdate;');
       //  procedure defFilereadUpdate;
     //DEFINIFILE
     //RegisterMethod('procedure Console1Click(Sender: TObject);');
@@ -707,10 +712,10 @@ begin
  CL.AddConstantN('ALLUNITLIST','String').SetString( 'docs\maxbox3_9.xml');
  CL.AddConstantN('INCLUDEBOX','String').SetString('pas_includebox.inc');
  CL.AddConstantN('BOOTSCRIPT','String').SetString('maxbootscript.txt');
- CL.AddConstantN('MBVERSION','String').SetString('3.9.9.190');
- CL.AddConstantN('VERSION','String').SetString('3.9.9.190');
- CL.AddConstantN('MBVERIALL','Integer').SetInt(399190);
- CL.AddConstantN('MBVER2','String').SetString('399190');
+ CL.AddConstantN('MBVERSION','String').SetString('3.9.9.195');
+ CL.AddConstantN('VERSION','String').SetString('3.9.9.195');
+ CL.AddConstantN('MBVERIALL','Integer').SetInt(399195);
+ CL.AddConstantN('MBVER2','String').SetString('399195');
  CL.AddConstantN('EXENAME','String').SetString( 'maXbox3.exe');
  CL.AddConstantN('MXINTERNETCHECK','String').SetString( 'www.ask.com');
  CL.AddConstantN('MBVER','String').SetString('399');
@@ -1754,6 +1759,27 @@ Begin Self.SkyStyle1 := T; end;
 (*----------------------------------------------------------------------------*)
 procedure TMaxForm1SkyStyle1_R(Self: TMaxForm1; var T: TMenuItem);
 Begin T := Self.SkyStyle1; end;
+
+procedure TMaxForm1myscript1_W(Self: TMaxForm1; const T: TMenuItem);
+Begin Self.MyScript1:= T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TMaxForm1myscript1_R(Self: TMaxForm1; var T: TMenuItem);
+Begin T := Self.MyScript1; end;
+
+procedure TMaxForm1externalapp_W(Self: TMaxForm1; const T: TMenuItem);
+Begin Self.ExternalApp1:= T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TMaxForm1externalapp_R(Self: TMaxForm1; var T: TMenuItem);
+Begin T := Self.ExternalApp1; end;
+
+procedure TMaxForm1terminal_W(Self: TMaxForm1; const T: TMenuItem);
+Begin Self.terminal1:= T; end;
+
+(*----------------------------------------------------------------------------*)
+procedure TMaxForm1terminal_R(Self: TMaxForm1; var T: TMenuItem);
+Begin T:= Self.terminal1; end;
 
 (*----------------------------------------------------------------------------*)
 procedure TMaxForm1UnindentSection1_W(Self: TMaxForm1; const T: TMenuItem);
@@ -3474,7 +3500,9 @@ begin
     RegisterPropertyHelper(@TMaxForm1Bookmark31_R,@TMaxForm1Bookmark31_W,'Bookmark31');
     RegisterPropertyHelper(@TMaxForm1Bookmark41_R,@TMaxForm1Bookmark41_W,'Bookmark41');
     RegisterPropertyHelper(@TMaxForm1SynMultiSyn1_R,@TMaxForm1SynMultiSyn1_W,'SynMultiSyn1');
-
+    RegisterPropertyHelper(@TMaxForm1myscript1_R,@TMaxForm1myscript1_W,'myscript1');
+    RegisterPropertyHelper(@TMaxForm1externalapp_R,@TMaxForm1externalapp_W,'externalapp1');
+    RegisterPropertyHelper(@TMaxForm1terminal_R,@TMaxForm1terminal_W,'terminal1');
 
     RegisterMethod(@TMaxForm1.IFPS3ClassesPlugin1CompImport, 'IFPS3ClassesPlugin1CompImport');
     RegisterMethod(@TMaxForm1.IFPS3ClassesPlugin1ExecImport, 'IFPS3ClassesPlugin1ExecImport');
@@ -3602,6 +3630,7 @@ begin
     RegisterMethod(@TMaxForm1.ExporttoHTML1Click, 'ExporttoHTML1Click');
     RegisterMethod(@TMaxForm1.Minesweeper1Click, 'Minesweeper1Click');
     RegisterMethod(@TMaxForm1.PicturePuzzle1Click, 'PicturePuzzle1Click');
+    //RegisterMethod(@TMaxForm1.MyScript1, 'MyScript1');
 
     RegisterMethod(@TMaxForm1.sbvclhelpClick, 'sbvclhelpClick');
     RegisterMethod(@TMaxForm1.DependencyWalker1Click, 'DependencyWalker1Click');
@@ -3719,7 +3748,10 @@ begin
     RegisterMethod(@TMaxForm1.PANView1Click, 'PANView1Click');
     RegisterMethod(@TMaxForm1.UnitConverter1Click, 'UnitConverter1Click');
     RegisterMethod(@TMaxForm1.MyScript1Click, 'MyScript1Click');
-            //  GetWebScript1Click
+    RegisterMethod(@TMaxForm1.terminal1click, 'Terminal1Click');
+    RegisterMethod(@TMaxForm1.TrainingArduino1Click, 'TrainingArduino1Click');
+     //RegisterMethod(@TMaxForm1.ExternalApp1, 'ExternalApp1');
+             //  GetWebScript1Click
    end;
 end;
 

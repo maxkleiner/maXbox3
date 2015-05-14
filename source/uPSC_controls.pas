@@ -14,7 +14,8 @@ uses
     add with TImage
     CreateParented and TWinControl Constructor
     seems NO constructor in TWinControl with canvas  , boundsrect!  'BORDERWIDTH', 'TBorderWidth', iptrw);
-
+  parentbackground hack
+  color bugfix2
 }
 
 procedure SIRegister_Controls_TypesAndConsts(Cl: TPSPascalCompiler);
@@ -311,8 +312,12 @@ begin
     RegisterProperty('Anchors', 'TAnchors', iptRW);
     RegisterProperty('BidiMode', 'TBiDiMode', iptr);
     RegisterProperty('BoundsRect', 'TRect', iptr);
-    RegisterProperty('Color', 'TColor', iptr);      //hack
-    RegisterProperty('Caption', 'TCaption', iptr);  //hack
+    RegisterProperty('Color', 'TColor', iptrw);      //hack2
+    RegisterProperty('Caption', 'TCaption', iptrw);  //hack2
+  //del  RegisterProperty('Color', 'TColor', iptrw);      //hack2
+    RegisterProperty('HostDockSite', 'TWinControl', iptrw);  //hack2
+    RegisterProperty('LRDockWidth', 'integer', iptrw);  //hack2
+
 
     //RegisterProperty('ClientWidth', 'Integer', iptrw);
     RegisterProperty('Constraints', 'TSizeConstraints', iptrw);
@@ -424,6 +429,10 @@ begin
     RegisterProperty('MouseInClient', 'Boolean', iptr);
     RegisterProperty('VisibleDockClientCount', 'Integer', iptr);
     RegisterProperty('UseDockManager', 'Boolean', iptr);
+    RegisterProperty('ParentBackground', 'Boolean', iptrw);
+
+   //   property ParentBackground: Boolean read GetParentBackground write SetParentBackground;
+
 
        {$IFNDEF PS_MINIVCL}
     RegisterMethod('function HandleAllocated: Boolean;');

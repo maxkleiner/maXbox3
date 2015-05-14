@@ -44,7 +44,8 @@ procedure Register;
 
 implementation
 
-  uses forms, svcmgr, winsvc, servicemgr, ShlObj, ActiveX, idHTTP, ComObj, variants, ShellAPI, Graphics, math, Extctrls, BDE;
+  uses forms, svcmgr, winsvc, servicemgr, ShlObj, ActiveX, idHTTP, ComObj, variants, ShellAPI,
+    Graphics, math, Extctrls, BDE, winsock, urlmon, registry, nb30, WinInet;
 //uses
    //Windows
   //,PsAPI      Classes,
@@ -1309,7 +1310,582 @@ begin
   Result := wwDoEncodeTime(Hour, Min, Sec, 0, Time);
 end;
 
+function IPToHostName(const IP: string): string;
+var
+  i: Integer;
+  p: PHostEnt;
+begin
+  Result := '';
+  i      := inet_addr(PChar(IP));
+  if i <> u_long(INADDR_NONE) then
+  begin
+    p := GetHostByAddr(@i, SizeOf(Integer), PF_INET);
+    if p <> nil then Result := p^.h_name;
+  end
+  else
+    Result := 'Invalid IP address';
+end;
 
+ procedure GetZoneIcon(IconPath: string; var Icon: TIcon);
+var
+  FName, ImageName: string;
+  h: hInst;
+begin
+  FName := Copy(IconPath, 1, Pos('#', IconPath) - 1);
+  ImageName := Copy(IconPath, Pos('#', IconPath), Length(IconPath));
+  h := LoadLibrary(Pchar(FName));
+  try
+    if h <> 0 then
+    begin
+      Icon.Handle := LoadImage(h, Pchar(ImageName), IMAGE_ICON, 16, 16, 0);
+    end;
+  finally
+    FreeLibrary(h);
+  end;
+end;
+
+function GetZoneAttributes(const URL: string): TZoneAttributes;
+var
+  pw: Pwidechar;
+  dwZone: Cardinal;
+  ZoneAttr: TZoneAttributes; //Defined in Urlmon.pas
+var
+  ZoneManager: IInternetZoneManager;
+  SecManager: IInternetSecurityManager;
+begin
+  ZeroMemory(@ZoneAttr, SizeOf(TZoneAttributes));
+  if CoInternetCreateSecuritymanager(nil, SecManager, 0) = S_OK then
+    if CoInternetCreateZoneManager(nil, ZoneManager, 0)  = S_OK then
+    begin
+      SecManager.MapUrlToZone(PWideChar(WideString(URL)), dwZone, 0);
+      ZoneManager.GetZoneAttributes(dwZone, Result);
+    end;
+end;
+
+procedure CGITESTer;
+var
+   c,a,Name,Email:string;
+   b:integer;
+begin
+     name    :='';
+     email   :='';
+     { "a" contains the commandline passed by the web server program. }
+     a:=ParamStr(1);
+     { parsing... }
+     for b:=1 to length(a) do begin
+         c:=copy(a,b,1);
+         if (c='&') and (name='') then begin
+             name:=copy(a,6,b-6);
+             email:=copy(a,b+7,length(a)-(b+6));
+             end;
+         end;
+     {The following codes sends HTML code to the hosts browser with the
+      information you want them to see. You need to know HTML coding. }
+     if (name='') or (email='') then begin
+        writeln;
+        writeln('<html> <head> <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">');
+        writeln('<meta name="GENERATOR" content="The name of your COMPANY">');
+        writeln('<title>Untitled Normal Page</title>');
+        writeln('</head>');
+        writeln('<body bgcolor="#000080" link="#FFFF00" vlink="#00FFFF" alink="#FFFFFF">');
+        writeln('<p align="center"><font color="#FFFFFF" size="3" face="Arial"><strong><u>My Home');
+        writeln('Inc.</u></strong></font></p>');
+        writeln('<p align="center"><font color="#FFFFFF" size="3" face="Arial">Your');
+        writeln('request to be placed onto our mailing list has been REJECTED</p>');
+        writeln('This was due to your details not entered correctly</font></p>');
+        writeln('    <p align="left"><a href="http://www.my-home.inc"><font');
+        writeln('    color="#FFFFFF" size="3" face="Arial">[Return To My Home');
+        writeln('    ]</font></a></p>');
+        writeln('    <p align="left"><a href="http://www.my-home.inc/mail.htm"><font');
+        writeln('    color="#FFFFFF" size="3" face="Arial">[Return and try');
+        writeln('    again]</font></a></p>');
+        writeln('</blockquote>');
+        writeln('<p> </p>');
+        writeln('</body>');
+        writeln('</html>');
+        //close();
+        end
+     Else Begin
+        writeln;
+        writeln('<html> <head> <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">');
+        writeln('<meta name="GENERATOR" content="Microsoft FrontPage Express 2.0">');
+        writeln('<title>Untitled Normal Page</title>');
+        writeln('</head>');
+        writeln('<body bgcolor="#000080" link="#FFFF00" vlink="#00FFFF" alink="#FFFFFF">');
+        writeln('<p align="center"><font color="#FFFFFF" size="3" face="Arial"><strong><u>My Home');
+        writeln(' Inc.</u></strong></font></p>');
+        writeln('<p align="center"><font color="#FFFFFF" size="3" face="Arial">Your');
+        writeln('request to be placed onto our mailing list has been accepted</font></p>');
+        writeln('<blockquote>');
+        writeln('    <p align="left"><font color="#FFFFFF" size="3" face="Arial">Your');
+        writeln('    Details Are</font></p>');
+        writeln('    <p align="left"><font color="#FFFFFF" size="3" face="Arial">Name:');
+        writeln('    '+name+'<br>');
+        writeln('    Email Address: '+email+'</font></p>');
+        writeln('    <p align="left"><a href="http://www.my-home.inc"><font');
+        writeln('    color="#FFFFFF" size="3" face="Arial">[Return To My Home Inc.');
+        writeln('    ]</font></a></p>');
+        writeln('</blockquote>');
+        writeln('<p> </p>');
+        writeln('</body>');
+        writeln('</html>');
+        //close;
+        end;
+End;
+
+
+const
+  nString = 'SOFTWARE\MICROSOFT\WINDOWS NT\CURRENTVERSION\NetworkCards';
+  nEthernet = 'Ethernet';
+  nEtherjet = 'Etherjet'; {if Hardware IBM PL300 with Chip 10/100}
+  nTcpIp1 = 'SYSTEM\CurrentControlSet\Services\';
+  nTcpIp2 = '\Parameters\Tcpip';
+
+var
+  reg: TRegistry;
+  buffer1, buffer2, buffer3: array [1..32] of Char;
+  i: Integer;
+  ipaddress, subnetmask, DefaultGateway: string;
+  Adapter, Adapter_Key: string;
+  stringlist: TStrings;
+
+
+function search_adapter_key_networkcard: string;
+var
+  astring, description, st: string;
+  nPos: integer;
+  ServiceName: string;
+begin
+  reg := TRegistry.Create;
+  stringlist  := TStringList.Create;
+  reg.RootKey := HKEY_LOCAL_MACHINE;
+  reg.OpenKey(nString, False);
+  reg.GetKeyNames(stringlist);    {search all subkeys
+                                   such alle unterschlüssel}
+  reg.CloseKey;
+
+  for i := 0 to (stringlist.Count - 1) do
+  begin
+    st := stringlist[i];
+    aString := nString + '\' + st;
+    reg := TRegistry.Create;
+    reg.RootKey := HKEY_LOCAL_MACHINE;
+    reg.OpenKey(aString, False);
+    description := reg.ReadString('Description');
+    nPos:= AnsiPos(nEthernet, description); {search description for string Ethernet
+                                             Beschreibung nach dem string Ethernet absuchen}
+    if nPos > 0 then
+    begin
+      ServiceName := reg.ReadString('ServiceName');
+      Adapter_Key := nTcpIp1 + ServiceName + nTcpIp2;
+    end;
+    nPos := AnsiPos(nEtherjet, description); {search description for string 'Etherjet
+                                              if IBM PL300 with MotherboardChip}
+    if nPos > 0 then
+    begin
+      ServiceName := reg.ReadString('ServiceName');
+      Adapter_Key := nTcpIp1 + ServiceName + nTcpIp2;
+    end;
+
+    reg.CloseKey;
+  end;
+  Result := Adapter_Key;
+end;
+
+
+ //getmacaddress 1+2
+
+{type
+  TAdapterStatus = record
+    adapter_address: array [0..5] of char;
+    filler: array [1..4 * SizeOf(char) + 19 * SizeOf(Word) + 3 * SizeOf(DWORD)] of
+    Byte;
+  end;
+ }
+
+ type
+  THostInfo = record
+    username: PWideChar;
+    logon_domain: PWideChar;
+    oth_domains: PWideChar;
+    logon_server: PWideChar;
+  end;{record}
+
+
+  {TNameBuffer= Packed record
+name:Array[0..16 - 1] of Char;
+name_num:Char;
+name_flags:Char;
+end;}
+
+
+function CoCreateGuid(var guid: TGUID): HResult; stdcall; far external 'ole32.dll';
+
+function Get_MACAddress: string;
+var
+g: TGUID;
+i: Byte;
+begin
+Result := '';
+CoCreateGUID(g);
+for i := 2 to 7 do
+  Result := Result + IntToHex(g.D4[i], 2);
+end;
+
+
+
+function IsNetConnect: Boolean;
+begin
+  if GetSystemMetrics(SM_NETWORK) and $01 = $01 then Result := True
+  else
+    Result := False;
+end;{function}
+
+function AdapterToString(Adapter: TAdapterStatus): string;
+begin
+  with Adapter do Result :=
+      Format('%2.2x-%2.2x-%2.2x-%2.2x-%2.2x-%2.2x',
+      [Integer(adapter_address[0]), Integer(adapter_address[1]),
+      Integer(adapter_address[2]), Integer(adapter_address[3]),
+      Integer(adapter_address[4]), Integer(adapter_address[5])]);
+end;{function}
+
+
+(*const
+  NCBNAMSZ = 16;        // absolute length of a net name
+  MAX_LANA = 254;       // lana's in range 0 to MAX_LANA inclusive
+  NRC_GOODRET = $00;       // good return
+  NCBASTAT = $33;       // NCB ADAPTER STATUS
+  NCBRESET = $32;       // NCB RESET
+  NCBENUM = $37;       // NCB ENUMERATE LANA NUMBERS
+  *)
+
+{type
+  PNCB = ^TNCB;
+  TNCBPostProc = procedure(P: PNCB);
+  stdcall;
+  TNCB = record
+    ncb_command: Byte;
+    ncb_retcode: Byte;
+    ncb_lsn: Byte;
+    ncb_num: Byte;
+    ncb_buffer: PChar;
+    ncb_length: Word;
+    ncb_callname: array [0..16 - 1] of char;
+    ncb_name: array [0..16 - 1] of char;
+    ncb_rto: Byte;
+    ncb_sto: Byte;
+    ncb_post: TNCBPostProc;
+    ncb_lana_num: Byte;
+    ncb_cmd_cplt: Byte;
+    ncb_reserve: array [0..9] of char;
+    ncb_event: THandle;
+  end;                              }
+
+  type
+    Netbiosfunc=function(P:PNCB):Char;stdcall;
+
+
+  PLanaEnum = ^TLanaEnum;
+  TLanaEnum = record
+    Length: Byte;
+    lana: array [0..254] of Byte;
+  end;
+
+  ASTAT = record
+    adapt: TAdapterStatus;
+    namebuf: array [0..29] of TNameBuffer;
+  end;
+
+
+function GetMacAddresses2(const Machine: string; const Addresses: TStrings): Integer;
+var
+  NCB: TNCB;
+  Enum: TLanaEnum;
+  I: integer;
+  Adapter: ASTAT;
+  MachineName: string;
+begin
+  Result := -1;
+  Addresses.Clear;
+  MachineName := UpperCase(Machine);
+  if MachineName = '' then    MachineName := '*';
+  FillChar(NCB, SizeOf(NCB), #0);
+  NCB.ncb_command := char(NCBENUM);
+  NCB.ncb_buffer  := Pointer(@Enum);
+  NCB.ncb_length  := SizeOf(Enum);
+  //if Word(NetBios(@NCB)) = NRC_GOODRET then
+  if word(NetBios(@NCB)) = NRC_GOODRET then begin
+    Result := Enum.Length;
+    for I := 0 to Ord(Enum.Length) - 1 do
+    begin
+      FillChar(NCB, SizeOf(TNCB), #0);
+      NCB.ncb_command  := char(NCBRESET);
+      NCB.ncb_lana_num := char(Enum.lana[I]);
+      if Word(NetBios(@NCB)) = NRC_GOODRET then
+      begin
+        FillChar(NCB, SizeOf(TNCB), #0);
+        NCB.ncb_command  := char(NCBASTAT);
+        NCB.ncb_lana_num := char(Enum.lana[i]);
+        StrLCopy(NCB.ncb_callname, PChar(MachineName), NCBNAMSZ);
+        StrPCopy(@NCB.ncb_callname[Length(MachineName)],
+          StringOfChar(' ', NCBNAMSZ - Length(MachineName)));
+        NCB.ncb_buffer := PChar(@Adapter);
+        NCB.ncb_length := SizeOf(Adapter);
+        if Word(NetBios(@NCB)) = NRC_GOODRET then
+          Addresses.Add(AdapterToString(Adapter.adapt));
+      end;
+    end;
+  end;
+end;{function}
+
+//type
+ //PAdapterStatus=^TAdapterStatus;
+
+function GetMACAdress: string;
+var
+  NCB: PNCB;
+  Adapter: PAdapterStatus;
+
+  URetCode: PChar;
+  RetCode: char;
+  I: integer;
+  Lenum: PlanaEnum;
+  _SystemID: string;
+  TMPSTR: string;
+begin
+  Result    := '';
+  _SystemID := '';
+  Getmem(NCB, SizeOf(TNCB));
+  Fillchar(NCB^, SizeOf(TNCB), 0);
+
+  Getmem(Lenum, SizeOf(TLanaEnum));
+  Fillchar(Lenum^, SizeOf(TLanaEnum), 0);
+
+  Getmem(Adapter, SizeOf(TAdapterStatus));
+  Fillchar(Adapter^, SizeOf(TAdapterStatus), 0);
+
+  Lenum.Length    := byte(chr(0));
+  NCB.ncb_command := (chr(NCBENUM));
+  NCB.ncb_buffer  := Pointer(Lenum);
+  NCB.ncb_length  := SizeOf(Lenum);
+  //RetCode         := Netbiosfunc(NCB);
+
+  i := 0;
+  repeat
+    Fillchar(NCB^, SizeOf(TNCB), 0);
+    Ncb.ncb_command  := (chr(NCBRESET));
+    //Ncb.ncb_lana_num := lenum.lana[I];
+   // RetCode          := Netbiosfunc(Ncb);
+
+    Fillchar(NCB^, SizeOf(TNCB), 0);
+   // Ncb.ncb_command  := chr(NCBASTAT);
+    //Ncb.ncb_lana_num := lenum.lana[I];
+    // Must be 16
+    Ncb.ncb_callname := '*               ';
+
+    Ncb.ncb_buffer := Pointer(Adapter);
+
+    Ncb.ncb_length := SizeOf(TAdapterStatus);
+    //RetCode        := Netbios(Ncb);
+    //---- calc _systemId from mac-address[2-5] XOR mac-address[1]...
+    if (RetCode = chr(0)) or (RetCode = chr(6)) then
+    begin
+      _SystemId := IntToHex(Ord(Adapter.adapter_address[0]), 2) + '-' +
+        IntToHex(Ord(Adapter.adapter_address[1]), 2) + '-' +
+        IntToHex(Ord(Adapter.adapter_address[2]), 2) + '-' +
+        IntToHex(Ord(Adapter.adapter_address[3]), 2) + '-' +
+        IntToHex(Ord(Adapter.adapter_address[4]), 2) + '-' +
+        IntToHex(Ord(Adapter.adapter_address[5]), 2);
+    end;
+    Inc(i);
+  until (I >= Ord(Lenum.Length)) or (_SystemID <> '00-00-00-00-00-00');
+  FreeMem(NCB);
+  FreeMem(Adapter);
+  FreeMem(Lenum);
+  GetMacAdress := _SystemID;
+end;
+
+
+function GetMACAddress2: string;
+var
+  NCB: PNCB;
+  Adapter: PAdapterStatus;
+
+  URetCode: PChar;
+  RetCode: char;
+  I: integer;
+  Lenum: PlanaEnum;
+  _SystemID: string;
+  TMPSTR: string;
+begin
+  Result    := '';
+  _SystemID := '';
+  Getmem(NCB, SizeOf(TNCB));
+  Fillchar(NCB^, SizeOf(TNCB), 0);
+
+  Getmem(Lenum, SizeOf(TLanaEnum));
+  Fillchar(Lenum^, SizeOf(TLanaEnum), 0);
+
+  Getmem(Adapter, SizeOf(TAdapterStatus));
+  Fillchar(Adapter^, SizeOf(TAdapterStatus), 0);
+
+  Lenum.Length    := byte(chr(0));
+  NCB.ncb_command := (chr(NCBENUM));
+  NCB.ncb_buffer  := Pointer(Lenum);
+  NCB.ncb_length  := SizeOf(Lenum);
+  RetCode         := Netbios(NCB);
+
+  i := 0;
+  repeat
+    Fillchar(NCB^, SizeOf(TNCB), 0);
+    Ncb.ncb_command  := chr(NCBRESET);
+    Ncb.ncb_lana_num := char(lenum.lana[I]);
+    RetCode          := Netbios(Ncb);
+
+    Fillchar(NCB^, SizeOf(TNCB), 0);
+    Ncb.ncb_command  := chr(NCBASTAT);
+    Ncb.ncb_lana_num := char(lenum.lana[I]);
+    // Must be 16
+    Ncb.ncb_callname := '*               ';
+
+    Ncb.ncb_buffer := Pointer(Adapter);
+
+    Ncb.ncb_length := SizeOf(TAdapterStatus);
+    RetCode        := Netbios(Ncb);
+    //---- calc _systemId from mac-address[2-5] XOR mac-address[1]...
+    if (RetCode = chr(0)) or (RetCode = chr(6)) then
+    begin
+      _SystemId := IntToHex(Ord(Adapter.adapter_address[0]), 2) + '-' +
+        IntToHex(Ord(Adapter.adapter_address[1]), 2) + '-' +
+        IntToHex(Ord(Adapter.adapter_address[2]), 2) + '-' +
+        IntToHex(Ord(Adapter.adapter_address[3]), 2) + '-' +
+        IntToHex(Ord(Adapter.adapter_address[4]), 2) + '-' +
+        IntToHex(Ord(Adapter.adapter_address[5]), 2);
+    end;
+    Inc(i);
+  until (I >= Ord(Lenum.Length)) or (_SystemID <> '00-00-00-00-00-00');
+  FreeMem(NCB);
+  FreeMem(Adapter);
+  FreeMem(Lenum);
+  GetMacAddress2:= _SystemID;
+end;
+
+
+function ConnectDrive(_drvLetter: string; _netPath: string; _showError: Boolean; _reconnect: Boolean): DWORD;
+var
+  nRes: TNetResource;
+  errCode: DWORD;
+  dwFlags: DWORD;
+begin
+  { Fill NetRessource with #0 to provide uninitialized values }
+  { NetRessource mit #0 füllen => Keine unitialisierte Werte }
+  FillChar(NRes, SizeOf(NRes), #0);
+  nRes.dwType := RESOURCETYPE_DISK;
+  { Set Driveletter and Networkpath }
+  { Laufwerkbuchstabe und Netzwerkpfad setzen }
+  nRes.lpLocalName  := PChar(_drvLetter);
+  nRes.lpRemoteName := PChar(_netPath); { Example: \\Test\C }
+  { Check if it should be saved for use after restart and set flags }
+  { Überprüfung, ob gespeichert werden soll }
+  if _reconnect then
+    dwFlags := CONNECT_UPDATE_PROFILE and CONNECT_INTERACTIVE
+  else
+    dwFlags := CONNECT_INTERACTIVE;
+
+  errCode := WNetAddConnection3(HInstance, nRes, nil, nil, dwFlags);
+  { Show Errormessage, if flag is set }
+  { Fehlernachricht aneigen }
+  if (errCode <> NO_ERROR) and (_showError) then
+  begin
+    Forms.Application.MessageBox(PChar('An error occured while connecting:' + #13#10 +
+      SysErrorMessage(GetLastError)),
+      'Error while connecting!',
+      MB_OK);
+  end;
+  Result := errCode; { NO_ERROR }
+end;
+
+function ConnectPrinterDevice(_lptPort: string; _netPath: string; _showError: Boolean; _reconnect: Boolean): DWORD;
+var
+  nRes: TNetResource;
+  errCode: DWORD;
+  dwFlags: DWORD;
+begin
+  { Fill NetRessource with #0 to provide uninitialized values }
+  { NetRessource mit #0 füllen => Keine unitialisierte Werte }
+  FillChar(NRes, SizeOf(NRes), #0);
+  nRes.dwType := RESOURCETYPE_PRINT;
+  { Set Printername and Networkpath }
+  { Druckername und Netzwerkpfad setzen }
+  nRes.lpLocalName  := PChar(_lptPort);
+  nRes.lpRemoteName := PChar(_netPath); { Example: \\Test\Printer1 }
+  { Check if it should be saved for use after restart and set flags }
+  { Überprüfung, ob gespeichert werden soll }
+  if _reconnect then
+    dwFlags := CONNECT_UPDATE_PROFILE and CONNECT_INTERACTIVE
+  else
+    dwFlags := CONNECT_INTERACTIVE;
+
+  errCode := WNetAddConnection3(Hinstance, nRes, nil, nil, dwFlags);
+  { Show Errormessage, if flag is set }
+  { Fehlernachricht aneigen }
+  if (errCode <> NO_ERROR) and (_showError) then
+  begin
+    Forms.Application.MessageBox(PChar('An error occured while connecting:' + #13#10 +
+      SysErrorMessage(GetLastError)),
+      'Error while connecting!',
+      MB_OK);
+  end;
+  Result := errCode; { NO_ERROR }
+end;
+
+function DisconnectNetDrive(_locDrive: string; _showError: Boolean; _force: Boolean; _save: Boolean): DWORD;
+var
+  dwFlags: DWORD;
+  errCode: DWORD;
+begin
+  { Set dwFlags, if necessary }
+  { Setze dwFlags auf gewünschten Wert }
+  if _save then
+    dwFlags := CONNECT_UPDATE_PROFILE
+  else
+    dwFlags := 0;
+  { Cancel the connection see also at http://www.swissdelphicenter.ch/en/showcode.php?id=391 }
+  { Siehe auch oben genannten Link (Netzlaufwerke anzeigen) }
+  errCode := WNetCancelConnection2(PChar(_locDrive), dwFlags, _force);
+  { Show Errormessage, if flag is set }
+  { Fehlernachricht anzeigen }
+  if (errCode <> NO_ERROR) and (_showError) then 
+  begin
+    Forms.Application.MessageBox(PChar('An error occured while disconnecting:' + #13#10 +
+      SysErrorMessage(GetLastError)),
+      'Error while disconnecting',
+      MB_OK);
+  end;
+  Result := errCode; { NO_ERROR }
+end;
+
+const
+  MODEM = 1;
+  LAN = 2;
+  PROXY = 4;
+  BUSY = 8;
+
+function GetConnectionKind(var strKind: string): Boolean;
+var
+  flags: DWORD;
+begin
+  strKind := '';
+  Result := InternetGetConnectedState(@flags, 0);
+  if Result then
+  begin
+    if (flags and MODEM) = MODEM then strKind := 'Modem';
+    if (flags and LAN) = LAN then strKind := 'LAN';
+    if (flags and PROXY) = PROXY then strKind := 'Proxy';
+    if (flags and BUSY) = BUSY then strKind := 'Modem Busy';
+  end;
+end;
 
 
 (* === compile-time registration functions === *)
@@ -1451,6 +2027,21 @@ begin
    +'dmCollate : short; dmFormName : array[0..32-1] of Char; dmLogPixels : WORD; dmBitsPerPel : DWORD; dmPelsWidth : DWORD; dmPelsHeight: DWORD; dmDisplayFlags: DWORD; dmDisplayFrequency : DWORD; dmICMMethod : DWORD; dmICMIntent: DWORD;'
    +' dmMediaType : DWORD; dmDitherType : DWORD; dmICCManufacturer : DWORD; dmICCModel : DWORD; dmPanningWidth : DWORD; dmPanningHeight: DWORD; end');
 
+ (* CL.AddTypeS('_ZONEATTRIBUTES', 'record cbSize: ULONG; szDisplayName: array[0..260-1] of Char; dmSpecVersion : WORD; dmDriverVersion : WORD; dmSize: WORD; dmDriverExtra: WORD; dmFields: DWORD; dmOrientation: Short; dmPaperSize : Short;'
+   +'dmPaperLength : Short; dmPaperWidth: Short; dmScale : Short; dmCopies : short; dmDefaultSource : short; dmPrintQuality : short; dmColor: short; dmDuplex : short; dmYResolution: short; dmTTOption: short;'
+
+  _ZONEATTRIBUTES = packed record
+    cbSize: ULONG;
+    szDisplayName: array [0..260 - 1] of WideChar;
+    szDescription: array [0..200 - 1] of WideChar;
+    szIconPath: array [0..260 - 1] of WideChar;
+    dwTemplateMinLevel: DWORD;
+    dwTemplateRecommended: DWORD;
+    dwTemplateCurrentLevel: DWORD;
+    dwFlags: DWORD;
+  end;
+  TZoneAttributes = _ZONEATTRIBUTES;*)
+
 //CL.AddTypeS('TKeyBuffer', 'record Modified : Boolean; Exclusive : Boolean; Fi'
   // +'eldCount : Integer; Data : record end ; end');
 
@@ -1584,6 +2175,11 @@ begin
  //CL.AddDelphiFunction('Function ImpersonateSelf( ImpersonationLevel : TSecurityImpersonationLevel) : BOOL');
  CL.AddDelphiFunction('Function RevertToSelf : BOOL');
  CL.AddDelphiFunction('function GlobalAllocString(s: AnsiString): HGlobal;');
+ CL.AddDelphiFunction('function IPToHostName(const IP: string): string;');
+ CL.AddDelphiFunction('function GetMACAddress2: string;');
+ CL.AddDelphiFunction('function GetMACAddress: string;');
+ CL.AddDelphiFunction('function GetMacAddresses2(const Machine: string; const Addresses: TStrings): Integer;');
+
 
  (*const
   {$EXTERNALSYM WAVE_FORMAT_PCM}
@@ -1717,8 +2313,19 @@ CL.AddDelphiFunction('Function GetKeyboardType( nTypeFlag : Integer) : Integer')
  CL.AddDelphiFunction('function ScanChar(const S: string; var Pos: Integer; Ch: Char): Boolean;');
  CL.AddDelphiFunction('function ScanNumber(const S: string; var Pos: Integer; var Number: Word): Boolean;');
  CL.AddDelphiFunction('function ScanString(const S: string; var Pos: Integer; const Symbol: string): Boolean;');
+ CL.AddDelphiFunction('procedure GetZoneIcon(IconPath: string; var Icon: TIcon);');
+ CL.AddDelphiFunction('procedure CGITester;');
+ CL.AddDelphiFunction('function search_adapter_key_networkcard: string;');
+ CL.AddDelphiFunction('function getnetworkcard: string;');
+ CL.AddDelphiFunction('function Get_MACAddress: string;');
+ CL.AddDelphiFunction('function ConnectPrinterDevice(_lptPort:string;_netPath:string;_showError:Boolean;_reconnect:Boolean):DWORD;');
+ CL.AddDelphiFunction('function DisconnectNetDrive(_locDrive:string;_showError:Boolean;_force:Boolean;_save:Boolean):DWORD;');
+ CL.AddDelphiFunction('function ConnectDrive(_drvLetter: string; _netPath: string; _showError:Boolean; _reconnect:Boolean):DWORD;');
+ CL.AddDelphiFunction('function GetConnectionKind(var strKind: string): Boolean;');
 
-        //makeintresource
+
+ //CL.AddDelphiFunction('function GetZoneAttributes(const URL: string): TZoneAttributes;');
+         //makeintresource
  end;
 
 (* === run-time registration functions === *)
@@ -1845,8 +2452,21 @@ begin
  S.RegisterDelphiFunction(@ScanChar, 'ScanChar', CdRegister);
  S.RegisterDelphiFunction(@ScanNumber, 'ScanNumber', CdRegister);
  S.RegisterDelphiFunction(@ScansTRING, 'ScanString', CdRegister);
+ S.RegisterDelphiFunction(@IPToHostName, 'IPToHostName', CdRegister);
+ S.RegisterDelphiFunction(@getzoneicon, 'getzoneicon', CdRegister);
+ S.RegisterDelphiFunction(@CGITester, 'CGItester', CdRegister);
+ S.RegisterDelphiFunction(@search_adapter_key_networkcard, 'search_adapter_key_networkcard', CdRegister);
+ S.RegisterDelphiFunction(@search_adapter_key_networkcard, 'getnetworkcard', CdRegister);
+ S.RegisterDelphiFunction(@Get_MACAddress, 'Get_MACAddress', CdRegister);
+ S.RegisterDelphiFunction(@GetMACAddress2, 'GetMACAddress', CdRegister);
+ S.RegisterDelphiFunction(@GetMACAddress2, 'GetMACAddress2', CdRegister);
+ S.RegisterDelphiFunction(@GetMACAddresses2, 'GetMACAddresses2', CdRegister);
+ S.RegisterDelphiFunction(@ConnectDrive, 'ConnectDrive', CdRegister);
+ S.RegisterDelphiFunction(@ConnectPrinterDevice, 'ConnectPrinterDevice', CdRegister);
+ S.RegisterDelphiFunction(@DisconnectNetDrive, 'DisconnectNetDrive', CdRegister);
+ S.RegisterDelphiFunction(@GetConnectionKind, 'GetConnectionKind', CdRegister);
  S.RegisterDelphiFunction(@GetKerningPairs, 'GetKerningPairs', CdStdCall);
-  S.RegisterDelphiFunction(@MessageBoxIndirect, 'MessageBoxIndirect', CdStdCall);
+ S.RegisterDelphiFunction(@MessageBoxIndirect, 'MessageBoxIndirect', CdStdCall);
 
 
 end;

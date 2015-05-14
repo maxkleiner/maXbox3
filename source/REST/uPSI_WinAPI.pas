@@ -75,6 +75,98 @@ begin
   b.free;
 end;
 
+procedure GetKLList(List: TStrings);
+var
+  AList : array [0..9] of Hkl;
+  AklName: array [0..255] of Char;
+  i: Longint;
+begin
+  List.Clear;
+  for i := 0 to GetKeyboardLayoutList(SizeOf(AList), AList) - 1 do begin
+      GetLocaleInfo(LoWord(AList[i]), LOCALE_SLANGUAGE, AklName, SizeOf(AklName));
+      List.AddObject(AklName, Pointer(AList[i]));
+    end;
+end;
+
+var
+  _SetSuspendState: function (Hibernate, ForceCritical, DisableWakeEvent: BOOL): BOOL
+  stdcall = nil;
+
+  function LinkAPI(const module, functionname: string): Pointer; forward;
+
+function SetSuspendState(Hibernate, ForceCritical, DisableWakeEvent: Boolean): Boolean;
+begin
+  if not Assigned(_SetSuspendState) then
+    @_SetSuspendState := LinkAPI('POWRPROF.dll', 'SetSuspendState');
+  if Assigned(_SetSuspendState) then
+    Result := _SetSuspendState(Hibernate, ForceCritical,
+      DisableWakeEvent)
+  else
+    Result := False;
+end;
+
+function LinkAPI(const module, functionname: string): Pointer;
+var
+  hLib: HMODULE;
+begin
+  hLib := GetModulehandle(PChar(module));
+  if hLib = 0 then
+    hLib := LoadLibrary(PChar(module));
+  if hLib <> 0 then
+    Result := getProcAddress(hLib, PChar(functionname))
+  else
+    Result := nil;
+end;
+
+
+function ServiceGetStatus(sMachine, sService: PChar): DWORD;
+  {******************************************}
+  {*** Parameters: ***}
+  {*** sService: specifies the name of the service to open
+  {*** sMachine: specifies the name of the target computer
+  {*** ***}
+  {*** Return Values: ***}
+  {*** -1 = Error opening service ***}
+  {*** 1 = SERVICE_STOPPED ***}
+  {*** 2 = SERVICE_START_PENDING ***}
+  {*** 3 = SERVICE_STOP_PENDING ***}
+  {*** 4 = SERVICE_RUNNING ***}
+  {*** 5 = SERVICE_CONTINUE_PENDING ***}
+  {*** 6 = SERVICE_PAUSE_PENDING ***}
+  {*** 7 = SERVICE_PAUSED ***}
+  {******************************************}
+var
+  SCManHandle, SvcHandle: SC_Handle;
+  SS: TServiceStatus;
+  dwStat: DWORD;
+begin
+  dwStat := 0;
+  // Open service manager handle.
+  SCManHandle := OpenSCManager(sMachine, nil, SC_MANAGER_CONNECT);
+  if (SCManHandle > 0) then
+  begin
+    SvcHandle := OpenService(SCManHandle, sService, SERVICE_QUERY_STATUS);
+    // if Service installed
+    if (SvcHandle > 0) then
+    begin
+      // SS structure holds the service status (TServiceStatus);
+      if (QueryServiceStatus(SvcHandle, SS)) then
+        dwStat := ss.dwCurrentState;
+      CloseServiceHandle(SvcHandle);
+    end;
+    CloseServiceHandle(SCManHandle);
+  end;
+  Result := dwStat;
+end;
+
+function ServiceRunning(sMachine, sService: PChar): Boolean;
+begin
+  Result := SERVICE_RUNNING = ServiceGetStatus(sMachine, sService);
+end;
+
+
+
+
 
 (* === compile-time registration functions === *)
 (*----------------------------------------------------------------------------*)
@@ -762,8 +854,7 @@ begin
  CL.AddDelphiFunction('Function ImpersonateSelf( ImpersonationLevel : TSecurityImpersonationLevel) : BOOL');
 
 
-
-     CL.AddTypeS('tagLOGFONTA', 'record lfHeight: longint; lfWidth : longint;'
+    CL.AddTypeS('tagLOGFONTA', 'record lfHeight: longint; lfWidth : longint;'
    +'lfEscapement : longint; lfOrientation : longint; lfWeight : longInt;'
    +'lfItalic: byte; lfUnderline : byte; lfStrikeOut: byte; lfCharSet'
    +' : byte; lfOutPrecision : byte; lfClipPrecision : byte; lfQuality'
@@ -954,7 +1045,11 @@ CL.AddDelphiFunction('Function IsBadStringPtr( lpsz : PChar; ucchMax : UINT) : B
  CL.AddDelphiFunction('Function AdjustWindowRect( var lpRect : TRect; dwStyle : DWORD; bMenu : BOOL) : BOOL');
  CL.AddDelphiFunction('Function AdjustWindowRectEx( var lpRect : TRect; dwStyle : DWORD; bMenu : BOOL; dwExStyle : DWORD) : BOOL');
  CL.AddDelphiFunction('Function EnumThreadWindows( dwThreadId : DWORD; lpfn : Tobject; lParam : LPARAM) : BOOL');
-
+ CL.AddDelphiFunction('procedure GetKLList(List: TStrings);');
+ CL.AddDelphiFunction('procedure GetKeyboardList(List: TStrings);');
+ CL.AddDelphiFunction('function SetSuspendState(Hibernate, ForceCritical, DisableWakeEvent: Boolean):boolean');
+ CL.AddDelphiFunction('function ServiceRunning(sMachine, sService: PChar): Boolean;');
+ CL.AddDelphiFunction('function isServiceRunning(sMachine, sService: PChar): Boolean;');
 
  //TPrivilegeSet
 end;
@@ -1061,7 +1156,11 @@ S.RegisterDelphiFunction(@TlsAlloc, 'TlsAlloc', CdStdCall);
  S.RegisterDelphiFunction(@AdjustWindowRect, 'AdjustWindowRect', CdStdCall);
  S.RegisterDelphiFunction(@AdjustWindowRectEx, 'AdjustWindowRectEx', CdStdCall);
  S.RegisterDelphiFunction(@EnumThreadWindows, 'EnumThreadWindows', CdStdCall);
-
+ S.RegisterDelphiFunction(@GetKLList, 'GetKLList', cdRegister);
+ S.RegisterDelphiFunction(@GetKLList, 'GetKeyboardList', cdRegister);
+ S.RegisterDelphiFunction(@SetSuspendState, 'SetSuspendState', cdRegister);
+ S.RegisterDelphiFunction(@ServiceRunning, 'ServiceRunning', cdRegister);
+ S.RegisterDelphiFunction(@ServiceRunning, 'isServiceRunning', cdRegister);
 
 
 end;

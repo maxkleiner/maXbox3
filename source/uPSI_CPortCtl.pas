@@ -72,6 +72,38 @@ begin
   //with RegClassS(CL,'TCustomComTerminal', 'TComTerminal') do
   with CL.AddClassN(CL.FindClass('TCustomComTerminal'),'TComTerminal') do begin
     RegisterPublishedProperties;
+     RegisterProperty('ONCLICK', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONDBLCLICK', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONENTER', 'TNOTIFYEVENT', iptrw);
+    RegisterProperty('ONEXIT', 'TNOTIFYEVENT', iptrw);
+     RegisterProperty('ONMOUSEDOWN', 'TMouseEvent', iptrw);
+    RegisterProperty('ONMOUSEMOVE', 'TMouseMoveEvent', iptrw);
+    RegisterProperty('ONMOUSEUP', 'TMouseEvent', iptrw);
+     RegisterProperty('ONKEYDOWN', 'TKeyEvent', iptrw);
+    RegisterProperty('ONKEYPRESS', 'TKeyPressEvent', iptrw);
+    RegisterProperty('ONKEYUP', 'TKeyEvent', iptrw);
+   RegisterProperty('ALIGNMENT', 'TALIGNMENT', iptrw);
+    RegisterProperty('CAPTION', 'String', iptrw);
+    RegisterProperty('CHECKED', 'BOOLEAN', iptrw);
+    RegisterProperty('COLOR', 'TColor', iptrw);
+    RegisterProperty('FONT', 'TFont', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CTL3D', 'Boolean', iptrw);
+     RegisterProperty('FONT', 'TFont', iptrw);
+     RegisterProperty('SORTED', 'Boolean', iptrw);
+     RegisterProperty('Visible', 'Boolean', iptrw);
+     RegisterProperty('TEXT', 'String', iptrw);
+    RegisterProperty('BORDERSTYLE', 'TBorderStyle', iptrw);
+    RegisterProperty('HIDESELECTION', 'Boolean', iptrw);
+    RegisterProperty('MAXLENGTH', 'Integer', iptrw);
+    RegisterProperty('PARENTCOLOR', 'Boolean', iptrw);
+    RegisterProperty('PARENTFONT', 'Boolean', iptrw);
+     RegisterProperty('CHARCASE', 'TEditCharCase', iptrw);
+    RegisterProperty('OEMCONVERT', 'Boolean', iptrw);
+    RegisterProperty('PopupMenu', 'TPopupMenu', iptrw);
+    RegisterProperty('Parent', 'TWinControl', iptrw);
+      RegisterProperty('Canvas', 'TCanvas', iptr);
   end;
 end;
 
@@ -571,19 +603,30 @@ begin Self.Items := T; end;
 procedure TComSelectItems_R(Self: TComSelect; var T: TStrings);
 begin T := Self.Items; end;
 
+procedure TControlParentR(Self: TControl; var T: TWinControl); begin T := Self.Parent; end;
+procedure TControlParentW(Self: TControl; T: TWinControl); begin Self.Parent:= T; end;
+
+//procedure TBitmapCanvas_R(Self: TComTerminal; var T: TCanvas); begin T:= Self.Canvas; end;
+
+//procedure TBitmapCanvas2_R(Self: TCustomDrawGrid; var T: TCanvas); begin T:= Self.Canvas; end;
+
+
+
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TComTerminal(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TComTerminal) do
-  begin
+  with CL.Add(TComTerminal) do begin
+
+    RegisterPropertyHelper(@TControlParentR, @TControlParentW, 'PARENT');
+    //RegisterPropertyHelper(@TBitmapCanvas_R,nil,'Canvas');
+
   end;
 end;
 
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TCustomComTerminal(CL: TPSRuntimeClassImporter);
 begin
-  with CL.Add(TCustomComTerminal) do
-  begin
+  with CL.Add(TCustomComTerminal) do begin
     RegisterConstructor(@TCustomComTerminal.Create, 'Create');
    RegisterMethod(@TCustomComTerminal.Destroy, 'Free');
     RegisterMethod(@TCustomComTerminal.ClearScreen, 'ClearScreen');
